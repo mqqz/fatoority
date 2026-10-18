@@ -152,10 +152,11 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
     )?;
 
     let issue_datetime = parse_datetime(&issue_date, &issue_time)?;
-    CurrencyCode::parse(&currency_code).map_err(|_| ParseError::InvalidValue {
-        field: "DocumentCurrencyCode",
-        value: currency_code.clone(),
-    })?;
+    let currency_code =
+        CurrencyCode::parse(&currency_code).map_err(|_| ParseError::InvalidValue {
+            field: "DocumentCurrencyCode",
+            value: currency_code.clone(),
+        })?;
     let original_ref = if invoice_type_code == "381" || invoice_type_code == "383" {
         Some(parse_original_ref(&ctx)?)
     } else {
@@ -205,7 +206,7 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
         .id(id)
         .uuid(uuid)
         .issue_datetime(issue_datetime)
-        .currency(currency_code.clone())
+        .currency(currency_code.as_str())
         .previous_invoice_hash(previous_invoice_hash)
         .invoice_counter(invoice_counter)
         .seller(seller)
@@ -335,11 +336,14 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
     }
     if let Some(code) = ctx.basic("TaxCurrencyCode").content() {
         let tax_currency = CurrencyCode::parse(code)?;
-        if tax_currency.as_str() != currency_code {
+        if tax_currency != currency_code {
             let totals: Vec<_> = nav::tax_totals(ctx)
                 .filter(|t| {
-                    t.basic("TaxAmount").attribute("currencyID").as_deref()
-                        == Some(tax_currency.as_str())
+                    t.basic("TaxAmount")
+                        .attribute("currencyID")
+                        .and_then(|code| CurrencyCode::parse(code).ok())
+                        .as_ref()
+                        == Some(&tax_currency)
                 })
                 .collect();
             if totals.len() != 1 || totals[0].aggregate("TaxSubtotal").0.is_some() {
@@ -377,10 +381,14 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
             check_amount(field, &value, expected)?;
         }
     }
-    let currency = invoice.data().currency().as_str().to_owned();
     let mut seen = Vec::new();
     for tax_total in nav::tax_totals(ctx).filter(|total| {
-        total.basic("TaxAmount").attribute("currencyID").as_deref() == Some(currency.as_str())
+        total
+            .basic("TaxAmount")
+            .attribute("currencyID")
+            .and_then(|code| CurrencyCode::parse(code).ok())
+            .as_ref()
+            == Some(&currency_code)
     }) {
         let value = text_required(tax_total.basic("TaxAmount").content(), "TaxAmount")?;
         check_amount("TaxAmount", &value, invoice.totals().tax_amount())?;
@@ -626,11 +634,13 @@ fn check_model_structure(root: Element<'_, '_>) -> Result<(), ParseError> {
         && let Some(document_currency) = root
             .basic("DocumentCurrencyCode")
             .content()
-            .filter(|s| CurrencyCode::parse(s.as_str()).is_ok())
+            .and_then(|code| CurrencyCode::parse(code).ok())
     {
         let tax_currency = root
             .basic("TaxCurrencyCode")
             .content()
+            .map(CurrencyCode::parse)
+            .transpose()?
             .unwrap_or_else(|| document_currency.clone());
         for n in node.descendants().filter(|n| n.is_element()) {
             if n.tag_name().namespace() != Some(CBC_NS) {
@@ -669,9 +679,12 @@ fn check_model_structure(root: Element<'_, '_>) -> Result<(), ParseError> {
                         | "TaxSubtotal"
                         | "TaxTotal"
                 );
+            let amount_currency = n
+                .attribute("currencyID")
+                .and_then(|code| CurrencyCode::parse(code).ok());
             if modeled
-                && n.attribute("currencyID") != Some(document_currency.as_str())
-                && !(direct_total && n.attribute("currencyID") == Some(tax_currency.as_str()))
+                && amount_currency.as_ref() != Some(&document_currency)
+                && !(direct_total && amount_currency.as_ref() == Some(&tax_currency))
             {
                 return Err(ParseError::InvalidValue {
                     field: "currencyID",

@@ -952,3 +952,30 @@ fn repeated_adjustment_classifications_compare_normalized_scalars() {
         assert!(parse(&modified).is_err(), "{field}");
     }
 }
+
+#[test]
+fn currency_normalization_is_consistent_across_tax_totals() {
+    for currency in ["SAR", "USD"] {
+        let mut source = builder()
+            .currency(currency)
+            .line_item(line(VatCategory::Standard));
+        if currency == "USD" {
+            source = source.tax_currency(CurrencyCode::parse("SAR").unwrap(), d("11.40"));
+        }
+        let invoice = source.build().unwrap();
+        let xml = invoice.to_xml().unwrap();
+        for modified in [
+            xml.replace("SAR", "sar").replace("USD", "usd"),
+            xml.replace("SAR", " SaR ").replace("USD", " uSd "),
+            xml.replace("currencyID=\"SAR\"", "currencyID=\"sar\"")
+                .replace("currencyID=\"USD\"", "currencyID=\"usd\""),
+        ] {
+            assert_eq!(roundtrip(&modified), invoice);
+            let wrong_tax = modified.replacen(">3.04</cbc:TaxAmount>", ">3.05</cbc:TaxAmount>", 1);
+            assert_ne!(wrong_tax, modified);
+            assert!(parse(&wrong_tax).is_err());
+            let missing_currency = modified.replacen("currencyID=", "missingCurrency=", 1);
+            assert!(parse(&missing_currency).is_err());
+        }
+    }
+}
