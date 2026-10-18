@@ -443,7 +443,7 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
         if let Some(value) =
             content_optional(ctx.aggregate("LegalMonetaryTotal").basic(field).content())?
         {
-            *dest = value.parse().map_err(ParseError::from)?;
+            *dest = value.trim().parse().map_err(ParseError::from)?;
             if dest.scale() > 2 {
                 return Err(ParseError::InvalidValue { field, value });
             }
@@ -721,7 +721,7 @@ fn check_model_structure(root: Element<'_, '_>) -> Result<(), ParseError> {
             });
         }
         if let Some(value) = line.aggregate("Price").basic("BaseQuantity").content() {
-            let quantity: Decimal = value.parse()?;
+            let quantity: Decimal = value.trim().parse()?;
             if quantity != Decimal::from(1) {
                 return Err(ParseError::InvalidValue {
                     field: "BaseQuantity",
@@ -1351,7 +1351,7 @@ fn decimal_required(value: Option<String>, field: &'static str) -> Result<Decima
         .map_err(|_| ParseError::InvalidValue { field, value })
 }
 fn check_amount(field: &'static str, value: &str, expected: Decimal) -> Result<(), ParseError> {
-    let supplied: Decimal = value.parse().map_err(|_| ParseError::InvalidValue {
+    let supplied: Decimal = value.trim().parse().map_err(|_| ParseError::InvalidValue {
         field,
         value: value.into(),
     })?;

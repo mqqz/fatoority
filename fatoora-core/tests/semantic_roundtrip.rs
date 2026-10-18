@@ -1054,3 +1054,84 @@ fn credit_debit_reasons_cannot_conflict_with_payment_instructions() {
         }
     }
 }
+
+#[test]
+fn numeric_xml_content_accepts_surrounding_whitespace_without_skipping_validation() {
+    let invoice = builder()
+        .line_item(line(VatCategory::Standard))
+        .adjustment(balance_adjustment(true, "1", VatCategory::Standard))
+        .prepaid_amount(d("1"))
+        .payable_rounding_amount(d("0.01"))
+        .tax_currency(CurrencyCode::parse("USD").unwrap(), d("4.02"))
+        .build()
+        .unwrap();
+    let xml = invoice.to_xml().unwrap().replace(
+        "</cac:Price>",
+        "<cbc:BaseQuantity unitCode=\"PCE\">1</cbc:BaseQuantity></cac:Price>",
+    );
+    let doc = roxmltree::Document::parse(&xml).unwrap();
+    let mut padded = xml.clone();
+    let numeric: Vec<_> = doc
+        .descendants()
+        .filter(|n| {
+            n.is_element()
+                && matches!(
+                    n.tag_name().name(),
+                    "LineExtensionAmount"
+                        | "TaxExclusiveAmount"
+                        | "TaxInclusiveAmount"
+                        | "AllowanceTotalAmount"
+                        | "ChargeTotalAmount"
+                        | "PrepaidAmount"
+                        | "PayableRoundingAmount"
+                        | "PayableAmount"
+                        | "RoundingAmount"
+                        | "TaxAmount"
+                        | "TaxableAmount"
+                        | "PriceAmount"
+                        | "Amount"
+                        | "Percent"
+                        | "InvoicedQuantity"
+                        | "BaseQuantity"
+                )
+        })
+        .collect();
+    for node in numeric.iter().rev() {
+        let text = node.first_child().unwrap();
+        let value = text.text().unwrap();
+        let replacement = format!(" \t{value}\n ");
+        let mut modified = xml.clone();
+        modified.replace_range(text.range(), &replacement);
+        validate_xml_invoice_from_str(&modified, &Config::default()).unwrap();
+        assert_eq!(roundtrip(&modified), invoice, "{}", node.tag_name().name());
+        padded.replace_range(text.range(), &replacement);
+        for invalid in ["", " \t\n ", "invalid", "1 0"] {
+            let mut bad = xml.clone();
+            bad.replace_range(text.range(), invalid);
+            assert!(
+                parse(&bad).is_err(),
+                "{}: {invalid:?}",
+                node.tag_name().name()
+            );
+        }
+    }
+    assert_eq!(roundtrip(&padded), invoice);
+    for (field, value) in [
+        ("PrepaidAmount", "-1"),
+        ("PayableRoundingAmount", "0.001"),
+        ("PayableAmount", "999"),
+        ("RoundingAmount", "999"),
+        ("BaseQuantity", "2"),
+    ] {
+        let node = numeric
+            .iter()
+            .find(|n| n.tag_name().name() == field)
+            .unwrap();
+        let mut bad = xml.clone();
+        bad.replace_range(
+            node.first_child().unwrap().range(),
+            &format!(" \t{value}\n "),
+        );
+        assert!(parse(&bad).is_err(), "{field}");
+    }
+}
