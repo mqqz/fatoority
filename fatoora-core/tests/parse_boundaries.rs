@@ -288,7 +288,7 @@ fn adjustment_vat_groups_cannot_be_merged_or_reassigned() {
             &format!("{ROOT}/cac:AllowanceCharge[1]/cac:TaxCategory[1]/cbc:Percent"),
             "5",
         ),
-        "AdjustmentVatRate",
+        "AllowanceCharge",
     );
     let start = XML.find("<cac:AllowanceCharge>").unwrap();
     let end = XML[start..].find("</cac:AllowanceCharge>").unwrap()
@@ -297,7 +297,12 @@ fn adjustment_vat_groups_cannot_be_merged_or_reassigned() {
     let second = XML[start..end].replace(">15<", ">5<");
     assert_ne!(second, XML[start..end]);
     let xml = format!("{}{}{}", &XML[..end], second, &XML[end..]);
-    invalid(&xml, "AllowanceCharge");
+    let parsed = parse_finalized_invoice_xml(&xml).unwrap();
+    assert_eq!(parsed.data().adjustments().len(), 2);
+    assert_eq!(
+        parsed.data().adjustments()[1].rate,
+        fatoora_core::Decimal::from(5)
+    );
 }
 
 #[test]

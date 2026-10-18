@@ -128,6 +128,7 @@ pub fn parse_signed_invoice_xml_file(path: impl AsRef<Path>) -> Result<SignedInv
 
 fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, ParseError> {
     let ctx = Element::invoice(doc);
+    check_model_structure(ctx)?;
 
     let id = text_required(ctx.basic("ID").content(), "ID")?;
     let uuid = text_required(ctx.basic("UUID").content(), "UUID")?;
@@ -175,6 +176,7 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
     )?;
 
     let seller = parse_seller(&ctx)?;
+    let buyer = parse_buyer(ctx)?;
 
     let previous_invoice_hash = text_required(
         nav::document_reference(ctx, "PIH")
@@ -203,7 +205,7 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
         .id(id)
         .uuid(uuid)
         .issue_datetime(issue_datetime)
-        .currency(currency_code)
+        .currency(currency_code.clone())
         .previous_invoice_hash(previous_invoice_hash)
         .invoice_counter(invoice_counter)
         .seller(seller)
@@ -215,21 +217,44 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
                 .enumerate()
                 .fold(0, |bits, (index, digit)| bits | ((digit - b'0') << index)),
         ));
+    if let Some(buyer) = buyer {
+        builder = builder.buyer(buyer);
+    }
+    let delivery = ctx.aggregate("Delivery");
+    if delivery.0.is_some() {
+        let date = |field| -> Result<Option<InvoiceDate>, ParseError> {
+            delivery
+                .basic(field)
+                .content()
+                .map(|value| InvoiceDate::parse(value).map_err(ParseError::from))
+                .transpose()
+        };
+        builder = builder.delivery(crate::invoice::Delivery {
+            actual_date: date("ActualDeliveryDate")?,
+            latest_date: date("LatestDeliveryDate")?,
+        });
+    }
     for item in line_items {
         builder = builder.line_item(item);
     }
     if let Some(note) = content_optional(ctx.basic("Note").content())? {
-        let language = text_optional(ctx.basic("Note").attribute("languageID"))?
-            .unwrap_or_else(|| "en".to_string());
-        builder = builder.note(crate::invoice::InvoiceNote {
-            language,
-            text: note,
-        });
+        let note = match ctx.basic("Note").attribute("languageID") {
+            Some(language) => crate::invoice::InvoiceNote::new(language, note),
+            None => crate::invoice::InvoiceNote::without_language(note),
+        };
+        builder = builder.note(note);
+    }
+    if let Some(instruction) = ctx
+        .aggregate("PaymentMeans")
+        .basic("InstructionNote")
+        .content()
+    {
+        builder = builder.payment_instruction(instruction);
     }
     let mut discount = Decimal::ZERO;
     let mut charge = Decimal::ZERO;
-    let mut adjustment_tax = None;
-    for adjustment in nav::allowance_charges(ctx) {
+
+    for (index, adjustment) in nav::allowance_charges(ctx).enumerate() {
         let amount = decimal_required(adjustment.basic("Amount").content(), "AdjustmentAmount")?;
         let category = text_required(
             adjustment.aggregate("TaxCategory").basic("ID").content(),
@@ -254,15 +279,28 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
                 });
             }
         };
-        if adjustment_tax.is_some_and(|tax| tax != (category, rate)) {
-            return Err(ParseError::InvalidValue {
-                field: "AllowanceCharge",
-                value: "multiple adjustment VAT groups are not supported".into(),
-            });
+        let categories: Vec<_> = adjustment
+            .children(super::constants::CAC_NS, "TaxCategory")
+            .collect();
+        if let Some(first) = categories.first() {
+            for other in categories.iter().skip(1) {
+                for field in [
+                    "ID",
+                    "Percent",
+                    "TaxExemptionReasonCode",
+                    "TaxExemptionReason",
+                ] {
+                    if first.basic(field).content() != other.basic(field).content() {
+                        return Err(ParseError::InvalidValue {
+                            field: "AllowanceCharge",
+                            value:
+                                "distinct VAT classifications on one adjustment are not supported"
+                                    .into(),
+                        });
+                    }
+                }
+            }
         }
-        adjustment_tax = Some((category, rate));
-        builder = builder.vat_category(category);
-        builder.adjustment_vat_rate = Some(rate);
         let is_charge = text_required(
             adjustment.basic("ChargeIndicator").content(),
             "ChargeIndicator",
@@ -283,27 +321,49 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
                 value: amount.to_string(),
             });
         }
-        if let Some(reason) = content_optional(adjustment.basic("AllowanceChargeReason").content())?
-        {
-            builder = builder.allowance_reason(reason);
+        if index == 0 {
+            builder = builder.vat_category(category);
         }
-    }
-    builder = builder
-        .invoice_level_discount(discount)
-        .invoice_level_charge(charge);
-    let mut invoice = builder.build().map_err(ParseError::from)?;
-    if let Some((category, rate)) = adjustment_tax
-        && !invoice
-            .totals()
-            .vat_breakdown()
-            .iter()
-            .any(|g| g.category() == category && g.rate() == rate)
-    {
-        return Err(ParseError::InvalidValue {
-            field: "AdjustmentVatRate",
-            value: rate.to_string(),
+        builder = builder.adjustment(crate::invoice::AllowanceCharge {
+            tax_category_count: adjustment
+                .children(super::constants::CAC_NS, "TaxCategory")
+                .count(),
+            charge: matches!(is_charge.as_str(), "true" | "1"),
+            amount,
+            reason: adjustment.basic("AllowanceChargeReason").content(),
+            reason_code: adjustment.basic("AllowanceChargeReasonCode").content(),
+            category,
+            rate,
+            exemption: parse_exemption(adjustment.aggregate("TaxCategory")),
         });
     }
+    if let Some(code) = ctx.basic("TaxCurrencyCode").content() {
+        let tax_currency = CurrencyCode::parse(code)?;
+        if tax_currency.as_str() != currency_code {
+            let totals: Vec<_> = nav::tax_totals(ctx)
+                .filter(|t| {
+                    t.basic("TaxAmount").attribute("currencyID").as_deref()
+                        == Some(tax_currency.as_str())
+                })
+                .collect();
+            if totals.len() != 1 || totals[0].aggregate("TaxSubtotal").0.is_some() {
+                return Err(ParseError::InvalidValue {
+                    field: "TaxCurrencyCode",
+                    value: "expected one accounting-currency tax total without subtotals".into(),
+                });
+            }
+            let amount =
+                decimal_required(totals[0].basic("TaxAmount").content(), "TaxCurrencyAmount")?;
+            if amount.scale() > 2 || amount < Decimal::ZERO {
+                return Err(ParseError::InvalidValue {
+                    field: "TaxCurrencyAmount",
+                    value: amount.to_string(),
+                });
+            }
+            builder = builder.tax_currency(tax_currency, amount);
+        }
+    }
+    let mut invoice = builder.build().map_err(ParseError::from)?;
     // Validate the amounts we model before returning a finalized imported invoice.
     for (field, expected) in [
         ("LineExtensionAmount", invoice.totals().line_extension()),
@@ -316,15 +376,15 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
         ("ChargeTotalAmount", charge),
     ] {
         if let Some(value) =
-            text_optional(ctx.aggregate("LegalMonetaryTotal").basic(field).content())?
+            content_optional(ctx.aggregate("LegalMonetaryTotal").basic(field).content())?
         {
             check_amount(field, &value, expected)?;
         }
     }
-    let currency = invoice.data().currency().as_str();
+    let currency = invoice.data().currency().as_str().to_owned();
     let mut seen = Vec::new();
     for tax_total in nav::tax_totals(ctx).filter(|total| {
-        total.basic("TaxAmount").attribute("currencyID").as_deref() == Some(currency)
+        total.basic("TaxAmount").attribute("currencyID").as_deref() == Some(currency.as_str())
     }) {
         let value = text_required(tax_total.basic("TaxAmount").content(), "TaxAmount")?;
         check_amount("TaxAmount", &value, invoice.totals().tax_amount())?;
@@ -338,9 +398,9 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
                 "VatRate",
             )?;
             let group = invoice
-                .totals()
-                .vat_breakdown()
-                .iter()
+                .totals
+                .groups
+                .iter_mut()
                 .find(|g| {
                     let code = match g.category() {
                         VatCategory::Standard => "S",
@@ -360,6 +420,7 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
                     value: "duplicate category/rate".into(),
                 });
             }
+            group.exemption = parse_exemption(subtotal.aggregate("TaxCategory"));
             seen.push((category, rate));
             for (field, expected) in [
                 ("TaxableAmount", group.taxable_amount()),
@@ -377,7 +438,7 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
         ("PayableRoundingAmount", &mut rounding),
     ] {
         if let Some(value) =
-            text_optional(ctx.aggregate("LegalMonetaryTotal").basic(field).content())?
+            content_optional(ctx.aggregate("LegalMonetaryTotal").basic(field).content())?
         {
             *dest = value.parse().map_err(ParseError::from)?;
             if dest.scale() > 2 {
@@ -397,7 +458,7 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
         .sub(prepaid)
         .and_then(|v| v.add(rounding))
         .map_err(ParseError::from)?;
-    if let Some(value) = text_optional(
+    if let Some(value) = content_optional(
         ctx.aggregate("LegalMonetaryTotal")
             .basic("PayableAmount")
             .content(),
@@ -408,6 +469,259 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
     invoice.totals.payable_rounding_amount = rounding;
     invoice.totals.payable_amount = payable;
     Ok(invoice)
+}
+
+// Reject ambiguous occurrences of modeled singleton fields before first-child navigation.
+// Signature extensions and unrelated UBL content remain outside the typed model.
+fn check_model_structure(root: Element<'_, '_>) -> Result<(), ParseError> {
+    use super::constants::{CAC_NS, CBC_NS};
+    fn visit(element: Element<'_, '_>) -> Result<(), ParseError> {
+        let Some(node) = element.0 else {
+            return Ok(());
+        };
+        if nav::is(node, CAC_NS, "TaxScheme")
+            && element
+                .basic("ID")
+                .content()
+                .is_some_and(|id| id.trim() != "VAT")
+        {
+            return Err(ParseError::InvalidValue {
+                field: "TaxScheme",
+                value: "only VAT is supported".into(),
+            });
+        }
+        let mut seen = std::collections::HashSet::new();
+        for child in node.children().filter(|n| n.is_element()) {
+            let name = child.tag_name();
+            let basic = name.namespace() == Some(CBC_NS);
+            let aggregate = name.namespace() == Some(CAC_NS);
+            if !basic && !aggregate {
+                continue;
+            }
+            let supported = if basic {
+                matches!(
+                    name.name(),
+                    "ID" | "UUID"
+                        | "IssueDate"
+                        | "IssueTime"
+                        | "InvoiceTypeCode"
+                        | "DocumentTypeCode"
+                        | "ProfileID"
+                        | "Note"
+                        | "DocumentCurrencyCode"
+                        | "TaxCurrencyCode"
+                        | "PaymentMeansCode"
+                        | "InstructionNote"
+                        | "ActualDeliveryDate"
+                        | "LatestDeliveryDate"
+                        | "CompanyID"
+                        | "RegistrationName"
+                        | "StreetName"
+                        | "AdditionalStreetName"
+                        | "BuildingNumber"
+                        | "PlotIdentification"
+                        | "CitySubdivisionName"
+                        | "CityName"
+                        | "PostalZone"
+                        | "IdentificationCode"
+                        | "Name"
+                        | "InvoicedQuantity"
+                        | "PriceAmount"
+                        | "Percent"
+                        | "TaxExemptionReasonCode"
+                        | "TaxExemptionReason"
+                        | "ChargeIndicator"
+                        | "AllowanceChargeReason"
+                        | "AllowanceChargeReasonCode"
+                        | "Amount"
+                        | "TaxAmount"
+                        | "TaxableAmount"
+                        | "RoundingAmount"
+                        | "LineExtensionAmount"
+                        | "TaxExclusiveAmount"
+                        | "TaxInclusiveAmount"
+                        | "AllowanceTotalAmount"
+                        | "ChargeTotalAmount"
+                        | "PrepaidAmount"
+                        | "PayableRoundingAmount"
+                        | "PayableAmount"
+                        | "EmbeddedDocumentBinaryObject"
+                )
+            } else {
+                matches!(
+                    name.name(),
+                    "AccountingSupplierParty"
+                        | "AccountingCustomerParty"
+                        | "Party"
+                        | "PartyIdentification"
+                        | "PartyTaxScheme"
+                        | "PartyLegalEntity"
+                        | "PostalAddress"
+                        | "Country"
+                        | "Delivery"
+                        | "PaymentMeans"
+                        | "BillingReference"
+                        | "InvoiceDocumentReference"
+                        | "DocumentReference"
+                        | "AdditionalDocumentReference"
+                        | "Attachment"
+                        | "AllowanceCharge"
+                        | "TaxCategory"
+                        | "ClassifiedTaxCategory"
+                        | "TaxScheme"
+                        | "TaxTotal"
+                        | "TaxSubtotal"
+                        | "LegalMonetaryTotal"
+                        | "InvoiceLine"
+                        | "Item"
+                        | "Price"
+                )
+            };
+            if !supported {
+                continue;
+            }
+            let repeated = aggregate
+                && matches!(
+                    name.name(),
+                    "InvoiceLine"
+                        | "TaxSubtotal"
+                        | "AllowanceCharge"
+                        | "AdditionalDocumentReference"
+                        | "DocumentReference"
+                )
+                || (aggregate && name.name() == "TaxTotal" && node.tag_name().name() == "Invoice")
+                || (aggregate
+                    && name.name() == "TaxCategory"
+                    && node.tag_name().name() == "AllowanceCharge");
+            if !repeated && !seen.insert((name.namespace(), name.name())) {
+                return Err(ParseError::InvalidValue {
+                    field: "Cardinality",
+                    value: format!(
+                        "multiple {} in {} are not supported",
+                        name.name(),
+                        node.tag_name().name()
+                    ),
+                });
+            }
+            if basic && child.children().any(|n| n.is_element()) {
+                return Err(ParseError::InvalidValue {
+                    field: "Content",
+                    value: format!("{} must contain text", name.name()),
+                });
+            }
+            if aggregate {
+                visit(Element(Some(child)))?;
+            }
+        }
+        Ok(())
+    }
+    visit(root)?;
+    if let Some(profile) = root.basic("ProfileID").content()
+        && profile != "reporting:1.0"
+    {
+        return Err(ParseError::InvalidValue {
+            field: "ProfileID",
+            value: profile,
+        });
+    }
+    if let Some(document_currency) = root
+        .basic("DocumentCurrencyCode")
+        .content()
+        .filter(|s| CurrencyCode::parse(s.as_str()).is_ok())
+    {
+        let tax_currency = root
+            .basic("TaxCurrencyCode")
+            .content()
+            .unwrap_or_else(|| document_currency.clone());
+        if let Some(node) = root.0 {
+            for n in node.descendants().filter(|n| n.is_element()) {
+                if n.tag_name().namespace() != Some(CBC_NS) {
+                    continue;
+                }
+                let field = n.tag_name().name();
+                if !matches!(
+                    field,
+                    "TaxAmount"
+                        | "TaxableAmount"
+                        | "LineExtensionAmount"
+                        | "TaxExclusiveAmount"
+                        | "TaxInclusiveAmount"
+                        | "AllowanceTotalAmount"
+                        | "ChargeTotalAmount"
+                        | "PrepaidAmount"
+                        | "PayableRoundingAmount"
+                        | "PayableAmount"
+                        | "PriceAmount"
+                        | "RoundingAmount"
+                        | "Amount"
+                ) {
+                    continue;
+                }
+                // Scope this check to modeled amounts, excluding extension and prepayment-reference content.
+                let parent = n.parent_element().unwrap();
+                let direct_total =
+                    nav::is(parent, CAC_NS, "TaxTotal") && parent.parent_element() == root.0;
+                let modeled = direct_total
+                    || matches!(
+                        parent.tag_name().name(),
+                        "LegalMonetaryTotal"
+                            | "InvoiceLine"
+                            | "Price"
+                            | "AllowanceCharge"
+                            | "TaxSubtotal"
+                            | "TaxTotal"
+                    );
+                if modeled
+                    && n.attribute("currencyID") != Some(document_currency.as_str())
+                    && !(direct_total && n.attribute("currencyID") == Some(tax_currency.as_str()))
+                {
+                    return Err(ParseError::InvalidValue {
+                        field: "currencyID",
+                        value: format!("inconsistent or missing currency on {field}"),
+                    });
+                }
+            }
+        }
+    }
+    for id in ["ICV", "PIH", "QR"] {
+        if root
+            .children(CAC_NS, "AdditionalDocumentReference")
+            .filter(|r| r.basic("ID").content().as_deref() == Some(id))
+            .count()
+            > 1
+        {
+            return Err(ParseError::InvalidValue {
+                field: "AdditionalDocumentReference",
+                value: format!("duplicate {id}"),
+            });
+        }
+    }
+    // A unit price with a basis other than one or line adjustments needs a different
+    // line calculation model. Reject it instead of dropping its financial meaning.
+    for line in nav::invoice_lines(root) {
+        if line.aggregate("AllowanceCharge").0.is_some()
+            || line
+                .aggregate("Price")
+                .aggregate("AllowanceCharge")
+                .0
+                .is_some()
+        {
+            return Err(ParseError::InvalidValue {
+                field: "InvoiceLine",
+                value: "line/price allowances are not supported".into(),
+            });
+        }
+        if let Some(value) = line.aggregate("Price").basic("BaseQuantity").content() {
+            let quantity: Decimal = value.parse()?;
+            if quantity != Decimal::from(1) {
+                return Err(ParseError::InvalidValue {
+                    field: "BaseQuantity",
+                    value,
+                });
+            }
+        }
+    }
+    Ok(())
 }
 
 fn parse_signed_properties(doc: &Document<'_>) -> Result<SignedProperties, ParseError> {
@@ -522,11 +836,7 @@ fn parse_invoice_type(
             value: name_code.to_string(),
         });
     }
-    let reason = if reason.trim().is_empty() {
-        "Adjustment".to_string()
-    } else {
-        reason
-    };
+
     let subtype = if name_code.starts_with("02") {
         InvoiceSubType::Simplified
     } else if name_code.starts_with("01") {
@@ -559,35 +869,34 @@ fn parse_invoice_type(
 }
 
 fn parse_original_ref(ctx: &Element<'_, '_>) -> Result<OriginalInvoiceRef, ParseError> {
-    let id = text_required(
+    parse_reference(
         ctx.aggregate("BillingReference")
-            .aggregate("InvoiceDocumentReference")
-            .basic("ID")
-            .content(),
+            .aggregate("InvoiceDocumentReference"),
+    )
+}
+fn parse_reference(node: Element<'_, '_>) -> Result<OriginalInvoiceRef, ParseError> {
+    let mut reference = OriginalInvoiceRef::new(text_required(
+        node.basic("ID").content(),
         "BillingReferenceID",
-    )?;
-    let mut original = OriginalInvoiceRef::new(id);
-    if let Some(uuid) = text_optional(
-        ctx.aggregate("BillingReference")
-            .aggregate("InvoiceDocumentReference")
-            .basic("UUID")
-            .content(),
-    )? {
-        original = original.with_uuid(uuid);
+    )?);
+    if let Some(uuid) = node.basic("UUID").content() {
+        reference = reference.with_uuid(uuid);
     }
-    if let Some(issue_date) = text_optional(
-        ctx.aggregate("BillingReference")
-            .aggregate("InvoiceDocumentReference")
-            .basic("IssueDate")
-            .content(),
-    )? {
-        let date = InvoiceDate::parse(&issue_date).map_err(|e| ParseError::InvalidValue {
-            field: "BillingReferenceIssueDate",
-            value: e.to_string(),
-        })?;
-        original = original.with_issue_date(date);
+    if let Some(date) = node.basic("IssueDate").content() {
+        reference = reference.with_issue_date(InvoiceDate::parse(&date).map_err(|_| {
+            ParseError::InvalidValue {
+                field: "BillingReferenceIssueDate",
+                value: date,
+            }
+        })?);
     }
-    Ok(original)
+    if let Some(time) = node.basic("IssueTime").content() {
+        reference = reference.with_issue_time(crate::invoice::InvoiceTime::parse(time)?);
+    }
+    if let Some(code) = node.basic("DocumentTypeCode").content() {
+        reference = reference.with_document_type_code(code);
+    }
+    Ok(reference)
 }
 
 fn parse_seller(ctx: &Element<'_, '_>) -> Result<Party<SellerRole>, ParseError> {
@@ -606,12 +915,15 @@ fn parse_seller(ctx: &Element<'_, '_>) -> Result<Party<SellerRole>, ParseError> 
             .content(),
         "SellerVAT",
     )?;
-    let crn = text_optional(
-        seller
-            .aggregate("PartyIdentification")
-            .basic("ID")
-            .content(),
-    )?;
+    let identification = seller.aggregate("PartyIdentification");
+    let crn = if identification.0.is_some() {
+        Some(text_required(
+            identification.basic("ID").content(),
+            "SellerID",
+        )?)
+    } else {
+        None
+    };
     let crn_scheme = text_optional(
         seller
             .aggregate("PartyIdentification")
@@ -619,7 +931,7 @@ fn parse_seller(ctx: &Element<'_, '_>) -> Result<Party<SellerRole>, ParseError> 
             .attribute("schemeID"),
     )?;
 
-    let address = parse_address(ctx)?;
+    let address = parse_address(seller, false)?;
     let other_id = match (crn, crn_scheme) {
         (Some(value), Some(scheme)) => Some(OtherId::with_scheme(value, scheme)),
         (Some(value), None) => Some(OtherId::new(value)),
@@ -629,16 +941,75 @@ fn parse_seller(ctx: &Element<'_, '_>) -> Result<Party<SellerRole>, ParseError> 
     Party::<SellerRole>::new(name, address, vat, other_id).map_err(ParseError::from)
 }
 
-fn parse_address(ctx: &Element<'_, '_>) -> Result<Address, ParseError> {
-    let seller = nav::seller_party(*ctx);
-    let street = content_required(
+fn parse_buyer(ctx: Element<'_, '_>) -> Result<Option<crate::invoice::Buyer>, ParseError> {
+    let customer = ctx.aggregate("AccountingCustomerParty");
+    let party = customer.aggregate("Party");
+    if party.0.is_none()
+        && customer.0.is_some_and(|n| {
+            n.children().any(|n| n.is_element()) || n.text().is_some_and(|t| !t.trim().is_empty())
+        })
+    {
+        return Err(ParseError::MissingField("BuyerParty"));
+    }
+    if party.0.is_none_or(|node| {
+        !node.children().any(|n| n.is_element()) && node.text().is_none_or(|t| t.trim().is_empty())
+    }) {
+        return Ok(None);
+    }
+    let name = content_required(
+        party
+            .aggregate("PartyLegalEntity")
+            .basic("RegistrationName")
+            .content(),
+        "BuyerName",
+    )?;
+    let id = party.aggregate("PartyIdentification");
+    let other_id = if id.0.is_some() {
+        let value = text_required(id.basic("ID").content(), "BuyerID")?;
+        Some(match id.basic("ID").attribute("schemeID") {
+            Some(scheme) => OtherId::with_scheme(value, scheme),
+            None => OtherId::new(value),
+        })
+    } else {
+        None
+    };
+    let tax = party.aggregate("PartyTaxScheme");
+    let vat = if tax.0.is_some() {
+        Some(text_required(tax.basic("CompanyID").content(), "BuyerVAT")?)
+    } else {
+        None
+    };
+    Ok(Some(crate::invoice::Buyer::new(
+        name,
+        parse_address(party, true)?,
+        vat,
+        other_id,
+    )?))
+}
+
+fn parse_exemption(category: Element<'_, '_>) -> crate::invoice::TaxExemption {
+    crate::invoice::TaxExemption {
+        reason_code: category.basic("TaxExemptionReasonCode").content(),
+        reason: category.basic("TaxExemptionReason").content(),
+    }
+}
+
+fn parse_address(seller: Element<'_, '_>, buyer: bool) -> Result<Address, ParseError> {
+    let required = |value: Option<String>, label| {
+        if buyer {
+            Ok(value.unwrap_or_default())
+        } else {
+            content_required(value, label)
+        }
+    };
+    let street = required(
         seller
             .aggregate("PostalAddress")
             .basic("StreetName")
             .content(),
         "SellerStreet",
     )?;
-    let building_number = text_required(
+    let building_number = required(
         seller
             .aggregate("PostalAddress")
             .basic("BuildingNumber")
@@ -651,30 +1022,35 @@ fn parse_address(ctx: &Element<'_, '_>) -> Result<Address, ParseError> {
             .basic("CitySubdivisionName")
             .content(),
     )?;
-    let city = content_required(
+    let city = required(
         seller
             .aggregate("PostalAddress")
             .basic("CityName")
             .content(),
         "SellerCity",
     )?;
-    let postal_code = text_required(
+    let postal_code = required(
         seller
             .aggregate("PostalAddress")
             .basic("PostalZone")
             .content(),
         "SellerPostalCode",
     )?;
+    let country_field = if buyer {
+        "BuyerCountry"
+    } else {
+        "SellerCountry"
+    };
     let country = text_required(
         seller
             .aggregate("PostalAddress")
             .aggregate("Country")
             .basic("IdentificationCode")
             .content(),
-        "SellerCountry",
+        country_field,
     )?;
     let country_code = CountryCode::parse(&country).map_err(|_| ParseError::InvalidValue {
-        field: "SellerCountry",
+        field: country_field,
         value: country,
     })?;
 
@@ -730,7 +1106,7 @@ fn parse_line_items(ctx: &Element<'_, '_>) -> Result<Vec<LineItem>, ParseError> 
     }
     let mut items = Vec::with_capacity(nodes.len());
     for line in nodes {
-        let _id = text_required(line.basic("ID").content(), "LineID")?;
+        let id = text_required(line.basic("ID").content(), "LineID")?;
         let name = content_required(line.aggregate("Item").basic("Name").content(), "LineName")?;
         let quantity = text_required(line.basic("InvoicedQuantity").content(), "InvoicedQuantity")?;
         let unit_code = text_required(
@@ -822,7 +1198,7 @@ fn parse_line_items(ctx: &Element<'_, '_>) -> Result<Vec<LineItem>, ParseError> 
             .map_err(ParseError::from)?;
         check_amount("LineExtensionAmount", &total_amount.to_string(), expected)?;
         if let Some(gross) =
-            text_optional(line.aggregate("TaxTotal").basic("RoundingAmount").content())?
+            content_optional(line.aggregate("TaxTotal").basic("RoundingAmount").content())?
         {
             check_amount(
                 "LineGrossAmount",
@@ -830,7 +1206,44 @@ fn parse_line_items(ctx: &Element<'_, '_>) -> Result<Vec<LineItem>, ParseError> 
                 total_amount.add(vat_amount).map_err(ParseError::from)?,
             )?;
         }
+        let mut document_references = Vec::new();
+        for reference in line.children(super::constants::CAC_NS, "DocumentReference") {
+            document_references.push(parse_reference(reference)?);
+        }
+        let mut tax_subtotals = Vec::new();
+        for subtotal in line
+            .aggregate("TaxTotal")
+            .children(super::constants::CAC_NS, "TaxSubtotal")
+        {
+            let category = subtotal.aggregate("TaxCategory");
+            let code = text_required(category.basic("ID").content(), "VatCategory")?;
+            let vat = match code.as_str() {
+                "S" => VatCategory::Standard,
+                "E" => VatCategory::Exempt,
+                "Z" => VatCategory::Zero,
+                "O" => VatCategory::OutOfScope,
+                _ => {
+                    return Err(ParseError::InvalidValue {
+                        field: "VatCategory",
+                        value: code,
+                    });
+                }
+            };
+            tax_subtotals.push(
+                crate::invoice::VatBreakdown::new(
+                    vat,
+                    decimal_required(category.basic("Percent").content(), "VatRate")?,
+                    decimal_required(subtotal.basic("TaxableAmount").content(), "TaxableAmount")?,
+                    decimal_required(subtotal.basic("TaxAmount").content(), "TaxAmount")?,
+                )?
+                .with_exemption(parse_exemption(category)),
+            );
+        }
         let line_item = LineItem {
+            document_references,
+            tax_subtotals,
+            id: Some(id),
+            exemption: parse_exemption(line.aggregate("Item").aggregate("ClassifiedTaxCategory")),
             description: name,
             quantity,
             unit_code,

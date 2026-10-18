@@ -67,6 +67,7 @@ deserialize_validated_string!(
     CurrencyCode,
     InvoiceTimestamp,
     InvoiceDate,
+    InvoiceTime,
     VatId
 );
 
@@ -429,6 +430,21 @@ impl TryFrom<&str> for InvoiceDate {
     }
 }
 
+/// Invoice/reference time in `HH:MM:SS` format.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
+pub struct InvoiceTime(String);
+impl InvoiceTime {
+    pub fn parse(value: impl Into<String>) -> Result<Self> {
+        let value = value.into();
+        let time = chrono::NaiveTime::parse_from_str(&value, "%H:%M:%S")
+            .map_err(|_| InvoiceError::InvalidTimestamp(value.clone()))?;
+        Ok(Self(time.format("%H:%M:%S").to_string()))
+    }
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
 /// Postal address for parties.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Address {
@@ -585,13 +601,27 @@ impl AsRef<str> for OtherId {
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct InvoiceNote {
+    #[serde(default)]
+    language_omitted: bool,
     language: String,
     text: String,
 }
 
 impl InvoiceNote {
+    pub fn without_language(text: impl Into<String>) -> Self {
+        Self {
+            language_omitted: true,
+            language: "en".into(),
+            text: text.into(),
+        }
+    }
+    pub fn language_id(&self) -> Option<&str> {
+        (!self.language_omitted).then_some(self.language.as_str())
+    }
+
     pub fn new(language: impl Into<String>, text: impl Into<String>) -> Self {
         Self {
+            language_omitted: false,
             language: language.into(),
             text: text.into(),
         }
@@ -690,7 +720,8 @@ impl Party<BuyerRole> {
     /// Create a buyer party from validated inputs.
     ///
     /// # Errors
-    /// Returns an error if the VAT ID is invalid or no identifier is provided.
+    /// Returns an error if a supplied VAT ID is empty. Identification requirements
+    /// depend on invoice type and are checked by XML business-rule validation.
     pub fn new(
         name: String,
         address: Address,
@@ -701,9 +732,6 @@ impl Party<BuyerRole> {
             Some(v) => Some(VatId::parse(v)?),
             None => None,
         };
-        if vat.is_none() && other_id.is_none() {
-            return Err(InvoiceError::MissingBuyerId);
-        }
         Ok(Party {
             _marker: PhantomData,
             name,
@@ -763,14 +791,35 @@ pub struct OriginalInvoiceRef {
     id: String,
     uuid: Option<String>,
     issue_date: Option<InvoiceDate>,
+    #[serde(default)]
+    issue_time: Option<InvoiceTime>,
+    #[serde(default)]
+    document_type_code: Option<String>,
 }
 
 impl OriginalInvoiceRef {
+    pub fn with_issue_time(mut self, time: InvoiceTime) -> Self {
+        self.issue_time = Some(time);
+        self
+    }
+    pub fn with_document_type_code(mut self, code: impl Into<String>) -> Self {
+        self.document_type_code = Some(code.into());
+        self
+    }
+    pub fn issue_time(&self) -> Option<&InvoiceTime> {
+        self.issue_time.as_ref()
+    }
+    pub fn document_type_code(&self) -> Option<&str> {
+        self.document_type_code.as_deref()
+    }
+
     pub fn new(id: impl Into<String>) -> Self {
         Self {
             id: id.into(),
             uuid: None,
             issue_date: None,
+            issue_time: None,
+            document_type_code: None,
         }
     }
 
@@ -847,6 +896,40 @@ pub enum VatCategory {
     Zero,
     OutOfScope,
 }
+/// Independent optional exemption code and description for a tax category.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct TaxExemption {
+    pub reason_code: Option<String>,
+    pub reason: Option<String>,
+}
+
+/// Supply date or supply period. Business-rule validation checks date ordering.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Delivery {
+    pub actual_date: Option<InvoiceDate>,
+    pub latest_date: Option<InvoiceDate>,
+}
+
+fn one_tax_category() -> usize {
+    1
+}
+
+/// One document allowance or charge, retaining its own VAT category and reason.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct AllowanceCharge {
+    /// Identical repeated VAT classifications, as used by the bundled SDK fixtures.
+    #[serde(default = "one_tax_category")]
+    pub tax_category_count: usize,
+    pub charge: bool,
+    pub amount: Decimal,
+    pub reason: Option<String>,
+    pub reason_code: Option<String>,
+    pub category: VatCategory,
+    pub rate: Decimal,
+    #[serde(default)]
+    pub exemption: TaxExemption,
+}
+
 /// Single invoice line item.
 ///
 /// # Examples
@@ -858,6 +941,14 @@ pub enum VatCategory {
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LineItem {
+    #[serde(default)]
+    document_references: Vec<OriginalInvoiceRef>,
+    #[serde(default)]
+    tax_subtotals: Vec<VatBreakdown>,
+    #[serde(default)]
+    id: Option<String>,
+    #[serde(default)]
+    exemption: TaxExemption,
     description: String,
     quantity: Decimal,
     unit_code: String,
@@ -869,6 +960,36 @@ pub struct LineItem {
 }
 
 impl LineItem {
+    pub fn document_reference(mut self, reference: OriginalInvoiceRef) -> Self {
+        self.document_references.push(reference);
+        self
+    }
+    pub fn tax_subtotal(mut self, subtotal: VatBreakdown) -> Self {
+        self.tax_subtotals.push(subtotal);
+        self
+    }
+    pub fn document_references(&self) -> &[OriginalInvoiceRef] {
+        &self.document_references
+    }
+    pub fn tax_subtotals(&self) -> &[VatBreakdown] {
+        &self.tax_subtotals
+    }
+
+    pub fn with_id(mut self, id: impl Into<String>) -> Self {
+        self.id = Some(id.into());
+        self
+    }
+    pub fn id(&self) -> Option<&str> {
+        self.id.as_deref()
+    }
+    pub fn with_exemption(mut self, exemption: TaxExemption) -> Self {
+        self.exemption = exemption;
+        self
+    }
+    pub fn exemption(&self) -> &TaxExemption {
+        &self.exemption
+    }
+
     pub fn new(
         description: impl Into<String>,
         quantity: Decimal,
@@ -946,6 +1067,10 @@ impl LineItem {
             return Err(ValidationError::new(issues).into());
         }
         Ok(Self {
+            document_references: Vec::new(),
+            tax_subtotals: Vec::new(),
+            id: None,
+            exemption: TaxExemption::default(),
             description: description.into(),
             quantity,
             unit_code: unit_code.into(),
@@ -1017,14 +1142,22 @@ pub struct InvoiceData {
     id: String,
     uuid: String,
     issue_datetime: InvoiceTimestamp,
-    currency: CurrencyCode, // currently no separate tax/invoice currency
+    currency: CurrencyCode,
+    #[serde(default)]
+    tax_currency: Option<CurrencyCode>,
+    #[serde(default)]
+    tax_currency_amount: Option<Decimal>,
     previous_invoice_hash: String,
     invoice_counter: u64,
     note: Option<InvoiceNote>,
     seller: Seller,
     buyer: Option<Buyer>,
+    #[serde(default)]
+    delivery: Option<Delivery>,
     line_items: LineItems,
     payment_means_code: String,
+    #[serde(default)]
+    payment_instruction: Option<String>,
     vat_category: VatCategory,
 
     flags: InvoiceFlags,
@@ -1034,9 +1167,26 @@ pub struct InvoiceData {
     #[serde(default)]
     adjustment_vat_rate: Option<Decimal>,
     allowance_reason: Option<String>,
+    #[serde(default)]
+    adjustments: Vec<AllowanceCharge>,
 }
 
 impl InvoiceData {
+    pub fn payment_instruction(&self) -> Option<&str> {
+        self.payment_instruction.as_deref()
+    }
+    pub fn tax_currency(&self) -> Option<&CurrencyCode> {
+        self.tax_currency.as_ref()
+    }
+    pub fn tax_currency_amount(&self) -> Option<Decimal> {
+        self.tax_currency_amount
+    }
+    pub fn adjustments(&self) -> &[AllowanceCharge] {
+        &self.adjustments
+    }
+    pub fn delivery(&self) -> Option<&Delivery> {
+        self.delivery.as_ref()
+    }
     pub fn invoice_type(&self) -> &InvoiceType {
         &self.invoice_type
     }
@@ -1122,7 +1272,14 @@ impl InvoiceData {
     }
 
     pub fn allowance_reason(&self) -> Option<&str> {
-        self.allowance_reason.as_deref()
+        self.allowance_reason.as_deref().or_else(|| {
+            let first = self.adjustments.first()?.reason.as_deref();
+            self.adjustments
+                .iter()
+                .all(|a| a.reason.as_deref() == first)
+                .then_some(first)
+                .flatten()
+        })
     }
 
     pub(crate) fn seller_name(&self) -> QrResult<&str> {
@@ -1184,12 +1341,52 @@ pub struct InvoiceTotalsData {
 /// Finalized document-level VAT calculation for one category and rate.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct VatBreakdown {
+    #[serde(default)]
+    pub(crate) exemption: TaxExemption,
     pub(crate) category: VatCategory,
     pub(crate) rate: Decimal,
     pub(crate) taxable_amount: Decimal,
     pub(crate) tax_amount: Decimal,
 }
 impl VatBreakdown {
+    /// Supplied line-level tax subtotal (for example a prepayment adjustment).
+    pub fn new(
+        category: VatCategory,
+        rate: Decimal,
+        taxable_amount: Decimal,
+        tax_amount: Decimal,
+    ) -> Result<Self> {
+        if rate < Decimal::ZERO
+            || rate > Decimal::from(100)
+            || rate.scale() > 2
+            || taxable_amount < Decimal::ZERO
+            || taxable_amount.scale() > 2
+            || tax_amount < Decimal::ZERO
+            || tax_amount.scale() > 2
+        {
+            return Err(ValidationError::new(vec![ValidationIssue::new(
+                InvoiceField::VatCategory,
+                ValidationKind::OutOfRange,
+                None,
+            )])
+            .into());
+        }
+        Ok(Self {
+            category,
+            rate,
+            taxable_amount,
+            tax_amount,
+            exemption: TaxExemption::default(),
+        })
+    }
+    pub fn with_exemption(mut self, exemption: TaxExemption) -> Self {
+        self.exemption = exemption;
+        self
+    }
+
+    pub fn exemption(&self) -> &TaxExemption {
+        &self.exemption
+    }
     pub fn category(&self) -> VatCategory {
         self.category
     }
@@ -1216,6 +1413,7 @@ impl InvoiceTotalsData {
                 group.taxable_amount = group.taxable_amount.add(line.total_amount)?;
             } else {
                 groups.push(VatBreakdown {
+                    exemption: TaxExemption::default(),
                     category: line.vat_category,
                     rate: line.vat_rate,
                     taxable_amount: line.total_amount,
@@ -1223,8 +1421,9 @@ impl InvoiceTotalsData {
                 });
             }
         }
-        if data.invoice_level_discount != Decimal::ZERO
-            || data.invoice_level_charge != Decimal::ZERO
+        if data.adjustments.is_empty()
+            && (data.invoice_level_discount != Decimal::ZERO
+                || data.invoice_level_charge != Decimal::ZERO)
         {
             let matches: Vec<_> = groups
                 .iter_mut()
@@ -1246,6 +1445,35 @@ impl InvoiceTotalsData {
                 .taxable_amount
                 .sub(data.invoice_level_discount)?
                 .add(data.invoice_level_charge)?;
+            if group.taxable_amount < Decimal::ZERO {
+                return Err(ValidationError::new(vec![ValidationIssue::new(
+                    InvoiceField::InvoiceLevelDiscount,
+                    ValidationKind::OutOfRange,
+                    None,
+                )])
+                .into());
+            }
+        }
+        for adjustment in &data.adjustments {
+            let index = groups
+                .iter()
+                .position(|g| g.category == adjustment.category && g.rate == adjustment.rate);
+            let index = index.unwrap_or_else(|| {
+                groups.push(VatBreakdown {
+                    category: adjustment.category,
+                    rate: adjustment.rate,
+                    taxable_amount: Decimal::ZERO,
+                    tax_amount: Decimal::ZERO,
+                    exemption: TaxExemption::default(),
+                });
+                groups.len() - 1
+            });
+            let group = &mut groups[index];
+            group.taxable_amount = if adjustment.charge {
+                group.taxable_amount.add(adjustment.amount)?
+            } else {
+                group.taxable_amount.sub(adjustment.amount)?
+            };
             if group.taxable_amount < Decimal::ZERO {
                 return Err(ValidationError::new(vec![ValidationIssue::new(
                     InvoiceField::InvoiceLevelDiscount,

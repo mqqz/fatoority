@@ -40,6 +40,7 @@ nav:
           - Signing: reference/invoice-signing.md
           - Validation: reference/invoice-validation.md
           - XML: reference/xml.md
+          - XML Model Coverage: invoice-model-roundtrip.md
           - XML and Schemas: reference/xml-and-schemas.md
           - QR: reference/qr.md
       - API Client: reference/api-client.md

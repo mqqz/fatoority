@@ -380,7 +380,7 @@ fn parse_credit_note_rejects_invalid_original_issue_date() {
 }
 
 #[test]
-fn parse_credit_note_defaults_reason_when_missing() {
+fn parse_credit_note_does_not_invent_reason_when_missing() {
     let xml = load_credit_note_xml();
     let xml = xml.replace(
         "<cbc:InstructionNote>In case of goods or services refund | عند ترجيع السلع أو الخدمات</cbc:InstructionNote>",
@@ -390,7 +390,7 @@ fn parse_credit_note_defaults_reason_when_missing() {
     match invoice.data().invoice_type() {
         InvoiceType::CreditNote(_, original, reason) => {
             assert_eq!(original.id(), "SME00002");
-            assert_eq!(reason, "Adjustment");
+            assert_eq!(reason, "");
         }
         _ => panic!("expected credit note"),
     }
