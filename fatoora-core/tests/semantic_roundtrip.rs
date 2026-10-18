@@ -886,3 +886,69 @@ fn reference_issue_times_accept_surrounding_whitespace_but_reject_invalid_values
         }
     }
 }
+
+#[test]
+fn repeated_adjustment_classifications_compare_normalized_scalars() {
+    let adjustment = AllowanceCharge {
+        tax_category_count: 2,
+        ..balance_adjustment(true, "1", VatCategory::Standard)
+    };
+    let invoice = builder()
+        .line_item(line(VatCategory::Standard))
+        .adjustment(adjustment)
+        .build()
+        .unwrap();
+    let xml = invoice.to_xml().unwrap();
+    let doc = roxmltree::Document::parse(&xml).unwrap();
+    let category = doc
+        .descendants()
+        .find(|n| {
+            n.has_tag_name((
+                "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+                "AllowanceCharge",
+            ))
+        })
+        .unwrap()
+        .children()
+        .filter(|n| n.is_element() && n.tag_name().name() == "TaxCategory")
+        .nth(1)
+        .unwrap();
+    let original = &xml[category.range()];
+    for rate in [" 15 ", "15.00", "\t15.0\n"] {
+        let replacement = original.replace(">S</cbc:ID>", "> S </cbc:ID>").replace(
+            "<cbc:Percent>15</cbc:Percent>",
+            &format!("<cbc:Percent>{rate}</cbc:Percent>"),
+        );
+        assert_ne!(replacement, original);
+        let mut modified = xml.clone();
+        modified.replace_range(category.range(), &replacement);
+        validate_xml_invoice_from_str(&modified, &Config::default()).unwrap();
+        assert_eq!(roundtrip(&modified), invoice);
+    }
+    for (field, value) in [
+        ("ID", "E"),
+        ("Percent", "14"),
+        ("Percent", "invalid"),
+        ("Percent", ""),
+        ("ID", ""),
+    ] {
+        let node = category
+            .children()
+            .find(|n| n.is_element() && n.tag_name().name() == field)
+            .unwrap();
+        let mut modified = xml.clone();
+        modified.replace_range(node.range(), &format!("<cbc:{field}>{value}</cbc:{field}>"));
+        assert!(parse(&modified).is_err(), "{field}: {value}");
+    }
+    for field in ["TaxExemptionReasonCode", "TaxExemptionReason"] {
+        let mut modified = xml.clone();
+        modified.replace_range(
+            category.range(),
+            &original.replace(
+                "<cac:TaxScheme>",
+                &format!("<cbc:{field}> reason </cbc:{field}><cac:TaxScheme>"),
+            ),
+        );
+        assert!(parse(&modified).is_err(), "{field}");
+    }
+}

@@ -284,20 +284,19 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
             .collect();
         if let Some(first) = categories.first() {
             for other in categories.iter().skip(1) {
-                for field in [
-                    "ID",
-                    "Percent",
-                    "TaxExemptionReasonCode",
-                    "TaxExemptionReason",
-                ] {
-                    if first.basic(field).content() != other.basic(field).content() {
-                        return Err(ParseError::InvalidValue {
-                            field: "AllowanceCharge",
-                            value:
-                                "distinct VAT classifications on one adjustment are not supported"
-                                    .into(),
-                        });
-                    }
+                let same_id = text_required(first.basic("ID").content(), "AdjustmentVatCategory")?
+                    == text_required(other.basic("ID").content(), "AdjustmentVatCategory")?;
+                let other_rate =
+                    decimal_required(other.basic("Percent").content(), "AdjustmentVatRate")?;
+                if !same_id
+                    || rate != other_rate
+                    || parse_exemption(*first) != parse_exemption(*other)
+                {
+                    return Err(ParseError::InvalidValue {
+                        field: "AllowanceCharge",
+                        value: "distinct VAT classifications on one adjustment are not supported"
+                            .into(),
+                    });
                 }
             }
         }
