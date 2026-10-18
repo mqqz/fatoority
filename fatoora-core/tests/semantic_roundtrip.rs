@@ -499,3 +499,222 @@ fn adjustment_balances_still_reject_a_negative_final_vat_group() {
         }
     }
 }
+
+#[test]
+fn builder_rejects_invalid_adjustments_and_inconsistent_accounting_metadata() {
+    let adjustment = AllowanceCharge {
+        tax_category_count: 1,
+        charge: true,
+        amount: d("1"),
+        reason: None,
+        reason_code: None,
+        category: VatCategory::Standard,
+        rate: d("15"),
+        exemption: TaxExemption::default(),
+    };
+    for legacy in [
+        builder().invoice_level_charge(d("1")),
+        builder().invoice_level_discount(d("1")),
+        builder().allowance_reason("legacy"),
+    ] {
+        assert!(
+            legacy
+                .line_item(line(VatCategory::Standard))
+                .adjustment(adjustment.clone())
+                .build()
+                .is_err()
+        );
+    }
+    for (amount, rate, category, count) in [
+        ("-1", "15", VatCategory::Standard, 1),
+        ("0.001", "15", VatCategory::Standard, 1),
+        ("1", "-1", VatCategory::Standard, 1),
+        ("1", "101", VatCategory::Standard, 1),
+        ("1", "15.001", VatCategory::Standard, 1),
+        ("1", "15", VatCategory::Exempt, 1),
+        ("1", "15", VatCategory::Standard, 0),
+    ] {
+        let invalid = AllowanceCharge {
+            amount: d(amount),
+            rate: d(rate),
+            category,
+            tax_category_count: count,
+            ..adjustment.clone()
+        };
+        assert!(
+            builder()
+                .line_item(line(VatCategory::Standard))
+                .adjustment(invalid)
+                .build()
+                .is_err(),
+            "{amount}/{rate}/{category:?}/{count}"
+        );
+    }
+    for invalid in [
+        builder().prepaid_amount(d("-1")),
+        builder().prepaid_amount(d("0.001")),
+        builder().payable_rounding_amount(d("0.001")),
+        builder().tax_currency(CurrencyCode::parse("USD").unwrap(), d("-1")),
+        builder().tax_currency(CurrencyCode::parse("USD").unwrap(), d("0.001")),
+        builder().tax_currency(CurrencyCode::parse("SAR").unwrap(), d("999")),
+        builder().tax_exemption(VatCategory::Exempt, d("0"), TaxExemption::default()),
+    ] {
+        assert!(
+            invalid
+                .line_item(line(VatCategory::Standard))
+                .build()
+                .is_err()
+        );
+    }
+}
+
+#[test]
+fn line_prepayment_subtotals_preserve_every_vat_category_and_reject_invalid_values() {
+    for category in [
+        VatCategory::Standard,
+        VatCategory::Exempt,
+        VatCategory::Zero,
+        VatCategory::OutOfScope,
+    ] {
+        let subtotal = VatBreakdown::new(category, d("0"), d("5"), d("0")).unwrap();
+        let item = line(category)
+            .tax_subtotal(subtotal.clone())
+            .document_reference(OriginalInvoiceRef::new("PRE-1"));
+        let invoice = builder().line_item(item).build().unwrap();
+        let xml = invoice.to_xml().unwrap();
+        let restored = roundtrip(&xml);
+        assert_eq!(restored.data().line_items()[0].tax_subtotals(), &[subtotal]);
+        let start = xml.find("<cac:InvoiceLine>").unwrap();
+        let (head, tail) = xml.split_at(start);
+        let doc = roxmltree::Document::parse(&xml).unwrap();
+        let code = doc
+            .descendants()
+            .find(|n| n.is_element() && n.tag_name().name() == "InvoiceLine")
+            .unwrap()
+            .descendants()
+            .find(|n| n.is_element() && n.tag_name().name() == "TaxCategory")
+            .unwrap()
+            .children()
+            .find(|n| n.is_element() && n.tag_name().name() == "ID")
+            .unwrap();
+        let mut bad_code = xml.clone();
+        bad_code.replace_range(code.range(), "<cbc:ID>INVALID</cbc:ID>");
+        assert!(
+            parse(&bad_code)
+                .unwrap_err()
+                .to_string()
+                .contains("VatCategory")
+        );
+        let bad_amount =
+            tail.replacen(">5.00</cbc:TaxableAmount>", ">-5.00</cbc:TaxableAmount>", 1);
+        assert_ne!(bad_amount, tail);
+        assert!(parse(&format!("{head}{bad_amount}")).is_err());
+    }
+}
+
+#[test]
+fn serialized_adjustments_default_the_legacy_tax_category_count() {
+    let adjustment = AllowanceCharge {
+        tax_category_count: 2,
+        charge: true,
+        amount: d("1"),
+        reason: None,
+        reason_code: None,
+        category: VatCategory::Standard,
+        rate: d("15"),
+        exemption: TaxExemption::default(),
+    };
+    let mut serialized = serde_json::to_value(&adjustment).unwrap();
+    serialized
+        .as_object_mut()
+        .unwrap()
+        .remove("tax_category_count");
+    let decoded: AllowanceCharge = serde_json::from_value(serialized).unwrap();
+    assert_eq!(decoded.tax_category_count, 1);
+}
+
+#[test]
+fn buyer_without_identification_scheme_and_empty_optional_address_roundtrips() {
+    let original = common::complex_standard_invoice();
+    let mut address = original.data().buyer().unwrap().address().clone();
+    address.street.clear();
+    address.city.clear();
+    let buyer = Buyer::new(
+        "Buyer".into(),
+        address,
+        None,
+        Some(OtherId::new("customer-id")),
+    )
+    .unwrap();
+    let invoice = builder()
+        .buyer(buyer.clone())
+        .line_item(line(VatCategory::Standard))
+        .build()
+        .unwrap();
+    assert_eq!(
+        roundtrip(&invoice.to_xml().unwrap()).data().buyer(),
+        Some(&buyer)
+    );
+}
+
+#[test]
+fn foreign_tax_totals_require_one_valid_accounting_amount() {
+    let invoice = builder()
+        .currency("USD")
+        .tax_currency(CurrencyCode::parse("SAR").unwrap(), d("11.40"))
+        .line_item(line(VatCategory::Standard))
+        .build()
+        .unwrap();
+    let xml = invoice.to_xml().unwrap();
+    let doc = roxmltree::Document::parse(&xml).unwrap();
+    let accounting = doc
+        .root_element()
+        .children()
+        .find(|node| {
+            node.is_element()
+                && node.tag_name().name() == "TaxTotal"
+                && node
+                    .children()
+                    .any(|n| n.attribute("currencyID") == Some("SAR"))
+        })
+        .unwrap();
+    let original = &xml[accounting.range()];
+    for replacement in [
+        String::new(),
+        format!("{original}{original}"),
+        original.replace("</cac:TaxTotal>", "<cac:TaxSubtotal/></cac:TaxTotal>"),
+    ] {
+        let modified = xml.replace(original, &replacement);
+        assert!(
+            parse(&modified)
+                .unwrap_err()
+                .to_string()
+                .contains("TaxCurrencyCode")
+        );
+    }
+    for amount in ["-1.00", "0.001"] {
+        let modified = xml.replace(
+            ">11.40</cbc:TaxAmount>",
+            &format!(">{amount}</cbc:TaxAmount>"),
+        );
+        assert!(
+            parse(&modified)
+                .unwrap_err()
+                .to_string()
+                .contains("TaxCurrencyAmount")
+        );
+    }
+    let domestic = builder()
+        .line_item(line(VatCategory::Standard))
+        .build()
+        .unwrap()
+        .to_xml()
+        .unwrap();
+    let without_tax_currency =
+        domestic.replace("<cbc:TaxCurrencyCode>SAR</cbc:TaxCurrencyCode>", "");
+    assert_ne!(without_tax_currency, domestic);
+    assert_eq!(
+        parse(&without_tax_currency).unwrap(),
+        parse(&domestic).unwrap()
+    );
+}

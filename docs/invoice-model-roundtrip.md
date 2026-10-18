@@ -152,8 +152,11 @@ is retained and reported as BR-KSA-36 at the validator's existing severity.
 `parse_fixtures` covers all bundled invoice families, including advance-payment
 references and subtotals, with complete imported-model equality after regeneration.
 Python tests exercise new metadata across the native ABI, serialization, reimport,
-and signed-source/hash retention. Existing property tests compare builder-created
-invoice fields, including buyer and line metadata.
+and signed-source/hash retention. Rust binding contract tests cover the same metadata
+through owned snapshots, including optional values, invalid inputs and indexed
+access errors. Serializer tests inject field and output failures to verify error
+propagation. Existing property tests compare builder-created invoice fields,
+including buyer and line metadata.
 
 Validation run for this change:
 

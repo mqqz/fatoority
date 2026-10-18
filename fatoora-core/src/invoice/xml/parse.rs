@@ -624,62 +624,61 @@ fn check_model_structure(root: Element<'_, '_>) -> Result<(), ParseError> {
             value: profile,
         });
     }
-    if let Some(document_currency) = root
-        .basic("DocumentCurrencyCode")
-        .content()
-        .filter(|s| CurrencyCode::parse(s.as_str()).is_ok())
+    if let Some(node) = root.0
+        && let Some(document_currency) = root
+            .basic("DocumentCurrencyCode")
+            .content()
+            .filter(|s| CurrencyCode::parse(s.as_str()).is_ok())
     {
         let tax_currency = root
             .basic("TaxCurrencyCode")
             .content()
             .unwrap_or_else(|| document_currency.clone());
-        if let Some(node) = root.0 {
-            for n in node.descendants().filter(|n| n.is_element()) {
-                if n.tag_name().namespace() != Some(CBC_NS) {
-                    continue;
-                }
-                let field = n.tag_name().name();
-                if !matches!(
-                    field,
-                    "TaxAmount"
-                        | "TaxableAmount"
-                        | "LineExtensionAmount"
-                        | "TaxExclusiveAmount"
-                        | "TaxInclusiveAmount"
-                        | "AllowanceTotalAmount"
-                        | "ChargeTotalAmount"
-                        | "PrepaidAmount"
-                        | "PayableRoundingAmount"
-                        | "PayableAmount"
-                        | "PriceAmount"
-                        | "RoundingAmount"
-                        | "Amount"
-                ) {
-                    continue;
-                }
-                // Scope this check to modeled amounts, excluding extension and prepayment-reference content.
-                let parent = n.parent_element().unwrap();
-                let direct_total =
-                    nav::is(parent, CAC_NS, "TaxTotal") && parent.parent_element() == root.0;
-                let modeled = direct_total
-                    || matches!(
-                        parent.tag_name().name(),
-                        "LegalMonetaryTotal"
-                            | "InvoiceLine"
-                            | "Price"
-                            | "AllowanceCharge"
-                            | "TaxSubtotal"
-                            | "TaxTotal"
-                    );
-                if modeled
-                    && n.attribute("currencyID") != Some(document_currency.as_str())
-                    && !(direct_total && n.attribute("currencyID") == Some(tax_currency.as_str()))
-                {
-                    return Err(ParseError::InvalidValue {
-                        field: "currencyID",
-                        value: format!("inconsistent or missing currency on {field}"),
-                    });
-                }
+        for n in node.descendants().filter(|n| n.is_element()) {
+            if n.tag_name().namespace() != Some(CBC_NS) {
+                continue;
+            }
+            let field = n.tag_name().name();
+            if !matches!(
+                field,
+                "TaxAmount"
+                    | "TaxableAmount"
+                    | "LineExtensionAmount"
+                    | "TaxExclusiveAmount"
+                    | "TaxInclusiveAmount"
+                    | "AllowanceTotalAmount"
+                    | "ChargeTotalAmount"
+                    | "PrepaidAmount"
+                    | "PayableRoundingAmount"
+                    | "PayableAmount"
+                    | "PriceAmount"
+                    | "RoundingAmount"
+                    | "Amount"
+            ) {
+                continue;
+            }
+            // Scope this check to modeled amounts, excluding extension and prepayment-reference content.
+            let parent = n.parent_element().unwrap();
+            let direct_total =
+                nav::is(parent, CAC_NS, "TaxTotal") && parent.parent_element() == root.0;
+            let modeled = direct_total
+                || matches!(
+                    parent.tag_name().name(),
+                    "LegalMonetaryTotal"
+                        | "InvoiceLine"
+                        | "Price"
+                        | "AllowanceCharge"
+                        | "TaxSubtotal"
+                        | "TaxTotal"
+                );
+            if modeled
+                && n.attribute("currencyID") != Some(document_currency.as_str())
+                && !(direct_total && n.attribute("currencyID") == Some(tax_currency.as_str()))
+            {
+                return Err(ParseError::InvalidValue {
+                    field: "currencyID",
+                    value: format!("inconsistent or missing currency on {field}"),
+                });
             }
         }
     }
@@ -979,12 +978,9 @@ fn parse_buyer(ctx: Element<'_, '_>) -> Result<Option<crate::invoice::Buyer>, Pa
     } else {
         None
     };
-    Ok(Some(crate::invoice::Buyer::new(
-        name,
-        parse_address(party, true)?,
-        vat,
-        other_id,
-    )?))
+    crate::invoice::Buyer::new(name, parse_address(party, true)?, vat, other_id)
+        .map(Some)
+        .map_err(ParseError::from)
 }
 
 fn parse_exemption(category: Element<'_, '_>) -> crate::invoice::TaxExemption {

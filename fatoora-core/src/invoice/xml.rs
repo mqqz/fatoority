@@ -1379,6 +1379,10 @@ impl<'a, T: InvoiceView + ?Sized> Serialize for InvoiceXml<'a, T> {
 }
 
 #[cfg(test)]
+#[path = "../../tests/support/serializer.rs"]
+mod test_serializer;
+
+#[cfg(test)]
 mod tests {
     #[allow(unused_imports)]
     use super::*;
@@ -1438,5 +1442,125 @@ mod tests {
             })
             .unwrap();
         assert_eq!(xml_result, pretty);
+    }
+    #[test]
+    fn serializer_propagates_output_failures_in_nested_metadata() {
+        use crate::invoice::{
+            AllowanceCharge, Delivery, InvoiceDate, OriginalInvoiceRef, TaxExemption, VatBreakdown,
+        };
+        // Exercise the real XML serializer with a sink failing at every write boundary.
+        // Each failure must propagate, including failures inside optional/repeated fields.
+        struct FailingWriter {
+            remaining: usize,
+            calls: usize,
+            output: String,
+        }
+        impl std::fmt::Write for FailingWriter {
+            fn write_str(&mut self, text: &str) -> std::fmt::Result {
+                if self.remaining == 0 {
+                    return Err(std::fmt::Error);
+                }
+                self.remaining -= 1;
+                self.calls += 1;
+                self.output.push_str(text);
+                Ok(())
+            }
+        }
+        let xml = include_str!("../../tests/fixtures/invoices/sample-simplified-invoice.xml");
+        let original = parse::parse_finalized_invoice_xml(xml).unwrap();
+        let delivery = Delivery {
+            actual_date: Some(InvoiceDate::parse("2024-01-01").unwrap()),
+            latest_date: Some(InvoiceDate::parse("2024-01-02").unwrap()),
+        };
+        let adjustment = AllowanceCharge {
+            tax_category_count: 2,
+            charge: true,
+            amount: Decimal::from(1),
+            reason: Some("fee".into()),
+            reason_code: Some("95".into()),
+            category: VatCategory::Standard,
+            rate: Decimal::from(15),
+            exemption: TaxExemption::default(),
+        };
+        let line = original.data().line_items()[0]
+            .clone()
+            .document_reference(OriginalInvoiceRef::new("PRE-1"))
+            .tax_subtotal(
+                VatBreakdown::new(
+                    VatCategory::Standard,
+                    Decimal::from(15),
+                    Decimal::from(10),
+                    Decimal::parse("1.5").unwrap(),
+                )
+                .unwrap(),
+            );
+        let invoice = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified))
+            .id("writer-test")
+            .uuid("writer-test")
+            .issue_datetime("2024-01-01T12:30:00Z")
+            .currency("SAR")
+            .previous_invoice_hash("hash")
+            .invoice_counter(1)
+            .seller(original.data().seller().clone())
+            .payment_means_code("10")
+            .vat_category(VatCategory::Standard)
+            .line_item(line)
+            .delivery(delivery)
+            .adjustment(adjustment)
+            .build()
+            .unwrap();
+        fn fails(value: impl Serialize, field: &'static str) {
+            let error = value
+                .serialize(test_serializer::FailField(field))
+                .unwrap_err();
+            assert_eq!(error.to_string(), format!("injected failure: {field}"));
+        }
+        for field in ["cbc:TaxCurrencyCode", "cac:Delivery", "cac:AllowanceCharge"] {
+            fails(InvoiceXml(&invoice), field);
+        }
+        for field in ["cbc:Amount", "cac:TaxCategory"] {
+            fails(
+                AdjustmentXml(&invoice.data().adjustments()[0], "SAR"),
+                field,
+            );
+        }
+        let line = &invoice.data().line_items()[0];
+        fails(
+            InvoiceLineXml(1, line, invoice.data()),
+            "cac:DocumentReference",
+        );
+        fails(
+            invoice_line_tax_total(
+                "SAR",
+                line.vat_amount(),
+                line.total_amount(),
+                line.tax_subtotals(),
+            ),
+            "cac:TaxSubtotal",
+        );
+        let mut good = FailingWriter {
+            remaining: usize::MAX,
+            calls: 0,
+            output: String::new(),
+        };
+        InvoiceXml(&invoice)
+            .serialize(QuickXmlSerializer::new(&mut good))
+            .unwrap();
+        assert!(good.output.contains("<cac:Delivery>"));
+        assert!(good.output.contains("<cac:DocumentReference>"));
+        for limit in 0..good.calls {
+            let mut sink = FailingWriter {
+                remaining: limit,
+                calls: 0,
+                output: String::new(),
+            };
+            assert!(
+                InvoiceXml(&invoice)
+                    .serialize(QuickXmlSerializer::new(&mut sink))
+                    .is_err(),
+                "write boundary {limit}"
+            );
+            assert!(good.output.starts_with(&sink.output));
+        }
     }
 }
