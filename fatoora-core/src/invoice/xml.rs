@@ -1281,15 +1281,9 @@ impl<'a, T: InvoiceView + ?Sized> Serialize for InvoiceXml<'a, T> {
         let instruction_note =
             data.payment_instruction
                 .as_deref()
-                .or_else(|| match &data.invoice_type {
+                .or(match &data.invoice_type {
                     InvoiceType::CreditNote(_, _, reason)
-                    | InvoiceType::DebitNote(_, _, reason) => {
-                        if reason.trim().is_empty() {
-                            None
-                        } else {
-                            Some(reason.as_str())
-                        }
-                    }
+                    | InvoiceType::DebitNote(_, _, reason) => Some(reason.as_str()),
                     _ => None,
                 });
         root.serialize_field(

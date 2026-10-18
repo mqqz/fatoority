@@ -979,3 +979,78 @@ fn currency_normalization_is_consistent_across_tax_totals() {
         }
     }
 }
+
+#[test]
+fn credit_debit_reasons_cannot_conflict_with_payment_instructions() {
+    for credit in [true, false] {
+        for reason in ["return & <تصحيح>", "", " \t "] {
+            let make = |id: &str| {
+                let original = OriginalInvoiceRef::new(id);
+                let kind = if credit {
+                    InvoiceType::CreditNote(InvoiceSubType::Simplified, original, reason.into())
+                } else {
+                    InvoiceType::DebitNote(InvoiceSubType::Simplified, original, reason.into())
+                };
+                let source = common::dummy_finalized_invoice();
+                InvoiceBuilder::new(kind)
+                    .id("note")
+                    .uuid(source.data().uuid())
+                    .issue_datetime("2024-01-01T12:30:00Z")
+                    .currency("SAR")
+                    .previous_invoice_hash(source.data().previous_invoice_hash())
+                    .invoice_counter(1)
+                    .seller(source.data().seller().clone())
+                    .payment_means_code("10")
+                    .vat_category(VatCategory::Standard)
+                    .line_item(line(VatCategory::Standard))
+                    .note(InvoiceNote::without_language("unrelated note"))
+            };
+            for explicit in [false, true] {
+                let b = make("ORIGINAL");
+                let invoice = if explicit {
+                    b.payment_instruction(reason)
+                } else {
+                    b
+                }
+                .build()
+                .unwrap();
+                let parsed = roundtrip(&invoice.to_xml().unwrap());
+                assert_eq!(parsed.data().invoice_type(), invoice.data().invoice_type());
+                assert_eq!(parsed.data().payment_instruction(), Some(reason));
+            }
+            for id in ["", " ", "\t\n", "\u{2003}"] {
+                let InvoiceError::Validation(error) = make(id).build().unwrap_err() else {
+                    panic!("unexpected error")
+                };
+                assert_eq!(error.issues()[0].field(), InvoiceField::OriginalInvoiceId);
+                let report = validation::ValidationReport::from(&error);
+                assert_eq!(
+                    report.issues[0].location,
+                    Some(validation::ValidationLocation::Field(
+                        "original_invoice_id".into()
+                    ))
+                );
+                let public: fatoora_core::Error = InvoiceError::Validation(error).into();
+                assert!(public.details_json().contains("original_invoice_id"));
+            }
+            let error = make("ORIGINAL")
+                .payment_instruction("different")
+                .build()
+                .unwrap_err();
+            let InvoiceError::Validation(error) = error else {
+                panic!("unexpected error")
+            };
+            assert_eq!(error.issues()[0].field(), InvoiceField::PaymentInstruction);
+            assert_eq!(error.issues()[0].kind(), ValidationKind::Mismatch);
+            let report = validation::ValidationReport::from(&error);
+            assert_eq!(
+                report.issues[0].location,
+                Some(validation::ValidationLocation::Field(
+                    "payment_instruction".into()
+                ))
+            );
+            let public: fatoora_core::Error = InvoiceError::Validation(error).into();
+            assert!(public.details_json().contains("payment_instruction"));
+        }
+    }
+}

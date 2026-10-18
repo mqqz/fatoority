@@ -100,6 +100,8 @@ impl From<&ValidationIssue> for ValidationFinding {
             InvoiceField::Seller => "seller",
             InvoiceField::LineItems => "line_items",
             InvoiceField::PaymentMeansCode => "payment_means_code",
+            InvoiceField::PaymentInstruction => "payment_instruction",
+            InvoiceField::OriginalInvoiceId => "original_invoice_id",
             InvoiceField::VatCategory => "vat_category",
             InvoiceField::LineItemDocumentReferenceId => "line_items.document_references.id",
             InvoiceField::LineItemId => "line_items.id",

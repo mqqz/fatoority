@@ -251,6 +251,8 @@ fn field_name(value: InvoiceField) -> &'static str {
         InvoiceField::Seller => "seller",
         InvoiceField::LineItems => "line_items",
         InvoiceField::PaymentMeansCode => "payment_means_code",
+        InvoiceField::PaymentInstruction => "payment_instruction",
+        InvoiceField::OriginalInvoiceId => "original_invoice_id",
         InvoiceField::VatCategory => "vat_category",
         InvoiceField::LineItemDocumentReferenceId => "line_item_document_reference_id",
         InvoiceField::LineItemId => "line_item_id",

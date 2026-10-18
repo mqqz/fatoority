@@ -287,6 +287,25 @@ impl InvoiceBuilder {
             issues.push(ValidationIssue::new(field, kind, line_item_index));
         };
 
+        if let InvoiceType::CreditNote(_, reference, _) | InvoiceType::DebitNote(_, reference, _) =
+            &self.invoice_type
+            && reference.id().trim().is_empty()
+        {
+            push_issue(InvoiceField::OriginalInvoiceId, ValidationKind::Empty, None);
+        }
+
+        if let InvoiceType::CreditNote(_, _, reason) | InvoiceType::DebitNote(_, _, reason) =
+            &self.invoice_type
+            && let Some(instruction) = &self.payment_instruction
+            && instruction != reason
+        {
+            push_issue(
+                InvoiceField::PaymentInstruction,
+                ValidationKind::Mismatch,
+                None,
+            );
+        }
+
         match self.id.as_deref() {
             None => push_issue(InvoiceField::Id, ValidationKind::Missing, None),
             Some(value) if value.trim().is_empty() => {

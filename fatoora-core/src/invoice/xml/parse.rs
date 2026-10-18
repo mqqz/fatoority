@@ -167,7 +167,6 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
             .basic("InstructionNote")
             .content(),
     )?
-    .filter(|value| !value.trim().is_empty())
     .or_else(|| content_optional(ctx.basic("Note").content()).ok().flatten());
     let invoice_type = parse_invoice_type(
         &invoice_type_name,
