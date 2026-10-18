@@ -376,6 +376,9 @@ impl InvoiceBuilder {
             push_issue(InvoiceField::LineItems, ValidationKind::Missing, None);
         } else {
             for (idx, item) in self.line_items.iter().enumerate() {
+                if item.id().is_some_and(|id| id.trim().is_empty()) {
+                    push_issue(InvoiceField::LineItemId, ValidationKind::Empty, Some(idx));
+                }
                 if item.description().trim().is_empty() {
                     push_issue(
                         InvoiceField::LineItemDescription,

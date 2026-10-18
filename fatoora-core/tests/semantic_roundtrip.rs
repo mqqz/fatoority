@@ -718,3 +718,52 @@ fn foreign_tax_totals_require_one_valid_accounting_amount() {
         parse(&domestic).unwrap()
     );
 }
+
+#[test]
+fn supplied_blank_line_ids_are_rejected_without_replacing_them() {
+    for id in ["", " ", "\t\r\n", "\u{2003}"] {
+        let result = builder()
+            .line_item(line(VatCategory::Standard))
+            .line_item(line(VatCategory::Standard).with_id(id))
+            .build();
+        let InvoiceError::Validation(error) = result.expect_err("blank line ID") else {
+            panic!("expected field validation error");
+        };
+        assert_eq!(error.issues().len(), 1);
+        let issue = &error.issues()[0];
+        assert_eq!(issue.field(), InvoiceField::LineItemId);
+        assert_eq!(issue.kind(), ValidationKind::Empty);
+        assert_eq!(issue.line_item_index(), Some(1));
+        let report = validation::ValidationReport::from(&error);
+        assert_eq!(report.issues[0].code, "FIELD_EMPTY");
+        assert_eq!(
+            report.issues[0].location,
+            Some(validation::ValidationLocation::Field(
+                "line_items[1].id".into()
+            ))
+        );
+        let public_error: fatoora_core::Error = InvoiceError::Validation(error).into();
+        let details: serde_json::Value =
+            serde_json::from_str(&public_error.details_json()).unwrap();
+        assert_eq!(details["issues"][0]["field"], "line_item_id");
+        assert_eq!(details["issues"][0]["line_item_index"], 1);
+    }
+}
+
+#[test]
+fn absent_line_ids_are_generated_and_supplied_ids_are_preserved() {
+    let invoice = builder()
+        .line_item(line(VatCategory::Standard))
+        .line_item(line(VatCategory::Standard).with_id("CUSTOM-42"))
+        .line_item(line(VatCategory::Standard))
+        .build()
+        .unwrap();
+    let restored = roundtrip(&invoice.to_xml().unwrap());
+    let ids: Vec<_> = restored
+        .data()
+        .line_items()
+        .iter()
+        .map(LineItem::id)
+        .collect();
+    assert_eq!(ids, [Some("1"), Some("CUSTOM-42"), Some("3")]);
+}

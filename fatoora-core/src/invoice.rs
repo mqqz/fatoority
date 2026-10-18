@@ -208,6 +208,7 @@ pub enum InvoiceField {
     LineItems,
     PaymentMeansCode,
     VatCategory,
+    LineItemId,
     LineItemDescription,
     LineItemUnitCode,
     LineItemQuantity,

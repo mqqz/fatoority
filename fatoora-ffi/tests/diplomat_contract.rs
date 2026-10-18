@@ -557,3 +557,25 @@ fn optional_metadata_and_invalid_inputs_are_distinct_in_bindings() {
         None
     );
 }
+
+#[test]
+fn supplied_blank_line_ids_return_indexed_binding_validation_errors() {
+    use fatoora_ffi::invoice::ffi::{InvoiceLineItem, TaxExemption};
+    let exemption = ok(TaxExemption::new(None, None));
+    for id in ["", " ", "\t\r\n", "\u{2003}"] {
+        let item = ok(InvoiceLineItem::new(
+            b"Item", b"1", b"PCE", b"100", b"15", 1,
+        ));
+        let item = ok(item.with_metadata(Some(id.as_bytes()), &exemption));
+        let mut b = builder();
+        ok(b.add_line_item(b"First", b"1", b"PCE", b"10", b"15", 1));
+        ok(b.add_item(&item));
+        let error = b.build().err().expect("blank line ID must fail");
+        let details: serde_json::Value =
+            serde_json::from_str(&written(|out| error.details_json(out))).unwrap();
+        assert_eq!(details["type"], "invoice_validation");
+        assert_eq!(details["issues"][0]["field"], "line_item_id");
+        assert_eq!(details["issues"][0]["kind"], "empty");
+        assert_eq!(details["issues"][0]["line_item_index"], 1);
+    }
+}
