@@ -811,3 +811,78 @@ fn document_adjustments_do_not_replace_the_line_derived_vat_category() {
         }
     }
 }
+
+#[test]
+fn supplied_blank_line_reference_ids_are_rejected() {
+    for id in ["", " ", "\t\r\n", "\u{2003}"] {
+        let result = builder()
+            .line_item(line(VatCategory::Standard))
+            .line_item(
+                line(VatCategory::Standard)
+                    .document_reference(OriginalInvoiceRef::new("PRE-1"))
+                    .document_reference(OriginalInvoiceRef::new(id)),
+            )
+            .build();
+        let InvoiceError::Validation(error) = result.expect_err("blank reference ID") else {
+            panic!("expected field validation error");
+        };
+        assert_eq!(error.issues().len(), 1);
+        let issue = &error.issues()[0];
+        assert_eq!(issue.field(), InvoiceField::LineItemDocumentReferenceId);
+        assert_eq!(issue.kind(), ValidationKind::Empty);
+        assert_eq!(issue.line_item_index(), Some(1));
+        let report = validation::ValidationReport::from(&error);
+        assert_eq!(
+            report.issues[0].location,
+            Some(validation::ValidationLocation::Field(
+                "line_items[1].document_references.id".into()
+            ))
+        );
+        let public_error: fatoora_core::Error = InvoiceError::Validation(error).into();
+        let details: serde_json::Value =
+            serde_json::from_str(&public_error.details_json()).unwrap();
+        assert_eq!(
+            details["issues"][0]["field"],
+            "line_item_document_reference_id"
+        );
+    }
+}
+
+#[test]
+fn reference_issue_times_accept_surrounding_whitespace_but_reject_invalid_values() {
+    let billing = common::credit_note_standard_invoice()
+        .to_xml()
+        .unwrap()
+        .replace(
+            "</cac:InvoiceDocumentReference>",
+            "<cbc:IssueTime>10:20:30</cbc:IssueTime></cac:InvoiceDocumentReference>",
+        );
+    let line_xml = builder()
+        .line_item(
+            line(VatCategory::Standard).document_reference(
+                OriginalInvoiceRef::new("PRE-1")
+                    .with_issue_time(InvoiceTime::parse("10:20:30").unwrap()),
+            ),
+        )
+        .build()
+        .unwrap()
+        .to_xml()
+        .unwrap();
+    for xml in [billing, line_xml] {
+        let expected = parse(&xml).unwrap();
+        let padded = xml.replace(
+            "<cbc:IssueTime>10:20:30</cbc:IssueTime>",
+            "<cbc:IssueTime> \t10:20:30\r\n </cbc:IssueTime>",
+        );
+        assert_ne!(padded, xml);
+        validate_xml_invoice_from_str(&padded, &Config::default()).unwrap();
+        assert_eq!(roundtrip(&padded), expected);
+        for invalid in ["", " \t\r\n ", "25:00:00", "not-a-time"] {
+            let modified = xml.replace(
+                "<cbc:IssueTime>10:20:30</cbc:IssueTime>",
+                &format!("<cbc:IssueTime>{invalid}</cbc:IssueTime>"),
+            );
+            assert!(parse(&modified).is_err(), "{invalid:?}");
+        }
+    }
+}

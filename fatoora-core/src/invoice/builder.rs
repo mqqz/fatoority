@@ -379,6 +379,15 @@ impl InvoiceBuilder {
                 if item.id().is_some_and(|id| id.trim().is_empty()) {
                     push_issue(InvoiceField::LineItemId, ValidationKind::Empty, Some(idx));
                 }
+                for reference in item.document_references() {
+                    if reference.id().trim().is_empty() {
+                        push_issue(
+                            InvoiceField::LineItemDocumentReferenceId,
+                            ValidationKind::Empty,
+                            Some(idx),
+                        );
+                    }
+                }
                 if item.description().trim().is_empty() {
                     push_issue(
                         InvoiceField::LineItemDescription,

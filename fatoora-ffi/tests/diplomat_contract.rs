@@ -611,3 +611,48 @@ fn mixed_category_adjustment_preserves_invoice_and_adjustment_categories() {
     );
     assert_eq!(written(|out| ok(imported.xml(out))), xml);
 }
+
+#[test]
+fn line_reference_ids_and_times_are_validated_through_bindings() {
+    use fatoora_ffi::invoice::ffi::{InvoiceLineItem, OriginalInvoiceRef};
+    for id in ["", " \t\r\n ", "PRE-1"] {
+        let reference = ok(OriginalInvoiceRef::new(
+            id.as_bytes(),
+            None,
+            None,
+            Some(b" \t10:20:30\r\n "),
+            None,
+        ));
+        assert_eq!(
+            optional_string(reference.issue_time()).as_deref(),
+            Some("10:20:30")
+        );
+        let line = ok(InvoiceLineItem::new(
+            b"Item", b"1", b"PCE", b"100", b"15", 1,
+        ));
+        let line = ok(line.with_document_reference(&reference));
+        let mut b = builder();
+        ok(b.add_item(&line));
+        if id.trim().is_empty() {
+            let error = b.build().err().expect("blank reference ID");
+            let details: serde_json::Value =
+                serde_json::from_str(&written(|out| error.details_json(out))).unwrap();
+            assert_eq!(
+                details["issues"][0]["field"],
+                "line_item_document_reference_id"
+            );
+            assert_eq!(details["issues"][0]["kind"], "empty");
+            assert_eq!(details["issues"][0]["line_item_index"], 0);
+        } else {
+            let invoice = ok(b.build());
+            let xml = written(|out| ok(invoice.xml(out)));
+            let restored = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
+            let reference = ok(ok(ok(restored.data()).line_item(0)).document_reference(0));
+            assert_eq!(written(|out| ok(reference.id(out))), "PRE-1");
+            assert_eq!(
+                optional_string(reference.issue_time()).as_deref(),
+                Some("10:20:30")
+            );
+        }
+    }
+}

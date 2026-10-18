@@ -209,6 +209,7 @@ pub enum InvoiceField {
     PaymentMeansCode,
     VatCategory,
     LineItemId,
+    LineItemDocumentReferenceId,
     LineItemDescription,
     LineItemUnitCode,
     LineItemQuantity,
@@ -436,7 +437,7 @@ impl TryFrom<&str> for InvoiceDate {
 pub struct InvoiceTime(String);
 impl InvoiceTime {
     pub fn parse(value: impl Into<String>) -> Result<Self> {
-        let value = value.into();
+        let value = value.into().trim().to_owned();
         let time = chrono::NaiveTime::parse_from_str(&value, "%H:%M:%S")
             .map_err(|_| InvoiceError::InvalidTimestamp(value.clone()))?;
         Ok(Self(time.format("%H:%M:%S").to_string()))
