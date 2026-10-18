@@ -12,6 +12,7 @@
 #include "BindingError.d.h"
 #include "FinalizedInvoice.d.h"
 #include "InvoiceLineItem.d.h"
+#include "OriginalInvoiceRef.d.h"
 #include "TaxExemption.d.h"
 
 #include "InvoiceBuilder.d.h"
@@ -20,6 +21,12 @@
 
 
 
+
+typedef struct fatoora_InvoiceBuilder_new_with_reference_result {union {InvoiceBuilder* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_new_with_reference_result;
+fatoora_InvoiceBuilder_new_with_reference_result fatoora_InvoiceBuilder_new_with_reference(uint8_t kind, uint8_t subtype, const OriginalInvoiceRef* reference, DiplomatStringView reason);
+
+typedef struct fatoora_InvoiceBuilder_set_note_without_language_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_note_without_language_result;
+fatoora_InvoiceBuilder_set_note_without_language_result fatoora_InvoiceBuilder_set_note_without_language(InvoiceBuilder* self, DiplomatStringView value);
 
 typedef struct fatoora_InvoiceBuilder_set_payment_instruction_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_payment_instruction_result;
 fatoora_InvoiceBuilder_set_payment_instruction_result fatoora_InvoiceBuilder_set_payment_instruction(InvoiceBuilder* self, DiplomatStringView instruction);

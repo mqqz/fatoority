@@ -426,6 +426,10 @@ class InvoiceNote(_Owned):
         return self._invoke("text")
 
 class OriginalInvoiceRef(_Owned):
+    @classmethod
+    def new(cls, id: str, uuid: Optional[str] = None, date: Optional[str] = None, time: Optional[str] = None, type_code: Optional[str] = None) -> 'OriginalInvoiceRef':
+        return cls(_call(_native.OriginalInvoiceRef.new, id, uuid, date, time, type_code))
+
     def issue_time(self) -> Optional[str]:
         return self._invoke("issue_time")
 
@@ -662,6 +666,13 @@ class InvoiceBuilder(_Owned):
     @classmethod
     def new(cls, invoice_type: InvoiceTypeKind, invoice_subtype: InvoiceSubType, original_invoice_id: Optional[str]=None, original_invoice_uuid: Optional[str]=None, original_invoice_issue_date: Optional[str]=None, original_invoice_reason: Optional[str]=None) -> 'InvoiceBuilder':
         return cls(_call(_native.InvoiceBuilder.new, int(invoice_type), int(invoice_subtype), original_invoice_id, original_invoice_uuid, original_invoice_issue_date, original_invoice_reason))
+
+    @classmethod
+    def new_with_reference(cls, invoice_type: InvoiceTypeKind, invoice_subtype: InvoiceSubType, reference: OriginalInvoiceRef, reason: str) -> 'InvoiceBuilder':
+        return cls(_call(_native.InvoiceBuilder.new_with_reference, int(invoice_type), int(invoice_subtype), reference, reason))
+
+    def set_note_without_language(self, text: str) -> None:
+        self._invoke("set_note_without_language", text)
 
     def set_delivery(self, actual: Optional[str] = None, latest: Optional[str] = None) -> None:
         self._invoke("set_delivery", actual, latest)

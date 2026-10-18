@@ -11,11 +11,20 @@ class InvoiceBuilder internal constructor(internal val raw: com.fatoora.raw.Invo
     }
     companion object {
         @JvmStatic
+        fun newWithReference(kind: Int, subtype: Int, reference: OriginalInvoiceRef, reason: String): InvoiceBuilder = nativeCall(listOfNotNull(reference)) {
+            InvoiceBuilder(unwrap(com.fatoora.raw.InvoiceBuilder.newWithReference(checkedUnsigned(kind.toLong(), 255).toUByte(), checkedUnsigned(subtype.toLong(), 255).toUByte(), reference.raw, checkedText(reason))))
+        }
+
+        @JvmStatic
         @JvmOverloads
         fun create(kind: Int, subtype: Int, originalId: String? = null, originalUuid: String? = null, originalDate: String? = null, reason: String? = null): InvoiceBuilder = nativeCall(listOfNotNull()) {
             InvoiceBuilder(unwrap(com.fatoora.raw.InvoiceBuilder.new_(checkedUnsigned(kind.toLong(), 255).toUByte(), checkedUnsigned(subtype.toLong(), 255).toUByte(), originalId?.let(::checkedText), originalUuid?.let(::checkedText), originalDate?.let(::checkedText), reason?.let(::checkedText))))
         }
     }
+    fun setNoteWithoutLanguage(value: String): Unit = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.setNoteWithoutLanguage(checkedText(value)))
+    }
+
     fun setPaymentInstruction(instruction: String): Unit = nativeCall(listOfNotNull(this)) {
         unwrap(raw.setPaymentInstruction(checkedText(instruction)))
     }

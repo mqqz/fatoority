@@ -320,6 +320,15 @@ FatooraStatus fatoora_finalized_invoice_xml(const FatooraFinalizedInvoice *self,
     char **out,
     FatooraError **error);
 void fatoora_finalized_invoice_free(FatooraFinalizedInvoice *self);
+FatooraStatus fatoora_invoice_builder_new_with_reference(int32_t kind,
+    int32_t subtype,
+    const FatooraOriginalInvoiceRef *reference,
+    const char *reason,
+    FatooraInvoiceBuilder **out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_builder_set_note_without_language(FatooraInvoiceBuilder *self,
+    const char *value,
+    FatooraError **error);
 FatooraStatus fatoora_invoice_builder_set_payment_instruction(FatooraInvoiceBuilder *self,
     const char *instruction,
     FatooraError **error);

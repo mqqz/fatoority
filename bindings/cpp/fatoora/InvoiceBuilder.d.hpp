@@ -24,6 +24,8 @@ namespace capi { struct InvoiceBuilder; }
 class InvoiceBuilder;
 namespace capi { struct InvoiceLineItem; }
 class InvoiceLineItem;
+namespace capi { struct OriginalInvoiceRef; }
+class OriginalInvoiceRef;
 namespace capi { struct TaxExemption; }
 class TaxExemption;
 } // namespace fatoora
@@ -40,6 +42,13 @@ namespace capi {
 namespace fatoora {
 class InvoiceBuilder {
 public:
+
+  /**
+   * Construct a credit or debit note with a complete billing reference.
+   */
+  inline static diplomat::result<std::unique_ptr<fatoora::InvoiceBuilder>, std::unique_ptr<fatoora::BindingError>> new_with_reference(uint8_t kind, uint8_t subtype, const fatoora::OriginalInvoiceRef& reference, std::string_view reason);
+
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_note_without_language(std::string_view value);
 
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_payment_instruction(std::string_view instruction);
 

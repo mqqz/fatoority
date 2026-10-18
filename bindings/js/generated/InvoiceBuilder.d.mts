@@ -4,6 +4,7 @@ import type { AllowanceCharge } from "./AllowanceCharge.mjs"
 import type { BindingError } from "./BindingError.mjs"
 import type { FinalizedInvoice } from "./FinalizedInvoice.mjs"
 import type { InvoiceLineItem } from "./InvoiceLineItem.mjs"
+import type { OriginalInvoiceRef } from "./OriginalInvoiceRef.mjs"
 import type { TaxExemption } from "./TaxExemption.mjs"
 import type { pointer, codepoint } from "./diplomat-runtime.mjs";
 
@@ -15,6 +16,13 @@ export class InvoiceBuilder {
     /** @internal */
     constructor();
 
+
+    /**
+     * Construct a credit or debit note with a complete billing reference.
+     */
+    static newWithReference(kind: number, subtype: number, reference: OriginalInvoiceRef, reason: string): InvoiceBuilder;
+
+    setNoteWithoutLanguage(value: string): void;
 
     setPaymentInstruction(instruction: string): void;
 

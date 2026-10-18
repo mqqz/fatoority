@@ -5,6 +5,7 @@
 #include "AllowanceCharge.hpp"
 #include "InvoiceBuilder.hpp"
 #include "InvoiceLineItem.hpp"
+#include "OriginalInvoiceRef.hpp"
 #include "TaxExemption.hpp"
 
 namespace _native {
@@ -25,6 +26,7 @@ void add_InvoiceBuilder_binding(nb::module_ mod) {
         .def("invoice_level_charge", std::move(maybe_op_unwrap(&_native::InvoiceBuilder::invoice_level_charge)), "value"_a)
         .def("invoice_level_discount", std::move(maybe_op_unwrap(&_native::InvoiceBuilder::invoice_level_discount)), "value"_a)
         .def_static("new", std::move(maybe_op_unwrap(&_native::InvoiceBuilder::new_)), "kind"_a, "subtype"_a, "original_id"_a= nb::none(), "original_uuid"_a= nb::none(), "original_date"_a= nb::none(), "reason"_a= nb::none())
+        .def_static("new_with_reference", std::move(maybe_op_unwrap(&_native::InvoiceBuilder::new_with_reference)), "kind"_a, "subtype"_a, "reference"_a, "reason"_a, "Construct a credit or debit note with a complete billing reference.")
         .def("set_allowance", std::move(maybe_op_unwrap(&_native::InvoiceBuilder::set_allowance)), "reason"_a, "amount"_a)
         .def("set_buyer", std::move(maybe_op_unwrap(&_native::InvoiceBuilder::set_buyer)), "name"_a, "address"_a, "vat_id"_a= nb::none(), "other_id"_a= nb::none(), "scheme"_a= nb::none())
         .def("set_currency", std::move(maybe_op_unwrap(&_native::InvoiceBuilder::set_currency)), "value"_a)
@@ -33,6 +35,7 @@ void add_InvoiceBuilder_binding(nb::module_ mod) {
         .def("set_invoice_counter", std::move(maybe_op_unwrap(&_native::InvoiceBuilder::set_invoice_counter)), "value"_a)
         .def("set_issue_datetime", std::move(maybe_op_unwrap(&_native::InvoiceBuilder::set_issue_datetime)), "value"_a)
         .def("set_note", std::move(maybe_op_unwrap(&_native::InvoiceBuilder::set_note)), "language"_a, "value"_a)
+        .def("set_note_without_language", std::move(maybe_op_unwrap(&_native::InvoiceBuilder::set_note_without_language)), "value"_a)
         .def("set_payable_rounding_amount", std::move(maybe_op_unwrap(&_native::InvoiceBuilder::set_payable_rounding_amount)), "amount"_a)
         .def("set_payment_instruction", std::move(maybe_op_unwrap(&_native::InvoiceBuilder::set_payment_instruction)), "instruction"_a)
         .def("set_payment_means_code", std::move(maybe_op_unwrap(&_native::InvoiceBuilder::set_payment_means_code)), "value"_a)

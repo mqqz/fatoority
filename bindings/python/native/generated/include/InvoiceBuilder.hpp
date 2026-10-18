@@ -16,6 +16,7 @@
 #include "BindingError.hpp"
 #include "FinalizedInvoice.hpp"
 #include "InvoiceLineItem.hpp"
+#include "OriginalInvoiceRef.hpp"
 #include "TaxExemption.hpp"
 #include "diplomat_runtime.hpp"
 
@@ -23,6 +24,12 @@
 namespace _native {
 namespace capi {
     extern "C" {
+
+    typedef struct fatoora_InvoiceBuilder_new_with_reference_result {union {_native::capi::InvoiceBuilder* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_new_with_reference_result;
+    fatoora_InvoiceBuilder_new_with_reference_result fatoora_InvoiceBuilder_new_with_reference(uint8_t kind, uint8_t subtype, const _native::capi::OriginalInvoiceRef* reference, _native::diplomat::capi::DiplomatStringView reason);
+
+    typedef struct fatoora_InvoiceBuilder_set_note_without_language_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_note_without_language_result;
+    fatoora_InvoiceBuilder_set_note_without_language_result fatoora_InvoiceBuilder_set_note_without_language(_native::capi::InvoiceBuilder* self, _native::diplomat::capi::DiplomatStringView value);
 
     typedef struct fatoora_InvoiceBuilder_set_payment_instruction_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_payment_instruction_result;
     fatoora_InvoiceBuilder_set_payment_instruction_result fatoora_InvoiceBuilder_set_payment_instruction(_native::capi::InvoiceBuilder* self, _native::diplomat::capi::DiplomatStringView instruction);
@@ -110,6 +117,20 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline _native::diplomat::result<std::unique_ptr<_native::InvoiceBuilder>, std::unique_ptr<_native::BindingError>> _native::InvoiceBuilder::new_with_reference(uint8_t kind, uint8_t subtype, const _native::OriginalInvoiceRef& reference, std::string_view reason) {
+    auto result = _native::capi::fatoora_InvoiceBuilder_new_with_reference(kind,
+        subtype,
+        reference.AsFFI(),
+        {reason.data(), reason.size()});
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::InvoiceBuilder>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::InvoiceBuilder>>(std::unique_ptr<_native::InvoiceBuilder>(_native::InvoiceBuilder::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::InvoiceBuilder>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::InvoiceBuilder::set_note_without_language(std::string_view value) {
+    auto result = _native::capi::fatoora_InvoiceBuilder_set_note_without_language(this->AsFFI(),
+        {value.data(), value.size()});
+    return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
 
 inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::InvoiceBuilder::set_payment_instruction(std::string_view instruction) {
     auto result = _native::capi::fatoora_InvoiceBuilder_set_payment_instruction(this->AsFFI(),

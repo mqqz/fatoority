@@ -1012,6 +1012,30 @@ void fatoora_finalized_invoice_free(FatooraFinalizedInvoice *self) {
     if (self) fatoora_FinalizedInvoice_destroy(self);
 }
 
+FatooraStatus fatoora_invoice_builder_new_with_reference(int32_t kind, int32_t subtype, const FatooraOriginalInvoiceRef *reference, const char *reason, FatooraInvoiceBuilder **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if ((kind < 0 || kind > UINT8_MAX) || (subtype < 0 || subtype > UINT8_MAX) || !reference || !reason || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceBuilder_new_with_reference_result result = fatoora_InvoiceBuilder_new_with_reference((uint8_t)kind, (uint8_t)subtype, reference, fatoora_private_string(reason));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_invoice_builder_set_note_without_language(FatooraInvoiceBuilder *self, const char *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceBuilder_set_note_without_language_result result = fatoora_InvoiceBuilder_set_note_without_language(self, fatoora_private_string(value));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
 FatooraStatus fatoora_invoice_builder_set_payment_instruction(FatooraInvoiceBuilder *self, const char *instruction, FatooraError **error) {
     if (error) *error = NULL;
     if (!self || !instruction)

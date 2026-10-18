@@ -332,6 +332,46 @@ pub mod ffi {
     #[diplomat::attr(dotnet, manually_disposable)]
     pub struct InvoiceBuilder(pub(crate) Option<inv_core::InvoiceBuilder>);
     impl InvoiceBuilder {
+        /// Construct a credit or debit note with a complete billing reference.
+        pub fn new_with_reference(
+            kind: u8,
+            subtype: u8,
+            reference: &OriginalInvoiceRef,
+            reason: &DiplomatStr,
+        ) -> Result<Box<InvoiceBuilder>, Box<BindingError>> {
+            boundary(|| {
+                let sub = match subtype {
+                    0 => inv_core::InvoiceSubType::Standard,
+                    1 => inv_core::InvoiceSubType::Simplified,
+                    _ => return Err(local_error(1, "invalid invoice subtype")),
+                };
+                let reason = text(reason)?.to_owned();
+                let invoice_type = match kind {
+                    2 => inv_core::InvoiceType::CreditNote(sub, reference.0.clone(), reason),
+                    3 => inv_core::InvoiceType::DebitNote(sub, reference.0.clone(), reason),
+                    _ => {
+                        return Err(local_error(
+                            1,
+                            "billing references require a credit or debit note",
+                        ));
+                    }
+                };
+                Ok(Box::new(Self(Some(inv_core::InvoiceBuilder::new(
+                    invoice_type,
+                )))))
+            })
+        }
+
+        pub fn set_note_without_language(
+            &mut self,
+            value: &DiplomatStr,
+        ) -> Result<(), Box<BindingError>> {
+            boundary(|| {
+                let note = inv_core::InvoiceNote::without_language(text(value)?);
+                self.update(|b| b.note(note))
+            })
+        }
+
         pub fn set_payment_instruction(
             &mut self,
             instruction: &DiplomatStr,

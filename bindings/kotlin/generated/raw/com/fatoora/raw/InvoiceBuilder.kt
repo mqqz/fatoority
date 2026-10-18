@@ -7,6 +7,8 @@ import com.sun.jna.Structure
 
 internal interface InvoiceBuilderLib: Library {
     fun fatoora_InvoiceBuilder_destroy(handle: Pointer)
+    fun fatoora_InvoiceBuilder_new_with_reference(kind: FFIUint8, subtype: FFIUint8, reference: Pointer, reason: Slice): ResultPointerPointer
+    fun fatoora_InvoiceBuilder_set_note_without_language(handle: Pointer, value: Slice): ResultUnitPointer
     fun fatoora_InvoiceBuilder_set_payment_instruction(handle: Pointer, instruction: Slice): ResultUnitPointer
     fun fatoora_InvoiceBuilder_set_prepaid_amount(handle: Pointer, amount: Slice): ResultUnitPointer
     fun fatoora_InvoiceBuilder_set_payable_rounding_amount(handle: Pointer, amount: Slice): ResultUnitPointer
@@ -66,6 +68,32 @@ class InvoiceBuilder internal constructor (
         internal val lib: InvoiceBuilderLib = Native.load("fatoora_ffi", libClass)
         @JvmStatic
 
+        /**
+         * Construct a credit or debit note with a complete billing reference.
+         */
+        fun newWithReference(kind: UByte, subtype: UByte, reference: OriginalInvoiceRef, reason: String): Result<InvoiceBuilder> {
+            val reasonSliceMemory = PrimitiveArrayTools.borrowUtf8(reason)
+
+            val returnVal = lib.fatoora_InvoiceBuilder_new_with_reference(FFIUint8(kind), FFIUint8(subtype), reference.handle, reasonSliceMemory.slice);
+            try {
+                val nativeOkVal = returnVal.getNativeOk();
+                if (nativeOkVal != null) {
+                    val selfEdges: List<Any> = listOf()
+                    val handle = nativeOkVal
+                    val returnOpaque = InvoiceBuilder(handle, selfEdges, true)
+                    return returnOpaque.ok()
+                } else {
+                    val selfEdges: List<Any> = listOf()
+                    val handle = returnVal.getNativeErr()!!
+                    val returnOpaque = BindingError(handle, selfEdges, true)
+                    return returnOpaque.err()
+                }
+            } finally {
+                reasonSliceMemory.close()
+            }
+        }
+        @JvmStatic
+
         fun new_(kind: UByte, subtype: UByte, originalId: String?, originalUuid: String?, originalDate: String?, reason: String?): Result<InvoiceBuilder> {
             val originalIdSliceMemory = originalId?.let { PrimitiveArrayTools.borrowUtf8(it) }
             val originalUuidSliceMemory = originalUuid?.let { PrimitiveArrayTools.borrowUtf8(it) }
@@ -92,6 +120,25 @@ class InvoiceBuilder internal constructor (
                 originalDateSliceMemory?.close()
                 reasonSliceMemory?.close()
             }
+        }
+    }
+
+    fun setNoteWithoutLanguage(value: String): Result<Unit> {
+        val valueSliceMemory = PrimitiveArrayTools.borrowUtf8(value)
+
+        val returnVal = lib.fatoora_InvoiceBuilder_set_note_without_language(handle, valueSliceMemory.slice);
+        try {
+            val nativeOkVal = returnVal.getNativeOk();
+            if (nativeOkVal != null) {
+                return Unit.ok()
+            } else {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal.getNativeErr()!!
+                val returnOpaque = BindingError(handle, selfEdges, true)
+                return returnOpaque.err()
+            }
+        } finally {
+            valueSliceMemory.close()
         }
     }
 

@@ -9,6 +9,12 @@ namespace Fatoora.Raw;
 internal partial struct InvoiceBuilder
 {
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_new_with_reference", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultInvoiceBuilderBindingError NewWithReference(byte kind, byte subtype, OriginalInvoiceRef* reference, DiplomatSliceU8 reason);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_note_without_language", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError SetNoteWithoutLanguage(InvoiceBuilder* handle, DiplomatSliceU8 value);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_payment_instruction", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError SetPaymentInstruction(InvoiceBuilder* handle, DiplomatSliceU8 instruction);
 

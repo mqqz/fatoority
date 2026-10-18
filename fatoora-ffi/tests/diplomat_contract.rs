@@ -656,3 +656,82 @@ fn line_reference_ids_and_times_are_validated_through_bindings() {
         }
     }
 }
+
+#[test]
+fn full_billing_references_and_language_less_notes_are_constructible() {
+    use fatoora_ffi::invoice::ffi::OriginalInvoiceRef;
+    let reference = ok(OriginalInvoiceRef::new(
+        b"ORIGINAL",
+        Some(b"uuid"),
+        Some(b"2023-11-13"),
+        Some(b"10:20:30"),
+        Some(b"388"),
+    ));
+    for (kind, subtype) in [(0, 1), (1, 1), (255, 1), (2, 255)] {
+        assert!(InvoiceBuilder::new_with_reference(kind, subtype, &reference, b"reason").is_err());
+    }
+    assert!(InvoiceBuilder::new_with_reference(2, 1, &reference, &[0xff]).is_err());
+    for kind in [2, 3] {
+        let blank = ok(OriginalInvoiceRef::new(b" ", None, None, None, None));
+        for b in [
+            ok(InvoiceBuilder::new_with_reference(
+                kind, 1, &blank, b"reason",
+            )),
+            ok(InvoiceBuilder::new(
+                kind,
+                1,
+                Some(b" "),
+                None,
+                None,
+                Some(b"reason"),
+            )),
+        ] {
+            let mut b = configured(b);
+            ok(b.add_line_item(b"Item", b"1", b"PCE", b"100", b"15", 1));
+            let error = b.build().err().unwrap();
+            assert!(written(|out| error.details_json(out)).contains("original_invoice_id"));
+        }
+    }
+    for kind in [2, 3] {
+        for subtype in [0, 1] {
+            let mut b = configured(ok(InvoiceBuilder::new_with_reference(
+                kind,
+                subtype,
+                &reference,
+                "تصحيح &".as_bytes(),
+            )));
+            assert!(b.set_note_without_language(&[0xff]).is_err());
+            ok(b.set_note(b"en", b"old"));
+            ok(b.set_note_without_language("ملاحظة &".as_bytes()));
+            ok(b.add_line_item(b"Item", b"1", b"PCE", b"100", b"15", 1));
+            let invoice = ok(b.build());
+            assert!(b.set_note_without_language(b"consumed").is_err());
+            let xml = written(|out| ok(invoice.xml(out)));
+            let parsed = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
+            let data = ok(parsed.data());
+            assert_eq!(data.invoice_type_kind(), kind);
+            assert_eq!(data.invoice_sub_type(), subtype);
+            let restored = ok(data.original_invoice_ref()).unwrap();
+            let note = ok(data.note()).unwrap();
+            drop(parsed);
+            drop(data);
+            assert_eq!(
+                optional_string(restored.issue_time()).as_deref(),
+                Some("10:20:30")
+            );
+            assert_eq!(
+                optional_string(restored.document_type_code()).as_deref(),
+                Some("388")
+            );
+            assert_eq!(optional_string(note.language_id()), None);
+            assert_eq!(written(|out| ok(note.text(out))), "ملاحظة &");
+        }
+        let mut b = configured(ok(InvoiceBuilder::new_with_reference(
+            kind, 1, &reference, b"reason",
+        )));
+        ok(b.add_line_item(b"Item", b"1", b"PCE", b"100", b"15", 1));
+        ok(b.set_payment_instruction(b"different"));
+        let error = b.build().err().unwrap();
+        assert!(written(|out| error.details_json(out)).contains("payment_instruction"));
+    }
+}

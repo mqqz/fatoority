@@ -23,6 +23,8 @@ namespace capi { struct InvoiceBuilder; }
 class InvoiceBuilder;
 namespace capi { struct InvoiceLineItem; }
 class InvoiceLineItem;
+namespace capi { struct OriginalInvoiceRef; }
+class OriginalInvoiceRef;
 namespace capi { struct TaxExemption; }
 class TaxExemption;
 } // namespace _native
@@ -38,6 +40,13 @@ namespace capi {
 namespace _native {
 class InvoiceBuilder {
 public:
+
+  /**
+   * Construct a credit or debit note with a complete billing reference.
+   */
+  inline static _native::diplomat::result<std::unique_ptr<_native::InvoiceBuilder>, std::unique_ptr<_native::BindingError>> new_with_reference(uint8_t kind, uint8_t subtype, const _native::OriginalInvoiceRef& reference, std::string_view reason);
+
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> set_note_without_language(std::string_view value);
 
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> set_payment_instruction(std::string_view instruction);
 

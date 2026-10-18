@@ -4,6 +4,7 @@ import { AllowanceCharge } from "./AllowanceCharge.mjs"
 import { BindingError } from "./BindingError.mjs"
 import { FinalizedInvoice } from "./FinalizedInvoice.mjs"
 import { InvoiceLineItem } from "./InvoiceLineItem.mjs"
+import { OriginalInvoiceRef } from "./OriginalInvoiceRef.mjs"
 import { TaxExemption } from "./TaxExemption.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
@@ -40,6 +41,58 @@ export class InvoiceBuilder {
         return this.#ptr;
     }
 
+
+    /**
+     * Construct a credit or debit note with a complete billing reference.
+     */
+    static newWithReference(kind, subtype, reference, reason) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+
+        const reasonSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, reason)));
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
+
+        const result = wasm.fatoora_InvoiceBuilder_new_with_reference(diplomatReceive.buffer, kind, subtype, reference instanceof OriginalInvoiceRef ? reference.ffiValue : typeError('reference', 'OriginalInvoiceRef'), reasonSlice.ptr);
+
+        try {
+            if (!diplomatReceive.resultFlag) {
+                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
+            }
+            return new InvoiceBuilder(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+            functionCleanupArena.free();
+
+            diplomatReceive.free();
+        }
+    }
+
+    setNoteWithoutLanguage(value) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+
+        const valueSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, value)));
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
+
+        const result = wasm.fatoora_InvoiceBuilder_set_note_without_language(diplomatReceive.buffer, this.ffiValue, valueSlice.ptr);
+
+        try {
+            if (!diplomatReceive.resultFlag) {
+                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
+            }
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+            functionCleanupArena.free();
+
+            diplomatReceive.free();
+        }
+    }
 
     setPaymentInstruction(instruction) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();

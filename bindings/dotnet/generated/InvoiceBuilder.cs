@@ -58,6 +58,66 @@ public partial class InvoiceBuilder: IDisposable
     }
 
     /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>InvoiceBuilder</c> allocated on Rust side.
+    /// </returns>
+    public static InvoiceBuilder NewWithReference(byte kind, byte subtype, OriginalInvoiceRef reference, string reason)
+    {
+        unsafe
+        {
+            if (reference == null) throw new ArgumentNullException(nameof(reference));
+            if (reason == null) throw new ArgumentNullException(nameof(reason));
+            byte[] reasonBytes = Diplomat.Utf8.Clone(reason);
+            BorrowLease<Raw.OriginalInvoiceRef>? referenceLease = null;
+            try
+            {
+                referenceLease = reference._diplomatHandle.Lease(BorrowKind.Shared);
+                fixed (byte* reasonPtr = reasonBytes)
+                {
+                    var result = Raw.InvoiceBuilder.NewWithReference(kind, subtype, referenceLease!.Ptr, new DiplomatSliceU8 { Ptr = reasonPtr, Len = (nuint)reasonBytes.Length });
+                    if (!result.IsOk)
+                    {
+                        throw new BindingErrorException(new BindingError(result.Err));
+                    }
+                    return new InvoiceBuilder(result.Ok);
+                }
+            }
+            finally
+            {
+                referenceLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    public void SetNoteWithoutLanguage(string value)
+    {
+        unsafe
+        {
+            if (value == null) throw new ArgumentNullException(nameof(value));
+            byte[] valueBytes = Diplomat.Utf8.Clone(value);
+            BorrowLease<Raw.InvoiceBuilder>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
+                fixed (byte* valuePtr = valueBytes)
+                {
+                    var result = Raw.InvoiceBuilder.SetNoteWithoutLanguage(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
+                    if (!result.IsOk)
+                    {
+                        throw new BindingErrorException(new BindingError(result.Err));
+                    }
+                    return;
+                }
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
     public void SetPaymentInstruction(string instruction)
     {
         unsafe
