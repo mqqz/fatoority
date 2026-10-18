@@ -408,3 +408,94 @@ fn unsupported_profiles_schemes_and_duplicate_line_totals_fail_explicitly() {
             .is_err()
     );
 }
+
+fn balance_adjustment(charge: bool, amount: &str, category: VatCategory) -> AllowanceCharge {
+    AllowanceCharge {
+        tax_category_count: 1,
+        charge,
+        amount: d(amount),
+        reason: Some(if charge { "charge" } else { "allowance" }.into()),
+        reason_code: None,
+        category,
+        rate: if category == VatCategory::Standard {
+            d("15")
+        } else {
+            d("0")
+        },
+        exemption: TaxExemption::default(),
+    }
+}
+
+#[test]
+fn adjustment_balances_are_validated_after_all_entries() {
+    let allowance = balance_adjustment(false, "25", VatCategory::Standard);
+    let charge = balance_adjustment(true, "30", VatCategory::Standard);
+    for adjustments in [[allowance.clone(), charge.clone()], [charge, allowance]] {
+        let invoice = builder()
+            .line_item(line(VatCategory::Standard))
+            .adjustment(adjustments[0].clone())
+            .adjustment(adjustments[1].clone())
+            .build()
+            .unwrap();
+        assert_eq!(invoice.totals().taxable_amount(), d("25.25"));
+        assert_eq!(invoice.totals().tax_amount(), d("3.79"));
+        let parsed = roundtrip(&invoice.to_xml().unwrap());
+        assert_eq!(parsed.data().adjustments(), adjustments);
+        assert_eq!(parsed.totals(), invoice.totals());
+    }
+}
+
+#[test]
+fn adjustment_balances_in_import_do_not_depend_on_xml_order() {
+    let invoice = builder()
+        .line_item(line(VatCategory::Standard))
+        .adjustment(balance_adjustment(true, "30", VatCategory::Standard))
+        .adjustment(balance_adjustment(false, "25", VatCategory::Standard))
+        .build()
+        .unwrap();
+    let xml = invoice.to_xml().unwrap();
+    let doc = roxmltree::Document::parse(&xml).unwrap();
+    let ranges: Vec<_> = doc
+        .root_element()
+        .children()
+        .filter(|node| node.tag_name().name() == "AllowanceCharge")
+        .map(|node| node.range())
+        .collect();
+    assert_eq!(ranges.len(), 2);
+    let mut allowance_first = xml.clone();
+    allowance_first.replace_range(ranges[1].clone(), &xml[ranges[0].clone()]);
+    allowance_first.replace_range(ranges[0].clone(), &xml[ranges[1].clone()]);
+    let parsed = roundtrip(&allowance_first);
+    assert!(!parsed.data().adjustments()[0].charge);
+    assert_eq!(parsed.totals(), invoice.totals());
+}
+
+#[test]
+fn adjustment_balances_still_reject_a_negative_final_vat_group() {
+    // A charge in a different group cannot offset this group's negative balance,
+    // even when the document's combined taxable balance is positive.
+    for charge in [
+        balance_adjustment(true, "4", VatCategory::Standard),
+        balance_adjustment(true, "30", VatCategory::Zero),
+    ] {
+        let allowance = balance_adjustment(false, "25", VatCategory::Standard);
+        for adjustments in [[allowance.clone(), charge.clone()], [charge, allowance]] {
+            let error = builder()
+                .line_item(line(VatCategory::Standard))
+                .adjustment(adjustments[0].clone())
+                .adjustment(adjustments[1].clone())
+                .build()
+                .unwrap_err();
+            let InvoiceError::Validation(error) = error else {
+                panic!("unexpected error: {error}");
+            };
+            assert!(
+                error
+                    .issues()
+                    .iter()
+                    .any(|issue| issue.field() == InvoiceField::InvoiceLevelDiscount
+                        && issue.kind() == ValidationKind::OutOfRange)
+            );
+        }
+    }
+}

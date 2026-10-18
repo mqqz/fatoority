@@ -1445,14 +1445,6 @@ impl InvoiceTotalsData {
                 .taxable_amount
                 .sub(data.invoice_level_discount)?
                 .add(data.invoice_level_charge)?;
-            if group.taxable_amount < Decimal::ZERO {
-                return Err(ValidationError::new(vec![ValidationIssue::new(
-                    InvoiceField::InvoiceLevelDiscount,
-                    ValidationKind::OutOfRange,
-                    None,
-                )])
-                .into());
-            }
         }
         for adjustment in &data.adjustments {
             let index = groups
@@ -1474,6 +1466,11 @@ impl InvoiceTotalsData {
             } else {
                 group.taxable_amount.sub(adjustment.amount)?
             };
+        }
+        let mut tax_amount = Decimal::ZERO;
+        // Validate final group balances: an allowance may precede a charge
+        // that restores the same group's taxable amount.
+        for group in &mut groups {
             if group.taxable_amount < Decimal::ZERO {
                 return Err(ValidationError::new(vec![ValidationIssue::new(
                     InvoiceField::InvoiceLevelDiscount,
@@ -1482,9 +1479,6 @@ impl InvoiceTotalsData {
                 )])
                 .into());
             }
-        }
-        let mut tax_amount = Decimal::ZERO;
-        for group in &mut groups {
             group.tax_amount = group.taxable_amount.product_rounded(group.rate, true)?;
             tax_amount = tax_amount.add(group.tax_amount)?;
         }
