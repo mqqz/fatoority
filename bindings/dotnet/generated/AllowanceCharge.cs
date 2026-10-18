@@ -192,6 +192,32 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>AllowanceCharge</c> allocated on Rust side.
+    /// </returns>
+    public AllowanceCharge WithTaxCategoryCount(nuint count)
+    {
+        unsafe
+        {
+            BorrowLease<Raw.AllowanceCharge>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.AllowanceCharge.WithTaxCategoryCount(selfLease!.Ptr, count);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return new AllowanceCharge(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
     public nuint TaxCategoryCount()
     {
         unsafe

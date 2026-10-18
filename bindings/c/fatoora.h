@@ -171,6 +171,10 @@ FatooraStatus fatoora_allowance_charge_rate(const FatooraAllowanceCharge *self,
 FatooraStatus fatoora_allowance_charge_category(const FatooraAllowanceCharge *self,
     uint8_t *out,
     FatooraError **error);
+FatooraStatus fatoora_allowance_charge_with_tax_category_count(const FatooraAllowanceCharge *self,
+    size_t count,
+    FatooraAllowanceCharge **out,
+    FatooraError **error);
 FatooraStatus fatoora_allowance_charge_tax_category_count(const FatooraAllowanceCharge *self,
     size_t *out,
     FatooraError **error);

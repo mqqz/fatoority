@@ -31,6 +31,10 @@ class AllowanceCharge internal constructor(internal val raw: com.fatoora.raw.All
         raw.category().toInt()
     }
 
+    fun withTaxCategoryCount(count: java.math.BigInteger): AllowanceCharge = nativeCall(listOfNotNull(this)) {
+        AllowanceCharge(unwrap(raw.withTaxCategoryCount(checkedCounter(count))))
+    }
+
     fun taxCategoryCount(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
         java.math.BigInteger(raw.taxCategoryCount().toString())
     }

@@ -34,6 +34,9 @@ namespace capi {
 
     uint8_t fatoora_AllowanceCharge_category(const fatoora::capi::AllowanceCharge* self);
 
+    typedef struct fatoora_AllowanceCharge_with_tax_category_count_result {union {fatoora::capi::AllowanceCharge* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_with_tax_category_count_result;
+    fatoora_AllowanceCharge_with_tax_category_count_result fatoora_AllowanceCharge_with_tax_category_count(const fatoora::capi::AllowanceCharge* self, size_t count);
+
     size_t fatoora_AllowanceCharge_tax_category_count(const fatoora::capi::AllowanceCharge* self);
 
     typedef struct fatoora_AllowanceCharge_reason_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_reason_result;
@@ -100,6 +103,12 @@ inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> 
 inline uint8_t fatoora::AllowanceCharge::category() const {
     auto result = fatoora::capi::fatoora_AllowanceCharge_category(this->AsFFI());
     return result;
+}
+
+inline diplomat::result<std::unique_ptr<fatoora::AllowanceCharge>, std::unique_ptr<fatoora::BindingError>> fatoora::AllowanceCharge::with_tax_category_count(size_t count) const {
+    auto result = fatoora::capi::fatoora_AllowanceCharge_with_tax_category_count(this->AsFFI(),
+        count);
+    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::AllowanceCharge>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::AllowanceCharge>>(std::unique_ptr<fatoora::AllowanceCharge>(fatoora::AllowanceCharge::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::AllowanceCharge>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
 inline size_t fatoora::AllowanceCharge::tax_category_count() const {

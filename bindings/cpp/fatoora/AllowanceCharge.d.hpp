@@ -49,6 +49,11 @@ public:
 
   inline uint8_t category() const;
 
+  /**
+   * Return an independent adjustment with the given number of identical tax classifications.
+   */
+  inline diplomat::result<std::unique_ptr<fatoora::AllowanceCharge>, std::unique_ptr<fatoora::BindingError>> with_tax_category_count(size_t count) const;
+
   inline size_t tax_category_count() const;
 
   inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> reason() const;

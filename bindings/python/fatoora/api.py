@@ -693,9 +693,8 @@ class InvoiceBuilder(_Owned):
         self._invoke("set_payable_rounding_amount", _decimal(amount))
 
     def add_adjustment(self, adjustment: AllowanceCharge) -> None:
-        if adjustment.tax_category_count != 1:
-            raise ValueError("new adjustments require one tax category")
         native = _call(_native.AllowanceCharge.new, adjustment.charge, _decimal(adjustment.amount), adjustment.reason, adjustment.reason_code, int(adjustment.category), _decimal(adjustment.rate), adjustment.exemption._native_value())
+        native = _call(native.with_tax_category_count, adjustment.tax_category_count)
         self._invoke("add_adjustment", native)
 
     def set_id(self, invoice_id: str) -> None:

@@ -735,3 +735,63 @@ fn full_billing_references_and_language_less_notes_are_constructible() {
         assert!(written(|out| error.details_json(out)).contains("payment_instruction"));
     }
 }
+
+#[test]
+fn repeated_adjustment_counts_preserve_owned_metadata_and_totals() {
+    use fatoora_ffi::invoice::ffi::{AllowanceCharge, TaxExemption};
+    for charge in [false, true] {
+        let exemption = ok(TaxExemption::new(
+            Some(b"VATEX-SA-29"),
+            Some("إعفاء &".as_bytes()),
+        ));
+        let original = ok(AllowanceCharge::new(
+            charge,
+            b"1",
+            Some("رسوم &".as_bytes()),
+            Some(b"95"),
+            0,
+            b"0",
+            &exemption,
+        ));
+        assert!(original.with_tax_category_count(0).is_err());
+        let repeated = ok(original.with_tax_category_count(3));
+        assert_eq!(original.tax_category_count(), 1);
+        assert_eq!(repeated.tax_category_count(), 3);
+        let single = ok(repeated.with_tax_category_count(1));
+        assert_eq!(repeated.tax_category_count(), 3);
+        assert_eq!(single.tax_category_count(), 1);
+        drop((original, exemption));
+        let mut b = builder();
+        ok(b.set_vat_category(0));
+        ok(b.add_line_item(b"Item", b"1", b"PCE", b"100", b"0", 0));
+        ok(b.add_adjustment(&repeated));
+        drop(repeated);
+        let invoice = ok(b.build());
+        let xml = written(|out| ok(invoice.xml(out)));
+        let parsed = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
+        assert_eq!(written(|out| ok(parsed.xml(out))), xml);
+        let data = ok(parsed.data());
+        let adjustment = ok(data.adjustment(0));
+        drop((parsed, data));
+        assert_eq!(adjustment.tax_category_count(), 3);
+        assert_eq!(adjustment.is_charge(), charge);
+        assert_eq!(
+            optional_string(adjustment.reason()).as_deref(),
+            Some("رسوم &")
+        );
+        assert_eq!(
+            optional_string(adjustment.reason_code()).as_deref(),
+            Some("95")
+        );
+        let tax = ok(adjustment.exemption());
+        assert_eq!(optional_string(tax.reason()).as_deref(), Some("إعفاء &"));
+        assert_eq!(
+            optional_string(tax.reason_code()).as_deref(),
+            Some("VATEX-SA-29")
+        );
+        assert_eq!(
+            written(|out| ok(ok(invoice.totals()).payable_amount(out))),
+            if charge { "101" } else { "99" }
+        );
+    }
+}

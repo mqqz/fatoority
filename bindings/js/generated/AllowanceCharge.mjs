@@ -136,6 +136,29 @@ export class AllowanceCharge {
         }
     }
 
+    /**
+     * Return an independent adjustment with the given number of identical tax classifications.
+     */
+    withTaxCategoryCount(count) {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
+
+        const result = wasm.fatoora_AllowanceCharge_with_tax_category_count(diplomatReceive.buffer, this.ffiValue, count);
+
+        try {
+            if (!diplomatReceive.resultFlag) {
+                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
+            }
+            return new AllowanceCharge(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+            diplomatReceive.free();
+        }
+    }
+
     taxCategoryCount() {
 
         const result = wasm.fatoora_AllowanceCharge_tax_category_count(this.ffiValue);

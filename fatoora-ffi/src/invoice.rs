@@ -274,6 +274,21 @@ pub mod ffi {
         pub fn category(&self) -> u8 {
             vat_code(self.0.category)
         }
+        /// Return an independent adjustment with the given number of identical tax classifications.
+        pub fn with_tax_category_count(
+            &self,
+            count: usize,
+        ) -> Result<Box<AllowanceCharge>, Box<BindingError>> {
+            boundary(|| {
+                if count == 0 {
+                    return Err(local_error(1, "tax category count must be positive"));
+                }
+                let mut adjustment = self.0.clone();
+                adjustment.tax_category_count = count;
+                Ok(Box::new(Self(adjustment)))
+            })
+        }
+
         pub fn tax_category_count(&self) -> usize {
             self.0.tax_category_count
         }

@@ -54,3 +54,45 @@ def test_prepayment_reference_and_tax_breakdown_are_exposed():
     assert item.tax_subtotals[0].taxable_amount == Decimal("1000")
     assert item.tax_subtotals[0].tax_amount == Decimal("150")
     assert parse_finalized_invoice_xml(invoice.xml()).line_items() == invoice.line_items()
+
+
+def test_repeated_adjustment_classifications_can_be_rebuilt():
+    from dataclasses import replace
+    import xml.etree.ElementTree as ET
+    import pytest
+    from fatoora.errors import FfiError
+
+    exemption = TaxExemption("VATEX-SA-29", "إعفاء & <test>")
+    adjustment = AllowanceCharge(True, Decimal("1"), VatCategory.EXEMPT,
+                                 Decimal("0"), "رسوم &", "95", exemption)
+    source = builder()
+    source.add_line_item("item", 1, "PCE", 100, 0, VatCategory.EXEMPT)
+    source.add_adjustment(adjustment)
+    invoice = source.build()
+    xml = invoice.xml()
+    root = ET.fromstring(xml)
+    ns = {"cac": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"}
+    category = root.find("cac:AllowanceCharge/cac:TaxCategory", ns)
+    # Duplicate the original XML category without rewriting namespace prefixes.
+    start = xml.index("<cac:TaxCategory>", xml.index("<cac:AllowanceCharge>"))
+    end = xml.index("</cac:TaxCategory>", start) + len("</cac:TaxCategory>")
+    assert category is not None
+    for count in [2, 3, 1]:
+        parsed = parse_finalized_invoice_xml(xml[:start] + xml[start:end] * count + xml[end:])
+        restored = parsed.adjustments()[0]
+        parsed.close()
+        assert restored == replace(adjustment, tax_category_count=count)
+        b = builder()
+        b.add_line_item("item", 1, "PCE", 100, 0, VatCategory.EXEMPT)
+        for invalid_count in [-1, 1 << 128]:
+            with pytest.raises((TypeError, OverflowError)):
+                b.add_adjustment(replace(restored, tax_category_count=invalid_count))
+        b.add_adjustment(restored)
+        with pytest.raises(FfiError):
+            b.add_adjustment(replace(restored, tax_category_count=0))
+        rebuilt = b.build()
+        assert rebuilt.adjustments() == [restored]
+        assert rebuilt.totals() == invoice.totals()
+        output = ET.fromstring(rebuilt.xml())
+        assert len(output.findall("cac:AllowanceCharge/cac:TaxCategory", ns)) == count
+        assert parse_finalized_invoice_xml(rebuilt.xml()).adjustments() == [restored]

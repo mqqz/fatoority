@@ -12,6 +12,7 @@ internal interface AllowanceChargeLib: Library {
     fun fatoora_AllowanceCharge_amount(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_AllowanceCharge_rate(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_AllowanceCharge_category(handle: Pointer): FFIUint8
+    fun fatoora_AllowanceCharge_with_tax_category_count(handle: Pointer, count: FFISizet): ResultPointerPointer
     fun fatoora_AllowanceCharge_tax_category_count(handle: Pointer): FFISizet
     fun fatoora_AllowanceCharge_reason(handle: Pointer): ResultPointerPointer
     fun fatoora_AllowanceCharge_reason_code(handle: Pointer): ResultPointerPointer
@@ -121,6 +122,26 @@ class AllowanceCharge internal constructor (
 
         val returnVal = lib.fatoora_AllowanceCharge_category(handle);
         return (returnVal.toUByte())
+    }
+
+    /**
+     * Return an independent adjustment with the given number of identical tax classifications.
+     */
+    fun withTaxCategoryCount(count: ULong): Result<AllowanceCharge> {
+
+        val returnVal = lib.fatoora_AllowanceCharge_with_tax_category_count(handle, FFISizet(count));
+        val nativeOkVal = returnVal.getNativeOk();
+        if (nativeOkVal != null) {
+            val selfEdges: List<Any> = listOf()
+            val handle = nativeOkVal
+            val returnOpaque = AllowanceCharge(handle, selfEdges, true)
+            return returnOpaque.ok()
+        } else {
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal.getNativeErr()!!
+            val returnOpaque = BindingError(handle, selfEdges, true)
+            return returnOpaque.err()
+        }
     }
 
     fun taxCategoryCount(): ULong {

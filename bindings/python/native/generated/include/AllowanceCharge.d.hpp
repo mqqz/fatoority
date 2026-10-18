@@ -47,6 +47,11 @@ public:
 
   inline uint8_t category() const;
 
+  /**
+   * Return an independent adjustment with the given number of identical tax classifications.
+   */
+  inline _native::diplomat::result<std::unique_ptr<_native::AllowanceCharge>, std::unique_ptr<_native::BindingError>> with_tax_category_count(size_t count) const;
+
   inline size_t tax_category_count() const;
 
   inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> reason() const;

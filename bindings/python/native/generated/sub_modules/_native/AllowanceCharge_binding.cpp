@@ -21,7 +21,8 @@ void add_AllowanceCharge_binding(nb::module_ mod) {
         .def("rate", std::move(maybe_op_unwrap(&_native::AllowanceCharge::rate)))
         .def("reason", std::move(maybe_op_unwrap(&_native::AllowanceCharge::reason)))
         .def("reason_code", std::move(maybe_op_unwrap(&_native::AllowanceCharge::reason_code)))
-        .def("tax_category_count", &_native::AllowanceCharge::tax_category_count);
+        .def("tax_category_count", &_native::AllowanceCharge::tax_category_count)
+        .def("with_tax_category_count", std::move(maybe_op_unwrap(&_native::AllowanceCharge::with_tax_category_count)), "count"_a, "Return an independent adjustment with the given number of identical tax classifications.");
 }
 
 } 

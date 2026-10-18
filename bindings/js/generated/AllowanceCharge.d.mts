@@ -23,6 +23,11 @@ export class AllowanceCharge {
 
     category(): number;
 
+    /**
+     * Return an independent adjustment with the given number of identical tax classifications.
+     */
+    withTaxCategoryCount(count: number): AllowanceCharge;
+
     taxCategoryCount(): number;
 
     reason(): Text | null;

@@ -31,6 +31,9 @@ fatoora_AllowanceCharge_rate_result fatoora_AllowanceCharge_rate(const Allowance
 
 uint8_t fatoora_AllowanceCharge_category(const AllowanceCharge* self);
 
+typedef struct fatoora_AllowanceCharge_with_tax_category_count_result {union {AllowanceCharge* ok; BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_with_tax_category_count_result;
+fatoora_AllowanceCharge_with_tax_category_count_result fatoora_AllowanceCharge_with_tax_category_count(const AllowanceCharge* self, size_t count);
+
 size_t fatoora_AllowanceCharge_tax_category_count(const AllowanceCharge* self);
 
 typedef struct fatoora_AllowanceCharge_reason_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_reason_result;

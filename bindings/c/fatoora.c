@@ -400,6 +400,19 @@ FatooraStatus fatoora_allowance_charge_category(const FatooraAllowanceCharge *se
     return FATOORA_OK;
 }
 
+FatooraStatus fatoora_allowance_charge_with_tax_category_count(const FatooraAllowanceCharge *self, size_t count, FatooraAllowanceCharge **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_AllowanceCharge_with_tax_category_count_result result = fatoora_AllowanceCharge_with_tax_category_count(self, count);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
+}
+
 FatooraStatus fatoora_allowance_charge_tax_category_count(const FatooraAllowanceCharge *self, size_t *out, FatooraError **error) {
     if (error) *error = NULL;
     if (out) *out = 0;

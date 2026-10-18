@@ -25,6 +25,9 @@ internal partial struct AllowanceCharge
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_AllowanceCharge_category", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern byte Category(AllowanceCharge* handle);
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_AllowanceCharge_with_tax_category_count", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultAllowanceChargeBindingError WithTaxCategoryCount(AllowanceCharge* handle, nuint count);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_AllowanceCharge_tax_category_count", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern nuint TaxCategoryCount(AllowanceCharge* handle);
 
