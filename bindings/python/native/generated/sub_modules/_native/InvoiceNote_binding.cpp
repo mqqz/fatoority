@@ -13,6 +13,7 @@ void add_InvoiceNote_binding(nb::module_ mod) {
     nb::class_<_native::InvoiceNote> opaque(mod, "InvoiceNote", nb::type_slots(_native_InvoiceNote_slots));
     opaque
         .def("language", std::move(maybe_op_unwrap(&_native::InvoiceNote::language)))
+        .def("language_id", std::move(maybe_op_unwrap(&_native::InvoiceNote::language_id)))
         .def("text", std::move(maybe_op_unwrap(&_native::InvoiceNote::text)));
 }
 

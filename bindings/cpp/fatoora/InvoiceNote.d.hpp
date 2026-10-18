@@ -14,6 +14,8 @@
 namespace fatoora {
 namespace capi { struct BindingError; }
 class BindingError;
+namespace capi { struct Text; }
+class Text;
 } // namespace fatoora
 
 
@@ -28,6 +30,8 @@ namespace capi {
 namespace fatoora {
 class InvoiceNote {
 public:
+
+  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> language_id() const;
 
   inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> language() const;
   template<typename W>

@@ -58,6 +58,32 @@ public partial class InvoiceNote: IDisposable
     }
 
     /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>Text</c> allocated on Rust side.
+    /// </returns>
+    public Text? LanguageId()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.InvoiceNote>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.InvoiceNote.LanguageId(selfLease!.Ptr);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return result.Ok == null ? null : new Text(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
     public string Language()
     {
         unsafe

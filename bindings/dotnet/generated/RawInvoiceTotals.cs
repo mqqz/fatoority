@@ -9,6 +9,12 @@ namespace Fatoora.Raw;
 internal partial struct InvoiceTotals
 {
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceTotals_vat_breakdown_len", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern nuint VatBreakdownLen(InvoiceTotals* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceTotals_vat_breakdown", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVatBreakdownBindingError VatBreakdown(InvoiceTotals* handle, nuint index);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceTotals_tax_inclusive", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError TaxInclusive(InvoiceTotals* handle, DiplomatWrite* writeable);
 

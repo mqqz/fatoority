@@ -9,6 +9,48 @@ class InvoiceLineItem internal constructor(internal val raw: com.fatoora.raw.Inv
         val handle = raw.handle
         attach { com.fatoora.raw.InvoiceLineItem.lib.fatoora_InvoiceLineItem_destroy(handle) }
     }
+    companion object {
+        @JvmStatic
+        fun create(description: String, quantity: String, unitCode: String, unitPrice: String, rate: String, category: Int): InvoiceLineItem = nativeCall(listOfNotNull()) {
+            InvoiceLineItem(unwrap(com.fatoora.raw.InvoiceLineItem.new_(checkedText(description), checkedText(quantity), checkedText(unitCode), checkedText(unitPrice), checkedText(rate), checkedUnsigned(category.toLong(), 255).toUByte())))
+        }
+    }
+    fun withDocumentReference(reference: OriginalInvoiceRef): InvoiceLineItem = nativeCall(listOfNotNull(this, reference)) {
+        InvoiceLineItem(unwrap(raw.withDocumentReference(reference.raw)))
+    }
+
+    fun withTaxSubtotal(subtotal: VatBreakdown): InvoiceLineItem = nativeCall(listOfNotNull(this, subtotal)) {
+        InvoiceLineItem(unwrap(raw.withTaxSubtotal(subtotal.raw)))
+    }
+
+    fun documentReferencesLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
+        java.math.BigInteger(raw.documentReferencesLen().toString())
+    }
+
+    fun documentReference(index: java.math.BigInteger): OriginalInvoiceRef = nativeCall(listOfNotNull(this)) {
+        OriginalInvoiceRef(unwrap(raw.documentReference(checkedCounter(index))))
+    }
+
+    fun taxSubtotalsLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
+        java.math.BigInteger(raw.taxSubtotalsLen().toString())
+    }
+
+    fun taxSubtotal(index: java.math.BigInteger): VatBreakdown = nativeCall(listOfNotNull(this)) {
+        VatBreakdown(unwrap(raw.taxSubtotal(checkedCounter(index))))
+    }
+
+    fun withMetadata(id: String?, exemption: TaxExemption): InvoiceLineItem = nativeCall(listOfNotNull(this, exemption)) {
+        InvoiceLineItem(unwrap(raw.withMetadata(id?.let(::checkedText), exemption.raw)))
+    }
+
+    fun id(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.id())?.let(::Text)
+    }
+
+    fun exemption(): TaxExemption = nativeCall(listOfNotNull(this)) {
+        TaxExemption(unwrap(raw.exemption()))
+    }
+
     fun description(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.description())
     }

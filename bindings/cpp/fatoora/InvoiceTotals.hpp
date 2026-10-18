@@ -13,11 +13,17 @@
 #include <cstdlib>
 #include "../diplomat_runtime.hpp"
 #include "BindingError.hpp"
+#include "VatBreakdown.hpp"
 
 
 namespace fatoora {
 namespace capi {
     extern "C" {
+
+    size_t fatoora_InvoiceTotals_vat_breakdown_len(const fatoora::capi::InvoiceTotals* self);
+
+    typedef struct fatoora_InvoiceTotals_vat_breakdown_result {union {fatoora::capi::VatBreakdown* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceTotals_vat_breakdown_result;
+    fatoora_InvoiceTotals_vat_breakdown_result fatoora_InvoiceTotals_vat_breakdown(const fatoora::capi::InvoiceTotals* self, size_t index);
 
     typedef struct fatoora_InvoiceTotals_tax_inclusive_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceTotals_tax_inclusive_result;
     fatoora_InvoiceTotals_tax_inclusive_result fatoora_InvoiceTotals_tax_inclusive(const fatoora::capi::InvoiceTotals* self, diplomat::capi::DiplomatWrite* write);
@@ -51,6 +57,17 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline size_t fatoora::InvoiceTotals::vat_breakdown_len() const {
+    auto result = fatoora::capi::fatoora_InvoiceTotals_vat_breakdown_len(this->AsFFI());
+    return result;
+}
+
+inline diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceTotals::vat_breakdown(size_t index) const {
+    auto result = fatoora::capi::fatoora_InvoiceTotals_vat_breakdown(this->AsFFI(),
+        index);
+    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::VatBreakdown>>(std::unique_ptr<fatoora::VatBreakdown>(fatoora::VatBreakdown::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
 
 inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceTotals::tax_inclusive() const {
     std::string output;

@@ -14,6 +14,16 @@
 namespace fatoora {
 namespace capi { struct BindingError; }
 class BindingError;
+namespace capi { struct InvoiceLineItem; }
+class InvoiceLineItem;
+namespace capi { struct OriginalInvoiceRef; }
+class OriginalInvoiceRef;
+namespace capi { struct TaxExemption; }
+class TaxExemption;
+namespace capi { struct Text; }
+class Text;
+namespace capi { struct VatBreakdown; }
+class VatBreakdown;
 } // namespace fatoora
 
 
@@ -28,6 +38,26 @@ namespace capi {
 namespace fatoora {
 class InvoiceLineItem {
 public:
+
+  inline diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>> with_document_reference(const fatoora::OriginalInvoiceRef& reference) const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>> with_tax_subtotal(const fatoora::VatBreakdown& subtotal) const;
+
+  inline size_t document_references_len() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::OriginalInvoiceRef>, std::unique_ptr<fatoora::BindingError>> document_reference(size_t index) const;
+
+  inline size_t tax_subtotals_len() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>> tax_subtotal(size_t index) const;
+
+  inline static diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>> new_(std::string_view description, std::string_view quantity, std::string_view unit_code, std::string_view unit_price, std::string_view rate, uint8_t category);
+
+  inline diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>> with_metadata(std::optional<std::string_view> id, const fatoora::TaxExemption& exemption) const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> id() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::TaxExemption>, std::unique_ptr<fatoora::BindingError>> exemption() const;
 
   inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> description() const;
   template<typename W>

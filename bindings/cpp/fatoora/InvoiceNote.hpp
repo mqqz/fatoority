@@ -13,11 +13,15 @@
 #include <cstdlib>
 #include "../diplomat_runtime.hpp"
 #include "BindingError.hpp"
+#include "Text.hpp"
 
 
 namespace fatoora {
 namespace capi {
     extern "C" {
+
+    typedef struct fatoora_InvoiceNote_language_id_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceNote_language_id_result;
+    fatoora_InvoiceNote_language_id_result fatoora_InvoiceNote_language_id(const fatoora::capi::InvoiceNote* self);
 
     typedef struct fatoora_InvoiceNote_language_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceNote_language_result;
     fatoora_InvoiceNote_language_result fatoora_InvoiceNote_language(const fatoora::capi::InvoiceNote* self, diplomat::capi::DiplomatWrite* write);
@@ -30,6 +34,11 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceNote::language_id() const {
+    auto result = fatoora::capi::fatoora_InvoiceNote_language_id(this->AsFFI());
+    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
 
 inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceNote::language() const {
     std::string output;

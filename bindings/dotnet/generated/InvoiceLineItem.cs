@@ -58,6 +58,272 @@ public partial class InvoiceLineItem: IDisposable
     }
 
     /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>InvoiceLineItem</c> allocated on Rust side.
+    /// </returns>
+    public InvoiceLineItem WithDocumentReference(OriginalInvoiceRef reference)
+    {
+        unsafe
+        {
+            if (reference == null) throw new ArgumentNullException(nameof(reference));
+            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+            BorrowLease<Raw.OriginalInvoiceRef>? referenceLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                referenceLease = reference._diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.InvoiceLineItem.WithDocumentReference(selfLease!.Ptr, referenceLease!.Ptr);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return new InvoiceLineItem(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+                referenceLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>InvoiceLineItem</c> allocated on Rust side.
+    /// </returns>
+    public InvoiceLineItem WithTaxSubtotal(VatBreakdown subtotal)
+    {
+        unsafe
+        {
+            if (subtotal == null) throw new ArgumentNullException(nameof(subtotal));
+            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+            BorrowLease<Raw.VatBreakdown>? subtotalLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                subtotalLease = subtotal._diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.InvoiceLineItem.WithTaxSubtotal(selfLease!.Ptr, subtotalLease!.Ptr);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return new InvoiceLineItem(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+                subtotalLease?.Release();
+            }
+        }
+    }
+
+    public nuint DocumentReferencesLen()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                return Raw.InvoiceLineItem.DocumentReferencesLen(selfLease!.Ptr);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>OriginalInvoiceRef</c> allocated on Rust side.
+    /// </returns>
+    public OriginalInvoiceRef DocumentReference(nuint index)
+    {
+        unsafe
+        {
+            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.InvoiceLineItem.DocumentReference(selfLease!.Ptr, index);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return new OriginalInvoiceRef(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    public nuint TaxSubtotalsLen()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                return Raw.InvoiceLineItem.TaxSubtotalsLen(selfLease!.Ptr);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>VatBreakdown</c> allocated on Rust side.
+    /// </returns>
+    public VatBreakdown TaxSubtotal(nuint index)
+    {
+        unsafe
+        {
+            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.InvoiceLineItem.TaxSubtotal(selfLease!.Ptr, index);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return new VatBreakdown(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>InvoiceLineItem</c> allocated on Rust side.
+    /// </returns>
+    public static InvoiceLineItem New(string description, string quantity, string unitCode, string unitPrice, string rate, byte category)
+    {
+        unsafe
+        {
+            if (description == null) throw new ArgumentNullException(nameof(description));
+            if (quantity == null) throw new ArgumentNullException(nameof(quantity));
+            if (unitCode == null) throw new ArgumentNullException(nameof(unitCode));
+            if (unitPrice == null) throw new ArgumentNullException(nameof(unitPrice));
+            if (rate == null) throw new ArgumentNullException(nameof(rate));
+            byte[] descriptionBytes = Diplomat.Utf8.Clone(description);
+            byte[] quantityBytes = Diplomat.Utf8.Clone(quantity);
+            byte[] unitCodeBytes = Diplomat.Utf8.Clone(unitCode);
+            byte[] unitPriceBytes = Diplomat.Utf8.Clone(unitPrice);
+            byte[] rateBytes = Diplomat.Utf8.Clone(rate);
+            fixed (byte* descriptionPtr = descriptionBytes)
+            fixed (byte* quantityPtr = quantityBytes)
+            fixed (byte* unitCodePtr = unitCodeBytes)
+            fixed (byte* unitPricePtr = unitPriceBytes)
+            fixed (byte* ratePtr = rateBytes)
+            {
+                var result = Raw.InvoiceLineItem.New(new DiplomatSliceU8 { Ptr = descriptionPtr, Len = (nuint)descriptionBytes.Length }, new DiplomatSliceU8 { Ptr = quantityPtr, Len = (nuint)quantityBytes.Length }, new DiplomatSliceU8 { Ptr = unitCodePtr, Len = (nuint)unitCodeBytes.Length }, new DiplomatSliceU8 { Ptr = unitPricePtr, Len = (nuint)unitPriceBytes.Length }, new DiplomatSliceU8 { Ptr = ratePtr, Len = (nuint)rateBytes.Length }, category);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return new InvoiceLineItem(result.Ok);
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>InvoiceLineItem</c> allocated on Rust side.
+    /// </returns>
+    public InvoiceLineItem WithMetadata(string? id, TaxExemption exemption)
+    {
+        unsafe
+        {
+            if (exemption == null) throw new ArgumentNullException(nameof(exemption));
+            byte[]? idBytes = id == null ? null : Diplomat.Utf8.Clone(id);
+            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+            BorrowLease<Raw.TaxExemption>? exemptionLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                exemptionLease = exemption._diplomatHandle.Lease(BorrowKind.Shared);
+                fixed (byte* idPtr = idBytes)
+                {
+                    var result = Raw.InvoiceLineItem.WithMetadata(selfLease!.Ptr, id == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = idPtr, Len = (nuint)idBytes!.Length }), exemptionLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw new BindingErrorException(new BindingError(result.Err));
+                    }
+                    return new InvoiceLineItem(result.Ok);
+                }
+            }
+            finally
+            {
+                selfLease?.Release();
+                exemptionLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>Text</c> allocated on Rust side.
+    /// </returns>
+    public Text? Id()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.InvoiceLineItem.Id(selfLease!.Ptr);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return result.Ok == null ? null : new Text(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>TaxExemption</c> allocated on Rust side.
+    /// </returns>
+    public TaxExemption Exemption()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.InvoiceLineItem.Exemption(selfLease!.Ptr);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return new TaxExemption(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
     public string Description()
     {
         unsafe

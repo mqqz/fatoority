@@ -13,11 +13,43 @@
 #include <cstdlib>
 #include "../diplomat_runtime.hpp"
 #include "BindingError.hpp"
+#include "OriginalInvoiceRef.hpp"
+#include "TaxExemption.hpp"
+#include "Text.hpp"
+#include "VatBreakdown.hpp"
 
 
 namespace fatoora {
 namespace capi {
     extern "C" {
+
+    typedef struct fatoora_InvoiceLineItem_with_document_reference_result {union {fatoora::capi::InvoiceLineItem* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_with_document_reference_result;
+    fatoora_InvoiceLineItem_with_document_reference_result fatoora_InvoiceLineItem_with_document_reference(const fatoora::capi::InvoiceLineItem* self, const fatoora::capi::OriginalInvoiceRef* reference);
+
+    typedef struct fatoora_InvoiceLineItem_with_tax_subtotal_result {union {fatoora::capi::InvoiceLineItem* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_with_tax_subtotal_result;
+    fatoora_InvoiceLineItem_with_tax_subtotal_result fatoora_InvoiceLineItem_with_tax_subtotal(const fatoora::capi::InvoiceLineItem* self, const fatoora::capi::VatBreakdown* subtotal);
+
+    size_t fatoora_InvoiceLineItem_document_references_len(const fatoora::capi::InvoiceLineItem* self);
+
+    typedef struct fatoora_InvoiceLineItem_document_reference_result {union {fatoora::capi::OriginalInvoiceRef* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_document_reference_result;
+    fatoora_InvoiceLineItem_document_reference_result fatoora_InvoiceLineItem_document_reference(const fatoora::capi::InvoiceLineItem* self, size_t index);
+
+    size_t fatoora_InvoiceLineItem_tax_subtotals_len(const fatoora::capi::InvoiceLineItem* self);
+
+    typedef struct fatoora_InvoiceLineItem_tax_subtotal_result {union {fatoora::capi::VatBreakdown* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_tax_subtotal_result;
+    fatoora_InvoiceLineItem_tax_subtotal_result fatoora_InvoiceLineItem_tax_subtotal(const fatoora::capi::InvoiceLineItem* self, size_t index);
+
+    typedef struct fatoora_InvoiceLineItem_new_result {union {fatoora::capi::InvoiceLineItem* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_new_result;
+    fatoora_InvoiceLineItem_new_result fatoora_InvoiceLineItem_new(diplomat::capi::DiplomatStringView description, diplomat::capi::DiplomatStringView quantity, diplomat::capi::DiplomatStringView unit_code, diplomat::capi::DiplomatStringView unit_price, diplomat::capi::DiplomatStringView rate, uint8_t category);
+
+    typedef struct fatoora_InvoiceLineItem_with_metadata_result {union {fatoora::capi::InvoiceLineItem* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_with_metadata_result;
+    fatoora_InvoiceLineItem_with_metadata_result fatoora_InvoiceLineItem_with_metadata(const fatoora::capi::InvoiceLineItem* self, diplomat::capi::OptionStringView id, const fatoora::capi::TaxExemption* exemption);
+
+    typedef struct fatoora_InvoiceLineItem_id_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_id_result;
+    fatoora_InvoiceLineItem_id_result fatoora_InvoiceLineItem_id(const fatoora::capi::InvoiceLineItem* self);
+
+    typedef struct fatoora_InvoiceLineItem_exemption_result {union {fatoora::capi::TaxExemption* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_exemption_result;
+    fatoora_InvoiceLineItem_exemption_result fatoora_InvoiceLineItem_exemption(const fatoora::capi::InvoiceLineItem* self);
 
     typedef struct fatoora_InvoiceLineItem_description_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_description_result;
     fatoora_InvoiceLineItem_description_result fatoora_InvoiceLineItem_description(const fatoora::capi::InvoiceLineItem* self, diplomat::capi::DiplomatWrite* write);
@@ -47,6 +79,67 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceLineItem::with_document_reference(const fatoora::OriginalInvoiceRef& reference) const {
+    auto result = fatoora::capi::fatoora_InvoiceLineItem_with_document_reference(this->AsFFI(),
+        reference.AsFFI());
+    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::InvoiceLineItem>>(std::unique_ptr<fatoora::InvoiceLineItem>(fatoora::InvoiceLineItem::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceLineItem::with_tax_subtotal(const fatoora::VatBreakdown& subtotal) const {
+    auto result = fatoora::capi::fatoora_InvoiceLineItem_with_tax_subtotal(this->AsFFI(),
+        subtotal.AsFFI());
+    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::InvoiceLineItem>>(std::unique_ptr<fatoora::InvoiceLineItem>(fatoora::InvoiceLineItem::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline size_t fatoora::InvoiceLineItem::document_references_len() const {
+    auto result = fatoora::capi::fatoora_InvoiceLineItem_document_references_len(this->AsFFI());
+    return result;
+}
+
+inline diplomat::result<std::unique_ptr<fatoora::OriginalInvoiceRef>, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceLineItem::document_reference(size_t index) const {
+    auto result = fatoora::capi::fatoora_InvoiceLineItem_document_reference(this->AsFFI(),
+        index);
+    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::OriginalInvoiceRef>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::OriginalInvoiceRef>>(std::unique_ptr<fatoora::OriginalInvoiceRef>(fatoora::OriginalInvoiceRef::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::OriginalInvoiceRef>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline size_t fatoora::InvoiceLineItem::tax_subtotals_len() const {
+    auto result = fatoora::capi::fatoora_InvoiceLineItem_tax_subtotals_len(this->AsFFI());
+    return result;
+}
+
+inline diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceLineItem::tax_subtotal(size_t index) const {
+    auto result = fatoora::capi::fatoora_InvoiceLineItem_tax_subtotal(this->AsFFI(),
+        index);
+    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::VatBreakdown>>(std::unique_ptr<fatoora::VatBreakdown>(fatoora::VatBreakdown::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceLineItem::new_(std::string_view description, std::string_view quantity, std::string_view unit_code, std::string_view unit_price, std::string_view rate, uint8_t category) {
+    auto result = fatoora::capi::fatoora_InvoiceLineItem_new({description.data(), description.size()},
+        {quantity.data(), quantity.size()},
+        {unit_code.data(), unit_code.size()},
+        {unit_price.data(), unit_price.size()},
+        {rate.data(), rate.size()},
+        category);
+    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::InvoiceLineItem>>(std::unique_ptr<fatoora::InvoiceLineItem>(fatoora::InvoiceLineItem::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceLineItem::with_metadata(std::optional<std::string_view> id, const fatoora::TaxExemption& exemption) const {
+    auto result = fatoora::capi::fatoora_InvoiceLineItem_with_metadata(this->AsFFI(),
+        id.has_value() ? (diplomat::capi::OptionStringView{ { {id.value().data(), id.value().size()} }, true }) : (diplomat::capi::OptionStringView{ {}, false }),
+        exemption.AsFFI());
+    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::InvoiceLineItem>>(std::unique_ptr<fatoora::InvoiceLineItem>(fatoora::InvoiceLineItem::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceLineItem::id() const {
+    auto result = fatoora::capi::fatoora_InvoiceLineItem_id(this->AsFFI());
+    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline diplomat::result<std::unique_ptr<fatoora::TaxExemption>, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceLineItem::exemption() const {
+    auto result = fatoora::capi::fatoora_InvoiceLineItem_exemption(this->AsFFI());
+    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::TaxExemption>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::TaxExemption>>(std::unique_ptr<fatoora::TaxExemption>(fatoora::TaxExemption::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::TaxExemption>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
 
 inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceLineItem::description() const {
     std::string output;

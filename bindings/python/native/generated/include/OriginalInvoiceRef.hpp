@@ -20,6 +20,15 @@ namespace _native {
 namespace capi {
     extern "C" {
 
+    typedef struct fatoora_OriginalInvoiceRef_new_result {union {_native::capi::OriginalInvoiceRef* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_OriginalInvoiceRef_new_result;
+    fatoora_OriginalInvoiceRef_new_result fatoora_OriginalInvoiceRef_new(_native::diplomat::capi::DiplomatStringView id, _native::diplomat::capi::OptionStringView uuid, _native::diplomat::capi::OptionStringView date, _native::diplomat::capi::OptionStringView time, _native::diplomat::capi::OptionStringView type_code);
+
+    typedef struct fatoora_OriginalInvoiceRef_issue_time_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_OriginalInvoiceRef_issue_time_result;
+    fatoora_OriginalInvoiceRef_issue_time_result fatoora_OriginalInvoiceRef_issue_time(const _native::capi::OriginalInvoiceRef* self);
+
+    typedef struct fatoora_OriginalInvoiceRef_document_type_code_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_OriginalInvoiceRef_document_type_code_result;
+    fatoora_OriginalInvoiceRef_document_type_code_result fatoora_OriginalInvoiceRef_document_type_code(const _native::capi::OriginalInvoiceRef* self);
+
     typedef struct fatoora_OriginalInvoiceRef_id_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_OriginalInvoiceRef_id_result;
     fatoora_OriginalInvoiceRef_id_result fatoora_OriginalInvoiceRef_id(const _native::capi::OriginalInvoiceRef* self, _native::diplomat::capi::DiplomatWrite* write);
 
@@ -34,6 +43,25 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline _native::diplomat::result<std::unique_ptr<_native::OriginalInvoiceRef>, std::unique_ptr<_native::BindingError>> _native::OriginalInvoiceRef::new_(std::string_view id, std::optional<std::string_view> uuid, std::optional<std::string_view> date, std::optional<std::string_view> time, std::optional<std::string_view> type_code) {
+    auto result = _native::capi::fatoora_OriginalInvoiceRef_new({id.data(), id.size()},
+        uuid.has_value() ? (_native::diplomat::capi::OptionStringView{ { {uuid.value().data(), uuid.value().size()} }, true }) : (_native::diplomat::capi::OptionStringView{ {}, false }),
+        date.has_value() ? (_native::diplomat::capi::OptionStringView{ { {date.value().data(), date.value().size()} }, true }) : (_native::diplomat::capi::OptionStringView{ {}, false }),
+        time.has_value() ? (_native::diplomat::capi::OptionStringView{ { {time.value().data(), time.value().size()} }, true }) : (_native::diplomat::capi::OptionStringView{ {}, false }),
+        type_code.has_value() ? (_native::diplomat::capi::OptionStringView{ { {type_code.value().data(), type_code.value().size()} }, true }) : (_native::diplomat::capi::OptionStringView{ {}, false }));
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::OriginalInvoiceRef>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::OriginalInvoiceRef>>(std::unique_ptr<_native::OriginalInvoiceRef>(_native::OriginalInvoiceRef::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::OriginalInvoiceRef>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::OriginalInvoiceRef::issue_time() const {
+    auto result = _native::capi::fatoora_OriginalInvoiceRef_issue_time(this->AsFFI());
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::OriginalInvoiceRef::document_type_code() const {
+    auto result = _native::capi::fatoora_OriginalInvoiceRef_document_type_code(this->AsFFI());
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
 
 inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> _native::OriginalInvoiceRef::id() const {
     std::string output;

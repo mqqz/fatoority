@@ -11,6 +11,8 @@
 #include <cstdlib>
 #include "diplomat_runtime.hpp"
 namespace _native {
+namespace capi { struct AllowanceCharge; }
+class AllowanceCharge;
 namespace capi { struct BindingError; }
 class BindingError;
 namespace capi { struct InvoiceLineItem; }
@@ -36,6 +38,20 @@ namespace capi {
 namespace _native {
 class InvoiceData {
 public:
+
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> payment_instruction() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> actual_delivery_date() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> latest_delivery_date() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> tax_currency() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> tax_currency_amount() const;
+
+  inline size_t adjustments_len() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::AllowanceCharge>, std::unique_ptr<_native::BindingError>> adjustment(size_t index) const;
 
   inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> id() const;
   template<typename W>

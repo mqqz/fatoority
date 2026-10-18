@@ -13,6 +13,8 @@
 namespace _native {
 namespace capi { struct BindingError; }
 class BindingError;
+namespace capi { struct Text; }
+class Text;
 } // namespace _native
 
 
@@ -26,6 +28,8 @@ namespace capi {
 namespace _native {
 class InvoiceNote {
 public:
+
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> language_id() const;
 
   inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> language() const;
   template<typename W>

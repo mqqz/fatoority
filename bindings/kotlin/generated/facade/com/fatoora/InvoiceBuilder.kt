@@ -16,6 +16,39 @@ class InvoiceBuilder internal constructor(internal val raw: com.fatoora.raw.Invo
             InvoiceBuilder(unwrap(com.fatoora.raw.InvoiceBuilder.new_(checkedUnsigned(kind.toLong(), 255).toUByte(), checkedUnsigned(subtype.toLong(), 255).toUByte(), originalId?.let(::checkedText), originalUuid?.let(::checkedText), originalDate?.let(::checkedText), reason?.let(::checkedText))))
         }
     }
+    fun setPaymentInstruction(instruction: String): Unit = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.setPaymentInstruction(checkedText(instruction)))
+    }
+
+    fun setPrepaidAmount(amount: String): Unit = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.setPrepaidAmount(checkedText(amount)))
+    }
+
+    fun setPayableRoundingAmount(amount: String): Unit = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.setPayableRoundingAmount(checkedText(amount)))
+    }
+
+    @JvmOverloads
+    fun setDelivery(actual: String? = null, latest: String? = null): Unit = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.setDelivery(actual?.let(::checkedText), latest?.let(::checkedText)))
+    }
+
+    fun setTaxCurrency(currency: String, amount: String): Unit = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.setTaxCurrency(checkedText(currency), checkedText(amount)))
+    }
+
+    fun setTaxExemption(category: Int, rate: String, exemption: TaxExemption): Unit = nativeCall(listOfNotNull(this, exemption)) {
+        unwrap(raw.setTaxExemption(checkedUnsigned(category.toLong(), 255).toUByte(), checkedText(rate), exemption.raw))
+    }
+
+    fun addAdjustment(adjustment: AllowanceCharge): Unit = nativeCall(listOfNotNull(this, adjustment)) {
+        unwrap(raw.addAdjustment(adjustment.raw))
+    }
+
+    fun addItem(item: InvoiceLineItem): Unit = nativeCall(listOfNotNull(this, item)) {
+        unwrap(raw.addItem(item.raw))
+    }
+
     fun setId(value: String): Unit = nativeCall(listOfNotNull(this)) {
         unwrap(raw.setId(checkedText(value)))
     }

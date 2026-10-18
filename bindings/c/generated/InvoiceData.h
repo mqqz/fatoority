@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
+#include "AllowanceCharge.d.h"
 #include "BindingError.d.h"
 #include "InvoiceLineItem.d.h"
 #include "InvoiceNote.d.h"
@@ -20,6 +21,26 @@
 
 
 
+
+typedef struct fatoora_InvoiceData_payment_instruction_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_payment_instruction_result;
+fatoora_InvoiceData_payment_instruction_result fatoora_InvoiceData_payment_instruction(const InvoiceData* self);
+
+typedef struct fatoora_InvoiceData_actual_delivery_date_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_actual_delivery_date_result;
+fatoora_InvoiceData_actual_delivery_date_result fatoora_InvoiceData_actual_delivery_date(const InvoiceData* self);
+
+typedef struct fatoora_InvoiceData_latest_delivery_date_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_latest_delivery_date_result;
+fatoora_InvoiceData_latest_delivery_date_result fatoora_InvoiceData_latest_delivery_date(const InvoiceData* self);
+
+typedef struct fatoora_InvoiceData_tax_currency_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_tax_currency_result;
+fatoora_InvoiceData_tax_currency_result fatoora_InvoiceData_tax_currency(const InvoiceData* self);
+
+typedef struct fatoora_InvoiceData_tax_currency_amount_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_tax_currency_amount_result;
+fatoora_InvoiceData_tax_currency_amount_result fatoora_InvoiceData_tax_currency_amount(const InvoiceData* self);
+
+size_t fatoora_InvoiceData_adjustments_len(const InvoiceData* self);
+
+typedef struct fatoora_InvoiceData_adjustment_result {union {AllowanceCharge* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_adjustment_result;
+fatoora_InvoiceData_adjustment_result fatoora_InvoiceData_adjustment(const InvoiceData* self, size_t index);
 
 typedef struct fatoora_InvoiceData_id_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceData_id_result;
 fatoora_InvoiceData_id_result fatoora_InvoiceData_id(const InvoiceData* self, DiplomatWrite* write);

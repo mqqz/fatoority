@@ -12,12 +12,18 @@
 #include <optional>
 #include <cstdlib>
 #include "BindingError.hpp"
+#include "VatBreakdown.hpp"
 #include "diplomat_runtime.hpp"
 
 
 namespace _native {
 namespace capi {
     extern "C" {
+
+    size_t fatoora_InvoiceTotals_vat_breakdown_len(const _native::capi::InvoiceTotals* self);
+
+    typedef struct fatoora_InvoiceTotals_vat_breakdown_result {union {_native::capi::VatBreakdown* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceTotals_vat_breakdown_result;
+    fatoora_InvoiceTotals_vat_breakdown_result fatoora_InvoiceTotals_vat_breakdown(const _native::capi::InvoiceTotals* self, size_t index);
 
     typedef struct fatoora_InvoiceTotals_tax_inclusive_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceTotals_tax_inclusive_result;
     fatoora_InvoiceTotals_tax_inclusive_result fatoora_InvoiceTotals_tax_inclusive(const _native::capi::InvoiceTotals* self, _native::diplomat::capi::DiplomatWrite* write);
@@ -51,6 +57,17 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline size_t _native::InvoiceTotals::vat_breakdown_len() const {
+    auto result = _native::capi::fatoora_InvoiceTotals_vat_breakdown_len(this->AsFFI());
+    return result;
+}
+
+inline _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>> _native::InvoiceTotals::vat_breakdown(size_t index) const {
+    auto result = _native::capi::fatoora_InvoiceTotals_vat_breakdown(this->AsFFI(),
+        index);
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::VatBreakdown>>(std::unique_ptr<_native::VatBreakdown>(_native::VatBreakdown::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
 
 inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> _native::InvoiceTotals::tax_inclusive() const {
     std::string output;

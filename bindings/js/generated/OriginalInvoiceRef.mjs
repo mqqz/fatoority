@@ -37,6 +37,71 @@ export class OriginalInvoiceRef {
     }
 
 
+    static new_(id, uuid, date, time, typeCode) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+
+        const idSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, id)));
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
+
+        const result = wasm.fatoora_OriginalInvoiceRef_new(diplomatReceive.buffer, idSlice.ptr, diplomatRuntime.optionToBufferForCalling(wasm, uuid, 8, 4, functionCleanupArena, (arrayBuffer, offset, jsValue) => [functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, jsValue)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0)]), diplomatRuntime.optionToBufferForCalling(wasm, date, 8, 4, functionCleanupArena, (arrayBuffer, offset, jsValue) => [functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, jsValue)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0)]), diplomatRuntime.optionToBufferForCalling(wasm, time, 8, 4, functionCleanupArena, (arrayBuffer, offset, jsValue) => [functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, jsValue)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0)]), diplomatRuntime.optionToBufferForCalling(wasm, typeCode, 8, 4, functionCleanupArena, (arrayBuffer, offset, jsValue) => [functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, jsValue)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0)]));
+
+        try {
+            if (!diplomatReceive.resultFlag) {
+                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
+            }
+            return new OriginalInvoiceRef(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+            functionCleanupArena.free();
+
+            diplomatReceive.free();
+        }
+    }
+
+    issueTime() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
+
+        const result = wasm.fatoora_OriginalInvoiceRef_issue_time(diplomatReceive.buffer, this.ffiValue);
+
+        try {
+            if (!diplomatReceive.resultFlag) {
+                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
+            }
+            return diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer) === 0 ? null : new Text(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+            diplomatReceive.free();
+        }
+    }
+
+    documentTypeCode() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
+
+        const result = wasm.fatoora_OriginalInvoiceRef_document_type_code(diplomatReceive.buffer, this.ffiValue);
+
+        try {
+            if (!diplomatReceive.resultFlag) {
+                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
+            }
+            return diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer) === 0 ? null : new Text(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+            diplomatReceive.free();
+        }
+    }
+
     id() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 

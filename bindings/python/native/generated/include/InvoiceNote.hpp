@@ -12,12 +12,16 @@
 #include <optional>
 #include <cstdlib>
 #include "BindingError.hpp"
+#include "Text.hpp"
 #include "diplomat_runtime.hpp"
 
 
 namespace _native {
 namespace capi {
     extern "C" {
+
+    typedef struct fatoora_InvoiceNote_language_id_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceNote_language_id_result;
+    fatoora_InvoiceNote_language_id_result fatoora_InvoiceNote_language_id(const _native::capi::InvoiceNote* self);
 
     typedef struct fatoora_InvoiceNote_language_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceNote_language_result;
     fatoora_InvoiceNote_language_result fatoora_InvoiceNote_language(const _native::capi::InvoiceNote* self, _native::diplomat::capi::DiplomatWrite* write);
@@ -30,6 +34,11 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::InvoiceNote::language_id() const {
+    auto result = _native::capi::fatoora_InvoiceNote_language_id(this->AsFFI());
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
 
 inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> _native::InvoiceNote::language() const {
     std::string output;

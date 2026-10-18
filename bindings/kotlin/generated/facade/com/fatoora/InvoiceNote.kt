@@ -9,6 +9,10 @@ class InvoiceNote internal constructor(internal val raw: com.fatoora.raw.Invoice
         val handle = raw.handle
         attach { com.fatoora.raw.InvoiceNote.lib.fatoora_InvoiceNote_destroy(handle) }
     }
+    fun languageId(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.languageId())?.let(::Text)
+    }
+
     fun language(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.language())
     }

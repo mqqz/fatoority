@@ -9,6 +9,15 @@ namespace Fatoora.Raw;
 internal partial struct OriginalInvoiceRef
 {
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_OriginalInvoiceRef_new", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultOriginalInvoiceRefBindingError New(DiplomatSliceU8 id, DiplomatOptionSliceU8 uuid, DiplomatOptionSliceU8 date, DiplomatOptionSliceU8 time, DiplomatOptionSliceU8 typeCode);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_OriginalInvoiceRef_issue_time", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultTextBindingError IssueTime(OriginalInvoiceRef* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_OriginalInvoiceRef_document_type_code", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultTextBindingError DocumentTypeCode(OriginalInvoiceRef* handle);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_OriginalInvoiceRef_id", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError Id(OriginalInvoiceRef* handle, DiplomatWrite* writeable);
 

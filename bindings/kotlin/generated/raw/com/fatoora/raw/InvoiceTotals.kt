@@ -7,6 +7,8 @@ import com.sun.jna.Structure
 
 internal interface InvoiceTotalsLib: Library {
     fun fatoora_InvoiceTotals_destroy(handle: Pointer)
+    fun fatoora_InvoiceTotals_vat_breakdown_len(handle: Pointer): FFISizet
+    fun fatoora_InvoiceTotals_vat_breakdown(handle: Pointer, index: FFISizet): ResultPointerPointer
     fun fatoora_InvoiceTotals_tax_inclusive(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_InvoiceTotals_tax_amount(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_InvoiceTotals_line_extension(handle: Pointer, write: Pointer): ResultUnitPointer
@@ -46,6 +48,29 @@ class InvoiceTotals internal constructor (
     companion object {
         internal val libClass: Class<InvoiceTotalsLib> = InvoiceTotalsLib::class.java
         internal val lib: InvoiceTotalsLib = Native.load("fatoora_ffi", libClass)
+    }
+
+    fun vatBreakdownLen(): ULong {
+
+        val returnVal = lib.fatoora_InvoiceTotals_vat_breakdown_len(handle);
+        return (returnVal.toULong())
+    }
+
+    fun vatBreakdown(index: ULong): Result<VatBreakdown> {
+
+        val returnVal = lib.fatoora_InvoiceTotals_vat_breakdown(handle, FFISizet(index));
+        val nativeOkVal = returnVal.getNativeOk();
+        if (nativeOkVal != null) {
+            val selfEdges: List<Any> = listOf()
+            val handle = nativeOkVal
+            val returnOpaque = VatBreakdown(handle, selfEdges, true)
+            return returnOpaque.ok()
+        } else {
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal.getNativeErr()!!
+            val returnOpaque = BindingError(handle, selfEdges, true)
+            return returnOpaque.err()
+        }
     }
 
     fun taxInclusive(): Result<String> {

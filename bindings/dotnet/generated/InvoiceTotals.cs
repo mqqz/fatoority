@@ -57,6 +57,49 @@ public partial class InvoiceTotals: IDisposable
         }
     }
 
+    public nuint VatBreakdownLen()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.InvoiceTotals>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                return Raw.InvoiceTotals.VatBreakdownLen(selfLease!.Ptr);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>VatBreakdown</c> allocated on Rust side.
+    /// </returns>
+    public VatBreakdown VatBreakdown(nuint index)
+    {
+        unsafe
+        {
+            BorrowLease<Raw.InvoiceTotals>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.InvoiceTotals.VatBreakdown(selfLease!.Ptr, index);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return new VatBreakdown(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
     /// <exception cref="BindingErrorException"></exception>
     public string TaxInclusive()
     {

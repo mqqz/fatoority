@@ -9,6 +9,14 @@ class InvoiceTotals internal constructor(internal val raw: com.fatoora.raw.Invoi
         val handle = raw.handle
         attach { com.fatoora.raw.InvoiceTotals.lib.fatoora_InvoiceTotals_destroy(handle) }
     }
+    fun vatBreakdownLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
+        java.math.BigInteger(raw.vatBreakdownLen().toString())
+    }
+
+    fun vatBreakdown(index: java.math.BigInteger): VatBreakdown = nativeCall(listOfNotNull(this)) {
+        VatBreakdown(unwrap(raw.vatBreakdown(checkedCounter(index))))
+    }
+
     fun taxInclusive(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.taxInclusive())
     }

@@ -20,6 +20,15 @@ namespace fatoora {
 namespace capi {
     extern "C" {
 
+    typedef struct fatoora_OriginalInvoiceRef_new_result {union {fatoora::capi::OriginalInvoiceRef* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_OriginalInvoiceRef_new_result;
+    fatoora_OriginalInvoiceRef_new_result fatoora_OriginalInvoiceRef_new(diplomat::capi::DiplomatStringView id, diplomat::capi::OptionStringView uuid, diplomat::capi::OptionStringView date, diplomat::capi::OptionStringView time, diplomat::capi::OptionStringView type_code);
+
+    typedef struct fatoora_OriginalInvoiceRef_issue_time_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_OriginalInvoiceRef_issue_time_result;
+    fatoora_OriginalInvoiceRef_issue_time_result fatoora_OriginalInvoiceRef_issue_time(const fatoora::capi::OriginalInvoiceRef* self);
+
+    typedef struct fatoora_OriginalInvoiceRef_document_type_code_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_OriginalInvoiceRef_document_type_code_result;
+    fatoora_OriginalInvoiceRef_document_type_code_result fatoora_OriginalInvoiceRef_document_type_code(const fatoora::capi::OriginalInvoiceRef* self);
+
     typedef struct fatoora_OriginalInvoiceRef_id_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_OriginalInvoiceRef_id_result;
     fatoora_OriginalInvoiceRef_id_result fatoora_OriginalInvoiceRef_id(const fatoora::capi::OriginalInvoiceRef* self, diplomat::capi::DiplomatWrite* write);
 
@@ -34,6 +43,25 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline diplomat::result<std::unique_ptr<fatoora::OriginalInvoiceRef>, std::unique_ptr<fatoora::BindingError>> fatoora::OriginalInvoiceRef::new_(std::string_view id, std::optional<std::string_view> uuid, std::optional<std::string_view> date, std::optional<std::string_view> time, std::optional<std::string_view> type_code) {
+    auto result = fatoora::capi::fatoora_OriginalInvoiceRef_new({id.data(), id.size()},
+        uuid.has_value() ? (diplomat::capi::OptionStringView{ { {uuid.value().data(), uuid.value().size()} }, true }) : (diplomat::capi::OptionStringView{ {}, false }),
+        date.has_value() ? (diplomat::capi::OptionStringView{ { {date.value().data(), date.value().size()} }, true }) : (diplomat::capi::OptionStringView{ {}, false }),
+        time.has_value() ? (diplomat::capi::OptionStringView{ { {time.value().data(), time.value().size()} }, true }) : (diplomat::capi::OptionStringView{ {}, false }),
+        type_code.has_value() ? (diplomat::capi::OptionStringView{ { {type_code.value().data(), type_code.value().size()} }, true }) : (diplomat::capi::OptionStringView{ {}, false }));
+    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::OriginalInvoiceRef>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::OriginalInvoiceRef>>(std::unique_ptr<fatoora::OriginalInvoiceRef>(fatoora::OriginalInvoiceRef::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::OriginalInvoiceRef>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::OriginalInvoiceRef::issue_time() const {
+    auto result = fatoora::capi::fatoora_OriginalInvoiceRef_issue_time(this->AsFFI());
+    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::OriginalInvoiceRef::document_type_code() const {
+    auto result = fatoora::capi::fatoora_OriginalInvoiceRef_document_type_code(this->AsFFI());
+    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
 
 inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> fatoora::OriginalInvoiceRef::id() const {
     std::string output;
