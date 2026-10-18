@@ -767,3 +767,47 @@ fn absent_line_ids_are_generated_and_supplied_ids_are_preserved() {
         .collect();
     assert_eq!(ids, [Some("1"), Some("CUSTOM-42"), Some("3")]);
 }
+
+#[test]
+fn document_adjustments_do_not_replace_the_line_derived_vat_category() {
+    for (line_category, adjustment_category) in [
+        (VatCategory::Standard, VatCategory::Exempt),
+        (VatCategory::Exempt, VatCategory::Standard),
+        (VatCategory::Zero, VatCategory::OutOfScope),
+    ] {
+        for charge in [false, true] {
+            let mut b = builder()
+                .vat_category(line_category)
+                .line_item(line(line_category));
+            // An allowance needs a taxable balance in its own category. A charge
+            // may introduce a category with no corresponding invoice line.
+            if !charge {
+                b = b.line_item(line(adjustment_category));
+            }
+            let invoice = b
+                .adjustment(AllowanceCharge {
+                    tax_category_count: 1,
+                    charge,
+                    amount: d("1"),
+                    reason: Some("Adjustment".into()),
+                    reason_code: None,
+                    category: adjustment_category,
+                    rate: if adjustment_category == VatCategory::Standard {
+                        d("15")
+                    } else {
+                        d("0")
+                    },
+                    exemption: TaxExemption::default(),
+                })
+                .build()
+                .unwrap();
+            let restored = roundtrip(&invoice.to_xml().unwrap());
+            assert_eq!(restored.data().vat_category(), line_category);
+            assert_eq!(
+                restored.data().adjustments()[0].category,
+                adjustment_category
+            );
+            assert_eq!(restored, invoice);
+        }
+    }
+}

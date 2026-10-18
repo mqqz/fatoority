@@ -579,3 +579,35 @@ fn supplied_blank_line_ids_return_indexed_binding_validation_errors() {
         assert_eq!(details["issues"][0]["line_item_index"], 1);
     }
 }
+
+#[test]
+fn mixed_category_adjustment_preserves_invoice_and_adjustment_categories() {
+    use fatoora_ffi::invoice::ffi::{AllowanceCharge, TaxExemption};
+    let exemption = ok(TaxExemption::new(
+        Some(b"VATEX-SA-29"),
+        Some(b"Exempt charge"),
+    ));
+    let charge = ok(AllowanceCharge::new(
+        true,
+        b"5",
+        Some(b"Fee"),
+        None,
+        0,
+        b"0",
+        &exemption,
+    ));
+    let mut b = builder();
+    ok(b.add_line_item(b"Standard item", b"1", b"PCE", b"100", b"15", 1));
+    ok(b.add_adjustment(&charge));
+    let invoice = ok(b.build());
+    let xml = written(|out| ok(invoice.xml(out)));
+    let imported = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
+    let data = ok(imported.data());
+    assert_eq!(data.vat_category(), 1);
+    assert_eq!(ok(data.adjustment(0)).category(), 0);
+    assert_eq!(
+        written(|out| ok(ok(imported.totals()).payable_amount(out))),
+        "120"
+    );
+    assert_eq!(written(|out| ok(imported.xml(out))), xml);
+}

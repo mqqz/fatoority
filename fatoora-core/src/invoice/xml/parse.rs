@@ -254,7 +254,7 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
     let mut discount = Decimal::ZERO;
     let mut charge = Decimal::ZERO;
 
-    for (index, adjustment) in nav::allowance_charges(ctx).enumerate() {
+    for adjustment in nav::allowance_charges(ctx) {
         let amount = decimal_required(adjustment.basic("Amount").content(), "AdjustmentAmount")?;
         let category = text_required(
             adjustment.aggregate("TaxCategory").basic("ID").content(),
@@ -320,9 +320,6 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
                 field: "AdjustmentAmount",
                 value: amount.to_string(),
             });
-        }
-        if index == 0 {
-            builder = builder.vat_category(category);
         }
         builder = builder.adjustment(crate::invoice::AllowanceCharge {
             tax_category_count: adjustment
