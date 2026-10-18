@@ -546,3 +546,52 @@ fn supplied_invalid_party_identifiers_do_not_become_absent() {
     let invalid_currency = change(XML, "/ubl:Invoice/cbc:DocumentCurrencyCode", "INVALID");
     assert!(parse_finalized_invoice_xml(&invalid_currency).is_err());
 }
+
+#[test]
+fn recognized_aggregate_nesting_is_bounded_before_model_recursion() {
+    use fatoora_core::invoice::xml::parse::{
+        ParseError, parse_finalized_invoice_xml_file, parse_signed_invoice_xml_file,
+    };
+    // The Invoice root is level 1. These are recognized CAC nodes, so the model
+    // visitor traverses the entire accepted chain rather than skipping it.
+    let nested = |depth: usize| {
+        XML.replace(
+            "</Invoice>",
+            &format!(
+                "{}{} </Invoice>",
+                "<cac:Party>".repeat(depth - 1),
+                "</cac:Party>".repeat(depth - 1)
+            ),
+        )
+    };
+    let accepted = nested(128);
+    assert_eq!(
+        parse_finalized_invoice_xml(&accepted).unwrap(),
+        parse_finalized_invoice_xml(XML).unwrap()
+    );
+    assert_eq!(parse_signed_invoice_xml(&accepted).unwrap().xml(), accepted);
+    let file = tempfile::NamedTempFile::new().unwrap();
+    std::fs::write(file.path(), &accepted).unwrap();
+    assert_eq!(
+        parse_finalized_invoice_xml_file(file.path()).unwrap(),
+        parse_finalized_invoice_xml(XML).unwrap()
+    );
+    assert_eq!(
+        parse_signed_invoice_xml_file(file.path()).unwrap().xml(),
+        accepted
+    );
+    for depth in [129, 50_000] {
+        let rejected = nested(depth);
+        std::fs::write(file.path(), &rejected).unwrap();
+        for error in [
+            parse_finalized_invoice_xml(&rejected).unwrap_err(),
+            parse_signed_invoice_xml(&rejected).unwrap_err(),
+            parse_finalized_invoice_xml_file(file.path()).unwrap_err(),
+            parse_signed_invoice_xml_file(file.path()).unwrap_err(),
+        ] {
+            assert!(matches!(error, ParseError::XmlParse(_)), "{error}");
+            assert!(error.to_string().contains("XML depth"), "{error}");
+        }
+    }
+    assert!(parse_finalized_invoice_xml(XML).is_ok());
+}

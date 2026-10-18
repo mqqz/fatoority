@@ -473,6 +473,8 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
 
 // Reject ambiguous occurrences of modeled singleton fields before first-child navigation.
 // Signature extensions and unrelated UBL content remain outside the typed model.
+// Both public import paths call lexical::document first; its 128-level XML depth
+// limit bounds this visitor before it can recurse into recognized aggregates.
 fn check_model_structure(root: Element<'_, '_>) -> Result<(), ParseError> {
     use super::constants::{CAC_NS, CBC_NS};
     fn visit(element: Element<'_, '_>) -> Result<(), ParseError> {
