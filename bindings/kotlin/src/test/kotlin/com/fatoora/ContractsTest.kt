@@ -110,6 +110,7 @@ class ContractsTest {
             Config.create(0).use { config -> ZatcaClient.create(config).use { client ->
                 val credentials = CsidProduction.create(0, null, "token", "secret")
                 val invoice = SignedInvoice.fromXml(signed)
+                assertEquals(Xml.hash(signed), invoice.hashBase64())
                 val request = client.prepareReportSimplifiedInvoice(invoice, credentials, false)
                 credentials.close(); invoice.close()
                 request.use {

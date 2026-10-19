@@ -817,3 +817,36 @@ fn signing_preserves_whitespace_padded_qr_references() {
     assert_eq!(ids.iter().filter(|&&id| id == " QR ").count(), 1);
     assert_eq!(signer.sign_xml(&signed).unwrap(), signed);
 }
+
+#[test]
+fn signed_hash_uses_retained_xml_and_does_not_trust_embedded_digest() {
+    use fatoora_core::invoice::{
+        sign::invoice_hash_base64_from_xml_str,
+        xml::parse::{parse_finalized_invoice_xml, parse_signed_invoice_xml},
+    };
+    let (signer, _) = build_test_signer();
+    let finalized = common::dummy_finalized_invoice();
+    let emitted = finalized.to_xml().unwrap();
+    assert_eq!(
+        finalized.hash_base64().unwrap(),
+        invoice_hash_base64_from_xml_str(&emitted).unwrap()
+    );
+    let signed = finalized.sign(&signer).unwrap();
+    assert_eq!(
+        signed.hash_base64().unwrap(),
+        invoice_hash_base64_from_xml_str(signed.xml()).unwrap()
+    );
+    assert_eq!(signed.hash_base64().unwrap(), signed.invoice_hash());
+
+    // A leading zero changes retained XML text without changing the numeric model.
+    let changed = signed.xml().replacen("<cbc:Percent>", "<cbc:Percent>0", 1);
+    assert_ne!(changed, signed.xml());
+    let imported = parse_signed_invoice_xml(&changed).unwrap();
+    let model = parse_finalized_invoice_xml(&changed).unwrap();
+    let raw_hash = invoice_hash_base64_from_xml_str(&changed).unwrap();
+    assert_eq!(imported.xml(), changed);
+    assert_eq!(imported.hash_base64().unwrap(), raw_hash);
+    assert_ne!(model.hash_base64().unwrap(), raw_hash);
+    assert_eq!(imported.invoice_hash(), signed.invoice_hash());
+    assert_ne!(imported.hash_base64().unwrap(), imported.invoice_hash());
+}

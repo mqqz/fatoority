@@ -8,6 +8,16 @@ import java.nio.file.Paths;
 import static org.junit.Assert.*;
 
 public class JavaContractsTest {
+    @Test public void importedSignedHashMatchesXml() throws Exception {
+        Path fixtures = Paths.get(System.getProperty("fatoora.fixtures"));
+        for (String kind : new String[]{"standard", "simplified"}) {
+            String xml = new String(Files.readAllBytes(fixtures.resolve("cases/" + kind + "-invoice/sdk-signed.xml")), StandardCharsets.UTF_8);
+            try (SignedInvoice invoice = SignedInvoice.fromXml(xml)) {
+                assertEquals(Xml.hash(xml), invoice.hashBase64());
+            }
+        }
+    }
+
     @Test public void nullableHttpStatusIsJavaCallable() throws Exception {
         assertEquals(Integer.class, ValidationResponse.class.getMethod("httpStatus").getReturnType());
         Path fixtures = Paths.get(System.getProperty("fatoora.fixtures"));

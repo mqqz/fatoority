@@ -12,6 +12,7 @@ use fatoora_core::{
     csr::CsrProperties,
     invoice::{
         FinalizedInvoice, SignedInvoice,
+        sign::invoice_hash_base64_from_xml_str,
         validation::{
             Severity, ValidationFinding, ValidationLocation, ZatcaStage, ZatcaStageStatus,
             ZatcaValidationOptions, ZatcaValidationReport, validate_xml_invoice_from_str,
@@ -259,12 +260,8 @@ fn main() -> Result<ExitCode> {
         Commands::GenerateHash { invoice } => {
             let xml = std::fs::read_to_string(&invoice)
                 .with_context(|| format!("failed to read invoice file {invoice}"))?;
-            let hash = match parse_signed_invoice_xml(&xml) {
-                Ok(signed) => signed.hash_base64()?,
-                Err(_) => parse_finalized_invoice_xml(&xml)
-                    .with_context(|| format!("failed to parse invoice XML from {invoice}"))?
-                    .hash_base64()?,
-            };
+            let hash = invoice_hash_base64_from_xml_str(&xml)
+                .with_context(|| format!("failed to hash invoice XML from {invoice}"))?;
             println!("{hash}");
         }
         Commands::InvoiceRequest {

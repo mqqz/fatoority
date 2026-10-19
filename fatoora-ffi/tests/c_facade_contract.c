@@ -93,6 +93,14 @@ static void invoices(const char *fixture) {
 
     FatooraSignedInvoice *signed_invoice = NULL;
     assert(fatoora_signed_invoice_from_file(fixture, &signed_invoice, &error) == FATOORA_OK);
+    char *computed_hash = NULL, *raw_hash = NULL;
+    assert(fatoora_signed_invoice_hash_base64(signed_invoice, &computed_hash, &error) == FATOORA_OK);
+    assert(fatoora_signed_invoice_xml(signed_invoice, &xml, &error) == FATOORA_OK);
+    assert(fatoora_xml_hash(xml, &raw_hash, &error) == FATOORA_OK);
+    assert(strcmp(computed_hash, raw_hash) == 0);
+    fatoora_string_free(computed_hash);
+    fatoora_string_free(raw_hash);
+    fatoora_string_free(xml);
     assert(fatoora_signed_invoice_into_xml(signed_invoice, &xml, &error) == FATOORA_OK);
     assert(strstr(xml, "Invoice"));
     failure(fatoora_signed_invoice_xml(signed_invoice, &value, &error), &error);

@@ -165,3 +165,10 @@ test('validation options preserve Rust errors before host clock injection', () =
     assert.ok(JSON.parse(sdk.Xml.validateZatca(config, xml, options)).stages);
   }
 });
+
+test('imported signed invoice hashes its stored XML', () => {
+  for (const kind of ['standard', 'simplified']) {
+    const xml = loadFixture(`sdk-parity/cases/${kind}-invoice/sdk-signed.xml`);
+    assert.equal(sdk.SignedInvoice.fromXml(xml).hashBase64(), sdk.Xml.hash(xml));
+  }
+});

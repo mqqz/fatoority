@@ -89,6 +89,7 @@ fn assert_roundtrip(xml: &str, invoice: &fatoora_core::invoice::FinalizedInvoice
     assert_eq!(signed.xml(), xml);
     assert_ne!(signed.xml(), generated);
     let hash = fatoora_core::invoice::sign::invoice_hash_base64_from_xml_str(xml).unwrap();
+    assert_eq!(signed.hash_base64().unwrap(), hash);
     assert_eq!(
         hash,
         fatoora_core::invoice::sign::invoice_hash_base64_from_xml_str(signed.xml()).unwrap()

@@ -49,7 +49,7 @@ A finalized invoice contains invoice data and calculated totals. A signed invoic
 | Invoice data | Identity, type/subtype, parties, notes, original invoice reference, flags, line items, and invoice adjustments. |
 | Line item | Description, quantity, unit code, unit price, line total, VAT rate, VAT amount, and category. Indexed access is zero-based and rejects out-of-range indexes. |
 | Totals | Line extension, allowance total, charge total, taxable amount, tax amount, tax inclusive total, prepaid amount, payable rounding amount, and payable amount. |
-| Model hash | Base64 hash calculated by serializing the finalized invoice model. On imported signed documents this can differ from the embedded invoice hash. |
+| Computed hash | `hash_base64()` hashes emitted XML for a finalized model and stored XML for a signed invoice. The signed result can differ from the embedded digest if the document was altered. |
 
 ## Language reference
 
