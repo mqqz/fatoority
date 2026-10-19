@@ -189,6 +189,6 @@ Choose your language for imports, exact calls, returns, and ownership behavior.
 
     Each output is owned NUL-terminated text; release it with `fatoora_string_free()`. `_xml` copies the result and preserves invoice state. `_into_xml` consumes signed invoice state; further reads fail, but the outer handle must still be freed. `_to_xml_base64` returns encoded text without consuming state. Finalized formatting uses two-space indentation; signed output is never reformatted.
 
-See the [field coverage audit](../invoice-model-roundtrip.md) for supported fields,
+See the [model preservation contract](../development/invoice-model.md) for supported fields,
 normalization, rejected structures, and the boundary between model serialization
 and original signed XML preservation.
