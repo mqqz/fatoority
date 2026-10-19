@@ -18,6 +18,12 @@
 
 
 
+typedef struct fatoora_AllowanceCharge_base_amount_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_base_amount_result;
+fatoora_AllowanceCharge_base_amount_result fatoora_AllowanceCharge_base_amount(const AllowanceCharge* self);
+
+typedef struct fatoora_AllowanceCharge_percentage_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_percentage_result;
+fatoora_AllowanceCharge_percentage_result fatoora_AllowanceCharge_percentage(const AllowanceCharge* self);
+
 typedef struct fatoora_AllowanceCharge_new_result {union {AllowanceCharge* ok; BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_new_result;
 fatoora_AllowanceCharge_new_result fatoora_AllowanceCharge_new(bool charge, DiplomatStringView amount, OptionStringView reason, OptionStringView reason_code, uint8_t category, DiplomatStringView rate, const TaxExemption* exemption);
 

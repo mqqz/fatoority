@@ -61,6 +61,63 @@ public partial class Address: IDisposable
     /// <returns>
     /// A <c>Address</c> allocated on Rust side.
     /// </returns>
+    public Address WithProvince(string value)
+    {
+        unsafe
+        {
+            if (value == null) throw new ArgumentNullException(nameof(value));
+            byte[] valueBytes = Diplomat.Utf8.Clone(value);
+            BorrowLease<Raw.Address>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                fixed (byte* valuePtr = valueBytes)
+                {
+                    var result = Raw.Address.WithProvince(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
+                    if (!result.IsOk)
+                    {
+                        throw new BindingErrorException(new BindingError(result.Err));
+                    }
+                    return new Address(result.Ok);
+                }
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>Text</c> allocated on Rust side.
+    /// </returns>
+    public Text? Province()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.Address>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.Address.Province(selfLease!.Ptr);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return result.Ok == null ? null : new Text(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>Address</c> allocated on Rust side.
+    /// </returns>
     public static Address New(string countryCode, string city, string street, string buildingNumber, string postalCode, string? additionalStreet, string? additionalNumber, string? district)
     {
         unsafe

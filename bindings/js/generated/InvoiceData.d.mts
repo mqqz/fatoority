@@ -5,6 +5,7 @@ import type { InvoiceLineItem } from "./InvoiceLineItem.mjs"
 import type { InvoiceNote } from "./InvoiceNote.mjs"
 import type { OriginalInvoiceRef } from "./OriginalInvoiceRef.mjs"
 import type { Party } from "./Party.mjs"
+import type { PaymentMeans } from "./PaymentMeans.mjs"
 import type { Text } from "./Text.mjs"
 import type { pointer, codepoint } from "./diplomat-runtime.mjs";
 
@@ -16,6 +17,18 @@ export class InvoiceData {
     /** @internal */
     constructor();
 
+
+    issueTime(): string;
+
+    issueDate(): string;
+
+    paymentMeansLen(): number;
+
+    paymentMeans(index: number): PaymentMeans;
+
+    purchaseOrderId(): Text | null;
+
+    contractId(): Text | null;
 
     paymentInstruction(): Text | null;
 
@@ -72,4 +85,12 @@ export class InvoiceData {
     originalInvoiceRef(): OriginalInvoiceRef | null;
 
     originalInvoiceReason(): Text | null;
+
+    notesLen(): number;
+
+    noteAt(index: number): InvoiceNote;
+
+    billingReferencesLen(): number;
+
+    billingReference(index: number): OriginalInvoiceRef;
 }

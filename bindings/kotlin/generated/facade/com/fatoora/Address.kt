@@ -16,6 +16,14 @@ class Address internal constructor(internal val raw: com.fatoora.raw.Address) : 
             Address(unwrap(com.fatoora.raw.Address.new_(checkedText(countryCode), checkedText(city), checkedText(street), checkedText(buildingNumber), checkedText(postalCode), additionalStreet?.let(::checkedText), additionalNumber?.let(::checkedText), district?.let(::checkedText))))
         }
     }
+    fun withProvince(value: String): Address = nativeCall(listOfNotNull(this)) {
+        Address(unwrap(raw.withProvince(checkedText(value))))
+    }
+
+    fun province(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.province())?.let(::Text)
+    }
+
     fun city(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.city())
     }

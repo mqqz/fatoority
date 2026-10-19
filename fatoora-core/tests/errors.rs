@@ -20,7 +20,7 @@ fn wrapping_retains_validation_fields_and_exact_amounts() {
         decimal("1"),
         "PCE",
         decimal("100"),
-        decimal("100"),
+        decimal("99"),
         decimal("15"),
         decimal("10"),
         VatCategory::Standard,
@@ -32,16 +32,16 @@ fn wrapping_retains_validation_fields_and_exact_amounts() {
         panic!("lost module error: {error}");
     };
     let issue = &validation.issues()[0];
-    assert_eq!(issue.field(), InvoiceField::LineItemVatAmount);
-    assert_eq!(issue.supplied(), Some(decimal("10")));
-    assert_eq!(issue.expected(), Some(decimal("15")));
+    assert_eq!(issue.field(), InvoiceField::LineItemTotalAmount);
+    assert_eq!(issue.supplied(), Some(decimal("99")));
+    assert_eq!(issue.expected(), Some(decimal("100")));
     assert!(error.source().unwrap().is::<InvoiceError>());
     let details: Value = serde_json::from_str(&error.details_json()).unwrap();
     assert_eq!(
         details,
         json!({"type": "invoice_validation", "issues": [{
-            "field": "line_item_vat_amount", "kind": "mismatch", "line_item_index": null,
-            "supplied": "10", "expected": "15"
+            "field": "line_item_total_amount", "kind": "mismatch", "line_item_index": null,
+            "supplied": "99", "expected": "100"
         }]})
     );
 }
@@ -147,7 +147,6 @@ fn incomplete_builder_reports_every_missing_field_to_bindings() {
         "previous_invoice_hash",
         "invoice_counter",
         "seller",
-        "payment_means_code",
         "vat_category",
         "line_items",
     ];
@@ -216,7 +215,6 @@ fn invalid_imported_line_reports_zero_based_locations_and_numeric_ranges() {
     let report = ValidationReport::from(validation);
     for (field, code) in [
         ("line_items[1].description", "FIELD_EMPTY"),
-        ("line_items[1].unit_code", "FIELD_EMPTY"),
         ("line_items[1].quantity", "FIELD_OUT_OF_RANGE"),
         ("line_items[1].unit_price", "FIELD_OUT_OF_RANGE"),
         ("line_items[1].total_amount", "FIELD_OUT_OF_RANGE"),
@@ -238,7 +236,6 @@ fn invalid_imported_line_reports_zero_based_locations_and_numeric_ranges() {
     let issues = details["issues"].as_array().unwrap();
     for field in [
         "line_item_description",
-        "line_item_unit_code",
         "line_item_quantity",
         "line_item_unit_price",
         "line_item_total_amount",

@@ -12,18 +12,42 @@
 #include <optional>
 #include <cstdlib>
 #include "Address.hpp"
+#include "Adjustment.hpp"
 #include "AllowanceCharge.hpp"
 #include "BindingError.hpp"
 #include "FinalizedInvoice.hpp"
 #include "InvoiceLineItem.hpp"
 #include "OriginalInvoiceRef.hpp"
+#include "PaymentMeans.hpp"
 #include "TaxExemption.hpp"
+#include "VatBreakdown.hpp"
 #include "diplomat_runtime.hpp"
 
 
 namespace _native {
 namespace capi {
     extern "C" {
+
+    typedef struct fatoora_InvoiceBuilder_add_seller_identifier_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_seller_identifier_result;
+    fatoora_InvoiceBuilder_add_seller_identifier_result fatoora_InvoiceBuilder_add_seller_identifier(_native::capi::InvoiceBuilder* self, _native::diplomat::capi::DiplomatStringView value, _native::diplomat::capi::OptionStringView scheme);
+
+    typedef struct fatoora_InvoiceBuilder_add_buyer_identifier_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_buyer_identifier_result;
+    fatoora_InvoiceBuilder_add_buyer_identifier_result fatoora_InvoiceBuilder_add_buyer_identifier(_native::capi::InvoiceBuilder* self, _native::diplomat::capi::DiplomatStringView value, _native::diplomat::capi::OptionStringView scheme);
+
+    typedef struct fatoora_InvoiceBuilder_add_vat_breakdown_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_vat_breakdown_result;
+    fatoora_InvoiceBuilder_add_vat_breakdown_result fatoora_InvoiceBuilder_add_vat_breakdown(_native::capi::InvoiceBuilder* self, const _native::capi::VatBreakdown* value);
+
+    typedef struct fatoora_InvoiceBuilder_add_payment_means_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_payment_means_result;
+    fatoora_InvoiceBuilder_add_payment_means_result fatoora_InvoiceBuilder_add_payment_means(_native::capi::InvoiceBuilder* self, const _native::capi::PaymentMeans* value);
+
+    typedef struct fatoora_InvoiceBuilder_add_note_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_note_result;
+    fatoora_InvoiceBuilder_add_note_result fatoora_InvoiceBuilder_add_note(_native::capi::InvoiceBuilder* self, _native::diplomat::capi::OptionStringView language, _native::diplomat::capi::DiplomatStringView value);
+
+    typedef struct fatoora_InvoiceBuilder_add_document_adjustment_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_document_adjustment_result;
+    fatoora_InvoiceBuilder_add_document_adjustment_result fatoora_InvoiceBuilder_add_document_adjustment(_native::capi::InvoiceBuilder* self, bool charge, const _native::capi::Adjustment* value, uint8_t category, _native::diplomat::capi::DiplomatStringView rate, const _native::capi::TaxExemption* exemption);
+
+    typedef struct fatoora_InvoiceBuilder_set_buyer_without_address_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_buyer_without_address_result;
+    fatoora_InvoiceBuilder_set_buyer_without_address_result fatoora_InvoiceBuilder_set_buyer_without_address(_native::capi::InvoiceBuilder* self, _native::diplomat::capi::DiplomatStringView name, _native::diplomat::capi::OptionStringView vat_id, _native::diplomat::capi::OptionStringView other_id, _native::diplomat::capi::OptionStringView scheme);
 
     typedef struct fatoora_InvoiceBuilder_new_with_reference_result {union {_native::capi::InvoiceBuilder* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_new_with_reference_result;
     fatoora_InvoiceBuilder_new_with_reference_result fatoora_InvoiceBuilder_new_with_reference(uint8_t kind, uint8_t subtype, const _native::capi::OriginalInvoiceRef* reference, _native::diplomat::capi::DiplomatStringView reason);
@@ -57,6 +81,15 @@ namespace capi {
 
     typedef struct fatoora_InvoiceBuilder_new_result {union {_native::capi::InvoiceBuilder* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_new_result;
     fatoora_InvoiceBuilder_new_result fatoora_InvoiceBuilder_new(uint8_t kind, uint8_t subtype, _native::diplomat::capi::OptionStringView original_id, _native::diplomat::capi::OptionStringView original_uuid, _native::diplomat::capi::OptionStringView original_date, _native::diplomat::capi::OptionStringView reason);
+
+    typedef struct fatoora_InvoiceBuilder_add_billing_reference_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_billing_reference_result;
+    fatoora_InvoiceBuilder_add_billing_reference_result fatoora_InvoiceBuilder_add_billing_reference(_native::capi::InvoiceBuilder* self, const _native::capi::OriginalInvoiceRef* value);
+
+    typedef struct fatoora_InvoiceBuilder_set_purchase_order_id_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_purchase_order_id_result;
+    fatoora_InvoiceBuilder_set_purchase_order_id_result fatoora_InvoiceBuilder_set_purchase_order_id(_native::capi::InvoiceBuilder* self, _native::diplomat::capi::DiplomatStringView value);
+
+    typedef struct fatoora_InvoiceBuilder_set_contract_id_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_contract_id_result;
+    fatoora_InvoiceBuilder_set_contract_id_result fatoora_InvoiceBuilder_set_contract_id(_native::capi::InvoiceBuilder* self, _native::diplomat::capi::DiplomatStringView value);
 
     typedef struct fatoora_InvoiceBuilder_set_id_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_id_result;
     fatoora_InvoiceBuilder_set_id_result fatoora_InvoiceBuilder_set_id(_native::capi::InvoiceBuilder* self, _native::diplomat::capi::DiplomatStringView value);
@@ -117,6 +150,58 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::InvoiceBuilder::add_seller_identifier(std::string_view value, std::optional<std::string_view> scheme) {
+    auto result = _native::capi::fatoora_InvoiceBuilder_add_seller_identifier(this->AsFFI(),
+        {value.data(), value.size()},
+        scheme.has_value() ? (_native::diplomat::capi::OptionStringView{ { {scheme.value().data(), scheme.value().size()} }, true }) : (_native::diplomat::capi::OptionStringView{ {}, false }));
+    return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::InvoiceBuilder::add_buyer_identifier(std::string_view value, std::optional<std::string_view> scheme) {
+    auto result = _native::capi::fatoora_InvoiceBuilder_add_buyer_identifier(this->AsFFI(),
+        {value.data(), value.size()},
+        scheme.has_value() ? (_native::diplomat::capi::OptionStringView{ { {scheme.value().data(), scheme.value().size()} }, true }) : (_native::diplomat::capi::OptionStringView{ {}, false }));
+    return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::InvoiceBuilder::add_vat_breakdown(const _native::VatBreakdown& value) {
+    auto result = _native::capi::fatoora_InvoiceBuilder_add_vat_breakdown(this->AsFFI(),
+        value.AsFFI());
+    return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::InvoiceBuilder::add_payment_means(const _native::PaymentMeans& value) {
+    auto result = _native::capi::fatoora_InvoiceBuilder_add_payment_means(this->AsFFI(),
+        value.AsFFI());
+    return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::InvoiceBuilder::add_note(std::optional<std::string_view> language, std::string_view value) {
+    auto result = _native::capi::fatoora_InvoiceBuilder_add_note(this->AsFFI(),
+        language.has_value() ? (_native::diplomat::capi::OptionStringView{ { {language.value().data(), language.value().size()} }, true }) : (_native::diplomat::capi::OptionStringView{ {}, false }),
+        {value.data(), value.size()});
+    return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::InvoiceBuilder::add_document_adjustment(bool charge, const _native::Adjustment& value, uint8_t category, std::string_view rate, const _native::TaxExemption& exemption) {
+    auto result = _native::capi::fatoora_InvoiceBuilder_add_document_adjustment(this->AsFFI(),
+        charge,
+        value.AsFFI(),
+        category,
+        {rate.data(), rate.size()},
+        exemption.AsFFI());
+    return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::InvoiceBuilder::set_buyer_without_address(std::string_view name, std::optional<std::string_view> vat_id, std::optional<std::string_view> other_id, std::optional<std::string_view> scheme) {
+    auto result = _native::capi::fatoora_InvoiceBuilder_set_buyer_without_address(this->AsFFI(),
+        {name.data(), name.size()},
+        vat_id.has_value() ? (_native::diplomat::capi::OptionStringView{ { {vat_id.value().data(), vat_id.value().size()} }, true }) : (_native::diplomat::capi::OptionStringView{ {}, false }),
+        other_id.has_value() ? (_native::diplomat::capi::OptionStringView{ { {other_id.value().data(), other_id.value().size()} }, true }) : (_native::diplomat::capi::OptionStringView{ {}, false }),
+        scheme.has_value() ? (_native::diplomat::capi::OptionStringView{ { {scheme.value().data(), scheme.value().size()} }, true }) : (_native::diplomat::capi::OptionStringView{ {}, false }));
+    return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
 
 inline _native::diplomat::result<std::unique_ptr<_native::InvoiceBuilder>, std::unique_ptr<_native::BindingError>> _native::InvoiceBuilder::new_with_reference(uint8_t kind, uint8_t subtype, const _native::OriginalInvoiceRef& reference, std::string_view reason) {
     auto result = _native::capi::fatoora_InvoiceBuilder_new_with_reference(kind,
@@ -192,6 +277,24 @@ inline _native::diplomat::result<std::unique_ptr<_native::InvoiceBuilder>, std::
         original_date.has_value() ? (_native::diplomat::capi::OptionStringView{ { {original_date.value().data(), original_date.value().size()} }, true }) : (_native::diplomat::capi::OptionStringView{ {}, false }),
         reason.has_value() ? (_native::diplomat::capi::OptionStringView{ { {reason.value().data(), reason.value().size()} }, true }) : (_native::diplomat::capi::OptionStringView{ {}, false }));
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::InvoiceBuilder>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::InvoiceBuilder>>(std::unique_ptr<_native::InvoiceBuilder>(_native::InvoiceBuilder::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::InvoiceBuilder>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::InvoiceBuilder::add_billing_reference(const _native::OriginalInvoiceRef& value) {
+    auto result = _native::capi::fatoora_InvoiceBuilder_add_billing_reference(this->AsFFI(),
+        value.AsFFI());
+    return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::InvoiceBuilder::set_purchase_order_id(std::string_view value) {
+    auto result = _native::capi::fatoora_InvoiceBuilder_set_purchase_order_id(this->AsFFI(),
+        {value.data(), value.size()});
+    return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::InvoiceBuilder::set_contract_id(std::string_view value) {
+    auto result = _native::capi::fatoora_InvoiceBuilder_set_contract_id(this->AsFFI(),
+        {value.data(), value.size()});
+    return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
 inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::InvoiceBuilder::set_id(std::string_view value) {

@@ -9,8 +9,16 @@ class Party internal constructor(internal val raw: com.fatoora.raw.Party) : Nati
         val handle = raw.handle
         attach { com.fatoora.raw.Party.lib.fatoora_Party_destroy(handle) }
     }
-    fun address(): Address = nativeCall(listOfNotNull(this)) {
-        Address(unwrap(raw.address()))
+    fun identifiersLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
+        java.math.BigInteger(raw.identifiersLen().toString())
+    }
+
+    fun identifier(index: java.math.BigInteger): OtherId = nativeCall(listOfNotNull(this)) {
+        OtherId(unwrap(raw.identifier(checkedCounter(index))))
+    }
+
+    fun address(): Address? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.address())?.let(::Address)
     }
 
     fun vatId(): VatId? = nativeCall(listOfNotNull(this)) {

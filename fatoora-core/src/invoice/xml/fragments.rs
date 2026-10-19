@@ -251,8 +251,11 @@ pub(crate) fn signing_time(xml: &str, certificate: &[u8]) -> Result<String, Stri
         nav::content(singleton(children(root, CBC_NS, "IssueTime"))?.ok_or("missing issue time")?);
     let date = chrono::NaiveDate::parse_from_str(date.trim(), "%Y-%m-%d")
         .map_err(|_| "invalid issue date")?;
-    let time = chrono::NaiveTime::parse_from_str(time.trim(), "%H:%M:%S")
-        .map_err(|_| "invalid issue time")?;
+    let time = chrono::NaiveTime::parse_from_str(
+        time.trim().strip_suffix('Z').unwrap_or(time.trim()),
+        "%H:%M:%S",
+    )
+    .map_err(|_| "invalid issue time")?;
     Ok(date.and_time(time).format("%Y-%m-%dT%H:%M:%S").to_string())
 }
 
@@ -839,6 +842,8 @@ mod tests {
             "<cbc:IssueDate>2024-02-29</cbc:IssueDate><cbc:IssueTime>12:30:00</cbc:IssueTime><foreign xmlns='urn:other'><IssueDate>wrong</IssueDate></foreign>",
         );
         assert_eq!(signing_time(&valid, &[]).unwrap(), "2024-02-29T12:30:00");
+        let utc = valid.replace("12:30:00</cbc:IssueTime>", "12:30:00Z</cbc:IssueTime>");
+        assert_eq!(signing_time(&utc, &[]).unwrap(), "2024-02-29T12:30:00");
         for content in [
             "",
             "<cbc:IssueDate>2024-02-29</cbc:IssueDate>",

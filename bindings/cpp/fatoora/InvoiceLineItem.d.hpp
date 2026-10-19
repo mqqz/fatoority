@@ -12,12 +12,16 @@
 #include "../diplomat_runtime.hpp"
 
 namespace fatoora {
+namespace capi { struct Adjustment; }
+class Adjustment;
 namespace capi { struct BindingError; }
 class BindingError;
 namespace capi { struct InvoiceLineItem; }
 class InvoiceLineItem;
 namespace capi { struct OriginalInvoiceRef; }
 class OriginalInvoiceRef;
+namespace capi { struct OtherId; }
+class OtherId;
 namespace capi { struct TaxExemption; }
 class TaxExemption;
 namespace capi { struct Text; }
@@ -38,6 +42,26 @@ namespace capi {
 namespace fatoora {
 class InvoiceLineItem {
 public:
+
+  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> item_gross_price() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> item_price_discount() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> item_price_base_quantity() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> item_price_base_quantity_unit_code() const;
+
+  inline size_t adjustments_len() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::Adjustment>, std::unique_ptr<fatoora::BindingError>> adjustment(size_t index) const;
+
+  inline diplomat::result<bool, std::unique_ptr<fatoora::BindingError>> adjustment_is_charge(size_t index) const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::OtherId>, std::unique_ptr<fatoora::BindingError>> item_seller_identifier() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::OtherId>, std::unique_ptr<fatoora::BindingError>> item_buyer_identifier() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::OtherId>, std::unique_ptr<fatoora::BindingError>> item_standard_identifier() const;
 
   inline diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>> with_document_reference(const fatoora::OriginalInvoiceRef& reference) const;
 

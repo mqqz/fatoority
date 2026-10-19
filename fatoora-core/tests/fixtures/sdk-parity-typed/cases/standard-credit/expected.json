@@ -1,0 +1,22 @@
+{
+  "validation": {
+    "xsd": "passed",
+    "en": "passed",
+    "ksa": "passed",
+    "qr": "not_run",
+    "signature": "not_run",
+    "pih": "passed",
+    "global": "passed"
+  },
+  "hash": "mhfMNSZp2CSbZamv7/ekngyEgAn8RjYi2kSHQo6HKUw=",
+  "signed_validation": {
+    "xsd": "passed",
+    "en": "passed",
+    "ksa": "passed",
+    "qr": "not_run",
+    "signature": "not_run",
+    "pih": "passed",
+    "global": "passed"
+  },
+  "qr": "ARZBY21lIEdsb2JhbCBUcmFkaW5nIENvAg8zOTk5OTk5OTk5MDAwMDMDEzIwMjQtMDItMTJUMTM6MDA6MDAEBjI3MC4yNQUFMzUuMjUGLG1oZk1OU1pwMkNTYlphbXY3L2Vrbmd5RWdBbjhSallpMmtTSFFvNkhLVXc9B2BNRVVDSVFEMXljQmx6Z09ESjl4UG16QTBXOHM2WXZEajVVMGZKbkh2cWNndTErenNYd0lnZFVrcktIZWJYZzNSK3lDVnRBaGZjMEpMdW5PU0hpelJGaFovWDNJQVBzdz0IWDBWMBAGByqGSM49AgEGBSuBBAAKA0IABKFgimtEmvRSBK0zr9LgJAtVSCl8VPZz6cdr5X+MoTHo8vHNNlyW5Q6u7T8naPJqtGoTjJjaPIMJ4u17dSk/VHg="
+}

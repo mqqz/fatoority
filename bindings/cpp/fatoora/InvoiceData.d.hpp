@@ -24,6 +24,8 @@ namespace capi { struct OriginalInvoiceRef; }
 class OriginalInvoiceRef;
 namespace capi { struct Party; }
 class Party;
+namespace capi { struct PaymentMeans; }
+class PaymentMeans;
 namespace capi { struct Text; }
 class Text;
 } // namespace fatoora
@@ -40,6 +42,22 @@ namespace capi {
 namespace fatoora {
 class InvoiceData {
 public:
+
+  inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> issue_time() const;
+  template<typename W>
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> issue_time_write(W& writeable_output) const;
+
+  inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> issue_date() const;
+  template<typename W>
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> issue_date_write(W& writeable_output) const;
+
+  inline size_t payment_means_len() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::PaymentMeans>, std::unique_ptr<fatoora::BindingError>> payment_means(size_t index) const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> purchase_order_id() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> contract_id() const;
 
   inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> payment_instruction() const;
 
@@ -112,6 +130,14 @@ public:
   inline diplomat::result<std::unique_ptr<fatoora::OriginalInvoiceRef>, std::unique_ptr<fatoora::BindingError>> original_invoice_ref() const;
 
   inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> original_invoice_reason() const;
+
+  inline size_t notes_len() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::InvoiceNote>, std::unique_ptr<fatoora::BindingError>> note_at(size_t index) const;
+
+  inline size_t billing_references_len() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::OriginalInvoiceRef>, std::unique_ptr<fatoora::BindingError>> billing_reference(size_t index) const;
 
     inline const fatoora::capi::InvoiceData* AsFFI() const;
     inline fatoora::capi::InvoiceData* AsFFI();

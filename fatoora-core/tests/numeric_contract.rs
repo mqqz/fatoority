@@ -83,14 +83,14 @@ fn document_vat_groups_are_rounded_independently() {
     assert_eq!(inv.totals().tax_amount(), d("0.00"));
 }
 #[test]
-fn one_cent_supplied_mismatch_is_rejected() {
+fn beyond_one_cent_supplied_mismatch_is_rejected() {
     assert!(
         LineItem::try_from_parts(
             "item",
             d("1.0"),
             "PCE",
             d("1.0"),
-            d("1.01"),
+            d("1.02"),
             d("0.0"),
             d("0.0"),
             VatCategory::Standard
@@ -152,7 +152,7 @@ fn supplied_mismatch_reports_both_values() {
         d("1"),
         "PCE",
         d("1"),
-        d("1.01"),
+        d("1.02"),
         d("0"),
         d("0"),
         VatCategory::Standard,
@@ -161,7 +161,7 @@ fn supplied_mismatch_reports_both_values() {
     let fatoora_core::invoice::InvoiceError::Validation(err) = err else {
         panic!("wrong error")
     };
-    assert_eq!(err.issues()[0].supplied(), Some(d("1.01")));
+    assert_eq!(err.issues()[0].supplied(), Some(d("1.02")));
     assert_eq!(err.issues()[0].expected(), Some(d("1")));
 }
 #[test]
@@ -189,10 +189,10 @@ fn parse_rejects_document_total_mismatch() {
     assert!(parse_finalized_invoice_xml(&xml).is_err());
 }
 #[test]
-fn line_vat_is_rounded_after_its_complete_calculation() {
+fn computed_line_vat_uses_the_serialized_net_amount() {
     let item = line(d("0.034"), d("1"), d("15"));
     assert_eq!(item.total_amount(), d("0.03"));
-    assert_eq!(item.vat_amount(), d("0.01"));
+    assert_eq!(item.vat_amount(), d("0.00"));
 }
 #[test]
 fn official_payable_rounding_sample_preserves_supplied_line_vat() {
@@ -414,7 +414,7 @@ fn supplied_line_total_is_checked_before_accepting_computed_vat() {
         d("3"),
         "PCE",
         d("0.3333"),
-        d("1.01"),
+        d("1.02"),
         d("15"),
         VatCategory::Standard,
     )
@@ -422,7 +422,7 @@ fn supplied_line_total_is_checked_before_accepting_computed_vat() {
     .into();
     let details: serde_json::Value = serde_json::from_str(&error.details_json()).unwrap();
     assert_eq!(details["issues"][0]["field"], "line_item_total_amount");
-    assert_eq!(details["issues"][0]["supplied"], "1.01");
+    assert_eq!(details["issues"][0]["supplied"], "1.02");
     assert_eq!(details["issues"][0]["expected"], "1");
 }
 

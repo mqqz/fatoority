@@ -21,6 +21,12 @@ namespace _native {
 namespace capi {
     extern "C" {
 
+    typedef struct fatoora_AllowanceCharge_base_amount_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_base_amount_result;
+    fatoora_AllowanceCharge_base_amount_result fatoora_AllowanceCharge_base_amount(const _native::capi::AllowanceCharge* self);
+
+    typedef struct fatoora_AllowanceCharge_percentage_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_percentage_result;
+    fatoora_AllowanceCharge_percentage_result fatoora_AllowanceCharge_percentage(const _native::capi::AllowanceCharge* self);
+
     typedef struct fatoora_AllowanceCharge_new_result {union {_native::capi::AllowanceCharge* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_new_result;
     fatoora_AllowanceCharge_new_result fatoora_AllowanceCharge_new(bool charge, _native::diplomat::capi::DiplomatStringView amount, _native::diplomat::capi::OptionStringView reason, _native::diplomat::capi::OptionStringView reason_code, uint8_t category, _native::diplomat::capi::DiplomatStringView rate, const _native::capi::TaxExemption* exemption);
 
@@ -53,6 +59,16 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::AllowanceCharge::base_amount() const {
+    auto result = _native::capi::fatoora_AllowanceCharge_base_amount(this->AsFFI());
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::AllowanceCharge::percentage() const {
+    auto result = _native::capi::fatoora_AllowanceCharge_percentage(this->AsFFI());
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
 
 inline _native::diplomat::result<std::unique_ptr<_native::AllowanceCharge>, std::unique_ptr<_native::BindingError>> _native::AllowanceCharge::new_(bool charge, std::string_view amount, std::optional<std::string_view> reason, std::optional<std::string_view> reason_code, uint8_t category, std::string_view rate, const _native::TaxExemption& exemption) {
     auto result = _native::capi::fatoora_AllowanceCharge_new(charge,

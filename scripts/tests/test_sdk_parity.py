@@ -124,7 +124,12 @@ class CaptureContracts(unittest.TestCase):
         self.assertEqual(len(frozen["cases"]), 53)
         self.assertEqual(
             {case["id"] for case in typed["cases"]},
-            {"standard-invoice", "export-self-billed", "mixed-vat", "out-of-scope", "prepayment"},
+            {
+                "simplified-invoice", "standard-invoice", "standard-credit",
+                "standard-debit", "simplified-credit", "simplified-debit",
+                "foreign-currency", "export-self-billed", "mixed-vat",
+                "out-of-scope", "prepayment",
+            },
         )
         # Business-rule observations pin the original corpus byte-for-byte.
         observations = json.loads(

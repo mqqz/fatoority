@@ -21,6 +21,12 @@ namespace fatoora {
 namespace capi {
     extern "C" {
 
+    typedef struct fatoora_AllowanceCharge_base_amount_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_base_amount_result;
+    fatoora_AllowanceCharge_base_amount_result fatoora_AllowanceCharge_base_amount(const fatoora::capi::AllowanceCharge* self);
+
+    typedef struct fatoora_AllowanceCharge_percentage_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_percentage_result;
+    fatoora_AllowanceCharge_percentage_result fatoora_AllowanceCharge_percentage(const fatoora::capi::AllowanceCharge* self);
+
     typedef struct fatoora_AllowanceCharge_new_result {union {fatoora::capi::AllowanceCharge* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_new_result;
     fatoora_AllowanceCharge_new_result fatoora_AllowanceCharge_new(bool charge, diplomat::capi::DiplomatStringView amount, diplomat::capi::OptionStringView reason, diplomat::capi::OptionStringView reason_code, uint8_t category, diplomat::capi::DiplomatStringView rate, const fatoora::capi::TaxExemption* exemption);
 
@@ -53,6 +59,16 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::AllowanceCharge::base_amount() const {
+    auto result = fatoora::capi::fatoora_AllowanceCharge_base_amount(this->AsFFI());
+    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::AllowanceCharge::percentage() const {
+    auto result = fatoora::capi::fatoora_AllowanceCharge_percentage(this->AsFFI());
+    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
 
 inline diplomat::result<std::unique_ptr<fatoora::AllowanceCharge>, std::unique_ptr<fatoora::BindingError>> fatoora::AllowanceCharge::new_(bool charge, std::string_view amount, std::optional<std::string_view> reason, std::optional<std::string_view> reason_code, uint8_t category, std::string_view rate, const fatoora::TaxExemption& exemption) {
     auto result = fatoora::capi::fatoora_AllowanceCharge_new(charge,

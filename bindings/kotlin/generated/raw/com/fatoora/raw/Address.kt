@@ -7,6 +7,8 @@ import com.sun.jna.Structure
 
 internal interface AddressLib: Library {
     fun fatoora_Address_destroy(handle: Pointer)
+    fun fatoora_Address_with_province(handle: Pointer, value: Slice): ResultPointerPointer
+    fun fatoora_Address_province(handle: Pointer): ResultPointerPointer
     fun fatoora_Address_new(countryCode: Slice, city: Slice, street: Slice, buildingNumber: Slice, postalCode: Slice, additionalStreet: OptionSlice, additionalNumber: OptionSlice, district: OptionSlice): ResultPointerPointer
     fun fatoora_Address_city(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_Address_street(handle: Pointer, write: Pointer): ResultUnitPointer
@@ -82,6 +84,45 @@ class Address internal constructor (
                 additionalNumberSliceMemory?.close()
                 districtSliceMemory?.close()
             }
+        }
+    }
+
+    fun withProvince(value: String): Result<Address> {
+        val valueSliceMemory = PrimitiveArrayTools.borrowUtf8(value)
+
+        val returnVal = lib.fatoora_Address_with_province(handle, valueSliceMemory.slice);
+        try {
+            val nativeOkVal = returnVal.getNativeOk();
+            if (nativeOkVal != null) {
+                val selfEdges: List<Any> = listOf()
+                val handle = nativeOkVal
+                val returnOpaque = Address(handle, selfEdges, true)
+                return returnOpaque.ok()
+            } else {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal.getNativeErr()!!
+                val returnOpaque = BindingError(handle, selfEdges, true)
+                return returnOpaque.err()
+            }
+        } finally {
+            valueSliceMemory.close()
+        }
+    }
+
+    fun province(): Result<Text?> {
+
+        val returnVal = lib.fatoora_Address_province(handle);
+        val nativeOkVal = returnVal.getNativeOk();
+        if (returnVal.isOk == 1.toByte()) {
+            val selfEdges: List<Any> = listOf()
+            val handle = nativeOkVal ?: return Result.success(null)
+            val returnOpaque = Text(handle, selfEdges, true)
+            return returnOpaque.ok()
+        } else {
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal.getNativeErr()!!
+            val returnOpaque = BindingError(handle, selfEdges, true)
+            return returnOpaque.err()
         }
     }
 

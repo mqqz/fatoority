@@ -9,6 +9,12 @@ namespace Fatoora.Raw;
 internal partial struct Address
 {
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Address_with_province", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultAddressBindingError WithProvince(Address* handle, DiplomatSliceU8 value);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Address_province", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultTextBindingError Province(Address* handle);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Address_new", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultAddressBindingError New(DiplomatSliceU8 countryCode, DiplomatSliceU8 city, DiplomatSliceU8 street, DiplomatSliceU8 buildingNumber, DiplomatSliceU8 postalCode, DiplomatOptionSliceU8 additionalStreet, DiplomatOptionSliceU8 additionalNumber, DiplomatOptionSliceU8 district);
 

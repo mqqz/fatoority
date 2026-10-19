@@ -13,6 +13,10 @@ export class AllowanceCharge {
     constructor();
 
 
+    baseAmount(): Text | null;
+
+    percentage(): Text | null;
+
     static new_(charge: boolean, amount: string, reason: string | null, reasonCode: string | null, category: number, rate: string, exemption: TaxExemption): AllowanceCharge;
 
     isCharge(): boolean;

@@ -534,11 +534,7 @@ fn build_qr_payload(
         .filter(|vat| !vat.is_empty())
         .ok_or_else(|| anyhow::anyhow!("seller VAT ID is missing"))?;
 
-    let timestamp = data
-        .issue_datetime()
-        .as_str()
-        .trim_end_matches('Z')
-        .to_string();
+    let timestamp = format!("{}T{}", data.issue_date(), data.issue_time());
     let total_with_vat = format!("{:.2}", totals.payable_amount());
     let total_vat = format!("{:.2}", totals.tax_amount());
 

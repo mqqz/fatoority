@@ -14,10 +14,12 @@ void add_AllowanceCharge_binding(nb::module_ mod) {
     nb::class_<_native::AllowanceCharge> opaque(mod, "AllowanceCharge", nb::type_slots(_native_AllowanceCharge_slots));
     opaque
         .def("amount", std::move(maybe_op_unwrap(&_native::AllowanceCharge::amount)))
+        .def("base_amount", std::move(maybe_op_unwrap(&_native::AllowanceCharge::base_amount)))
         .def("category", &_native::AllowanceCharge::category)
         .def("exemption", std::move(maybe_op_unwrap(&_native::AllowanceCharge::exemption)))
         .def("is_charge", &_native::AllowanceCharge::is_charge)
         .def_static("new", std::move(maybe_op_unwrap(&_native::AllowanceCharge::new_)), "charge"_a, "amount"_a, "reason"_a= nb::none(), "reason_code"_a= nb::none(), "category"_a, "rate"_a, "exemption"_a)
+        .def("percentage", std::move(maybe_op_unwrap(&_native::AllowanceCharge::percentage)))
         .def("rate", std::move(maybe_op_unwrap(&_native::AllowanceCharge::rate)))
         .def("reason", std::move(maybe_op_unwrap(&_native::AllowanceCharge::reason)))
         .def("reason_code", std::move(maybe_op_unwrap(&_native::AllowanceCharge::reason_code)))

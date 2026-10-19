@@ -7,6 +7,8 @@ import com.sun.jna.Structure
 
 internal interface PartyLib: Library {
     fun fatoora_Party_destroy(handle: Pointer)
+    fun fatoora_Party_identifiers_len(handle: Pointer): FFISizet
+    fun fatoora_Party_identifier(handle: Pointer, index: FFISizet): ResultPointerPointer
     fun fatoora_Party_address(handle: Pointer): ResultPointerPointer
     fun fatoora_Party_vat_id(handle: Pointer): ResultPointerPointer
     fun fatoora_Party_other_id(handle: Pointer): ResultPointerPointer
@@ -43,13 +45,36 @@ class Party internal constructor (
         internal val lib: PartyLib = Native.load("fatoora_ffi", libClass)
     }
 
-    fun address(): Result<Address> {
+    fun identifiersLen(): ULong {
 
-        val returnVal = lib.fatoora_Party_address(handle);
+        val returnVal = lib.fatoora_Party_identifiers_len(handle);
+        return (returnVal.toULong())
+    }
+
+    fun identifier(index: ULong): Result<OtherId> {
+
+        val returnVal = lib.fatoora_Party_identifier(handle, FFISizet(index));
         val nativeOkVal = returnVal.getNativeOk();
         if (nativeOkVal != null) {
             val selfEdges: List<Any> = listOf()
             val handle = nativeOkVal
+            val returnOpaque = OtherId(handle, selfEdges, true)
+            return returnOpaque.ok()
+        } else {
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal.getNativeErr()!!
+            val returnOpaque = BindingError(handle, selfEdges, true)
+            return returnOpaque.err()
+        }
+    }
+
+    fun address(): Result<Address?> {
+
+        val returnVal = lib.fatoora_Party_address(handle);
+        val nativeOkVal = returnVal.getNativeOk();
+        if (returnVal.isOk == 1.toByte()) {
+            val selfEdges: List<Any> = listOf()
+            val handle = nativeOkVal ?: return Result.success(null)
             val returnOpaque = Address(handle, selfEdges, true)
             return returnOpaque.ok()
         } else {

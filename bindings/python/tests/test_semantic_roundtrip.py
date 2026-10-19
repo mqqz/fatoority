@@ -98,3 +98,50 @@ def test_repeated_adjustment_classifications_can_be_rebuilt():
         output = ET.fromstring(rebuilt.xml())
         assert len(output.findall("cac:AllowanceCharge/cac:TaxCategory", ns)) == count
         assert parse_finalized_invoice_xml(rebuilt.xml()).adjustments() == [restored]
+
+
+def test_optional_line_builder_and_repeated_metadata():
+    from fatoora import Adjustment, LineItemBuilder, PaymentMeans, OriginalInvoiceRef
+    line = LineItemBuilder.new()
+    line.set_item_name("case of items")
+    line.set_invoiced_quantity("30")
+    line.set_invoiced_quantity_unit_code("PCE")
+    line.set_item_net_price("100")
+    line.set_item_gross_price("120")
+    line.set_item_price_discount("20")
+    line.set_item_price_base_quantity("12")
+    line.set_item_price_base_quantity_unit_code("PCE")
+    line.set_vat_category(VatCategory.STANDARD)
+    line.set_vat_rate("15")
+    line.set_item_seller_identifier("SKU", None)
+    line.add_allowance(Adjustment.percentage("250", "10").with_reason("discount", "95"))
+    line.add_charge(Adjustment.amount("5").with_reason("freight"))
+    item = line.build()
+    assert item.total_amount == Decimal("230")
+    b = builder()
+    b.add_item(item)
+    b.add_note("one", "en")
+    b.add_note("اثنان")
+    b.add_payment_means(PaymentMeans.new("30", "first").with_instruction_note("second").with_account("account", "net 30"))
+    b.add_seller_identifier("secondary", "OTH")
+    b.add_billing_reference(OriginalInvoiceRef.new("original", None, None, None, None))
+    b.set_purchase_order_id("PO")
+    b.set_contract_id("CON")
+    b.set_buyer_without_address("buyer")
+    b.add_buyer_identifier("buyer-id", "NAT")
+    b.add_document_adjustment(False, Adjustment.percentage("230", "10"), VatCategory.STANDARD, "15")
+    invoice = b.build()
+    restored = parse_finalized_invoice_xml(invoice.xml())
+    assert restored.line_items() == invoice.line_items()
+    assert restored.adjustments() == invoice.adjustments()
+    assert restored.line_item(0).item_price_base_quantity == Decimal("12")
+    assert [note.text() for note in restored.notes()] == ["one", "اثنان"]
+    assert restored.payment_means()[-1].payment_terms() == "net 30"
+    assert restored.billing_references()[0].id() == "original"
+    assert restored.purchase_order_id() == "PO"
+    assert restored.contract_id() == "CON"
+    assert restored.buyer().address() is None
+    assert restored.buyer().identifiers()[0].value() == "buyer-id"
+    assert restored.seller().identifiers()[-1].value() == "secondary"
+    assert restored.payment_means()[-1].instruction_notes() == ["first", "second"]
+    assert restored.issue_time() == "12:30:00Z"

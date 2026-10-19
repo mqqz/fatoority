@@ -13,6 +13,7 @@
 #include "InvoiceNote.d.h"
 #include "OriginalInvoiceRef.d.h"
 #include "Party.d.h"
+#include "PaymentMeans.d.h"
 #include "Text.d.h"
 
 #include "InvoiceData.d.h"
@@ -21,6 +22,23 @@
 
 
 
+
+typedef struct fatoora_InvoiceData_issue_time_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceData_issue_time_result;
+fatoora_InvoiceData_issue_time_result fatoora_InvoiceData_issue_time(const InvoiceData* self, DiplomatWrite* write);
+
+typedef struct fatoora_InvoiceData_issue_date_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceData_issue_date_result;
+fatoora_InvoiceData_issue_date_result fatoora_InvoiceData_issue_date(const InvoiceData* self, DiplomatWrite* write);
+
+size_t fatoora_InvoiceData_payment_means_len(const InvoiceData* self);
+
+typedef struct fatoora_InvoiceData_payment_means_result {union {PaymentMeans* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_payment_means_result;
+fatoora_InvoiceData_payment_means_result fatoora_InvoiceData_payment_means(const InvoiceData* self, size_t index);
+
+typedef struct fatoora_InvoiceData_purchase_order_id_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_purchase_order_id_result;
+fatoora_InvoiceData_purchase_order_id_result fatoora_InvoiceData_purchase_order_id(const InvoiceData* self);
+
+typedef struct fatoora_InvoiceData_contract_id_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_contract_id_result;
+fatoora_InvoiceData_contract_id_result fatoora_InvoiceData_contract_id(const InvoiceData* self);
 
 typedef struct fatoora_InvoiceData_payment_instruction_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_payment_instruction_result;
 fatoora_InvoiceData_payment_instruction_result fatoora_InvoiceData_payment_instruction(const InvoiceData* self);
@@ -98,6 +116,16 @@ fatoora_InvoiceData_original_invoice_ref_result fatoora_InvoiceData_original_inv
 
 typedef struct fatoora_InvoiceData_original_invoice_reason_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_original_invoice_reason_result;
 fatoora_InvoiceData_original_invoice_reason_result fatoora_InvoiceData_original_invoice_reason(const InvoiceData* self);
+
+size_t fatoora_InvoiceData_notes_len(const InvoiceData* self);
+
+typedef struct fatoora_InvoiceData_note_at_result {union {InvoiceNote* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_note_at_result;
+fatoora_InvoiceData_note_at_result fatoora_InvoiceData_note_at(const InvoiceData* self, size_t index);
+
+size_t fatoora_InvoiceData_billing_references_len(const InvoiceData* self);
+
+typedef struct fatoora_InvoiceData_billing_reference_result {union {OriginalInvoiceRef* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_billing_reference_result;
+fatoora_InvoiceData_billing_reference_result fatoora_InvoiceData_billing_reference(const InvoiceData* self, size_t index);
 
 void fatoora_InvoiceData_destroy(InvoiceData* self);
 

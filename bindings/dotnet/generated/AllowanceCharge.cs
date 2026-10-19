@@ -59,6 +59,58 @@ public partial class AllowanceCharge: IDisposable
 
     /// <exception cref="BindingErrorException"></exception>
     /// <returns>
+    /// A <c>Text</c> allocated on Rust side.
+    /// </returns>
+    public Text? BaseAmount()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.AllowanceCharge>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.AllowanceCharge.BaseAmount(selfLease!.Ptr);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return result.Ok == null ? null : new Text(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>Text</c> allocated on Rust side.
+    /// </returns>
+    public Text? Percentage()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.AllowanceCharge>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.AllowanceCharge.Percentage(selfLease!.Ptr);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return result.Ok == null ? null : new Text(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
     /// A <c>AllowanceCharge</c> allocated on Rust side.
     /// </returns>
     public static AllowanceCharge New(bool charge, string amount, string? reason, string? reasonCode, byte category, string rate, TaxExemption exemption)

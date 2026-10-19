@@ -11,8 +11,10 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
+#include "Adjustment.hpp"
 #include "BindingError.hpp"
 #include "OriginalInvoiceRef.hpp"
+#include "OtherId.hpp"
 #include "TaxExemption.hpp"
 #include "Text.hpp"
 #include "VatBreakdown.hpp"
@@ -22,6 +24,35 @@
 namespace _native {
 namespace capi {
     extern "C" {
+
+    typedef struct fatoora_InvoiceLineItem_item_gross_price_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_item_gross_price_result;
+    fatoora_InvoiceLineItem_item_gross_price_result fatoora_InvoiceLineItem_item_gross_price(const _native::capi::InvoiceLineItem* self);
+
+    typedef struct fatoora_InvoiceLineItem_item_price_discount_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_item_price_discount_result;
+    fatoora_InvoiceLineItem_item_price_discount_result fatoora_InvoiceLineItem_item_price_discount(const _native::capi::InvoiceLineItem* self);
+
+    typedef struct fatoora_InvoiceLineItem_item_price_base_quantity_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_item_price_base_quantity_result;
+    fatoora_InvoiceLineItem_item_price_base_quantity_result fatoora_InvoiceLineItem_item_price_base_quantity(const _native::capi::InvoiceLineItem* self);
+
+    typedef struct fatoora_InvoiceLineItem_item_price_base_quantity_unit_code_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_item_price_base_quantity_unit_code_result;
+    fatoora_InvoiceLineItem_item_price_base_quantity_unit_code_result fatoora_InvoiceLineItem_item_price_base_quantity_unit_code(const _native::capi::InvoiceLineItem* self);
+
+    size_t fatoora_InvoiceLineItem_adjustments_len(const _native::capi::InvoiceLineItem* self);
+
+    typedef struct fatoora_InvoiceLineItem_adjustment_result {union {_native::capi::Adjustment* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_adjustment_result;
+    fatoora_InvoiceLineItem_adjustment_result fatoora_InvoiceLineItem_adjustment(const _native::capi::InvoiceLineItem* self, size_t index);
+
+    typedef struct fatoora_InvoiceLineItem_adjustment_is_charge_result {union {bool ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_adjustment_is_charge_result;
+    fatoora_InvoiceLineItem_adjustment_is_charge_result fatoora_InvoiceLineItem_adjustment_is_charge(const _native::capi::InvoiceLineItem* self, size_t index);
+
+    typedef struct fatoora_InvoiceLineItem_item_seller_identifier_result {union {_native::capi::OtherId* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_item_seller_identifier_result;
+    fatoora_InvoiceLineItem_item_seller_identifier_result fatoora_InvoiceLineItem_item_seller_identifier(const _native::capi::InvoiceLineItem* self);
+
+    typedef struct fatoora_InvoiceLineItem_item_buyer_identifier_result {union {_native::capi::OtherId* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_item_buyer_identifier_result;
+    fatoora_InvoiceLineItem_item_buyer_identifier_result fatoora_InvoiceLineItem_item_buyer_identifier(const _native::capi::InvoiceLineItem* self);
+
+    typedef struct fatoora_InvoiceLineItem_item_standard_identifier_result {union {_native::capi::OtherId* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_item_standard_identifier_result;
+    fatoora_InvoiceLineItem_item_standard_identifier_result fatoora_InvoiceLineItem_item_standard_identifier(const _native::capi::InvoiceLineItem* self);
 
     typedef struct fatoora_InvoiceLineItem_with_document_reference_result {union {_native::capi::InvoiceLineItem* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_with_document_reference_result;
     fatoora_InvoiceLineItem_with_document_reference_result fatoora_InvoiceLineItem_with_document_reference(const _native::capi::InvoiceLineItem* self, const _native::capi::OriginalInvoiceRef* reference);
@@ -79,6 +110,58 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::InvoiceLineItem::item_gross_price() const {
+    auto result = _native::capi::fatoora_InvoiceLineItem_item_gross_price(this->AsFFI());
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::InvoiceLineItem::item_price_discount() const {
+    auto result = _native::capi::fatoora_InvoiceLineItem_item_price_discount(this->AsFFI());
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::InvoiceLineItem::item_price_base_quantity() const {
+    auto result = _native::capi::fatoora_InvoiceLineItem_item_price_base_quantity(this->AsFFI());
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::InvoiceLineItem::item_price_base_quantity_unit_code() const {
+    auto result = _native::capi::fatoora_InvoiceLineItem_item_price_base_quantity_unit_code(this->AsFFI());
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline size_t _native::InvoiceLineItem::adjustments_len() const {
+    auto result = _native::capi::fatoora_InvoiceLineItem_adjustments_len(this->AsFFI());
+    return result;
+}
+
+inline _native::diplomat::result<std::unique_ptr<_native::Adjustment>, std::unique_ptr<_native::BindingError>> _native::InvoiceLineItem::adjustment(size_t index) const {
+    auto result = _native::capi::fatoora_InvoiceLineItem_adjustment(this->AsFFI(),
+        index);
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Adjustment>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Adjustment>>(std::unique_ptr<_native::Adjustment>(_native::Adjustment::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Adjustment>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<bool, std::unique_ptr<_native::BindingError>> _native::InvoiceLineItem::adjustment_is_charge(size_t index) const {
+    auto result = _native::capi::fatoora_InvoiceLineItem_adjustment_is_charge(this->AsFFI(),
+        index);
+    return result.is_ok ? _native::diplomat::result<bool, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<bool>(result.ok)) : _native::diplomat::result<bool, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>> _native::InvoiceLineItem::item_seller_identifier() const {
+    auto result = _native::capi::fatoora_InvoiceLineItem_item_seller_identifier(this->AsFFI());
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::OtherId>>(std::unique_ptr<_native::OtherId>(_native::OtherId::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>> _native::InvoiceLineItem::item_buyer_identifier() const {
+    auto result = _native::capi::fatoora_InvoiceLineItem_item_buyer_identifier(this->AsFFI());
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::OtherId>>(std::unique_ptr<_native::OtherId>(_native::OtherId::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>> _native::InvoiceLineItem::item_standard_identifier() const {
+    auto result = _native::capi::fatoora_InvoiceLineItem_item_standard_identifier(this->AsFFI());
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::OtherId>>(std::unique_ptr<_native::OtherId>(_native::OtherId::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
 
 inline _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std::unique_ptr<_native::BindingError>> _native::InvoiceLineItem::with_document_reference(const _native::OriginalInvoiceRef& reference) const {
     auto result = _native::capi::fatoora_InvoiceLineItem_with_document_reference(this->AsFFI(),

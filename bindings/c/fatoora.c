@@ -8,6 +8,8 @@
 
 #include "generated/Address.h"
 
+#include "generated/Adjustment.h"
+
 #include "generated/AllowanceCharge.h"
 
 #include "generated/BindingError.h"
@@ -44,11 +46,15 @@
 
 #include "generated/InvoiceTotals.h"
 
+#include "generated/LineItemBuilder.h"
+
 #include "generated/OriginalInvoiceRef.h"
 
 #include "generated/OtherId.h"
 
 #include "generated/Party.h"
+
+#include "generated/PaymentMeans.h"
 
 #include "generated/ProductionRequest.h"
 
@@ -192,6 +198,31 @@ static OptionStringView fatoora_private_optional(const char *value) {
 }
 
 
+FatooraStatus fatoora_address_with_province(const FatooraAddress *self, const char *value, FatooraAddress **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !value || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_Address_with_province_result result = fatoora_Address_with_province(self, fatoora_private_string(value));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_address_province(const FatooraAddress *self, char **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_Address_province_result result = fatoora_Address_province(self);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return fatoora_private_text(result.ok, out, error);
+}
+
 FatooraStatus fatoora_address_new(const FatooraAddressOptions *options, FatooraAddress **out, FatooraError **error) {
     if (error) *error = NULL;
     if (out) *out = 0;
@@ -333,6 +364,150 @@ FatooraStatus fatoora_address_district(const FatooraAddress *self, char **out, F
 
 void fatoora_address_free(FatooraAddress *self) {
     if (self) fatoora_Address_destroy(self);
+}
+
+FatooraStatus fatoora_adjustment_amount(const char *value, FatooraAdjustment **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!value || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_Adjustment_amount_result result = fatoora_Adjustment_amount(fatoora_private_string(value));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_adjustment_percentage(const char *base, const char *percent, FatooraAdjustment **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!base || !percent || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_Adjustment_percentage_result result = fatoora_Adjustment_percentage(fatoora_private_string(base), fatoora_private_string(percent));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_adjustment_with_supplied_amount(const FatooraAdjustment *self, const char *value, FatooraAdjustment **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !value || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_Adjustment_with_supplied_amount_result result = fatoora_Adjustment_with_supplied_amount(self, fatoora_private_string(value));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_adjustment_with_reason(const FatooraAdjustment *self, const char *reason, const char *code, FatooraAdjustment **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_Adjustment_with_reason_result result = fatoora_Adjustment_with_reason(self, fatoora_private_optional(reason), fatoora_private_optional(code));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_adjustment_value(const FatooraAdjustment *self, char **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    DiplomatWrite write = fatoora_private_writer();
+    if (write.grow_failed)
+        return fatoora_private_fail(FATOORA_INTERNAL, "output allocation failed", error);
+    fatoora_Adjustment_value_result result = fatoora_Adjustment_value(self, &write);
+    if (!result.is_ok) {
+        free(write.buf);
+        return fatoora_private_error(result.err, error);
+    }
+    return fatoora_private_finish(&write, out, error);
+}
+
+FatooraStatus fatoora_adjustment_base_amount(const FatooraAdjustment *self, char **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_Adjustment_base_amount_result result = fatoora_Adjustment_base_amount(self);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return fatoora_private_text(result.ok, out, error);
+}
+
+FatooraStatus fatoora_adjustment_percent(const FatooraAdjustment *self, char **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_Adjustment_percent_result result = fatoora_Adjustment_percent(self);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return fatoora_private_text(result.ok, out, error);
+}
+
+FatooraStatus fatoora_adjustment_reason(const FatooraAdjustment *self, char **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_Adjustment_reason_result result = fatoora_Adjustment_reason(self);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return fatoora_private_text(result.ok, out, error);
+}
+
+FatooraStatus fatoora_adjustment_reason_code(const FatooraAdjustment *self, char **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_Adjustment_reason_code_result result = fatoora_Adjustment_reason_code(self);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return fatoora_private_text(result.ok, out, error);
+}
+
+void fatoora_adjustment_free(FatooraAdjustment *self) {
+    if (self) fatoora_Adjustment_destroy(self);
+}
+
+FatooraStatus fatoora_allowance_charge_base_amount(const FatooraAllowanceCharge *self, char **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_AllowanceCharge_base_amount_result result = fatoora_AllowanceCharge_base_amount(self);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return fatoora_private_text(result.ok, out, error);
+}
+
+FatooraStatus fatoora_allowance_charge_percentage(const FatooraAllowanceCharge *self, char **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_AllowanceCharge_percentage_result result = fatoora_AllowanceCharge_percentage(self);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return fatoora_private_text(result.ok, out, error);
 }
 
 FatooraStatus fatoora_allowance_charge_new(bool charge, const char *amount, const char *reason, const char *reason_code, int32_t category, const char *rate, const FatooraTaxExemption *exemption, FatooraAllowanceCharge **out, FatooraError **error) {
@@ -1025,6 +1200,83 @@ void fatoora_finalized_invoice_free(FatooraFinalizedInvoice *self) {
     if (self) fatoora_FinalizedInvoice_destroy(self);
 }
 
+FatooraStatus fatoora_invoice_builder_add_seller_identifier(FatooraInvoiceBuilder *self, const char *value, const char *scheme, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceBuilder_add_seller_identifier_result result = fatoora_InvoiceBuilder_add_seller_identifier(self, fatoora_private_string(value), fatoora_private_optional(scheme));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_invoice_builder_add_buyer_identifier(FatooraInvoiceBuilder *self, const char *value, const char *scheme, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceBuilder_add_buyer_identifier_result result = fatoora_InvoiceBuilder_add_buyer_identifier(self, fatoora_private_string(value), fatoora_private_optional(scheme));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_invoice_builder_add_vat_breakdown(FatooraInvoiceBuilder *self, const FatooraVatBreakdown *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceBuilder_add_vat_breakdown_result result = fatoora_InvoiceBuilder_add_vat_breakdown(self, value);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_invoice_builder_add_payment_means(FatooraInvoiceBuilder *self, const FatooraPaymentMeans *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceBuilder_add_payment_means_result result = fatoora_InvoiceBuilder_add_payment_means(self, value);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_invoice_builder_add_note(FatooraInvoiceBuilder *self, const char *language, const char *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceBuilder_add_note_result result = fatoora_InvoiceBuilder_add_note(self, fatoora_private_optional(language), fatoora_private_string(value));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_invoice_builder_add_document_adjustment(FatooraInvoiceBuilder *self, bool charge, const FatooraAdjustment *value, int32_t category, const char *rate, const FatooraTaxExemption *exemption, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value || (category < 0 || category > UINT8_MAX) || !rate || !exemption)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceBuilder_add_document_adjustment_result result = fatoora_InvoiceBuilder_add_document_adjustment(self, charge, value, (uint8_t)category, fatoora_private_string(rate), exemption);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_invoice_builder_set_buyer_without_address(FatooraInvoiceBuilder *self, const char *name, const char *vat_id, const char *other_id, const char *scheme, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !name)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceBuilder_set_buyer_without_address_result result = fatoora_InvoiceBuilder_set_buyer_without_address(self, fatoora_private_string(name), fatoora_private_optional(vat_id), fatoora_private_optional(other_id), fatoora_private_optional(scheme));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
 FatooraStatus fatoora_invoice_builder_new_with_reference(int32_t kind, int32_t subtype, const FatooraOriginalInvoiceRef *reference, const char *reason, FatooraInvoiceBuilder **out, FatooraError **error) {
     if (error) *error = NULL;
     if (out) *out = 0;
@@ -1155,6 +1407,39 @@ FatooraStatus fatoora_invoice_builder_new(const FatooraInvoiceOptions *options, 
         return fatoora_private_error(result.err, error);
     }
     *out = result.ok;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_invoice_builder_add_billing_reference(FatooraInvoiceBuilder *self, const FatooraOriginalInvoiceRef *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceBuilder_add_billing_reference_result result = fatoora_InvoiceBuilder_add_billing_reference(self, value);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_invoice_builder_set_purchase_order_id(FatooraInvoiceBuilder *self, const char *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceBuilder_set_purchase_order_id_result result = fatoora_InvoiceBuilder_set_purchase_order_id(self, fatoora_private_string(value));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_invoice_builder_set_contract_id(FatooraInvoiceBuilder *self, const char *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceBuilder_set_contract_id_result result = fatoora_InvoiceBuilder_set_contract_id(self, fatoora_private_string(value));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
     return FATOORA_OK;
 }
 
@@ -1382,6 +1667,85 @@ FatooraStatus fatoora_invoice_builder_build(FatooraInvoiceBuilder *self, Fatoora
 
 void fatoora_invoice_builder_free(FatooraInvoiceBuilder *self) {
     if (self) fatoora_InvoiceBuilder_destroy(self);
+}
+
+FatooraStatus fatoora_invoice_data_issue_time(const FatooraInvoiceData *self, char **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    DiplomatWrite write = fatoora_private_writer();
+    if (write.grow_failed)
+        return fatoora_private_fail(FATOORA_INTERNAL, "output allocation failed", error);
+    fatoora_InvoiceData_issue_time_result result = fatoora_InvoiceData_issue_time(self, &write);
+    if (!result.is_ok) {
+        free(write.buf);
+        return fatoora_private_error(result.err, error);
+    }
+    return fatoora_private_finish(&write, out, error);
+}
+
+FatooraStatus fatoora_invoice_data_issue_date(const FatooraInvoiceData *self, char **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    DiplomatWrite write = fatoora_private_writer();
+    if (write.grow_failed)
+        return fatoora_private_fail(FATOORA_INTERNAL, "output allocation failed", error);
+    fatoora_InvoiceData_issue_date_result result = fatoora_InvoiceData_issue_date(self, &write);
+    if (!result.is_ok) {
+        free(write.buf);
+        return fatoora_private_error(result.err, error);
+    }
+    return fatoora_private_finish(&write, out, error);
+}
+
+FatooraStatus fatoora_invoice_data_payment_means_len(const FatooraInvoiceData *self, size_t *out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    size_t value = fatoora_InvoiceData_payment_means_len(self);
+    *out = value;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_invoice_data_payment_means(const FatooraInvoiceData *self, size_t index, FatooraPaymentMeans **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceData_payment_means_result result = fatoora_InvoiceData_payment_means(self, index);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_invoice_data_purchase_order_id(const FatooraInvoiceData *self, char **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceData_purchase_order_id_result result = fatoora_InvoiceData_purchase_order_id(self);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return fatoora_private_text(result.ok, out, error);
+}
+
+FatooraStatus fatoora_invoice_data_contract_id(const FatooraInvoiceData *self, char **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceData_contract_id_result result = fatoora_InvoiceData_contract_id(self);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return fatoora_private_text(result.ok, out, error);
 }
 
 FatooraStatus fatoora_invoice_data_payment_instruction(const FatooraInvoiceData *self, char **out, FatooraError **error) {
@@ -1744,8 +2108,177 @@ FatooraStatus fatoora_invoice_data_original_invoice_reason(const FatooraInvoiceD
     return fatoora_private_text(result.ok, out, error);
 }
 
+FatooraStatus fatoora_invoice_data_notes_len(const FatooraInvoiceData *self, size_t *out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    size_t value = fatoora_InvoiceData_notes_len(self);
+    *out = value;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_invoice_data_note_at(const FatooraInvoiceData *self, size_t index, FatooraInvoiceNote **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceData_note_at_result result = fatoora_InvoiceData_note_at(self, index);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_invoice_data_billing_references_len(const FatooraInvoiceData *self, size_t *out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    size_t value = fatoora_InvoiceData_billing_references_len(self);
+    *out = value;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_invoice_data_billing_reference(const FatooraInvoiceData *self, size_t index, FatooraOriginalInvoiceRef **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceData_billing_reference_result result = fatoora_InvoiceData_billing_reference(self, index);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
+}
+
 void fatoora_invoice_data_free(FatooraInvoiceData *self) {
     if (self) fatoora_InvoiceData_destroy(self);
+}
+
+FatooraStatus fatoora_invoice_line_item_item_gross_price(const FatooraInvoiceLineItem *self, char **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceLineItem_item_gross_price_result result = fatoora_InvoiceLineItem_item_gross_price(self);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return fatoora_private_text(result.ok, out, error);
+}
+
+FatooraStatus fatoora_invoice_line_item_item_price_discount(const FatooraInvoiceLineItem *self, char **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceLineItem_item_price_discount_result result = fatoora_InvoiceLineItem_item_price_discount(self);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return fatoora_private_text(result.ok, out, error);
+}
+
+FatooraStatus fatoora_invoice_line_item_item_price_base_quantity(const FatooraInvoiceLineItem *self, char **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceLineItem_item_price_base_quantity_result result = fatoora_InvoiceLineItem_item_price_base_quantity(self);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return fatoora_private_text(result.ok, out, error);
+}
+
+FatooraStatus fatoora_invoice_line_item_item_price_base_quantity_unit_code(const FatooraInvoiceLineItem *self, char **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceLineItem_item_price_base_quantity_unit_code_result result = fatoora_InvoiceLineItem_item_price_base_quantity_unit_code(self);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return fatoora_private_text(result.ok, out, error);
+}
+
+FatooraStatus fatoora_invoice_line_item_adjustments_len(const FatooraInvoiceLineItem *self, size_t *out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    size_t value = fatoora_InvoiceLineItem_adjustments_len(self);
+    *out = value;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_invoice_line_item_adjustment(const FatooraInvoiceLineItem *self, size_t index, FatooraAdjustment **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceLineItem_adjustment_result result = fatoora_InvoiceLineItem_adjustment(self, index);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_invoice_line_item_adjustment_is_charge(const FatooraInvoiceLineItem *self, size_t index, bool *out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceLineItem_adjustment_is_charge_result result = fatoora_InvoiceLineItem_adjustment_is_charge(self, index);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_invoice_line_item_item_seller_identifier(const FatooraInvoiceLineItem *self, FatooraOtherId **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceLineItem_item_seller_identifier_result result = fatoora_InvoiceLineItem_item_seller_identifier(self);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_invoice_line_item_item_buyer_identifier(const FatooraInvoiceLineItem *self, FatooraOtherId **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceLineItem_item_buyer_identifier_result result = fatoora_InvoiceLineItem_item_buyer_identifier(self);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_invoice_line_item_item_standard_identifier(const FatooraInvoiceLineItem *self, FatooraOtherId **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_InvoiceLineItem_item_standard_identifier_result result = fatoora_InvoiceLineItem_item_standard_identifier(self);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
 }
 
 FatooraStatus fatoora_invoice_line_item_with_document_reference(const FatooraInvoiceLineItem *self, const FatooraOriginalInvoiceRef *reference, FatooraInvoiceLineItem **out, FatooraError **error) {
@@ -2294,6 +2827,265 @@ void fatoora_invoice_totals_free(FatooraInvoiceTotals *self) {
     if (self) fatoora_InvoiceTotals_destroy(self);
 }
 
+FatooraStatus fatoora_line_item_builder_build(FatooraLineItemBuilder *self, FatooraInvoiceLineItem **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_build_result result = fatoora_LineItemBuilder_build(self);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_set_item_name(FatooraLineItemBuilder *self, const char *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_set_item_name_result result = fatoora_LineItemBuilder_set_item_name(self, fatoora_private_string(value));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_set_invoiced_quantity_unit_code(FatooraLineItemBuilder *self, const char *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_set_invoiced_quantity_unit_code_result result = fatoora_LineItemBuilder_set_invoiced_quantity_unit_code(self, fatoora_private_string(value));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_set_item_price_base_quantity_unit_code(FatooraLineItemBuilder *self, const char *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_set_item_price_base_quantity_unit_code_result result = fatoora_LineItemBuilder_set_item_price_base_quantity_unit_code(self, fatoora_private_string(value));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_set_id(FatooraLineItemBuilder *self, const char *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_set_id_result result = fatoora_LineItemBuilder_set_id(self, fatoora_private_string(value));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_set_invoiced_quantity(FatooraLineItemBuilder *self, const char *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_set_invoiced_quantity_result result = fatoora_LineItemBuilder_set_invoiced_quantity(self, fatoora_private_string(value));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_set_item_net_price(FatooraLineItemBuilder *self, const char *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_set_item_net_price_result result = fatoora_LineItemBuilder_set_item_net_price(self, fatoora_private_string(value));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_set_item_gross_price(FatooraLineItemBuilder *self, const char *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_set_item_gross_price_result result = fatoora_LineItemBuilder_set_item_gross_price(self, fatoora_private_string(value));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_set_item_price_discount(FatooraLineItemBuilder *self, const char *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_set_item_price_discount_result result = fatoora_LineItemBuilder_set_item_price_discount(self, fatoora_private_string(value));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_set_item_price_base_quantity(FatooraLineItemBuilder *self, const char *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_set_item_price_base_quantity_result result = fatoora_LineItemBuilder_set_item_price_base_quantity(self, fatoora_private_string(value));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_set_line_net_amount(FatooraLineItemBuilder *self, const char *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_set_line_net_amount_result result = fatoora_LineItemBuilder_set_line_net_amount(self, fatoora_private_string(value));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_set_line_vat_amount(FatooraLineItemBuilder *self, const char *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_set_line_vat_amount_result result = fatoora_LineItemBuilder_set_line_vat_amount(self, fatoora_private_string(value));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_set_line_amount_with_vat(FatooraLineItemBuilder *self, const char *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_set_line_amount_with_vat_result result = fatoora_LineItemBuilder_set_line_amount_with_vat(self, fatoora_private_string(value));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_set_vat_rate(FatooraLineItemBuilder *self, const char *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_set_vat_rate_result result = fatoora_LineItemBuilder_set_vat_rate(self, fatoora_private_string(value));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_set_vat_category(FatooraLineItemBuilder *self, int32_t value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || (value < 0 || value > UINT8_MAX))
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_set_vat_category_result result = fatoora_LineItemBuilder_set_vat_category(self, (uint8_t)value);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_set_exemption(FatooraLineItemBuilder *self, const FatooraTaxExemption *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_set_exemption_result result = fatoora_LineItemBuilder_set_exemption(self, value);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_add_allowance(FatooraLineItemBuilder *self, const FatooraAdjustment *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_add_allowance_result result = fatoora_LineItemBuilder_add_allowance(self, value);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_add_charge(FatooraLineItemBuilder *self, const FatooraAdjustment *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_add_charge_result result = fatoora_LineItemBuilder_add_charge(self, value);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_add_document_reference(FatooraLineItemBuilder *self, const FatooraOriginalInvoiceRef *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_add_document_reference_result result = fatoora_LineItemBuilder_add_document_reference(self, value);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_add_tax_subtotal(FatooraLineItemBuilder *self, const FatooraVatBreakdown *value, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_add_tax_subtotal_result result = fatoora_LineItemBuilder_add_tax_subtotal(self, value);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_set_item_seller_identifier(FatooraLineItemBuilder *self, const char *value, const char *scheme, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_set_item_seller_identifier_result result = fatoora_LineItemBuilder_set_item_seller_identifier(self, fatoora_private_string(value), fatoora_private_optional(scheme));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_set_item_buyer_identifier(FatooraLineItemBuilder *self, const char *value, const char *scheme, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_set_item_buyer_identifier_result result = fatoora_LineItemBuilder_set_item_buyer_identifier(self, fatoora_private_string(value), fatoora_private_optional(scheme));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_set_item_standard_identifier(FatooraLineItemBuilder *self, const char *value, const char *scheme, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self || !value)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_set_item_standard_identifier_result result = fatoora_LineItemBuilder_set_item_standard_identifier(self, fatoora_private_string(value), fatoora_private_optional(scheme));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+void fatoora_line_item_builder_free(FatooraLineItemBuilder *self) {
+    if (self) fatoora_LineItemBuilder_destroy(self);
+}
+
 FatooraStatus fatoora_original_invoice_ref_new(const char *id, const char *uuid, const char *date, const char *time, const char *type_code, FatooraOriginalInvoiceRef **out, FatooraError **error) {
     if (error) *error = NULL;
     if (out) *out = 0;
@@ -2407,6 +3199,29 @@ void fatoora_other_id_free(FatooraOtherId *self) {
     if (self) fatoora_OtherId_destroy(self);
 }
 
+FatooraStatus fatoora_party_identifiers_len(const FatooraParty *self, size_t *out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    size_t value = fatoora_Party_identifiers_len(self);
+    *out = value;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_party_identifier(const FatooraParty *self, size_t index, FatooraOtherId **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_Party_identifier_result result = fatoora_Party_identifier(self, index);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
+}
+
 FatooraStatus fatoora_party_address(const FatooraParty *self, FatooraAddress **out, FatooraError **error) {
     if (error) *error = NULL;
     if (out) *out = 0;
@@ -2464,6 +3279,133 @@ FatooraStatus fatoora_party_name(const FatooraParty *self, char **out, FatooraEr
 
 void fatoora_party_free(FatooraParty *self) {
     if (self) fatoora_Party_destroy(self);
+}
+
+FatooraStatus fatoora_payment_means_with_instruction_note(const FatooraPaymentMeans *self, const char *value, FatooraPaymentMeans **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !value || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_PaymentMeans_with_instruction_note_result result = fatoora_PaymentMeans_with_instruction_note(self, fatoora_private_string(value));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_payment_means_instruction_notes_len(const FatooraPaymentMeans *self, size_t *out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    size_t value = fatoora_PaymentMeans_instruction_notes_len(self);
+    *out = value;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_payment_means_instruction_note_at(const FatooraPaymentMeans *self, size_t index, char **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_PaymentMeans_instruction_note_at_result result = fatoora_PaymentMeans_instruction_note_at(self, index);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return fatoora_private_text(result.ok, out, error);
+}
+
+FatooraStatus fatoora_payment_means_new(const char *code, const char *instruction, FatooraPaymentMeans **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!code || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_PaymentMeans_new_result result = fatoora_PaymentMeans_new(fatoora_private_string(code), fatoora_private_optional(instruction));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_payment_means_with_account(const FatooraPaymentMeans *self, const char *id, const char *terms, FatooraPaymentMeans **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_PaymentMeans_with_account_result result = fatoora_PaymentMeans_with_account(self, fatoora_private_optional(id), fatoora_private_optional(terms));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_payment_means_code(const FatooraPaymentMeans *self, char **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    DiplomatWrite write = fatoora_private_writer();
+    if (write.grow_failed)
+        return fatoora_private_fail(FATOORA_INTERNAL, "output allocation failed", error);
+    fatoora_PaymentMeans_code_result result = fatoora_PaymentMeans_code(self, &write);
+    if (!result.is_ok) {
+        free(write.buf);
+        return fatoora_private_error(result.err, error);
+    }
+    return fatoora_private_finish(&write, out, error);
+}
+
+FatooraStatus fatoora_payment_means_instruction_note(const FatooraPaymentMeans *self, char **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_PaymentMeans_instruction_note_result result = fatoora_PaymentMeans_instruction_note(self);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return fatoora_private_text(result.ok, out, error);
+}
+
+FatooraStatus fatoora_payment_means_has_account(const FatooraPaymentMeans *self, bool *out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    bool value = fatoora_PaymentMeans_has_account(self);
+    *out = value;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_payment_means_account_identifier(const FatooraPaymentMeans *self, char **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_PaymentMeans_account_identifier_result result = fatoora_PaymentMeans_account_identifier(self);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return fatoora_private_text(result.ok, out, error);
+}
+
+FatooraStatus fatoora_payment_means_payment_terms(const FatooraPaymentMeans *self, char **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_PaymentMeans_payment_terms_result result = fatoora_PaymentMeans_payment_terms(self);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return fatoora_private_text(result.ok, out, error);
+}
+
+void fatoora_payment_means_free(FatooraPaymentMeans *self) {
+    if (self) fatoora_PaymentMeans_destroy(self);
 }
 
 FatooraStatus fatoora_production_request_method(const FatooraProductionRequest *self, char **out, FatooraError **error) {

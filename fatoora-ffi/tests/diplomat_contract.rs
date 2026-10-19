@@ -74,8 +74,9 @@ fn failed_build_also_consumes_builder() {
 fn enum_values_and_credit_note_inputs_are_checked() {
     assert!(InvoiceBuilder::new(255, 1, None, None, None, None).is_err());
     assert!(InvoiceBuilder::new(0, 255, None, None, None, None).is_err());
-    assert!(InvoiceBuilder::new(2, 1, None, None, None, None).is_err());
-    assert!(InvoiceBuilder::new(3, 1, Some(b"INV-0"), None, None, None).is_err());
+    assert!(InvoiceBuilder::new(2, 1, None, None, None, None).is_ok());
+    assert!(InvoiceBuilder::new(2, 1, None, Some(b"uuid"), None, None).is_err());
+    assert!(InvoiceBuilder::new(3, 1, Some(b"INV-0"), None, None, None).is_ok());
     assert!(
         InvoiceBuilder::new(
             2,
@@ -108,7 +109,7 @@ fn child_snapshots_survive_parent_drop() {
     let data = ok(invoice.data());
     let line = ok(data.line_item(0));
     let seller = ok(data.seller());
-    let address = ok(seller.address());
+    let address = ok(seller.address()).unwrap();
     drop(invoice);
     drop(data);
     drop(seller);
@@ -218,7 +219,7 @@ fn buyer_optional_fields_and_owned_snapshots_preserve_absent_vs_empty() {
         let invoice = ok(b.build());
         let data = ok(invoice.data());
         let buyer = ok(data.buyer()).unwrap();
-        let address = ok(buyer.address());
+        let address = ok(buyer.address()).unwrap();
         let id = ok(buyer.other_id()).unwrap();
         let vat_id = ok(buyer.vat_id());
         assert_eq!(written(|out| ok(buyer.name(out))), "مشتري");
@@ -323,7 +324,7 @@ fn prepayment_handoff_preserves_transaction_identity_and_amounts() {
         let parsed = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
         let data = ok(parsed.data());
         let line = ok(data.line_item(0));
-        let address = ok(ok(data.seller()).address());
+        let address = ok(ok(data.seller()).address()).unwrap();
         let expected_hash = written(|out| ok(invoice.hash_base64(out)));
         assert_eq!(
             written(|out| ok(fatoora_ffi::invoice::ffi::Xml::hash(xml.as_bytes(), out))),
@@ -374,7 +375,7 @@ fn roundtrip_metadata_crosses_binding_boundary_and_snapshots_own_their_data() {
         Some(b"original-uuid"),
         Some(b"2023-12-01"),
         Some(b"10:20:30"),
-        Some(b"386"),
+        Some(b"388"),
     ));
     let subtotal = ok(VatBreakdown::new(2, b"0", b"10", b"0", &exemption));
     let item = ok(InvoiceLineItem::new(
@@ -477,7 +478,7 @@ fn roundtrip_metadata_crosses_binding_boundary_and_snapshots_own_their_data() {
     );
     assert_eq!(
         optional_string(reference.document_type_code()).as_deref(),
-        Some("386")
+        Some("388")
     );
     assert_eq!(totals.vat_breakdown_len(), 1);
     assert!(totals.vat_breakdown(1).is_err());
@@ -712,7 +713,8 @@ fn full_billing_references_and_language_less_notes_are_constructible() {
             assert_eq!(data.invoice_type_kind(), kind);
             assert_eq!(data.invoice_sub_type(), subtype);
             let restored = ok(data.original_invoice_ref()).unwrap();
-            let note = ok(data.note()).unwrap();
+            assert_eq!(data.notes_len(), 2);
+            let note = ok(data.note_at(1));
             drop(parsed);
             drop(data);
             assert_eq!(
@@ -731,8 +733,11 @@ fn full_billing_references_and_language_less_notes_are_constructible() {
         )));
         ok(b.add_line_item(b"Item", b"1", b"PCE", b"100", b"15", 1));
         ok(b.set_payment_instruction(b"different"));
-        let error = b.build().err().unwrap();
-        assert!(written(|out| error.details_json(out)).contains("payment_instruction"));
+        let invoice = ok(b.build());
+        assert_eq!(
+            optional_string(ok(invoice.data()).payment_instruction()).as_deref(),
+            Some("different")
+        );
     }
 }
 
@@ -823,7 +828,7 @@ fn imported_notes_do_not_invent_payment_instructions() {
         assert!(ok(ok(imported.data()).payment_instruction()).is_none());
         assert_eq!(
             optional_string(ok(imported.data()).original_invoice_reason()).as_deref(),
-            Some("fallback")
+            None
         );
         let regenerated = written(|out| ok(imported.xml(out)));
         assert!(!regenerated.contains("InstructionNote"));

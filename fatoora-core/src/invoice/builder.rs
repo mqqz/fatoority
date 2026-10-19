@@ -90,14 +90,15 @@ pub struct InvoiceBuilder {
     tax_currency_amount: Option<Decimal>,
     previous_invoice_hash: Option<String>,
     invoice_counter: Option<u64>,
-    note: Option<InvoiceNote>,
+    notes: Vec<InvoiceNote>,
+    billing_references: Vec<super::OriginalInvoiceRef>,
+    purchase_order_id: Option<String>,
+    contract_id: Option<String>,
     seller: Option<Seller>,
     buyer: Option<Buyer>,
     delivery: Option<super::Delivery>,
     line_items: LineItems,
-    payment_means_code: Option<String>,
-    payment_instruction: Option<String>,
-    pub(super) payment_instruction_absent: bool,
+    payment_means: Vec<super::PaymentMeans>,
     prepaid_amount: Decimal,
     payable_rounding_amount: Decimal,
     vat_category: Option<VatCategory>,
@@ -107,12 +108,55 @@ pub struct InvoiceBuilder {
     pub(crate) adjustment_vat_rate: Option<Decimal>,
     allowance_reason: Option<String>,
     adjustments: Vec<super::AllowanceCharge>,
+    pending_adjustments: Vec<(usize, bool, super::DocumentAdjustment)>,
     exemptions: Vec<(VatCategory, Decimal, super::TaxExemption)>,
+    supplied_breakdowns: Vec<super::VatBreakdown>,
+    party_identifiers: Vec<(bool, super::OtherId)>,
 }
 
 impl InvoiceBuilder {
+    pub fn seller_identifier(mut self, value: super::OtherId) -> Self {
+        self.party_identifiers.push((true, value));
+        self
+    }
+    pub fn buyer_identifier(mut self, value: super::OtherId) -> Self {
+        self.party_identifiers.push((false, value));
+        self
+    }
+
+    /// Preserve a supplied VAT breakdown after checking the applicable arithmetic.
+    pub fn vat_breakdown(mut self, value: super::VatBreakdown) -> Self {
+        self.supplied_breakdowns.push(value);
+        self
+    }
+
+    /// Append a document allowance; validation occurs in `build`.
+    pub fn allowance(mut self, adjustment: super::DocumentAdjustment) -> Self {
+        self.pending_adjustments.push((
+            self.adjustments.len() + self.pending_adjustments.len(),
+            false,
+            adjustment,
+        ));
+        self
+    }
+    /// Append a document charge; validation occurs in `build`.
+    pub fn charge(mut self, adjustment: super::DocumentAdjustment) -> Self {
+        self.pending_adjustments.push((
+            self.adjustments.len() + self.pending_adjustments.len(),
+            true,
+            adjustment,
+        ));
+        self
+    }
+    pub fn payment_means(mut self, value: super::PaymentMeans) -> Self {
+        self.payment_means.push(value);
+        self
+    }
     pub fn payment_instruction(mut self, instruction: impl Into<String>) -> Self {
-        self.payment_instruction = Some(instruction.into());
+        if self.payment_means.is_empty() {
+            self.payment_means.push(super::PaymentMeans::new(""));
+        }
+        self.payment_means[0].instruction_notes = vec![instruction.into()];
         self
     }
     pub fn prepaid_amount(mut self, amount: Decimal) -> Self {
@@ -162,14 +206,15 @@ impl InvoiceBuilder {
             tax_currency_amount: None,
             previous_invoice_hash: None,
             invoice_counter: None,
-            note: None,
+            billing_references: Vec::new(),
+            notes: Vec::new(),
+            purchase_order_id: None,
+            contract_id: None,
             seller: None,
             buyer: None,
             delivery: None,
             line_items: Vec::new(),
-            payment_means_code: None,
-            payment_instruction: None,
-            payment_instruction_absent: false,
+            payment_means: Vec::new(),
             prepaid_amount: Decimal::ZERO,
             payable_rounding_amount: Decimal::ZERO,
             vat_category: None,
@@ -179,7 +224,10 @@ impl InvoiceBuilder {
             adjustment_vat_rate: None,
             allowance_reason: None,
             adjustments: Vec::new(),
+            pending_adjustments: Vec::new(),
             exemptions: Vec::new(),
+            supplied_breakdowns: Vec::new(),
+            party_identifiers: Vec::new(),
         }
     }
 
@@ -233,8 +281,20 @@ impl InvoiceBuilder {
         self
     }
 
+    pub fn billing_reference(mut self, reference: super::OriginalInvoiceRef) -> Self {
+        self.billing_references.push(reference);
+        self
+    }
+    pub fn purchase_order_id(mut self, value: impl Into<String>) -> Self {
+        self.purchase_order_id = Some(value.into());
+        self
+    }
+    pub fn contract_id(mut self, value: impl Into<String>) -> Self {
+        self.contract_id = Some(value.into());
+        self
+    }
     pub fn note(mut self, note: InvoiceNote) -> Self {
-        self.note = Some(note);
+        self.notes.push(note);
         self
     }
 
@@ -243,14 +303,12 @@ impl InvoiceBuilder {
         self
     }
 
-    pub fn allowance(mut self, reason: impl Into<String>, amount: Decimal) -> Self {
-        self.invoice_level_discount = amount;
-        self.allowance_reason = Some(reason.into());
-        self
-    }
-
     pub fn payment_means_code(mut self, code: impl Into<String>) -> Self {
-        self.payment_means_code = Some(code.into());
+        if self.payment_means.is_empty() {
+            self.payment_means.push(super::PaymentMeans::new(code));
+        } else {
+            self.payment_means[0].payment_means_type_code = code.into();
+        }
         self
     }
 
@@ -279,6 +337,11 @@ impl InvoiceBuilder {
     /// # Errors
     /// Returns [`InvoiceError::Validation`] when required fields are missing or invalid.
     pub fn build(mut self) -> Result<FinalizedInvoice, InvoiceError> {
+        for (index, charge, adjustment) in self.pending_adjustments {
+            self.adjustments
+                .insert(index, adjustment.into_entry(charge)?);
+        }
+
         for (index, line) in self.line_items.iter_mut().enumerate() {
             if line.id.is_none() {
                 line.id = Some((index + 1).to_string());
@@ -290,25 +353,11 @@ impl InvoiceBuilder {
             issues.push(ValidationIssue::new(field, kind, line_item_index));
         };
 
-        if let InvoiceType::CreditNote(_, reference, _) | InvoiceType::DebitNote(_, reference, _) =
-            &self.invoice_type
-            && reference.id().trim().is_empty()
-        {
-            push_issue(InvoiceField::OriginalInvoiceId, ValidationKind::Empty, None);
+        for reference in &self.billing_references {
+            if reference.id().trim().is_empty() {
+                push_issue(InvoiceField::OriginalInvoiceId, ValidationKind::Empty, None);
+            }
         }
-
-        if let InvoiceType::CreditNote(_, _, reason) | InvoiceType::DebitNote(_, _, reason) =
-            &self.invoice_type
-            && let Some(instruction) = &self.payment_instruction
-            && instruction != reason
-        {
-            push_issue(
-                InvoiceField::PaymentInstruction,
-                ValidationKind::Mismatch,
-                None,
-            );
-        }
-
         match self.id.as_deref() {
             None => push_issue(InvoiceField::Id, ValidationKind::Missing, None),
             Some(value) if value.trim().is_empty() => {
@@ -380,16 +429,10 @@ impl InvoiceBuilder {
         if self.seller.is_none() {
             push_issue(InvoiceField::Seller, ValidationKind::Missing, None);
         }
-        match self.payment_means_code.as_deref() {
-            None => push_issue(
-                InvoiceField::PaymentMeansCode,
-                ValidationKind::Missing,
-                None,
-            ),
-            Some(value) if value.trim().is_empty() => {
-                push_issue(InvoiceField::PaymentMeansCode, ValidationKind::Empty, None)
+        for payment in &self.payment_means {
+            if payment.payment_means_type_code.trim().is_empty() {
+                push_issue(InvoiceField::PaymentMeansCode, ValidationKind::Empty, None);
             }
-            _ => {}
         }
         if self.vat_category.is_none() {
             push_issue(InvoiceField::VatCategory, ValidationKind::Missing, None);
@@ -413,13 +456,6 @@ impl InvoiceBuilder {
                 if item.description().trim().is_empty() {
                     push_issue(
                         InvoiceField::LineItemDescription,
-                        ValidationKind::Empty,
-                        Some(idx),
-                    );
-                }
-                if item.unit_code().trim().is_empty() {
-                    push_issue(
-                        InvoiceField::LineItemUnitCode,
                         ValidationKind::Empty,
                         Some(idx),
                     );
@@ -462,8 +498,31 @@ impl InvoiceBuilder {
                         Some(idx),
                     );
                 }
-                let expected = item.quantity().product_rounded(item.unit_price(), false)?;
-                if item.total_amount() != expected || item.total_amount().scale() > 2 {
+                if item.is_prepayment_adjustment()
+                    && (item.quantity() != Decimal::ZERO
+                        || item.unit_price() != Decimal::ZERO
+                        || item.total_amount() != Decimal::ZERO
+                        || item.vat_amount() != Decimal::ZERO
+                        || item
+                            .adjustments()
+                            .iter()
+                            .any(|a| a.adjustment.value().is_ok_and(|v| v != Decimal::ZERO)))
+                {
+                    push_issue(
+                        InvoiceField::LineItemTotalAmount,
+                        ValidationKind::Mismatch,
+                        Some(idx),
+                    );
+                }
+                let expected = item.expected_net()?;
+                if super::line_builder::check_supplied(
+                    InvoiceField::LineItemTotalAmount,
+                    item.total_amount(),
+                    expected,
+                    "0.01".parse()?,
+                )
+                .is_err()
+                {
                     push_issue(
                         InvoiceField::LineItemTotalAmount,
                         ValidationKind::Mismatch,
@@ -516,6 +575,14 @@ impl InvoiceBuilder {
                 .into());
             }
             for adjustment in &self.adjustments {
+                super::Adjustment {
+                    amount: Some(adjustment.amount),
+                    base_amount: adjustment.base_amount,
+                    percentage: adjustment.percentage,
+                    reason: adjustment.reason.clone(),
+                    reason_code: adjustment.reason_code.clone(),
+                }
+                .value()?;
                 if adjustment.amount < Decimal::ZERO
                     || adjustment.amount.scale() > 2
                     || adjustment.rate < Decimal::ZERO
@@ -539,7 +606,24 @@ impl InvoiceBuilder {
                 }
             }
         }
+        for (seller, value) in self.party_identifiers {
+            if seller {
+                self.seller = self.seller.map(|p| p.identifier(value));
+            } else {
+                let buyer = self.buyer.take().ok_or_else(|| {
+                    ValidationError::new(vec![ValidationIssue::new(
+                        InvoiceField::Buyer,
+                        ValidationKind::Missing,
+                        None,
+                    )])
+                })?;
+                self.buyer = Some(buyer.identifier(value));
+            }
+        }
         let mut invoice = InvoiceData {
+            issue_date_override: None,
+            issue_time_override: None,
+            document_tax_first: false,
             invoice_type: self.invoice_type,
             id: self.id.expect("validated id"),
             uuid: self.uuid.expect("validated uuid"),
@@ -551,16 +635,15 @@ impl InvoiceBuilder {
                 .previous_invoice_hash
                 .expect("validated previous invoice hash"),
             invoice_counter: self.invoice_counter.expect("validated invoice counter"),
-            note: self.note,
+            billing_references: self.billing_references,
+            notes: self.notes,
+            purchase_order_id: self.purchase_order_id,
+            contract_id: self.contract_id,
             seller: self.seller.expect("validated seller"),
             buyer: self.buyer,
             delivery: self.delivery,
             line_items: self.line_items,
-            payment_means_code: self
-                .payment_means_code
-                .expect("validated payment means code"),
-            payment_instruction: self.payment_instruction,
-            payment_instruction_absent: self.payment_instruction_absent,
+            payment_means: self.payment_means,
             vat_category: self.vat_category.expect("validated vat category"),
             flags: self.flags,
             invoice_level_charge: self.invoice_level_charge,
@@ -589,6 +672,37 @@ impl InvoiceBuilder {
             .into());
         }
         let mut totals = InvoiceTotalsData::from_data(&invoice)?;
+        let mut seen_groups = Vec::new();
+        for supplied in self.supplied_breakdowns {
+            let key = (supplied.category, supplied.rate);
+            if seen_groups.contains(&key) {
+                return Err(ValidationError::new(vec![ValidationIssue::new(
+                    InvoiceField::VatCategory,
+                    ValidationKind::Mismatch,
+                    None,
+                )])
+                .into());
+            }
+            seen_groups.push(key);
+            let expected = totals
+                .groups
+                .iter_mut()
+                .find(|g| (g.category, g.rate) == key)
+                .ok_or_else(|| {
+                    ValidationError::new(vec![ValidationIssue::new(
+                        InvoiceField::VatCategory,
+                        ValidationKind::Mismatch,
+                        None,
+                    )])
+                })?;
+            supplied.check_against(expected, invoice.line_items.len())?;
+            *expected = supplied;
+        }
+        totals.tax_amount = totals
+            .groups
+            .iter()
+            .try_fold(Decimal::ZERO, |sum, g| sum.add(g.tax_amount))?;
+        totals.tax_inclusive_amount = totals.taxable_amount.add(totals.tax_amount)?;
         if invoice
             .tax_currency
             .as_ref()
@@ -611,13 +725,49 @@ impl InvoiceBuilder {
             invoice.tax_currency_amount = Some(totals.tax_amount);
         }
 
+        if invoice
+            .line_items
+            .iter()
+            .any(|l| l.is_prepayment_adjustment())
+        {
+            let expected = invoice
+                .line_items
+                .iter()
+                .filter(|l| l.is_prepayment_adjustment())
+                .flat_map(|l| l.tax_subtotals())
+                .try_fold(Decimal::ZERO, |sum, g| {
+                    sum.add(g.taxable_amount)?.add(g.tax_amount)
+                })?;
+            super::line_builder::check_supplied(
+                InvoiceField::InvoiceLevelDiscount,
+                self.prepaid_amount,
+                expected,
+                Decimal::ZERO,
+            )?;
+        }
         totals.prepaid_amount = self.prepaid_amount;
         totals.payable_rounding_amount = self.payable_rounding_amount;
         totals.payable_amount = totals
             .tax_inclusive_amount
             .sub(self.prepaid_amount)?
             .add(self.payable_rounding_amount)?;
+        let mut assigned = Vec::new();
         for (category, rate, exemption) in self.exemptions {
+            if let Some((_, _, previous)) = assigned
+                .iter()
+                .find(|(c, r, _)| *c == category && *r == rate)
+            {
+                if previous != &exemption {
+                    return Err(ValidationError::new(vec![ValidationIssue::new(
+                        InvoiceField::VatCategory,
+                        ValidationKind::Mismatch,
+                        None,
+                    )])
+                    .into());
+                }
+            } else {
+                assigned.push((category, rate, exemption.clone()));
+            }
             let group = totals
                 .groups
                 .iter_mut()
@@ -629,6 +779,14 @@ impl InvoiceBuilder {
                         None,
                     )])
                 })?;
+            if seen_groups.contains(&(category, rate)) && group.exemption != exemption {
+                return Err(ValidationError::new(vec![ValidationIssue::new(
+                    InvoiceField::VatCategory,
+                    ValidationKind::Mismatch,
+                    None,
+                )])
+                .into());
+            }
             group.exemption = exemption;
         }
         Ok(FinalizedInvoice {
@@ -639,6 +797,34 @@ impl InvoiceBuilder {
 }
 
 impl FinalizedInvoice {
+    pub(super) fn preserve_import_tax_layout(
+        &mut self,
+        currency: Option<super::CurrencyCode>,
+        accounting_total: bool,
+        document_first: bool,
+    ) {
+        self.data.tax_currency = currency;
+        if !accounting_total {
+            self.data.tax_currency_amount = None;
+        }
+        self.data.document_tax_first = document_first;
+    }
+    pub(super) fn preserve_import_time(
+        &mut self,
+        date: super::InvoiceDate,
+        time: super::InvoiceTime,
+    ) {
+        if !time.as_str().ends_with('Z') {
+            self.data.issue_date_override = Some(date);
+            self.data.issue_time_override = Some(time);
+        }
+    }
+    pub(super) fn refresh_accounting_tax(&mut self) {
+        if self.data.tax_currency.as_ref() == Some(&self.data.currency) {
+            self.data.tax_currency_amount = Some(self.totals.tax_amount);
+        }
+    }
+
     /// Access the underlying invoice data.
     pub fn data(&self) -> &InvoiceData {
         &self.data

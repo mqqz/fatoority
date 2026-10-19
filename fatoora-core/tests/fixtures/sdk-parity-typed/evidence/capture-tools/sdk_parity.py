@@ -716,10 +716,11 @@ def capture(root, output, inputs):
             "case": "payable-rounding",
             "field": "qr.tag4",
             "sdk": "1000.00",
-            "rust": "1000.01",
-            "reason": "SDK output differs from XML TaxInclusiveAmount; preserve guideline mapping in Rust",
-            "tracking": "https://github.com/mqqz/fatoora-rs/issues/2",
-            "source": "https://www.zatca.gov.sa/en/E-Invoicing/Introduction/Guidelines/Documents/E-invoicing-Detailed-Technical-Guideline.pdf#page=61",
+            "rust": "1000.00",
+            "status": "resolved",
+            "reason": "QR generation and validation use PayableAmount, including rounding and prepayments",
+            "tracking": "https://github.com/mqqz/fatoority/issues/2",
+            "source": "https://zatca1.discourse.group/t/how-to-show-advance-deductions-in-qr-code/890/2",
         }
     ]
     manifest["capture"]["signed_properties_adapter_sha256"] = digest(
@@ -809,6 +810,9 @@ def verify(root, output, corpus):
         raise CaptureError(
             "Fresh Rust exporter currently requires the repository corpus"
         )
+    typed_corpus = corpus.with_name("sdk-parity-typed")
+    typed_manifest = load_manifest(typed_corpus)
+    typed_cases = {case["id"] for case in typed_manifest["cases"]}
     new_output(output)
     before = {
         str(p.relative_to(root)): digest(p) for p in root.rglob("*") if p.is_file()
@@ -859,9 +863,10 @@ def verify(root, output, corpus):
 
         def check(name):
             case_id = name.removesuffix("-typed")
-            expected = json.loads(
-                (corpus / "cases" / case_id / "expected.json").read_text()
-            )["signed_validation"]
+            directory = corpus / "cases" / case_id
+            if name.endswith("-typed") and case_id in typed_cases:
+                directory = typed_corpus / "cases" / case_id
+            expected = json.loads((directory / "expected.json").read_text())["signed_validation"]
             rec, raw = invoke(
                 scratch,
                 env,
@@ -904,6 +909,7 @@ def verify(root, output, corpus):
             "sdk_version": VERSION,
             "jar_sha256": JAR_SHA256,
             "corpus_manifest_sha256": digest(corpus / "manifest.json"),
+            "typed_corpus_manifest_sha256": digest(typed_corpus / "manifest.json"),
             "results": reports,
         },
     )

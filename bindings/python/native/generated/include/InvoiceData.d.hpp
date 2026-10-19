@@ -23,6 +23,8 @@ namespace capi { struct OriginalInvoiceRef; }
 class OriginalInvoiceRef;
 namespace capi { struct Party; }
 class Party;
+namespace capi { struct PaymentMeans; }
+class PaymentMeans;
 namespace capi { struct Text; }
 class Text;
 } // namespace _native
@@ -38,6 +40,22 @@ namespace capi {
 namespace _native {
 class InvoiceData {
 public:
+
+  inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> issue_time() const;
+  template<typename W>
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> issue_time_write(W& writeable_output) const;
+
+  inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> issue_date() const;
+  template<typename W>
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> issue_date_write(W& writeable_output) const;
+
+  inline size_t payment_means_len() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::PaymentMeans>, std::unique_ptr<_native::BindingError>> payment_means(size_t index) const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> purchase_order_id() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> contract_id() const;
 
   inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> payment_instruction() const;
 
@@ -110,6 +128,14 @@ public:
   inline _native::diplomat::result<std::unique_ptr<_native::OriginalInvoiceRef>, std::unique_ptr<_native::BindingError>> original_invoice_ref() const;
 
   inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> original_invoice_reason() const;
+
+  inline size_t notes_len() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::InvoiceNote>, std::unique_ptr<_native::BindingError>> note_at(size_t index) const;
+
+  inline size_t billing_references_len() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::OriginalInvoiceRef>, std::unique_ptr<_native::BindingError>> billing_reference(size_t index) const;
 
     inline const _native::capi::InvoiceData* AsFFI() const;
     inline _native::capi::InvoiceData* AsFFI();

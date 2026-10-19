@@ -3,7 +3,7 @@
   <cbc:ID>INV-EXP-3001</cbc:ID>
   <cbc:UUID>8f1e4f20-9e40-4a2c-8c7f-65d7b9c3c9a1</cbc:UUID>
   <cbc:IssueDate>2024-02-22</cbc:IssueDate>
-  <cbc:IssueTime>13:10:00</cbc:IssueTime>
+  <cbc:IssueTime>13:10:00Z</cbc:IssueTime>
   <cbc:InvoiceTypeCode name="0100101">388</cbc:InvoiceTypeCode>
   <cbc:Note languageID="en">Export self-billed invoice</cbc:Note>
   <cbc:DocumentCurrencyCode>SAR</cbc:DocumentCurrencyCode>

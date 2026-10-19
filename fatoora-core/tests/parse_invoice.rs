@@ -18,7 +18,7 @@ fn parse_sample_simplified_invoice() {
 
     assert_eq!(data.id(), "SME00010");
     assert_eq!(data.uuid(), "8e6000cf-1a98-4174-b3e7-b5d5954bc10d");
-    assert_eq!(data.issue_datetime().as_str(), "2022-08-17T17:41:08Z");
+    assert_eq!(data.issue_datetime().as_str(), "2022-08-17T14:41:08Z");
     assert_eq!(data.currency().as_str(), "SAR");
     assert_eq!(
         data.previous_invoice_hash(),
@@ -34,7 +34,7 @@ fn parse_sample_simplified_invoice() {
     assert_eq!(data.seller().other_id().unwrap().as_str(), "1010010000");
     assert_eq!(data.seller().other_id().unwrap().scheme_id(), Some("CRN"));
 
-    let address = data.seller().address();
+    let address = data.seller().address().unwrap();
     assert!(address.street().contains("Prince Sultan"));
     assert_eq!(address.building_number(), "2322");
     assert!(address.city().contains("Riyadh"));
@@ -269,11 +269,9 @@ fn credit_note_serializes_billing_reference_and_reason() {
         .with_issue_date_str("2023-12-31")
         .expect("issue date");
 
-    let mut builder = InvoiceBuilder::new(InvoiceType::CreditNote(
-        InvoiceSubType::Standard,
-        original,
-        "pricing correction".into(),
-    ));
+    let mut builder = InvoiceBuilder::new(InvoiceType::CreditNote(InvoiceSubType::Standard))
+        .billing_reference(original)
+        .payment_instruction("pricing correction");
     builder = builder
         .id("CR-1")
         .uuid("uuid-cr-1")
@@ -313,11 +311,9 @@ fn debit_note_serializes_billing_reference_and_reason() {
         .with_issue_date_str("2023-12-31")
         .expect("issue date");
 
-    let mut builder = InvoiceBuilder::new(InvoiceType::DebitNote(
-        InvoiceSubType::Simplified,
-        original,
-        "pricing adjustment".into(),
-    ));
+    let mut builder = InvoiceBuilder::new(InvoiceType::DebitNote(InvoiceSubType::Simplified))
+        .billing_reference(original)
+        .payment_instruction("pricing adjustment");
     builder = builder
         .id("DB-1")
         .uuid("uuid-db-1")
@@ -355,11 +351,9 @@ fn parse_credit_note_requires_billing_reference_id() {
 fn parse_credit_note_missing_billing_reference_element() {
     let xml = load_credit_note_xml();
     let xml = remove_billing_reference(&xml);
-    let err = parse_finalized_invoice_xml(&xml).expect_err("missing billing reference element");
-    assert!(matches!(
-        err,
-        ParseError::MissingField("BillingReferenceID")
-    ));
+    let invoice =
+        parse_finalized_invoice_xml(&xml).expect("conditional reference checks are separate");
+    assert!(invoice.data().billing_references().is_empty());
 }
 
 #[test]
@@ -388,7 +382,9 @@ fn parse_credit_note_does_not_invent_reason_when_missing() {
     );
     let invoice = parse_finalized_invoice_xml(&xml).expect("parse credit note");
     match invoice.data().invoice_type() {
-        InvoiceType::CreditNote(_, original, reason) => {
+        InvoiceType::CreditNote(_) => {
+            let original = &invoice.data().billing_references()[0];
+            let reason = invoice.data().payment_instruction().unwrap_or("");
             assert_eq!(original.id(), "SME00002");
             assert_eq!(reason, "");
         }
@@ -397,9 +393,9 @@ fn parse_credit_note_does_not_invent_reason_when_missing() {
 }
 
 #[test]
-fn parse_credit_note_uses_note_only_when_instruction_missing() {
+fn parse_credit_note_does_not_use_general_note_as_instruction() {
     for (replacement, expected) in [
-        ("", "fallback note"),
+        ("", ""),
         ("<cbc:InstructionNote> \t </cbc:InstructionNote>", " \t "),
     ] {
         let xml = load_credit_note_xml();
@@ -413,7 +409,8 @@ fn parse_credit_note_uses_note_only_when_instruction_missing() {
         );
         let invoice = parse_finalized_invoice_xml(&xml).expect("parse credit note");
         match invoice.data().invoice_type() {
-            InvoiceType::CreditNote(_, _, reason) => {
+            InvoiceType::CreditNote(_) => {
+                let reason = invoice.data().payment_instruction().unwrap_or("");
                 assert_eq!(reason, expected);
             }
             _ => panic!("expected credit note"),
@@ -430,7 +427,8 @@ fn parse_credit_note_prefers_instruction_note_over_note() {
     );
     let invoice = parse_finalized_invoice_xml(&xml).expect("parse credit note");
     match invoice.data().invoice_type() {
-        InvoiceType::CreditNote(_, _, reason) => {
+        InvoiceType::CreditNote(_) => {
+            let reason = invoice.data().payment_instruction().unwrap_or("");
             assert!(reason.contains("In case of goods or services refund"));
         }
         _ => panic!("expected credit note"),
@@ -442,7 +440,9 @@ fn parse_debit_note_type_and_reason() {
     let xml = load_debit_note_xml();
     let invoice = parse_finalized_invoice_xml(&xml).expect("parse debit note");
     match invoice.data().invoice_type() {
-        InvoiceType::DebitNote(subtype, original, reason) => {
+        InvoiceType::DebitNote(subtype) => {
+            let original = &invoice.data().billing_references()[0];
+            let reason = invoice.data().payment_instruction().unwrap_or("");
             assert_eq!(*subtype, InvoiceSubType::Standard);
             assert_eq!(original.id(), "SME00002");
             assert!(reason.contains("Amendment"));
@@ -465,11 +465,9 @@ fn credit_note_serialization_preserves_whitespace_reason() {
     .unwrap();
 
     let original = OriginalInvoiceRef::new("INV-ORIG");
-    let mut builder = InvoiceBuilder::new(InvoiceType::CreditNote(
-        InvoiceSubType::Standard,
-        original,
-        "   ".into(),
-    ));
+    let mut builder = InvoiceBuilder::new(InvoiceType::CreditNote(InvoiceSubType::Standard))
+        .billing_reference(original)
+        .payment_instruction("   ");
     builder = builder
         .id("CR-NO-REASON")
         .uuid("uuid-cr-no-reason")
@@ -501,11 +499,9 @@ fn credit_note_allowance_discount_round_trip() {
     .unwrap();
 
     let original = OriginalInvoiceRef::new("INV-ORIG");
-    let mut builder = InvoiceBuilder::new(InvoiceType::CreditNote(
-        InvoiceSubType::Standard,
-        original,
-        "pricing correction".into(),
-    ));
+    let mut builder = InvoiceBuilder::new(InvoiceType::CreditNote(InvoiceSubType::Standard))
+        .billing_reference(original)
+        .payment_instruction("pricing correction");
     builder = builder
         .id("CR-DISC-1")
         .uuid("uuid-cr-disc-1")
@@ -565,11 +561,9 @@ fn debit_note_charge_serializes_allowance_charge() {
     .unwrap();
 
     let original = OriginalInvoiceRef::new("INV-ORIG");
-    let mut builder = InvoiceBuilder::new(InvoiceType::DebitNote(
-        InvoiceSubType::Standard,
-        original,
-        "pricing adjustment".into(),
-    ));
+    let mut builder = InvoiceBuilder::new(InvoiceType::DebitNote(InvoiceSubType::Standard))
+        .billing_reference(original)
+        .payment_instruction("pricing adjustment");
     builder = builder
         .id("DB-CHG-1")
         .uuid("uuid-db-chg-1")
@@ -615,11 +609,9 @@ fn debit_note_allowance_round_trip() {
     .unwrap();
 
     let original = OriginalInvoiceRef::new("INV-ORIG");
-    let mut builder = InvoiceBuilder::new(InvoiceType::DebitNote(
-        InvoiceSubType::Standard,
-        original,
-        "pricing adjustment".into(),
-    ));
+    let mut builder = InvoiceBuilder::new(InvoiceType::DebitNote(InvoiceSubType::Standard))
+        .billing_reference(original)
+        .payment_instruction("pricing adjustment");
     builder = builder
         .id("DB-DISC-1")
         .uuid("uuid-db-disc-1")
@@ -679,11 +671,9 @@ fn credit_note_round_trip_preserves_original_ref_and_reason() {
         .with_issue_date_str("2023-12-31")
         .expect("issue date");
 
-    let mut builder = InvoiceBuilder::new(InvoiceType::CreditNote(
-        InvoiceSubType::Standard,
-        original,
-        "pricing correction".into(),
-    ));
+    let mut builder = InvoiceBuilder::new(InvoiceType::CreditNote(InvoiceSubType::Standard))
+        .billing_reference(original)
+        .payment_instruction("pricing correction");
     builder = builder
         .id("CR-RT-1")
         .uuid("uuid-cr-rt-1")
@@ -700,7 +690,9 @@ fn credit_note_round_trip_preserves_original_ref_and_reason() {
     let xml = invoice.to_xml().expect("serialize credit note");
     let parsed = parse_finalized_invoice_xml(&xml).expect("parse credit note");
     match parsed.data().invoice_type() {
-        InvoiceType::CreditNote(subtype, original, reason) => {
+        InvoiceType::CreditNote(subtype) => {
+            let original = &parsed.data().billing_references()[0];
+            let reason = parsed.data().payment_instruction().unwrap_or("");
             assert_eq!(*subtype, InvoiceSubType::Standard);
             assert_eq!(original.id(), "INV-ORIG");
             assert_eq!(original.uuid(), Some("uuid-orig"));
@@ -715,6 +707,7 @@ fn build_seller() -> Party<SellerRole> {
     Party::<SellerRole>::new(
         "Acme Inc".into(),
         Address {
+            province: None,
             country_code: CountryCode::parse("SAU").expect("country code"),
             city: "Riyadh".into(),
             street: "King Fahd".into(),

@@ -59,6 +59,254 @@ public partial class InvoiceLineItem: IDisposable
 
     /// <exception cref="BindingErrorException"></exception>
     /// <returns>
+    /// A <c>Text</c> allocated on Rust side.
+    /// </returns>
+    public Text? ItemGrossPrice()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.InvoiceLineItem.ItemGrossPrice(selfLease!.Ptr);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return result.Ok == null ? null : new Text(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>Text</c> allocated on Rust side.
+    /// </returns>
+    public Text? ItemPriceDiscount()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.InvoiceLineItem.ItemPriceDiscount(selfLease!.Ptr);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return result.Ok == null ? null : new Text(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>Text</c> allocated on Rust side.
+    /// </returns>
+    public Text? ItemPriceBaseQuantity()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.InvoiceLineItem.ItemPriceBaseQuantity(selfLease!.Ptr);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return result.Ok == null ? null : new Text(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>Text</c> allocated on Rust side.
+    /// </returns>
+    public Text? ItemPriceBaseQuantityUnitCode()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.InvoiceLineItem.ItemPriceBaseQuantityUnitCode(selfLease!.Ptr);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return result.Ok == null ? null : new Text(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    public nuint AdjustmentsLen()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                return Raw.InvoiceLineItem.AdjustmentsLen(selfLease!.Ptr);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>Adjustment</c> allocated on Rust side.
+    /// </returns>
+    public Adjustment Adjustment(nuint index)
+    {
+        unsafe
+        {
+            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.InvoiceLineItem.Adjustment(selfLease!.Ptr, index);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return new Adjustment(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    public bool AdjustmentIsCharge(nuint index)
+    {
+        unsafe
+        {
+            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.InvoiceLineItem.AdjustmentIsCharge(selfLease!.Ptr, index);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return result.Ok;
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>OtherId</c> allocated on Rust side.
+    /// </returns>
+    public OtherId? ItemSellerIdentifier()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.InvoiceLineItem.ItemSellerIdentifier(selfLease!.Ptr);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return result.Ok == null ? null : new OtherId(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>OtherId</c> allocated on Rust side.
+    /// </returns>
+    public OtherId? ItemBuyerIdentifier()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.InvoiceLineItem.ItemBuyerIdentifier(selfLease!.Ptr);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return result.Ok == null ? null : new OtherId(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>OtherId</c> allocated on Rust side.
+    /// </returns>
+    public OtherId? ItemStandardIdentifier()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.InvoiceLineItem.ItemStandardIdentifier(selfLease!.Ptr);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return result.Ok == null ? null : new OtherId(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
     /// A <c>InvoiceLineItem</c> allocated on Rust side.
     /// </returns>
     public InvoiceLineItem WithDocumentReference(OriginalInvoiceRef reference)

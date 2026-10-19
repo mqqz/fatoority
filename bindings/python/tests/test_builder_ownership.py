@@ -47,7 +47,8 @@ def test_full_billing_reference_and_language_less_note(kind):
         b.set_note_without_language("consumed")
     parsed = parse_finalized_invoice_xml(invoice.xml())
     restored = parsed.original_invoice_ref()
-    note = parsed.note()
+    assert parsed.notes()[0].text() == "old"
+    note = parsed.notes()[1]
     assert parsed.original_invoice_reason() == "تصحيح &"
     parsed.close()
     assert restored.issue_time() == "10:20:30"

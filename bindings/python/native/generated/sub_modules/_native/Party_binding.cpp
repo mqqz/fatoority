@@ -13,6 +13,8 @@ void add_Party_binding(nb::module_ mod) {
     nb::class_<_native::Party> opaque(mod, "Party", nb::type_slots(_native_Party_slots));
     opaque
         .def("address", std::move(maybe_op_unwrap(&_native::Party::address)))
+        .def("identifier", std::move(maybe_op_unwrap(&_native::Party::identifier)), "index"_a)
+        .def("identifiers_len", &_native::Party::identifiers_len)
         .def("name", std::move(maybe_op_unwrap(&_native::Party::name)))
         .def("other_id", std::move(maybe_op_unwrap(&_native::Party::other_id)))
         .def("vat_id", std::move(maybe_op_unwrap(&_native::Party::vat_id)));

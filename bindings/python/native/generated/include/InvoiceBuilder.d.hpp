@@ -13,6 +13,8 @@
 namespace _native {
 namespace capi { struct Address; }
 class Address;
+namespace capi { struct Adjustment; }
+class Adjustment;
 namespace capi { struct AllowanceCharge; }
 class AllowanceCharge;
 namespace capi { struct BindingError; }
@@ -25,8 +27,12 @@ namespace capi { struct InvoiceLineItem; }
 class InvoiceLineItem;
 namespace capi { struct OriginalInvoiceRef; }
 class OriginalInvoiceRef;
+namespace capi { struct PaymentMeans; }
+class PaymentMeans;
 namespace capi { struct TaxExemption; }
 class TaxExemption;
+namespace capi { struct VatBreakdown; }
+class VatBreakdown;
 } // namespace _native
 
 
@@ -40,6 +46,20 @@ namespace capi {
 namespace _native {
 class InvoiceBuilder {
 public:
+
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> add_seller_identifier(std::string_view value, std::optional<std::string_view> scheme);
+
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> add_buyer_identifier(std::string_view value, std::optional<std::string_view> scheme);
+
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> add_vat_breakdown(const _native::VatBreakdown& value);
+
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> add_payment_means(const _native::PaymentMeans& value);
+
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> add_note(std::optional<std::string_view> language, std::string_view value);
+
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> add_document_adjustment(bool charge, const _native::Adjustment& value, uint8_t category, std::string_view rate, const _native::TaxExemption& exemption);
+
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> set_buyer_without_address(std::string_view name, std::optional<std::string_view> vat_id, std::optional<std::string_view> other_id, std::optional<std::string_view> scheme);
 
   /**
    * Construct a credit or debit note with a complete billing reference.
@@ -65,6 +85,12 @@ public:
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> add_item(const _native::InvoiceLineItem& item);
 
   inline static _native::diplomat::result<std::unique_ptr<_native::InvoiceBuilder>, std::unique_ptr<_native::BindingError>> new_(uint8_t kind, uint8_t subtype, std::optional<std::string_view> original_id, std::optional<std::string_view> original_uuid, std::optional<std::string_view> original_date, std::optional<std::string_view> reason);
+
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> add_billing_reference(const _native::OriginalInvoiceRef& value);
+
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> set_purchase_order_id(std::string_view value);
+
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> set_contract_id(std::string_view value);
 
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> set_id(std::string_view value);
 

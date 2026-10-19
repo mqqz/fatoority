@@ -15,6 +15,46 @@ class InvoiceLineItem internal constructor(internal val raw: com.fatoora.raw.Inv
             InvoiceLineItem(unwrap(com.fatoora.raw.InvoiceLineItem.new_(checkedText(description), checkedText(quantity), checkedText(unitCode), checkedText(unitPrice), checkedText(rate), checkedUnsigned(category.toLong(), 255).toUByte())))
         }
     }
+    fun itemGrossPrice(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.itemGrossPrice())?.let(::Text)
+    }
+
+    fun itemPriceDiscount(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.itemPriceDiscount())?.let(::Text)
+    }
+
+    fun itemPriceBaseQuantity(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.itemPriceBaseQuantity())?.let(::Text)
+    }
+
+    fun itemPriceBaseQuantityUnitCode(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.itemPriceBaseQuantityUnitCode())?.let(::Text)
+    }
+
+    fun adjustmentsLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
+        java.math.BigInteger(raw.adjustmentsLen().toString())
+    }
+
+    fun adjustment(index: java.math.BigInteger): Adjustment = nativeCall(listOfNotNull(this)) {
+        Adjustment(unwrap(raw.adjustment(checkedCounter(index))))
+    }
+
+    fun adjustmentIsCharge(index: java.math.BigInteger): Boolean = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.adjustmentIsCharge(checkedCounter(index)))
+    }
+
+    fun itemSellerIdentifier(): OtherId? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.itemSellerIdentifier())?.let(::OtherId)
+    }
+
+    fun itemBuyerIdentifier(): OtherId? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.itemBuyerIdentifier())?.let(::OtherId)
+    }
+
+    fun itemStandardIdentifier(): OtherId? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.itemStandardIdentifier())?.let(::OtherId)
+    }
+
     fun withDocumentReference(reference: OriginalInvoiceRef): InvoiceLineItem = nativeCall(listOfNotNull(this, reference)) {
         InvoiceLineItem(unwrap(raw.withDocumentReference(reference.raw)))
     }

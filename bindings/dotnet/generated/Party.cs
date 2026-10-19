@@ -57,11 +57,54 @@ public partial class Party: IDisposable
         }
     }
 
+    public nuint IdentifiersLen()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.Party>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                return Raw.Party.IdentifiersLen(selfLease!.Ptr);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>OtherId</c> allocated on Rust side.
+    /// </returns>
+    public OtherId Identifier(nuint index)
+    {
+        unsafe
+        {
+            BorrowLease<Raw.Party>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.Party.Identifier(selfLease!.Ptr, index);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return new OtherId(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
     /// <exception cref="BindingErrorException"></exception>
     /// <returns>
     /// A <c>Address</c> allocated on Rust side.
     /// </returns>
-    public Address Address()
+    public Address? Address()
     {
         unsafe
         {
@@ -74,7 +117,7 @@ public partial class Party: IDisposable
                 {
                     throw new BindingErrorException(new BindingError(result.Err));
                 }
-                return new Address(result.Ok);
+                return result.Ok == null ? null : new Address(result.Ok);
             }
             finally
             {

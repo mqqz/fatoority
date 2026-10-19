@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "javac",
+    "-cp",
+    "/home/mo/code/fatoora-rs/target/fatoora sdk parity d7qjn8c1/sdk/Apps/zatca-einvoicing-sdk-238-R3.4.8.jar",
+    "/home/mo/code/fatoora-rs/target/fatoora sdk parity d7qjn8c1/sdk/CanonicalBytes.java",
+    "/home/mo/code/fatoora-rs/target/fatoora sdk parity d7qjn8c1/sdk/SignedPropertiesBytes.java"
+  ],
+  "cwd": "/home/mo/code/fatoora-rs/target/fatoora sdk parity d7qjn8c1/sdk",
+  "exit_code": 0
+}
