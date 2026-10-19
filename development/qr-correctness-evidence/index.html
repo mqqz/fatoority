@@ -1,0 +1,1675 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Published requirements, pinned SDK comparisons, native integrity policies and migration notes for QR correctness.">
+      
+      
+      
+        <link rel="canonical" href="https://docs.fatoority.com/development/qr-correctness-evidence/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>QR correctness evidence and workflow limits - fatoority</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/home.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  
+  
+    
+    
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="fatoority">
+    <meta property="og:title" content="QR correctness evidence and workflow limits - fatoority">
+    <meta property="og:description" content="Published requirements, pinned SDK comparisons, native integrity policies and migration notes for QR correctness.">
+    <meta property="og:url" content="https://docs.fatoority.com/development/qr-correctness-evidence/">
+    <meta property="og:image" content="https://docs.fatoority.com/assets/images/crab-logo.png">
+    <meta property="og:image:alt" content="fatoority crab logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="QR correctness evidence and workflow limits - fatoority">
+    <meta name="twitter:description" content="Published requirements, pinned SDK comparisons, native integrity policies and migration notes for QR correctness.">
+    <meta name="twitter:image" content="https://docs.fatoority.com/assets/images/crab-logo.png">
+    <meta name="twitter:image:alt" content="fatoority crab logo">
+  
+
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#qr-correctness-evidence" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="fatoority" class="md-header__button md-logo" aria-label="fatoority" data-md-component="logo">
+      
+  <img src="../../assets/images/crab-logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            fatoority
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              QR correctness evidence and workflow limits
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/mqqz/fatoority" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mqqz/fatoority
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="fatoority" class="md-nav__button md-logo" aria-label="fatoority" data-md-component="logo">
+      
+  <img src="../../assets/images/crab-logo.png" alt="logo">
+
+    </a>
+    fatoority
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/mqqz/fatoority" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mqqz/fatoority
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/csr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CSR Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/invoice-signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Invoice Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/qr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QR Codes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ZATCA API Client
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/csr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CSR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bindings
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Bindings
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/bindings/python/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/bindings/javascript/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JavaScript / TypeScript
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/bindings/csharp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C# / .NET
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/bindings/kotlin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kotlin / Java
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/bindings/c/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C/C++ (FFI)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Invoice
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Invoice
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/invoice-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/numbers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decimal numbers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/invoice-signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/invoice-validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/xml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../invoice-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XML Model Coverage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/xml-and-schemas/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XML and Schemas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/qr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/api-client/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Client
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sdk-parity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SDK Compatibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../diplomat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Binding Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../business-rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Validation Tests
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Releases
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#requirements-and-observed-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Requirements and observed behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#findings-and-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Findings and changes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decimal-observations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decimal observations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reproduce-the-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproduce the comparison
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#regression-coverage-and-api-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regression coverage and API changes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-performed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification performed
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#development-compliance-api-observations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development compliance API observations
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="qr-correctness-evidence">QR correctness evidence<a class="headerlink" href="#qr-correctness-evidence" title="Permanent link">&para;</a></h1>
+<h2 id="requirements-and-observed-behavior">Requirements and observed behavior<a class="headerlink" href="#requirements-and-observed-behavior" title="Permanent link">&para;</a></h2>
+<p>The <a href="https://www.zatca.gov.sa/ar/E-Invoicing/SystemsDevelopers/Documents/20230519_ZATCA_Electronic_Invoice_Security_Features_Implementation_Standards_vF.pdf">May 2023 ZATCA security standard</a>, section 4.1, lists Tags 7–8 for stamped invoices and restricts Tag 9 to simplified invoices and their notes. Section 2.2.1 distinguishes platform clearance stamping of standard invoices from EGS stamping of simplified invoices.</p>
+<p>The pinned SDK <code>238-R3.4.8</code> independently generated Tags 1–8 for standard tax invoices, credit notes and debit notes; simplified equivalents contained Tags 1–9. Fatoority produced the same tag sequences and decoded values for Tags 4, 5 and 9. Tag 9 contains the certificate's binary signature bytes. Certificate signature metadata remains available for standard documents.</p>
+<p>These standard cases are local SDK signing exercises. They are not gateway-cleared documents and establish no platform issuer trust. The original standard XML samples contain Tags 1–8. One foreign-currency sample fails strict Tag 5 comparison as described below. No newly obtained production clearance fixture or live clearance submission was used. Imported certificates are checked against their document's signature and QR; they need not match a locally configured signer.</p>
+<h2 id="findings-and-changes">Findings and changes<a class="headerlink" href="#findings-and-changes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Finding</th>
+<th>Root cause</th>
+<th>Changed paths</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>QR-001</td>
+<td>Certificate metadata was treated as unconditional QR content</td>
+<td><code>invoice/qr.rs</code> centralizes subtype and required stamp tags; <code>invoice/sign.rs</code> supplies Tag 9 only for simplified documents</td>
+</tr>
+<tr>
+<td>QR-002</td>
+<td>The model QR constructor formatted money independently of source XML</td>
+<td>Typed signing now serializes first; the obsolete model constructor was removed. XML construction preserves decimal text</td>
+</tr>
+<tr>
+<td>QR-003</td>
+<td><code>sign_with_bundle()</code> reconstructed a second QR from typed totals</td>
+<td><code>invoice/builder.rs</code> retains the payload extracted and checked against the final XML. Signed CLI commands use that payload</td>
+</tr>
+<tr>
+<td>QR-004</td>
+<td>Invalid Base64 was unwrapped or replaced with empty bytes; Tag 9 TLV errors were ignored</td>
+<td><code>invoice/qr.rs</code> bounds binary inputs and propagates decoding and field-length errors through structured QR errors</td>
+</tr>
+<tr>
+<td>QR-005</td>
+<td>The integrity decoder required nine tags and the import decoder had different framing checks</td>
+<td><code>invoice/xml/parse.rs</code> and <code>validation/integrity.rs</code> share bounded decoding and explicit subtype applicability. The SDK report still skips standard signature/QR stages</td>
+</tr>
+<tr>
+<td>QR-006</td>
+<td>Tag 4 used byte equality while Tag 5 used decimal equality</td>
+<td>Both fields use the existing bounded exact XML-decimal implementation. A separate SDK-profile check retains Tag 4 lexical matching. BT-110 selects the document-currency tax amount</td>
+</tr>
+</tbody>
+</table>
+<p>Signed imports now verify signature, digest, certificate metadata and QR consistency. They preserve the supplied XML and reject mismatches. The original XML signature verifier and signing postconditions remain in use. No certificate trust or revocation checks were added.</p>
+<h2 id="decimal-observations">Decimal observations<a class="headerlink" href="#decimal-observations" title="Permanent link">&para;</a></h2>
+<p>For each of <code>300</code>, <code>300.0</code>, <code>300.00</code>, <code>300.01</code>, <code>0.00</code>, <code>45.0</code>, <code>45.00</code> and <code>123456789012345678901234.56</code>, both generators retained the supplied XML spelling in Tags 4 and 5. The pinned SDK accepted those QR fields on Fatoority-signed XML. The decimal probes deliberately alter totals without rebuilding invoice lines; some therefore fail business rules. QR acceptance is a separate result.</p>
+<p>The SDK and development API reject QR Tag 4 <code>115.0</code> against XML <code>115.00</code>. The underlying exact comparison recognizes monetary equality, while a separate SDK-profile formatting check rejects the different spelling under <code>SDK-QR-004</code>. Signed import checks monetary integrity; full-profile validation remains a separate operation. The frozen <code>qr-total-scale</code> SDK output and native SDK-profile expectation are unchanged. Tag 5 retains <code>SDK-QR-003</code>, including rejection of NaN, exponent syntax and float-collision mismatches. Business-rule scale checks remain separate.</p>
+<p>The sample <code>Standard/Invoice/Advance Payment adjustments with foreign currency invoice.xml</code> has document currency USD, accounting VAT <code>1068.75</code> SAR and invoice VAT <code>285</code> USD. Its original QR uses <code>1068.75</code> in Tag 5. The published security standard names BT-110; the <a href="https://zatca.gov.sa/ar/E-Invoicing/SystemsDevelopers/Documents/20230519_ZATCA_Electronic_Invoice_XML_Implementation_Standard_%20vF.pdf">XML standard</a>, sections 9.2 and BR-KSA-CL-02, distinguishes BT-110 from accounting-currency BT-111. Fatoority selects <code>285</code> and rejects the original sample on strict import under <code>SDK-QR-005</code>. This selection follows the published business-term interpretation. The pinned SDK regenerated <code>1068.75</code>; this observed difference is recorded in the comparison report. Standard SDK-profile QR validation remains inapplicable.</p>
+<h2 id="reproduce-the-comparison">Reproduce the comparison<a class="headerlink" href="#reproduce-the-comparison" title="Permanent link">&para;</a></h2>
+<p>Build the CLI, then run with the pinned SDK installed. Choose new output directories. Set <code>TMPDIR</code> to a filesystem with enough space for an isolated SDK copy if needed.</p>
+<div class="highlight"><pre><span></span><code>cargo<span class="w"> </span>build<span class="w"> </span>-p<span class="w"> </span>fatoora-cli<span class="w"> </span>--locked
+python<span class="w"> </span>scripts/qr_parity.py<span class="w"> </span>--sdk-root<span class="w"> </span><span class="s2">"</span><span class="nv">$FATOORA_HOME</span><span class="s2">"</span><span class="w"> </span>--output<span class="w"> </span>/tmp/qr-comparison
+python<span class="w"> </span>scripts/sdk_parity.py<span class="w"> </span>verify<span class="w"> </span>--sdk-root<span class="w"> </span><span class="s2">"</span><span class="nv">$FATOORA_HOME</span><span class="s2">"</span><span class="w"> </span>--output<span class="w"> </span>/tmp/sdk-verification
+</code></pre></div>
+<p><code>qr_parity.py</code> writes the input XML, SDK and Fatoority signed XML, raw process evidence and <code>report.json</code>. The report contains source/input hashes, encoded QR payloads, decoded tag sequences, exact Tags 4/5, Tag 9 in Base64, SDK validation outcomes and Fatoority stage results. It verifies that the installed SDK remains unchanged. A reviewed copy of the report is stored in <code>tests/fixtures/qr-correctness/report.json</code> under <code>fatoora-core</code>.</p>
+<p>The broader SDK verification checks freshly exported model and XML signing output against existing golden validation outcomes. It includes standard documents for which the SDK skips QR verification; those skips remain explicit.</p>
+<h2 id="regression-coverage-and-api-changes">Regression coverage and API changes<a class="headerlink" href="#regression-coverage-and-api-changes" title="Permanent link">&para;</a></h2>
+<p>Tests cover both signing paths and all six invoice/note combinations, unchanged imported XML, equality of embedded and exposed QR, certificate metadata retention, binary Tag 9 content, lexical decimal preservation, exact decimal equivalence, document-currency VAT selection, malformed Base64, oversized fields, subtype errors, TLV framing/order/duplicates and tampering. C/C++ and Python checks exercise the shared native boundary.</p>
+<p>Public method signatures are unchanged. <code>QrCodeError::InvalidField</code> adds an invalid-input error to a non-exhaustive enum, with structured error details for bindings. Signed parsing is stricter; callers that used it to inspect corrupted documents should retain their source XML and use finalized parsing for supported invoice fields. The CLI rejects a failed signed import instead of generating an unsigned replacement QR. See <a href="../sdk-parity/#qr-correctness-change-and-migration">migration guidance</a>.</p>
+<h2 id="verification-performed">Verification performed<a class="headerlink" href="#verification-performed" title="Permanent link">&para;</a></h2>
+<p>Formatting and workspace Clippy passed with warnings denied. The workspace unit, integration and documentation suites passed with live ZATCA API tests disabled. The pinned SDK golden verification passed, and the 16-case SDK QR comparison retained matching capture-source hashes. Release metadata, frozen business-rule/integrity evidence and 73 release-tool unit tests passed. Native C/C++ contracts and C examples passed. All 71 Python binding tests passed against the current native library in an isolated copy of the existing Python package.</p>
+<p>No new wheel, NuGet, JVM, WASM or platform release package was built. C#, Java and JavaScript runtime suites were not rerun. No registry publication or platform certificate trust check occurred. The development compliance probes below used no production endpoint.</p>
+<h2 id="development-compliance-api-observations">Development compliance API observations<a class="headerlink" href="#development-compliance-api-observations" title="Permanent link">&para;</a></h2>
+<p>One disposable compliance credential and 15 explicitly approved public test probes were sent to <code>https://gw-fatoora.zatca.gov.sa/e-invoicing/developer-portal/compliance/invoices</code>. Fresh issue dates and UUIDs were used; paired QR mutations retained the same signed invoice, certificate and digest. The credential secret and private key were temporary. The recorded responses are in <code>tests/fixtures/qr-correctness/development-api.json</code> under <code>fatoora-core</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Probe</th>
+<th>Development compliance result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Six subtype-correct baselines</td>
+<td>HTTP 200/202; <code>PASS</code> or <code>WARNING</code>, with <code>REPORTED</code>/<code>CLEARED</code> response fields</td>
+</tr>
+<tr>
+<td>Tag 4 <code>115.0</code> or <code>115</code> against XML <code>115.00</code></td>
+<td>HTTP 400; <code>invoiceTotal_QRCODE_INVALID</code></td>
+</tr>
+<tr>
+<td>Tag 5 <code>15.0</code> against XML <code>15.00</code></td>
+<td>HTTP 200; <code>PASS</code></td>
+</tr>
+<tr>
+<td>Incorrect Tag 4 <code>116.00</code> against XML <code>115.00</code></td>
+<td>HTTP 400; <code>invoiceTotal_QRCODE_INVALID</code></td>
+</tr>
+<tr>
+<td>Incorrect Tag 5 <code>16.00</code> against XML <code>15.00</code></td>
+<td>HTTP 200; <code>PASS</code>, despite the mismatch</td>
+</tr>
+<tr>
+<td>Simplified invoice missing Tag 9</td>
+<td>HTTP 400; <code>QRCODE_INVALID</code></td>
+</tr>
+<tr>
+<td>Standard invoice containing Tag 9</td>
+<td>HTTP 202; <code>WARNING</code>, with <code>CLEARED</code></td>
+</tr>
+<tr>
+<td>Standard foreign-currency invoice with Tag 5 <code>285</code> USD or <code>1068.75</code> SAR</td>
+<td>Both HTTP 200; <code>PASS</code>, with <code>CLEARED</code></td>
+</tr>
+</tbody>
+</table>
+<p>These observations confirm Tag 4's additional formatting constraint. Acceptance of the incorrect VAT and unexpected standard Tag 9 controls prevents treating the development service as an integrity oracle. It does not resolve the standard-invoice VAT currency discrepancy. Fatoority retains exact VAT mismatch rejection and the published BT-110 interpretation. The standard warnings concern existing supply-date, charge-reason and exemption-reason fields; they are unrelated to the QR probes.</p>
+<p>The endpoint was the development <strong>compliance check</strong>, not the reporting or clearance submission endpoints. Its <code>REPORTED</code>/<code>CLEARED</code> fields are recorded response values; it returned no cleared XML. No production acceptance or genuine platform-stamped XML fixture was established. <code>scripts/qr_development_api.py</code> reproduces this credential-issuing, external-submission workflow only when explicitly authorized.</p>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.tabs.link", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
