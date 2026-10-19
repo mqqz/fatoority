@@ -817,6 +817,8 @@ FatooraStatus fatoora_line_item_builder_set_tax_total_present(FatooraLineItemBui
 FatooraStatus fatoora_line_item_builder_set_gross_amount_present(FatooraLineItemBuilder *self,
     bool present,
     FatooraError **error);
+FatooraStatus fatoora_line_item_builder_new(FatooraLineItemBuilder **out,
+    FatooraError **error);
 FatooraStatus fatoora_line_item_builder_build(FatooraLineItemBuilder *self,
     FatooraInvoiceLineItem **out,
     FatooraError **error);

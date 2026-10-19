@@ -92,7 +92,12 @@ const char *fatoora_error_details_json(const FatooraError *error);
     count = 0
     for path, text in texts.items():
         results = dict(re.findall(r"typedef struct (fatoora_\w+_result) \{union \{(.*?)\}; bool is_ok;\} \1;", text))
-        for ret, native, owner, method, params in re.findall(r"^(\w+) (fatoora_(\w+?)_(\w+))\((.*?)\);$", text, re.M):
+        declarations = re.findall(r"^.*\bfatoora_\w+\(.*\);$", text, re.M)
+        for declaration_text in declarations:
+            match = re.fullmatch(r"(\w+\*?) (fatoora_(\w+?)_(\w+))\((.*?)\);", declaration_text)
+            if not match:
+                raise ValueError(f"Unsupported function declaration: {declaration_text}")
+            ret, native, owner, method, params = match.groups()
             if owner in ("BindingError", "Text") or (owner == "Xml" and method == "destroy"):
                 continue
             name = "fatoora_" + snake(owner) + "_" + ("free" if method == "destroy" else method)

@@ -2915,6 +2915,16 @@ FatooraStatus fatoora_line_item_builder_set_gross_amount_present(FatooraLineItem
     return FATOORA_OK;
 }
 
+FatooraStatus fatoora_line_item_builder_new(FatooraLineItemBuilder **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    LineItemBuilder* value = fatoora_LineItemBuilder_new();
+    *out = value;
+    return FATOORA_OK;
+}
+
 FatooraStatus fatoora_line_item_builder_build(FatooraLineItemBuilder *self, FatooraInvoiceLineItem **out, FatooraError **error) {
     if (error) *error = NULL;
     if (out) *out = 0;
