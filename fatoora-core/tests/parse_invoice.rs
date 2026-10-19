@@ -752,3 +752,79 @@ fn remove_billing_reference(xml: &str) -> String {
         _ => xml.to_string(),
     }
 }
+
+#[test]
+fn signed_certificate_accepts_only_xml_whitespace_without_changing_xml() {
+    for kind in ["standard", "simplified"] {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(format!(
+            "tests/fixtures/sdk-parity/cases/{kind}-invoice/sdk-signed.xml"
+        ));
+        let xml = std::fs::read_to_string(path).unwrap();
+        let original = parse_signed_invoice_xml(&xml).unwrap();
+        let doc = roxmltree::Document::parse(&xml).unwrap();
+        let certificate = doc
+            .descendants()
+            .find(|node| {
+                node.has_tag_name(("http://www.w3.org/2000/09/xmldsig#", "X509Certificate"))
+            })
+            .unwrap()
+            .text()
+            .unwrap();
+        let wrapped = certificate
+            .as_bytes()
+            .chunks(64)
+            .map(|chunk| std::str::from_utf8(chunk).unwrap())
+            .collect::<Vec<_>>()
+            .join(" \t\r\n");
+        let changed = xml.replacen(certificate, &wrapped, 1);
+        let parsed = parse_signed_invoice_xml(&changed).unwrap();
+        assert_eq!(parsed.xml(), changed);
+        assert_eq!(parsed.qr_code(), original.qr_code());
+        assert_eq!(parsed.zatca_key_signature(), original.zatca_key_signature());
+        for invalid in [
+            format!("{}!", certificate),
+            format!("{}\u{a0}", certificate),
+        ] {
+            assert!(parse_signed_invoice_xml(&xml.replacen(certificate, &invalid, 1)).is_err());
+        }
+    }
+}
+
+#[test]
+fn signed_import_rejects_malformed_certificate_encodings() {
+    use base64ct::{Base64, Encoding};
+    use x509_cert::der::Decode;
+    let xml = include_str!("fixtures/sdk-parity/cases/simplified-invoice/sdk-signed.xml");
+    let doc = roxmltree::Document::parse(xml).unwrap();
+    let certificate = doc
+        .descendants()
+        .find(|node| node.has_tag_name(("http://www.w3.org/2000/09/xmldsig#", "X509Certificate")))
+        .unwrap()
+        .text()
+        .unwrap();
+    let mut der = Base64::decode_vec(certificate).unwrap();
+    let cert = x509_cert::Certificate::from_der(&der).unwrap();
+    let signature_len = cert.signature().as_bytes().unwrap().len();
+    let unused_bits = der.len() - signature_len - 1;
+    assert_eq!(der[unused_bits], 0);
+    der[unused_bits] = 1;
+    *der.last_mut().unwrap() &= 0xfe;
+    for invalid in [
+        Base64::encode_string(b"invalid DER"),
+        Base64::encode_string(&der),
+        Base64::encode_string(&vec![0; 16 * 1024 + 1]),
+        "A".repeat(32 * 1024 + 1),
+    ] {
+        let err = parse_signed_invoice_xml(&xml.replacen(certificate, &invalid, 1)).unwrap_err();
+        assert!(
+            matches!(
+                err,
+                ParseError::InvalidValue {
+                    field: "X509Certificate",
+                    ..
+                }
+            ),
+            "{err:?}"
+        );
+    }
+}

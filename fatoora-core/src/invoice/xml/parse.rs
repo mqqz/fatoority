@@ -905,16 +905,12 @@ fn parse_signed_properties(doc: &Document<'_>) -> Result<SignedProperties, Parse
             .content(),
         "X509Certificate",
     )?;
-    if certificate.len() > 21848 {
-        return Err(ParseError::InvalidValue {
-            field: "X509Certificate",
-            value: "certificate exceeds 16 KiB".into(),
-        });
-    }
     use x509_cert::der::Decode;
-    let certificate = Base64::decode_vec(&certificate).map_err(|e| ParseError::InvalidValue {
-        field: "X509Certificate",
-        value: e.to_string(),
+    let certificate = super::lexical::decode_base64(&certificate, 16 * 1024).map_err(|e| {
+        ParseError::InvalidValue {
+            field: "X509Certificate",
+            value: e.to_string(),
+        }
     })?;
     let certificate =
         x509_cert::Certificate::from_der(&certificate).map_err(|e| ParseError::InvalidValue {

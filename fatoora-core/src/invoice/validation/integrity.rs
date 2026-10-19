@@ -141,18 +141,7 @@ struct Verified {
     certificate_signature: Vec<u8>,
 }
 fn decode(value: &str, maximum: usize, code: &'static str) -> Checked<Vec<u8>> {
-    if value.len() > maximum * 2 {
-        return Err(bad(code, "Encoded value exceeds the profile limit"));
-    }
-    let compact: String = value
-        .chars()
-        .filter(|c| !matches!(c, ' ' | '\t' | '\r' | '\n'))
-        .collect();
-    let bytes = Base64::decode_vec(&compact).map_err(|_| bad(code, "Invalid base64 value"))?;
-    if bytes.len() > maximum {
-        return Err(bad(code, "Decoded value exceeds the profile limit"));
-    }
-    Ok(bytes)
+    lexical::decode_base64(value, maximum).map_err(|message| bad(code, message))
 }
 fn signature(xml: &Xml<'_>, input: &str) -> Checked<Verified> {
     let signature = xml.one(&xml.signature())?;
