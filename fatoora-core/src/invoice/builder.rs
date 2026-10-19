@@ -815,7 +815,7 @@ impl FinalizedInvoice {
         date: super::InvoiceDate,
         time: super::InvoiceTime,
     ) {
-        if !time.as_str().ends_with('Z') {
+        if !time.as_str().ends_with('Z') || time.as_str() == "24:00:00Z" {
             self.data.issue_date_override = Some(date);
             self.data.issue_time_override = Some(time);
         }

@@ -1508,11 +1508,13 @@ fn parse_line_items(ctx: &Element<'_, '_>) -> Result<Vec<LineItem>, ParseError> 
 
 fn parse_datetime(date: &str, time: &str) -> Result<String, ParseError> {
     let utc = time.ends_with('Z');
-    let time = NaiveTime::parse_from_str(time.strip_suffix('Z').unwrap_or(time), "%H:%M:%S")
+    let clock = time.strip_suffix('Z').unwrap_or(time);
+    let end_of_day = clock == "24:00:00";
+    let time = NaiveTime::parse_from_str(if end_of_day { "00:00:00" } else { clock }, "%H:%M:%S")
         .map_err(|e| ParseError::InvalidValue {
-            field: "IssueTime",
-            value: format!("{time} ({e:?})"),
-        })?;
+        field: "IssueTime",
+        value: format!("{time} ({e:?})"),
+    })?;
     let combined = format!("{date}T{}Z", time.format("%H:%M:%S"));
     let naive = NaiveDateTime::parse_from_str(&combined, "%Y-%m-%dT%H:%M:%SZ").map_err(|e| {
         ParseError::InvalidValue {
@@ -1520,6 +1522,16 @@ fn parse_datetime(date: &str, time: &str) -> Result<String, ParseError> {
             value: format!("{combined} ({e:?})"),
         }
     })?;
+    let naive = if end_of_day {
+        naive
+            .checked_add_signed(chrono::Duration::days(1))
+            .ok_or_else(|| ParseError::InvalidValue {
+                field: "IssueDateTime",
+                value: combined.clone(),
+            })?
+    } else {
+        naive
+    };
     let normalized = if utc {
         naive
     } else {

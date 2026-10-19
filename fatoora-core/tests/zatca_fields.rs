@@ -608,6 +608,46 @@ fn utc_and_ast_clock_values_survive_import_including_midnight() {
         "24:00:00Z"
     );
     assert!(InvoiceTime::parse("24:01:00Z").is_err());
+    for (date, next_date) in [
+        ("2024-01-31", "2024-02-01"),
+        ("2024-02-28", "2024-02-29"),
+        ("2024-02-29", "2024-03-01"),
+        ("2024-12-31", "2025-01-01"),
+    ] {
+        for time in ["24:00:00", "24:00:00Z"] {
+            let source = xml
+                .replacen(
+                    "2024-01-01</cbc:IssueDate>",
+                    &format!("{date}</cbc:IssueDate>"),
+                    1,
+                )
+                .replacen(
+                    "01:30:00Z</cbc:IssueTime>",
+                    &format!("{time}</cbc:IssueTime>"),
+                    1,
+                );
+            let parsed = parse(&source).unwrap();
+            let expected = if time.ends_with('Z') {
+                format!("{next_date}T00:00:00Z")
+            } else {
+                format!("{date}T21:00:00Z")
+            };
+            assert_eq!(parsed.data().issue_datetime().as_str(), expected);
+            assert_eq!(parsed.data().issue_date(), date);
+            assert_eq!(parsed.data().issue_time(), time);
+            let output = parsed.to_xml().unwrap();
+            assert_eq!(leaves(&source), leaves(&output));
+            validate_xml_invoice_from_str(&output, &Config::default()).unwrap();
+        }
+    }
+    for time in ["24:00:01", "24:01:00Z", "25:00:00Z"] {
+        let source = xml.replacen(
+            "01:30:00Z</cbc:IssueTime>",
+            &format!("{time}</cbc:IssueTime>"),
+            1,
+        );
+        assert!(parse(&source).is_err());
+    }
 }
 
 #[test]
