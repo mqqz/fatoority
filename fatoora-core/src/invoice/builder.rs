@@ -512,6 +512,9 @@ impl InvoiceBuilder {
                         Some(idx),
                     );
                 }
+                if let Some(field) = item.tax_presence_error() {
+                    push_issue(field, ValidationKind::OutOfRange, Some(idx));
+                }
                 if item.is_prepayment_adjustment()
                     && (item.quantity() != Decimal::ZERO
                         || item.unit_price() != Decimal::ZERO

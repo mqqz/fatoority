@@ -401,18 +401,28 @@ impl LineItemBuilder {
                 Decimal::ZERO,
             )?;
         }
-        if self.omit_tax_total
-            && (line.vat_amount != Decimal::ZERO || !line.tax_subtotals.is_empty())
-        {
-            return Err(invalid(
-                InvoiceField::LineItemVatAmount,
-                ValidationKind::OutOfRange,
-            ));
+        if let Some(field) = line.tax_presence_error() {
+            return Err(invalid(field, ValidationKind::OutOfRange));
         }
         Ok(line)
     }
 }
 impl LineItem {
+    pub(super) fn tax_presence_error(&self) -> Option<InvoiceField> {
+        if self.omitted_vat_rate
+            && (self.vat_category != VatCategory::OutOfScope || self.vat_rate != Decimal::ZERO)
+        {
+            return Some(InvoiceField::LineItemVatRate);
+        }
+        if self.omitted_tax_amount
+            && (self.vat_amount != Decimal::ZERO
+                || !self.tax_subtotals.is_empty()
+                || !self.omitted_gross_amount)
+        {
+            return Some(InvoiceField::LineItemVatAmount);
+        }
+        None
+    }
     pub fn builder() -> LineItemBuilder {
         LineItemBuilder::default()
     }
