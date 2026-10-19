@@ -1,0 +1,4484 @@
+{
+  "specification": {
+    "date": "2023-05-19",
+    "dictionary_url": "https://www.zatca.gov.sa/ar/E-Invoicing/SystemsDevelopers/Documents/20230519_EInvoice_Data_Dictionary%20vF.xlsx",
+    "dictionary_sha256": "61148ff46d174e5b1f04471418c2c209192de668198b7ae1de781f7032e9f038",
+    "standard_url": "https://www.zatca.gov.sa/ar/E-Invoicing/SystemsDevelopers/Documents/20230519_ZATCA_Electronic_Invoice_XML_Implementation_Standard_%20vF.pdf",
+    "standard_sha256": "5aa15ff95efb98d3696083c309470d116d7e93ea7e134cca63f9680bc112685e",
+    "sdk": "238-R3.4.8"
+  },
+  "fields": [
+    {
+      "row": 4,
+      "term_id": "BT-23",
+      "name": "Business process type",
+      "xml_path": "/ubl:Invoice/cbc:ProfileID",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceData",
+      "treatment": "fixed-checked",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 5,
+      "term_id": "BT-1",
+      "name": "Invoice number",
+      "xml_path": "/ubl:Invoice/cbc:ID",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 6,
+      "term_id": "KSA-1",
+      "name": "Unique invoice identifier",
+      "xml_path": "/ubl:Invoice/cbc:UUID",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 7,
+      "term_id": "BT-2",
+      "name": "Invoice issue date (gregorian calendar)",
+      "xml_path": "/ubl:Invoice/cbc:IssueDate",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 8,
+      "term_id": "KSA-25",
+      "name": "Invoice issue time",
+      "xml_path": "/ubl:Invoice/cbc:IssueTime",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 9,
+      "term_id": "BT-3",
+      "name": "Invoice type code",
+      "xml_path": "/ubl:Invoice/cbc:InvoiceTypeCode",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 10,
+      "term_id": "KSA-2",
+      "name": "Invoice type transactions",
+      "xml_path": "/ubl:Invoice/cbc:InvoiceTypeCode/@name",
+      "attributes": [
+        "name"
+      ],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 11,
+      "term_id": "BT-22",
+      "name": "Invoice note",
+      "xml_path": "/ubl:Invoice/cbc:Note",
+      "attributes": [
+        "languageID"
+      ],
+      "cardinality": "0..*",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "InvoiceData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 12,
+      "term_id": "BT-5",
+      "name": "Invoice currency code",
+      "xml_path": "/ubl:Invoice/cbc:DocumentCurrencyCode",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 13,
+      "term_id": "BT-6",
+      "name": "Tax currency code",
+      "xml_path": "/ubl:Invoice/cbc:TaxCurrencyCode",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 14,
+      "term_id": "BT-13",
+      "name": "Purchase order ID",
+      "xml_path": "/ubl:Invoice/cac:OrderReference/cbc:ID",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "InvoiceData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "OrderReference"
+        ]
+      }
+    },
+    {
+      "row": 15,
+      "term_id": "BT-25",
+      "name": "Billing reference ID",
+      "xml_path": "/ubl:Invoice/cac:BillingReference/cac:InvoiceDocumentReference/cbc:ID",
+      "attributes": [],
+      "cardinality": "1..n",
+      "profiles": {
+        "O": "NA",
+        "P": "M",
+        "Q": "M",
+        "R": "NA",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "BillingReference"
+        ]
+      }
+    },
+    {
+      "row": 16,
+      "term_id": "BT-12",
+      "name": "Contract ID",
+      "xml_path": "/ubl:Invoice/cac:ContractDocumentReference/cbc:ID",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "InvoiceData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "ContractDocumentReference"
+        ]
+      }
+    },
+    {
+      "row": 17,
+      "term_id": "KSA-16",
+      "name": "Invoice counter value",
+      "xml_path": "/ubl:Invoice/cac:AdditionalDocumentReference[cbc:ID='ICV']/cbc:UUID",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 18,
+      "term_id": "KSA-13",
+      "name": "Previous invoice hash",
+      "xml_path": "/ubl:Invoice/cac:AdditionalDocumentReference[cbc:ID='PIH']/cac:Attachment/cbc:EmbeddedDocumentBinaryObject",
+      "attributes": [
+        "mimeCode"
+      ],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 19,
+      "term_id": "KSA-14",
+      "name": "Invoice QR code",
+      "xml_path": "/ubl:Invoice/cac:AdditionalDocumentReference[cbc:ID='QR']/cac:Attachment/cbc:EmbeddedDocumentBinaryObject",
+      "attributes": [
+        "mimeCode"
+      ],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceData",
+      "treatment": "signed-original-only",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 20,
+      "term_id": "KSA-15",
+      "name": "Cryptographic stamp",
+      "xml_path": "/ubl:Invoice/ext:UBLExtensions",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceData",
+      "treatment": "signed-original-only",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 21,
+      "term_id": "BT-29\nBT-29-1",
+      "name": "Other seller ID",
+      "xml_path": "/ubl:Invoice/cac:AccountingSupplierParty/cac:Party/cac:PartyIdentification/cbc:ID",
+      "attributes": [
+        "schemeID"
+      ],
+      "cardinality": "0..*",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage; repeated_identifiers_and_payment_instructions_keep_order",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "PartyIdentification"
+        ]
+      }
+    },
+    {
+      "row": 22,
+      "term_id": "BT-35",
+      "name": "Address - Street",
+      "xml_path": "/ubl:Invoice/cac:AccountingSupplierParty/cac:Party/cac:PostalAddress/cbc:StreetName",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "PostalAddress"
+        ]
+      }
+    },
+    {
+      "row": 23,
+      "term_id": "BT-36",
+      "name": "Address - Additional street",
+      "xml_path": "/ubl:Invoice/cac:AccountingSupplierParty/cac:Party/cac:PostalAddress/cbc:AdditionalStreetName",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "PostalAddress"
+        ]
+      }
+    },
+    {
+      "row": 24,
+      "term_id": "KSA-17",
+      "name": "Additional - Building number",
+      "xml_path": "/ubl:Invoice/cac:AccountingSupplierParty/cac:Party/cac:PostalAddress/cbc:BuildingNumber",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "PostalAddress"
+        ]
+      }
+    },
+    {
+      "row": 25,
+      "term_id": "KSA-23",
+      "name": "Address - Additional number",
+      "xml_path": "/ubl:Invoice/cac:AccountingSupplierParty/cac:Party/cac:PostalAddress/cbc:PlotIdentification",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "PostalAddress"
+        ]
+      }
+    },
+    {
+      "row": 26,
+      "term_id": "BT-37",
+      "name": "Address - City",
+      "xml_path": "/ubl:Invoice/cac:AccountingSupplierParty/cac:Party/cac:PostalAddress/cbc:CityName",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "PostalAddress"
+        ]
+      }
+    },
+    {
+      "row": 27,
+      "term_id": "BT-38",
+      "name": "Address - Seller postal code",
+      "xml_path": "/ubl:Invoice/cac:AccountingSupplierParty/cac:Party/cac:PostalAddress/cbc:PostalZone",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "PostalAddress"
+        ]
+      }
+    },
+    {
+      "row": 28,
+      "term_id": "BT-39",
+      "name": "Address - Province/State",
+      "xml_path": "/ubl:Invoice/cac:AccountingSupplierParty/cac:Party/cac:PostalAddress/cbc:CountrySubentity",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "PostalAddress"
+        ]
+      }
+    },
+    {
+      "row": 29,
+      "term_id": "KSA-3",
+      "name": "Address - District",
+      "xml_path": "/ubl:Invoice/cac:AccountingSupplierParty/cac:Party/cac:PostalAddress/cbc:CitySubdivisionName",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "PostalAddress"
+        ]
+      }
+    },
+    {
+      "row": 30,
+      "term_id": "BT-40",
+      "name": "Address - Country code",
+      "xml_path": "/ubl:Invoice/cac:AccountingSupplierParty/cac:Party/cac:PostalAddress/cac:Country/cbc:IdentificationCode",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "PostalAddress"
+        ]
+      }
+    },
+    {
+      "row": 31,
+      "term_id": "BT-31",
+      "name": "VAT number (registered) or Group VAT number",
+      "xml_path": "/ubl:Invoice/cac:AccountingSupplierParty/cac:Party/cac:PartyTaxScheme/cbc:CompanyID",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "PartyTaxScheme"
+        ]
+      }
+    },
+    {
+      "row": 32,
+      "term_id": "BT-27",
+      "name": "Seller name",
+      "xml_path": "/ubl:Invoice/cac:AccountingSupplierParty/cac:Party/cac:PartyLegalEntity/cbc:RegistrationName",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 33,
+      "term_id": "BT-46\nBT-46-1",
+      "name": "Other buyer ID",
+      "xml_path": "/ubl:Invoice/cac:AccountingCustomerParty/cac:Party/cac:PartyIdentification/cbc:ID",
+      "attributes": [
+        "schemeID"
+      ],
+      "cardinality": "0..*",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage; repeated_identifiers_and_payment_instructions_keep_order",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "AccountingCustomerParty",
+          "PartyIdentification"
+        ]
+      }
+    },
+    {
+      "row": 34,
+      "term_id": "BT-50",
+      "name": "Address - Street",
+      "xml_path": "/ubl:Invoice/cac:AccountingCustomerParty/cac:Party/cac:PostalAddress/cbc:StreetName",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "AccountingCustomerParty",
+          "PostalAddress"
+        ]
+      }
+    },
+    {
+      "row": 35,
+      "term_id": "BT-51",
+      "name": "Address - Additional street",
+      "xml_path": "/ubl:Invoice/cac:AccountingCustomerParty/cac:Party/cac:PostalAddress/cbc:AdditionalStreetName",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "AccountingCustomerParty",
+          "PostalAddress"
+        ]
+      }
+    },
+    {
+      "row": 36,
+      "term_id": "KSA-18",
+      "name": "Address - Building number",
+      "xml_path": "/ubl:Invoice/cac:AccountingCustomerParty/cac:Party/cac:PostalAddress/cbc:BuildingNumber",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "AccountingCustomerParty",
+          "PostalAddress"
+        ]
+      }
+    },
+    {
+      "row": 37,
+      "term_id": "KSA-19",
+      "name": "Address - Additional number",
+      "xml_path": "/ubl:Invoice/cac:AccountingCustomerParty/cac:Party/cac:PostalAddress/cbc:PlotIdentification",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "AccountingCustomerParty",
+          "PostalAddress"
+        ]
+      }
+    },
+    {
+      "row": 38,
+      "term_id": "BT-52",
+      "name": "Address - City",
+      "xml_path": "/ubl:Invoice/cac:AccountingCustomerParty/cac:Party/cac:PostalAddress/cbc:CityName",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "AccountingCustomerParty",
+          "PostalAddress"
+        ]
+      }
+    },
+    {
+      "row": 39,
+      "term_id": "BT-53",
+      "name": "Address - Buyer postal code",
+      "xml_path": "/ubl:Invoice/cac:AccountingCustomerParty/cac:Party/cac:PostalAddress/cbc:PostalZone",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "AccountingCustomerParty",
+          "PostalAddress"
+        ]
+      }
+    },
+    {
+      "row": 40,
+      "term_id": "BT-54",
+      "name": "Address - Province/State",
+      "xml_path": "/ubl:Invoice/cac:AccountingCustomerParty/cac:Party/cac:PostalAddress/cbc:CountrySubentity",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "AccountingCustomerParty",
+          "PostalAddress"
+        ]
+      }
+    },
+    {
+      "row": 41,
+      "term_id": "KSA-4",
+      "name": "Address - District",
+      "xml_path": "/ubl:Invoice/cac:AccountingCustomerParty/cac:Party/cac:PostalAddress/cbc:CitySubdivisionName",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "AccountingCustomerParty",
+          "PostalAddress"
+        ]
+      }
+    },
+    {
+      "row": 42,
+      "term_id": "BT-55",
+      "name": "Address - Country code",
+      "xml_path": "/ubl:Invoice/cac:AccountingCustomerParty/cac:Party/cac:PostalAddress/cac:Country/cbc:IdentificationCode",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "AccountingCustomerParty",
+          "PostalAddress"
+        ]
+      }
+    },
+    {
+      "row": 43,
+      "term_id": "BT-48",
+      "name": "VAT number (registered) or Group VAT number",
+      "xml_path": "/ubl:Invoice/cac:AccountingCustomerParty/cac:Party/cac:PartyTaxScheme/cbc:CompanyID",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "AccountingCustomerParty",
+          "PartyTaxScheme"
+        ]
+      }
+    },
+    {
+      "row": 44,
+      "term_id": "BT-44",
+      "name": "Buyer name",
+      "xml_path": "/ubl:Invoice/cac:AccountingCustomerParty/cac:Party/cac:PartyLegalEntity/cbc:RegistrationName",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "Party/Address",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "AccountingCustomerParty"
+        ]
+      }
+    },
+    {
+      "row": 45,
+      "term_id": "KSA-5",
+      "name": "Supply date (gregorian calendar)",
+      "xml_path": "/ubl:Invoice/cac:Delivery/cbc:ActualDeliveryDate",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "Delivery",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "Delivery"
+        ]
+      }
+    },
+    {
+      "row": 46,
+      "term_id": "KSA-24",
+      "name": "Supply end date",
+      "xml_path": "/ubl:Invoice/cac:Delivery/cbc:LatestDeliveryDate",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "Delivery",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "Delivery"
+        ]
+      }
+    },
+    {
+      "row": 47,
+      "term_id": "BT-81",
+      "name": "Payment means type code",
+      "xml_path": "/ubl:Invoice/cac:PaymentMeans/cbc:PaymentMeansCode",
+      "attributes": [],
+      "cardinality": "1..n",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "PaymentMeans/PaymentAccount",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "PaymentMeans"
+        ]
+      }
+    },
+    {
+      "row": 48,
+      "term_id": "KSA-10",
+      "name": "Reasons for issuance of credit / debit note",
+      "xml_path": "/ubl:Invoice/cac:PaymentMeans/cbc:InstructionNote",
+      "attributes": [],
+      "cardinality": "0..*",
+      "profiles": {
+        "O": "NA",
+        "P": "M",
+        "Q": "M",
+        "R": "NA",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "PaymentMeans/PaymentAccount",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage; repeated_identifiers_and_payment_instructions_keep_order",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "PaymentMeans"
+        ]
+      }
+    },
+    {
+      "row": 49,
+      "term_id": "KSA-22",
+      "name": "Payment terms",
+      "xml_path": "/ubl:Invoice/cac:PaymentMeans/cac:PayeeFinancialAccount/cbc:PaymentNote",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "PaymentMeans/PaymentAccount",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "PaymentMeans",
+          "PayeeFinancialAccount"
+        ]
+      }
+    },
+    {
+      "row": 50,
+      "term_id": "BT-84",
+      "name": "Payment account identifier",
+      "xml_path": "/ubl:Invoice/cac:PaymentMeans/cac:PayeeFinancialAccount/cbc:ID",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "PaymentMeans/PaymentAccount",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "PaymentMeans",
+          "PayeeFinancialAccount"
+        ]
+      }
+    },
+    {
+      "row": 51,
+      "term_id": "-",
+      "name": "Document level allowance indicator",
+      "xml_path": "/ubl:Invoice/cac:AllowanceCharge[cbc:ChargeIndicator='false']/cbc:ChargeIndicator",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "AllowanceCharge/DocumentAdjustment",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 52,
+      "term_id": "BT-94",
+      "name": "Document level allowance percentage",
+      "xml_path": "/ubl:Invoice/cac:AllowanceCharge[cbc:ChargeIndicator='false']/cbc:MultiplierFactorNumeric",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "AllowanceCharge/DocumentAdjustment",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 53,
+      "term_id": "BT-92",
+      "name": "Document level allowance amount",
+      "xml_path": "/ubl:Invoice/cac:AllowanceCharge[cbc:ChargeIndicator='false']/cbc:Amount",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "AllowanceCharge/DocumentAdjustment",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 54,
+      "term_id": "BT-5",
+      "name": "Currency for document level allowance amount",
+      "xml_path": "/ubl:Invoice/cac:AllowanceCharge[cbc:ChargeIndicator='false']/cbc:Amount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "AllowanceCharge/DocumentAdjustment",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 55,
+      "term_id": "BT-93",
+      "name": "Document level allowance base amount",
+      "xml_path": "/ubl:Invoice/cac:AllowanceCharge[cbc:ChargeIndicator='false']/cbc:BaseAmount",
+      "attributes": [],
+      "cardinality": "0..1 ",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "AllowanceCharge/DocumentAdjustment",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 56,
+      "term_id": "BT-5",
+      "name": "Currency for document level allowance base amount",
+      "xml_path": "/ubl:Invoice/cac:AllowanceCharge[cbc:ChargeIndicator='false']/cbc:BaseAmount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "AllowanceCharge/DocumentAdjustment",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 57,
+      "term_id": "BT-95",
+      "name": "Document level allowance VAT category code",
+      "xml_path": "/ubl:Invoice/cac:AllowanceCharge[cbc:ChargeIndicator='false']/cac:TaxCategory/cbc:ID",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "AllowanceCharge/DocumentAdjustment",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 58,
+      "term_id": "BT-96",
+      "name": "Document level allowance VAT rate",
+      "xml_path": "/ubl:Invoice/cac:AllowanceCharge[cbc:ChargeIndicator='false']/cac:TaxCategory/cbc:Percent",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "AllowanceCharge/DocumentAdjustment",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 59,
+      "term_id": "BT-97",
+      "name": "Reason for the document level allowance",
+      "xml_path": "/ubl:Invoice/cac:AllowanceCharge[cbc:ChargeIndicator='false']/cbc:AllowanceChargeReason",
+      "attributes": [],
+      "cardinality": "0..1\n",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "AllowanceCharge/DocumentAdjustment",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 60,
+      "term_id": "BT-98",
+      "name": "Code for the reason for document level allowance",
+      "xml_path": "/ubl:Invoice/cac:AllowanceCharge[cbc:ChargeIndicator='false']/cbc:AllowanceChargeReasonCode",
+      "attributes": [],
+      "cardinality": "0..1\n",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "AllowanceCharge/DocumentAdjustment",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 61,
+      "term_id": "KSA-21",
+      "name": "Tax scheme ID",
+      "xml_path": "/ubl:Invoice/cac:AllowanceCharge[cbc:ChargeIndicator='false']/cac:TaxCategory/cac:TaxScheme/cbc:ID",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "AllowanceCharge/DocumentAdjustment",
+      "treatment": "fixed-checked",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 62,
+      "term_id": "-",
+      "name": "Document level charge indicator",
+      "xml_path": "/ubl:Invoice/cac:AllowanceCharge[cbc:ChargeIndicator='true']/cbc:ChargeIndicator",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "AllowanceCharge/DocumentAdjustment",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 63,
+      "term_id": "BT-101",
+      "name": "Document level charge percentage",
+      "xml_path": "/ubl:Invoice/cac:AllowanceCharge[cbc:ChargeIndicator='true']/cbc:MultiplierFactorNumeric",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "AllowanceCharge/DocumentAdjustment",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 64,
+      "term_id": "BT-99",
+      "name": "Document level charge amount",
+      "xml_path": "/ubl:Invoice/cac:AllowanceCharge[cbc:ChargeIndicator='true']/cbc:Amount",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "AllowanceCharge/DocumentAdjustment",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 65,
+      "term_id": "BT-5",
+      "name": "Currency for document level charge amount",
+      "xml_path": "/ubl:Invoice/cac:AllowanceCharge[cbc:ChargeIndicator='true']/cbc:Amount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "AllowanceCharge/DocumentAdjustment",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 66,
+      "term_id": "BT-100",
+      "name": "Document level charge base amount",
+      "xml_path": "/ubl:Invoice/cac:AllowanceCharge[cbc:ChargeIndicator='true']/cbc:BaseAmount",
+      "attributes": [],
+      "cardinality": "0..1 ",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "AllowanceCharge/DocumentAdjustment",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 67,
+      "term_id": "BT-5",
+      "name": "Currency for document level charge base amount",
+      "xml_path": "/ubl:Invoice/cac:AllowanceCharge[cbc:ChargeIndicator='true']/cbc:BaseAmount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "AllowanceCharge/DocumentAdjustment",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 68,
+      "term_id": "BT-102",
+      "name": "Document level Charge VAT category code",
+      "xml_path": "/ubl:Invoice/cac:AllowanceCharge[cbc:ChargeIndicator='true']/cac:TaxCategory/cbc:ID",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "AllowanceCharge/DocumentAdjustment",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 69,
+      "term_id": "BT-103",
+      "name": "Document level Charge VAT rate",
+      "xml_path": "/ubl:Invoice/cac:AllowanceCharge[cbc:ChargeIndicator='true']/cac:TaxCategory/cbc:Percent",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "AllowanceCharge/DocumentAdjustment",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 70,
+      "term_id": "BT-104",
+      "name": "Reason for the document level charge",
+      "xml_path": "/ubl:Invoice/cac:AllowanceCharge[cbc:ChargeIndicator='true']/cbc:AllowanceChargeReason",
+      "attributes": [],
+      "cardinality": "0..1\n",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "AllowanceCharge/DocumentAdjustment",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 71,
+      "term_id": "BT-105",
+      "name": "Code for the reason for document level charge",
+      "xml_path": "/ubl:Invoice/cac:AllowanceCharge[cbc:ChargeIndicator='true']/cbc:AllowanceChargeReasonCode",
+      "attributes": [],
+      "cardinality": "0..1\n",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "AllowanceCharge/DocumentAdjustment",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 72,
+      "term_id": "KSA-21",
+      "name": "Tax scheme ID",
+      "xml_path": "/ubl:Invoice/cac:AllowanceCharge[cbc:ChargeIndicator='true']/cac:TaxCategory/cac:TaxScheme/cbc:ID",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "AllowanceCharge/DocumentAdjustment",
+      "treatment": "fixed-checked",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 73,
+      "term_id": "BT-106",
+      "name": "Sum of Invoice line net amount",
+      "xml_path": "/ubl:Invoice/cac:LegalMonetaryTotal/cbc:LineExtensionAmount",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceTotalsData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 74,
+      "term_id": "BT-5",
+      "name": "Currency for sum of invoice line net amount",
+      "xml_path": "/ubl:Invoice/cac:LegalMonetaryTotal/cbc:LineExtensionAmount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceTotalsData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 75,
+      "term_id": "BT-107",
+      "name": "Sum of allowances on document level",
+      "xml_path": "/ubl:Invoice/cac:LegalMonetaryTotal/cbc:AllowanceTotalAmount",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "InvoiceTotalsData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 76,
+      "term_id": "BT-5",
+      "name": "Currency for sum of allowances on document level",
+      "xml_path": "/ubl:Invoice/cac:LegalMonetaryTotal/cbc:AllowanceTotalAmount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "InvoiceTotalsData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 77,
+      "term_id": "BT-108",
+      "name": "Sum of charges on document level",
+      "xml_path": "/ubl:Invoice/cac:LegalMonetaryTotal/cbc:ChargeTotalAmount",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "InvoiceTotalsData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 78,
+      "term_id": "BT-5",
+      "name": "Currency for sum of charges on document level",
+      "xml_path": "/ubl:Invoice/cac:LegalMonetaryTotal/cbc:ChargeTotalAmount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "InvoiceTotalsData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 79,
+      "term_id": "BT-109",
+      "name": "Invoice total amount without VAT",
+      "xml_path": "/ubl:Invoice/cac:LegalMonetaryTotal/cbc:TaxExclusiveAmount",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceTotalsData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 80,
+      "term_id": "BT-5",
+      "name": "Currency for invoice total amount without VAT",
+      "xml_path": "/ubl:Invoice/cac:LegalMonetaryTotal/cbc:TaxExclusiveAmount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceTotalsData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 81,
+      "term_id": "BT-110",
+      "name": "Invoice total VAT amount",
+      "xml_path": "/ubl:Invoice/cac:TaxTotal/cbc:TaxAmount",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceTotalsData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "Invoice/TaxTotal"
+        ]
+      }
+    },
+    {
+      "row": 82,
+      "term_id": "BT-5",
+      "name": "Currency for total VAT amount",
+      "xml_path": "/ubl:Invoice/cac:TaxTotal/cbc:TaxAmount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceTotalsData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "Invoice/TaxTotal"
+        ]
+      }
+    },
+    {
+      "row": 83,
+      "term_id": "BT-111",
+      "name": "Invoice total VAT amount in accounting currency",
+      "xml_path": "/ubl:Invoice/cac:TaxTotal/cbc:TaxAmount",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "InvoiceTotalsData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "Invoice/TaxTotal"
+        ]
+      }
+    },
+    {
+      "row": 84,
+      "term_id": "BT-6",
+      "name": "Currency for invoice total VAT amount in accounting currency",
+      "xml_path": "/ubl:Invoice/cac:TaxTotal/cbc:TaxAmount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "InvoiceTotalsData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "Invoice/TaxTotal"
+        ]
+      }
+    },
+    {
+      "row": 85,
+      "term_id": "BT-112",
+      "name": "Invoice total amount with VAT",
+      "xml_path": "/ubl:Invoice/cac:LegalMonetaryTotal/cbc:TaxInclusiveAmount",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceTotalsData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 86,
+      "term_id": "BT-5",
+      "name": "Currency for invoice total amount with VAT",
+      "xml_path": "/ubl:Invoice/cac:LegalMonetaryTotal/cbc:TaxInclusiveAmount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceTotalsData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 87,
+      "term_id": "BT-113",
+      "name": "Pre-Paid amount",
+      "xml_path": "/ubl:Invoice/cac:LegalMonetaryTotal/cbc:PrepaidAmount",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "InvoiceTotalsData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 88,
+      "term_id": "BT-5",
+      "name": "Currency for pre-paid amount",
+      "xml_path": "/ubl:Invoice/cac:LegalMonetaryTotal/cbc:PrepaidAmount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "InvoiceTotalsData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 89,
+      "term_id": "BT-114",
+      "name": "Rounding amount",
+      "xml_path": "/ubl:Invoice/cac:LegalMonetaryTotal/cbc:PayableRoundingAmount",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "InvoiceTotalsData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 90,
+      "term_id": "BT-5",
+      "name": "Currency for Rounding amount",
+      "xml_path": "/ubl:Invoice/cac:LegalMonetaryTotal/cbc:PayableRoundingAmount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "InvoiceTotalsData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 91,
+      "term_id": "BT-115",
+      "name": "Amount due for payment",
+      "xml_path": "/ubl:Invoice/cac:LegalMonetaryTotal/cbc:PayableAmount",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceTotalsData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 92,
+      "term_id": "BT-5",
+      "name": "Currency for amount due for payment",
+      "xml_path": "/ubl:Invoice/cac:LegalMonetaryTotal/cbc:PayableAmount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "InvoiceTotalsData",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 93,
+      "term_id": "BT-116",
+      "name": "VAT category taxable amount",
+      "xml_path": "/ubl:Invoice/cac:TaxTotal/cac:TaxSubtotal/cbc:TaxableAmount",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "VatBreakdown",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "Invoice/TaxTotal",
+          "TaxSubtotal"
+        ]
+      }
+    },
+    {
+      "row": 94,
+      "term_id": "BT-5",
+      "name": "Currency for VAT category taxable amount",
+      "xml_path": "/ubl:Invoice/cac:TaxTotal/cac:TaxSubtotal/cbc:TaxableAmount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "VatBreakdown",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "Invoice/TaxTotal",
+          "TaxSubtotal"
+        ]
+      }
+    },
+    {
+      "row": 95,
+      "term_id": "BT-117",
+      "name": "VAT category tax amount",
+      "xml_path": "/ubl:Invoice/cac:TaxTotal/cac:TaxSubtotal/cbc:TaxAmount",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "VatBreakdown",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "Invoice/TaxTotal",
+          "TaxSubtotal"
+        ]
+      }
+    },
+    {
+      "row": 96,
+      "term_id": "BT-5",
+      "name": "Currency for category tax amount",
+      "xml_path": "/ubl:Invoice/cac:TaxTotal/cac:TaxSubtotal/cbc:TaxAmount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "VatBreakdown",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "Invoice/TaxTotal",
+          "TaxSubtotal"
+        ]
+      }
+    },
+    {
+      "row": 97,
+      "term_id": "BT-118",
+      "name": "VAT category code",
+      "xml_path": "/ubl:Invoice/cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory/cbc:ID",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "VatBreakdown",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "Invoice/TaxTotal",
+          "TaxSubtotal"
+        ]
+      }
+    },
+    {
+      "row": 98,
+      "term_id": "BT-119",
+      "name": "VAT category rate",
+      "xml_path": "/ubl:Invoice/cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory/cbc:Percent",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "VatBreakdown",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "Invoice/TaxTotal",
+          "TaxSubtotal"
+        ]
+      }
+    },
+    {
+      "row": 99,
+      "term_id": "BT-121",
+      "name": "VAT exemption reason code",
+      "xml_path": "/ubl:Invoice/cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory/cbc:TaxExemptionReasonCode",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "VatBreakdown",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "Invoice/TaxTotal",
+          "TaxSubtotal"
+        ]
+      }
+    },
+    {
+      "row": 100,
+      "term_id": "BT-120",
+      "name": "VAT exemption reason text",
+      "xml_path": "/ubl:Invoice/cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory/cbc:TaxExemptionReason",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "VatBreakdown",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "Invoice/TaxTotal",
+          "TaxSubtotal"
+        ]
+      }
+    },
+    {
+      "row": 101,
+      "term_id": "KSA-21",
+      "name": "Tax scheme ID",
+      "xml_path": "/ubl:Invoice/cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory/cac:TaxScheme/cbc:ID",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "VatBreakdown",
+      "treatment": "fixed-checked",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "Invoice/TaxTotal",
+          "TaxSubtotal"
+        ]
+      }
+    },
+    {
+      "row": 102,
+      "term_id": "BT-126",
+      "name": "Invoice line identifier",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cbc:ID",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 103,
+      "term_id": "KSA-26",
+      "name": "Prepayment ID",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:DocumentReference/cbc:ID",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "DocumentReference"
+        ]
+      }
+    },
+    {
+      "row": 104,
+      "term_id": "KSA-27",
+      "name": "Prepayment UUID",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:DocumentReference/cbc:UUID",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "DocumentReference"
+        ]
+      }
+    },
+    {
+      "row": 105,
+      "term_id": "KSA-28",
+      "name": "Prepayment Issue Date",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:DocumentReference/cbc:IssueDate",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "DocumentReference"
+        ]
+      }
+    },
+    {
+      "row": 106,
+      "term_id": "KSA-29",
+      "name": "Prepayment Issue Time",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:DocumentReference/cbc:IssueTime",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "DocumentReference"
+        ]
+      }
+    },
+    {
+      "row": 107,
+      "term_id": "KSA-30",
+      "name": "Prepayment Document Type Code",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:DocumentReference/cbc:DocumentTypeCode",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "DocumentReference"
+        ]
+      }
+    },
+    {
+      "row": 108,
+      "term_id": "BT-129",
+      "name": "Invoiced quantity",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cbc:InvoicedQuantity",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 109,
+      "term_id": "BT-130",
+      "name": "Invoiced quantity unit of measure",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cbc:InvoicedQuantity/@unitCode",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 110,
+      "term_id": "BT-131",
+      "name": "Invoice line net amount",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cbc:LineExtensionAmount",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 111,
+      "term_id": "BT-5",
+      "name": "Currency for invoice line net amount",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cbc:LineExtensionAmount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 112,
+      "term_id": "-",
+      "name": "Invoice line allowance indicator",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:AllowanceCharge[cbc:ChargeIndicator='false']/cbc:ChargeIndicator",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 113,
+      "term_id": "BT-138",
+      "name": "Invoice line allowance percentage",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:AllowanceCharge[cbc:ChargeIndicator='false']/cbc:MultiplierFactorNumeric",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 114,
+      "term_id": "BT-139",
+      "name": "Reason for the invoice line allowance",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:AllowanceCharge[cbc:ChargeIndicator='false']/cbc:AllowanceChargeReason",
+      "attributes": [],
+      "cardinality": "0..1\n",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 115,
+      "term_id": "BT-140",
+      "name": "Code for the reason for invoice line allowance",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:AllowanceCharge[cbc:ChargeIndicator='false']/cbc:AllowanceChargeReasonCode",
+      "attributes": [],
+      "cardinality": "0..1\n",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 116,
+      "term_id": "BT-136",
+      "name": "Invoice line allowance amount (discount or rebate amount)",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:AllowanceCharge[cbc:ChargeIndicator='false']/cbc:Amount",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 117,
+      "term_id": "BT-5",
+      "name": "Currency for line allowance amount",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:AllowanceCharge[cbc:ChargeIndicator='false']/cbc:Amount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 118,
+      "term_id": "BT-137",
+      "name": "Invoice line allowance base amount",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:AllowanceCharge[cbc:ChargeIndicator='false']/cbc:BaseAmount",
+      "attributes": [],
+      "cardinality": "0..1 ",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 119,
+      "term_id": "BT-5",
+      "name": "Currency for invoice line allowance base amount",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:AllowanceCharge[cbc:ChargeIndicator='false']/cbc:BaseAmount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 120,
+      "term_id": "-",
+      "name": "Invoice line Charge indicator",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:AllowanceCharge[cbc:ChargeIndicator='true']/cbc:ChargeIndicator",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 121,
+      "term_id": "BT-143",
+      "name": "Invoice line charge percentage",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:AllowanceCharge[cbc:ChargeIndicator='true']/cbc:MultiplierFactorNumeric",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 122,
+      "term_id": "BT-141",
+      "name": "Invoice line charge amount",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:AllowanceCharge[cbc:ChargeIndicator='true']/cbc:Amount",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 123,
+      "term_id": "BT-5",
+      "name": "Currency for Invoice line charge amount",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:AllowanceCharge[cbc:ChargeIndicator='true']/cbc:Amount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 124,
+      "term_id": "BT-142",
+      "name": "Invoice line charge base amount",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:AllowanceCharge[cbc:ChargeIndicator='true']/cbc:BaseAmount",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 125,
+      "term_id": "BT-5",
+      "name": "Currency for invoice line charge base amount",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:AllowanceCharge[cbc:ChargeIndicator='true']/cbc:BaseAmount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 126,
+      "term_id": "BT-144",
+      "name": "Reason for invoice line charge",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:AllowanceCharge[cbc:ChargeIndicator='true']/cbc:AllowanceChargeReason",
+      "attributes": [],
+      "cardinality": "0..1\n",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 127,
+      "term_id": "BT-145",
+      "name": "Code for the reason for invoice line charge",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:AllowanceCharge[cbc:ChargeIndicator='true']/cbc:AllowanceChargeReasonCode",
+      "attributes": [],
+      "cardinality": "0..1\n",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 128,
+      "term_id": "KSA-11",
+      "name": "VAT line amount",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:TaxTotal/cbc:TaxAmount",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "InvoiceLine/TaxTotal"
+        ]
+      }
+    },
+    {
+      "row": 129,
+      "term_id": "BT-5",
+      "name": "Currency for VAT line amount",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:TaxTotal/cbc:TaxAmount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "InvoiceLine/TaxTotal"
+        ]
+      }
+    },
+    {
+      "row": 130,
+      "term_id": "KSA-12",
+      "name": "Line amount inclusive VAT",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:TaxTotal/cbc:RoundingAmount",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "InvoiceLine/TaxTotal"
+        ]
+      }
+    },
+    {
+      "row": 131,
+      "term_id": "BT-5",
+      "name": "Currency for line amount inclusive VAT",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:TaxTotal/cbc:RoundingAmount/@currencyID",
+      "attributes": [
+        "curencyID"
+      ],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "InvoiceLine/TaxTotal"
+        ]
+      }
+    },
+    {
+      "row": 132,
+      "term_id": "KSA-31",
+      "name": "Prepayment VAT Category Taxable Amount",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal/cbc:TaxableAmount",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "InvoiceLine/TaxTotal",
+          "TaxSubtotal"
+        ]
+      }
+    },
+    {
+      "row": 133,
+      "term_id": "BT-5",
+      "name": "Currency for Prepayment VAT category Taxable Amount",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal/cbc:TaxableAmount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "InvoiceLine/TaxTotal",
+          "TaxSubtotal"
+        ]
+      }
+    },
+    {
+      "row": 134,
+      "term_id": "KSA-32",
+      "name": "Prepayment VAT Category Tax Amount",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal/cbc:TaxAmount",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "InvoiceLine/TaxTotal",
+          "TaxSubtotal"
+        ]
+      }
+    },
+    {
+      "row": 135,
+      "term_id": "BT-5",
+      "name": "Currency for Prepayment VAT Category Tax Amount",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal/cbc:TaxAmount/@currencyID",
+      "attributes": [
+        "currencyID"
+      ],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "InvoiceLine/TaxTotal",
+          "TaxSubtotal"
+        ]
+      }
+    },
+    {
+      "row": 136,
+      "term_id": "BT-153",
+      "name": "Item name",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:Item/cbc:Name",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 137,
+      "term_id": "BT-156",
+      "name": "Item Buyer's identifier",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:Item/cac:BuyersItemIdentification/cbc:ID",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "BuyersItemIdentification"
+        ]
+      }
+    },
+    {
+      "row": 138,
+      "term_id": "BT-155",
+      "name": "Item Seller's identifier",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:Item/cac:SellersItemIdentification/cbc:ID",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "SellersItemIdentification"
+        ]
+      }
+    },
+    {
+      "row": 139,
+      "term_id": "BT-157",
+      "name": "Item standard identifier",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:Item/cac:StandardItemIdentification/cbc:ID",
+      "attributes": [
+        "schemeID"
+      ],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "StandardItemIdentification"
+        ]
+      }
+    },
+    {
+      "row": 140,
+      "term_id": "BT-146",
+      "name": "Item net price",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:Price/cbc:PriceAmount",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "Price"
+        ]
+      }
+    },
+    {
+      "row": 141,
+      "term_id": "BT-5",
+      "name": "Currency for item net price",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:Price/cbc:PriceAmount/@currencyID",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "Price"
+        ]
+      }
+    },
+    {
+      "row": 142,
+      "term_id": "BT-151",
+      "name": "Invoiced item VAT category code",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:Item/cac:ClassifiedTaxCategory/cbc:ID",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 143,
+      "term_id": "BT-152",
+      "name": "Invoiced item VAT rate",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:Item/cac:ClassifiedTaxCategory/cbc:Percent",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 144,
+      "term_id": "KSA-33",
+      "name": "Prepayment VAT Category Code",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory/cbc:ID",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "InvoiceLine/TaxTotal",
+          "TaxSubtotal"
+        ]
+      }
+    },
+    {
+      "row": 145,
+      "term_id": "KSA-34",
+      "name": "Prepayment VAT rate",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory/cbc:Percent",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "InvoiceLine/TaxTotal",
+          "TaxSubtotal"
+        ]
+      }
+    },
+    {
+      "row": 146,
+      "term_id": "KSA-21",
+      "name": "Tax scheme ID",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:Item/cac:ClassifiedTaxCategory/cac:TaxScheme/cbc:ID",
+      "attributes": [],
+      "cardinality": "1..1",
+      "profiles": {
+        "O": "M",
+        "P": "M",
+        "Q": "M",
+        "R": "M",
+        "S": "M",
+        "T": "M"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "fixed-checked",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate"
+      }
+    },
+    {
+      "row": 147,
+      "term_id": "BT-149",
+      "name": "Item price base quantity",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:Price/cbc:BaseQuantity",
+      "attributes": [],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "Price"
+        ]
+      }
+    },
+    {
+      "row": 148,
+      "term_id": "BT-150",
+      "name": "Item price base quantity unit code",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:Price/cbc:BaseQuantity/@unitCode",
+      "attributes": [
+        "unitCode"
+      ],
+      "cardinality": "0..1",
+      "profiles": {
+        "O": "O",
+        "P": "O",
+        "Q": "O",
+        "R": "O",
+        "S": "O",
+        "T": "O"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "Price"
+        ]
+      }
+    },
+    {
+      "row": 149,
+      "term_id": "-",
+      "name": "Price allowance indicator",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:Price/cac:AllowanceCharge/cbc:ChargeIndicator",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "fixed-checked",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "AllowanceCharge",
+          "Price/AllowanceCharge",
+          "Price"
+        ]
+      }
+    },
+    {
+      "row": 150,
+      "term_id": "BT-147",
+      "name": "Item price discount",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:Price/cac:AllowanceCharge/cbc:Amount",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "AllowanceCharge",
+          "Price/AllowanceCharge",
+          "Price"
+        ]
+      }
+    },
+    {
+      "row": 151,
+      "term_id": "BT-5",
+      "name": "Currency for item price discount",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:Price/cac:AllowanceCharge/cbc:Amount/@currencyID",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "AllowanceCharge",
+          "Price/AllowanceCharge",
+          "Price"
+        ]
+      }
+    },
+    {
+      "row": 152,
+      "term_id": "BT-148",
+      "name": "Item gross price",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:Price/cac:AllowanceCharge/cbc:BaseAmount",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "AllowanceCharge",
+          "Price/AllowanceCharge",
+          "Price"
+        ]
+      }
+    },
+    {
+      "row": 153,
+      "term_id": "BT-5",
+      "name": "Currency for item gross prices",
+      "xml_path": "/ubl:Invoice/cac:InvoiceLine/cac:Price/cac:AllowanceCharge/cbc:BaseAmount/@currencyID",
+      "attributes": [],
+      "cardinality": "1..1 if its parent context exists",
+      "profiles": {
+        "O": "C",
+        "P": "C",
+        "Q": "C",
+        "R": "C",
+        "S": "C",
+        "T": "C"
+      },
+      "model": "LineItem/LineItemBuilder",
+      "treatment": "preserved",
+      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
+      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
+      "regression_test": "dictionary_source_to_output_coverage",
+      "container_semantics": {
+        "absent": "allowed where optional; no supplied value is invented",
+        "partial": "accept only when required children of the supported aggregate are present",
+        "malformed": "error on malformed supported scalar or aggregate; full business rules remain separate",
+        "policies": [
+          "AllowanceCharge",
+          "Price/AllowanceCharge",
+          "Price"
+        ]
+      }
+    }
+  ],
+  "optional_aggregates": {
+    "AccountingCustomerParty": {
+      "absent": "No buyer; serializer may emit the existing empty Party placeholder.",
+      "valid_partial": "A modeled buyer has a name; address, VAT registration and identifiers are independent.",
+      "malformed_present": "Nonempty customer content without Party, or a nonempty Party without its required modeled name, fails."
+    },
+    "PostalAddress": {
+      "absent": "Allowed for buyer; required for seller construction.",
+      "valid_partial": "Buyer address may omit basic components but must have a country; omitted components use the existing empty-string API convention.",
+      "malformed_present": "Missing country, malformed country code or blank supplied basic components fails."
+    },
+    "Delivery": {
+      "absent": "No delivery information.",
+      "valid_partial": "Empty, actual-only, latest-only or both dates are retained; chronology is a business-rule concern.",
+      "malformed_present": "Malformed supplied dates or duplicate modeled children fails."
+    },
+    "PaymentMeans": {
+      "absent": "No payment entry is invented.",
+      "valid_partial": "Code required; ordered instructions and financial account optional.",
+      "malformed_present": "Missing code or duplicate singleton children fails."
+    },
+    "PayeeFinancialAccount": {
+      "absent": "No account.",
+      "valid_partial": "Empty, identifier-only, terms-only or both supported fields retained.",
+      "malformed_present": "Duplicate supported singleton children fails."
+    },
+    "PartyIdentification": {
+      "absent": "No identifier.",
+      "valid_partial": "ID required; schemeID optional; repeated identifiers preserved.",
+      "malformed_present": "Missing ID or duplicate ID fails."
+    },
+    "PartyTaxScheme": {
+      "absent": "Buyer VAT registration absent.",
+      "valid_partial": "When supplied for a buyer, CompanyID required; supported tax scheme is VAT.",
+      "malformed_present": "Missing buyer CompanyID or a supplied non-VAT TaxScheme ID fails."
+    },
+    "OrderReference": {
+      "absent": "No purchase order.",
+      "valid_partial": "ID required.",
+      "malformed_present": "Missing ID or duplicate singleton fails."
+    },
+    "ContractDocumentReference": {
+      "absent": "No contract reference.",
+      "valid_partial": "ID required.",
+      "malformed_present": "Missing ID or duplicate singleton fails."
+    },
+    "BillingReference": {
+      "absent": "No original invoice reference; business rules decide conditional requirement.",
+      "valid_partial": "InvoiceDocumentReference with ID required; UUID/date/time optional.",
+      "malformed_present": "Missing reference ID, malformed supplied date/time or duplicate singleton fails."
+    },
+    "DocumentReference": {
+      "absent": "No line reference.",
+      "valid_partial": "ID required; type/date/time optional; type 386 selects prepayment-adjustment treatment.",
+      "malformed_present": "Missing ID or malformed supplied metadata fails."
+    },
+    "AllowanceCharge": {
+      "absent": "No adjustment.",
+      "valid_partial": "Line/document adjustments require indicator and amount; document adjustments require VAT allocation; base and percentage are paired.",
+      "malformed_present": "Incomplete calculation pair, inconsistent supplied amount or malformed allocation fails."
+    },
+    "Price/AllowanceCharge": {
+      "absent": "No price discount metadata.",
+      "valid_partial": "Discount Amount and gross BaseAmount required; resulting net price must agree.",
+      "malformed_present": "Missing gross or discount, charge instead of allowance, or inconsistent net price fails."
+    },
+    "Price": {
+      "absent": "Missing price fails line import.",
+      "valid_partial": "PriceAmount required; positive BaseQuantity and its unit optional.",
+      "malformed_present": "Missing or invalid price, nonpositive basis or inconsistent gross/discount metadata fails."
+    },
+    "BuyersItemIdentification": {
+      "absent": "No buyer item ID.",
+      "valid_partial": "ID required; scheme optional.",
+      "malformed_present": "Missing or duplicate ID fails."
+    },
+    "SellersItemIdentification": {
+      "absent": "No seller item ID.",
+      "valid_partial": "ID required; scheme optional.",
+      "malformed_present": "Missing or duplicate ID fails."
+    },
+    "StandardItemIdentification": {
+      "absent": "No standard item ID.",
+      "valid_partial": "ID required; supplied scheme preserved; business rules check its conditional requirement.",
+      "malformed_present": "Missing or duplicate ID fails."
+    },
+    "InvoiceLine/TaxTotal": {
+      "absent": "Absence retained; computed internal values do not fabricate the container.",
+      "valid_partial": "TaxAmount required; gross RoundingAmount and prepayment subtotals optional.",
+      "malformed_present": "Empty present total, malformed money or inconsistent gross fails."
+    },
+    "Invoice/TaxTotal": {
+      "absent": "Document breakdown total required; scalar accounting total may be absent.",
+      "valid_partial": "One breakdown total and at most one scalar accounting total; source order retained.",
+      "malformed_present": "Missing breakdown, duplicate totals, malformed amounts or inconsistent accepted sums fails."
+    },
+    "TaxSubtotal": {
+      "absent": "No subtotal occurrence; required document groups cannot be omitted.",
+      "valid_partial": "TaxableAmount, TaxAmount and category required; exemption code and text independently optional.",
+      "malformed_present": "Malformed amounts, conflicting group metadata or rule-specific monetary inconsistency fails."
+    }
+  }
+}
