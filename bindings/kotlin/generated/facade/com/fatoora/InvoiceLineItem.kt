@@ -119,6 +119,18 @@ class InvoiceLineItem internal constructor(internal val raw: com.fatoora.raw.Inv
         unwrap(raw.vatAmount())
     }
 
+    fun hasVatRate(): Boolean = nativeCall(listOfNotNull(this)) {
+        raw.hasVatRate()
+    }
+
+    fun hasTaxTotal(): Boolean = nativeCall(listOfNotNull(this)) {
+        raw.hasTaxTotal()
+    }
+
+    fun hasGrossAmount(): Boolean = nativeCall(listOfNotNull(this)) {
+        raw.hasGrossAmount()
+    }
+
     fun vatCategory(): Int = nativeCall(listOfNotNull(this)) {
         raw.vatCategory().toInt()
     }

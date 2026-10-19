@@ -7,6 +7,8 @@ import com.sun.jna.Structure
 
 internal interface LineItemBuilderLib: Library {
     fun fatoora_LineItemBuilder_destroy(handle: Pointer)
+    fun fatoora_LineItemBuilder_set_tax_total_present(handle: Pointer, present: Boolean): ResultUnitPointer
+    fun fatoora_LineItemBuilder_set_gross_amount_present(handle: Pointer, present: Boolean): ResultUnitPointer
     fun fatoora_LineItemBuilder_new(): Pointer
     fun fatoora_LineItemBuilder_build(handle: Pointer): ResultPointerPointer
     fun fatoora_LineItemBuilder_set_item_name(handle: Pointer, value: Slice): ResultUnitPointer
@@ -70,6 +72,34 @@ class LineItemBuilder internal constructor (
             val handle = returnVal
             val returnOpaque = LineItemBuilder(handle, selfEdges, true)
             return returnOpaque
+        }
+    }
+
+    fun setTaxTotalPresent(present: Boolean): Result<Unit> {
+
+        val returnVal = lib.fatoora_LineItemBuilder_set_tax_total_present(handle, present);
+        val nativeOkVal = returnVal.getNativeOk();
+        if (nativeOkVal != null) {
+            return Unit.ok()
+        } else {
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal.getNativeErr()!!
+            val returnOpaque = BindingError(handle, selfEdges, true)
+            return returnOpaque.err()
+        }
+    }
+
+    fun setGrossAmountPresent(present: Boolean): Result<Unit> {
+
+        val returnVal = lib.fatoora_LineItemBuilder_set_gross_amount_present(handle, present);
+        val nativeOkVal = returnVal.getNativeOk();
+        if (nativeOkVal != null) {
+            return Unit.ok()
+        } else {
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal.getNativeErr()!!
+            val returnOpaque = BindingError(handle, selfEdges, true)
+            return returnOpaque.err()
         }
     }
 

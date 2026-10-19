@@ -23,6 +23,7 @@ void add_LineItemBuilder_binding(nb::module_ mod) {
         .def("build", std::move(maybe_op_unwrap(&_native::LineItemBuilder::build)))
         .def_static("new", std::move(maybe_op_unwrap(&_native::LineItemBuilder::new_)))
         .def("set_exemption", std::move(maybe_op_unwrap(&_native::LineItemBuilder::set_exemption)), "value"_a)
+        .def("set_gross_amount_present", std::move(maybe_op_unwrap(&_native::LineItemBuilder::set_gross_amount_present)), "present"_a)
         .def("set_id", std::move(maybe_op_unwrap(&_native::LineItemBuilder::set_id)), "value"_a)
         .def("set_invoiced_quantity", std::move(maybe_op_unwrap(&_native::LineItemBuilder::set_invoiced_quantity)), "value"_a)
         .def("set_invoiced_quantity_unit_code", std::move(maybe_op_unwrap(&_native::LineItemBuilder::set_invoiced_quantity_unit_code)), "value"_a)
@@ -38,6 +39,7 @@ void add_LineItemBuilder_binding(nb::module_ mod) {
         .def("set_line_amount_with_vat", std::move(maybe_op_unwrap(&_native::LineItemBuilder::set_line_amount_with_vat)), "value"_a)
         .def("set_line_net_amount", std::move(maybe_op_unwrap(&_native::LineItemBuilder::set_line_net_amount)), "value"_a)
         .def("set_line_vat_amount", std::move(maybe_op_unwrap(&_native::LineItemBuilder::set_line_vat_amount)), "value"_a)
+        .def("set_tax_total_present", std::move(maybe_op_unwrap(&_native::LineItemBuilder::set_tax_total_present)), "present"_a)
         .def("set_vat_category", std::move(maybe_op_unwrap(&_native::LineItemBuilder::set_vat_category)), "value"_a)
         .def("set_vat_rate", std::move(maybe_op_unwrap(&_native::LineItemBuilder::set_vat_rate)), "value"_a);
 }

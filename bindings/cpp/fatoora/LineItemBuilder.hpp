@@ -24,6 +24,12 @@ namespace fatoora {
 namespace capi {
     extern "C" {
 
+    typedef struct fatoora_LineItemBuilder_set_tax_total_present_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_LineItemBuilder_set_tax_total_present_result;
+    fatoora_LineItemBuilder_set_tax_total_present_result fatoora_LineItemBuilder_set_tax_total_present(fatoora::capi::LineItemBuilder* self, bool present);
+
+    typedef struct fatoora_LineItemBuilder_set_gross_amount_present_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_LineItemBuilder_set_gross_amount_present_result;
+    fatoora_LineItemBuilder_set_gross_amount_present_result fatoora_LineItemBuilder_set_gross_amount_present(fatoora::capi::LineItemBuilder* self, bool present);
+
     fatoora::capi::LineItemBuilder* fatoora_LineItemBuilder_new(void);
 
     typedef struct fatoora_LineItemBuilder_build_result {union {fatoora::capi::InvoiceLineItem* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_LineItemBuilder_build_result;
@@ -100,6 +106,18 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> fatoora::LineItemBuilder::set_tax_total_present(bool present) {
+    auto result = fatoora::capi::fatoora_LineItemBuilder_set_tax_total_present(this->AsFFI(),
+        present);
+    return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> fatoora::LineItemBuilder::set_gross_amount_present(bool present) {
+    auto result = fatoora::capi::fatoora_LineItemBuilder_set_gross_amount_present(this->AsFFI(),
+        present);
+    return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
 
 inline std::unique_ptr<fatoora::LineItemBuilder> fatoora::LineItemBuilder::new_() {
     auto result = fatoora::capi::fatoora_LineItemBuilder_new();

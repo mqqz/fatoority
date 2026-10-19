@@ -39,6 +39,10 @@ namespace _native {
 class LineItemBuilder {
 public:
 
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> set_tax_total_present(bool present);
+
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> set_gross_amount_present(bool present);
+
   inline static std::unique_ptr<_native::LineItemBuilder> new_();
 
   inline _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std::unique_ptr<_native::BindingError>> build();

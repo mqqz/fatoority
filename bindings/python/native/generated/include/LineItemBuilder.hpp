@@ -24,6 +24,12 @@ namespace _native {
 namespace capi {
     extern "C" {
 
+    typedef struct fatoora_LineItemBuilder_set_tax_total_present_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_LineItemBuilder_set_tax_total_present_result;
+    fatoora_LineItemBuilder_set_tax_total_present_result fatoora_LineItemBuilder_set_tax_total_present(_native::capi::LineItemBuilder* self, bool present);
+
+    typedef struct fatoora_LineItemBuilder_set_gross_amount_present_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_LineItemBuilder_set_gross_amount_present_result;
+    fatoora_LineItemBuilder_set_gross_amount_present_result fatoora_LineItemBuilder_set_gross_amount_present(_native::capi::LineItemBuilder* self, bool present);
+
     _native::capi::LineItemBuilder* fatoora_LineItemBuilder_new(void);
 
     typedef struct fatoora_LineItemBuilder_build_result {union {_native::capi::InvoiceLineItem* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_LineItemBuilder_build_result;
@@ -100,6 +106,18 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::LineItemBuilder::set_tax_total_present(bool present) {
+    auto result = _native::capi::fatoora_LineItemBuilder_set_tax_total_present(this->AsFFI(),
+        present);
+    return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::LineItemBuilder::set_gross_amount_present(bool present) {
+    auto result = _native::capi::fatoora_LineItemBuilder_set_gross_amount_present(this->AsFFI(),
+        present);
+    return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
 
 inline std::unique_ptr<_native::LineItemBuilder> _native::LineItemBuilder::new_() {
     auto result = _native::capi::fatoora_LineItemBuilder_new();

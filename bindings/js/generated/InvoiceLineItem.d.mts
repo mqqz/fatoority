@@ -71,5 +71,11 @@ export class InvoiceLineItem {
 
     vatAmount(): string;
 
+    hasVatRate(): boolean;
+
+    hasTaxTotal(): boolean;
+
+    hasGrossAmount(): boolean;
+
     vatCategory(): number;
 }

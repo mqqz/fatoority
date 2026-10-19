@@ -180,3 +180,90 @@ def test_out_of_scope_adjustment_without_rate_survives_rebuild():
     restored = parse_finalized_invoice_xml(invoice.xml())
     assert restored.adjustments() == [adjustment]
     assert restored.xml() == invoice.xml()
+
+
+def test_line_tax_presence_survives_python_value_rebuild():
+    import itertools
+    import xml.etree.ElementTree as ET
+
+    ns = {"cac": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+          "cbc": "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"}
+    source = builder()
+    source.add_line_item("item", 1, "PCE", 100, 0, VatCategory.OUT_OF_SCOPE)
+    xml = source.build().xml()
+    for rate_present, tax_present, gross_present in itertools.product([False, True], repeat=3):
+        if not tax_present and gross_present:
+            continue
+        root = ET.fromstring(xml)
+        line = root.find("cac:InvoiceLine", ns)
+        category = line.find("cac:Item/cac:ClassifiedTaxCategory", ns)
+        tax = line.find("cac:TaxTotal", ns)
+        if not rate_present:
+            category.remove(category.find("cbc:Percent", ns))
+        if not tax_present:
+            line.remove(tax)
+        elif not gross_present:
+            tax.remove(tax.find("cbc:RoundingAmount", ns))
+        parsed = parse_finalized_invoice_xml(ET.tostring(root, encoding="unicode"))
+        item = parsed.line_item(0)
+        assert item.omitted_vat_rate == (not rate_present)
+        assert item.omitted_tax_amount == (not tax_present)
+        assert item.omitted_gross_amount == (not gross_present)
+        rebuilt = builder()
+        rebuilt.add_item(item)
+        result = rebuilt.build()
+        assert result.line_item(0) == item
+        regenerated = ET.fromstring(result.xml()).find("cac:InvoiceLine", ns)
+        def values(node):
+            return (node.tag, tuple(sorted(node.attrib.items())), (node.text or "").strip(), tuple(values(child) for child in node))
+        assert values(regenerated) == values(line)
+
+
+def test_breakdown_rate_absence_survives_all_python_entrypoints():
+    from fatoora import VatBreakdown
+    from dataclasses import replace
+    import pytest
+
+    group = VatBreakdown(VatCategory.OUT_OF_SCOPE, Decimal(0), Decimal(100), Decimal(0),
+                         TaxExemption(), omitted_rate=True)
+    for use_value in [False, True]:
+        b = builder()
+        b.add_line_item("item", 1, "PCE", 100, 0, VatCategory.OUT_OF_SCOPE,
+                        tax_subtotals=(group,))
+        original = b.build()
+        rebuilt = builder()
+        if use_value:
+            rebuilt.add_item(original.line_item(0))
+        else:
+            rebuilt.add_line_item("item", 1, "PCE", 100, 0, VatCategory.OUT_OF_SCOPE,
+                                  tax_subtotals=original.line_item(0).tax_subtotals)
+        rebuilt.add_vat_breakdown(group)
+        output = rebuilt.build().xml()
+        import xml.etree.ElementTree as ET
+        ns = {"cac": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+              "cbc": "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"}
+        categories = ET.fromstring(output).findall(".//cac:TaxSubtotal/cac:TaxCategory", ns)
+        assert len(categories) == 2
+        assert all(category.find("cbc:Percent", ns) is None for category in categories)
+        parsed = parse_finalized_invoice_xml(output)
+        assert parsed.vat_breakdown() == [group]
+        assert parsed.line_item(0).tax_subtotals == (group,)
+    from fatoora.errors import FfiError
+    with pytest.raises(FfiError):
+        builder().add_vat_breakdown(replace(group, category=VatCategory.STANDARD))
+
+
+def test_presence_flags_reject_hidden_values_and_keep_explicit_zeroes():
+    from dataclasses import replace
+    import pytest
+    from fatoora.errors import FfiError
+
+    b = builder()
+    b.add_line_item("item", 1, "PCE", 100, 15, VatCategory.STANDARD)
+    item = b.build().line_item(0)
+    with pytest.raises(ValueError, match="omitted VAT rate"):
+        builder().add_item(replace(item, omitted_vat_rate=True))
+    with pytest.raises(FfiError):
+        builder().add_item(replace(item, omitted_tax_amount=True))
+    with pytest.raises(FfiError):
+        builder().add_item(replace(item, vat_rate=Decimal(0), omitted_vat_rate=True))

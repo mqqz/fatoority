@@ -57,6 +57,52 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
+    /// <exception cref="BindingErrorException"></exception>
+    public void SetTaxTotalPresent(bool present)
+    {
+        unsafe
+        {
+            BorrowLease<Raw.LineItemBuilder>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
+                var result = Raw.LineItemBuilder.SetTaxTotalPresent(selfLease!.Ptr, present);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return;
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    public void SetGrossAmountPresent(bool present)
+    {
+        unsafe
+        {
+            BorrowLease<Raw.LineItemBuilder>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
+                var result = Raw.LineItemBuilder.SetGrossAmountPresent(selfLease!.Ptr, present);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return;
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
     /// <returns>
     /// A <c>LineItemBuilder</c> allocated on Rust side.
     /// </returns>

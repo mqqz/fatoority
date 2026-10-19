@@ -9,6 +9,12 @@ namespace Fatoora.Raw;
 internal partial struct LineItemBuilder
 {
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_LineItemBuilder_set_tax_total_present", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError SetTaxTotalPresent(LineItemBuilder* handle, [MarshalAs(UnmanagedType.U1)] bool present);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_LineItemBuilder_set_gross_amount_present", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError SetGrossAmountPresent(LineItemBuilder* handle, [MarshalAs(UnmanagedType.U1)] bool present);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_LineItemBuilder_new", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern LineItemBuilder* New();
 

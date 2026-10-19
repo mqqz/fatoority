@@ -1371,15 +1371,20 @@ fn parse_line_items(ctx: &Element<'_, '_>) -> Result<Vec<LineItem>, ParseError> 
                     });
                 }
             };
-            tax_subtotals.push(
-                crate::invoice::VatBreakdown::new(
-                    vat,
-                    decimal_required(category.basic("Percent").content(), "VatRate")?,
-                    decimal_required(subtotal.basic("TaxableAmount").content(), "TaxableAmount")?,
-                    decimal_required(subtotal.basic("TaxAmount").content(), "TaxAmount")?,
-                )?
-                .with_exemption(parse_exemption(category)),
-            );
+            let rate_text = category.basic("Percent").content();
+            let rate = match &rate_text {
+                None if vat == VatCategory::OutOfScope => Decimal::ZERO,
+                value => decimal_required(value.clone(), "VatRate")?,
+            };
+            let mut breakdown = crate::invoice::VatBreakdown::new(
+                vat,
+                rate,
+                decimal_required(subtotal.basic("TaxableAmount").content(), "TaxableAmount")?,
+                decimal_required(subtotal.basic("TaxAmount").content(), "TaxAmount")?,
+            )?
+            .with_exemption(parse_exemption(category));
+            breakdown.omitted_rate = rate_text.is_none();
+            tax_subtotals.push(breakdown);
         }
         let price_node = line.aggregate("Price");
         let decimal_optional =

@@ -16,6 +16,10 @@ export class LineItemBuilder {
     constructor();
 
 
+    setTaxTotalPresent(present: boolean): void;
+
+    setGrossAmountPresent(present: boolean): void;
+
     static new_(): LineItemBuilder;
 
     build(): InvoiceLineItem;

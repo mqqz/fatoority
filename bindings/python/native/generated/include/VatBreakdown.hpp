@@ -20,6 +20,11 @@ namespace _native {
 namespace capi {
     extern "C" {
 
+    bool fatoora_VatBreakdown_has_vat_rate(const _native::capi::VatBreakdown* self);
+
+    typedef struct fatoora_VatBreakdown_without_vat_rate_result {union {_native::capi::VatBreakdown* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_VatBreakdown_without_vat_rate_result;
+    fatoora_VatBreakdown_without_vat_rate_result fatoora_VatBreakdown_without_vat_rate(const _native::capi::VatBreakdown* self);
+
     typedef struct fatoora_VatBreakdown_new_result {union {_native::capi::VatBreakdown* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_VatBreakdown_new_result;
     fatoora_VatBreakdown_new_result fatoora_VatBreakdown_new(uint8_t category, _native::diplomat::capi::DiplomatStringView rate, _native::diplomat::capi::DiplomatStringView taxable_amount, _native::diplomat::capi::DiplomatStringView tax_amount, const _native::capi::TaxExemption* exemption);
 
@@ -42,6 +47,16 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline bool _native::VatBreakdown::has_vat_rate() const {
+    auto result = _native::capi::fatoora_VatBreakdown_has_vat_rate(this->AsFFI());
+    return result;
+}
+
+inline _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>> _native::VatBreakdown::without_vat_rate() const {
+    auto result = _native::capi::fatoora_VatBreakdown_without_vat_rate(this->AsFFI());
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::VatBreakdown>>(std::unique_ptr<_native::VatBreakdown>(_native::VatBreakdown::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
 
 inline _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>> _native::VatBreakdown::new_(uint8_t category, std::string_view rate, std::string_view taxable_amount, std::string_view tax_amount, const _native::TaxExemption& exemption) {
     auto result = _native::capi::fatoora_VatBreakdown_new(category,

@@ -1076,3 +1076,18 @@ fn deserialized_price_metadata_is_checked_before_invoice_construction() {
         assert!(builder().line_item(invalid).build().is_err());
     }
 }
+
+#[test]
+fn omitting_line_tax_must_not_hide_nonzero_tax_or_subtotals() {
+    assert!(line().tax_total_present(false).build().is_err());
+    let subtotal = VatBreakdown::new(VatCategory::OutOfScope, d("0"), d("100"), d("0")).unwrap();
+    assert!(
+        line()
+            .vat_category(VatCategory::OutOfScope)
+            .vat_rate(d("0"))
+            .tax_total_present(false)
+            .tax_subtotal(subtotal)
+            .build()
+            .is_err()
+    );
+}

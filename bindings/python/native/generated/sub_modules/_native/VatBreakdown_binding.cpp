@@ -15,10 +15,12 @@ void add_VatBreakdown_binding(nb::module_ mod) {
     opaque
         .def("category", &_native::VatBreakdown::category)
         .def("exemption", std::move(maybe_op_unwrap(&_native::VatBreakdown::exemption)))
+        .def("has_vat_rate", &_native::VatBreakdown::has_vat_rate)
         .def_static("new", std::move(maybe_op_unwrap(&_native::VatBreakdown::new_)), "category"_a, "rate"_a, "taxable_amount"_a, "tax_amount"_a, "exemption"_a)
         .def("rate", std::move(maybe_op_unwrap(&_native::VatBreakdown::rate)))
         .def("tax_amount", std::move(maybe_op_unwrap(&_native::VatBreakdown::tax_amount)))
-        .def("taxable_amount", std::move(maybe_op_unwrap(&_native::VatBreakdown::taxable_amount)));
+        .def("taxable_amount", std::move(maybe_op_unwrap(&_native::VatBreakdown::taxable_amount)))
+        .def("without_vat_rate", std::move(maybe_op_unwrap(&_native::VatBreakdown::without_vat_rate)));
 }
 
 } 

@@ -100,6 +100,12 @@ fatoora_InvoiceLineItem_vat_rate_result fatoora_InvoiceLineItem_vat_rate(const I
 typedef struct fatoora_InvoiceLineItem_vat_amount_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_vat_amount_result;
 fatoora_InvoiceLineItem_vat_amount_result fatoora_InvoiceLineItem_vat_amount(const InvoiceLineItem* self, DiplomatWrite* write);
 
+bool fatoora_InvoiceLineItem_has_vat_rate(const InvoiceLineItem* self);
+
+bool fatoora_InvoiceLineItem_has_tax_total(const InvoiceLineItem* self);
+
+bool fatoora_InvoiceLineItem_has_gross_amount(const InvoiceLineItem* self);
+
 uint8_t fatoora_InvoiceLineItem_vat_category(const InvoiceLineItem* self);
 
 void fatoora_InvoiceLineItem_destroy(InvoiceLineItem* self);

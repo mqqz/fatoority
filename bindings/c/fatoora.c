@@ -2552,6 +2552,36 @@ FatooraStatus fatoora_invoice_line_item_vat_amount(const FatooraInvoiceLineItem 
     return fatoora_private_finish(&write, out, error);
 }
 
+FatooraStatus fatoora_invoice_line_item_has_vat_rate(const FatooraInvoiceLineItem *self, bool *out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    bool value = fatoora_InvoiceLineItem_has_vat_rate(self);
+    *out = value;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_invoice_line_item_has_tax_total(const FatooraInvoiceLineItem *self, bool *out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    bool value = fatoora_InvoiceLineItem_has_tax_total(self);
+    *out = value;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_invoice_line_item_has_gross_amount(const FatooraInvoiceLineItem *self, bool *out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    bool value = fatoora_InvoiceLineItem_has_gross_amount(self);
+    *out = value;
+    return FATOORA_OK;
+}
+
 FatooraStatus fatoora_invoice_line_item_vat_category(const FatooraInvoiceLineItem *self, uint8_t *out, FatooraError **error) {
     if (error) *error = NULL;
     if (out) *out = 0;
@@ -2861,6 +2891,28 @@ FatooraStatus fatoora_invoice_totals_payable_amount(const FatooraInvoiceTotals *
 
 void fatoora_invoice_totals_free(FatooraInvoiceTotals *self) {
     if (self) fatoora_InvoiceTotals_destroy(self);
+}
+
+FatooraStatus fatoora_line_item_builder_set_tax_total_present(FatooraLineItemBuilder *self, bool present, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_set_tax_total_present_result result = fatoora_LineItemBuilder_set_tax_total_present(self, present);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_line_item_builder_set_gross_amount_present(FatooraLineItemBuilder *self, bool present, FatooraError **error) {
+    if (error) *error = NULL;
+    if (!self)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_LineItemBuilder_set_gross_amount_present_result result = fatoora_LineItemBuilder_set_gross_amount_present(self, present);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    return FATOORA_OK;
 }
 
 FatooraStatus fatoora_line_item_builder_build(FatooraLineItemBuilder *self, FatooraInvoiceLineItem **out, FatooraError **error) {
@@ -4268,6 +4320,29 @@ FatooraStatus fatoora_validation_results_error_message(const FatooraValidationRe
 
 void fatoora_validation_results_free(FatooraValidationResults *self) {
     if (self) fatoora_ValidationResults_destroy(self);
+}
+
+FatooraStatus fatoora_vat_breakdown_has_vat_rate(const FatooraVatBreakdown *self, bool *out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    bool value = fatoora_VatBreakdown_has_vat_rate(self);
+    *out = value;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_vat_breakdown_without_vat_rate(const FatooraVatBreakdown *self, FatooraVatBreakdown **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_VatBreakdown_without_vat_rate_result result = fatoora_VatBreakdown_without_vat_rate(self);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
 }
 
 FatooraStatus fatoora_vat_breakdown_new(int32_t category, const char *rate, const char *taxable_amount, const char *tax_amount, const FatooraTaxExemption *exemption, FatooraVatBreakdown **out, FatooraError **error) {

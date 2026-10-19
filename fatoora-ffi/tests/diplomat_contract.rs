@@ -1107,3 +1107,45 @@ fn optional_adjustments_and_party_metadata_preserve_absence() {
     assert!(missing.set_item_net_price(b"1").is_err());
     assert!(missing.build().is_err());
 }
+
+#[test]
+fn tax_presence_crosses_binding_snapshots_without_hiding_amounts() {
+    use fatoora_ffi::invoice::ffi::{LineItemBuilder, TaxExemption, VatBreakdown};
+    let exemption = ok(TaxExemption::new(None, None));
+    let subtotal = ok(VatBreakdown::new(3, b"0", b"100", b"0", &exemption));
+    assert!(subtotal.has_vat_rate());
+    let subtotal = ok(subtotal.without_vat_rate());
+    assert!(!subtotal.has_vat_rate());
+    let standard = ok(VatBreakdown::new(1, b"15", b"100", b"15", &exemption));
+    assert!(standard.without_vat_rate().is_err());
+    for (tax, gross) in [(false, false), (true, false), (true, true)] {
+        let mut line = LineItemBuilder::new();
+        ok(line.set_item_name(b"item"));
+        ok(line.set_invoiced_quantity(b"1"));
+        ok(line.set_item_net_price(b"100"));
+        ok(line.set_vat_category(3));
+        ok(line.set_tax_total_present(tax));
+        ok(line.set_gross_amount_present(gross));
+        if tax {
+            ok(line.add_tax_subtotal(&subtotal));
+        }
+        let item = ok(line.build());
+        assert!(!item.has_vat_rate());
+        assert_eq!(item.has_tax_total(), tax);
+        assert_eq!(item.has_gross_amount(), gross);
+        let mut b = builder();
+        ok(b.add_item(&item));
+        let invoice = ok(b.build());
+        let xml = written(|out| ok(invoice.xml(out)));
+        let restored = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
+        let item = ok(ok(restored.data()).line_item(0));
+        assert!(!item.has_vat_rate());
+        assert_eq!(item.has_tax_total(), tax);
+        assert_eq!(item.has_gross_amount(), gross);
+        if tax {
+            assert!(!ok(item.tax_subtotal(0)).has_vat_rate());
+        }
+        assert!(line.set_tax_total_present(true).is_err());
+        assert!(line.set_gross_amount_present(true).is_err());
+    }
+}

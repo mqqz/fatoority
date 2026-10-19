@@ -111,6 +111,12 @@ public:
   template<typename W>
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> vat_amount_write(W& writeable_output) const;
 
+  inline bool has_vat_rate() const;
+
+  inline bool has_tax_total() const;
+
+  inline bool has_gross_amount() const;
+
   inline uint8_t vat_category() const;
 
     inline const fatoora::capi::InvoiceLineItem* AsFFI() const;

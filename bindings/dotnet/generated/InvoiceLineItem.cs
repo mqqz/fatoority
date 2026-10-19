@@ -788,6 +788,57 @@ public partial class InvoiceLineItem: IDisposable
         }
     }
 
+    public bool HasVatRate()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                return Raw.InvoiceLineItem.HasVatRate(selfLease!.Ptr);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    public bool HasTaxTotal()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                return Raw.InvoiceLineItem.HasTaxTotal(selfLease!.Ptr);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    public bool HasGrossAmount()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                return Raw.InvoiceLineItem.HasGrossAmount(selfLease!.Ptr);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
     public byte VatCategory()
     {
         unsafe

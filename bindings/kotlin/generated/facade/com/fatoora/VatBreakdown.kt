@@ -15,6 +15,14 @@ class VatBreakdown internal constructor(internal val raw: com.fatoora.raw.VatBre
             VatBreakdown(unwrap(com.fatoora.raw.VatBreakdown.new_(checkedUnsigned(category.toLong(), 255).toUByte(), checkedText(rate), checkedText(taxableAmount), checkedText(taxAmount), exemption.raw)))
         }
     }
+    fun hasVatRate(): Boolean = nativeCall(listOfNotNull(this)) {
+        raw.hasVatRate()
+    }
+
+    fun withoutVatRate(): VatBreakdown = nativeCall(listOfNotNull(this)) {
+        VatBreakdown(unwrap(raw.withoutVatRate()))
+    }
+
     fun category(): Int = nativeCall(listOfNotNull(this)) {
         raw.category().toInt()
     }

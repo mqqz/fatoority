@@ -179,6 +179,8 @@ pub struct LineItemBuilder {
     net: Option<Decimal>,
     vat: Option<Decimal>,
     gross: Option<Decimal>,
+    omit_tax_total: bool,
+    omit_gross_amount: bool,
     category: Option<VatCategory>,
     rate: Option<Decimal>,
     id: Option<String>,
@@ -194,6 +196,16 @@ macro_rules! decimal_setters {
     ($($name:ident => $field:ident),* $(,)?) => { $(pub fn $name(mut self, value: Decimal) -> Self { self.$field = Some(value); self })* };
 }
 impl LineItemBuilder {
+    /// Control whether the line tax container is emitted; omitted tax must be zero.
+    pub fn tax_total_present(mut self, present: bool) -> Self {
+        self.omit_tax_total = !present;
+        self
+    }
+    /// Control whether the line amount including VAT is emitted.
+    pub fn gross_amount_present(mut self, present: bool) -> Self {
+        self.omit_gross_amount = !present;
+        self
+    }
     pub fn item_name(mut self, value: impl Into<String>) -> Self {
         self.name = Some(value.into());
         self
@@ -334,8 +346,8 @@ impl LineItemBuilder {
             })
             .collect::<Result<Vec<_>>>()?;
         let mut line = LineItem {
-            omitted_tax_amount: false,
-            omitted_gross_amount: false,
+            omitted_tax_amount: self.omit_tax_total,
+            omitted_gross_amount: self.omit_tax_total || self.omit_gross_amount,
             omitted_vat_rate: self.rate.is_none(),
             description: name,
             quantity,
@@ -388,6 +400,14 @@ impl LineItemBuilder {
                 line.total_amount.add(line.vat_amount)?,
                 Decimal::ZERO,
             )?;
+        }
+        if self.omit_tax_total
+            && (line.vat_amount != Decimal::ZERO || !line.tax_subtotals.is_empty())
+        {
+            return Err(invalid(
+                InvoiceField::LineItemVatAmount,
+                ValidationKind::OutOfRange,
+            ));
         }
         Ok(line)
     }

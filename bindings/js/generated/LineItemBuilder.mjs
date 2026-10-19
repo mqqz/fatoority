@@ -41,6 +41,44 @@ export class LineItemBuilder {
     }
 
 
+    setTaxTotalPresent(present) {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
+
+        const result = wasm.fatoora_LineItemBuilder_set_tax_total_present(diplomatReceive.buffer, this.ffiValue, present);
+
+        try {
+            if (!diplomatReceive.resultFlag) {
+                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
+            }
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+            diplomatReceive.free();
+        }
+    }
+
+    setGrossAmountPresent(present) {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
+
+        const result = wasm.fatoora_LineItemBuilder_set_gross_amount_present(diplomatReceive.buffer, this.ffiValue, present);
+
+        try {
+            if (!diplomatReceive.resultFlag) {
+                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
+            }
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+            diplomatReceive.free();
+        }
+    }
+
     static new_() {
 
         const result = wasm.fatoora_LineItemBuilder_new();

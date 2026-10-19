@@ -103,6 +103,12 @@ namespace capi {
     typedef struct fatoora_InvoiceLineItem_vat_amount_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_vat_amount_result;
     fatoora_InvoiceLineItem_vat_amount_result fatoora_InvoiceLineItem_vat_amount(const fatoora::capi::InvoiceLineItem* self, diplomat::capi::DiplomatWrite* write);
 
+    bool fatoora_InvoiceLineItem_has_vat_rate(const fatoora::capi::InvoiceLineItem* self);
+
+    bool fatoora_InvoiceLineItem_has_tax_total(const fatoora::capi::InvoiceLineItem* self);
+
+    bool fatoora_InvoiceLineItem_has_gross_amount(const fatoora::capi::InvoiceLineItem* self);
+
     uint8_t fatoora_InvoiceLineItem_vat_category(const fatoora::capi::InvoiceLineItem* self);
 
     void fatoora_InvoiceLineItem_destroy(InvoiceLineItem* self);
@@ -327,6 +333,21 @@ inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> 
     auto result = fatoora::capi::fatoora_InvoiceLineItem_vat_amount(this->AsFFI(),
         &write);
     return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline bool fatoora::InvoiceLineItem::has_vat_rate() const {
+    auto result = fatoora::capi::fatoora_InvoiceLineItem_has_vat_rate(this->AsFFI());
+    return result;
+}
+
+inline bool fatoora::InvoiceLineItem::has_tax_total() const {
+    auto result = fatoora::capi::fatoora_InvoiceLineItem_has_tax_total(this->AsFFI());
+    return result;
+}
+
+inline bool fatoora::InvoiceLineItem::has_gross_amount() const {
+    auto result = fatoora::capi::fatoora_InvoiceLineItem_has_gross_amount(this->AsFFI());
+    return result;
 }
 
 inline uint8_t fatoora::InvoiceLineItem::vat_category() const {

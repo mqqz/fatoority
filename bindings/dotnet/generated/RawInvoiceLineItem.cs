@@ -90,6 +90,18 @@ internal partial struct InvoiceLineItem
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_vat_amount", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError VatAmount(InvoiceLineItem* handle, DiplomatWrite* writeable);
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_has_vat_rate", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.U1)]
+    internal static unsafe extern bool HasVatRate(InvoiceLineItem* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_has_tax_total", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.U1)]
+    internal static unsafe extern bool HasTaxTotal(InvoiceLineItem* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_has_gross_amount", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.U1)]
+    internal static unsafe extern bool HasGrossAmount(InvoiceLineItem* handle);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_vat_category", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern byte VatCategory(InvoiceLineItem* handle);
 

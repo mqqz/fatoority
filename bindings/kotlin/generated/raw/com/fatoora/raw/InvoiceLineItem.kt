@@ -34,6 +34,9 @@ internal interface InvoiceLineItemLib: Library {
     fun fatoora_InvoiceLineItem_total_amount(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_InvoiceLineItem_vat_rate(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_InvoiceLineItem_vat_amount(handle: Pointer, write: Pointer): ResultUnitPointer
+    fun fatoora_InvoiceLineItem_has_vat_rate(handle: Pointer): Byte
+    fun fatoora_InvoiceLineItem_has_tax_total(handle: Pointer): Byte
+    fun fatoora_InvoiceLineItem_has_gross_amount(handle: Pointer): Byte
     fun fatoora_InvoiceLineItem_vat_category(handle: Pointer): FFIUint8
 }
 
@@ -507,6 +510,24 @@ class InvoiceLineItem internal constructor (
             val returnOpaque = BindingError(handle, selfEdges, true)
             return returnOpaque.err()
         }
+    }
+
+    fun hasVatRate(): Boolean {
+
+        val returnVal = lib.fatoora_InvoiceLineItem_has_vat_rate(handle);
+        return (returnVal > 0)
+    }
+
+    fun hasTaxTotal(): Boolean {
+
+        val returnVal = lib.fatoora_InvoiceLineItem_has_tax_total(handle);
+        return (returnVal > 0)
+    }
+
+    fun hasGrossAmount(): Boolean {
+
+        val returnVal = lib.fatoora_InvoiceLineItem_has_gross_amount(handle);
+        return (returnVal > 0)
     }
 
     fun vatCategory(): UByte {

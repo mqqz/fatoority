@@ -41,6 +41,10 @@ namespace fatoora {
 class LineItemBuilder {
 public:
 
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_tax_total_present(bool present);
+
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_gross_amount_present(bool present);
+
   inline static std::unique_ptr<fatoora::LineItemBuilder> new_();
 
   inline diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>> build();

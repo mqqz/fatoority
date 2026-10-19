@@ -15,6 +15,14 @@ class LineItemBuilder internal constructor(internal val raw: com.fatoora.raw.Lin
             LineItemBuilder(com.fatoora.raw.LineItemBuilder.new_())
         }
     }
+    fun setTaxTotalPresent(present: Boolean): Unit = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.setTaxTotalPresent(present))
+    }
+
+    fun setGrossAmountPresent(present: Boolean): Unit = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.setGrossAmountPresent(present))
+    }
+
     fun build(): InvoiceLineItem = nativeCall(listOfNotNull(this)) {
         InvoiceLineItem(unwrap(raw.build()))
     }

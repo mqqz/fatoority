@@ -595,6 +595,45 @@ export class InvoiceLineItem {
         }
     }
 
+    hasVatRate() {
+
+        const result = wasm.fatoora_InvoiceLineItem_has_vat_rate(this.ffiValue);
+
+        try {
+            return result;
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+        }
+    }
+
+    hasTaxTotal() {
+
+        const result = wasm.fatoora_InvoiceLineItem_has_tax_total(this.ffiValue);
+
+        try {
+            return result;
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+        }
+    }
+
+    hasGrossAmount() {
+
+        const result = wasm.fatoora_InvoiceLineItem_has_gross_amount(this.ffiValue);
+
+        try {
+            return result;
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+        }
+    }
+
     vatCategory() {
 
         const result = wasm.fatoora_InvoiceLineItem_vat_category(this.ffiValue);

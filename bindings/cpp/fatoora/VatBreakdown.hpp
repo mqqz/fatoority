@@ -20,6 +20,11 @@ namespace fatoora {
 namespace capi {
     extern "C" {
 
+    bool fatoora_VatBreakdown_has_vat_rate(const fatoora::capi::VatBreakdown* self);
+
+    typedef struct fatoora_VatBreakdown_without_vat_rate_result {union {fatoora::capi::VatBreakdown* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_VatBreakdown_without_vat_rate_result;
+    fatoora_VatBreakdown_without_vat_rate_result fatoora_VatBreakdown_without_vat_rate(const fatoora::capi::VatBreakdown* self);
+
     typedef struct fatoora_VatBreakdown_new_result {union {fatoora::capi::VatBreakdown* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_VatBreakdown_new_result;
     fatoora_VatBreakdown_new_result fatoora_VatBreakdown_new(uint8_t category, diplomat::capi::DiplomatStringView rate, diplomat::capi::DiplomatStringView taxable_amount, diplomat::capi::DiplomatStringView tax_amount, const fatoora::capi::TaxExemption* exemption);
 
@@ -42,6 +47,16 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline bool fatoora::VatBreakdown::has_vat_rate() const {
+    auto result = fatoora::capi::fatoora_VatBreakdown_has_vat_rate(this->AsFFI());
+    return result;
+}
+
+inline diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>> fatoora::VatBreakdown::without_vat_rate() const {
+    auto result = fatoora::capi::fatoora_VatBreakdown_without_vat_rate(this->AsFFI());
+    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::VatBreakdown>>(std::unique_ptr<fatoora::VatBreakdown>(fatoora::VatBreakdown::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
 
 inline diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>> fatoora::VatBreakdown::new_(uint8_t category, std::string_view rate, std::string_view taxable_amount, std::string_view tax_amount, const fatoora::TaxExemption& exemption) {
     auto result = fatoora::capi::fatoora_VatBreakdown_new(category,

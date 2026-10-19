@@ -78,6 +78,11 @@ class VatBreakdown:
     taxable_amount: Decimal
     tax_amount: Decimal
     exemption: TaxExemption
+    omitted_rate: bool = False
+
+    def _native_value(self):
+        value = _call(_native.VatBreakdown.new, int(self.category), _decimal(self.rate), _decimal(self.taxable_amount), _decimal(self.tax_amount), self.exemption._native_value())
+        return _call(value.without_vat_rate) if self.omitted_rate else value
 
 @dataclass(frozen=True)
 class DocumentReference:
@@ -109,6 +114,9 @@ class InvoiceLineItem:
     item_seller_identifier: Optional[tuple[str, Optional[str]]] = None
     item_buyer_identifier: Optional[tuple[str, Optional[str]]] = None
     item_standard_identifier: Optional[tuple[str, Optional[str]]] = None
+    omitted_vat_rate: bool = False
+    omitted_tax_amount: bool = False
+    omitted_gross_amount: bool = False
 
 @dataclass(frozen=True)
 class InvoiceTotals:
@@ -605,7 +613,7 @@ class _Invoice(_Owned):
         result = []
         for i in range(_call(totals.vat_breakdown_len)):
             group = _call(totals.vat_breakdown, i)
-            result.append(VatBreakdown(VatCategory(_call(group.category)), Decimal(_call(group.rate)), Decimal(_call(group.taxable_amount)), Decimal(_call(group.tax_amount)), TaxExemption._from_native(_call(group.exemption))))
+            result.append(VatBreakdown(VatCategory(_call(group.category)), Decimal(_call(group.rate)), Decimal(_call(group.taxable_amount)), Decimal(_call(group.tax_amount)), TaxExemption._from_native(_call(group.exemption)), not _call(group.has_vat_rate)))
         return result
 
     def line_item_count(self) -> int:
@@ -623,7 +631,7 @@ class _Invoice(_Owned):
             references.append(DocumentReference(_call(ref.id), _call(ref.uuid), _call(ref.issue_date), _call(ref.issue_time), _call(ref.document_type_code)))
         for i in range(_call(item.tax_subtotals_len)):
             tax = _call(item.tax_subtotal, i)
-            subtotals.append(VatBreakdown(VatCategory(_call(tax.category)), Decimal(_call(tax.rate)), Decimal(_call(tax.taxable_amount)), Decimal(_call(tax.tax_amount)), TaxExemption._from_native(_call(tax.exemption))))
+            subtotals.append(VatBreakdown(VatCategory(_call(tax.category)), Decimal(_call(tax.rate)), Decimal(_call(tax.taxable_amount)), Decimal(_call(tax.tax_amount)), TaxExemption._from_native(_call(tax.exemption)), not _call(tax.has_vat_rate)))
         return InvoiceLineItem(description=(_call(item.description)), unit_code=(_call(item.unit_code)), quantity=Decimal(_call(item.quantity)), unit_price=Decimal(_call(item.unit_price)), total_amount=Decimal(_call(item.total_amount)), vat_rate=Decimal(_call(item.vat_rate)), vat_amount=Decimal(_call(item.vat_amount)), vat_category=VatCategory(_call(item.vat_category)), id=_call(item.id), exemption=TaxExemption._from_native(_call(item.exemption)), document_references=tuple(references), tax_subtotals=tuple(subtotals),
             item_price_base_quantity=_optional_decimal(_call(item.item_price_base_quantity)),
             item_price_base_quantity_unit_code=_call(item.item_price_base_quantity_unit_code),
@@ -632,7 +640,10 @@ class _Invoice(_Owned):
             adjustments=tuple(AllowanceCharge(_call(item.adjustment_is_charge, i), Decimal(_call(a.value)), VatCategory(_call(item.vat_category)), Decimal(_call(item.vat_rate)), _call(a.reason), _call(a.reason_code), base_amount=_optional_decimal(_call(a.base_amount)), percentage=_optional_decimal(_call(a.percent))) for i in range(_call(item.adjustments_len)) for a in [_call(item.adjustment, i)]),
             item_seller_identifier=_identifier(_call(item.item_seller_identifier)),
             item_buyer_identifier=_identifier(_call(item.item_buyer_identifier)),
-            item_standard_identifier=_identifier(_call(item.item_standard_identifier)))
+            item_standard_identifier=_identifier(_call(item.item_standard_identifier)),
+            omitted_vat_rate=not _call(item.has_vat_rate),
+            omitted_tax_amount=not _call(item.has_tax_total),
+            omitted_gross_amount=not _call(item.has_gross_amount))
 
     def line_items(self) -> list[InvoiceLineItem]:
         data = self._invoke("data")
@@ -816,6 +827,12 @@ class LineItemBuilder(_Owned):
     def set_item_price_base_quantity(self, value: Decimal | str | int) -> None:
         self._invoke("set_item_price_base_quantity", _decimal(value))
 
+    def set_tax_total_present(self, present: bool) -> None:
+        self._invoke("set_tax_total_present", present)
+
+    def set_gross_amount_present(self, present: bool) -> None:
+        self._invoke("set_gross_amount_present", present)
+
     def set_line_net_amount(self, value: Decimal | str | int) -> None:
         self._invoke("set_line_net_amount", _decimal(value))
 
@@ -844,7 +861,7 @@ class LineItemBuilder(_Owned):
         self._invoke("add_document_reference", value)
 
     def add_tax_subtotal(self, value: VatBreakdown) -> None:
-        native = _call(_native.VatBreakdown.new, int(value.category), _decimal(value.rate), _decimal(value.taxable_amount), _decimal(value.tax_amount), value.exemption._native_value())
+        native = value._native_value()
         self._invoke("add_tax_subtotal", native)
 
     def set_item_seller_identifier(self, value: str, scheme: Optional[str] = None) -> None:
@@ -864,7 +881,7 @@ class InvoiceBuilder(_Owned):
         self._invoke("add_buyer_identifier", value, scheme)
 
     def add_vat_breakdown(self, value: VatBreakdown) -> None:
-        native = _call(_native.VatBreakdown.new, int(value.category), _decimal(value.rate), _decimal(value.taxable_amount), _decimal(value.tax_amount), value.exemption._native_value())
+        native = value._native_value()
         self._invoke("add_vat_breakdown", native)
 
     def add_payment_means(self, value: PaymentMeans) -> None:
@@ -895,10 +912,15 @@ class InvoiceBuilder(_Owned):
         if item.unit_code:
             b.set_invoiced_quantity_unit_code(item.unit_code)
         b.set_item_net_price(item.unit_price)
-        b.set_vat_rate(item.vat_rate)
+        if not item.omitted_vat_rate:
+            b.set_vat_rate(item.vat_rate)
+        elif item.vat_rate != 0:
+            raise ValueError("omitted VAT rate must be zero")
         b.set_vat_category(item.vat_category)
         b.set_line_net_amount(item.total_amount)
         b.set_line_vat_amount(item.vat_amount)
+        b.set_tax_total_present(not item.omitted_tax_amount)
+        b.set_gross_amount_present(not item.omitted_gross_amount)
         b.set_exemption(item.exemption)
         if item.id is not None:
             b.set_id(item.id)
@@ -998,7 +1020,7 @@ class InvoiceBuilder(_Owned):
             native = _call(_native.OriginalInvoiceRef.new, ref.id, ref.uuid, ref.issue_date, ref.issue_time, ref.document_type_code)
             item = _call(item.with_document_reference, native)
         for tax in tax_subtotals:
-            native = _call(_native.VatBreakdown.new, int(tax.category), _decimal(tax.rate), _decimal(tax.taxable_amount), _decimal(tax.tax_amount), tax.exemption._native_value())
+            native = tax._native_value()
             item = _call(item.with_tax_subtotal, native)
         self._invoke("add_item", item)
 

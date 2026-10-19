@@ -734,6 +734,15 @@ FatooraStatus fatoora_invoice_line_item_vat_rate(const FatooraInvoiceLineItem *s
 FatooraStatus fatoora_invoice_line_item_vat_amount(const FatooraInvoiceLineItem *self,
     char **out,
     FatooraError **error);
+FatooraStatus fatoora_invoice_line_item_has_vat_rate(const FatooraInvoiceLineItem *self,
+    bool *out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_line_item_has_tax_total(const FatooraInvoiceLineItem *self,
+    bool *out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_line_item_has_gross_amount(const FatooraInvoiceLineItem *self,
+    bool *out,
+    FatooraError **error);
 FatooraStatus fatoora_invoice_line_item_vat_category(const FatooraInvoiceLineItem *self,
     uint8_t *out,
     FatooraError **error);
@@ -802,6 +811,12 @@ FatooraStatus fatoora_invoice_totals_payable_amount(const FatooraInvoiceTotals *
     char **out,
     FatooraError **error);
 void fatoora_invoice_totals_free(FatooraInvoiceTotals *self);
+FatooraStatus fatoora_line_item_builder_set_tax_total_present(FatooraLineItemBuilder *self,
+    bool present,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_set_gross_amount_present(FatooraLineItemBuilder *self,
+    bool present,
+    FatooraError **error);
 FatooraStatus fatoora_line_item_builder_build(FatooraLineItemBuilder *self,
     FatooraInvoiceLineItem **out,
     FatooraError **error);
@@ -1159,6 +1174,12 @@ FatooraStatus fatoora_validation_results_error_message(const FatooraValidationRe
     FatooraValidationMessage **out,
     FatooraError **error);
 void fatoora_validation_results_free(FatooraValidationResults *self);
+FatooraStatus fatoora_vat_breakdown_has_vat_rate(const FatooraVatBreakdown *self,
+    bool *out,
+    FatooraError **error);
+FatooraStatus fatoora_vat_breakdown_without_vat_rate(const FatooraVatBreakdown *self,
+    FatooraVatBreakdown **out,
+    FatooraError **error);
 FatooraStatus fatoora_vat_breakdown_new(int32_t category,
     const char *rate,
     const char *taxable_amount,

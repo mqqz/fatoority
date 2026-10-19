@@ -395,6 +395,16 @@ pub mod ffi {
     #[diplomat::attr(dotnet, manually_disposable)]
     pub struct VatBreakdown(pub(crate) inv_core::VatBreakdown);
     impl VatBreakdown {
+        pub fn has_vat_rate(&self) -> bool {
+            self.0.has_vat_rate()
+        }
+        pub fn without_vat_rate(&self) -> Result<Box<VatBreakdown>, Box<BindingError>> {
+            boundary(|| {
+                Ok(Box::new(Self(
+                    self.0.clone().without_vat_rate().map_err(core_error)?,
+                )))
+            })
+        }
         pub fn new(
             category: u8,
             rate: &DiplomatStr,
@@ -520,6 +530,12 @@ pub mod ffi {
     #[diplomat::attr(dotnet, manually_disposable)]
     pub struct LineItemBuilder(pub(crate) Option<inv_core::LineItemBuilder>);
     impl LineItemBuilder {
+        pub fn set_tax_total_present(&mut self, present: bool) -> Result<(), Box<BindingError>> {
+            boundary(|| self.update(|b| b.tax_total_present(present)))
+        }
+        pub fn set_gross_amount_present(&mut self, present: bool) -> Result<(), Box<BindingError>> {
+            boundary(|| self.update(|b| b.gross_amount_present(present)))
+        }
         pub fn new() -> Box<LineItemBuilder> {
             Box::new(Self(Some(inv_core::LineItem::builder())))
         }
@@ -1787,6 +1803,15 @@ pub mod ffi {
         }
         pub fn vat_amount(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
             boundary(|| write(self.0.vat_amount().to_string(), out))
+        }
+        pub fn has_vat_rate(&self) -> bool {
+            self.0.has_vat_rate()
+        }
+        pub fn has_tax_total(&self) -> bool {
+            self.0.has_tax_total()
+        }
+        pub fn has_gross_amount(&self) -> bool {
+            self.0.has_gross_amount()
         }
         pub fn vat_category(&self) -> u8 {
             vat_code(self.0.vat_category())

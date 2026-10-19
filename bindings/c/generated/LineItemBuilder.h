@@ -21,6 +21,12 @@
 
 
 
+typedef struct fatoora_LineItemBuilder_set_tax_total_present_result {union { BindingError* err;}; bool is_ok;} fatoora_LineItemBuilder_set_tax_total_present_result;
+fatoora_LineItemBuilder_set_tax_total_present_result fatoora_LineItemBuilder_set_tax_total_present(LineItemBuilder* self, bool present);
+
+typedef struct fatoora_LineItemBuilder_set_gross_amount_present_result {union { BindingError* err;}; bool is_ok;} fatoora_LineItemBuilder_set_gross_amount_present_result;
+fatoora_LineItemBuilder_set_gross_amount_present_result fatoora_LineItemBuilder_set_gross_amount_present(LineItemBuilder* self, bool present);
+
 LineItemBuilder* fatoora_LineItemBuilder_new(void);
 
 typedef struct fatoora_LineItemBuilder_build_result {union {InvoiceLineItem* ok; BindingError* err;}; bool is_ok;} fatoora_LineItemBuilder_build_result;

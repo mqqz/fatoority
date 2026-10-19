@@ -1052,6 +1052,15 @@ pub struct LineItem {
 }
 
 impl LineItem {
+    pub fn has_vat_rate(&self) -> bool {
+        !self.omitted_vat_rate
+    }
+    pub fn has_tax_total(&self) -> bool {
+        !self.omitted_tax_amount
+    }
+    pub fn has_gross_amount(&self) -> bool {
+        !self.omitted_gross_amount
+    }
     pub fn document_reference(mut self, reference: OriginalInvoiceRef) -> Self {
         self.document_references.push(reference);
         self
@@ -1461,6 +1470,21 @@ pub struct VatBreakdown {
     pub(crate) tax_amount: Decimal,
 }
 impl VatBreakdown {
+    pub fn has_vat_rate(&self) -> bool {
+        !self.omitted_rate
+    }
+    pub fn without_vat_rate(mut self) -> Result<Self> {
+        if self.category != VatCategory::OutOfScope || self.rate != Decimal::ZERO {
+            return Err(ValidationError::new(vec![ValidationIssue::new(
+                InvoiceField::VatCategory,
+                ValidationKind::OutOfRange,
+                None,
+            )])
+            .into());
+        }
+        self.omitted_rate = true;
+        Ok(self)
+    }
     pub(crate) fn check_against(&self, expected: &Self, line_count: usize) -> Result<()> {
         line_builder::check_supplied(
             InvoiceField::VatCategory,
