@@ -1,5 +1,6 @@
 //! Mutate one field of an accepted fixture so rejection cannot be caused by an
 //! unrelated missing field. Parsing checks supplied amounts; it is not validation.
+mod common;
 use base64ct::{Base64, Encoding};
 use fatoora_core::invoice::xml::parse::{parse_finalized_invoice_xml, parse_signed_invoice_xml};
 use fatoora_core::{Error, ErrorKind};
@@ -579,6 +580,8 @@ fn recognized_aggregate_nesting_is_bounded_before_model_recursion() {
         )
     };
     let accepted = nested(128);
+    assert!(parse_signed_invoice_xml(&accepted).is_err());
+    let accepted = common::fixture_signer().sign_xml(&accepted).unwrap();
     assert_eq!(
         parse_finalized_invoice_xml(&accepted).unwrap(),
         parse_finalized_invoice_xml(XML).unwrap()

@@ -1,7 +1,7 @@
 //! XML schema validation and complete local ZATCA validation reports.
 //!
 //! XSD checks do not run builder field checks, business rules, or signature
-//! verification. Parsing a signed invoice does not verify its signature.
+//! verification. Signed imports separately check local signature and QR integrity.
 mod decimal_lexical;
 pub(crate) mod integrity;
 mod integrity_xml;
@@ -125,6 +125,13 @@ fn schema_validation_report(
         layers_checked: vec![ValidationLayer::Xsd],
         issues,
     })
+}
+
+/// QR money shares the bounded XML-decimal domain. Scale remains a separate rule.
+pub(crate) fn check_qr_decimal(value: &str) -> Result<(), String> {
+    business_rules::decimal_equal(value, value)
+        .map(|_| ())
+        .map_err(|e| e.to_string())
 }
 
 #[cfg(test)]

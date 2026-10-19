@@ -43,6 +43,8 @@ fn imports_optional_seller_address_fields_from_xml() {
     assert_eq!(address.additional_street(), Some("Second street"));
     assert_eq!(address.additional_number(), Some("0123"));
     assert_eq!(address.district(), Some("المربع | Al-Murabba"));
+    assert!(parse_signed_invoice_xml(&xml).is_err());
+    let xml = common::fixture_signer().sign_xml(&xml).unwrap();
     let signed = parse_signed_invoice_xml(&xml).unwrap();
     assert_eq!(signed.data().seller().address().unwrap(), address);
     assert_eq!(signed.xml(), xml);

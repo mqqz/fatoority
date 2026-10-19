@@ -174,6 +174,7 @@ impl QrCodeError {
             Self::MissingSellerName => json!({"type": "missing_seller_name"}),
             Self::MissingSellerVat => json!({"type": "missing_seller_vat"}),
             Self::Xml(message) => message_details("qr_xml", message),
+            Self::InvalidField(message) => message_details("qr_invalid_field", message),
         }
     }
 }

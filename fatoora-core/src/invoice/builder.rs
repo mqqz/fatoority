@@ -1,7 +1,7 @@
 //! Invoice builder and view types.
 use super::{
     Buyer, CurrencyCode, InvoiceData, InvoiceError, InvoiceField, InvoiceFlags, InvoiceNote,
-    InvoiceTimestamp, InvoiceTotalsData, InvoiceType, LineItems, QrPayload, QrResult, Seller,
+    InvoiceTimestamp, InvoiceTotalsData, InvoiceType, LineItems, QrCodeError, QrResult, Seller,
     ValidationError, ValidationIssue, ValidationKind, VatCategory,
 };
 use crate::Decimal;
@@ -23,8 +23,8 @@ pub struct FinalizedInvoice {
 
 /// An invoice carrying signature material, QR payload, and signed XML.
 ///
-/// It may be produced by signing or imported by parsing. The type does not prove
-/// that an imported signature was verified, nor establish business-rule compliance.
+/// Produced by local signing or imported with local signature and QR integrity checks.
+/// It does not establish certificate issuer trust, clearance, or business-rule compliance.
 ///
 /// Formatting signed XML is intentionally unavailable:
 /// ```compile_fail
@@ -878,14 +878,8 @@ impl FinalizedInvoice {
         signed_properties: SignedProperties,
         signed_xml: String,
     ) -> QrResult<SignedInvoice> {
-        let qr_code = QrPayload::from_invoice(&self.data, &self.totals)?
-            .with_signing_parts(
-                Some(signed_properties.invoice_hash()),
-                Some(signed_properties.signature()),
-                Some(signed_properties.public_key()),
-                signed_properties.zatca_key_signature(),
-            )
-            .encode()?;
+        let qr_code = super::validation::integrity::signed_qr(&signed_xml)
+            .map_err(QrCodeError::InvalidField)?;
         Ok(SignedInvoice {
             finalized: self,
             signed_properties,
@@ -909,6 +903,7 @@ impl SignedInvoice {
         &self.signed_properties
     }
 
+    /// Borrow the exact Base64 payload embedded in the retained XML.
     pub fn qr_code(&self) -> &str {
         &self.qr_code
     }

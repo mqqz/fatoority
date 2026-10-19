@@ -3,7 +3,6 @@ use super::xml::{
     lexical,
     nav::{self, Element},
 };
-use super::{InvoiceData, InvoiceTotalsData};
 use base64ct::{Base64, Encoding};
 use thiserror::Error;
 
@@ -19,6 +18,8 @@ pub enum QrCodeError {
     ValueTooLong { tag: u8, len: usize },
     #[error("QR code payload exceeds 700 characters once base64 encoded (len={len})")]
     EncodedTooLong { len: usize },
+    #[error("invalid QR field: {0}")]
+    InvalidField(String),
     #[error("QR XML error: {0}")]
     Xml(String),
 }
@@ -27,7 +28,8 @@ impl QrCodeError {
     /// Shared classification used by bindings.
     pub fn kind(&self) -> crate::ErrorKind {
         match self {
-            Self::MissingSellerName
+            Self::InvalidField(_)
+            | Self::MissingSellerName
             | Self::MissingSellerVat
             | Self::ValueTooLong { .. }
             | Self::EncodedTooLong { .. } => crate::ErrorKind::InvalidInput,
@@ -39,23 +41,12 @@ impl QrCodeError {
 /// QR result alias.
 pub type QrResult<T> = std::result::Result<T, QrCodeError>;
 
-/// QR payload builder for ZATCA tags.
-///
-/// # Examples
-/// ```rust,ignore
-/// use fatoora_core::invoice::QrPayload;
-/// use fatoora_core::invoice::{FinalizedInvoice, InvoiceTotalsData};
-///
-/// let invoice: FinalizedInvoice = unimplemented!();
-/// let totals = InvoiceTotalsData::from_data(invoice.data());
-/// let payload = QrPayload::from_invoice(invoice.data(), &totals)?;
-/// let encoded = payload.encode()?;
-/// # let _ = encoded;
-/// use fatoora_core::invoice::QrCodeError;
-/// # Ok::<(), QrCodeError>(())
-/// ```
+/// QR payload used internally by signing. Read a completed payload with
+/// [`super::SignedInvoice::qr_code`]. Typed signing serializes before constructing
+/// QR fields; importing signed XML extracts its existing payload.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct QrPayload {
+    applicability: QrApplicability,
     seller_name: String,
     seller_vat: String,
     timestamp: String,
@@ -65,6 +56,104 @@ pub struct QrPayload {
     signature: Option<String>,
     public_key: Option<String>,
     zatca_key_signature: Option<String>,
+}
+
+/// Phase-two stamp applicability. A local standard stamp is not clearance.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) enum QrApplicability {
+    Standard,
+    Simplified,
+}
+
+impl QrApplicability {
+    pub(crate) fn parse(code: &str) -> QrResult<Self> {
+        if code.len() != 7
+            || !code.as_bytes()[2..]
+                .iter()
+                .all(|b| matches!(b, b'0' | b'1'))
+        {
+            return Err(QrCodeError::InvalidField("InvoiceTypeCode@name".into()));
+        }
+        match &code[..2] {
+            "01" => Ok(Self::Standard),
+            "02" => Ok(Self::Simplified),
+            _ => Err(QrCodeError::InvalidField("InvoiceTypeCode@name".into())),
+        }
+    }
+
+    pub(crate) fn from_xml(xml: &str) -> QrResult<Self> {
+        let doc = lexical::document(xml).map_err(|e| QrCodeError::Xml(e.to_string()))?;
+        Self::parse(
+            &Element::invoice(&doc)
+                .basic("InvoiceTypeCode")
+                .attribute("name")
+                .unwrap_or_default(),
+        )
+    }
+
+    pub(crate) fn last_tag(self) -> u8 {
+        match self {
+            Self::Standard => 8,
+            Self::Simplified => 9,
+        }
+    }
+
+    pub(crate) fn check_tags(self, tags: &std::collections::BTreeMap<u8, Vec<u8>>) -> QrResult<()> {
+        if tags.len() != self.last_tag() as usize
+            || !(1..=self.last_tag()).all(|t| tags.contains_key(&t))
+        {
+            return Err(QrCodeError::InvalidField(format!(
+                "expected tags 1 through {}",
+                self.last_tag()
+            )));
+        }
+        Ok(())
+    }
+}
+
+/// Decode bounded, ordered, nonempty TLV fields without inferring a subtype.
+pub(crate) fn decode_tlv(encoded: &str) -> QrResult<std::collections::BTreeMap<u8, Vec<u8>>> {
+    if encoded.len() > 700 {
+        return Err(QrCodeError::EncodedTooLong { len: encoded.len() });
+    }
+    let raw =
+        Base64::decode_vec(encoded).map_err(|_| QrCodeError::InvalidField("QR Base64".into()))?;
+    let mut tags = std::collections::BTreeMap::new();
+    let mut at = 0;
+    let mut previous = 0;
+    while at < raw.len() {
+        if raw.len() - at < 2 {
+            return Err(QrCodeError::InvalidField("truncated TLV header".into()));
+        }
+        let tag = raw[at];
+        let len = raw[at + 1] as usize;
+        at += 2;
+        if tag <= previous || tag > 9 || len == 0 || len > raw.len() - at {
+            return Err(QrCodeError::InvalidField(
+                "TLV order, number or length".into(),
+            ));
+        }
+        tags.insert(tag, raw[at..at + len].to_vec());
+        at += len;
+        previous = tag;
+    }
+    Ok(tags)
+}
+
+fn binary_field(tag: u8, value: &str) -> QrResult<Vec<u8>> {
+    // Bound before Base64 allocation, including deliberately oversized inputs.
+    if value.len() > 344 {
+        return Err(QrCodeError::ValueTooLong {
+            tag,
+            len: value.len() / 4 * 3,
+        });
+    }
+    let bytes = Base64::decode_vec(value)
+        .map_err(|_| QrCodeError::InvalidField(format!("tag {tag} Base64")))?;
+    if bytes.is_empty() {
+        return Err(QrCodeError::InvalidField(format!("empty tag {tag}")));
+    }
+    Ok(bytes)
 }
 
 #[derive(Clone, Copy)]
@@ -85,39 +174,12 @@ impl QrField {
             | Self::IssueDate
             | Self::IssueTime
             | Self::TotalWithVat
-            | Self::TotalVat => value.trim(),
+            | Self::TotalVat => value.trim_matches(|c| matches!(c, ' ' | '\t' | '\r' | '\n')),
         }
     }
 }
 
 impl QrPayload {
-    pub(crate) fn from_invoice(
-        invoice: &InvoiceData,
-        totals: &InvoiceTotalsData,
-    ) -> QrResult<Self> {
-        let seller_name = invoice.seller_name()?.to_string();
-        let seller_vat = invoice.seller_vat()?.to_string();
-        let timestamp = format!(
-            "{}T{}",
-            invoice.issue_date_string(),
-            invoice.issue_time_string()
-        );
-        let total_with_vat = InvoiceData::format_amount(totals.payable_amount());
-        let total_vat = InvoiceData::format_amount(totals.tax_amount());
-
-        Ok(Self {
-            seller_name,
-            seller_vat,
-            timestamp,
-            total_with_vat,
-            total_vat,
-            invoice_hash: None,
-            signature: None,
-            public_key: None,
-            zatca_key_signature: None,
-        })
-    }
-
     pub(crate) fn from_xml(xml: &str) -> QrResult<Self> {
         let doc = lexical::document(xml).map_err(|e| QrCodeError::Xml(e.to_string()))?;
         let invoice = Element::invoice(&doc);
@@ -157,16 +219,21 @@ impl QrPayload {
             QrField::TotalWithVat,
         )?;
         let total_vat = required_value(
-            nav::tax_totals(invoice)
-                .next()
-                .unwrap_or(Element(None))
-                .basic("TaxAmount")
-                .content(),
+            nav::qr_tax_amount(invoice).content(),
             "total VAT",
             QrField::TotalVat,
         )?;
 
+        for value in [&total_with_vat, &total_vat] {
+            super::validation::check_qr_decimal(value).map_err(QrCodeError::InvalidField)?;
+        }
         Ok(Self {
+            applicability: QrApplicability::parse(
+                &invoice
+                    .basic("InvoiceTypeCode")
+                    .attribute("name")
+                    .unwrap_or_default(),
+            )?,
             seller_name,
             seller_vat,
             timestamp: format!("{issue_date}T{issue_time}"),
@@ -194,6 +261,26 @@ impl QrPayload {
     }
 
     pub(crate) fn encode(&self) -> QrResult<String> {
+        let stamped = self.invoice_hash.is_some()
+            || self.signature.is_some()
+            || self.public_key.is_some()
+            || self.zatca_key_signature.is_some();
+        if stamped
+            && (self.invoice_hash.is_none()
+                || self.signature.is_none()
+                || self.public_key.is_none()
+                || (self.applicability == QrApplicability::Simplified
+                    && self.zatca_key_signature.is_none()))
+        {
+            return Err(QrCodeError::InvalidField(
+                "incomplete stamp material".into(),
+            ));
+        }
+        if self.applicability == QrApplicability::Standard && self.zatca_key_signature.is_some() {
+            return Err(QrCodeError::InvalidField(
+                "standard invoice prohibits tag 9".into(),
+            ));
+        }
         let mut tlv = TlvBuilder::new();
         tlv.push_str(1, &self.seller_name)?;
         tlv.push_str(2, &self.seller_vat)?;
@@ -208,13 +295,10 @@ impl QrPayload {
             tlv.push_bytes(7, sig.as_bytes())?;
         }
         if let Some(pk) = self.public_key.as_deref() {
-            tlv.push_bytes(8, &base64ct::Base64::decode_vec(pk).unwrap())?;
+            tlv.push_bytes(8, &binary_field(8, pk)?)?;
         }
         if let Some(stamp_sig) = self.zatca_key_signature.as_deref() {
-            let _ = tlv.push_bytes(
-                9,
-                &base64ct::Base64::decode_vec(stamp_sig).unwrap_or(vec![]),
-            );
+            tlv.push_bytes(9, &binary_field(9, stamp_sig)?)?;
         }
 
         tlv.finish()
@@ -252,10 +336,6 @@ impl TlvBuilder {
         if encoded.len() > 700 {
             return Err(QrCodeError::EncodedTooLong { len: encoded.len() });
         }
-        let mut enc_hex = String::new();
-        for byte in encoded.as_bytes() {
-            enc_hex.push_str(&format!("{:02X}", byte));
-        }
         Ok(encoded)
     }
 }
@@ -280,6 +360,20 @@ mod tests {
     use base64ct::{Base64, Encoding};
 
     fn sample_invoice() -> FinalizedInvoice {
+        sample_invoice_with_items(vec![
+            LineItem::new(
+                "Item",
+                crate::Decimal::from(1),
+                "PCE",
+                crate::Decimal::from(100),
+                crate::Decimal::from(15),
+                VatCategory::Standard,
+            )
+            .unwrap(),
+        ])
+    }
+
+    fn sample_invoice_with_items(items: Vec<LineItem>) -> FinalizedInvoice {
         let seller = Party::<SellerRole>::new(
             "Acme Inc".into(),
             Address {
@@ -298,16 +392,6 @@ mod tests {
         )
         .expect("valid seller");
 
-        let line_item = LineItem::new(
-            "Item",
-            crate::Decimal::from(1),
-            "PCE",
-            crate::Decimal::from(100),
-            crate::Decimal::from(15),
-            VatCategory::Standard,
-        )
-        .unwrap();
-
         let mut builder = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified));
         builder = builder
             .id("INV-1")
@@ -318,12 +402,14 @@ mod tests {
             .invoice_counter(0)
             .seller(seller)
             .payment_means_code("10")
-            .vat_category(VatCategory::Standard)
-            .line_item(line_item);
+            .vat_category(VatCategory::Standard);
+        for item in items {
+            builder = builder.line_item(item);
+        }
         builder.build().expect("build sample invoice")
     }
 
-    fn decode_tlv(bytes: &[u8]) -> Vec<(u8, Vec<u8>)> {
+    fn decode_test_tlv(bytes: &[u8]) -> Vec<(u8, Vec<u8>)> {
         let mut entries = Vec::new();
         let mut idx = 0;
         while idx < bytes.len() {
@@ -339,8 +425,7 @@ mod tests {
 
     #[test]
     fn qr_uses_document_vat_instead_of_rounded_line_vat() {
-        let mut data = sample_invoice().data().clone();
-        data.line_items = vec![
+        let invoice = sample_invoice_with_items(vec![
             LineItem::new(
                 "tiny",
                 crate::Decimal::from(1),
@@ -351,9 +436,8 @@ mod tests {
             )
             .unwrap();
             3
-        ];
-        let totals = crate::invoice::InvoiceTotalsData::from_data(&data).unwrap();
-        let payload = QrPayload::from_invoice(&data, &totals).unwrap();
+        ]);
+        let payload = QrPayload::from_xml(&invoice.to_xml().unwrap()).unwrap();
         assert_eq!(payload.total_vat, "0.01");
         assert_eq!(payload.total_with_vat, "0.10");
     }
@@ -373,15 +457,20 @@ mod tests {
         );
 
         let signed_xml = invoice.to_xml().expect("serialize invoice");
-        let qr = invoice
-            .sign_with_bundle(signing, signed_xml)
-            .expect("sign invoice")
-            .qr_code()
-            .to_string();
+        let qr = QrPayload::from_xml(&signed_xml)
+            .unwrap()
+            .with_signing_parts(
+                Some(signing.invoice_hash()),
+                Some(signing.signature()),
+                Some(signing.public_key()),
+                signing.zatca_key_signature(),
+            )
+            .encode()
+            .unwrap();
         assert!(qr.len() < 700);
 
         let raw = Base64::decode_vec(&qr).expect("base64 decode");
-        let entries = decode_tlv(&raw);
+        let entries = decode_test_tlv(&raw);
         let expected = vec![
             (1, b"Acme Inc".to_vec()),
             (2, b"301121971500003".to_vec()),
@@ -401,10 +490,19 @@ mod tests {
         let invoice = sample_invoice();
         let oversized = "a".repeat(300);
         let pk_b64 = Base64::encode_string(b"pk");
-        let signing = SignedProperties::from_qr_parts(&oversized, "sig", &pk_b64, None);
+        let signing = SignedProperties::from_qr_parts(&oversized, "sig", &pk_b64, Some(&pk_b64));
 
         let signed_xml = invoice.to_xml().expect("serialize invoice");
-        match invoice.sign_with_bundle(signing, signed_xml) {
+        match QrPayload::from_xml(&signed_xml)
+            .unwrap()
+            .with_signing_parts(
+                Some(signing.invoice_hash()),
+                Some(signing.signature()),
+                Some(signing.public_key()),
+                signing.zatca_key_signature(),
+            )
+            .encode()
+        {
             Err(QrCodeError::ValueTooLong { tag, .. }) => assert_eq!(tag, 6),
             other => panic!("expected ValueTooLong error, got {:?}", other),
         }
@@ -424,9 +522,135 @@ mod tests {
         );
 
         let signed_xml = invoice.to_xml().expect("serialize invoice");
-        match invoice.sign_with_bundle(signing, signed_xml) {
+        match QrPayload::from_xml(&signed_xml)
+            .unwrap()
+            .with_signing_parts(
+                Some(signing.invoice_hash()),
+                Some(signing.signature()),
+                Some(signing.public_key()),
+                signing.zatca_key_signature(),
+            )
+            .encode()
+        {
             Err(QrCodeError::EncodedTooLong { .. }) => {}
             other => panic!("expected EncodedTooLong error, got {:?}", other),
         }
+    }
+    #[test]
+    fn malformed_signing_material_is_rejected_without_panics() {
+        let xml = sample_invoice().to_xml().unwrap();
+        let payload = QrPayload::from_xml(&xml).unwrap();
+        let key = Base64::encode_string(b"key");
+        for (pk, stamp) in [
+            ("%%%", Some(key.as_str())),
+            (key.as_str(), Some("%%%")),
+            (key.as_str(), None),
+            ("", Some(key.as_str())),
+        ] {
+            assert!(
+                payload
+                    .clone()
+                    .with_signing_parts(Some("hash"), Some("sig"), Some(pk), stamp)
+                    .encode()
+                    .is_err()
+            );
+        }
+        let large = Base64::encode_string(&[0; 256]);
+        assert!(matches!(
+            payload
+                .with_signing_parts(Some("hash"), Some("sig"), Some(&key), Some(&large))
+                .encode(),
+            Err(QrCodeError::ValueTooLong { tag: 9, .. })
+        ));
+    }
+
+    #[test]
+    fn subtype_and_tlv_boundaries_are_explicit() {
+        for code in [
+            "", "03", "0300000", "0200002", "02000000", "é00000", "0é0000",
+        ] {
+            assert!(QrApplicability::parse(code).is_err(), "{code}");
+        }
+        for raw in [
+            vec![],
+            vec![1],
+            vec![1, 0],
+            vec![1, 2, 65],
+            vec![1, 1, 65, 1, 1, 66],
+            vec![2, 1, 65, 1, 1, 66],
+            vec![10, 1, 65],
+        ] {
+            let result = decode_tlv(&Base64::encode_string(&raw));
+            assert!(
+                result.is_err()
+                    || QrApplicability::Simplified
+                        .check_tags(&result.unwrap())
+                        .is_err()
+            );
+        }
+        assert!(decode_tlv(&"A".repeat(704)).is_err());
+        let tags = (1..=8).map(|t| (t, vec![65])).collect();
+        QrApplicability::Standard.check_tags(&tags).unwrap();
+        assert!(QrApplicability::Simplified.check_tags(&tags).is_err());
+        let mut tags = tags;
+        tags.insert(9, vec![65]);
+        assert!(QrApplicability::Standard.check_tags(&tags).is_err());
+    }
+
+    #[test]
+    fn xml_qr_preserves_decimal_text_and_validates_syntax_and_limits() {
+        let input = sample_invoice().to_xml().unwrap();
+        for value in [
+            "300",
+            "300.0",
+            "300.00",
+            "300.01",
+            "0.00",
+            "45.0",
+            "45.00",
+            "123456789012345678901234.56",
+        ] {
+            let xml = input
+                .replace(
+                    ">115.00</cbc:PayableAmount>",
+                    &format!("> \t{value}\n</cbc:PayableAmount>"),
+                )
+                .replace(
+                    ">15.00</cbc:TaxAmount>",
+                    &format!(">{value}</cbc:TaxAmount>"),
+                );
+            let payload = QrPayload::from_xml(&xml).unwrap();
+            assert_eq!(payload.total_with_vat, value);
+            assert_eq!(payload.total_vat, value);
+        }
+        for value in ["NaN", "1e2", "1.2.3", "", "１２"] {
+            let xml = input.replace(
+                ">115.00</cbc:PayableAmount>",
+                &format!(">{value}</cbc:PayableAmount>"),
+            );
+            assert!(QrPayload::from_xml(&xml).is_err(), "{value}");
+        }
+        let xml = input.replace(
+            ">115.00</cbc:PayableAmount>",
+            &format!(">{}</cbc:PayableAmount>", "1".repeat(4097)),
+        );
+        assert!(QrPayload::from_xml(&xml).is_err());
+    }
+    #[test]
+    fn qr_uses_document_currency_vat_even_when_accounting_total_is_first() {
+        let input = sample_invoice().to_xml().unwrap();
+        let doc = lexical::document(&input).unwrap();
+        let first = nav::tax_totals(Element::invoice(&doc))
+            .next()
+            .unwrap()
+            .0
+            .unwrap()
+            .range();
+        let mut xml = input.clone();
+        xml.insert_str(
+            first.start,
+            "<cac:TaxTotal><cbc:TaxAmount currencyID=\"USD\">999.00</cbc:TaxAmount></cac:TaxTotal>",
+        );
+        assert_eq!(QrPayload::from_xml(&xml).unwrap().total_vat, "15.00");
     }
 }

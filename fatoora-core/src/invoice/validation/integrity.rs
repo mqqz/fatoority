@@ -14,7 +14,7 @@ use k256::{
 };
 use roxmltree::{Document, Node};
 use sha2::{Digest, Sha256};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use x509_cert::{
     Certificate,
     der::{Decode, Encode},
@@ -498,32 +498,6 @@ fn previous_hash(xml: &Xml<'_>, expected: Option<&str>) -> Checked<()> {
     }
     Ok(())
 }
-fn qr_tags(bytes: &[u8]) -> Checked<BTreeMap<u8, Vec<u8>>> {
-    let mut tags = BTreeMap::new();
-    let mut at = 0;
-    let mut previous = 0;
-    while at < bytes.len() {
-        if bytes.len() - at < 2 {
-            return Err(bad("QR_TLV", "Truncated QR tag header"));
-        }
-        let tag = bytes[at];
-        let length = bytes[at + 1] as usize;
-        at += 2;
-        if tag <= previous || tag > 9 || tag == 0 || length == 0 || length > bytes.len() - at {
-            return Err(bad("QR_TLV", "Invalid QR tag order, number, or length"));
-        }
-        tags.insert(tag, bytes[at..at + length].to_vec());
-        at += length;
-        previous = tag;
-    }
-    if !(1..=9).all(|tag| tags.contains_key(&tag)) {
-        return Err(bad(
-            "QR_TLV",
-            "Simplified invoice QR requires tags 1 through 9",
-        ));
-    }
-    Ok(tags)
-}
 fn qr(xml: &Xml<'_>, verified: &Verified) -> Checked<()> {
     qr_for_profile(xml, verified, QrProfile::Sdk)
 }
@@ -540,7 +514,15 @@ fn qr_for_profile(xml: &Xml<'_>, verified: &Verified, profile: QrProfile) -> Che
         QrProfile::Signing => field.normalize(&value).to_owned(),
     };
     let encoded = xml.text(&xml.document_reference("QR"))?;
-    let tags = qr_tags(&decode(&encoded, 4096, "QR_BASE64")?)?;
+    let applicability = crate::invoice::qr::QrApplicability::parse(
+        &xml.attribute(&xml.root().children(CBC, "InvoiceTypeCode"), "name")?,
+    )
+    .map_err(|e| bad("QR_APPLICABILITY", e.to_string()))?;
+    let tags =
+        crate::invoice::qr::decode_tlv(&encoded).map_err(|e| bad("QR_TLV", e.to_string()))?;
+    applicability
+        .check_tags(&tags)
+        .map_err(|e| bad("QR_TLV", e.to_string()))?;
     let expected = [
         (
             1,
@@ -567,23 +549,9 @@ fn qr_for_profile(xml: &Xml<'_>, verified: &Verified, profile: QrProfile) -> Che
             )
             .into_bytes(),
         ),
-        // QR tag 4 includes prepayment and payable rounding adjustments (BT-115).
-        (
-            4,
-            scalar(
-                crate::invoice::qr::QrField::TotalWithVat,
-                xml.text(
-                    &xml.root()
-                        .children(CAC, "LegalMonetaryTotal")
-                        .children(CBC, "PayableAmount"),
-                )?,
-            )
-            .into_bytes(),
-        ),
         (6, verified.hash.as_bytes().to_vec()),
         (7, Base64::encode_string(&verified.signature).into_bytes()),
         (8, verified.public_key.clone()),
-        (9, verified.certificate_signature.clone()),
     ];
     for (tag, value) in expected {
         if tags.get(&tag) != Some(&value) {
@@ -592,6 +560,41 @@ fn qr_for_profile(xml: &Xml<'_>, verified: &Verified, profile: QrProfile) -> Che
                 format!("QR tag {tag} does not match the invoice or signing certificate"),
             ));
         }
+    }
+    if applicability == crate::invoice::qr::QrApplicability::Simplified
+        && tags.get(&9) != Some(&verified.certificate_signature)
+    {
+        return Err(bad(
+            "QR_VALUE",
+            "QR tag 9 differs from the signing certificate",
+        ));
+    }
+    let payable = std::str::from_utf8(&tags[&4])
+        .map_err(|_| bad("QR_VALUE", "QR payable amount is not UTF-8"))?;
+    let xml_payable = xml.text(
+        &xml.root()
+            .children(CAC, "LegalMonetaryTotal")
+            .children(CBC, "PayableAmount"),
+    )?;
+    if !super::business_rules::decimal_equal(payable, &xml_payable).map_err(
+        |error| match error {
+            super::business_rules::FailureKind::Limit(_) => CheckError::Backend(error.to_string()),
+            _ => bad("QR_VALUE", "QR payable amount is not an XML decimal"),
+        },
+    )? {
+        return Err(bad(
+            "QR_VALUE",
+            "QR payable amount differs from the invoice",
+        ));
+    }
+    // SDK-QR-004: money is compared exactly above. The SDK/development API
+    // additionally require Tag 4's lexical spelling to match in the SDK profile.
+    // Signed import checks integrity; full compliance remains a separate operation.
+    if matches!(profile, QrProfile::Sdk) && payable != xml_payable {
+        return Err(bad(
+            "QR_VALUE",
+            "QR tag 4 formatting differs from the XML payable amount",
+        ));
     }
     let time = std::str::from_utf8(&tags[&3])
         .map_err(|_| bad("QR_TIMESTAMP", "QR timestamp is not UTF-8"))?;
@@ -627,12 +630,9 @@ fn qr_for_profile(xml: &Xml<'_>, verified: &Verified, profile: QrProfile) -> Che
     }
     let vat =
         std::str::from_utf8(&tags[&5]).map_err(|_| bad("QR_VAT", "QR VAT amount is not UTF-8"))?;
-    let xml_vat = xml.text(
-        &xml.root()
-            .children(CAC, "TaxTotal")
-            .children(CBC, "TaxAmount")
-            .at(0),
-    )?;
+    xml.text(&xml.root().children(CBC, "DocumentCurrencyCode"))?;
+    let amount = nav::qr_tax_amount(nav::Element::invoice(&xml.doc));
+    let xml_vat = xml.text(&Nodes(amount.0.into_iter().collect()))?;
     // SDK-QR-003: require exact decimal equality, rejecting NaN, exponents,
     // and distinct values that collapse to the same binary float.
     let equal =
@@ -688,15 +688,18 @@ pub(super) fn apply(
 ) -> Result<(), (ZatcaStage, String)> {
     let xml = Xml::parse(input).map_err(|e| (ZatcaStage::Signature, e))?;
     let transaction = xml.attribute(&xml.root().children(CBC, "InvoiceTypeCode"), "name");
-    match transaction {
-        Ok(value) if value.starts_with("01") => {
+    match transaction.and_then(|value| {
+        crate::invoice::qr::QrApplicability::parse(&value)
+            .map_err(|e| bad("SIGNATURE_APPLICABILITY", e.to_string()))
+    }) {
+        Ok(crate::invoice::qr::QrApplicability::Standard) => {
             for stage in &mut report.stages {
                 if matches!(stage.stage, ZatcaStage::Signature | ZatcaStage::Qr) {
                     stage.status = ZatcaStageStatus::NotApplicable;
                 }
             }
         }
-        Ok(value) if value.starts_with("02") => match signature(&xml, input) {
+        Ok(crate::invoice::qr::QrApplicability::Simplified) => match signature(&xml, input) {
             Ok(verified) => {
                 record(report, ZatcaStage::Signature, Ok(()))?;
                 record(report, ZatcaStage::Qr, qr(&xml, &verified))?;
@@ -705,14 +708,6 @@ pub(super) fn apply(
                 record(report, ZatcaStage::Signature, Err(error))?;
             }
         },
-        Ok(_) => record(
-            report,
-            ZatcaStage::Signature,
-            Err(bad(
-                "SIGNATURE_APPLICABILITY",
-                "Invoice transaction code does not identify a supported standard or simplified profile",
-            )),
-        )?,
         Err(error) => record(report, ZatcaStage::Signature, Err(error))?,
     }
     record(
@@ -744,6 +739,18 @@ pub(super) fn apply(
 #[cfg(test)]
 #[path = "integrity_tests.rs"]
 mod tests;
+
+/// Verify the original signed document and return its exact embedded payload.
+/// This establishes local cryptographic integrity, not certificate issuer trust.
+pub(crate) fn signed_qr(input: &str) -> Result<String, String> {
+    let xml = Xml::parse(input)?;
+    let checked = || -> Checked<String> {
+        let verified = signature(&xml, input)?;
+        qr_for_profile(&xml, &verified, QrProfile::Signing)?;
+        xml.text(&xml.document_reference("QR"))
+    };
+    checked().map_err(|e| format!("signed QR integrity: {e:?}"))
+}
 
 pub(crate) fn signing_postcondition(
     input: &str,

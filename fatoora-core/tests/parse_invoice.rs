@@ -159,7 +159,7 @@ fn parse_signed_invoice_from_fixture() {
 }
 
 #[test]
-fn parsing_signature_material_does_not_verify_it() {
+fn parsing_rejects_modified_signature_material() {
     let xml = include_str!("fixtures/invoices/sample-simplified-invoice.xml");
     let original = parse_signed_invoice_xml(xml).unwrap();
     let signature = original.signature();
@@ -169,10 +169,7 @@ fn parsing_signature_material_does_not_verify_it() {
     let changed_signature = format!("{first}{}", &signature[1..]);
     let changed_xml = xml.replacen(signature, &changed_signature, 1);
     assert_ne!(changed_xml, xml);
-    let parsed = parse_signed_invoice_xml(&changed_xml).unwrap();
-    assert!(parsed.xml().contains(&format!(
-        "<ds:SignatureValue>{changed_signature}</ds:SignatureValue>"
-    )));
+    assert!(parse_signed_invoice_xml(&changed_xml).is_err());
 }
 
 #[test]

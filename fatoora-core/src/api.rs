@@ -837,10 +837,9 @@ mod tests {
         csr::CsrProperties,
         invoice::{
             Address, CountryCode, InvoiceBuilder, InvoiceSubType, InvoiceType, LineItem, Party,
-            SellerRole, VatCategory, sign::SignedProperties,
+            SellerRole, VatCategory,
         },
     };
-    use base64ct::{Base64, Encoding};
     use httpmock::{Method::PATCH, Method::POST, MockServer};
     use std::path::Path;
 
@@ -1729,13 +1728,12 @@ mod tests {
             .line_item(line_item);
         let invoice = builder.build().expect("build invoice");
 
-        let signed_xml = invoice.to_xml().expect("serialize invoice");
-        let public_key_b64 = Base64::encode_string(b"pk");
-        let signing =
-            SignedProperties::from_qr_parts("hash==", "signature==", &public_key_b64, None);
-        invoice
-            .sign_with_bundle(signing, signed_xml)
-            .expect("sign invoice")
+        let signer = crate::invoice::sign::InvoiceSigner::from_der(
+            include_bytes!("../tests/fixtures/sdk-parity/credentials/certificate.der"),
+            include_bytes!("../tests/fixtures/sdk-parity/credentials/private-key.der"),
+        )
+        .unwrap();
+        invoice.sign(&signer).expect("sign invoice")
     }
 }
 
