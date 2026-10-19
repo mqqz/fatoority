@@ -39,6 +39,39 @@ export class Party {
     }
 
 
+    identifiersLen() {
+
+        const result = wasm.fatoora_Party_identifiers_len(this.ffiValue);
+
+        try {
+            return result;
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+        }
+    }
+
+    identifier(index) {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
+
+        const result = wasm.fatoora_Party_identifier(diplomatReceive.buffer, this.ffiValue, index);
+
+        try {
+            if (!diplomatReceive.resultFlag) {
+                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
+            }
+            return new OtherId(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+            diplomatReceive.free();
+        }
+    }
+
     address() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
@@ -50,7 +83,7 @@ export class Party {
                 const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
                 throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
             }
-            return new Address(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+            return diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer) === 0 ? null : new Address(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
 
         finally {

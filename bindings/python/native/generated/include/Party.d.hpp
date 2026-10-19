@@ -33,6 +33,10 @@ namespace _native {
 class Party {
 public:
 
+  inline size_t identifiers_len() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>> identifier(size_t index) const;
+
   inline _native::diplomat::result<std::unique_ptr<_native::Address>, std::unique_ptr<_native::BindingError>> address() const;
 
   inline _native::diplomat::result<std::unique_ptr<_native::VatId>, std::unique_ptr<_native::BindingError>> vat_id() const;

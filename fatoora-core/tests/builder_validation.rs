@@ -9,6 +9,7 @@ fn dummy_seller() -> Party<SellerRole> {
     Party::<SellerRole>::new(
         "Acme Inc".into(),
         Address {
+            province: None,
             country_code: CountryCode::parse("SAU").expect("country code"),
             city: "Riyadh".into(),
             street: "King Fahd".into(),
@@ -113,7 +114,7 @@ fn build_reports_invalid_line_items() {
     }
 
     assert!(has_description);
-    assert!(has_unit_code);
+    assert!(!has_unit_code); // An absent optional unit is represented by an empty string.
     assert!(has_quantity);
     assert!(has_unit_price);
     assert!(has_total_amount);
@@ -127,7 +128,7 @@ fn line_item_try_from_parts_reports_mismatch() {
         fatoora_core::Decimal::parse("1.0").unwrap(),
         "PCE",
         fatoora_core::Decimal::parse("100.0").unwrap(),
-        fatoora_core::Decimal::parse("100.0").unwrap(),
+        fatoora_core::Decimal::parse("99.0").unwrap(),
         fatoora_core::Decimal::parse("15.0").unwrap(),
         fatoora_core::Decimal::parse("10.0").unwrap(),
         VatCategory::Standard,
@@ -138,17 +139,16 @@ fn line_item_try_from_parts_reports_mismatch() {
         panic!("expected validation error")
     };
     assert!(err.issues().iter().any(|issue| {
-        issue.field() == InvoiceField::LineItemVatAmount && issue.kind() == ValidationKind::Mismatch
+        issue.field() == InvoiceField::LineItemTotalAmount
+            && issue.kind() == ValidationKind::Mismatch
     }));
 }
 
 #[test]
 fn credit_note_missing_required_fields_reports_issues() {
-    let mut builder = InvoiceBuilder::new(InvoiceType::CreditNote(
-        InvoiceSubType::Standard,
-        fatoora_core::invoice::OriginalInvoiceRef::new("INV-ORIG"),
-        "reason".into(),
-    ));
+    let mut builder = InvoiceBuilder::new(InvoiceType::CreditNote(InvoiceSubType::Standard))
+        .billing_reference(fatoora_core::invoice::OriginalInvoiceRef::new("INV-ORIG"))
+        .payment_instruction("reason");
     builder = builder
         .id(" ")
         .uuid("")
@@ -184,11 +184,9 @@ fn credit_note_invalid_line_item_reports_issues() {
     }))
     .unwrap();
 
-    let mut builder = InvoiceBuilder::new(InvoiceType::CreditNote(
-        InvoiceSubType::Simplified,
-        fatoora_core::invoice::OriginalInvoiceRef::new("INV-ORIG"),
-        "reason".into(),
-    ));
+    let mut builder = InvoiceBuilder::new(InvoiceType::CreditNote(InvoiceSubType::Simplified))
+        .billing_reference(fatoora_core::invoice::OriginalInvoiceRef::new("INV-ORIG"))
+        .payment_instruction("reason");
     builder = builder
         .id("CR-1")
         .uuid("uuid-cr-1")

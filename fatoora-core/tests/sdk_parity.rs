@@ -351,8 +351,8 @@ fn typed_serialization_and_signing_match_frozen_inputs() {
     let inventory: Value =
         serde_json::from_slice(&fs::read(typed_root.join("manifest.json")).unwrap()).unwrap();
     for (id, invoice) in common::parity_invoices() {
-        // The original corpus predates transaction-flag serialization. Keep it
-        // as historical SDK evidence; typed builders use the refreshed capture.
+        // The original corpus remains historical SDK evidence. Typed builders
+        // use the refreshed capture, including explicit UTC issue times.
         let dir = if inventory["cases"]
             .as_array()
             .unwrap()
@@ -617,7 +617,13 @@ fn typed_capture_inventory_and_checksums_are_required_offline() {
     assert_eq!(
         ids,
         [
+            "simplified-invoice",
             "standard-invoice",
+            "standard-credit",
+            "standard-debit",
+            "simplified-credit",
+            "simplified-debit",
+            "foreign-currency",
             "export-self-billed",
             "mixed-vat",
             "out-of-scope",

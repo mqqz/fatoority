@@ -4,7 +4,7 @@
   <cbc:ID>INV-OOS-4001</cbc:ID>
   <cbc:UUID>1c7d7c2b-9a0c-4fdd-9f4b-7c6d41b9f0a2</cbc:UUID>
   <cbc:IssueDate>2024-02-24</cbc:IssueDate>
-  <cbc:IssueTime>16:30:00</cbc:IssueTime>
+  <cbc:IssueTime>16:30:00Z</cbc:IssueTime>
   <cbc:InvoiceTypeCode name="0100010">388</cbc:InvoiceTypeCode>
   <cbc:Note languageID="en">Out of scope invoice</cbc:Note>
   <cbc:DocumentCurrencyCode>SAR</cbc:DocumentCurrencyCode>

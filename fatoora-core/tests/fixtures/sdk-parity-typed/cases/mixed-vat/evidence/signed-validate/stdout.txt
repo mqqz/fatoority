@@ -6,15 +6,15 @@ It checks for syntax and content as well.
 You can use the command (fatoora -help) for more information.
 
 ****************************************************************
-2026-09-24 19:31:47,427 [INFO] ValidationProcessorImpl - [XSD] validation result : PASSED
-2026-09-24 19:31:48,024 [INFO] ValidationProcessorImpl - [EN] validation result : PASSED
-2026-09-24 19:31:48,201 [INFO] ValidationProcessorImpl - [KSA] validation result : PASSED
-2026-09-24 19:31:48,201 [ERROR] ValidationProcessorImpl - ksa validation warnings : 
-2026-09-24 19:31:48,201 [WARN] ValidationProcessorImpl - CODE : BR-KSA-71, MESSAGE : If the Invoice is a simplified invoice type and is a summary invoice (KSA-2, position 1 and 2 = 02, position 6 = 1),then the buyer name must be present.
-2026-09-24 19:31:48,201 [WARN] ValidationProcessorImpl - CODE : BR-KSA-98, MESSAGE : [BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice.
-2026-09-24 19:31:48,201 [WARN] ValidationProcessorImpl - CODE : BR-KSA-23, MESSAGE : [BR-KSA-23]-A VAT breakdown (BG-23) with VAT Category code (BT-118) 'Exempt from VAT' shall have a VAT exemption reason code (BT-121).
-2026-09-24 19:31:48,202 [WARN] ValidationProcessorImpl - CODE : BR-KSA-69, MESSAGE : [BR-KSA-69]-A VAT breakdown (BG-23) with VAT Category code (BT-118) 'Zero rated' shall have a VAT exception reason code (BT-121).
-2026-09-24 19:31:48,420 [INFO] ValidationProcessorImpl - [QR] validation result : PASSED
-2026-09-24 19:31:48,467 [INFO] ValidationProcessorImpl - [SIGNATURE] validation result : PASSED
-2026-09-24 19:31:48,469 [INFO] ValidationProcessorImpl - [PIH] validation result : PASSED
-2026-09-24 19:31:48,469 [INFO] InvoiceValidationService -  *** GLOBAL VALIDATION RESULT = PASSED 
+2026-10-19 18:02:22,678 [INFO] ValidationProcessorImpl - [XSD] validation result : PASSED
+2026-10-19 18:02:23,386 [INFO] ValidationProcessorImpl - [EN] validation result : PASSED
+2026-10-19 18:02:23,599 [INFO] ValidationProcessorImpl - [KSA] validation result : PASSED
+2026-10-19 18:02:23,599 [ERROR] ValidationProcessorImpl - ksa validation warnings : 
+2026-10-19 18:02:23,600 [WARN] ValidationProcessorImpl - CODE : BR-KSA-71, MESSAGE : If the Invoice is a simplified invoice type and is a summary invoice (KSA-2, position 1 and 2 = 02, position 6 = 1),then the buyer name must be present.
+2026-10-19 18:02:23,600 [WARN] ValidationProcessorImpl - CODE : BR-KSA-98, MESSAGE : [BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice.
+2026-10-19 18:02:23,600 [WARN] ValidationProcessorImpl - CODE : BR-KSA-23, MESSAGE : [BR-KSA-23]-A VAT breakdown (BG-23) with VAT Category code (BT-118) 'Exempt from VAT' shall have a VAT exemption reason code (BT-121).
+2026-10-19 18:02:23,600 [WARN] ValidationProcessorImpl - CODE : BR-KSA-69, MESSAGE : [BR-KSA-69]-A VAT breakdown (BG-23) with VAT Category code (BT-118) 'Zero rated' shall have a VAT exception reason code (BT-121).
+2026-10-19 18:02:23,863 [INFO] ValidationProcessorImpl - [QR] validation result : PASSED
+2026-10-19 18:02:23,932 [INFO] ValidationProcessorImpl - [SIGNATURE] validation result : PASSED
+2026-10-19 18:02:23,935 [INFO] ValidationProcessorImpl - [PIH] validation result : PASSED
+2026-10-19 18:02:23,935 [INFO] InvoiceValidationService -  *** GLOBAL VALIDATION RESULT = PASSED 

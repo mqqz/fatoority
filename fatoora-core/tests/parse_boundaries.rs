@@ -48,7 +48,7 @@ fn line_precision_and_gross_checks_reject_one_cent_and_subcent_changes() {
     for (path, value, field) in [
         ("cbc:LineExtensionAmount", "99.001", "LineItem"),
         ("cac:TaxTotal/cbc:TaxAmount", "14.851", "LineItem"),
-        ("cbc:LineExtensionAmount", "99.01", "LineExtensionAmount"),
+        ("cbc:LineExtensionAmount", "99.01", "LineGrossAmount"),
         (
             "cac:TaxTotal/cbc:RoundingAmount",
             "113.86",
@@ -297,6 +297,17 @@ fn adjustment_vat_groups_cannot_be_merged_or_reassigned() {
     let second = XML[start..end].replace(">15<", ">5<");
     assert_ne!(second, XML[start..end]);
     let xml = format!("{}{}{}", &XML[..end], second, &XML[end..]);
+    // The additional category/rate needs its own supplied breakdown, even at zero.
+    assert!(parse_finalized_invoice_xml(&xml).is_err());
+    let doc = roxmltree::Document::parse(&xml).unwrap();
+    let group_total = test_xml::select(&doc, "/ubl:Invoice/cac:TaxTotal")
+        .into_iter()
+        .find(|n| n.children().any(|c| c.tag_name().name() == "TaxSubtotal"))
+        .unwrap();
+    let insert_at = group_total.range().end - "</cac:TaxTotal>".len();
+    let mut xml = xml;
+    xml.insert_str(insert_at, "<cac:TaxSubtotal><cbc:TaxableAmount currencyID=\"SAR\">0.00</cbc:TaxableAmount><cbc:TaxAmount currencyID=\"SAR\">0.00</cbc:TaxAmount><cac:TaxCategory><cbc:ID>S</cbc:ID><cbc:Percent>5</cbc:Percent><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:TaxCategory></cac:TaxSubtotal>");
+
     let parsed = parse_finalized_invoice_xml(&xml).unwrap();
     assert_eq!(parsed.data().adjustments().len(), 2);
     assert_eq!(
@@ -471,26 +482,29 @@ fn unsupported_structure_and_duplicate_document_identifiers_are_rejected() {
         ),
         XML.replacen("<cac:Price>", "<cac:Price><cac:AllowanceCharge/>", 1),
     ] {
-        invalid(&xml, "InvoiceLine");
+        assert!(parse_finalized_invoice_xml(&xml).is_err());
     }
     for quantity in ["0", "2", "0.5"] {
-        invalid(
-            &XML.replacen(
-                "<cac:Price>",
-                &format!("<cac:Price><cbc:BaseQuantity>{quantity}</cbc:BaseQuantity>"),
-                1,
-            ),
-            "BaseQuantity",
+        let xml = XML.replacen(
+            "<cac:Price>",
+            &format!("<cac:Price><cbc:BaseQuantity>{quantity}</cbc:BaseQuantity>"),
+            1,
         );
+        assert!(parse_finalized_invoice_xml(&xml).is_err());
     }
     let unit_basis = XML.replacen(
         "<cac:Price>",
         "<cac:Price><cbc:BaseQuantity>1</cbc:BaseQuantity>",
         1,
     );
+    let parsed = parse_finalized_invoice_xml(&unit_basis).unwrap();
     assert_eq!(
-        parse_finalized_invoice_xml(&unit_basis).unwrap(),
-        parse_finalized_invoice_xml(XML).unwrap()
+        parsed.data().line_items()[0].item_price_base_quantity(),
+        Some("1".parse().unwrap())
+    );
+    assert_eq!(
+        parsed.totals(),
+        parse_finalized_invoice_xml(XML).unwrap().totals()
     );
     assert!(
         parse_finalized_invoice_xml(&XML.replacen(

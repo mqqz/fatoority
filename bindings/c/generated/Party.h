@@ -19,6 +19,11 @@
 
 
 
+size_t fatoora_Party_identifiers_len(const Party* self);
+
+typedef struct fatoora_Party_identifier_result {union {OtherId* ok; BindingError* err;}; bool is_ok;} fatoora_Party_identifier_result;
+fatoora_Party_identifier_result fatoora_Party_identifier(const Party* self, size_t index);
+
 typedef struct fatoora_Party_address_result {union {Address* ok; BindingError* err;}; bool is_ok;} fatoora_Party_address_result;
 fatoora_Party_address_result fatoora_Party_address(const Party* self);
 

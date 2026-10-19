@@ -57,6 +57,49 @@ public partial class VatBreakdown: IDisposable
         }
     }
 
+    public bool HasVatRate()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.VatBreakdown>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                return Raw.VatBreakdown.HasVatRate(selfLease!.Ptr);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>VatBreakdown</c> allocated on Rust side.
+    /// </returns>
+    public VatBreakdown WithoutVatRate()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.VatBreakdown>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.VatBreakdown.WithoutVatRate(selfLease!.Ptr);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return new VatBreakdown(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
     /// <exception cref="BindingErrorException"></exception>
     /// <returns>
     /// A <c>VatBreakdown</c> allocated on Rust side.

@@ -257,6 +257,7 @@ async fn clear_invoice_with_live_pcsid() {
         let seller = Party::<SellerRole>::new(
             "Acme Inc".into(),
             Address {
+                province: None,
                 country_code: CountryCode::parse("SAU").expect("country code"),
                 city: "Riyadh".into(),
                 street: "King Fahd".into(),

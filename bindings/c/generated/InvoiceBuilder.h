@@ -8,12 +8,15 @@
 #include "diplomat_runtime.h"
 
 #include "Address.d.h"
+#include "Adjustment.d.h"
 #include "AllowanceCharge.d.h"
 #include "BindingError.d.h"
 #include "FinalizedInvoice.d.h"
 #include "InvoiceLineItem.d.h"
 #include "OriginalInvoiceRef.d.h"
+#include "PaymentMeans.d.h"
 #include "TaxExemption.d.h"
+#include "VatBreakdown.d.h"
 
 #include "InvoiceBuilder.d.h"
 
@@ -21,6 +24,27 @@
 
 
 
+
+typedef struct fatoora_InvoiceBuilder_add_seller_identifier_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_seller_identifier_result;
+fatoora_InvoiceBuilder_add_seller_identifier_result fatoora_InvoiceBuilder_add_seller_identifier(InvoiceBuilder* self, DiplomatStringView value, OptionStringView scheme);
+
+typedef struct fatoora_InvoiceBuilder_add_buyer_identifier_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_buyer_identifier_result;
+fatoora_InvoiceBuilder_add_buyer_identifier_result fatoora_InvoiceBuilder_add_buyer_identifier(InvoiceBuilder* self, DiplomatStringView value, OptionStringView scheme);
+
+typedef struct fatoora_InvoiceBuilder_add_vat_breakdown_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_vat_breakdown_result;
+fatoora_InvoiceBuilder_add_vat_breakdown_result fatoora_InvoiceBuilder_add_vat_breakdown(InvoiceBuilder* self, const VatBreakdown* value);
+
+typedef struct fatoora_InvoiceBuilder_add_payment_means_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_payment_means_result;
+fatoora_InvoiceBuilder_add_payment_means_result fatoora_InvoiceBuilder_add_payment_means(InvoiceBuilder* self, const PaymentMeans* value);
+
+typedef struct fatoora_InvoiceBuilder_add_note_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_note_result;
+fatoora_InvoiceBuilder_add_note_result fatoora_InvoiceBuilder_add_note(InvoiceBuilder* self, OptionStringView language, DiplomatStringView value);
+
+typedef struct fatoora_InvoiceBuilder_add_document_adjustment_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_document_adjustment_result;
+fatoora_InvoiceBuilder_add_document_adjustment_result fatoora_InvoiceBuilder_add_document_adjustment(InvoiceBuilder* self, bool charge, const Adjustment* value, uint8_t category, DiplomatStringView rate, const TaxExemption* exemption);
+
+typedef struct fatoora_InvoiceBuilder_set_buyer_without_address_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_buyer_without_address_result;
+fatoora_InvoiceBuilder_set_buyer_without_address_result fatoora_InvoiceBuilder_set_buyer_without_address(InvoiceBuilder* self, DiplomatStringView name, OptionStringView vat_id, OptionStringView other_id, OptionStringView scheme);
 
 typedef struct fatoora_InvoiceBuilder_new_with_reference_result {union {InvoiceBuilder* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_new_with_reference_result;
 fatoora_InvoiceBuilder_new_with_reference_result fatoora_InvoiceBuilder_new_with_reference(uint8_t kind, uint8_t subtype, const OriginalInvoiceRef* reference, DiplomatStringView reason);
@@ -54,6 +78,15 @@ fatoora_InvoiceBuilder_add_item_result fatoora_InvoiceBuilder_add_item(InvoiceBu
 
 typedef struct fatoora_InvoiceBuilder_new_result {union {InvoiceBuilder* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_new_result;
 fatoora_InvoiceBuilder_new_result fatoora_InvoiceBuilder_new(uint8_t kind, uint8_t subtype, OptionStringView original_id, OptionStringView original_uuid, OptionStringView original_date, OptionStringView reason);
+
+typedef struct fatoora_InvoiceBuilder_add_billing_reference_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_billing_reference_result;
+fatoora_InvoiceBuilder_add_billing_reference_result fatoora_InvoiceBuilder_add_billing_reference(InvoiceBuilder* self, const OriginalInvoiceRef* value);
+
+typedef struct fatoora_InvoiceBuilder_set_purchase_order_id_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_purchase_order_id_result;
+fatoora_InvoiceBuilder_set_purchase_order_id_result fatoora_InvoiceBuilder_set_purchase_order_id(InvoiceBuilder* self, DiplomatStringView value);
+
+typedef struct fatoora_InvoiceBuilder_set_contract_id_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_contract_id_result;
+fatoora_InvoiceBuilder_set_contract_id_result fatoora_InvoiceBuilder_set_contract_id(InvoiceBuilder* self, DiplomatStringView value);
 
 typedef struct fatoora_InvoiceBuilder_set_id_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_id_result;
 fatoora_InvoiceBuilder_set_id_result fatoora_InvoiceBuilder_set_id(InvoiceBuilder* self, DiplomatStringView value);

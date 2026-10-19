@@ -7,6 +7,12 @@ import com.sun.jna.Structure
 
 internal interface InvoiceDataLib: Library {
     fun fatoora_InvoiceData_destroy(handle: Pointer)
+    fun fatoora_InvoiceData_issue_time(handle: Pointer, write: Pointer): ResultUnitPointer
+    fun fatoora_InvoiceData_issue_date(handle: Pointer, write: Pointer): ResultUnitPointer
+    fun fatoora_InvoiceData_payment_means_len(handle: Pointer): FFISizet
+    fun fatoora_InvoiceData_payment_means(handle: Pointer, index: FFISizet): ResultPointerPointer
+    fun fatoora_InvoiceData_purchase_order_id(handle: Pointer): ResultPointerPointer
+    fun fatoora_InvoiceData_contract_id(handle: Pointer): ResultPointerPointer
     fun fatoora_InvoiceData_payment_instruction(handle: Pointer): ResultPointerPointer
     fun fatoora_InvoiceData_actual_delivery_date(handle: Pointer): ResultPointerPointer
     fun fatoora_InvoiceData_latest_delivery_date(handle: Pointer): ResultPointerPointer
@@ -35,6 +41,10 @@ internal interface InvoiceDataLib: Library {
     fun fatoora_InvoiceData_line_item(handle: Pointer, index: FFISizet): ResultPointerPointer
     fun fatoora_InvoiceData_original_invoice_ref(handle: Pointer): ResultPointerPointer
     fun fatoora_InvoiceData_original_invoice_reason(handle: Pointer): ResultPointerPointer
+    fun fatoora_InvoiceData_notes_len(handle: Pointer): FFISizet
+    fun fatoora_InvoiceData_note_at(handle: Pointer, index: FFISizet): ResultPointerPointer
+    fun fatoora_InvoiceData_billing_references_len(handle: Pointer): FFISizet
+    fun fatoora_InvoiceData_billing_reference(handle: Pointer, index: FFISizet): ResultPointerPointer
 }
 
 class InvoiceData internal constructor (
@@ -65,6 +75,97 @@ class InvoiceData internal constructor (
     companion object {
         internal val libClass: Class<InvoiceDataLib> = InvoiceDataLib::class.java
         internal val lib: InvoiceDataLib = Native.load("fatoora_ffi", libClass)
+    }
+
+    fun issueTime(): Result<String> {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_InvoiceData_issue_time(handle, write);
+        val nativeOkVal = returnVal.getNativeOk();
+        if (nativeOkVal != null) {
+
+            val returnString = DW.writeToString(write)
+            return returnString.ok()
+        } else {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal.getNativeErr()!!
+            val returnOpaque = BindingError(handle, selfEdges, true)
+            return returnOpaque.err()
+        }
+    }
+
+    fun issueDate(): Result<String> {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_InvoiceData_issue_date(handle, write);
+        val nativeOkVal = returnVal.getNativeOk();
+        if (nativeOkVal != null) {
+
+            val returnString = DW.writeToString(write)
+            return returnString.ok()
+        } else {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal.getNativeErr()!!
+            val returnOpaque = BindingError(handle, selfEdges, true)
+            return returnOpaque.err()
+        }
+    }
+
+    fun paymentMeansLen(): ULong {
+
+        val returnVal = lib.fatoora_InvoiceData_payment_means_len(handle);
+        return (returnVal.toULong())
+    }
+
+    fun paymentMeans(index: ULong): Result<PaymentMeans> {
+
+        val returnVal = lib.fatoora_InvoiceData_payment_means(handle, FFISizet(index));
+        val nativeOkVal = returnVal.getNativeOk();
+        if (nativeOkVal != null) {
+            val selfEdges: List<Any> = listOf()
+            val handle = nativeOkVal
+            val returnOpaque = PaymentMeans(handle, selfEdges, true)
+            return returnOpaque.ok()
+        } else {
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal.getNativeErr()!!
+            val returnOpaque = BindingError(handle, selfEdges, true)
+            return returnOpaque.err()
+        }
+    }
+
+    fun purchaseOrderId(): Result<Text?> {
+
+        val returnVal = lib.fatoora_InvoiceData_purchase_order_id(handle);
+        val nativeOkVal = returnVal.getNativeOk();
+        if (returnVal.isOk == 1.toByte()) {
+            val selfEdges: List<Any> = listOf()
+            val handle = nativeOkVal ?: return Result.success(null)
+            val returnOpaque = Text(handle, selfEdges, true)
+            return returnOpaque.ok()
+        } else {
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal.getNativeErr()!!
+            val returnOpaque = BindingError(handle, selfEdges, true)
+            return returnOpaque.err()
+        }
+    }
+
+    fun contractId(): Result<Text?> {
+
+        val returnVal = lib.fatoora_InvoiceData_contract_id(handle);
+        val nativeOkVal = returnVal.getNativeOk();
+        if (returnVal.isOk == 1.toByte()) {
+            val selfEdges: List<Any> = listOf()
+            val handle = nativeOkVal ?: return Result.success(null)
+            val returnOpaque = Text(handle, selfEdges, true)
+            return returnOpaque.ok()
+        } else {
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal.getNativeErr()!!
+            val returnOpaque = BindingError(handle, selfEdges, true)
+            return returnOpaque.err()
+        }
     }
 
     fun paymentInstruction(): Result<Text?> {
@@ -457,6 +558,52 @@ class InvoiceData internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = nativeOkVal ?: return Result.success(null)
             val returnOpaque = Text(handle, selfEdges, true)
+            return returnOpaque.ok()
+        } else {
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal.getNativeErr()!!
+            val returnOpaque = BindingError(handle, selfEdges, true)
+            return returnOpaque.err()
+        }
+    }
+
+    fun notesLen(): ULong {
+
+        val returnVal = lib.fatoora_InvoiceData_notes_len(handle);
+        return (returnVal.toULong())
+    }
+
+    fun noteAt(index: ULong): Result<InvoiceNote> {
+
+        val returnVal = lib.fatoora_InvoiceData_note_at(handle, FFISizet(index));
+        val nativeOkVal = returnVal.getNativeOk();
+        if (nativeOkVal != null) {
+            val selfEdges: List<Any> = listOf()
+            val handle = nativeOkVal
+            val returnOpaque = InvoiceNote(handle, selfEdges, true)
+            return returnOpaque.ok()
+        } else {
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal.getNativeErr()!!
+            val returnOpaque = BindingError(handle, selfEdges, true)
+            return returnOpaque.err()
+        }
+    }
+
+    fun billingReferencesLen(): ULong {
+
+        val returnVal = lib.fatoora_InvoiceData_billing_references_len(handle);
+        return (returnVal.toULong())
+    }
+
+    fun billingReference(index: ULong): Result<OriginalInvoiceRef> {
+
+        val returnVal = lib.fatoora_InvoiceData_billing_reference(handle, FFISizet(index));
+        val nativeOkVal = returnVal.getNativeOk();
+        if (nativeOkVal != null) {
+            val selfEdges: List<Any> = listOf()
+            val handle = nativeOkVal
+            val returnOpaque = OriginalInvoiceRef(handle, selfEdges, true)
             return returnOpaque.ok()
         } else {
             val selfEdges: List<Any> = listOf()

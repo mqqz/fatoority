@@ -11,12 +11,16 @@
 #include <cstdlib>
 #include "diplomat_runtime.hpp"
 namespace _native {
+namespace capi { struct Adjustment; }
+class Adjustment;
 namespace capi { struct BindingError; }
 class BindingError;
 namespace capi { struct InvoiceLineItem; }
 class InvoiceLineItem;
 namespace capi { struct OriginalInvoiceRef; }
 class OriginalInvoiceRef;
+namespace capi { struct OtherId; }
+class OtherId;
 namespace capi { struct TaxExemption; }
 class TaxExemption;
 namespace capi { struct Text; }
@@ -36,6 +40,26 @@ namespace capi {
 namespace _native {
 class InvoiceLineItem {
 public:
+
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> item_gross_price() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> item_price_discount() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> item_price_base_quantity() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> item_price_base_quantity_unit_code() const;
+
+  inline size_t adjustments_len() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::Adjustment>, std::unique_ptr<_native::BindingError>> adjustment(size_t index) const;
+
+  inline _native::diplomat::result<bool, std::unique_ptr<_native::BindingError>> adjustment_is_charge(size_t index) const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>> item_seller_identifier() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>> item_buyer_identifier() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>> item_standard_identifier() const;
 
   inline _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std::unique_ptr<_native::BindingError>> with_document_reference(const _native::OriginalInvoiceRef& reference) const;
 
@@ -84,6 +108,12 @@ public:
   inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> vat_amount() const;
   template<typename W>
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> vat_amount_write(W& writeable_output) const;
+
+  inline bool has_vat_rate() const;
+
+  inline bool has_tax_total() const;
+
+  inline bool has_gross_amount() const;
 
   inline uint8_t vat_category() const;
 

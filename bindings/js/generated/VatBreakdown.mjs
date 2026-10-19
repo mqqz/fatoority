@@ -37,6 +37,39 @@ export class VatBreakdown {
     }
 
 
+    hasVatRate() {
+
+        const result = wasm.fatoora_VatBreakdown_has_vat_rate(this.ffiValue);
+
+        try {
+            return result;
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+        }
+    }
+
+    withoutVatRate() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
+
+        const result = wasm.fatoora_VatBreakdown_without_vat_rate(diplomatReceive.buffer, this.ffiValue);
+
+        try {
+            if (!diplomatReceive.resultFlag) {
+                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
+            }
+            return new VatBreakdown(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+            diplomatReceive.free();
+        }
+    }
+
     static new_(category, rate, taxableAmount, taxAmount, exemption) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 

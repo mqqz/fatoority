@@ -23,6 +23,47 @@ impl DecimalError {
     }
 }
 impl Decimal {
+    /// Extend a price exactly, rounding only the resulting monetary amount.
+    pub(crate) fn product_divided_rounded(
+        self,
+        price: Self,
+        basis: Self,
+    ) -> Result<Self, DecimalError> {
+        self.product_divided_rounding(price, basis, false)
+    }
+
+    /// Exact decimal midpoint policy used by the pinned VAT tolerance rule.
+    pub(crate) fn vat_tolerance_center(self, rate: Self) -> Result<Self, DecimalError> {
+        self.product_divided_rounding(rate, Self::from(100), true)
+    }
+
+    fn product_divided_rounding(
+        self,
+        price: Self,
+        basis: Self,
+        ties_even: bool,
+    ) -> Result<Self, DecimalError> {
+        use num_bigint::BigInt;
+        use num_traits::{Signed, ToPrimitive};
+        if basis <= Self::ZERO {
+            return Err(DecimalError::OutOfRange);
+        }
+        let ten = BigInt::from(10);
+        let numerator = BigInt::from(self.0.mantissa())
+            * BigInt::from(price.0.mantissa())
+            * ten.pow(basis.0.scale() + 2);
+        let denominator =
+            BigInt::from(basis.0.mantissa()) * ten.pow(self.0.scale() + price.0.scale());
+        let mut cents = &numerator / &denominator;
+        let remainder = &numerator % &denominator;
+        let doubled = remainder.abs() * 2;
+        if doubled > denominator
+            || (doubled == denominator && (!ties_even || &cents % 2 != BigInt::from(0)))
+        {
+            cents += numerator.signum();
+        }
+        Self::coefficient(cents.to_i128().ok_or(DecimalError::OutOfRange)?, 2)
+    }
     pub const ZERO: Self = Self(rust_decimal::Decimal::ZERO);
     pub fn parse(value: &str) -> Result<Self, DecimalError> {
         value.parse()
@@ -74,6 +115,7 @@ impl Decimal {
             2,
         )
     }
+    #[cfg(test)]
     pub(crate) fn line_vat(self, price: Self, rate: Self) -> Result<Self, DecimalError> {
         let a = self.0.normalize();
         let b = price.0.normalize();

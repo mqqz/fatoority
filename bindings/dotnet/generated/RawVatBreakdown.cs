@@ -9,6 +9,13 @@ namespace Fatoora.Raw;
 internal partial struct VatBreakdown
 {
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_VatBreakdown_has_vat_rate", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.U1)]
+    internal static unsafe extern bool HasVatRate(VatBreakdown* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_VatBreakdown_without_vat_rate", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVatBreakdownBindingError WithoutVatRate(VatBreakdown* handle);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_VatBreakdown_new", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVatBreakdownBindingError New(byte category, DiplomatSliceU8 rate, DiplomatSliceU8 taxableAmount, DiplomatSliceU8 taxAmount, TaxExemption* exemption);
 

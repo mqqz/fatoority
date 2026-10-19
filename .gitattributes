@@ -2,6 +2,11 @@
 fatoora-core/tests/fixtures/sdk-parity/** -text
 fatoora-core/tests/fixtures/business-rules/** -text
 fatoora-core/tests/fixtures/sdk-parity-typed/** -text
+# Raw SDK logs retain their original trailing spaces for checksum verification.
+fatoora-core/tests/fixtures/sdk-parity-typed/**/evidence/**/*.txt whitespace=-blank-at-eol
+fatoora-core/tests/fixtures/sdk-parity-typed/**/sdk-signed.xml whitespace=-blank-at-eol
+# Keep Diplomat output byte-identical to the pinned generator.
+bindings/python/native/generated/sub_modules/**/*.cpp whitespace=-blank-at-eol
 fatoora-core/tests/fixtures/xml-migration/** -text
 
 # Gradle Windows launcher is checked out with Windows line endings.

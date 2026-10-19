@@ -138,11 +138,9 @@ pub fn credit_note_standard_invoice() -> FinalizedInvoice {
         .with_issue_date_str("2024-01-15")
         .expect("valid original invoice ref");
 
-    let mut builder = InvoiceBuilder::new(InvoiceType::CreditNote(
-        InvoiceSubType::Standard,
-        original,
-        "Return of goods".into(),
-    ));
+    let mut builder = InvoiceBuilder::new(InvoiceType::CreditNote(InvoiceSubType::Standard))
+        .billing_reference(original)
+        .payment_instruction("Return of goods");
 
     builder = builder
         .id("CRN-1001")
@@ -199,11 +197,9 @@ pub fn debit_note_standard_invoice() -> FinalizedInvoice {
         .with_issue_date_str("2024-01-20")
         .expect("valid original invoice ref");
 
-    let mut builder = InvoiceBuilder::new(InvoiceType::DebitNote(
-        InvoiceSubType::Standard,
-        original,
-        "Additional service charge".into(),
-    ));
+    let mut builder = InvoiceBuilder::new(InvoiceType::DebitNote(InvoiceSubType::Standard))
+        .billing_reference(original)
+        .payment_instruction("Additional service charge");
 
     builder = builder
         .id("DBN-1001")
@@ -481,11 +477,9 @@ pub fn simplified_credit_note_invoice() -> FinalizedInvoice {
         .with_issue_date_str("2024-01-05")
         .expect("valid original invoice ref");
 
-    let mut builder = InvoiceBuilder::new(InvoiceType::CreditNote(
-        InvoiceSubType::Simplified,
-        original,
-        "Price adjustment".into(),
-    ));
+    let mut builder = InvoiceBuilder::new(InvoiceType::CreditNote(InvoiceSubType::Simplified))
+        .billing_reference(original)
+        .payment_instruction("Price adjustment");
 
     builder = builder
         .id("CRN-SIMP-5001")
@@ -533,11 +527,9 @@ pub fn simplified_debit_note_invoice() -> FinalizedInvoice {
         .with_issue_date_str("2024-01-07")
         .expect("valid original invoice ref");
 
-    let mut builder = InvoiceBuilder::new(InvoiceType::DebitNote(
-        InvoiceSubType::Simplified,
-        original,
-        "Additional charge".into(),
-    ));
+    let mut builder = InvoiceBuilder::new(InvoiceType::DebitNote(InvoiceSubType::Simplified))
+        .billing_reference(original)
+        .payment_instruction("Additional charge");
 
     builder = builder
         .id("DBN-SIMP-5002")
@@ -635,6 +627,7 @@ pub fn signer_from_csid(
 #[allow(dead_code)]
 fn dummy_seller_address() -> Address {
     Address {
+        province: None,
         country_code: fatoora_core::invoice::CountryCode::parse("SAU").expect("country code"),
         city: "Riyadh".into(),
         street: "King Fahd".into(),
@@ -649,6 +642,7 @@ fn dummy_seller_address() -> Address {
 #[allow(dead_code)]
 fn dummy_buyer_address() -> Address {
     Address {
+        province: None,
         country_code: fatoora_core::invoice::CountryCode::parse("SAU").expect("country code"),
         city: "Jeddah".into(),
         street: "King Abdulaziz".into(),

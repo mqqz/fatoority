@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "java",
+    "-Djdk.sunec.disableNative=false",
+    "-jar",
+    "/home/mo/code/fatoora-rs/target/fatoora sdk parity d7qjn8c1/sdk/Apps/zatca-einvoicing-sdk-238-R3.4.8.jar",
+    "--globalVersion",
+    "238-R3.4.8",
+    "-sign",
+    "-invoice",
+    "/home/mo/code/fatoora-rs/target/invoice-model-sdk-capture/cases/simplified-credit/input.xml",
+    "-signedInvoice",
+    "/home/mo/code/fatoora-rs/target/invoice-model-sdk-capture/cases/simplified-credit/sdk-signed.xml"
+  ],
+  "cwd": "/home/mo/code/fatoora-rs/target/fatoora sdk parity d7qjn8c1/sdk/Apps",
+  "exit_code": 0
+}

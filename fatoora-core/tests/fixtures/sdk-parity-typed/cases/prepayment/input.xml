@@ -4,7 +4,7 @@
   <cbc:ID>PP-1001</cbc:ID>
   <cbc:UUID>7d25c3a8-1c7a-4a1e-9b25-2d4e1a8b4c10</cbc:UUID>
   <cbc:IssueDate>2024-02-18</cbc:IssueDate>
-  <cbc:IssueTime>08:05:00</cbc:IssueTime>
+  <cbc:IssueTime>08:05:00Z</cbc:IssueTime>
   <cbc:InvoiceTypeCode name="0110010">386</cbc:InvoiceTypeCode>
   <cbc:Note languageID="en">Prepayment invoice</cbc:Note>
   <cbc:DocumentCurrencyCode>SAR</cbc:DocumentCurrencyCode>

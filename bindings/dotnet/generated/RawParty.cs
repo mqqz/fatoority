@@ -9,6 +9,12 @@ namespace Fatoora.Raw;
 internal partial struct Party
 {
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Party_identifiers_len", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern nuint IdentifiersLen(Party* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Party_identifier", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultOtherIdBindingError Identifier(Party* handle, nuint index);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Party_address", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultAddressBindingError Address(Party* handle);
 

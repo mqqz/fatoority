@@ -31,6 +31,10 @@ namespace _native {
 class VatBreakdown {
 public:
 
+  inline bool has_vat_rate() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>> without_vat_rate() const;
+
   inline static _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>> new_(uint8_t category, std::string_view rate, std::string_view taxable_amount, std::string_view tax_amount, const _native::TaxExemption& exemption);
 
   inline uint8_t category() const;

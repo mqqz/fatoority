@@ -9,6 +9,36 @@ namespace Fatoora.Raw;
 internal partial struct InvoiceLineItem
 {
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_item_gross_price", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultTextBindingError ItemGrossPrice(InvoiceLineItem* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_item_price_discount", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultTextBindingError ItemPriceDiscount(InvoiceLineItem* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_item_price_base_quantity", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultTextBindingError ItemPriceBaseQuantity(InvoiceLineItem* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_item_price_base_quantity_unit_code", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultTextBindingError ItemPriceBaseQuantityUnitCode(InvoiceLineItem* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_adjustments_len", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern nuint AdjustmentsLen(InvoiceLineItem* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_adjustment", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultAdjustmentBindingError Adjustment(InvoiceLineItem* handle, nuint index);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_adjustment_is_charge", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultBoolBindingError AdjustmentIsCharge(InvoiceLineItem* handle, nuint index);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_item_seller_identifier", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultOtherIdBindingError ItemSellerIdentifier(InvoiceLineItem* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_item_buyer_identifier", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultOtherIdBindingError ItemBuyerIdentifier(InvoiceLineItem* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_item_standard_identifier", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultOtherIdBindingError ItemStandardIdentifier(InvoiceLineItem* handle);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_with_document_reference", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultInvoiceLineItemBindingError WithDocumentReference(InvoiceLineItem* handle, OriginalInvoiceRef* reference);
 
@@ -59,6 +89,18 @@ internal partial struct InvoiceLineItem
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_vat_amount", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError VatAmount(InvoiceLineItem* handle, DiplomatWrite* writeable);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_has_vat_rate", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.U1)]
+    internal static unsafe extern bool HasVatRate(InvoiceLineItem* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_has_tax_total", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.U1)]
+    internal static unsafe extern bool HasTaxTotal(InvoiceLineItem* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_has_gross_amount", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.U1)]
+    internal static unsafe extern bool HasGrossAmount(InvoiceLineItem* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_vat_category", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern byte VatCategory(InvoiceLineItem* handle);

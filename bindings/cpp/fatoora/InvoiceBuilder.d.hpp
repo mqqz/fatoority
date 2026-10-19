@@ -14,6 +14,8 @@
 namespace fatoora {
 namespace capi { struct Address; }
 class Address;
+namespace capi { struct Adjustment; }
+class Adjustment;
 namespace capi { struct AllowanceCharge; }
 class AllowanceCharge;
 namespace capi { struct BindingError; }
@@ -26,8 +28,12 @@ namespace capi { struct InvoiceLineItem; }
 class InvoiceLineItem;
 namespace capi { struct OriginalInvoiceRef; }
 class OriginalInvoiceRef;
+namespace capi { struct PaymentMeans; }
+class PaymentMeans;
 namespace capi { struct TaxExemption; }
 class TaxExemption;
+namespace capi { struct VatBreakdown; }
+class VatBreakdown;
 } // namespace fatoora
 
 
@@ -42,6 +48,20 @@ namespace capi {
 namespace fatoora {
 class InvoiceBuilder {
 public:
+
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> add_seller_identifier(std::string_view value, std::optional<std::string_view> scheme);
+
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> add_buyer_identifier(std::string_view value, std::optional<std::string_view> scheme);
+
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> add_vat_breakdown(const fatoora::VatBreakdown& value);
+
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> add_payment_means(const fatoora::PaymentMeans& value);
+
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> add_note(std::optional<std::string_view> language, std::string_view value);
+
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> add_document_adjustment(bool charge, const fatoora::Adjustment& value, uint8_t category, std::string_view rate, const fatoora::TaxExemption& exemption);
+
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_buyer_without_address(std::string_view name, std::optional<std::string_view> vat_id, std::optional<std::string_view> other_id, std::optional<std::string_view> scheme);
 
   /**
    * Construct a credit or debit note with a complete billing reference.
@@ -67,6 +87,12 @@ public:
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> add_item(const fatoora::InvoiceLineItem& item);
 
   inline static diplomat::result<std::unique_ptr<fatoora::InvoiceBuilder>, std::unique_ptr<fatoora::BindingError>> new_(uint8_t kind, uint8_t subtype, std::optional<std::string_view> original_id, std::optional<std::string_view> original_uuid, std::optional<std::string_view> original_date, std::optional<std::string_view> reason);
+
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> add_billing_reference(const fatoora::OriginalInvoiceRef& value);
+
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_purchase_order_id(std::string_view value);
+
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_contract_id(std::string_view value);
 
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_id(std::string_view value);
 

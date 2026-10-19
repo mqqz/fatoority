@@ -22,6 +22,11 @@ namespace _native {
 namespace capi {
     extern "C" {
 
+    size_t fatoora_Party_identifiers_len(const _native::capi::Party* self);
+
+    typedef struct fatoora_Party_identifier_result {union {_native::capi::OtherId* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_Party_identifier_result;
+    fatoora_Party_identifier_result fatoora_Party_identifier(const _native::capi::Party* self, size_t index);
+
     typedef struct fatoora_Party_address_result {union {_native::capi::Address* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_Party_address_result;
     fatoora_Party_address_result fatoora_Party_address(const _native::capi::Party* self);
 
@@ -39,6 +44,17 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline size_t _native::Party::identifiers_len() const {
+    auto result = _native::capi::fatoora_Party_identifiers_len(this->AsFFI());
+    return result;
+}
+
+inline _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>> _native::Party::identifier(size_t index) const {
+    auto result = _native::capi::fatoora_Party_identifier(this->AsFFI(),
+        index);
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::OtherId>>(std::unique_ptr<_native::OtherId>(_native::OtherId::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
 
 inline _native::diplomat::result<std::unique_ptr<_native::Address>, std::unique_ptr<_native::BindingError>> _native::Party::address() const {
     auto result = _native::capi::fatoora_Party_address(this->AsFFI());

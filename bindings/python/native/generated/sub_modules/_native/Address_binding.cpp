@@ -20,7 +20,9 @@ void add_Address_binding(nb::module_ mod) {
         .def("district", std::move(maybe_op_unwrap(&_native::Address::district)))
         .def_static("new", std::move(maybe_op_unwrap(&_native::Address::new_)), "country_code"_a, "city"_a, "street"_a, "building_number"_a, "postal_code"_a, "additional_street"_a= nb::none(), "additional_number"_a= nb::none(), "district"_a= nb::none())
         .def("postal_code", std::move(maybe_op_unwrap(&_native::Address::postal_code)))
-        .def("street", std::move(maybe_op_unwrap(&_native::Address::street)));
+        .def("province", std::move(maybe_op_unwrap(&_native::Address::province)))
+        .def("street", std::move(maybe_op_unwrap(&_native::Address::street)))
+        .def("with_province", std::move(maybe_op_unwrap(&_native::Address::with_province)), "value"_a);
 }
 
 } 

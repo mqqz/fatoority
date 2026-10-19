@@ -1,6 +1,6 @@
 <xades:SignedProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="xadesSignedProperties">
                                     <xades:SignedSignatureProperties>
-                                        <xades:SigningTime>2026-09-24T19:32:03</xades:SigningTime>
+                                        <xades:SigningTime>2026-10-19T18:02:44</xades:SigningTime>
                                         <xades:SigningCertificate>
                                             <xades:Cert>
                                                 <xades:CertDigest>

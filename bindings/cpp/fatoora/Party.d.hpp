@@ -35,6 +35,10 @@ namespace fatoora {
 class Party {
 public:
 
+  inline size_t identifiers_len() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::OtherId>, std::unique_ptr<fatoora::BindingError>> identifier(size_t index) const;
+
   inline diplomat::result<std::unique_ptr<fatoora::Address>, std::unique_ptr<fatoora::BindingError>> address() const;
 
   inline diplomat::result<std::unique_ptr<fatoora::VatId>, std::unique_ptr<fatoora::BindingError>> vat_id() const;

@@ -6,5 +6,5 @@ It checks for syntax and content as well.
 You can use the command (fatoora -help) for more information.
 
 ****************************************************************
-2026-09-24 19:32:03,331 [INFO] InvoiceSigningService - invoice has been signed successfully
-2026-09-24 19:32:03,332 [INFO] InvoiceSigningService -  *** INVOICE HASH = vzzyMs52wHyJ0ddGPasQ2i9TSkGQdZppMSqcgnzT1Jg=
+2026-10-19 18:02:44,524 [INFO] InvoiceSigningService - invoice has been signed successfully
+2026-10-19 18:02:44,524 [INFO] InvoiceSigningService -  *** INVOICE HASH = x4ibUSL4Sh/Y2yajt/22Wci4BPVofm7w8gkMj33WtYw=

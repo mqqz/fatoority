@@ -98,6 +98,7 @@ impl From<&ValidationIssue> for ValidationFinding {
             InvoiceField::PreviousInvoiceHash => "previous_invoice_hash",
             InvoiceField::InvoiceCounter => "invoice_counter",
             InvoiceField::Seller => "seller",
+            InvoiceField::Buyer => "buyer",
             InvoiceField::LineItems => "line_items",
             InvoiceField::PaymentMeansCode => "payment_means_code",
             InvoiceField::PaymentInstruction => "payment_instruction",

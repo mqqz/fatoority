@@ -31,6 +31,10 @@ namespace _native {
 class Address {
 public:
 
+  inline _native::diplomat::result<std::unique_ptr<_native::Address>, std::unique_ptr<_native::BindingError>> with_province(std::string_view value) const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> province() const;
+
   inline static _native::diplomat::result<std::unique_ptr<_native::Address>, std::unique_ptr<_native::BindingError>> new_(std::string_view country_code, std::string_view city, std::string_view street, std::string_view building_number, std::string_view postal_code, std::optional<std::string_view> additional_street, std::optional<std::string_view> additional_number, std::optional<std::string_view> district);
 
   inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> city() const;

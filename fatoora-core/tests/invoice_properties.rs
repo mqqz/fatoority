@@ -104,17 +104,8 @@ fn build(
     text: &str,
     flags: u8,
 ) -> FinalizedInvoice {
-    let kind = match kind {
-        InvoiceType::CreditNote(subtype, reference, _) => {
-            InvoiceType::CreditNote(subtype, reference, text.to_owned())
-        }
-        InvoiceType::DebitNote(subtype, reference, _) => {
-            InvoiceType::DebitNote(subtype, reference, text.to_owned())
-        }
-        other => other,
-    };
     let template = common::dummy_finalized_invoice();
-    let mut address = template.data().seller().address().clone();
+    let mut address = template.data().seller().address().unwrap().clone();
     address.street = text.to_owned();
     address.city = text.to_owned();
     address.district = Some(text.to_owned());
@@ -131,6 +122,8 @@ fn build(
         .invoice_counter(42)
         .seller(seller)
         .payment_means_code("10")
+        .payment_instruction(text)
+        .billing_reference(OriginalInvoiceRef::new("ORIGINAL"))
         .vat_category(category(selected))
         .flags(InvoiceFlags::from_bits(flags).unwrap())
         .note(InvoiceNote::new("ar", text))
@@ -158,15 +151,11 @@ fn kind(code: u8, standard: bool) -> InvoiceType {
     } else {
         InvoiceSubType::Simplified
     };
-    let reference = OriginalInvoiceRef::new("ORIGINAL")
-        .with_uuid("original-uuid")
-        .with_issue_date_str("2023-12-31")
-        .unwrap();
     match code {
         0 => InvoiceType::Tax(subtype),
         1 => InvoiceType::Prepayment(subtype),
-        2 => InvoiceType::CreditNote(subtype, reference, "Adjustment".into()),
-        _ => InvoiceType::DebitNote(subtype, reference, "Adjustment".into()),
+        2 => InvoiceType::CreditNote(subtype),
+        _ => InvoiceType::DebitNote(subtype),
     }
 }
 
@@ -192,7 +181,7 @@ proptest! {
         }
         for (source, actual) in lines.iter().zip(invoice.data().line_items()) {
             prop_assert_eq!(actual.total_amount(), decimal(net(source), 2));
-            prop_assert_eq!(actual.vat_amount(), decimal((source.quantity * source.price * rate(source.group) + 5_000_000) / 10_000_000, 2));
+            prop_assert_eq!(actual.vat_amount(), decimal((net(source) * rate(source.group) + 50) / 100, 2));
         }
         let reversed: Vec<_> = lines.iter().rev().cloned().collect();
         let reordered = build(&reversed, discount, charge, lines[0].group, kind(0, false), "Item", 0);

@@ -9,6 +9,30 @@ class InvoiceData internal constructor(internal val raw: com.fatoora.raw.Invoice
         val handle = raw.handle
         attach { com.fatoora.raw.InvoiceData.lib.fatoora_InvoiceData_destroy(handle) }
     }
+    fun issueTime(): String = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.issueTime())
+    }
+
+    fun issueDate(): String = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.issueDate())
+    }
+
+    fun paymentMeansLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
+        java.math.BigInteger(raw.paymentMeansLen().toString())
+    }
+
+    fun paymentMeans(index: java.math.BigInteger): PaymentMeans = nativeCall(listOfNotNull(this)) {
+        PaymentMeans(unwrap(raw.paymentMeans(checkedCounter(index))))
+    }
+
+    fun purchaseOrderId(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.purchaseOrderId())?.let(::Text)
+    }
+
+    fun contractId(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.contractId())?.let(::Text)
+    }
+
     fun paymentInstruction(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.paymentInstruction())?.let(::Text)
     }
@@ -119,5 +143,21 @@ class InvoiceData internal constructor(internal val raw: com.fatoora.raw.Invoice
 
     fun originalInvoiceReason(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.originalInvoiceReason())?.let(::Text)
+    }
+
+    fun notesLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
+        java.math.BigInteger(raw.notesLen().toString())
+    }
+
+    fun noteAt(index: java.math.BigInteger): InvoiceNote = nativeCall(listOfNotNull(this)) {
+        InvoiceNote(unwrap(raw.noteAt(checkedCounter(index))))
+    }
+
+    fun billingReferencesLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
+        java.math.BigInteger(raw.billingReferencesLen().toString())
+    }
+
+    fun billingReference(index: java.math.BigInteger): OriginalInvoiceRef = nativeCall(listOfNotNull(this)) {
+        OriginalInvoiceRef(unwrap(raw.billingReference(checkedCounter(index))))
     }
 }

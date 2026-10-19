@@ -14,7 +14,11 @@ export class Party {
     constructor();
 
 
-    address(): Address;
+    identifiersLen(): number;
+
+    identifier(index: number): OtherId;
+
+    address(): Address | null;
 
     vatId(): VatId | null;
 

@@ -9,6 +9,22 @@ namespace Fatoora.Raw;
 internal partial struct AllowanceCharge
 {
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_AllowanceCharge_has_vat_rate", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.U1)]
+    internal static unsafe extern bool HasVatRate(AllowanceCharge* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_AllowanceCharge_without_vat_rate", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultAllowanceChargeBindingError WithoutVatRate(AllowanceCharge* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_AllowanceCharge_with_percentage", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultAllowanceChargeBindingError WithPercentage(AllowanceCharge* handle, DiplomatSliceU8 @base, DiplomatSliceU8 percent);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_AllowanceCharge_base_amount", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultTextBindingError BaseAmount(AllowanceCharge* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_AllowanceCharge_percentage", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultTextBindingError Percentage(AllowanceCharge* handle);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_AllowanceCharge_new", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultAllowanceChargeBindingError New([MarshalAs(UnmanagedType.U1)] bool charge, DiplomatSliceU8 amount, DiplomatOptionSliceU8 reason, DiplomatOptionSliceU8 reasonCode, byte category, DiplomatSliceU8 rate, TaxExemption* exemption);
 

@@ -33,6 +33,10 @@ namespace fatoora {
 class VatBreakdown {
 public:
 
+  inline bool has_vat_rate() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>> without_vat_rate() const;
+
   inline static diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>> new_(uint8_t category, std::string_view rate, std::string_view taxable_amount, std::string_view tax_amount, const fatoora::TaxExemption& exemption);
 
   inline uint8_t category() const;

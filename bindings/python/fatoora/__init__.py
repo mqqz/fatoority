@@ -1,5 +1,8 @@
 from .api import (
     Address,
+    Adjustment,
+    PaymentMeans,
+    LineItemBuilder,
     TaxExemption,
     DocumentReference,
     AllowanceCharge,
@@ -58,6 +61,9 @@ from .errors import (
 __all__ = [
     "Config",
     "Address",
+    "Adjustment",
+    "PaymentMeans",
+    "LineItemBuilder",
     "TaxExemption",
     "DocumentReference",
     "AllowanceCharge",

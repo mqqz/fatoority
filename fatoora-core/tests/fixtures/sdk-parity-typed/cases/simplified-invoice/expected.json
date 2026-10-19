@@ -1,0 +1,22 @@
+{
+  "validation": {
+    "xsd": "passed",
+    "en": "passed",
+    "ksa": "passed",
+    "qr": "failed",
+    "signature": "failed",
+    "pih": "passed",
+    "global": "failed"
+  },
+  "hash": "I7nAz9koZYw2QooB5iDgAZukzY1VhlZEaH0IXJjFQ0Q=",
+  "signed_validation": {
+    "xsd": "passed",
+    "en": "passed",
+    "ksa": "passed",
+    "qr": "passed",
+    "signature": "passed",
+    "pih": "passed",
+    "global": "passed"
+  },
+  "qr": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAxLTAxVDE1OjMwOjAwBAYxMTUuMDAFBTE1LjAwBixJN25Bejlrb1pZdzJRb29CNWlEZ0FadWt6WTFWaGxaRWFIMElYSmpGUTBRPQdgTUVVQ0lRRG1IOUVmRk5meSs1QUNqR2tUcm1GSlRrSk1IQk05L29aSzNrU2NuWW51bndJZ2RaRE5kVGdiTjJYc2FtOUVMamJVQzgrQ0pKejFTSEJhVHBQZ3Npelh1OTA9CFgwVjAQBgcqhkjOPQIBBgUrgQQACgNCAAShYIprRJr0UgStM6/S4CQLVUgpfFT2c+nHa+V/jKEx6PLxzTZcluUOru0/J2jyarRqE4yY2jyDCeLte3UpP1R4CUcwRQIhALE/ichmnWXCUKUbca3yci8oqwaLvFdHVjQrveI9uqAbAiA9hC4M8jgMBADPSzmd2uiPJA6gKR3LE03U75eqbC/rXA=="
+}

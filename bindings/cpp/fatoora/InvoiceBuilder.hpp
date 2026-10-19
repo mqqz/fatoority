@@ -13,17 +13,41 @@
 #include <cstdlib>
 #include "../diplomat_runtime.hpp"
 #include "Address.hpp"
+#include "Adjustment.hpp"
 #include "AllowanceCharge.hpp"
 #include "BindingError.hpp"
 #include "FinalizedInvoice.hpp"
 #include "InvoiceLineItem.hpp"
 #include "OriginalInvoiceRef.hpp"
+#include "PaymentMeans.hpp"
 #include "TaxExemption.hpp"
+#include "VatBreakdown.hpp"
 
 
 namespace fatoora {
 namespace capi {
     extern "C" {
+
+    typedef struct fatoora_InvoiceBuilder_add_seller_identifier_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_seller_identifier_result;
+    fatoora_InvoiceBuilder_add_seller_identifier_result fatoora_InvoiceBuilder_add_seller_identifier(fatoora::capi::InvoiceBuilder* self, diplomat::capi::DiplomatStringView value, diplomat::capi::OptionStringView scheme);
+
+    typedef struct fatoora_InvoiceBuilder_add_buyer_identifier_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_buyer_identifier_result;
+    fatoora_InvoiceBuilder_add_buyer_identifier_result fatoora_InvoiceBuilder_add_buyer_identifier(fatoora::capi::InvoiceBuilder* self, diplomat::capi::DiplomatStringView value, diplomat::capi::OptionStringView scheme);
+
+    typedef struct fatoora_InvoiceBuilder_add_vat_breakdown_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_vat_breakdown_result;
+    fatoora_InvoiceBuilder_add_vat_breakdown_result fatoora_InvoiceBuilder_add_vat_breakdown(fatoora::capi::InvoiceBuilder* self, const fatoora::capi::VatBreakdown* value);
+
+    typedef struct fatoora_InvoiceBuilder_add_payment_means_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_payment_means_result;
+    fatoora_InvoiceBuilder_add_payment_means_result fatoora_InvoiceBuilder_add_payment_means(fatoora::capi::InvoiceBuilder* self, const fatoora::capi::PaymentMeans* value);
+
+    typedef struct fatoora_InvoiceBuilder_add_note_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_note_result;
+    fatoora_InvoiceBuilder_add_note_result fatoora_InvoiceBuilder_add_note(fatoora::capi::InvoiceBuilder* self, diplomat::capi::OptionStringView language, diplomat::capi::DiplomatStringView value);
+
+    typedef struct fatoora_InvoiceBuilder_add_document_adjustment_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_document_adjustment_result;
+    fatoora_InvoiceBuilder_add_document_adjustment_result fatoora_InvoiceBuilder_add_document_adjustment(fatoora::capi::InvoiceBuilder* self, bool charge, const fatoora::capi::Adjustment* value, uint8_t category, diplomat::capi::DiplomatStringView rate, const fatoora::capi::TaxExemption* exemption);
+
+    typedef struct fatoora_InvoiceBuilder_set_buyer_without_address_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_buyer_without_address_result;
+    fatoora_InvoiceBuilder_set_buyer_without_address_result fatoora_InvoiceBuilder_set_buyer_without_address(fatoora::capi::InvoiceBuilder* self, diplomat::capi::DiplomatStringView name, diplomat::capi::OptionStringView vat_id, diplomat::capi::OptionStringView other_id, diplomat::capi::OptionStringView scheme);
 
     typedef struct fatoora_InvoiceBuilder_new_with_reference_result {union {fatoora::capi::InvoiceBuilder* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_new_with_reference_result;
     fatoora_InvoiceBuilder_new_with_reference_result fatoora_InvoiceBuilder_new_with_reference(uint8_t kind, uint8_t subtype, const fatoora::capi::OriginalInvoiceRef* reference, diplomat::capi::DiplomatStringView reason);
@@ -57,6 +81,15 @@ namespace capi {
 
     typedef struct fatoora_InvoiceBuilder_new_result {union {fatoora::capi::InvoiceBuilder* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_new_result;
     fatoora_InvoiceBuilder_new_result fatoora_InvoiceBuilder_new(uint8_t kind, uint8_t subtype, diplomat::capi::OptionStringView original_id, diplomat::capi::OptionStringView original_uuid, diplomat::capi::OptionStringView original_date, diplomat::capi::OptionStringView reason);
+
+    typedef struct fatoora_InvoiceBuilder_add_billing_reference_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_billing_reference_result;
+    fatoora_InvoiceBuilder_add_billing_reference_result fatoora_InvoiceBuilder_add_billing_reference(fatoora::capi::InvoiceBuilder* self, const fatoora::capi::OriginalInvoiceRef* value);
+
+    typedef struct fatoora_InvoiceBuilder_set_purchase_order_id_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_purchase_order_id_result;
+    fatoora_InvoiceBuilder_set_purchase_order_id_result fatoora_InvoiceBuilder_set_purchase_order_id(fatoora::capi::InvoiceBuilder* self, diplomat::capi::DiplomatStringView value);
+
+    typedef struct fatoora_InvoiceBuilder_set_contract_id_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_contract_id_result;
+    fatoora_InvoiceBuilder_set_contract_id_result fatoora_InvoiceBuilder_set_contract_id(fatoora::capi::InvoiceBuilder* self, diplomat::capi::DiplomatStringView value);
 
     typedef struct fatoora_InvoiceBuilder_set_id_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_id_result;
     fatoora_InvoiceBuilder_set_id_result fatoora_InvoiceBuilder_set_id(fatoora::capi::InvoiceBuilder* self, diplomat::capi::DiplomatStringView value);
@@ -117,6 +150,58 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceBuilder::add_seller_identifier(std::string_view value, std::optional<std::string_view> scheme) {
+    auto result = fatoora::capi::fatoora_InvoiceBuilder_add_seller_identifier(this->AsFFI(),
+        {value.data(), value.size()},
+        scheme.has_value() ? (diplomat::capi::OptionStringView{ { {scheme.value().data(), scheme.value().size()} }, true }) : (diplomat::capi::OptionStringView{ {}, false }));
+    return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceBuilder::add_buyer_identifier(std::string_view value, std::optional<std::string_view> scheme) {
+    auto result = fatoora::capi::fatoora_InvoiceBuilder_add_buyer_identifier(this->AsFFI(),
+        {value.data(), value.size()},
+        scheme.has_value() ? (diplomat::capi::OptionStringView{ { {scheme.value().data(), scheme.value().size()} }, true }) : (diplomat::capi::OptionStringView{ {}, false }));
+    return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceBuilder::add_vat_breakdown(const fatoora::VatBreakdown& value) {
+    auto result = fatoora::capi::fatoora_InvoiceBuilder_add_vat_breakdown(this->AsFFI(),
+        value.AsFFI());
+    return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceBuilder::add_payment_means(const fatoora::PaymentMeans& value) {
+    auto result = fatoora::capi::fatoora_InvoiceBuilder_add_payment_means(this->AsFFI(),
+        value.AsFFI());
+    return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceBuilder::add_note(std::optional<std::string_view> language, std::string_view value) {
+    auto result = fatoora::capi::fatoora_InvoiceBuilder_add_note(this->AsFFI(),
+        language.has_value() ? (diplomat::capi::OptionStringView{ { {language.value().data(), language.value().size()} }, true }) : (diplomat::capi::OptionStringView{ {}, false }),
+        {value.data(), value.size()});
+    return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceBuilder::add_document_adjustment(bool charge, const fatoora::Adjustment& value, uint8_t category, std::string_view rate, const fatoora::TaxExemption& exemption) {
+    auto result = fatoora::capi::fatoora_InvoiceBuilder_add_document_adjustment(this->AsFFI(),
+        charge,
+        value.AsFFI(),
+        category,
+        {rate.data(), rate.size()},
+        exemption.AsFFI());
+    return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceBuilder::set_buyer_without_address(std::string_view name, std::optional<std::string_view> vat_id, std::optional<std::string_view> other_id, std::optional<std::string_view> scheme) {
+    auto result = fatoora::capi::fatoora_InvoiceBuilder_set_buyer_without_address(this->AsFFI(),
+        {name.data(), name.size()},
+        vat_id.has_value() ? (diplomat::capi::OptionStringView{ { {vat_id.value().data(), vat_id.value().size()} }, true }) : (diplomat::capi::OptionStringView{ {}, false }),
+        other_id.has_value() ? (diplomat::capi::OptionStringView{ { {other_id.value().data(), other_id.value().size()} }, true }) : (diplomat::capi::OptionStringView{ {}, false }),
+        scheme.has_value() ? (diplomat::capi::OptionStringView{ { {scheme.value().data(), scheme.value().size()} }, true }) : (diplomat::capi::OptionStringView{ {}, false }));
+    return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
 
 inline diplomat::result<std::unique_ptr<fatoora::InvoiceBuilder>, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceBuilder::new_with_reference(uint8_t kind, uint8_t subtype, const fatoora::OriginalInvoiceRef& reference, std::string_view reason) {
     auto result = fatoora::capi::fatoora_InvoiceBuilder_new_with_reference(kind,
@@ -192,6 +277,24 @@ inline diplomat::result<std::unique_ptr<fatoora::InvoiceBuilder>, std::unique_pt
         original_date.has_value() ? (diplomat::capi::OptionStringView{ { {original_date.value().data(), original_date.value().size()} }, true }) : (diplomat::capi::OptionStringView{ {}, false }),
         reason.has_value() ? (diplomat::capi::OptionStringView{ { {reason.value().data(), reason.value().size()} }, true }) : (diplomat::capi::OptionStringView{ {}, false }));
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::InvoiceBuilder>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::InvoiceBuilder>>(std::unique_ptr<fatoora::InvoiceBuilder>(fatoora::InvoiceBuilder::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::InvoiceBuilder>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceBuilder::add_billing_reference(const fatoora::OriginalInvoiceRef& value) {
+    auto result = fatoora::capi::fatoora_InvoiceBuilder_add_billing_reference(this->AsFFI(),
+        value.AsFFI());
+    return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceBuilder::set_purchase_order_id(std::string_view value) {
+    auto result = fatoora::capi::fatoora_InvoiceBuilder_set_purchase_order_id(this->AsFFI(),
+        {value.data(), value.size()});
+    return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceBuilder::set_contract_id(std::string_view value) {
+    auto result = fatoora::capi::fatoora_InvoiceBuilder_set_contract_id(this->AsFFI(),
+        {value.data(), value.size()});
+    return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
 inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceBuilder::set_id(std::string_view value) {

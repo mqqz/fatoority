@@ -22,6 +22,11 @@ namespace fatoora {
 namespace capi {
     extern "C" {
 
+    size_t fatoora_Party_identifiers_len(const fatoora::capi::Party* self);
+
+    typedef struct fatoora_Party_identifier_result {union {fatoora::capi::OtherId* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Party_identifier_result;
+    fatoora_Party_identifier_result fatoora_Party_identifier(const fatoora::capi::Party* self, size_t index);
+
     typedef struct fatoora_Party_address_result {union {fatoora::capi::Address* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Party_address_result;
     fatoora_Party_address_result fatoora_Party_address(const fatoora::capi::Party* self);
 
@@ -39,6 +44,17 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline size_t fatoora::Party::identifiers_len() const {
+    auto result = fatoora::capi::fatoora_Party_identifiers_len(this->AsFFI());
+    return result;
+}
+
+inline diplomat::result<std::unique_ptr<fatoora::OtherId>, std::unique_ptr<fatoora::BindingError>> fatoora::Party::identifier(size_t index) const {
+    auto result = fatoora::capi::fatoora_Party_identifier(this->AsFFI(),
+        index);
+    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::OtherId>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::OtherId>>(std::unique_ptr<fatoora::OtherId>(fatoora::OtherId::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::OtherId>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
 
 inline diplomat::result<std::unique_ptr<fatoora::Address>, std::unique_ptr<fatoora::BindingError>> fatoora::Party::address() const {
     auto result = fatoora::capi::fatoora_Party_address(this->AsFFI());

@@ -9,6 +9,27 @@ namespace Fatoora.Raw;
 internal partial struct InvoiceBuilder
 {
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_add_seller_identifier", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError AddSellerIdentifier(InvoiceBuilder* handle, DiplomatSliceU8 value, DiplomatOptionSliceU8 scheme);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_add_buyer_identifier", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError AddBuyerIdentifier(InvoiceBuilder* handle, DiplomatSliceU8 value, DiplomatOptionSliceU8 scheme);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_add_vat_breakdown", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError AddVatBreakdown(InvoiceBuilder* handle, VatBreakdown* value);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_add_payment_means", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError AddPaymentMeans(InvoiceBuilder* handle, PaymentMeans* value);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_add_note", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError AddNote(InvoiceBuilder* handle, DiplomatOptionSliceU8 language, DiplomatSliceU8 value);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_add_document_adjustment", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError AddDocumentAdjustment(InvoiceBuilder* handle, [MarshalAs(UnmanagedType.U1)] bool charge, Adjustment* value, byte category, DiplomatSliceU8 rate, TaxExemption* exemption);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_buyer_without_address", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError SetBuyerWithoutAddress(InvoiceBuilder* handle, DiplomatSliceU8 name, DiplomatOptionSliceU8 vatId, DiplomatOptionSliceU8 otherId, DiplomatOptionSliceU8 scheme);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_new_with_reference", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultInvoiceBuilderBindingError NewWithReference(byte kind, byte subtype, OriginalInvoiceRef* reference, DiplomatSliceU8 reason);
 
@@ -41,6 +62,15 @@ internal partial struct InvoiceBuilder
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_new", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultInvoiceBuilderBindingError New(byte kind, byte subtype, DiplomatOptionSliceU8 originalId, DiplomatOptionSliceU8 originalUuid, DiplomatOptionSliceU8 originalDate, DiplomatOptionSliceU8 reason);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_add_billing_reference", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError AddBillingReference(InvoiceBuilder* handle, OriginalInvoiceRef* value);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_purchase_order_id", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError SetPurchaseOrderId(InvoiceBuilder* handle, DiplomatSliceU8 value);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_contract_id", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError SetContractId(InvoiceBuilder* handle, DiplomatSliceU8 value);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_id", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError SetId(InvoiceBuilder* handle, DiplomatSliceU8 value);

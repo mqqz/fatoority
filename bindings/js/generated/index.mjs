@@ -38,6 +38,8 @@ export { SigningKey } from "./SigningKey.mjs"
 
 export { Address } from "./Address.mjs"
 
+export { Adjustment } from "./Adjustment.mjs"
+
 export { AllowanceCharge } from "./AllowanceCharge.mjs"
 
 export { FinalizedInvoice } from "./FinalizedInvoice.mjs"
@@ -52,11 +54,15 @@ export { InvoiceNote } from "./InvoiceNote.mjs"
 
 export { InvoiceTotals } from "./InvoiceTotals.mjs"
 
+export { LineItemBuilder } from "./LineItemBuilder.mjs"
+
 export { OriginalInvoiceRef } from "./OriginalInvoiceRef.mjs"
 
 export { OtherId } from "./OtherId.mjs"
 
 export { Party } from "./Party.mjs"
+
+export { PaymentMeans } from "./PaymentMeans.mjs"
 
 export { SignedInvoice } from "./SignedInvoice.mjs"
 

@@ -144,37 +144,13 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
         ctx.basic("DocumentCurrencyCode").content(),
         "DocumentCurrencyCode",
     )?;
-    let payment_means_code = text_required(
-        ctx.aggregate("PaymentMeans")
-            .basic("PaymentMeansCode")
-            .content(),
-        "PaymentMeansCode",
-    )?;
-
     let issue_datetime = parse_datetime(&issue_date, &issue_time)?;
     let currency_code =
         CurrencyCode::parse(&currency_code).map_err(|_| ParseError::InvalidValue {
             field: "DocumentCurrencyCode",
             value: currency_code.clone(),
         })?;
-    let original_ref = if invoice_type_code == "381" || invoice_type_code == "383" {
-        Some(parse_original_ref(&ctx)?)
-    } else {
-        None
-    };
-    let reason = content_optional(
-        ctx.aggregate("PaymentMeans")
-            .basic("InstructionNote")
-            .content(),
-    )?
-    .or_else(|| content_optional(ctx.basic("Note").content()).ok().flatten());
-    let invoice_type = parse_invoice_type(
-        &invoice_type_name,
-        &invoice_type_code,
-        original_ref,
-        reason.unwrap_or_default(),
-    )?;
-
+    let invoice_type = parse_invoice_type(&invoice_type_name, &invoice_type_code)?;
     let seller = parse_seller(&ctx)?;
     let buyer = parse_buyer(ctx)?;
 
@@ -209,7 +185,6 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
         .previous_invoice_hash(previous_invoice_hash)
         .invoice_counter(invoice_counter)
         .seller(seller)
-        .payment_means_code(payment_means_code)
         .vat_category(vat_category)
         .flags(InvoiceFlags::from_bits_truncate(
             invoice_type_name.as_bytes()[2..]
@@ -217,6 +192,11 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
                 .enumerate()
                 .fold(0, |bits, (index, digit)| bits | ((digit - b'0') << index)),
         ));
+    for reference in ctx.children(super::constants::CAC_NS, "BillingReference") {
+        builder = builder.billing_reference(parse_reference(
+            reference.aggregate("InvoiceDocumentReference"),
+        )?);
+    }
     if let Some(buyer) = buyer {
         builder = builder.buyer(buyer);
     }
@@ -237,19 +217,49 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
     for item in line_items {
         builder = builder.line_item(item);
     }
-    if let Some(note) = content_optional(ctx.basic("Note").content())? {
-        let note = match ctx.basic("Note").attribute("languageID") {
+    for note_node in ctx.children(super::constants::CBC_NS, "Note") {
+        let note = content_required(note_node.content(), "Note")?;
+        let note = match note_node.attribute("languageID") {
             Some(language) => crate::invoice::InvoiceNote::new(language, note),
             None => crate::invoice::InvoiceNote::without_language(note),
         };
         builder = builder.note(note);
     }
-    if let Some(instruction) = ctx
-        .aggregate("PaymentMeans")
-        .basic("InstructionNote")
-        .content()
-    {
-        builder = builder.payment_instruction(instruction);
+    for node in ctx.children(super::constants::CAC_NS, "PaymentMeans") {
+        let account = node.aggregate("PayeeFinancialAccount");
+        let value = crate::invoice::PaymentMeans {
+            payment_means_type_code: text_required(
+                node.basic("PaymentMeansCode").content(),
+                "PaymentMeansCode",
+            )?,
+            instruction_notes: node
+                .children(super::constants::CBC_NS, "InstructionNote")
+                .map(|n| n.content().unwrap_or_default())
+                .collect(),
+            payee_financial_account: if account.0.is_some() {
+                Some(crate::invoice::PaymentAccount {
+                    payment_account_identifier: account.basic("ID").content(),
+                    payment_terms: account.basic("PaymentNote").content(),
+                })
+            } else {
+                None
+            },
+        };
+        builder = builder.payment_means(value);
+    }
+    for (name, is_order) in [
+        ("OrderReference", true),
+        ("ContractDocumentReference", false),
+    ] {
+        let node = ctx.aggregate(name);
+        if node.0.is_some() {
+            let id = text_required(node.basic("ID").content(), "ReferenceID")?;
+            builder = if is_order {
+                builder.purchase_order_id(id)
+            } else {
+                builder.contract_id(id)
+            };
+        }
     }
     let mut discount = Decimal::ZERO;
     let mut charge = Decimal::ZERO;
@@ -260,13 +270,14 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
             adjustment.aggregate("TaxCategory").basic("ID").content(),
             "AdjustmentVatCategory",
         )?;
-        let rate = decimal_required(
-            adjustment
-                .aggregate("TaxCategory")
-                .basic("Percent")
-                .content(),
-            "AdjustmentVatRate",
-        )?;
+        let rate_text = adjustment
+            .aggregate("TaxCategory")
+            .basic("Percent")
+            .content();
+        let rate = match rate_text.clone() {
+            None if category == "O" => Decimal::ZERO,
+            value => decimal_required(value, "AdjustmentVatRate")?,
+        };
         let category = match category.as_str() {
             "S" => VatCategory::Standard,
             "Z" => VatCategory::Zero,
@@ -286,9 +297,13 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
             for other in categories.iter().skip(1) {
                 let same_id = text_required(first.basic("ID").content(), "AdjustmentVatCategory")?
                     == text_required(other.basic("ID").content(), "AdjustmentVatCategory")?;
-                let other_rate =
-                    decimal_required(other.basic("Percent").content(), "AdjustmentVatRate")?;
-                if !same_id
+                let other_rate_text = other.basic("Percent").content();
+                let other_rate = match other_rate_text.clone() {
+                    None if category == VatCategory::OutOfScope => Decimal::ZERO,
+                    value => decimal_required(value, "AdjustmentVatRate")?,
+                };
+                if rate_text.is_none() != other_rate_text.is_none()
+                    || !same_id
                     || rate != other_rate
                     || parse_exemption(*first) != parse_exemption(*other)
                 {
@@ -321,6 +336,17 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
             });
         }
         builder = builder.adjustment(crate::invoice::AllowanceCharge {
+            omitted_rate: rate_text.is_none(),
+            base_amount: adjustment
+                .basic("BaseAmount")
+                .content()
+                .map(|v| decimal_required(Some(v), "AdjustmentBaseAmount"))
+                .transpose()?,
+            percentage: adjustment
+                .basic("MultiplierFactorNumeric")
+                .content()
+                .map(|v| decimal_required(Some(v), "AdjustmentPercentage"))
+                .transpose()?,
             tax_category_count: adjustment
                 .children(super::constants::CAC_NS, "TaxCategory")
                 .count(),
@@ -362,30 +388,48 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
             builder = builder.tax_currency(tax_currency, amount);
         }
     }
-    builder.payment_instruction_absent = matches!(invoice_type_code.as_str(), "381" | "383")
-        && ctx
-            .aggregate("PaymentMeans")
-            .basic("InstructionNote")
-            .0
-            .is_none();
-    let mut invoice = builder.build().map_err(ParseError::from)?;
-    // Validate the amounts we model before returning a finalized imported invoice.
-    for (field, expected) in [
-        ("LineExtensionAmount", invoice.totals().line_extension()),
-        ("TaxExclusiveAmount", invoice.totals().taxable_amount()),
-        (
-            "TaxInclusiveAmount",
-            invoice.totals().tax_inclusive_amount(),
-        ),
-        ("AllowanceTotalAmount", discount),
-        ("ChargeTotalAmount", charge),
-    ] {
-        if let Some(value) =
-            content_optional(ctx.aggregate("LegalMonetaryTotal").basic(field).content())?
-        {
-            check_amount(field, &value, expected)?;
+    if let Some(value) = ctx
+        .aggregate("LegalMonetaryTotal")
+        .basic("PrepaidAmount")
+        .content()
+    {
+        let amount = decimal_required(Some(value.clone()), "PrepaidAmount")?;
+        if amount < Decimal::ZERO || amount.scale() > 2 {
+            return Err(ParseError::InvalidValue {
+                field: "PrepaidAmount",
+                value,
+            });
         }
+        builder = builder.prepaid_amount(amount);
     }
+    for field in [
+        "LineExtensionAmount",
+        "TaxExclusiveAmount",
+        "TaxInclusiveAmount",
+        "PayableAmount",
+    ] {
+        text_required(
+            ctx.aggregate("LegalMonetaryTotal").basic(field).content(),
+            field,
+        )?;
+    }
+    let root_tax_totals: Vec<_> = nav::tax_totals(ctx).collect();
+    let accounting_count = root_tax_totals
+        .iter()
+        .filter(|t| t.aggregate("TaxSubtotal").0.is_none())
+        .count();
+    let document_count = root_tax_totals.len() - accounting_count;
+    if accounting_count > 1 || document_count != 1 {
+        return Err(ParseError::InvalidValue {
+            field: "TaxTotal",
+            value: "expected one document breakdown and at most one accounting total".into(),
+        });
+    }
+    let document_first = root_tax_totals
+        .first()
+        .is_some_and(|t| t.aggregate("TaxSubtotal").0.is_some());
+    let mut invoice = builder.build().map_err(ParseError::from)?;
+    let line_count = invoice.data().line_items().len() as i64;
     let mut seen = Vec::new();
     for tax_total in nav::tax_totals(ctx).filter(|total| {
         total
@@ -395,17 +439,17 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
             .as_ref()
             == Some(&currency_code)
     }) {
-        let value = text_required(tax_total.basic("TaxAmount").content(), "TaxAmount")?;
-        check_amount("TaxAmount", &value, invoice.totals().tax_amount())?;
         for subtotal in tax_total.children(super::constants::CAC_NS, "TaxSubtotal") {
             let category = text_required(
                 subtotal.aggregate("TaxCategory").basic("ID").content(),
                 "VatCategory",
             )?;
-            let rate = decimal_required(
-                subtotal.aggregate("TaxCategory").basic("Percent").content(),
-                "VatRate",
-            )?;
+            let rate_text = subtotal.aggregate("TaxCategory").basic("Percent").content();
+            let rate = match &rate_text {
+                Some(v) => decimal_required(Some(v.clone()), "VatRate")?,
+                None if category == "O" => Decimal::ZERO,
+                None => return Err(ParseError::MissingField("VatRate")),
+            };
             let group = invoice
                 .totals
                 .groups
@@ -429,15 +473,75 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
                     value: "duplicate category/rate".into(),
                 });
             }
+            group.omitted_rate = rate_text.is_none();
             group.exemption = parse_exemption(subtotal.aggregate("TaxCategory"));
             seen.push((category, rate));
-            for (field, expected) in [
-                ("TaxableAmount", group.taxable_amount()),
-                ("TaxAmount", group.tax_amount()),
-            ] {
-                let value = text_required(subtotal.basic(field).content(), field)?;
-                check_amount(field, &value, expected)?;
-            }
+            let taxable =
+                decimal_required(subtotal.basic("TaxableAmount").content(), "TaxableAmount")?;
+            check_amount("TaxableAmount", &taxable.to_string(), group.taxable_amount)?;
+            let supplied_tax =
+                decimal_required(subtotal.basic("TaxAmount").content(), "TaxAmount")?;
+            let mut supplied = group.clone();
+            supplied.taxable_amount = taxable;
+            supplied.tax_amount = supplied_tax;
+            supplied.check_against(group, line_count as usize)?;
+            group.taxable_amount = taxable;
+            group.tax_amount = supplied_tax;
+        }
+    }
+    if seen.len() != invoice.totals.groups.len() || seen.is_empty() {
+        return Err(ParseError::MissingField("TaxSubtotal"));
+    }
+    invoice.totals.groups.sort_by_key(|g| {
+        seen.iter().position(|(code, rate)| {
+            let category = match g.category {
+                VatCategory::Standard => "S",
+                VatCategory::Exempt => "E",
+                VatCategory::Zero => "Z",
+                VatCategory::OutOfScope => "O",
+            };
+            code == category && *rate == g.rate
+        })
+    });
+    invoice.totals.tax_amount = invoice
+        .totals
+        .groups
+        .iter()
+        .try_fold(Decimal::ZERO, |sum, g| sum.add(g.tax_amount))?;
+    invoice.totals.tax_inclusive_amount = invoice
+        .totals
+        .taxable_amount
+        .add(invoice.totals.tax_amount)?;
+    invoice.refresh_accounting_tax();
+    for tax_total in nav::tax_totals(ctx).filter(|total| {
+        total
+            .basic("TaxAmount")
+            .attribute("currencyID")
+            .and_then(|v| CurrencyCode::parse(v).ok())
+            .as_ref()
+            == Some(&currency_code)
+    }) {
+        check_amount(
+            "TaxAmount",
+            &text_required(tax_total.basic("TaxAmount").content(), "TaxAmount")?,
+            invoice.totals.tax_amount,
+        )?;
+    }
+    // Validate the amounts we model before returning a finalized imported invoice.
+    for (field, expected) in [
+        ("LineExtensionAmount", invoice.totals().line_extension()),
+        ("TaxExclusiveAmount", invoice.totals().taxable_amount()),
+        (
+            "TaxInclusiveAmount",
+            invoice.totals().tax_inclusive_amount(),
+        ),
+        ("AllowanceTotalAmount", discount),
+        ("ChargeTotalAmount", charge),
+    ] {
+        if let Some(value) =
+            content_optional(ctx.aggregate("LegalMonetaryTotal").basic(field).content())?
+        {
+            check_amount(field, &value, expected)?;
         }
     }
     let mut prepaid = Decimal::ZERO;
@@ -474,9 +578,33 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
     )? {
         check_amount("PayableAmount", &value, payable)?;
     }
+    for (i, field) in [
+        "AllowanceTotalAmount",
+        "ChargeTotalAmount",
+        "PrepaidAmount",
+        "PayableRoundingAmount",
+    ]
+    .iter()
+    .enumerate()
+    {
+        invoice.totals.omitted_optional_amounts[i] =
+            ctx.aggregate("LegalMonetaryTotal").basic(field).0.is_none();
+    }
     invoice.totals.prepaid_amount = prepaid;
     invoice.totals.payable_rounding_amount = rounding;
     invoice.totals.payable_amount = payable;
+    invoice.preserve_import_time(
+        InvoiceDate::parse(issue_date)?,
+        crate::invoice::InvoiceTime::parse(issue_time)?,
+    );
+    invoice.preserve_import_tax_layout(
+        ctx.basic("TaxCurrencyCode")
+            .content()
+            .map(CurrencyCode::parse)
+            .transpose()?,
+        accounting_count == 1,
+        document_first,
+    );
     Ok(invoice)
 }
 
@@ -523,6 +651,7 @@ fn check_model_structure(root: Element<'_, '_>) -> Result<(), ParseError> {
                         | "TaxCurrencyCode"
                         | "PaymentMeansCode"
                         | "InstructionNote"
+                        | "PaymentNote"
                         | "ActualDeliveryDate"
                         | "LatestDeliveryDate"
                         | "CompanyID"
@@ -534,10 +663,14 @@ fn check_model_structure(root: Element<'_, '_>) -> Result<(), ParseError> {
                         | "CitySubdivisionName"
                         | "CityName"
                         | "PostalZone"
+                        | "CountrySubentity"
                         | "IdentificationCode"
                         | "Name"
                         | "InvoicedQuantity"
                         | "PriceAmount"
+                        | "BaseQuantity"
+                        | "BaseAmount"
+                        | "MultiplierFactorNumeric"
                         | "Percent"
                         | "TaxExemptionReasonCode"
                         | "TaxExemptionReason"
@@ -568,9 +701,12 @@ fn check_model_structure(root: Element<'_, '_>) -> Result<(), ParseError> {
                         | "PartyTaxScheme"
                         | "PartyLegalEntity"
                         | "PostalAddress"
+                        | "OrderReference"
+                        | "ContractDocumentReference"
                         | "Country"
                         | "Delivery"
                         | "PaymentMeans"
+                        | "PayeeFinancialAccount"
                         | "BillingReference"
                         | "InvoiceDocumentReference"
                         | "DocumentReference"
@@ -586,20 +722,38 @@ fn check_model_structure(root: Element<'_, '_>) -> Result<(), ParseError> {
                         | "InvoiceLine"
                         | "Item"
                         | "Price"
+                        | "BuyersItemIdentification"
+                        | "SellersItemIdentification"
+                        | "StandardItemIdentification"
                 )
             };
             if !supported {
                 continue;
             }
-            let repeated = aggregate
-                && matches!(
-                    name.name(),
-                    "InvoiceLine"
-                        | "TaxSubtotal"
-                        | "AllowanceCharge"
-                        | "AdditionalDocumentReference"
-                        | "DocumentReference"
-                )
+            let repeated = (aggregate
+                && name.name() == "PartyIdentification"
+                && node.tag_name().name() == "Party")
+                || (basic
+                    && name.name() == "InstructionNote"
+                    && node.tag_name().name() == "PaymentMeans")
+                || (aggregate
+                    && name.name() == "AllowanceCharge"
+                    && node.tag_name().name() != "Price")
+                || (aggregate
+                    && name.name() == "BillingReference"
+                    && node.tag_name().name() == "Invoice")
+                || (aggregate
+                    && name.name() == "PaymentMeans"
+                    && node.tag_name().name() == "Invoice")
+                || (basic && name.name() == "Note" && node.tag_name().name() == "Invoice")
+                || aggregate
+                    && matches!(
+                        name.name(),
+                        "InvoiceLine"
+                            | "TaxSubtotal"
+                            | "AdditionalDocumentReference"
+                            | "DocumentReference"
+                    )
                 || (aggregate && name.name() == "TaxTotal" && node.tag_name().name() == "Invoice")
                 || (aggregate
                     && name.name() == "TaxCategory"
@@ -665,6 +819,7 @@ fn check_model_structure(root: Element<'_, '_>) -> Result<(), ParseError> {
                     | "PayableRoundingAmount"
                     | "PayableAmount"
                     | "PriceAmount"
+                    | "BaseAmount"
                     | "RoundingAmount"
                     | "Amount"
             ) {
@@ -680,6 +835,9 @@ fn check_model_structure(root: Element<'_, '_>) -> Result<(), ParseError> {
                     "LegalMonetaryTotal"
                         | "InvoiceLine"
                         | "Price"
+                        | "BuyersItemIdentification"
+                        | "SellersItemIdentification"
+                        | "StandardItemIdentification"
                         | "AllowanceCharge"
                         | "TaxSubtotal"
                         | "TaxTotal"
@@ -709,31 +867,6 @@ fn check_model_structure(root: Element<'_, '_>) -> Result<(), ParseError> {
                 field: "AdditionalDocumentReference",
                 value: format!("duplicate {id}"),
             });
-        }
-    }
-    // A unit price with a basis other than one or line adjustments needs a different
-    // line calculation model. Reject it instead of dropping its financial meaning.
-    for line in nav::invoice_lines(root) {
-        if line.aggregate("AllowanceCharge").0.is_some()
-            || line
-                .aggregate("Price")
-                .aggregate("AllowanceCharge")
-                .0
-                .is_some()
-        {
-            return Err(ParseError::InvalidValue {
-                field: "InvoiceLine",
-                value: "line/price allowances are not supported".into(),
-            });
-        }
-        if let Some(value) = line.aggregate("Price").basic("BaseQuantity").content() {
-            let quantity: Decimal = value.trim().parse()?;
-            if quantity != Decimal::from(1) {
-                return Err(ParseError::InvalidValue {
-                    field: "BaseQuantity",
-                    value,
-                });
-            }
         }
     }
     Ok(())
@@ -835,12 +968,7 @@ fn parse_signed_properties(doc: &Document<'_>) -> Result<SignedProperties, Parse
     })
 }
 
-fn parse_invoice_type(
-    name_code: &str,
-    body_code: &str,
-    original_ref: Option<OriginalInvoiceRef>,
-    reason: String,
-) -> Result<InvoiceType, ParseError> {
+fn parse_invoice_type(name_code: &str, body_code: &str) -> Result<InvoiceType, ParseError> {
     if name_code.len() != 7
         || !name_code.as_bytes()[2..]
             .iter()
@@ -866,16 +994,8 @@ fn parse_invoice_type(
     match body_code {
         "388" => Ok(InvoiceType::Tax(subtype)),
         "386" => Ok(InvoiceType::Prepayment(subtype)),
-        "381" => Ok(InvoiceType::CreditNote(
-            subtype,
-            original_ref.ok_or(ParseError::MissingField("BillingReference"))?,
-            reason,
-        )),
-        "383" => Ok(InvoiceType::DebitNote(
-            subtype,
-            original_ref.ok_or(ParseError::MissingField("BillingReference"))?,
-            reason,
-        )),
+        "381" => Ok(InvoiceType::CreditNote(subtype)),
+        "383" => Ok(InvoiceType::DebitNote(subtype)),
         _ => Err(ParseError::InvalidValue {
             field: "InvoiceTypeCode",
             value: body_code.to_string(),
@@ -883,12 +1003,6 @@ fn parse_invoice_type(
     }
 }
 
-fn parse_original_ref(ctx: &Element<'_, '_>) -> Result<OriginalInvoiceRef, ParseError> {
-    parse_reference(
-        ctx.aggregate("BillingReference")
-            .aggregate("InvoiceDocumentReference"),
-    )
-}
 fn parse_reference(node: Element<'_, '_>) -> Result<OriginalInvoiceRef, ParseError> {
     let mut reference = OriginalInvoiceRef::new(text_required(
         node.basic("ID").content(),
@@ -930,30 +1044,12 @@ fn parse_seller(ctx: &Element<'_, '_>) -> Result<Party<SellerRole>, ParseError> 
             .content(),
         "SellerVAT",
     )?;
-    let identification = seller.aggregate("PartyIdentification");
-    let crn = if identification.0.is_some() {
-        Some(text_required(
-            identification.basic("ID").content(),
-            "SellerID",
-        )?)
-    } else {
-        None
-    };
-    let crn_scheme = text_optional(
-        seller
-            .aggregate("PartyIdentification")
-            .basic("ID")
-            .attribute("schemeID"),
-    )?;
-
     let address = parse_address(seller, false)?;
-    let other_id = match (crn, crn_scheme) {
-        (Some(value), Some(scheme)) => Some(OtherId::with_scheme(value, scheme)),
-        (Some(value), None) => Some(OtherId::new(value)),
-        _ => None,
-    };
-
-    Party::<SellerRole>::new(name, address, vat, other_id).map_err(ParseError::from)
+    let mut result = Party::<SellerRole>::new(name, address, vat, None)?;
+    for id in parse_party_identifiers(seller, "SellerID")? {
+        result = result.identifier(id);
+    }
+    Ok(result)
 }
 
 fn parse_buyer(ctx: Element<'_, '_>) -> Result<Option<crate::invoice::Buyer>, ParseError> {
@@ -978,25 +1074,50 @@ fn parse_buyer(ctx: Element<'_, '_>) -> Result<Option<crate::invoice::Buyer>, Pa
             .content(),
         "BuyerName",
     )?;
-    let id = party.aggregate("PartyIdentification");
-    let other_id = if id.0.is_some() {
-        let value = text_required(id.basic("ID").content(), "BuyerID")?;
-        Some(match id.basic("ID").attribute("schemeID") {
-            Some(scheme) => OtherId::with_scheme(value, scheme),
-            None => OtherId::new(value),
-        })
-    } else {
-        None
-    };
     let tax = party.aggregate("PartyTaxScheme");
     let vat = if tax.0.is_some() {
-        Some(text_required(tax.basic("CompanyID").content(), "BuyerVAT")?)
+        // Let VatId validate present values; distinguish blank from missing input.
+        Some(
+            tax.basic("CompanyID")
+                .content()
+                .ok_or(ParseError::MissingField("BuyerVAT"))?,
+        )
     } else {
         None
     };
-    crate::invoice::Buyer::new(name, parse_address(party, true)?, vat, other_id)
-        .map(Some)
-        .map_err(ParseError::from)
+    let mut result = crate::invoice::Buyer::new(
+        name,
+        if party.aggregate("PostalAddress").0.is_some() {
+            Some(parse_address(party, true)?)
+        } else {
+            None
+        },
+        vat,
+        None,
+    )?;
+    for id in parse_party_identifiers(party, "BuyerID")? {
+        result = result.identifier(id);
+    }
+    Ok(Some(result))
+}
+
+fn parse_party_identifiers(
+    party: Element<'_, '_>,
+    field: &'static str,
+) -> Result<Vec<OtherId>, ParseError> {
+    party
+        .children(super::constants::CAC_NS, "PartyIdentification")
+        .map(|id| {
+            let value = text_required(id.basic("ID").content(), field)?;
+            Ok(match id.basic("ID").attribute("schemeID") {
+                Some(scheme) => OtherId::with_scheme(
+                    value,
+                    text_required(Some(scheme), "PartyIdentification@schemeID")?,
+                ),
+                None => OtherId::new(value),
+            })
+        })
+        .collect()
 }
 
 fn parse_exemption(category: Element<'_, '_>) -> crate::invoice::TaxExemption {
@@ -1009,7 +1130,10 @@ fn parse_exemption(category: Element<'_, '_>) -> crate::invoice::TaxExemption {
 fn parse_address(seller: Element<'_, '_>, buyer: bool) -> Result<Address, ParseError> {
     let required = |value: Option<String>, label| {
         if buyer {
-            Ok(value.unwrap_or_default())
+            value
+                .map(|v| content_required(Some(v), label))
+                .transpose()
+                .map(Option::unwrap_or_default)
         } else {
             content_required(value, label)
         }
@@ -1067,6 +1191,10 @@ fn parse_address(seller: Element<'_, '_>, buyer: bool) -> Result<Address, ParseE
     })?;
 
     Ok(Address {
+        province: seller
+            .aggregate("PostalAddress")
+            .basic("CountrySubentity")
+            .content(),
         country_code,
         city,
         street,
@@ -1121,10 +1249,10 @@ fn parse_line_items(ctx: &Element<'_, '_>) -> Result<Vec<LineItem>, ParseError> 
         let id = text_required(line.basic("ID").content(), "LineID")?;
         let name = content_required(line.aggregate("Item").basic("Name").content(), "LineName")?;
         let quantity = text_required(line.basic("InvoicedQuantity").content(), "InvoicedQuantity")?;
-        let unit_code = text_required(
-            line.basic("InvoicedQuantity").attribute("unitCode"),
-            "InvoicedQuantity@unitCode",
-        )?;
+        let unit_code = match line.basic("InvoicedQuantity").attribute("unitCode") {
+            Some(v) => text_required(Some(v), "InvoicedQuantity@unitCode")?,
+            None => String::new(),
+        };
         let line_extension = text_required(
             line.basic("LineExtensionAmount").content(),
             "LineExtensionAmount",
@@ -1133,13 +1261,12 @@ fn parse_line_items(ctx: &Element<'_, '_>) -> Result<Vec<LineItem>, ParseError> 
             line.aggregate("Price").basic("PriceAmount").content(),
             "PriceAmount",
         )?;
-        let vat_rate = text_required(
-            line.aggregate("Item")
-                .aggregate("ClassifiedTaxCategory")
-                .basic("Percent")
-                .content(),
-            "LineVatPercent",
-        )?;
+        let rate_text = line
+            .aggregate("Item")
+            .aggregate("ClassifiedTaxCategory")
+            .basic("Percent")
+            .content();
+        let vat_rate = rate_text.clone().unwrap_or_else(|| "0".into());
         let vat_category = text_required(
             line.aggregate("Item")
                 .aggregate("ClassifiedTaxCategory")
@@ -1147,11 +1274,8 @@ fn parse_line_items(ctx: &Element<'_, '_>) -> Result<Vec<LineItem>, ParseError> 
                 .content(),
             "LineVatCategory",
         )?;
-        let vat_amount = text_required(
-            line.aggregate("TaxTotal").basic("TaxAmount").content(),
-            "LineTaxAmount",
-        )?;
-
+        let tax_text = line.aggregate("TaxTotal").basic("TaxAmount").content();
+        let vat_amount = tax_text.clone().unwrap_or_else(|| "0".into());
         let vat_category = match vat_category.as_str() {
             "S" => VatCategory::Standard,
             "E" => VatCategory::Exempt,
@@ -1184,19 +1308,29 @@ fn parse_line_items(ctx: &Element<'_, '_>) -> Result<Vec<LineItem>, ParseError> 
                     field: "LineExtensionAmount",
                     value: line_extension,
                 })?;
-        let vat_rate = vat_rate
-            .parse::<Decimal>()
-            .map_err(|_| ParseError::InvalidValue {
-                field: "LineVatPercent",
-                value: vat_rate,
-            })?;
-        let vat_amount = vat_amount
-            .parse::<Decimal>()
-            .map_err(|_| ParseError::InvalidValue {
-                field: "LineTaxAmount",
-                value: vat_amount,
-            })?;
+        let vat_rate =
+            vat_rate
+                .trim()
+                .parse::<Decimal>()
+                .map_err(|_| ParseError::InvalidValue {
+                    field: "LineVatPercent",
+                    value: vat_rate,
+                })?;
+        let vat_amount =
+            vat_amount
+                .trim()
+                .parse::<Decimal>()
+                .map_err(|_| ParseError::InvalidValue {
+                    field: "LineTaxAmount",
+                    value: vat_amount,
+                })?;
 
+        if rate_text.is_none() && vat_category != VatCategory::OutOfScope {
+            return Err(ParseError::MissingField("LineVatPercent"));
+        }
+        if tax_text.is_none() && line.aggregate("TaxTotal").0.is_some() {
+            return Err(ParseError::MissingField("LineTaxAmount"));
+        }
         // BR-KSA-50 was removed in the May 2023 standard. Imported line VAT
         // is supplied data; validate its scale and gross equation, not a guessed formula.
         if total_amount.scale() > 2 || vat_amount.scale() > 2 {
@@ -1205,10 +1339,6 @@ fn parse_line_items(ctx: &Element<'_, '_>) -> Result<Vec<LineItem>, ParseError> 
                 value: "amounts require at most two decimals".into(),
             });
         }
-        let expected = quantity
-            .product_rounded(unit_price, false)
-            .map_err(ParseError::from)?;
-        check_amount("LineExtensionAmount", &total_amount.to_string(), expected)?;
         if let Some(gross) =
             content_optional(line.aggregate("TaxTotal").basic("RoundingAmount").content())?
         {
@@ -1241,17 +1371,131 @@ fn parse_line_items(ctx: &Element<'_, '_>) -> Result<Vec<LineItem>, ParseError> 
                     });
                 }
             };
-            tax_subtotals.push(
-                crate::invoice::VatBreakdown::new(
-                    vat,
-                    decimal_required(category.basic("Percent").content(), "VatRate")?,
-                    decimal_required(subtotal.basic("TaxableAmount").content(), "TaxableAmount")?,
-                    decimal_required(subtotal.basic("TaxAmount").content(), "TaxAmount")?,
-                )?
-                .with_exemption(parse_exemption(category)),
-            );
+            let rate_text = category.basic("Percent").content();
+            let rate = match &rate_text {
+                None if vat == VatCategory::OutOfScope => Decimal::ZERO,
+                value => decimal_required(value.clone(), "VatRate")?,
+            };
+            let mut breakdown = crate::invoice::VatBreakdown::new(
+                vat,
+                rate,
+                decimal_required(subtotal.basic("TaxableAmount").content(), "TaxableAmount")?,
+                decimal_required(subtotal.basic("TaxAmount").content(), "TaxAmount")?,
+            )?
+            .with_exemption(parse_exemption(category));
+            breakdown.omitted_rate = rate_text.is_none();
+            tax_subtotals.push(breakdown);
         }
+        let price_node = line.aggregate("Price");
+        let decimal_optional =
+            |node: Element<'_, '_>, field: &'static str| -> Result<Option<Decimal>, ParseError> {
+                node.basic(field)
+                    .content()
+                    .map(|value| decimal_required(Some(value), field))
+                    .transpose()
+            };
+        if let Some(unit) = price_node.basic("BaseQuantity").attribute("unitCode") {
+            text_required(Some(unit), "BaseQuantity@unitCode")?;
+        }
+        let basis = decimal_optional(price_node, "BaseQuantity")?;
+        if basis.is_some_and(|v| v <= Decimal::ZERO) {
+            return Err(ParseError::InvalidValue {
+                field: "BaseQuantity",
+                value: basis.unwrap().to_string(),
+            });
+        }
+        let discount = price_node.aggregate("AllowanceCharge");
+        if discount.0.is_some()
+            && !matches!(
+                discount
+                    .basic("ChargeIndicator")
+                    .content()
+                    .as_deref()
+                    .map(str::trim),
+                Some("false" | "0")
+            )
+        {
+            return Err(ParseError::InvalidValue {
+                field: "PriceChargeIndicator",
+                value: "price discount requires false".into(),
+            });
+        }
+        let price_discount = if discount.0.is_some() {
+            Some(decimal_required(
+                discount.basic("Amount").content(),
+                "PriceDiscount",
+            )?)
+        } else {
+            None
+        };
+        let gross_price = if discount.0.is_some() {
+            Some(decimal_required(
+                discount.basic("BaseAmount").content(),
+                "PriceGrossAmount",
+            )?)
+        } else {
+            None
+        };
+        if let (Some(gross), Some(discount)) = (gross_price, price_discount)
+            && gross.sub(discount)? != unit_price
+        {
+            return Err(ParseError::InvalidValue {
+                field: "PriceAmount",
+                value: "gross minus discount differs from net".into(),
+            });
+        }
+        let mut adjustments = Vec::new();
+        for node in line.children(super::constants::CAC_NS, "AllowanceCharge") {
+            let charge = match node
+                .basic("ChargeIndicator")
+                .content()
+                .as_deref()
+                .map(str::trim)
+            {
+                Some("true" | "1") => true,
+                Some("false" | "0") => false,
+                _ => return Err(ParseError::MissingField("ChargeIndicator")),
+            };
+            let adjustment = crate::invoice::Adjustment {
+                amount: Some(decimal_required(
+                    node.basic("Amount").content(),
+                    "LineAdjustmentAmount",
+                )?),
+                base_amount: decimal_optional(node, "BaseAmount")?,
+                percentage: decimal_optional(node, "MultiplierFactorNumeric")?,
+                reason: node.basic("AllowanceChargeReason").content(),
+                reason_code: node.basic("AllowanceChargeReasonCode").content(),
+            }
+            .finalize()?;
+            adjustments.push(crate::invoice::LineAdjustment { charge, adjustment });
+        }
+        let item_id = |name| -> Result<Option<OtherId>, ParseError> {
+            let node = line.aggregate("Item").aggregate(name);
+            if node.0.is_none() {
+                return Ok(None);
+            }
+            let value = text_required(node.basic("ID").content(), "ItemIdentifier")?;
+            Ok(Some(match node.basic("ID").attribute("schemeID") {
+                Some(scheme) => OtherId::with_scheme(value, scheme),
+                None => OtherId::new(value),
+            }))
+        };
         let line_item = LineItem {
+            omitted_tax_amount: tax_text.is_none(),
+            omitted_gross_amount: line
+                .aggregate("TaxTotal")
+                .basic("RoundingAmount")
+                .0
+                .is_none(),
+            omitted_vat_rate: rate_text.is_none(),
+            price_base_quantity: basis,
+            price_base_unit: price_node.basic("BaseQuantity").attribute("unitCode"),
+            price_discount,
+            gross_price,
+            adjustments,
+            seller_item_id: item_id("SellersItemIdentification")?,
+            buyer_item_id: item_id("BuyersItemIdentification")?,
+            standard_item_id: item_id("StandardItemIdentification")?,
             document_references,
             tax_subtotals,
             id: Some(id),
@@ -1273,11 +1517,14 @@ fn parse_line_items(ctx: &Element<'_, '_>) -> Result<Vec<LineItem>, ParseError> 
 }
 
 fn parse_datetime(date: &str, time: &str) -> Result<String, ParseError> {
-    let time =
-        NaiveTime::parse_from_str(time, "%H:%M:%S").map_err(|e| ParseError::InvalidValue {
-            field: "IssueTime",
-            value: format!("{time} ({e:?})"),
-        })?;
+    let utc = time.ends_with('Z');
+    let clock = time.strip_suffix('Z').unwrap_or(time);
+    let end_of_day = clock == "24:00:00";
+    let time = NaiveTime::parse_from_str(if end_of_day { "00:00:00" } else { clock }, "%H:%M:%S")
+        .map_err(|e| ParseError::InvalidValue {
+        field: "IssueTime",
+        value: format!("{time} ({e:?})"),
+    })?;
     let combined = format!("{date}T{}Z", time.format("%H:%M:%S"));
     let naive = NaiveDateTime::parse_from_str(&combined, "%Y-%m-%dT%H:%M:%SZ").map_err(|e| {
         ParseError::InvalidValue {
@@ -1285,7 +1532,27 @@ fn parse_datetime(date: &str, time: &str) -> Result<String, ParseError> {
             value: format!("{combined} ({e:?})"),
         }
     })?;
-    let timestamp = naive.format("%Y-%m-%dT%H:%M:%SZ").to_string();
+    let naive = if end_of_day {
+        naive
+            .checked_add_signed(chrono::Duration::days(1))
+            .ok_or_else(|| ParseError::InvalidValue {
+                field: "IssueDateTime",
+                value: combined.clone(),
+            })?
+    } else {
+        naive
+    };
+    let normalized = if utc {
+        naive
+    } else {
+        naive
+            .checked_sub_signed(chrono::Duration::hours(3))
+            .ok_or_else(|| ParseError::InvalidValue {
+                field: "IssueDateTime",
+                value: combined.clone(),
+            })?
+    };
+    let timestamp = normalized.format("%Y-%m-%dT%H:%M:%SZ").to_string();
     InvoiceTimestamp::parse(&timestamp).map_err(|e| ParseError::InvalidValue {
         field: "IssueDateTime",
         value: e.to_string(),
@@ -1368,4 +1635,25 @@ fn check_amount(field: &'static str, value: &str, expected: Decimal) -> Result<(
         });
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod timestamp_boundaries {
+    use super::*;
+
+    #[test]
+    fn overflow_is_reported_without_panicking() {
+        for (date, time) in [
+            (chrono::NaiveDate::MAX.to_string(), "24:00:00Z"),
+            (chrono::NaiveDate::MIN.to_string(), "00:00:00"),
+        ] {
+            assert!(matches!(
+                parse_datetime(&date, time),
+                Err(ParseError::InvalidValue {
+                    field: "IssueDateTime",
+                    ..
+                })
+            ));
+        }
+    }
 }

@@ -3,13 +3,13 @@
     "java",
     "-Djdk.sunec.disableNative=false",
     "-jar",
-    "/tmp/fatoora sdk parity 4xkuuqqx/sdk/Apps/zatca-einvoicing-sdk-238-R3.4.8.jar",
+    "/home/mo/code/fatoora-rs/target/fatoora sdk parity d7qjn8c1/sdk/Apps/zatca-einvoicing-sdk-238-R3.4.8.jar",
     "--globalVersion",
     "238-R3.4.8",
     "-validate",
     "-invoice",
-    "/tmp/fatoora-flag-sdk/cases/prepayment/input.xml"
+    "/home/mo/code/fatoora-rs/target/invoice-model-sdk-capture/cases/prepayment/input.xml"
   ],
-  "cwd": "/tmp/fatoora sdk parity 4xkuuqqx/sdk/Apps",
+  "cwd": "/home/mo/code/fatoora-rs/target/fatoora sdk parity d7qjn8c1/sdk/Apps",
   "exit_code": 0
 }

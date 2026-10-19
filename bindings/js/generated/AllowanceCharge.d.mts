@@ -13,6 +13,19 @@ export class AllowanceCharge {
     constructor();
 
 
+    hasVatRate(): boolean;
+
+    withoutVatRate(): AllowanceCharge;
+
+    /**
+     * Retain this adjustment's metadata and check its percentage calculation.
+     */
+    withPercentage(base: string, percent: string): AllowanceCharge;
+
+    baseAmount(): Text | null;
+
+    percentage(): Text | null;
+
     static new_(charge: boolean, amount: string, reason: string | null, reasonCode: string | null, category: number, rate: string, exemption: TaxExemption): AllowanceCharge;
 
     isCharge(): boolean;

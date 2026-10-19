@@ -283,6 +283,7 @@ mod tests {
         let seller = Party::<SellerRole>::new(
             "Acme Inc".into(),
             Address {
+                province: None,
                 country_code: CountryCode::parse("SAU").expect("country code"),
                 city: "Riyadh".into(),
                 street: "King Fahd".into(),
@@ -384,7 +385,7 @@ mod tests {
         let expected = vec![
             (1, b"Acme Inc".to_vec()),
             (2, b"301121971500003".to_vec()),
-            (3, b"2024-01-01T12:30:00".to_vec()),
+            (3, b"2024-01-01T12:30:00Z".to_vec()),
             (4, b"115.00".to_vec()),
             (5, b"15.00".to_vec()),
             (6, b"hash==".to_vec()),

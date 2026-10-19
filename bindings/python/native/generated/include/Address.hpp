@@ -20,6 +20,12 @@ namespace _native {
 namespace capi {
     extern "C" {
 
+    typedef struct fatoora_Address_with_province_result {union {_native::capi::Address* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_Address_with_province_result;
+    fatoora_Address_with_province_result fatoora_Address_with_province(const _native::capi::Address* self, _native::diplomat::capi::DiplomatStringView value);
+
+    typedef struct fatoora_Address_province_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_Address_province_result;
+    fatoora_Address_province_result fatoora_Address_province(const _native::capi::Address* self);
+
     typedef struct fatoora_Address_new_result {union {_native::capi::Address* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_Address_new_result;
     fatoora_Address_new_result fatoora_Address_new(_native::diplomat::capi::DiplomatStringView country_code, _native::diplomat::capi::DiplomatStringView city, _native::diplomat::capi::DiplomatStringView street, _native::diplomat::capi::DiplomatStringView building_number, _native::diplomat::capi::DiplomatStringView postal_code, _native::diplomat::capi::OptionStringView additional_street, _native::diplomat::capi::OptionStringView additional_number, _native::diplomat::capi::OptionStringView district);
 
@@ -52,6 +58,17 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline _native::diplomat::result<std::unique_ptr<_native::Address>, std::unique_ptr<_native::BindingError>> _native::Address::with_province(std::string_view value) const {
+    auto result = _native::capi::fatoora_Address_with_province(this->AsFFI(),
+        {value.data(), value.size()});
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Address>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Address>>(std::unique_ptr<_native::Address>(_native::Address::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Address>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::Address::province() const {
+    auto result = _native::capi::fatoora_Address_province(this->AsFFI());
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
 
 inline _native::diplomat::result<std::unique_ptr<_native::Address>, std::unique_ptr<_native::BindingError>> _native::Address::new_(std::string_view country_code, std::string_view city, std::string_view street, std::string_view building_number, std::string_view postal_code, std::optional<std::string_view> additional_street, std::optional<std::string_view> additional_number, std::optional<std::string_view> district) {
     auto result = _native::capi::fatoora_Address_new({country_code.data(), country_code.size()},

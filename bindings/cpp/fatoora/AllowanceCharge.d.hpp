@@ -35,6 +35,19 @@ namespace fatoora {
 class AllowanceCharge {
 public:
 
+  inline bool has_vat_rate() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::AllowanceCharge>, std::unique_ptr<fatoora::BindingError>> without_vat_rate() const;
+
+  /**
+   * Retain this adjustment's metadata and check its percentage calculation.
+   */
+  inline diplomat::result<std::unique_ptr<fatoora::AllowanceCharge>, std::unique_ptr<fatoora::BindingError>> with_percentage(std::string_view base, std::string_view percent) const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> base_amount() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> percentage() const;
+
   inline static diplomat::result<std::unique_ptr<fatoora::AllowanceCharge>, std::unique_ptr<fatoora::BindingError>> new_(bool charge, std::string_view amount, std::optional<std::string_view> reason, std::optional<std::string_view> reason_code, uint8_t category, std::string_view rate, const fatoora::TaxExemption& exemption);
 
   inline bool is_charge() const;

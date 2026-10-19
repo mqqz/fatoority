@@ -5,3 +5,4 @@
 # It is recommended to check this file in to source control so that
 # everyone who runs the test benefits from these saved cases.
 cc f479715c6f2b3d25d40288fe87db7c72b380571d615a76995045af96d444c258 # shrinks to lines = [Line { quantity: 1, price: 0, group: 0 }], percent = 0, charge = 0, text = "X\rX", flags = 0, code = 0, standard = false
+cc afae013f19d9631e583226bd863be77babfadce3aacea8a541ec4d1a2fde54fc # shrinks to lines = [Line { quantity: 26088, price: 3333, group: 0 }], percent = 0, charge = 0

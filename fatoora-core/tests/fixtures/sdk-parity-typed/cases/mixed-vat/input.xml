@@ -4,7 +4,7 @@
   <cbc:ID>INV-SIMP-2001</cbc:ID>
   <cbc:UUID>5c8e7f12-1f2a-4d4a-9a5b-5f6e7d8c9b10</cbc:UUID>
   <cbc:IssueDate>2024-02-20</cbc:IssueDate>
-  <cbc:IssueTime>11:45:00</cbc:IssueTime>
+  <cbc:IssueTime>11:45:00Z</cbc:IssueTime>
   <cbc:InvoiceTypeCode name="0201010">388</cbc:InvoiceTypeCode>
   <cbc:Note languageID="en">Mixed VAT simplified invoice</cbc:Note>
   <cbc:DocumentCurrencyCode>SAR</cbc:DocumentCurrencyCode>

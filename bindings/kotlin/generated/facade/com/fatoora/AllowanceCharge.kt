@@ -15,6 +15,26 @@ class AllowanceCharge internal constructor(internal val raw: com.fatoora.raw.All
             AllowanceCharge(unwrap(com.fatoora.raw.AllowanceCharge.new_(charge, checkedText(amount), reason?.let(::checkedText), reasonCode?.let(::checkedText), checkedUnsigned(category.toLong(), 255).toUByte(), checkedText(rate), exemption.raw)))
         }
     }
+    fun hasVatRate(): Boolean = nativeCall(listOfNotNull(this)) {
+        raw.hasVatRate()
+    }
+
+    fun withoutVatRate(): AllowanceCharge = nativeCall(listOfNotNull(this)) {
+        AllowanceCharge(unwrap(raw.withoutVatRate()))
+    }
+
+    fun withPercentage(base: String, percent: String): AllowanceCharge = nativeCall(listOfNotNull(this)) {
+        AllowanceCharge(unwrap(raw.withPercentage(checkedText(base), checkedText(percent))))
+    }
+
+    fun baseAmount(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.baseAmount())?.let(::Text)
+    }
+
+    fun percentage(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.percentage())?.let(::Text)
+    }
+
     fun isCharge(): Boolean = nativeCall(listOfNotNull(this)) {
         raw.isCharge()
     }

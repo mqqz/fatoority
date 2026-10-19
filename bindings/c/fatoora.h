@@ -43,6 +43,7 @@ const char *fatoora_error_details_json(const FatooraError *error);
  * See docs/development/c-api.md for consumption and synchronization rules. */
 
 typedef struct Address FatooraAddress;
+typedef struct Adjustment FatooraAdjustment;
 typedef struct AllowanceCharge FatooraAllowanceCharge;
 typedef struct Bytes FatooraBytes;
 typedef struct BytesList FatooraBytesList;
@@ -59,9 +60,11 @@ typedef struct InvoiceLineItem FatooraInvoiceLineItem;
 typedef struct InvoiceNote FatooraInvoiceNote;
 typedef struct InvoiceRequest FatooraInvoiceRequest;
 typedef struct InvoiceTotals FatooraInvoiceTotals;
+typedef struct LineItemBuilder FatooraLineItemBuilder;
 typedef struct OriginalInvoiceRef FatooraOriginalInvoiceRef;
 typedef struct OtherId FatooraOtherId;
 typedef struct Party FatooraParty;
+typedef struct PaymentMeans FatooraPaymentMeans;
 typedef struct ProductionRequest FatooraProductionRequest;
 typedef struct SignedInvoice FatooraSignedInvoice;
 typedef struct Signer FatooraSigner;
@@ -122,6 +125,13 @@ typedef struct FatooraLineItemOptions {
     int32_t category;
 } FatooraLineItemOptions;
 
+FatooraStatus fatoora_address_with_province(const FatooraAddress *self,
+    const char *value,
+    FatooraAddress **out,
+    FatooraError **error);
+FatooraStatus fatoora_address_province(const FatooraAddress *self,
+    char **out,
+    FatooraError **error);
 FatooraStatus fatoora_address_new(const FatooraAddressOptions *options,
     FatooraAddress **out,
     FatooraError **error);
@@ -150,6 +160,55 @@ FatooraStatus fatoora_address_district(const FatooraAddress *self,
     char **out,
     FatooraError **error);
 void fatoora_address_free(FatooraAddress *self);
+FatooraStatus fatoora_adjustment_amount(const char *value,
+    FatooraAdjustment **out,
+    FatooraError **error);
+FatooraStatus fatoora_adjustment_percentage(const char *base,
+    const char *percent,
+    FatooraAdjustment **out,
+    FatooraError **error);
+FatooraStatus fatoora_adjustment_with_supplied_amount(const FatooraAdjustment *self,
+    const char *value,
+    FatooraAdjustment **out,
+    FatooraError **error);
+FatooraStatus fatoora_adjustment_with_reason(const FatooraAdjustment *self,
+    const char *reason,
+    const char *code,
+    FatooraAdjustment **out,
+    FatooraError **error);
+FatooraStatus fatoora_adjustment_value(const FatooraAdjustment *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_adjustment_base_amount(const FatooraAdjustment *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_adjustment_percent(const FatooraAdjustment *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_adjustment_reason(const FatooraAdjustment *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_adjustment_reason_code(const FatooraAdjustment *self,
+    char **out,
+    FatooraError **error);
+void fatoora_adjustment_free(FatooraAdjustment *self);
+FatooraStatus fatoora_allowance_charge_has_vat_rate(const FatooraAllowanceCharge *self,
+    bool *out,
+    FatooraError **error);
+FatooraStatus fatoora_allowance_charge_without_vat_rate(const FatooraAllowanceCharge *self,
+    FatooraAllowanceCharge **out,
+    FatooraError **error);
+FatooraStatus fatoora_allowance_charge_with_percentage(const FatooraAllowanceCharge *self,
+    const char *base,
+    const char *percent,
+    FatooraAllowanceCharge **out,
+    FatooraError **error);
+FatooraStatus fatoora_allowance_charge_base_amount(const FatooraAllowanceCharge *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_allowance_charge_percentage(const FatooraAllowanceCharge *self,
+    char **out,
+    FatooraError **error);
 FatooraStatus fatoora_allowance_charge_new(bool charge,
     const char *amount,
     const char *reason,
@@ -324,6 +383,37 @@ FatooraStatus fatoora_finalized_invoice_xml(const FatooraFinalizedInvoice *self,
     char **out,
     FatooraError **error);
 void fatoora_finalized_invoice_free(FatooraFinalizedInvoice *self);
+FatooraStatus fatoora_invoice_builder_add_seller_identifier(FatooraInvoiceBuilder *self,
+    const char *value,
+    const char *scheme,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_builder_add_buyer_identifier(FatooraInvoiceBuilder *self,
+    const char *value,
+    const char *scheme,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_builder_add_vat_breakdown(FatooraInvoiceBuilder *self,
+    const FatooraVatBreakdown *value,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_builder_add_payment_means(FatooraInvoiceBuilder *self,
+    const FatooraPaymentMeans *value,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_builder_add_note(FatooraInvoiceBuilder *self,
+    const char *language,
+    const char *value,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_builder_add_document_adjustment(FatooraInvoiceBuilder *self,
+    bool charge,
+    const FatooraAdjustment *value,
+    int32_t category,
+    const char *rate,
+    const FatooraTaxExemption *exemption,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_builder_set_buyer_without_address(FatooraInvoiceBuilder *self,
+    const char *name,
+    const char *vat_id,
+    const char *other_id,
+    const char *scheme,
+    FatooraError **error);
 FatooraStatus fatoora_invoice_builder_new_with_reference(int32_t kind,
     int32_t subtype,
     const FatooraOriginalInvoiceRef *reference,
@@ -363,6 +453,15 @@ FatooraStatus fatoora_invoice_builder_add_item(FatooraInvoiceBuilder *self,
     FatooraError **error);
 FatooraStatus fatoora_invoice_builder_new(const FatooraInvoiceOptions *options,
     FatooraInvoiceBuilder **out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_builder_add_billing_reference(FatooraInvoiceBuilder *self,
+    const FatooraOriginalInvoiceRef *value,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_builder_set_purchase_order_id(FatooraInvoiceBuilder *self,
+    const char *value,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_builder_set_contract_id(FatooraInvoiceBuilder *self,
+    const char *value,
     FatooraError **error);
 FatooraStatus fatoora_invoice_builder_set_id(FatooraInvoiceBuilder *self,
     const char *value,
@@ -421,6 +520,25 @@ FatooraStatus fatoora_invoice_builder_build(FatooraInvoiceBuilder *self,
     FatooraFinalizedInvoice **out,
     FatooraError **error);
 void fatoora_invoice_builder_free(FatooraInvoiceBuilder *self);
+FatooraStatus fatoora_invoice_data_issue_time(const FatooraInvoiceData *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_data_issue_date(const FatooraInvoiceData *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_data_payment_means_len(const FatooraInvoiceData *self,
+    size_t *out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_data_payment_means(const FatooraInvoiceData *self,
+    size_t index,
+    FatooraPaymentMeans **out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_data_purchase_order_id(const FatooraInvoiceData *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_data_contract_id(const FatooraInvoiceData *self,
+    char **out,
+    FatooraError **error);
 FatooraStatus fatoora_invoice_data_payment_instruction(const FatooraInvoiceData *self,
     char **out,
     FatooraError **error);
@@ -507,7 +625,53 @@ FatooraStatus fatoora_invoice_data_original_invoice_ref(const FatooraInvoiceData
 FatooraStatus fatoora_invoice_data_original_invoice_reason(const FatooraInvoiceData *self,
     char **out,
     FatooraError **error);
+FatooraStatus fatoora_invoice_data_notes_len(const FatooraInvoiceData *self,
+    size_t *out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_data_note_at(const FatooraInvoiceData *self,
+    size_t index,
+    FatooraInvoiceNote **out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_data_billing_references_len(const FatooraInvoiceData *self,
+    size_t *out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_data_billing_reference(const FatooraInvoiceData *self,
+    size_t index,
+    FatooraOriginalInvoiceRef **out,
+    FatooraError **error);
 void fatoora_invoice_data_free(FatooraInvoiceData *self);
+FatooraStatus fatoora_invoice_line_item_item_gross_price(const FatooraInvoiceLineItem *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_line_item_item_price_discount(const FatooraInvoiceLineItem *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_line_item_item_price_base_quantity(const FatooraInvoiceLineItem *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_line_item_item_price_base_quantity_unit_code(const FatooraInvoiceLineItem *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_line_item_adjustments_len(const FatooraInvoiceLineItem *self,
+    size_t *out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_line_item_adjustment(const FatooraInvoiceLineItem *self,
+    size_t index,
+    FatooraAdjustment **out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_line_item_adjustment_is_charge(const FatooraInvoiceLineItem *self,
+    size_t index,
+    bool *out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_line_item_item_seller_identifier(const FatooraInvoiceLineItem *self,
+    FatooraOtherId **out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_line_item_item_buyer_identifier(const FatooraInvoiceLineItem *self,
+    FatooraOtherId **out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_line_item_item_standard_identifier(const FatooraInvoiceLineItem *self,
+    FatooraOtherId **out,
+    FatooraError **error);
 FatooraStatus fatoora_invoice_line_item_with_document_reference(const FatooraInvoiceLineItem *self,
     const FatooraOriginalInvoiceRef *reference,
     FatooraInvoiceLineItem **out,
@@ -569,6 +733,15 @@ FatooraStatus fatoora_invoice_line_item_vat_rate(const FatooraInvoiceLineItem *s
     FatooraError **error);
 FatooraStatus fatoora_invoice_line_item_vat_amount(const FatooraInvoiceLineItem *self,
     char **out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_line_item_has_vat_rate(const FatooraInvoiceLineItem *self,
+    bool *out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_line_item_has_tax_total(const FatooraInvoiceLineItem *self,
+    bool *out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_line_item_has_gross_amount(const FatooraInvoiceLineItem *self,
+    bool *out,
     FatooraError **error);
 FatooraStatus fatoora_invoice_line_item_vat_category(const FatooraInvoiceLineItem *self,
     uint8_t *out,
@@ -638,6 +811,85 @@ FatooraStatus fatoora_invoice_totals_payable_amount(const FatooraInvoiceTotals *
     char **out,
     FatooraError **error);
 void fatoora_invoice_totals_free(FatooraInvoiceTotals *self);
+FatooraStatus fatoora_line_item_builder_set_tax_total_present(FatooraLineItemBuilder *self,
+    bool present,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_set_gross_amount_present(FatooraLineItemBuilder *self,
+    bool present,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_build(FatooraLineItemBuilder *self,
+    FatooraInvoiceLineItem **out,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_set_item_name(FatooraLineItemBuilder *self,
+    const char *value,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_set_invoiced_quantity_unit_code(FatooraLineItemBuilder *self,
+    const char *value,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_set_item_price_base_quantity_unit_code(FatooraLineItemBuilder *self,
+    const char *value,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_set_id(FatooraLineItemBuilder *self,
+    const char *value,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_set_invoiced_quantity(FatooraLineItemBuilder *self,
+    const char *value,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_set_item_net_price(FatooraLineItemBuilder *self,
+    const char *value,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_set_item_gross_price(FatooraLineItemBuilder *self,
+    const char *value,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_set_item_price_discount(FatooraLineItemBuilder *self,
+    const char *value,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_set_item_price_base_quantity(FatooraLineItemBuilder *self,
+    const char *value,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_set_line_net_amount(FatooraLineItemBuilder *self,
+    const char *value,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_set_line_vat_amount(FatooraLineItemBuilder *self,
+    const char *value,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_set_line_amount_with_vat(FatooraLineItemBuilder *self,
+    const char *value,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_set_vat_rate(FatooraLineItemBuilder *self,
+    const char *value,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_set_vat_category(FatooraLineItemBuilder *self,
+    int32_t value,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_set_exemption(FatooraLineItemBuilder *self,
+    const FatooraTaxExemption *value,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_add_allowance(FatooraLineItemBuilder *self,
+    const FatooraAdjustment *value,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_add_charge(FatooraLineItemBuilder *self,
+    const FatooraAdjustment *value,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_add_document_reference(FatooraLineItemBuilder *self,
+    const FatooraOriginalInvoiceRef *value,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_add_tax_subtotal(FatooraLineItemBuilder *self,
+    const FatooraVatBreakdown *value,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_set_item_seller_identifier(FatooraLineItemBuilder *self,
+    const char *value,
+    const char *scheme,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_set_item_buyer_identifier(FatooraLineItemBuilder *self,
+    const char *value,
+    const char *scheme,
+    FatooraError **error);
+FatooraStatus fatoora_line_item_builder_set_item_standard_identifier(FatooraLineItemBuilder *self,
+    const char *value,
+    const char *scheme,
+    FatooraError **error);
+void fatoora_line_item_builder_free(FatooraLineItemBuilder *self);
 FatooraStatus fatoora_original_invoice_ref_new(const char *id,
     const char *uuid,
     const char *date,
@@ -668,6 +920,13 @@ FatooraStatus fatoora_other_id_scheme(const FatooraOtherId *self,
     char **out,
     FatooraError **error);
 void fatoora_other_id_free(FatooraOtherId *self);
+FatooraStatus fatoora_party_identifiers_len(const FatooraParty *self,
+    size_t *out,
+    FatooraError **error);
+FatooraStatus fatoora_party_identifier(const FatooraParty *self,
+    size_t index,
+    FatooraOtherId **out,
+    FatooraError **error);
 FatooraStatus fatoora_party_address(const FatooraParty *self,
     FatooraAddress **out,
     FatooraError **error);
@@ -681,6 +940,42 @@ FatooraStatus fatoora_party_name(const FatooraParty *self,
     char **out,
     FatooraError **error);
 void fatoora_party_free(FatooraParty *self);
+FatooraStatus fatoora_payment_means_with_instruction_note(const FatooraPaymentMeans *self,
+    const char *value,
+    FatooraPaymentMeans **out,
+    FatooraError **error);
+FatooraStatus fatoora_payment_means_instruction_notes_len(const FatooraPaymentMeans *self,
+    size_t *out,
+    FatooraError **error);
+FatooraStatus fatoora_payment_means_instruction_note_at(const FatooraPaymentMeans *self,
+    size_t index,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_payment_means_new(const char *code,
+    const char *instruction,
+    FatooraPaymentMeans **out,
+    FatooraError **error);
+FatooraStatus fatoora_payment_means_with_account(const FatooraPaymentMeans *self,
+    const char *id,
+    const char *terms,
+    FatooraPaymentMeans **out,
+    FatooraError **error);
+FatooraStatus fatoora_payment_means_code(const FatooraPaymentMeans *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_payment_means_instruction_note(const FatooraPaymentMeans *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_payment_means_has_account(const FatooraPaymentMeans *self,
+    bool *out,
+    FatooraError **error);
+FatooraStatus fatoora_payment_means_account_identifier(const FatooraPaymentMeans *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_payment_means_payment_terms(const FatooraPaymentMeans *self,
+    char **out,
+    FatooraError **error);
+void fatoora_payment_means_free(FatooraPaymentMeans *self);
 FatooraStatus fatoora_production_request_method(const FatooraProductionRequest *self,
     char **out,
     FatooraError **error);
@@ -879,6 +1174,12 @@ FatooraStatus fatoora_validation_results_error_message(const FatooraValidationRe
     FatooraValidationMessage **out,
     FatooraError **error);
 void fatoora_validation_results_free(FatooraValidationResults *self);
+FatooraStatus fatoora_vat_breakdown_has_vat_rate(const FatooraVatBreakdown *self,
+    bool *out,
+    FatooraError **error);
+FatooraStatus fatoora_vat_breakdown_without_vat_rate(const FatooraVatBreakdown *self,
+    FatooraVatBreakdown **out,
+    FatooraError **error);
 FatooraStatus fatoora_vat_breakdown_new(int32_t category,
     const char *rate,
     const char *taxable_amount,

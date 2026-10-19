@@ -53,7 +53,7 @@ fn buyers_preserve_identifiers_address_and_optional_fields() {
     assert_eq!(result.data().buyer(), standard.data().buyer());
     for vat in [None, Some("310122393500003".into())] {
         for other in [None, Some(OtherId::with_scheme("1234567890", "NAT"))] {
-            let mut address = standard.data().buyer().unwrap().address().clone();
+            let mut address = standard.data().buyer().unwrap().address().unwrap().clone();
             address.building_number.clear();
             address.postal_code.clear();
             address.additional_street = Some("شارع & آخر".into());
@@ -150,6 +150,9 @@ fn mixed_exemptions_and_repeated_adjustments_preserve_independent_metadata() {
             .tax_exemption(category, rate, exemption.clone());
         for charge in [false, true] {
             b = b.adjustment(AllowanceCharge {
+                omitted_rate: false,
+                base_amount: None,
+                percentage: None,
                 tax_category_count: 1,
                 charge,
                 amount: d("1"),
@@ -204,12 +207,7 @@ fn foreign_currency_tax_total_is_not_replaced_by_document_tax() {
 #[test]
 fn duplicate_supported_singletons_are_rejected() {
     let xml = common::complex_standard_invoice().to_xml().unwrap();
-    for tag in [
-        "cbc:Note",
-        "cac:PartyIdentification",
-        "cac:Delivery",
-        "cac:PaymentMeans",
-    ] {
+    for tag in ["cac:PartyIdentification", "cac:Delivery"] {
         let duplicate = if tag == "cac:Delivery" {
             "<cac:Delivery/><cac:Delivery/>".into()
         } else {
@@ -412,6 +410,9 @@ fn unsupported_profiles_schemes_and_duplicate_line_totals_fail_explicitly() {
 
 fn balance_adjustment(charge: bool, amount: &str, category: VatCategory) -> AllowanceCharge {
     AllowanceCharge {
+        omitted_rate: false,
+        base_amount: None,
+        percentage: None,
         tax_category_count: 1,
         charge,
         amount: d(amount),
@@ -504,6 +505,9 @@ fn adjustment_balances_still_reject_a_negative_final_vat_group() {
 #[test]
 fn builder_rejects_invalid_adjustments_and_inconsistent_accounting_metadata() {
     let adjustment = AllowanceCharge {
+        omitted_rate: false,
+        base_amount: None,
+        percentage: None,
         tax_category_count: 1,
         charge: true,
         amount: d("1"),
@@ -616,6 +620,9 @@ fn line_prepayment_subtotals_preserve_every_vat_category_and_reject_invalid_valu
 #[test]
 fn serialized_adjustments_default_the_legacy_tax_category_count() {
     let adjustment = AllowanceCharge {
+        omitted_rate: false,
+        base_amount: None,
+        percentage: None,
         tax_category_count: 2,
         charge: true,
         amount: d("1"),
@@ -637,7 +644,7 @@ fn serialized_adjustments_default_the_legacy_tax_category_count() {
 #[test]
 fn buyer_without_identification_scheme_and_empty_optional_address_roundtrips() {
     let original = common::complex_standard_invoice();
-    let mut address = original.data().buyer().unwrap().address().clone();
+    let mut address = original.data().buyer().unwrap().address().unwrap().clone();
     address.street.clear();
     address.city.clear();
     let buyer = Buyer::new(
@@ -714,10 +721,10 @@ fn foreign_tax_totals_require_one_valid_accounting_amount() {
     let without_tax_currency =
         domestic.replace("<cbc:TaxCurrencyCode>SAR</cbc:TaxCurrencyCode>", "");
     assert_ne!(without_tax_currency, domestic);
-    assert_eq!(
-        parse(&without_tax_currency).unwrap(),
-        parse(&domestic).unwrap()
-    );
+    let parsed = roundtrip(&without_tax_currency);
+    assert!(parsed.data().tax_currency().is_none());
+    assert!(!parsed.to_xml().unwrap().contains("TaxCurrencyCode"));
+    assert_eq!(parsed.totals(), roundtrip(&domestic).totals());
 }
 
 #[test]
@@ -787,6 +794,9 @@ fn document_adjustments_do_not_replace_the_line_derived_vat_category() {
             }
             let invoice = b
                 .adjustment(AllowanceCharge {
+                    omitted_rate: false,
+                    base_amount: None,
+                    percentage: None,
                     tax_category_count: 1,
                     charge,
                     amount: d("1"),
@@ -891,6 +901,9 @@ fn reference_issue_times_accept_surrounding_whitespace_but_reject_invalid_values
 #[test]
 fn repeated_adjustment_classifications_compare_normalized_scalars() {
     let adjustment = AllowanceCharge {
+        omitted_rate: false,
+        base_amount: None,
+        percentage: None,
         tax_category_count: 2,
         ..balance_adjustment(true, "1", VatCategory::Standard)
     };
@@ -988,12 +1001,14 @@ fn credit_debit_reasons_cannot_conflict_with_payment_instructions() {
             let make = |id: &str| {
                 let original = OriginalInvoiceRef::new(id);
                 let kind = if credit {
-                    InvoiceType::CreditNote(InvoiceSubType::Simplified, original, reason.into())
+                    InvoiceType::CreditNote(InvoiceSubType::Simplified)
                 } else {
-                    InvoiceType::DebitNote(InvoiceSubType::Simplified, original, reason.into())
+                    InvoiceType::DebitNote(InvoiceSubType::Simplified)
                 };
                 let source = common::dummy_finalized_invoice();
                 InvoiceBuilder::new(kind)
+                    .billing_reference(original)
+                    .payment_instruction(reason)
                     .id("note")
                     .uuid(source.data().uuid())
                     .issue_datetime("2024-01-01T12:30:00Z")
@@ -1034,24 +1049,16 @@ fn credit_debit_reasons_cannot_conflict_with_payment_instructions() {
                 let public: fatoora_core::Error = InvoiceError::Validation(error).into();
                 assert!(public.details_json().contains("original_invoice_id"));
             }
-            let error = make("ORIGINAL")
+            let changed = make("ORIGINAL")
                 .payment_instruction("different")
                 .build()
-                .unwrap_err();
-            let InvoiceError::Validation(error) = error else {
-                panic!("unexpected error")
-            };
-            assert_eq!(error.issues()[0].field(), InvoiceField::PaymentInstruction);
-            assert_eq!(error.issues()[0].kind(), ValidationKind::Mismatch);
-            let report = validation::ValidationReport::from(&error);
+                .unwrap();
             assert_eq!(
-                report.issues[0].location,
-                Some(validation::ValidationLocation::Field(
-                    "payment_instruction".into()
-                ))
+                roundtrip(&changed.to_xml().unwrap())
+                    .data()
+                    .payment_instruction(),
+                Some("different")
             );
-            let public: fatoora_core::Error = InvoiceError::Validation(error).into();
-            assert!(public.details_json().contains("payment_instruction"));
         }
     }
 }
@@ -1070,6 +1077,7 @@ fn numeric_xml_content_accepts_surrounding_whitespace_without_skipping_validatio
         "</cac:Price>",
         "<cbc:BaseQuantity unitCode=\"PCE\">1</cbc:BaseQuantity></cac:Price>",
     );
+    let invoice = roundtrip(&xml);
     let doc = roxmltree::Document::parse(&xml).unwrap();
     let mut padded = xml.clone();
     let numeric: Vec<_> = doc
@@ -1199,6 +1207,9 @@ fn imported_note_instruction_presence_survives_xml_and_serde() {
 fn oversized_adjustment_counts_are_rejected_before_serialization() {
     for count in [AllowanceCharge::MAX_TAX_CATEGORY_COUNT + 1, usize::MAX] {
         let adjustment = AllowanceCharge {
+            omitted_rate: false,
+            base_amount: None,
+            percentage: None,
             tax_category_count: count,
             ..balance_adjustment(true, "1", VatCategory::Standard)
         };
@@ -1217,6 +1228,9 @@ fn adjustment_count_limit_accepts_boundary_and_rejects_oversized_imports() {
     let invoice = builder()
         .line_item(line(VatCategory::Standard))
         .adjustment(AllowanceCharge {
+            omitted_rate: false,
+            base_amount: None,
+            percentage: None,
             tax_category_count: AllowanceCharge::MAX_TAX_CATEGORY_COUNT,
             ..balance_adjustment(true, "1", VatCategory::Standard)
         })

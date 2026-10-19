@@ -12,6 +12,10 @@ export class Address {
     constructor();
 
 
+    withProvince(value: string): Address;
+
+    province(): Text | null;
+
     static new_(countryCode: string, city: string, street: string, buildingNumber: string, postalCode: string, additionalStreet: string | null, additionalNumber: string | null, district: string | null): Address;
 
     city(): string;

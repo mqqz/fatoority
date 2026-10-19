@@ -6,5 +6,5 @@ It checks for syntax and content as well.
 You can use the command (fatoora -help) for more information.
 
 ****************************************************************
-2026-09-24 19:31:48,617 [INFO] QrGenerationService - Qr has been generated successfully
-2026-09-24 19:31:48,617 [INFO] QrGenerationService -  *** QR code = ARJBY21lIEV4cG9ydGVycyBMdGQCDzM5OTk5OTk5OTkwMDAwMwMTMjAyNC0wMi0yMlQxMzoxMDowMAQGNjAwLjAwBQQwLjAwBiwwTEZzVE8xVUJvVW1EQzRuOEVwV0NlNVM1a1dYemVEc0YxVmFWdCtsS0cwPQdgTUVRQ0lDZXIxeUlDS0ZuTVNyZW15cGJhNzZKcEhtMy8zZ2ZUaWgxTE1yOURJK3pOQWlCZTdCMHlocHBmV1c4WEtONjk0RTIyWFFYcktoT0VaVUFmRm9sZ0xyOEVEUT09CFgwVjAQBgcqhkjOPQIBBgUrgQQACgNCAAShYIprRJr0UgStM6/S4CQLVUgpfFT2c+nHa+V/jKEx6PLxzTZcluUOru0/J2jyarRqE4yY2jyDCeLte3UpP1R4
+2026-10-19 18:02:24,103 [INFO] QrGenerationService - Qr has been generated successfully
+2026-10-19 18:02:24,103 [INFO] QrGenerationService -  *** QR code = ARJBY21lIEV4cG9ydGVycyBMdGQCDzM5OTk5OTk5OTkwMDAwMwMTMjAyNC0wMi0yMlQxNjoxMDowMAQGNjAwLjAwBQQwLjAwBixZVklPbnMvODFRMUtacE1FdGhVcGJub2txQTlxekZVZ2w5L0NMZ0wwT1owPQdgTUVZQ0lRRDlvekhja3FlWC9KajdYTml6bWtMUGsyWVEwS0JRZnBwYW5taG1WUHY2blFJaEFQRzkyYkR2MW5vVVFTdEplOExjTkdOYklGZmtQV2hjOExJalMyQmZBVzRyCFgwVjAQBgcqhkjOPQIBBgUrgQQACgNCAAShYIprRJr0UgStM6/S4CQLVUgpfFT2c+nHa+V/jKEx6PLxzTZcluUOru0/J2jyarRqE4yY2jyDCeLte3UpP1R4

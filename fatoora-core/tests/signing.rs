@@ -556,7 +556,7 @@ fn signing_normalizes_qr_scalars_and_preserves_free_text() {
         for (tag, expected) in [
             (1, " Acme Inc "),
             (2, "399999999900003"),
-            (3, "2024-01-01T12:30:00"),
+            (3, "2024-01-01T12:30:00Z"),
             (4, "115.00"),
             (5, "15.00"),
         ] {

@@ -33,6 +33,19 @@ namespace _native {
 class AllowanceCharge {
 public:
 
+  inline bool has_vat_rate() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::AllowanceCharge>, std::unique_ptr<_native::BindingError>> without_vat_rate() const;
+
+  /**
+   * Retain this adjustment's metadata and check its percentage calculation.
+   */
+  inline _native::diplomat::result<std::unique_ptr<_native::AllowanceCharge>, std::unique_ptr<_native::BindingError>> with_percentage(std::string_view base, std::string_view percent) const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> base_amount() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> percentage() const;
+
   inline static _native::diplomat::result<std::unique_ptr<_native::AllowanceCharge>, std::unique_ptr<_native::BindingError>> new_(bool charge, std::string_view amount, std::optional<std::string_view> reason, std::optional<std::string_view> reason_code, uint8_t category, std::string_view rate, const _native::TaxExemption& exemption);
 
   inline bool is_charge() const;

@@ -6,13 +6,13 @@ It checks for syntax and content as well.
 You can use the command (fatoora -help) for more information.
 
 ****************************************************************
-2026-09-24 19:31:47,075 [INFO] ValidationProcessorImpl - [XSD] validation result : PASSED
-2026-09-24 19:31:47,643 [INFO] ValidationProcessorImpl - [EN] validation result : PASSED
-2026-09-24 19:31:47,889 [INFO] ValidationProcessorImpl - [KSA] validation result : FAILED
-2026-09-24 19:31:47,890 [ERROR] ValidationProcessorImpl - ksa validation errors : 
-2026-09-24 19:31:47,890 [ERROR] ValidationProcessorImpl - CODE : BR-KSA-07, MESSAGE : [BR-KSA-07]-Self billing is not allowed (KSA-2, position 7 cannot be "1") for export invoices (KSA-2, position 5 = 1).
-2026-09-24 19:31:47,890 [ERROR] ValidationProcessorImpl - ksa validation warnings : 
-2026-09-24 19:31:47,890 [WARN] ValidationProcessorImpl - CODE : BR-KSA-69, MESSAGE : [BR-KSA-69]-A VAT breakdown (BG-23) with VAT Category code (BT-118) 'Zero rated' shall have a VAT exception reason code (BT-121).
-2026-09-24 19:31:47,890 [WARN] ValidationProcessorImpl - CODE : BR-KSA-15, MESSAGE : [BR-KSA-15]-The tax invoice ((invoice type code (BT-30) = 388) and (invoice transaction code (KSA-2) has "01" as first 2 digits)) must contain the supply date (KSA-5).
-2026-09-24 19:31:47,922 [INFO] ValidationProcessorImpl - [PIH] validation result : PASSED
-2026-09-24 19:31:47,922 [INFO] InvoiceValidationService -  *** GLOBAL VALIDATION RESULT = FAILED 
+2026-10-19 18:02:22,316 [INFO] ValidationProcessorImpl - [XSD] validation result : PASSED
+2026-10-19 18:02:22,996 [INFO] ValidationProcessorImpl - [EN] validation result : PASSED
+2026-10-19 18:02:23,267 [INFO] ValidationProcessorImpl - [KSA] validation result : FAILED
+2026-10-19 18:02:23,267 [ERROR] ValidationProcessorImpl - ksa validation errors : 
+2026-10-19 18:02:23,267 [ERROR] ValidationProcessorImpl - CODE : BR-KSA-07, MESSAGE : [BR-KSA-07]-Self billing is not allowed (KSA-2, position 7 cannot be "1") for export invoices (KSA-2, position 5 = 1).
+2026-10-19 18:02:23,268 [ERROR] ValidationProcessorImpl - ksa validation warnings : 
+2026-10-19 18:02:23,268 [WARN] ValidationProcessorImpl - CODE : BR-KSA-69, MESSAGE : [BR-KSA-69]-A VAT breakdown (BG-23) with VAT Category code (BT-118) 'Zero rated' shall have a VAT exception reason code (BT-121).
+2026-10-19 18:02:23,268 [WARN] ValidationProcessorImpl - CODE : BR-KSA-15, MESSAGE : [BR-KSA-15]-The tax invoice ((invoice type code (BT-30) = 388) and (invoice transaction code (KSA-2) has "01" as first 2 digits)) must contain the supply date (KSA-5).
+2026-10-19 18:02:23,302 [INFO] ValidationProcessorImpl - [PIH] validation result : PASSED
+2026-10-19 18:02:23,302 [INFO] InvoiceValidationService -  *** GLOBAL VALIDATION RESULT = FAILED 

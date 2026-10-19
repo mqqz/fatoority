@@ -172,3 +172,26 @@ test('imported signed invoice hashes its stored XML', () => {
     assert.equal(sdk.SignedInvoice.fromXml(xml).hashBase64(), sdk.Xml.hash(xml));
   }
 });
+
+test('optional line fields and repeated identifiers survive WASM import', () => {
+  const b = sdk.InvoiceBuilder.new_(0, 1, null, null, null, null);
+  b.setId('JS-fields'); b.setUuid('uuid'); b.setIssueDatetime('2024-01-01T12:30:00Z');
+  b.setCurrency('SAR'); b.setPreviousInvoiceHash('hash'); b.setInvoiceCounter(1n); b.setVatCategory(1);
+  b.setSeller('Seller', sdk.Address.new_('SA', 'Riyadh', 'Street', '1234', '12222', null, null, null), '301121971500003', 'first', 'CRN');
+  b.addSellerIdentifier('second', 'OTH');
+  const line = sdk.LineItemBuilder.new_();
+  line.setItemName('case'); line.setInvoicedQuantity('30'); line.setItemNetPrice('100');
+  line.setItemPriceBaseQuantity('12'); line.setVatRate('15'); line.setVatCategory(1);
+  line.addAllowance(sdk.Adjustment.percentage('250', '10').withReason('rebate', '95'));
+  b.addItem(line.build());
+  b.addPaymentMeans(sdk.PaymentMeans.new_('30', 'one').withInstructionNote('two').withAccount('bank', 'net 30'));
+  const invoice = b.build();
+  const parsed = sdk.FinalizedInvoice.fromXml(invoice.xml());
+  assert.equal(parsed.data().lineItem(0).totalAmount(), '225');
+  assert.equal(parsed.data().lineItem(0).itemPriceBaseQuantity().value(), '12');
+  assert.equal(parsed.data().seller().identifiersLen(), 2);
+  assert.equal(parsed.data().seller().identifier(1).value(), 'second');
+  assert.equal(parsed.data().paymentMeans(0).instructionNotesLen(), 2);
+  assert.equal(parsed.data().paymentMeans(0).instructionNoteAt(1).value(), 'two');
+  assert.equal(parsed.xml(), invoice.xml());
+});

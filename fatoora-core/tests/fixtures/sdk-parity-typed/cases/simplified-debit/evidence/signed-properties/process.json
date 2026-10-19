@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "java",
+    "-cp",
+    "/home/mo/code/fatoora-rs/target/fatoora sdk parity d7qjn8c1/sdk:/home/mo/code/fatoora-rs/target/fatoora sdk parity d7qjn8c1/sdk/Apps/zatca-einvoicing-sdk-238-R3.4.8.jar",
+    "SignedPropertiesBytes",
+    "/home/mo/code/fatoora-rs/target/invoice-model-sdk-capture/cases/simplified-debit/input.xml",
+    "/home/mo/code/fatoora-rs/target/invoice-model-sdk-capture/cases/simplified-debit/sdk-signed.xml",
+    "/home/mo/code/fatoora-rs/target/invoice-model-sdk-capture/cases/simplified-debit/signed-properties.xml"
+  ],
+  "cwd": "/home/mo/code/fatoora-rs/target/fatoora sdk parity d7qjn8c1/sdk",
+  "exit_code": 0
+}

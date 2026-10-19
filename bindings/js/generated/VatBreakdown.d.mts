@@ -12,6 +12,10 @@ export class VatBreakdown {
     constructor();
 
 
+    hasVatRate(): boolean;
+
+    withoutVatRate(): VatBreakdown;
+
     static new_(category: number, rate: string, taxableAmount: string, taxAmount: string, exemption: TaxExemption): VatBreakdown;
 
     category(): number;

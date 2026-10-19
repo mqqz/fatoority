@@ -7,6 +7,13 @@ import com.sun.jna.Structure
 
 internal interface InvoiceBuilderLib: Library {
     fun fatoora_InvoiceBuilder_destroy(handle: Pointer)
+    fun fatoora_InvoiceBuilder_add_seller_identifier(handle: Pointer, value: Slice, scheme: OptionSlice): ResultUnitPointer
+    fun fatoora_InvoiceBuilder_add_buyer_identifier(handle: Pointer, value: Slice, scheme: OptionSlice): ResultUnitPointer
+    fun fatoora_InvoiceBuilder_add_vat_breakdown(handle: Pointer, value: Pointer): ResultUnitPointer
+    fun fatoora_InvoiceBuilder_add_payment_means(handle: Pointer, value: Pointer): ResultUnitPointer
+    fun fatoora_InvoiceBuilder_add_note(handle: Pointer, language: OptionSlice, value: Slice): ResultUnitPointer
+    fun fatoora_InvoiceBuilder_add_document_adjustment(handle: Pointer, charge: Boolean, value: Pointer, category: FFIUint8, rate: Slice, exemption: Pointer): ResultUnitPointer
+    fun fatoora_InvoiceBuilder_set_buyer_without_address(handle: Pointer, name: Slice, vatId: OptionSlice, otherId: OptionSlice, scheme: OptionSlice): ResultUnitPointer
     fun fatoora_InvoiceBuilder_new_with_reference(kind: FFIUint8, subtype: FFIUint8, reference: Pointer, reason: Slice): ResultPointerPointer
     fun fatoora_InvoiceBuilder_set_note_without_language(handle: Pointer, value: Slice): ResultUnitPointer
     fun fatoora_InvoiceBuilder_set_payment_instruction(handle: Pointer, instruction: Slice): ResultUnitPointer
@@ -18,6 +25,9 @@ internal interface InvoiceBuilderLib: Library {
     fun fatoora_InvoiceBuilder_add_adjustment(handle: Pointer, adjustment: Pointer): ResultUnitPointer
     fun fatoora_InvoiceBuilder_add_item(handle: Pointer, item: Pointer): ResultUnitPointer
     fun fatoora_InvoiceBuilder_new(kind: FFIUint8, subtype: FFIUint8, originalId: OptionSlice, originalUuid: OptionSlice, originalDate: OptionSlice, reason: OptionSlice): ResultPointerPointer
+    fun fatoora_InvoiceBuilder_add_billing_reference(handle: Pointer, value: Pointer): ResultUnitPointer
+    fun fatoora_InvoiceBuilder_set_purchase_order_id(handle: Pointer, value: Slice): ResultUnitPointer
+    fun fatoora_InvoiceBuilder_set_contract_id(handle: Pointer, value: Slice): ResultUnitPointer
     fun fatoora_InvoiceBuilder_set_id(handle: Pointer, value: Slice): ResultUnitPointer
     fun fatoora_InvoiceBuilder_set_uuid(handle: Pointer, value: Slice): ResultUnitPointer
     fun fatoora_InvoiceBuilder_set_issue_datetime(handle: Pointer, value: Slice): ResultUnitPointer
@@ -120,6 +130,141 @@ class InvoiceBuilder internal constructor (
                 originalDateSliceMemory?.close()
                 reasonSliceMemory?.close()
             }
+        }
+    }
+
+    fun addSellerIdentifier(value: String, scheme: String?): Result<Unit> {
+        val valueSliceMemory = PrimitiveArrayTools.borrowUtf8(value)
+        val schemeSliceMemory = scheme?.let { PrimitiveArrayTools.borrowUtf8(it) }
+
+        val returnVal = lib.fatoora_InvoiceBuilder_add_seller_identifier(handle, valueSliceMemory.slice, schemeSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none());
+        try {
+            val nativeOkVal = returnVal.getNativeOk();
+            if (nativeOkVal != null) {
+                return Unit.ok()
+            } else {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal.getNativeErr()!!
+                val returnOpaque = BindingError(handle, selfEdges, true)
+                return returnOpaque.err()
+            }
+        } finally {
+            valueSliceMemory.close()
+            schemeSliceMemory?.close()
+        }
+    }
+
+    fun addBuyerIdentifier(value: String, scheme: String?): Result<Unit> {
+        val valueSliceMemory = PrimitiveArrayTools.borrowUtf8(value)
+        val schemeSliceMemory = scheme?.let { PrimitiveArrayTools.borrowUtf8(it) }
+
+        val returnVal = lib.fatoora_InvoiceBuilder_add_buyer_identifier(handle, valueSliceMemory.slice, schemeSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none());
+        try {
+            val nativeOkVal = returnVal.getNativeOk();
+            if (nativeOkVal != null) {
+                return Unit.ok()
+            } else {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal.getNativeErr()!!
+                val returnOpaque = BindingError(handle, selfEdges, true)
+                return returnOpaque.err()
+            }
+        } finally {
+            valueSliceMemory.close()
+            schemeSliceMemory?.close()
+        }
+    }
+
+    fun addVatBreakdown(value: VatBreakdown): Result<Unit> {
+
+        val returnVal = lib.fatoora_InvoiceBuilder_add_vat_breakdown(handle, value.handle);
+        val nativeOkVal = returnVal.getNativeOk();
+        if (nativeOkVal != null) {
+            return Unit.ok()
+        } else {
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal.getNativeErr()!!
+            val returnOpaque = BindingError(handle, selfEdges, true)
+            return returnOpaque.err()
+        }
+    }
+
+    fun addPaymentMeans(value: PaymentMeans): Result<Unit> {
+
+        val returnVal = lib.fatoora_InvoiceBuilder_add_payment_means(handle, value.handle);
+        val nativeOkVal = returnVal.getNativeOk();
+        if (nativeOkVal != null) {
+            return Unit.ok()
+        } else {
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal.getNativeErr()!!
+            val returnOpaque = BindingError(handle, selfEdges, true)
+            return returnOpaque.err()
+        }
+    }
+
+    fun addNote(language: String?, value: String): Result<Unit> {
+        val languageSliceMemory = language?.let { PrimitiveArrayTools.borrowUtf8(it) }
+        val valueSliceMemory = PrimitiveArrayTools.borrowUtf8(value)
+
+        val returnVal = lib.fatoora_InvoiceBuilder_add_note(handle, languageSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none(), valueSliceMemory.slice);
+        try {
+            val nativeOkVal = returnVal.getNativeOk();
+            if (nativeOkVal != null) {
+                return Unit.ok()
+            } else {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal.getNativeErr()!!
+                val returnOpaque = BindingError(handle, selfEdges, true)
+                return returnOpaque.err()
+            }
+        } finally {
+            languageSliceMemory?.close()
+            valueSliceMemory.close()
+        }
+    }
+
+    fun addDocumentAdjustment(charge: Boolean, value: Adjustment, category: UByte, rate: String, exemption: TaxExemption): Result<Unit> {
+        val rateSliceMemory = PrimitiveArrayTools.borrowUtf8(rate)
+
+        val returnVal = lib.fatoora_InvoiceBuilder_add_document_adjustment(handle, charge, value.handle, FFIUint8(category), rateSliceMemory.slice, exemption.handle);
+        try {
+            val nativeOkVal = returnVal.getNativeOk();
+            if (nativeOkVal != null) {
+                return Unit.ok()
+            } else {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal.getNativeErr()!!
+                val returnOpaque = BindingError(handle, selfEdges, true)
+                return returnOpaque.err()
+            }
+        } finally {
+            rateSliceMemory.close()
+        }
+    }
+
+    fun setBuyerWithoutAddress(name: String, vatId: String?, otherId: String?, scheme: String?): Result<Unit> {
+        val nameSliceMemory = PrimitiveArrayTools.borrowUtf8(name)
+        val vatIdSliceMemory = vatId?.let { PrimitiveArrayTools.borrowUtf8(it) }
+        val otherIdSliceMemory = otherId?.let { PrimitiveArrayTools.borrowUtf8(it) }
+        val schemeSliceMemory = scheme?.let { PrimitiveArrayTools.borrowUtf8(it) }
+
+        val returnVal = lib.fatoora_InvoiceBuilder_set_buyer_without_address(handle, nameSliceMemory.slice, vatIdSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none(), otherIdSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none(), schemeSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none());
+        try {
+            val nativeOkVal = returnVal.getNativeOk();
+            if (nativeOkVal != null) {
+                return Unit.ok()
+            } else {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal.getNativeErr()!!
+                val returnOpaque = BindingError(handle, selfEdges, true)
+                return returnOpaque.err()
+            }
+        } finally {
+            nameSliceMemory.close()
+            vatIdSliceMemory?.close()
+            otherIdSliceMemory?.close()
+            schemeSliceMemory?.close()
         }
     }
 
@@ -285,6 +430,58 @@ class InvoiceBuilder internal constructor (
             val handle = returnVal.getNativeErr()!!
             val returnOpaque = BindingError(handle, selfEdges, true)
             return returnOpaque.err()
+        }
+    }
+
+    fun addBillingReference(value: OriginalInvoiceRef): Result<Unit> {
+
+        val returnVal = lib.fatoora_InvoiceBuilder_add_billing_reference(handle, value.handle);
+        val nativeOkVal = returnVal.getNativeOk();
+        if (nativeOkVal != null) {
+            return Unit.ok()
+        } else {
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal.getNativeErr()!!
+            val returnOpaque = BindingError(handle, selfEdges, true)
+            return returnOpaque.err()
+        }
+    }
+
+    fun setPurchaseOrderId(value: String): Result<Unit> {
+        val valueSliceMemory = PrimitiveArrayTools.borrowUtf8(value)
+
+        val returnVal = lib.fatoora_InvoiceBuilder_set_purchase_order_id(handle, valueSliceMemory.slice);
+        try {
+            val nativeOkVal = returnVal.getNativeOk();
+            if (nativeOkVal != null) {
+                return Unit.ok()
+            } else {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal.getNativeErr()!!
+                val returnOpaque = BindingError(handle, selfEdges, true)
+                return returnOpaque.err()
+            }
+        } finally {
+            valueSliceMemory.close()
+        }
+    }
+
+    fun setContractId(value: String): Result<Unit> {
+        val valueSliceMemory = PrimitiveArrayTools.borrowUtf8(value)
+
+        val returnVal = lib.fatoora_InvoiceBuilder_set_contract_id(handle, valueSliceMemory.slice);
+        try {
+            val nativeOkVal = returnVal.getNativeOk();
+            if (nativeOkVal != null) {
+                return Unit.ok()
+            } else {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal.getNativeErr()!!
+                val returnOpaque = BindingError(handle, selfEdges, true)
+                return returnOpaque.err()
+            }
+        } finally {
+            valueSliceMemory.close()
         }
     }
 
