@@ -1,0 +1,748 @@
+{
+  "environment": "developer-portal",
+  "base_url": "https://gw-fatoora.zatca.gov.sa/e-invoicing/developer-portal/",
+  "run_utc": "2026-10-19T18:05:19.423480+00:00",
+  "cases": {
+    "simplified-invoice": {
+      "endpoint": "compliance/invoices",
+      "http_status": 200,
+      "note": "baseline with subtype-correct tags",
+      "invoice_sha256": "25ef26aa5e782ef1dd60b23e181bf1ca50572aa794b23cf40252ffd94d433751",
+      "qr": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI2LTEwLTE5VDE4OjA1OjE5BAYxMTUuMDAFBTE1LjAwBixkSElDdjlZUFZNOWk4RFJXQ0pTaFlxTEtORlNKZ1l4UnVmdnZDcFNtaVRnPQdgTUVVQ0lRQ0hpbTFtTzh2bjlkYXphZHRsN0xPK0lyZEdWZVprSk84YnNucTdid0h6dVFJZ1JBanVXelhXd2syZUpCMjEvRFdlOEdBTVJoaWYxaWk5SEJsOVkySWkzSzQ9CFgwVjAQBgcqhkjOPQIBBgUrgQQACgNCAAQYlKOn14UpC+uyelpXGfXS0LXrUt+e8CMpCLiJz9qhBQkDfS0zQo4w1bzqlvKNnwPH/4DpBzgX/8swhSYgS78/CUcwRQIgHP1t+uaAKXTHTWUbdf4CcNPr1ZPYqPXHLqmVGgLW6p8CIQCbavAFrILEiHtqDpOha4NirygEfGApcS4PG2+P6PsO9g==",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "115.00",
+        "tag5": "15.00",
+        "tag9_base64": "MEUCIBz9bfrmgCl0x01lG3X+AnDT69WT2Kj1xy6plRoC1uqfAiEAm2rwBayCxIh7ag6ToWuDYq8oBHxgKXEuDxtvj+j7DvY="
+      },
+      "response": {
+        "validationResults": {
+          "infoMessages": [
+            {
+              "type": "INFO",
+              "code": "XSD_ZATCA_VALID",
+              "category": "XSD validation",
+              "message": "Complied with UBL 2.1 standards in line with ZATCA specifications",
+              "status": "PASS"
+            }
+          ],
+          "warningMessages": [],
+          "errorMessages": [],
+          "status": "PASS"
+        },
+        "reportingStatus": "REPORTED",
+        "clearanceStatus": null,
+        "qrSellertStatus": null,
+        "qrBuyertStatus": null
+      }
+    },
+    "simplified-credit": {
+      "endpoint": "compliance/invoices",
+      "http_status": 200,
+      "note": "baseline with subtype-correct tags",
+      "invoice_sha256": "46bcd7bfee8cb50c3a09c5039a636042f56c92fbf59b18815ad8740a0637ee68",
+      "qr": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI2LTEwLTE5VDE4OjA1OjIwBAYxMDMuNTAFBTEzLjUwBiw3VThpdXdSRm9JZjdVMThYR0ZJYWRQWUxsSGNPK0pzNzA4TitNQk1hd1dVPQdgTUVVQ0lRREpUZm9ScDVjTk4xcmpEOEpWZStuRmJIcUZKdmtIWTM3MGJDQWI1Nk52c1FJZ092Z1F2dkhES0E4bzZuRktrcmpOQ3BHTEloU0lFbUk4V09IWVBDRHBqUm89CFgwVjAQBgcqhkjOPQIBBgUrgQQACgNCAAQYlKOn14UpC+uyelpXGfXS0LXrUt+e8CMpCLiJz9qhBQkDfS0zQo4w1bzqlvKNnwPH/4DpBzgX/8swhSYgS78/CUcwRQIgHP1t+uaAKXTHTWUbdf4CcNPr1ZPYqPXHLqmVGgLW6p8CIQCbavAFrILEiHtqDpOha4NirygEfGApcS4PG2+P6PsO9g==",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "103.50",
+        "tag5": "13.50",
+        "tag9_base64": "MEUCIBz9bfrmgCl0x01lG3X+AnDT69WT2Kj1xy6plRoC1uqfAiEAm2rwBayCxIh7ag6ToWuDYq8oBHxgKXEuDxtvj+j7DvY="
+      },
+      "response": {
+        "validationResults": {
+          "infoMessages": [
+            {
+              "type": "INFO",
+              "code": "XSD_ZATCA_VALID",
+              "category": "XSD validation",
+              "message": "Complied with UBL 2.1 standards in line with ZATCA specifications",
+              "status": "PASS"
+            }
+          ],
+          "warningMessages": [],
+          "errorMessages": [],
+          "status": "PASS"
+        },
+        "reportingStatus": "REPORTED",
+        "clearanceStatus": null,
+        "qrSellertStatus": null,
+        "qrBuyertStatus": null
+      }
+    },
+    "simplified-debit": {
+      "endpoint": "compliance/invoices",
+      "http_status": 202,
+      "note": "baseline with subtype-correct tags",
+      "invoice_sha256": "f628929a07586b88430211538e6bab68f27dca1f42ba6d7799f7ff6368009a76",
+      "qr": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI2LTEwLTE5VDE4OjA1OjIxBAYxMDEuMjAFBTEzLjIwBixyclE2b3l4WUM1TXh1VXNrRjRmUEk2SzJuMWppZFJycE14cnEzKy95ZmJBPQdgTUVRQ0lGNE1SVkgxVGE5LzRSbXc5aGlXamJVYUxRRThtNWpFVE1XRVJPMURXNHRKQWlCTWRRM3pBSkZueVlQUEVvcU1HV2trUDNrSWJBMytWREpXWVZsamlmd3pSZz09CFgwVjAQBgcqhkjOPQIBBgUrgQQACgNCAAQYlKOn14UpC+uyelpXGfXS0LXrUt+e8CMpCLiJz9qhBQkDfS0zQo4w1bzqlvKNnwPH/4DpBzgX/8swhSYgS78/CUcwRQIgHP1t+uaAKXTHTWUbdf4CcNPr1ZPYqPXHLqmVGgLW6p8CIQCbavAFrILEiHtqDpOha4NirygEfGApcS4PG2+P6PsO9g==",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "101.20",
+        "tag5": "13.20",
+        "tag9_base64": "MEUCIBz9bfrmgCl0x01lG3X+AnDT69WT2Kj1xy6plRoC1uqfAiEAm2rwBayCxIh7ag6ToWuDYq8oBHxgKXEuDxtvj+j7DvY="
+      },
+      "response": {
+        "validationResults": {
+          "infoMessages": [
+            {
+              "type": "INFO",
+              "code": "XSD_ZATCA_VALID",
+              "category": "XSD validation",
+              "message": "Complied with UBL 2.1 standards in line with ZATCA specifications",
+              "status": "PASS"
+            }
+          ],
+          "warningMessages": [
+            {
+              "type": "WARNING",
+              "code": "BR-KSA-19",
+              "category": "KSA",
+              "message": "Each Document level charge (BG-21) shall have a code for the reason for document level charge (BT-105).",
+              "status": "WARNING"
+            }
+          ],
+          "errorMessages": [],
+          "status": "WARNING"
+        },
+        "reportingStatus": "REPORTED",
+        "clearanceStatus": null,
+        "qrSellertStatus": null,
+        "qrBuyertStatus": null
+      }
+    },
+    "standard-invoice": {
+      "endpoint": "compliance/invoices",
+      "http_status": 202,
+      "note": "baseline with subtype-correct tags",
+      "invoice_sha256": "e2c10e77c416f2f0e3bf5a0ca3f63148429f81b4e0528b31ecfbea244dc610da",
+      "qr": {
+        "encoded": "ARZBY21lIEdsb2JhbCBUcmFkaW5nIENvAg8zOTk5OTk5OTk5MDAwMDMDEzIwMjYtMTAtMTlUMTg6MDU6MjIEBzE1MTEuMzgFBjExOC44OAYsZXRqa05iL2R4NGJodDg3L2V1L2lnbWJURWFRUjdVT3hUQU9paXErZTdGWT0HYE1FVUNJUUQreFdnMGRNcU41ZTNuU3F5VkNrczNsaityTkprU2VRNkIrMW9qZ2VVTUd3SWdhWFNHQnZSdFJnNG5UZVE1emZ4azhXaUNtK2pLQjhtZE9qSm9vMVN1dG5JPQhYMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEGJSjp9eFKQvrsnpaVxn10tC161LfnvAjKQi4ic/aoQUJA30tM0KOMNW86pbyjZ8Dx/+A6Qc4F//LMIUmIEu/Pw==",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "tag4": "1511.38",
+        "tag5": "118.88",
+        "tag9_base64": null
+      },
+      "response": {
+        "validationResults": {
+          "infoMessages": [
+            {
+              "type": "INFO",
+              "code": "XSD_ZATCA_VALID",
+              "category": "XSD validation",
+              "message": "Complied with UBL 2.1 standards in line with ZATCA specifications",
+              "status": "PASS"
+            }
+          ],
+          "warningMessages": [
+            {
+              "type": "WARNING",
+              "code": "BR-KSA-15",
+              "category": "KSA",
+              "message": "The tax invoice ((invoice type code (BT-30) = 388) & (invoice transaction code (KSA-2) has \u201c01\u201d as first 2 digits)) must contain the supply date (KSA-5).",
+              "status": "WARNING"
+            },
+            {
+              "type": "WARNING",
+              "code": "BR-KSA-19",
+              "category": "KSA",
+              "message": "Each Document level charge (BG-21) shall have a code for the reason for document level charge (BT-105).",
+              "status": "WARNING"
+            },
+            {
+              "type": "WARNING",
+              "code": "BR-KSA-69",
+              "category": "KSA",
+              "message": "[BR-KSA-69]-A VAT breakdown (BG-23) with VAT Category code (BT-118) 'Zero rated' shall have a VAT exception reason code (BT-121).",
+              "status": "WARNING"
+            }
+          ],
+          "errorMessages": [],
+          "status": "WARNING"
+        },
+        "reportingStatus": null,
+        "clearanceStatus": "CLEARED",
+        "qrSellertStatus": null,
+        "qrBuyertStatus": null
+      }
+    },
+    "standard-credit": {
+      "endpoint": "compliance/invoices",
+      "http_status": 200,
+      "note": "baseline with subtype-correct tags",
+      "invoice_sha256": "581603a7ef3100d01e73ee9c89c4b8b0bb77f0b398e87cb029ae65f0b59cf859",
+      "qr": {
+        "encoded": "ARZBY21lIEdsb2JhbCBUcmFkaW5nIENvAg8zOTk5OTk5OTk5MDAwMDMDEzIwMjYtMTAtMTlUMTg6MDU6MjIEBjI3MC4yNQUFMzUuMjUGLHc1WDd2ajAxa2I0Z09yMk5vSmMxaGJmb2NFZ1Zaemd2M003Z2hTS0JqL0k9B2BNRVVDSVFEZGlqS2l5aElmVjhQdStPd285WkdwcTBtSlp1OGU1THB0WWhpYnJlb080UUlnSVQrY3E4MnpXK1B2c2Vab2I0K3N1SnRCTUZzcU01OVZIQUg1Z3FOd0hVcz0IWDBWMBAGByqGSM49AgEGBSuBBAAKA0IABBiUo6fXhSkL67J6WlcZ9dLQtetS357wIykIuInP2qEFCQN9LTNCjjDVvOqW8o2fA8f/gOkHOBf/yzCFJiBLvz8=",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "tag4": "270.25",
+        "tag5": "35.25",
+        "tag9_base64": null
+      },
+      "response": {
+        "validationResults": {
+          "infoMessages": [
+            {
+              "type": "INFO",
+              "code": "XSD_ZATCA_VALID",
+              "category": "XSD validation",
+              "message": "Complied with UBL 2.1 standards in line with ZATCA specifications",
+              "status": "PASS"
+            }
+          ],
+          "warningMessages": [],
+          "errorMessages": [],
+          "status": "PASS"
+        },
+        "reportingStatus": null,
+        "clearanceStatus": "CLEARED",
+        "qrSellertStatus": null,
+        "qrBuyertStatus": null
+      }
+    },
+    "standard-debit": {
+      "endpoint": "compliance/invoices",
+      "http_status": 202,
+      "note": "baseline with subtype-correct tags",
+      "invoice_sha256": "4c0f0177e3b0667b688f28555d1850123f0f8ba8a487d4908915a225a9e00e9a",
+      "qr": {
+        "encoded": "ARZBY21lIEdsb2JhbCBUcmFkaW5nIENvAg8zOTk5OTk5OTk5MDAwMDMDEzIwMjYtMTAtMTlUMTg6MDU6MjMEBjM3OS41MAUFNDkuNTAGLE9ieVM1OVBIcy82aHc1Wlgra3dBY2VLUStIRzFyVUovdVlESHdCSFNndVk9B2BNRVVDSVFDZzZKMVNteThJa200MjZjeVlqTWNkVjZyU1lmaXZWOU1hMUREZTkyRGtlZ0lnYTBwNDduWi84YjVHVE15UFYydGZSbW5sa2JMdFVvR3NXNVozVER4WXZXRT0IWDBWMBAGByqGSM49AgEGBSuBBAAKA0IABBiUo6fXhSkL67J6WlcZ9dLQtetS357wIykIuInP2qEFCQN9LTNCjjDVvOqW8o2fA8f/gOkHOBf/yzCFJiBLvz8=",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "tag4": "379.50",
+        "tag5": "49.50",
+        "tag9_base64": null
+      },
+      "response": {
+        "validationResults": {
+          "infoMessages": [
+            {
+              "type": "INFO",
+              "code": "XSD_ZATCA_VALID",
+              "category": "XSD validation",
+              "message": "Complied with UBL 2.1 standards in line with ZATCA specifications",
+              "status": "PASS"
+            }
+          ],
+          "warningMessages": [
+            {
+              "type": "WARNING",
+              "code": "BR-KSA-19",
+              "category": "KSA",
+              "message": "Each Document level charge (BG-21) shall have a code for the reason for document level charge (BT-105).",
+              "status": "WARNING"
+            }
+          ],
+          "errorMessages": [],
+          "status": "WARNING"
+        },
+        "reportingStatus": null,
+        "clearanceStatus": "CLEARED",
+        "qrSellertStatus": null,
+        "qrBuyertStatus": null
+      }
+    },
+    "tag4-equivalent-scale": {
+      "endpoint": "compliance/invoices",
+      "http_status": 400,
+      "note": "XML 115.00, QR 115.0",
+      "invoice_sha256": "50a873ab23a15f1587dc3a9624b542279fc9adaec34d244e87b3b7887a18ca23",
+      "qr": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI2LTEwLTE5VDE4OjA1OjE5BAUxMTUuMAUFMTUuMDAGLGRISUN2OVlQVk05aThEUldDSlNoWXFMS05GU0pnWXhSdWZ2dkNwU21pVGc9B2BNRVVDSVFDSGltMW1POHZuOWRhemFkdGw3TE8rSXJkR1ZlWmtKTzhic25xN2J3SHp1UUlnUkFqdVd6WFd3azJlSkIyMS9EV2U4R0FNUmhpZjFpaTlIQmw5WTJJaTNLND0IWDBWMBAGByqGSM49AgEGBSuBBAAKA0IABBiUo6fXhSkL67J6WlcZ9dLQtetS357wIykIuInP2qEFCQN9LTNCjjDVvOqW8o2fA8f/gOkHOBf/yzCFJiBLvz8JRzBFAiAc/W365oApdMdNZRt1/gJw0+vVk9io9ccuqZUaAtbqnwIhAJtq8AWsgsSIe2oOk6Frg2KvKAR8YClxLg8bb4/o+w72",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "115.0",
+        "tag5": "15.00",
+        "tag9_base64": "MEUCIBz9bfrmgCl0x01lG3X+AnDT69WT2Kj1xy6plRoC1uqfAiEAm2rwBayCxIh7ag6ToWuDYq8oBHxgKXEuDxtvj+j7DvY="
+      },
+      "response": {
+        "validationResults": {
+          "infoMessages": [
+            {
+              "type": "INFO",
+              "code": "XSD_ZATCA_VALID",
+              "category": "XSD validation",
+              "message": "Complied with UBL 2.1 standards in line with ZATCA specifications",
+              "status": "PASS"
+            }
+          ],
+          "warningMessages": [],
+          "errorMessages": [
+            {
+              "type": "ERROR",
+              "code": "invoiceTotal_QRCODE_INVALID",
+              "category": "QRCODE_VALIDATION",
+              "message": "Amount due for payment (BT-115) in the Invoice does not match with QR code invoice total or Amount due for payment (BT-115) missing in the invoice",
+              "status": "ERROR"
+            }
+          ],
+          "status": "ERROR"
+        },
+        "reportingStatus": "NOT_REPORTED",
+        "clearanceStatus": null,
+        "qrSellertStatus": null,
+        "qrBuyertStatus": null
+      }
+    },
+    "tag4-equivalent-integer": {
+      "endpoint": "compliance/invoices",
+      "http_status": 400,
+      "note": "XML 115.00, QR 115",
+      "invoice_sha256": "cbb69674fadab9833858e23a9fd45b95e5ca11bde6dce4851f3bb59707f15d89",
+      "qr": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI2LTEwLTE5VDE4OjA1OjE5BAMxMTUFBTE1LjAwBixkSElDdjlZUFZNOWk4RFJXQ0pTaFlxTEtORlNKZ1l4UnVmdnZDcFNtaVRnPQdgTUVVQ0lRQ0hpbTFtTzh2bjlkYXphZHRsN0xPK0lyZEdWZVprSk84YnNucTdid0h6dVFJZ1JBanVXelhXd2syZUpCMjEvRFdlOEdBTVJoaWYxaWk5SEJsOVkySWkzSzQ9CFgwVjAQBgcqhkjOPQIBBgUrgQQACgNCAAQYlKOn14UpC+uyelpXGfXS0LXrUt+e8CMpCLiJz9qhBQkDfS0zQo4w1bzqlvKNnwPH/4DpBzgX/8swhSYgS78/CUcwRQIgHP1t+uaAKXTHTWUbdf4CcNPr1ZPYqPXHLqmVGgLW6p8CIQCbavAFrILEiHtqDpOha4NirygEfGApcS4PG2+P6PsO9g==",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "115",
+        "tag5": "15.00",
+        "tag9_base64": "MEUCIBz9bfrmgCl0x01lG3X+AnDT69WT2Kj1xy6plRoC1uqfAiEAm2rwBayCxIh7ag6ToWuDYq8oBHxgKXEuDxtvj+j7DvY="
+      },
+      "response": {
+        "validationResults": {
+          "infoMessages": [
+            {
+              "type": "INFO",
+              "code": "XSD_ZATCA_VALID",
+              "category": "XSD validation",
+              "message": "Complied with UBL 2.1 standards in line with ZATCA specifications",
+              "status": "PASS"
+            }
+          ],
+          "warningMessages": [],
+          "errorMessages": [
+            {
+              "type": "ERROR",
+              "code": "invoiceTotal_QRCODE_INVALID",
+              "category": "QRCODE_VALIDATION",
+              "message": "Amount due for payment (BT-115) in the Invoice does not match with QR code invoice total or Amount due for payment (BT-115) missing in the invoice",
+              "status": "ERROR"
+            }
+          ],
+          "status": "ERROR"
+        },
+        "reportingStatus": "NOT_REPORTED",
+        "clearanceStatus": null,
+        "qrSellertStatus": null,
+        "qrBuyertStatus": null
+      }
+    },
+    "tag5-equivalent-scale": {
+      "endpoint": "compliance/invoices",
+      "http_status": 200,
+      "note": "XML 15.00, QR 15.0",
+      "invoice_sha256": "dfacb1e98fcd37a6d4d79ccd5891b3a20702ce3d33f35765838e37237b457023",
+      "qr": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI2LTEwLTE5VDE4OjA1OjE5BAYxMTUuMDAFBDE1LjAGLGRISUN2OVlQVk05aThEUldDSlNoWXFMS05GU0pnWXhSdWZ2dkNwU21pVGc9B2BNRVVDSVFDSGltMW1POHZuOWRhemFkdGw3TE8rSXJkR1ZlWmtKTzhic25xN2J3SHp1UUlnUkFqdVd6WFd3azJlSkIyMS9EV2U4R0FNUmhpZjFpaTlIQmw5WTJJaTNLND0IWDBWMBAGByqGSM49AgEGBSuBBAAKA0IABBiUo6fXhSkL67J6WlcZ9dLQtetS357wIykIuInP2qEFCQN9LTNCjjDVvOqW8o2fA8f/gOkHOBf/yzCFJiBLvz8JRzBFAiAc/W365oApdMdNZRt1/gJw0+vVk9io9ccuqZUaAtbqnwIhAJtq8AWsgsSIe2oOk6Frg2KvKAR8YClxLg8bb4/o+w72",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "115.00",
+        "tag5": "15.0",
+        "tag9_base64": "MEUCIBz9bfrmgCl0x01lG3X+AnDT69WT2Kj1xy6plRoC1uqfAiEAm2rwBayCxIh7ag6ToWuDYq8oBHxgKXEuDxtvj+j7DvY="
+      },
+      "response": {
+        "validationResults": {
+          "infoMessages": [
+            {
+              "type": "INFO",
+              "code": "XSD_ZATCA_VALID",
+              "category": "XSD validation",
+              "message": "Complied with UBL 2.1 standards in line with ZATCA specifications",
+              "status": "PASS"
+            }
+          ],
+          "warningMessages": [],
+          "errorMessages": [],
+          "status": "PASS"
+        },
+        "reportingStatus": "REPORTED",
+        "clearanceStatus": null,
+        "qrSellertStatus": null,
+        "qrBuyertStatus": null
+      }
+    },
+    "tag4-wrong-value": {
+      "endpoint": "compliance/invoices",
+      "http_status": 400,
+      "note": "negative control: wrong monetary value",
+      "invoice_sha256": "a645f645118088212bef67b33f24a373fe655fb9abdd52b5a7b1337bd828b50f",
+      "qr": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI2LTEwLTE5VDE4OjA1OjE5BAYxMTYuMDAFBTE1LjAwBixkSElDdjlZUFZNOWk4RFJXQ0pTaFlxTEtORlNKZ1l4UnVmdnZDcFNtaVRnPQdgTUVVQ0lRQ0hpbTFtTzh2bjlkYXphZHRsN0xPK0lyZEdWZVprSk84YnNucTdid0h6dVFJZ1JBanVXelhXd2syZUpCMjEvRFdlOEdBTVJoaWYxaWk5SEJsOVkySWkzSzQ9CFgwVjAQBgcqhkjOPQIBBgUrgQQACgNCAAQYlKOn14UpC+uyelpXGfXS0LXrUt+e8CMpCLiJz9qhBQkDfS0zQo4w1bzqlvKNnwPH/4DpBzgX/8swhSYgS78/CUcwRQIgHP1t+uaAKXTHTWUbdf4CcNPr1ZPYqPXHLqmVGgLW6p8CIQCbavAFrILEiHtqDpOha4NirygEfGApcS4PG2+P6PsO9g==",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "116.00",
+        "tag5": "15.00",
+        "tag9_base64": "MEUCIBz9bfrmgCl0x01lG3X+AnDT69WT2Kj1xy6plRoC1uqfAiEAm2rwBayCxIh7ag6ToWuDYq8oBHxgKXEuDxtvj+j7DvY="
+      },
+      "response": {
+        "validationResults": {
+          "infoMessages": [
+            {
+              "type": "INFO",
+              "code": "XSD_ZATCA_VALID",
+              "category": "XSD validation",
+              "message": "Complied with UBL 2.1 standards in line with ZATCA specifications",
+              "status": "PASS"
+            }
+          ],
+          "warningMessages": [],
+          "errorMessages": [
+            {
+              "type": "ERROR",
+              "code": "invoiceTotal_QRCODE_INVALID",
+              "category": "QRCODE_VALIDATION",
+              "message": "Amount due for payment (BT-115) in the Invoice does not match with QR code invoice total or Amount due for payment (BT-115) missing in the invoice",
+              "status": "ERROR"
+            }
+          ],
+          "status": "ERROR"
+        },
+        "reportingStatus": "NOT_REPORTED",
+        "clearanceStatus": null,
+        "qrSellertStatus": null,
+        "qrBuyertStatus": null
+      }
+    },
+    "tag5-wrong-value": {
+      "endpoint": "compliance/invoices",
+      "http_status": 200,
+      "note": "negative control: wrong monetary value",
+      "invoice_sha256": "7458d1ea5236185c4e1ff8c7996df92a520994b2fe32c731f06ddc35bdb9bc39",
+      "qr": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI2LTEwLTE5VDE4OjA1OjE5BAYxMTUuMDAFBTE2LjAwBixkSElDdjlZUFZNOWk4RFJXQ0pTaFlxTEtORlNKZ1l4UnVmdnZDcFNtaVRnPQdgTUVVQ0lRQ0hpbTFtTzh2bjlkYXphZHRsN0xPK0lyZEdWZVprSk84YnNucTdid0h6dVFJZ1JBanVXelhXd2syZUpCMjEvRFdlOEdBTVJoaWYxaWk5SEJsOVkySWkzSzQ9CFgwVjAQBgcqhkjOPQIBBgUrgQQACgNCAAQYlKOn14UpC+uyelpXGfXS0LXrUt+e8CMpCLiJz9qhBQkDfS0zQo4w1bzqlvKNnwPH/4DpBzgX/8swhSYgS78/CUcwRQIgHP1t+uaAKXTHTWUbdf4CcNPr1ZPYqPXHLqmVGgLW6p8CIQCbavAFrILEiHtqDpOha4NirygEfGApcS4PG2+P6PsO9g==",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "115.00",
+        "tag5": "16.00",
+        "tag9_base64": "MEUCIBz9bfrmgCl0x01lG3X+AnDT69WT2Kj1xy6plRoC1uqfAiEAm2rwBayCxIh7ag6ToWuDYq8oBHxgKXEuDxtvj+j7DvY="
+      },
+      "response": {
+        "validationResults": {
+          "infoMessages": [
+            {
+              "type": "INFO",
+              "code": "XSD_ZATCA_VALID",
+              "category": "XSD validation",
+              "message": "Complied with UBL 2.1 standards in line with ZATCA specifications",
+              "status": "PASS"
+            }
+          ],
+          "warningMessages": [],
+          "errorMessages": [],
+          "status": "PASS"
+        },
+        "reportingStatus": "REPORTED",
+        "clearanceStatus": null,
+        "qrSellertStatus": null,
+        "qrBuyertStatus": null
+      }
+    },
+    "simplified-missing-tag9": {
+      "endpoint": "compliance/invoices",
+      "http_status": 400,
+      "note": "negative control: missing required Tag 9",
+      "invoice_sha256": "f578ea97812e14ef77c06a3d9aed91bfac0b1d8fdfa09bf25e2fdd11c205d030",
+      "qr": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI2LTEwLTE5VDE4OjA1OjE5BAYxMTUuMDAFBTE1LjAwBixkSElDdjlZUFZNOWk4RFJXQ0pTaFlxTEtORlNKZ1l4UnVmdnZDcFNtaVRnPQdgTUVVQ0lRQ0hpbTFtTzh2bjlkYXphZHRsN0xPK0lyZEdWZVprSk84YnNucTdid0h6dVFJZ1JBanVXelhXd2syZUpCMjEvRFdlOEdBTVJoaWYxaWk5SEJsOVkySWkzSzQ9CFgwVjAQBgcqhkjOPQIBBgUrgQQACgNCAAQYlKOn14UpC+uyelpXGfXS0LXrUt+e8CMpCLiJz9qhBQkDfS0zQo4w1bzqlvKNnwPH/4DpBzgX/8swhSYgS78/",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "tag4": "115.00",
+        "tag5": "15.00",
+        "tag9_base64": null
+      },
+      "response": {
+        "validationResults": {
+          "infoMessages": [
+            {
+              "type": "INFO",
+              "code": "XSD_ZATCA_VALID",
+              "category": "XSD validation",
+              "message": "Complied with UBL 2.1 standards in line with ZATCA specifications",
+              "status": "PASS"
+            }
+          ],
+          "warningMessages": [],
+          "errorMessages": [
+            {
+              "type": "ERROR",
+              "code": "QRCODE_INVALID",
+              "category": "QRCODE_VALIDATION",
+              "message": "Failed to validate QR code",
+              "status": "ERROR"
+            }
+          ],
+          "status": "ERROR"
+        },
+        "reportingStatus": "NOT_REPORTED",
+        "clearanceStatus": null,
+        "qrSellertStatus": null,
+        "qrBuyertStatus": null
+      }
+    },
+    "standard-unexpected-tag9": {
+      "endpoint": "compliance/invoices",
+      "http_status": 202,
+      "note": "negative control: prohibited standard Tag 9",
+      "invoice_sha256": "7641d1d4fd192be7c4feff1a7f7932b8162a9e7900ce3201d7de0255b8b640d4",
+      "qr": {
+        "encoded": "ARZBY21lIEdsb2JhbCBUcmFkaW5nIENvAg8zOTk5OTk5OTk5MDAwMDMDEzIwMjYtMTAtMTlUMTg6MDU6MjIEBzE1MTEuMzgFBjExOC44OAYsZXRqa05iL2R4NGJodDg3L2V1L2lnbWJURWFRUjdVT3hUQU9paXErZTdGWT0HYE1FVUNJUUQreFdnMGRNcU41ZTNuU3F5VkNrczNsaityTkprU2VRNkIrMW9qZ2VVTUd3SWdhWFNHQnZSdFJnNG5UZVE1emZ4azhXaUNtK2pLQjhtZE9qSm9vMVN1dG5JPQhYMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEGJSjp9eFKQvrsnpaVxn10tC161LfnvAjKQi4ic/aoQUJA30tM0KOMNW86pbyjZ8Dx/+A6Qc4F//LMIUmIEu/PwlHMEUCIBz9bfrmgCl0x01lG3X+AnDT69WT2Kj1xy6plRoC1uqfAiEAm2rwBayCxIh7ag6ToWuDYq8oBHxgKXEuDxtvj+j7DvY=",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "1511.38",
+        "tag5": "118.88",
+        "tag9_base64": "MEUCIBz9bfrmgCl0x01lG3X+AnDT69WT2Kj1xy6plRoC1uqfAiEAm2rwBayCxIh7ag6ToWuDYq8oBHxgKXEuDxtvj+j7DvY="
+      },
+      "response": {
+        "validationResults": {
+          "infoMessages": [
+            {
+              "type": "INFO",
+              "code": "XSD_ZATCA_VALID",
+              "category": "XSD validation",
+              "message": "Complied with UBL 2.1 standards in line with ZATCA specifications",
+              "status": "PASS"
+            }
+          ],
+          "warningMessages": [
+            {
+              "type": "WARNING",
+              "code": "BR-KSA-15",
+              "category": "KSA",
+              "message": "The tax invoice ((invoice type code (BT-30) = 388) & (invoice transaction code (KSA-2) has \u201c01\u201d as first 2 digits)) must contain the supply date (KSA-5).",
+              "status": "WARNING"
+            },
+            {
+              "type": "WARNING",
+              "code": "BR-KSA-19",
+              "category": "KSA",
+              "message": "Each Document level charge (BG-21) shall have a code for the reason for document level charge (BT-105).",
+              "status": "WARNING"
+            },
+            {
+              "type": "WARNING",
+              "code": "BR-KSA-69",
+              "category": "KSA",
+              "message": "[BR-KSA-69]-A VAT breakdown (BG-23) with VAT Category code (BT-118) 'Zero rated' shall have a VAT exception reason code (BT-121).",
+              "status": "WARNING"
+            }
+          ],
+          "errorMessages": [],
+          "status": "WARNING"
+        },
+        "reportingStatus": null,
+        "clearanceStatus": "CLEARED",
+        "qrSellertStatus": null,
+        "qrBuyertStatus": null
+      }
+    },
+    "foreign-currency-bt110": {
+      "endpoint": "compliance/invoices",
+      "http_status": 200,
+      "note": "Tag 5 is 285 USD (BT-110)",
+      "invoice_sha256": "bb6f82f60d6da15719be34602066004e6c54a0353db223f6eaeabbf7fb16d0c8",
+      "qr": {
+        "encoded": "AW/YtNix2YPYqSDYqtmI2LHZitivINin2YTYqtmD2YbZiNmE2YjYrNmK2Kcg2KjYo9mC2LXZiSDYs9ix2LnYqSDYp9mE2YXYrdiv2YjYr9ipIHwgTWF4aW11bSBTcGVlZCBUZWNoIFN1cHBseSBMVEQCDzM5OTk5OTk5OTkwMDAwMwMTMjAyNi0xMC0xOVQxODowNToyOQQEMTAzNQUDMjg1BixQL0NFeVlLeWppOTVBN2M0WE0wcStCOXhHZDhVSSs0ZU1XZUw2QUF2aXRBPQdgTUVRQ0lDOUlQUlBTSVNZVHZ6b1JoMzNTemFkRWY4SE9EZEMwczEvVGowSnVzNlZXQWlCbldsY21YNkJuRFlOdEVFTnphWFA4cUh2OHVLdzdzNXFZNXI3TWNhcEpvZz09CFgwVjAQBgcqhkjOPQIBBgUrgQQACgNCAAQYlKOn14UpC+uyelpXGfXS0LXrUt+e8CMpCLiJz9qhBQkDfS0zQo4w1bzqlvKNnwPH/4DpBzgX/8swhSYgS78/",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "tag4": "1035",
+        "tag5": "285",
+        "tag9_base64": null
+      },
+      "response": {
+        "validationResults": {
+          "infoMessages": [
+            {
+              "type": "INFO",
+              "code": "XSD_ZATCA_VALID",
+              "category": "XSD validation",
+              "message": "Complied with UBL 2.1 standards in line with ZATCA specifications",
+              "status": "PASS"
+            }
+          ],
+          "warningMessages": [],
+          "errorMessages": [],
+          "status": "PASS"
+        },
+        "reportingStatus": null,
+        "clearanceStatus": "CLEARED",
+        "qrSellertStatus": null,
+        "qrBuyertStatus": null
+      }
+    },
+    "foreign-currency-bt111": {
+      "endpoint": "compliance/invoices",
+      "http_status": 200,
+      "note": "same XML, Tag 5 changed to SDK's 1068.75 SAR (BT-111)",
+      "invoice_sha256": "c0f1e957b14cbfdf4923f1a9376221f9b49331e81244d5e3e9a3277898ea4880",
+      "qr": {
+        "encoded": "AW/YtNix2YPYqSDYqtmI2LHZitivINin2YTYqtmD2YbZiNmE2YjYrNmK2Kcg2KjYo9mC2LXZiSDYs9ix2LnYqSDYp9mE2YXYrdiv2YjYr9ipIHwgTWF4aW11bSBTcGVlZCBUZWNoIFN1cHBseSBMVEQCDzM5OTk5OTk5OTkwMDAwMwMTMjAyNi0xMC0xOVQxODowNToyOQQEMTAzNQUHMTA2OC43NQYsUC9DRXlZS3lqaTk1QTdjNFhNMHErQjl4R2Q4VUkrNGVNV2VMNkFBdml0QT0HYE1FUUNJQzlJUFJQU0lTWVR2em9SaDMzU3phZEVmOEhPRGRDMHMxL1RqMEp1czZWV0FpQm5XbGNtWDZCbkRZTnRFRU56YVhQOHFIdjh1S3c3czVxWTVyN01jYXBKb2c9PQhYMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEGJSjp9eFKQvrsnpaVxn10tC161LfnvAjKQi4ic/aoQUJA30tM0KOMNW86pbyjZ8Dx/+A6Qc4F//LMIUmIEu/Pw==",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "tag4": "1035",
+        "tag5": "1068.75",
+        "tag9_base64": null
+      },
+      "response": {
+        "validationResults": {
+          "infoMessages": [
+            {
+              "type": "INFO",
+              "code": "XSD_ZATCA_VALID",
+              "category": "XSD validation",
+              "message": "Complied with UBL 2.1 standards in line with ZATCA specifications",
+              "status": "PASS"
+            }
+          ],
+          "warningMessages": [],
+          "errorMessages": [],
+          "status": "PASS"
+        },
+        "reportingStatus": null,
+        "clearanceStatus": "CLEARED",
+        "qrSellertStatus": null,
+        "qrBuyertStatus": null
+      }
+    }
+  },
+  "onboarding": {
+    "http_status": 200,
+    "issued": true
+  },
+  "capture_script_sha256": "d2ec126b164e1ed7f8cc6cf85351bb35b448435afdb60e3b35b2f940cca27264",
+  "authorization_scope": {
+    "credential_requests": 1,
+    "compliance_invoice_requests": 15,
+    "production_endpoints": false
+  }
+}
