@@ -877,6 +877,11 @@ fn optional_builder_fields_survive_binding_snapshots_and_xml() {
     };
     let exemption = ok(TaxExemption::new(None, None));
     let rebate = ok(Adjustment::percentage(b"250", b"10"));
+    assert!(rebate.with_reason(Some(&[0xff]), None).is_err());
+    assert!(rebate.with_reason(None, Some(&[0xff])).is_err());
+    let unchanged = ok(rebate.with_reason(None, None));
+    assert!(ok(unchanged.reason()).is_none());
+    assert!(ok(unchanged.reason_code()).is_none());
     let rebate = ok(rebate.with_supplied_amount(b"25"));
     let rebate = ok(rebate.with_reason(Some(b"rebate"), Some(b"95")));
     let freight = ok(Adjustment::amount(b"5"));

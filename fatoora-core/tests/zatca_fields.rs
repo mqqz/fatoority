@@ -717,6 +717,49 @@ fn payment_instruction_placeholder_retains_notes_and_payment_metadata() {
 }
 
 #[test]
+fn malformed_optional_prices_and_buyer_identity_are_rejected() {
+    let xml = builder()
+        .line_item(
+            line()
+                .item_gross_price(d("120"))
+                .item_price_discount(d("20"))
+                .allowance(Adjustment::amount(d("1")))
+                .build()
+                .unwrap(),
+        )
+        .buyer(Buyer::new("Buyer".into(), None, Some("301121971500003".into()), None).unwrap())
+        .build()
+        .unwrap()
+        .to_xml()
+        .unwrap();
+    let doc = roxmltree::Document::parse(&xml).unwrap();
+    for (path, replacement) in [
+        (
+            "/ubl:Invoice/cac:InvoiceLine/cac:Price/cac:AllowanceCharge/cbc:Amount",
+            "",
+        ),
+        (
+            "/ubl:Invoice/cac:InvoiceLine/cac:Price/cac:AllowanceCharge/cbc:BaseAmount",
+            "",
+        ),
+        (
+            "/ubl:Invoice/cac:InvoiceLine/cac:AllowanceCharge/cbc:Amount",
+            "",
+        ),
+        (
+            "/ubl:Invoice/cac:AccountingCustomerParty/cac:Party/cac:PartyTaxScheme/cbc:CompanyID",
+            "<cbc:CompanyID> </cbc:CompanyID>",
+        ),
+    ] {
+        let nodes = source_xml::select(&doc, path);
+        assert_eq!(nodes.len(), 1);
+        let mut invalid = xml.clone();
+        invalid.replace_range(nodes[0].range(), replacement);
+        assert!(parse(&invalid).is_err(), "accepted malformed {path}");
+    }
+}
+
+#[test]
 fn imported_tax_totals_reject_missing_or_duplicate_owners() {
     let xml = builder()
         .line_item(line().build().unwrap())

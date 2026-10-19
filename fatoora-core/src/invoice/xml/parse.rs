@@ -1076,7 +1076,12 @@ fn parse_buyer(ctx: Element<'_, '_>) -> Result<Option<crate::invoice::Buyer>, Pa
     )?;
     let tax = party.aggregate("PartyTaxScheme");
     let vat = if tax.0.is_some() {
-        Some(text_required(tax.basic("CompanyID").content(), "BuyerVAT")?)
+        // Let VatId validate present values; distinguish blank from missing input.
+        Some(
+            tax.basic("CompanyID")
+                .content()
+                .ok_or(ParseError::MissingField("BuyerVAT"))?,
+        )
     } else {
         None
     };
@@ -1625,4 +1630,25 @@ fn check_amount(field: &'static str, value: &str, expected: Decimal) -> Result<(
         });
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod timestamp_boundaries {
+    use super::*;
+
+    #[test]
+    fn overflow_is_reported_without_panicking() {
+        for (date, time) in [
+            (chrono::NaiveDate::MAX.to_string(), "24:00:00Z"),
+            (chrono::NaiveDate::MIN.to_string(), "00:00:00"),
+        ] {
+            assert!(matches!(
+                parse_datetime(&date, time),
+                Err(ParseError::InvalidValue {
+                    field: "IssueDateTime",
+                    ..
+                })
+            ));
+        }
+    }
 }

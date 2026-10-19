@@ -1689,6 +1689,74 @@ mod tests {
                 .unwrap_err();
             assert_eq!(error.to_string(), format!("injected failure: {field}"));
         }
+        let mut adjustment = invoice.data().adjustments()[0].clone();
+        adjustment.base_amount = Some(Decimal::from(10));
+        fails(AdjustmentXml(&adjustment, "SAR"), "cbc:BaseAmount");
+        for field in [
+            "cbc:AllowanceTotalAmount",
+            "cbc:ChargeTotalAmount",
+            "cbc:PrepaidAmount",
+            "cbc:PayableRoundingAmount",
+        ] {
+            fails(legal_monetary_total("SAR", &invoice.totals), field);
+        }
+        for field in ["cbc:TaxAmount", "cbc:RoundingAmount"] {
+            fails(
+                invoice_line_tax_total(
+                    "SAR",
+                    Decimal::from(1),
+                    Decimal::from(2),
+                    &[],
+                    false,
+                    false,
+                ),
+                field,
+            );
+        }
+        for (omit_tax, omit_gross) in [(true, false), (false, true), (true, true)] {
+            let mut output = String::new();
+            invoice_line_tax_total(
+                "SAR",
+                Decimal::from(1),
+                Decimal::from(2),
+                &[],
+                omit_tax,
+                omit_gross,
+            )
+            .serialize(QuickXmlSerializer::new(&mut output))
+            .unwrap();
+            assert_eq!(output.contains("cbc:TaxAmount"), !omit_tax);
+            assert_eq!(output.contains("cbc:RoundingAmount"), !omit_gross);
+        }
+        let mut priced_line = invoice.data().line_items()[0].clone();
+        priced_line.price_base_quantity = Some(Decimal::from(1));
+        priced_line.price_discount = Some(Decimal::from(1));
+        priced_line.gross_price = Some(priced_line.unit_price.add(Decimal::from(1)).unwrap());
+        for field in ["cbc:BaseQuantity", "cac:AllowanceCharge"] {
+            fails(invoice_line_price("SAR", &priced_line), field);
+        }
+        let line_adjustment = crate::invoice::LineAdjustment {
+            charge: false,
+            adjustment: crate::invoice::Adjustment::percentage(
+                Decimal::from(10),
+                Decimal::from(10),
+            ),
+        };
+        for field in ["cbc:Amount", "cbc:BaseAmount"] {
+            fails(LineAdjustmentXml(&line_adjustment, "SAR"), field);
+        }
+        priced_line.adjustments.push(line_adjustment);
+        for field in ["cac:AllowanceCharge", "cac:TaxTotal"] {
+            fails(InvoiceLineXml(1, &priced_line, invoice.data()), field);
+        }
+        let payment = crate::invoice::PaymentMeans::new("30").payee_financial_account(
+            crate::invoice::PaymentAccount {
+                payment_account_identifier: Some("bank".into()),
+                payment_terms: None,
+            },
+        );
+        fails(PaymentXml(&payment), "cac:PayeeFinancialAccount");
+        fails(InvoiceXml(&invoice), "cac:TaxTotal");
         for field in ["cbc:TaxCurrencyCode", "cac:Delivery", "cac:AllowanceCharge"] {
             fails(InvoiceXml(&invoice), field);
         }
