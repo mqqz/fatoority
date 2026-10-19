@@ -24,7 +24,7 @@ Keep signed XML unchanged for storage and submission. Signing existing XML does 
 
 ## Signed invoice values
 
-All getters below leave the signed invoice usable. Values extracted from imported signed XML are metadata, not proof of signature verification.
+All getters below leave the signed invoice usable. Signed imports verify local signature and QR consistency with the embedded certificate; certificate trust and clearance remain separate.
 
 | Value | Returned content |
 | --- | --- |
@@ -41,7 +41,7 @@ All getters below leave the signed invoice usable. Values extracted from importe
 | Signed properties hash | Encoded signed-properties digest |
 | Signing time | UTC text in `YYYY-MM-DDTHH:MM:SS` format |
 
-Signed `hash_base64()` equals the XML hash operation on `xml()`. The embedded `invoice_hash()` may differ for an altered imported document. Digest equality alone does not verify the signature or certificate trust. See [XML reference](xml.md) for parsing and consuming XML access.
+Signed `hash_base64()` equals the XML hash operation on `xml()`. Signed imports reject altered digests, signatures and inconsistent QR data. Local integrity checks do not establish certificate issuer trust. See [XML reference](xml.md) for parsing and consuming XML access.
 
 ## Methods by language
 

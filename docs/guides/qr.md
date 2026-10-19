@@ -13,8 +13,8 @@ This walkthrough reads an existing payload from a signed invoice and saves `qr.t
 
 Download [signed.xml](../assets/examples/signed.xml) into a working folder, or use
 an invoice you created with the [signing guide](invoice-signing.md).
-The download is a public demonstration fixture; reading its QR data does not
-verify its signature or establish that it is accepted by ZATCA.
+The download is a public demonstration fixture. Signed imports check local integrity;
+this establishes neither certificate issuer trust nor acceptance by ZATCA.
 
 ## Choose the operation
 
