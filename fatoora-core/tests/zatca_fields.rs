@@ -677,6 +677,41 @@ fn vat_midpoint_tolerance_uses_the_pinned_rule_policy() {
 }
 
 #[test]
+fn imported_tax_totals_reject_missing_or_duplicate_owners() {
+    let xml = builder()
+        .line_item(line().build().unwrap())
+        .build()
+        .unwrap()
+        .to_xml()
+        .unwrap();
+    let doc = roxmltree::Document::parse(&xml).unwrap();
+    let totals = source_xml::select(&doc, "/ubl:Invoice/cac:TaxTotal");
+    assert_eq!(totals.len(), 2);
+    for total in totals {
+        for replacement in [String::new(), xml[total.range()].repeat(2)] {
+            // An absent accounting total is supported; the document breakdown is required.
+            if replacement.is_empty() && !xml[total.range()].contains("TaxSubtotal") {
+                continue;
+            }
+            let mut invalid = xml.clone();
+            invalid.replace_range(total.range(), &replacement);
+            let error = parse(&invalid).unwrap_err();
+            assert!(error.to_string().contains("TaxTotal"), "{error}");
+        }
+    }
+    for path in [
+        "/ubl:Invoice/cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory/cbc:Percent",
+        "/ubl:Invoice/cac:InvoiceLine/cac:Item/cac:ClassifiedTaxCategory/cbc:Percent",
+    ] {
+        let nodes = source_xml::select(&doc, path);
+        assert_eq!(nodes.len(), 1);
+        let mut invalid = xml.clone();
+        invalid.replace_range(nodes[0].range(), "");
+        assert!(parse(&invalid).is_err(), "accepted missing rate at {path}");
+    }
+}
+
+#[test]
 fn imported_price_discounts_obey_constructor_ranges() {
     let xml = builder()
         .line_item(
@@ -710,6 +745,16 @@ fn imported_price_discounts_obey_constructor_ranges() {
     assert!(
         parse(&invalid).is_err(),
         "import accepted a negative price discount"
+    );
+    let inconsistent = xml.replace(
+        "<cbc:BaseAmount currencyID=\"SAR\">120</cbc:BaseAmount>",
+        "<cbc:BaseAmount currencyID=\"SAR\">121</cbc:BaseAmount>",
+    );
+    assert_ne!(xml, inconsistent);
+    let error = parse(&inconsistent).unwrap_err();
+    assert!(
+        error.to_string().contains("gross minus discount"),
+        "{error}"
     );
 }
 
