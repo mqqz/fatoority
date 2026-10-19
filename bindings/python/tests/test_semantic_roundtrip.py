@@ -38,6 +38,7 @@ def test_signed_import_retains_source_and_raw_hash():
     path = Path(__file__).resolve().parents[3] / "fatoora-core/tests/fixtures/invoices/Standard/Invoice/Exempt Tax Invoice.xml"
     xml = path.read_text()
     signed = parse_signed_invoice_xml(xml)
+    assert signed.hash_base64() == invoice_hash_base64_from_xml_str(xml)
     assert signed.xml() == xml
     assert invoice_hash_base64_from_xml_str(signed.xml()) == invoice_hash_base64_from_xml_str(xml)
     assert signed.buyer() is not None

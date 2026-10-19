@@ -32,7 +32,7 @@ All getters below leave the signed invoice usable. Values extracted from importe
 | XML Base64 | Base64 of that stored XML text |
 | QR code | Base64 TLV payload for rendering; see [QR reference](qr.md) |
 | Invoice hash | Embedded invoice digest from signature metadata |
-| Model hash | Recomputed hash of the underlying finalized model's serialization; **not an alias for the embedded hash** |
+| Computed hash | `hash_base64()` recomputes the digest of the stored signed XML using ZATCA exclusions |
 | Signature | Encoded invoice signature |
 | Public key | Encoded public-key material |
 | ZATCA key signature | Optional encoded certificate-signature material |
@@ -41,7 +41,7 @@ All getters below leave the signed invoice usable. Values extracted from importe
 | Signed properties hash | Encoded signed-properties digest |
 | Signing time | UTC text in `YYYY-MM-DDTHH:MM:SS` format |
 
-To hash a particular XML document, use the XML hash operation rather than the model hash getter. See [XML reference](xml.md) for parsing and consuming XML access.
+Signed `hash_base64()` equals the XML hash operation on `xml()`. The embedded `invoice_hash()` may differ for an altered imported document. Digest equality alone does not verify the signature or certificate trust. See [XML reference](xml.md) for parsing and consuming XML access.
 
 ## Methods by language
 

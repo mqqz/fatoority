@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- **Behavior change:** `SignedInvoice::hash_base64()` and all language bindings
+  now hash stored signed XML instead of reserializing its parsed model.
+  CLI `generate-hash` likewise hashes the input XML directly for signed and
+  unsigned documents, without requiring model conversion. Imported documents
+  can therefore produce different results. `FinalizedInvoice::hash_base64()`
+  still hashes emitted XML; `invoice_hash()` still returns the unverified
+  embedded digest. No model-hash compatibility method is added.
+
 ## [0.4.4] - Unreleased
 
 - Use `PayableAmount` (BT-115) for QR tag 4 in the library and CLI, including

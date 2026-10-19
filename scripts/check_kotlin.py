@@ -59,6 +59,8 @@ test {
         fixtures = ROOT / "fatoora-core/tests/fixtures/sdk-parity"
         for name in (
             "cases/simplified-invoice/input.xml",
+            "cases/simplified-invoice/sdk-signed.xml",
+            "cases/standard-invoice/sdk-signed.xml",
             "credentials/certificate.der",
             "credentials/private-key.der",
         ):

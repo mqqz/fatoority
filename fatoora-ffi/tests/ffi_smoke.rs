@@ -86,6 +86,10 @@ fn imported_signed_xml_retains_whitespace_and_declaration() {
     // The fixed fixture is an independent document, not serialized by these bindings.
     let source = std::str::from_utf8(INVOICE).unwrap();
     let mut invoice = ok(SignedInvoice::from_xml(INVOICE));
+    assert_eq!(
+        written(|out| ok(invoice.hash_base64(out))),
+        written(|out| ok(Xml::hash(INVOICE, out)))
+    );
     assert_eq!(written(|out| ok(invoice.xml(out))), source);
     assert_eq!(written(|out| ok(invoice.into_xml(out))), source);
 }

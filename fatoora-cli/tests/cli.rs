@@ -1050,11 +1050,51 @@ fn malformed_xml_has_command_context_and_no_success_output() {
         assert!(!output.status.success());
         assert!(output.stdout.is_empty());
         let stderr = String::from_utf8(output.stderr).unwrap();
-        assert!(stderr.contains("failed to parse invoice XML"), "{stderr}");
+        assert!(
+            stderr.contains(if command == "generate-hash" {
+                "failed to hash invoice XML"
+            } else {
+                "failed to parse invoice XML"
+            }),
+            "{stderr}"
+        );
         assert!(stderr.contains(path.to_str().unwrap()), "{stderr}");
         if command == "qr" {
             assert!(stderr.contains("signed parse error"), "{stderr}");
         }
     }
     std::fs::remove_file(path).unwrap();
+}
+
+#[test]
+fn generate_hash_preserves_input_representation() {
+    use fatoora_core::invoice::sign::invoice_hash_base64_from_xml_str;
+    let unsigned = unique_temp_path("unsigned-hash-input");
+    let source = std::fs::read_to_string(signed_invoice_fixture()).unwrap();
+    let finalized =
+        fatoora_core::invoice::xml::parse::parse_finalized_invoice_xml(&source).unwrap();
+    std::fs::write(&unsigned, finalized.to_xml().unwrap()).unwrap();
+    for source in [signed_invoice_fixture(), unsigned.clone()] {
+        let xml = std::fs::read_to_string(&source).unwrap();
+        let changed = xml.replacen("<cbc:Percent>", "<cbc:Percent>0", 1);
+        assert_ne!(xml, changed);
+        let path = unique_temp_path("hash-retained-xml");
+        std::fs::write(&path, &changed).unwrap();
+        let output = Command::new(cli_exe())
+            .args(["generate-hash", "--invoice"])
+            .arg(&path)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert_eq!(
+            String::from_utf8(output.stdout).unwrap().trim(),
+            invoice_hash_base64_from_xml_str(&changed).unwrap()
+        );
+        std::fs::remove_file(path).unwrap();
+    }
+    std::fs::remove_file(unsigned).unwrap();
 }

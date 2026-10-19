@@ -1,3 +1,4 @@
+#include "fatoora/Xml.hpp"
 #include "fatoora/Address.hpp"
 #include "fatoora/BindingError.hpp"
 #include "fatoora/Bytes.hpp"
@@ -82,6 +83,7 @@ static void signed_contract(const char *path) {
     assert(input);
     std::string xml((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
     auto invoice = fatoora::SignedInvoice::from_xml(xml).ok().value();
+    assert(invoice->hash_base64().ok().value() == fatoora::Xml::hash(xml).ok().value());
     auto copied = invoice->xml().ok().value();
     auto data = invoice->data().ok().value();
     auto owned = invoice->into_xml().ok().value();

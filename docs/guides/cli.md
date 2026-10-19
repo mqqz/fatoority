@@ -132,6 +132,9 @@ if needed. The [QR guide](qr.md) explains how to pass it to an image renderer.
 fatoora generate-hash --invoice invoice.xml
 ```
 
+This hashes the supplied XML using ZATCA exclusions, for both signed and unsigned
+documents. It does not reserialize an invoice model or verify a signature.
+
 This prints a base64 invoice hash. For signed XML, it prints the signed hash;
 otherwise it hashes finalized invoice XML.
 

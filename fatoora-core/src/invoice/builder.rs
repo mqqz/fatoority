@@ -7,6 +7,7 @@ use super::{
 use crate::Decimal;
 use crate::invoice::sign::{
     InvoiceSigner, SignedProperties, SigningError, invoice_hash_base64_from_xml,
+    invoice_hash_base64_from_xml_str,
 };
 
 /// An invoice with computed totals and the implemented builder field checks.
@@ -647,7 +648,7 @@ impl FinalizedInvoice {
         &self.totals
     }
 
-    /// Compute the base64 invoice hash for this finalized invoice.
+    /// Hash the XML serialization of this finalized model.
     ///
     /// # Errors
     /// Returns [`SigningError`] if XML serialization, parsing, or hashing fails.
@@ -722,16 +723,19 @@ impl SignedInvoice {
         self.finalized.data().uuid.as_str()
     }
 
+    /// Return the embedded digest without recomputing or verifying it.
+    ///
+    /// Equality with `hash_base64()` alone does not verify signature authenticity.
     pub fn invoice_hash(&self) -> &str {
         self.signed_properties.invoice_hash()
     }
 
-    /// Compute the base64 invoice hash for the underlying finalized invoice.
+    /// Recompute the invoice digest from the exact stored XML using ZATCA exclusions.
     ///
     /// # Errors
-    /// Returns [`SigningError`] if XML serialization, parsing, or hashing fails.
+    /// Returns [`SigningError`] if XML parsing or hashing fails.
     pub fn hash_base64(&self) -> Result<String, SigningError> {
-        self.finalized.hash_base64()
+        invoice_hash_base64_from_xml_str(self.xml())
     }
 
     pub fn signature(&self) -> &str {

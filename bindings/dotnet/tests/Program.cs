@@ -91,6 +91,8 @@ foreach (var kind in new[] { "simplified", "standard" })
     var xml = File.ReadAllText(Path.Combine(fixture, "input.xml"));
     using var expected = JsonDocument.Parse(File.ReadAllText(Path.Combine(fixture, "expected.json")));
     Check(Xml.Hash(xml) == expected.RootElement.GetProperty("hash").GetString(), "Frozen SDK hash parity");
+    using var imported = SignedInvoice.FromXml(File.ReadAllText(Path.Combine(fixture, "sdk-signed.xml")));
+    Check(imported.HashBase64() == Xml.Hash(imported.Xml()), "Imported signed XML hash parity");
     using var invoice = FinalizedInvoice.FromXml(xml);
     using var signed = signer.Sign(invoice);
     NativeError(() => invoice.Xml(), 1, "consumed");
