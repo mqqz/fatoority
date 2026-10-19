@@ -145,3 +145,38 @@ def test_optional_line_builder_and_repeated_metadata():
     assert restored.seller().identifiers()[-1].value() == "secondary"
     assert restored.payment_means()[-1].instruction_notes() == ["first", "second"]
     assert restored.issue_time() == "12:30:00Z"
+
+
+def test_percentage_adjustment_keeps_repeated_tax_categories():
+    adjustment = AllowanceCharge(False, Decimal("10"), VatCategory.STANDARD,
+                                 Decimal("15"), tax_category_count=3,
+                                 base_amount=Decimal("100"), percentage=Decimal("10"))
+    b = builder()
+    b.add_line_item("item", 1, "PCE", 100, 15, VatCategory.STANDARD)
+    b.add_adjustment(adjustment)
+    invoice = b.build()
+    assert invoice.adjustments() == [adjustment]
+    assert parse_finalized_invoice_xml(invoice.xml()).adjustments() == [adjustment]
+
+
+def test_python_party_setters_expose_province():
+    b = builder()
+    b.set_seller("Seller", "SA", "Riyadh", "Street", "1234", "12222",
+                 "399999999900003", province="Riyadh Province")
+    b.set_buyer("Buyer", "SA", "Jeddah", "Street", "", "", province="Makkah Province")
+    b.add_line_item("item", 1, "PCE", 100, 15, VatCategory.STANDARD)
+    restored = parse_finalized_invoice_xml(b.build().xml())
+    assert restored.seller().address().province() == "Riyadh Province"
+    assert restored.buyer().address().province() == "Makkah Province"
+
+
+def test_out_of_scope_adjustment_without_rate_survives_rebuild():
+    adjustment = AllowanceCharge(True, Decimal("10"), VatCategory.OUT_OF_SCOPE,
+                                 Decimal("0"), omitted_rate=True)
+    b = builder()
+    b.add_line_item("item", 1, "PCE", 100, 0, VatCategory.OUT_OF_SCOPE)
+    b.add_adjustment(adjustment)
+    invoice = b.build()
+    restored = parse_finalized_invoice_xml(invoice.xml())
+    assert restored.adjustments() == [adjustment]
+    assert restored.xml() == invoice.xml()

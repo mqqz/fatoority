@@ -973,6 +973,9 @@ fn one_tax_category() -> usize {
 /// One document allowance or charge, retaining its own VAT category and reason.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AllowanceCharge {
+    /// Preserve an absent VAT rate for an out-of-scope adjustment.
+    #[serde(default)]
+    pub omitted_rate: bool,
     #[serde(default)]
     pub base_amount: Option<Decimal>,
     #[serde(default)]

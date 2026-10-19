@@ -69,6 +69,7 @@ class AllowanceCharge:
     tax_category_count: int = 1
     base_amount: Optional[Decimal] = None
     percentage: Optional[Decimal] = None
+    omitted_rate: bool = False
 
 @dataclass(frozen=True)
 class VatBreakdown:
@@ -596,7 +597,7 @@ class _Invoice(_Owned):
         result = []
         for i in range(_call(data.adjustments_len)):
             a = _call(data.adjustment, i)
-            result.append(AllowanceCharge(_call(a.is_charge), Decimal(_call(a.amount)), VatCategory(_call(a.category)), Decimal(_call(a.rate)), _call(a.reason), _call(a.reason_code), TaxExemption._from_native(_call(a.exemption)), _call(a.tax_category_count), _optional_decimal(_call(a.base_amount)), _optional_decimal(_call(a.percentage))))
+            result.append(AllowanceCharge(_call(a.is_charge), Decimal(_call(a.amount)), VatCategory(_call(a.category)), Decimal(_call(a.rate)), _call(a.reason), _call(a.reason_code), TaxExemption._from_native(_call(a.exemption)), _call(a.tax_category_count), _optional_decimal(_call(a.base_amount)), _optional_decimal(_call(a.percentage)), not _call(a.has_vat_rate)))
         return result
 
     def vat_breakdown(self) -> list[VatBreakdown]:
@@ -950,12 +951,14 @@ class InvoiceBuilder(_Owned):
         self._invoke("set_payable_rounding_amount", _decimal(amount))
 
     def add_adjustment(self, adjustment: AllowanceCharge) -> None:
-        if adjustment.percentage is not None:
-            value = Adjustment.percentage(adjustment.base_amount, adjustment.percentage).with_supplied_amount(adjustment.amount).with_reason(adjustment.reason, adjustment.reason_code)
-            self.add_document_adjustment(adjustment.charge, value, adjustment.category, adjustment.rate, adjustment.exemption)
-            return
+        if (adjustment.base_amount is None) != (adjustment.percentage is None):
+            raise ValueError("adjustment base_amount and percentage must be supplied together")
         native = _call(_native.AllowanceCharge.new, adjustment.charge, _decimal(adjustment.amount), adjustment.reason, adjustment.reason_code, int(adjustment.category), _decimal(adjustment.rate), adjustment.exemption._native_value())
         native = _call(native.with_tax_category_count, adjustment.tax_category_count)
+        if adjustment.percentage is not None:
+            native = _call(native.with_percentage, _decimal(adjustment.base_amount), _decimal(adjustment.percentage))
+        if adjustment.omitted_rate:
+            native = _call(native.without_vat_rate)
         self._invoke("add_adjustment", native)
 
     def set_id(self, invoice_id: str) -> None:
@@ -982,8 +985,10 @@ class InvoiceBuilder(_Owned):
     def set_vat_category(self, vat_category: VatCategory) -> None:
         self._invoke("set_vat_category", int(vat_category))
 
-    def set_seller(self, name: str, country_code: str, city: str, street: str, building_number: str, postal_code: str, vat_id: str, additional_street: Optional[str]=None, additional_number: Optional[str]=None, district: Optional[str]=None, other_id: Optional[str]=None, other_id_scheme: Optional[str]=None) -> None:
+    def set_seller(self, name: str, country_code: str, city: str, street: str, building_number: str, postal_code: str, vat_id: str, additional_street: Optional[str]=None, additional_number: Optional[str]=None, district: Optional[str]=None, other_id: Optional[str]=None, other_id_scheme: Optional[str]=None, *, province: Optional[str]=None) -> None:
         address = Address.new(country_code, city, street, building_number, postal_code, additional_street, additional_number, district)
+        if province is not None:
+            address = address.with_province(province)
         self._invoke("set_seller", name, address, vat_id, other_id, other_id_scheme)
 
     def add_line_item(self, description: str, quantity: Decimal | str | int, unit_code: str, unit_price: Decimal | str | int, vat_rate: Decimal | str | int, vat_category: VatCategory, *, id: Optional[str] = None, exemption: TaxExemption = TaxExemption(), document_references: tuple[DocumentReference, ...] = (), tax_subtotals: tuple[VatBreakdown, ...] = ()) -> None:
@@ -997,8 +1002,10 @@ class InvoiceBuilder(_Owned):
             item = _call(item.with_tax_subtotal, native)
         self._invoke("add_item", item)
 
-    def set_buyer(self, name: str, country_code: str, city: str, street: str, building_number: str, postal_code: str, vat_id: Optional[str]=None, other_id: Optional[str]=None, other_id_scheme: Optional[str]=None, additional_street: Optional[str]=None, additional_number: Optional[str]=None, district: Optional[str]=None) -> None:
+    def set_buyer(self, name: str, country_code: str, city: str, street: str, building_number: str, postal_code: str, vat_id: Optional[str]=None, other_id: Optional[str]=None, other_id_scheme: Optional[str]=None, additional_street: Optional[str]=None, additional_number: Optional[str]=None, district: Optional[str]=None, *, province: Optional[str]=None) -> None:
         address = Address.new(country_code, city, street, building_number, postal_code, additional_street, additional_number, district)
+        if province is not None:
+            address = address.with_province(province)
         self._invoke("set_buyer", name, address, vat_id, other_id, other_id_scheme)
 
     def set_note(self, language: str, text: str) -> None:

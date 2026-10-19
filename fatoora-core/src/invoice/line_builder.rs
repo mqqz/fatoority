@@ -113,6 +113,7 @@ pub struct DocumentAdjustment {
 impl DocumentAdjustment {
     pub(crate) fn into_entry(self, charge: bool) -> Result<AllowanceCharge> {
         Ok(AllowanceCharge {
+            omitted_rate: false,
             tax_category_count: 1,
             charge,
             amount: self.adjustment.value()?,
@@ -279,7 +280,11 @@ impl LineItemBuilder {
         if self.gross_price.is_some() && self.discount.is_none() {
             return Err(missing(InvoiceField::LineItemUnitPrice));
         }
-        let rate = self.rate.unwrap_or(Decimal::ZERO);
+        let rate = match self.rate {
+            Some(rate) => rate,
+            None if category == VatCategory::OutOfScope => Decimal::ZERO,
+            None => return Err(missing(InvoiceField::LineItemVatRate)),
+        };
         let price = match (self.price, self.gross_price, self.discount) {
             (Some(p), _, _) => p,
             (None, Some(g), Some(d)) => g.sub(d)?,
@@ -422,6 +427,29 @@ impl LineItem {
         self.standard_item_id.as_ref()
     }
     pub(super) fn expected_net(&self) -> Result<Decimal> {
+        match (self.gross_price, self.price_discount) {
+            (Some(gross), Some(discount)) => {
+                if gross < Decimal::ZERO || discount < Decimal::ZERO {
+                    return Err(invalid(
+                        InvoiceField::LineItemUnitPrice,
+                        ValidationKind::OutOfRange,
+                    ));
+                }
+                if gross.sub(discount)? != self.unit_price {
+                    return Err(invalid(
+                        InvoiceField::LineItemUnitPrice,
+                        ValidationKind::Mismatch,
+                    ));
+                }
+            }
+            (None, None) => {}
+            _ => {
+                return Err(invalid(
+                    InvoiceField::LineItemUnitPrice,
+                    ValidationKind::Missing,
+                ));
+            }
+        }
         let mut amount = self.quantity.product_divided_rounded(
             self.unit_price,
             self.price_base_quantity.unwrap_or(Decimal::from(1)),

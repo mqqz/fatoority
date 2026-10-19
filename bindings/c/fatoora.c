@@ -486,6 +486,42 @@ void fatoora_adjustment_free(FatooraAdjustment *self) {
     if (self) fatoora_Adjustment_destroy(self);
 }
 
+FatooraStatus fatoora_allowance_charge_has_vat_rate(const FatooraAllowanceCharge *self, bool *out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    bool value = fatoora_AllowanceCharge_has_vat_rate(self);
+    *out = value;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_allowance_charge_without_vat_rate(const FatooraAllowanceCharge *self, FatooraAllowanceCharge **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_AllowanceCharge_without_vat_rate_result result = fatoora_AllowanceCharge_without_vat_rate(self);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
+}
+
+FatooraStatus fatoora_allowance_charge_with_percentage(const FatooraAllowanceCharge *self, const char *base, const char *percent, FatooraAllowanceCharge **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!self || !base || !percent || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_AllowanceCharge_with_percentage_result result = fatoora_AllowanceCharge_with_percentage(self, fatoora_private_string(base), fatoora_private_string(percent));
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
+}
+
 FatooraStatus fatoora_allowance_charge_base_amount(const FatooraAllowanceCharge *self, char **out, FatooraError **error) {
     if (error) *error = NULL;
     if (out) *out = 0;

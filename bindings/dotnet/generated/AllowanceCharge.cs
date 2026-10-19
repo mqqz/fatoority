@@ -57,6 +57,83 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
+    public bool HasVatRate()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.AllowanceCharge>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                return Raw.AllowanceCharge.HasVatRate(selfLease!.Ptr);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>AllowanceCharge</c> allocated on Rust side.
+    /// </returns>
+    public AllowanceCharge WithoutVatRate()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.AllowanceCharge>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.AllowanceCharge.WithoutVatRate(selfLease!.Ptr);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return new AllowanceCharge(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>AllowanceCharge</c> allocated on Rust side.
+    /// </returns>
+    public AllowanceCharge WithPercentage(string @base, string percent)
+    {
+        unsafe
+        {
+            if (@base == null) throw new ArgumentNullException(nameof(@base));
+            if (percent == null) throw new ArgumentNullException(nameof(percent));
+            byte[] baseBytes = Diplomat.Utf8.Clone(@base);
+            byte[] percentBytes = Diplomat.Utf8.Clone(percent);
+            BorrowLease<Raw.AllowanceCharge>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                fixed (byte* basePtr = baseBytes)
+                fixed (byte* percentPtr = percentBytes)
+                {
+                    var result = Raw.AllowanceCharge.WithPercentage(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = basePtr, Len = (nuint)baseBytes.Length }, new DiplomatSliceU8 { Ptr = percentPtr, Len = (nuint)percentBytes.Length });
+                    if (!result.IsOk)
+                    {
+                        throw new BindingErrorException(new BindingError(result.Err));
+                    }
+                    return new AllowanceCharge(result.Ok);
+                }
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
     /// <exception cref="BindingErrorException"></exception>
     /// <returns>
     /// A <c>Text</c> allocated on Rust side.

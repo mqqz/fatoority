@@ -17,6 +17,7 @@ void add_AllowanceCharge_binding(nb::module_ mod) {
         .def("base_amount", std::move(maybe_op_unwrap(&_native::AllowanceCharge::base_amount)))
         .def("category", &_native::AllowanceCharge::category)
         .def("exemption", std::move(maybe_op_unwrap(&_native::AllowanceCharge::exemption)))
+        .def("has_vat_rate", &_native::AllowanceCharge::has_vat_rate)
         .def("is_charge", &_native::AllowanceCharge::is_charge)
         .def_static("new", std::move(maybe_op_unwrap(&_native::AllowanceCharge::new_)), "charge"_a, "amount"_a, "reason"_a= nb::none(), "reason_code"_a= nb::none(), "category"_a, "rate"_a, "exemption"_a)
         .def("percentage", std::move(maybe_op_unwrap(&_native::AllowanceCharge::percentage)))
@@ -24,7 +25,9 @@ void add_AllowanceCharge_binding(nb::module_ mod) {
         .def("reason", std::move(maybe_op_unwrap(&_native::AllowanceCharge::reason)))
         .def("reason_code", std::move(maybe_op_unwrap(&_native::AllowanceCharge::reason_code)))
         .def("tax_category_count", &_native::AllowanceCharge::tax_category_count)
-        .def("with_tax_category_count", std::move(maybe_op_unwrap(&_native::AllowanceCharge::with_tax_category_count)), "count"_a, "Return an independent adjustment with the given number of identical tax classifications.");
+        .def("with_percentage", std::move(maybe_op_unwrap(&_native::AllowanceCharge::with_percentage)), "base"_a, "percent"_a, "Retain this adjustment's metadata and check its percentage calculation.")
+        .def("with_tax_category_count", std::move(maybe_op_unwrap(&_native::AllowanceCharge::with_tax_category_count)), "count"_a, "Return an independent adjustment with the given number of identical tax classifications.")
+        .def("without_vat_rate", std::move(maybe_op_unwrap(&_native::AllowanceCharge::without_vat_rate)));
 }
 
 } 

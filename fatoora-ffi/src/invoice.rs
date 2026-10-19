@@ -275,6 +275,46 @@ pub mod ffi {
     #[diplomat::attr(dotnet, manually_disposable)]
     pub struct AllowanceCharge(pub(crate) inv_core::AllowanceCharge);
     impl AllowanceCharge {
+        pub fn has_vat_rate(&self) -> bool {
+            !self.0.omitted_rate
+        }
+
+        pub fn without_vat_rate(&self) -> Result<Box<AllowanceCharge>, Box<BindingError>> {
+            boundary(|| {
+                if self.0.category != inv_core::VatCategory::OutOfScope
+                    || self.0.rate != fatoora_core::Decimal::ZERO
+                {
+                    return Err(local_error(
+                        1,
+                        "only out-of-scope adjustments can omit a zero VAT rate",
+                    ));
+                }
+                let mut value = self.0.clone();
+                value.omitted_rate = true;
+                Ok(Box::new(Self(value)))
+            })
+        }
+
+        /// Retain this adjustment's metadata and check its percentage calculation.
+        pub fn with_percentage(
+            &self,
+            base: &DiplomatStr,
+            percent: &DiplomatStr,
+        ) -> Result<Box<AllowanceCharge>, Box<BindingError>> {
+            boundary(|| {
+                let base = decimal(base, "base")?;
+                let percent = decimal(percent, "percent")?;
+                inv_core::Adjustment::percentage(base, percent)
+                    .supplied_amount(self.0.amount)
+                    .value()
+                    .map_err(core_error)?;
+                let mut adjustment = self.0.clone();
+                adjustment.base_amount = Some(base);
+                adjustment.percentage = Some(percent);
+                Ok(Box::new(Self(adjustment)))
+            })
+        }
+
         pub fn base_amount(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
             boundary(|| Ok(self.0.base_amount.map(|v| Box::new(Text(v.to_string())))))
         }
@@ -294,6 +334,7 @@ pub mod ffi {
         ) -> Result<Box<AllowanceCharge>, Box<BindingError>> {
             boundary(|| {
                 Ok(Box::new(Self(inv_core::AllowanceCharge {
+                    omitted_rate: false,
                     base_amount: None,
                     percentage: None,
                     tax_category_count: 1,
@@ -798,6 +839,7 @@ pub mod ffi {
         ) -> Result<(), Box<BindingError>> {
             boundary(|| {
                 let value = inv_core::AllowanceCharge {
+                    omitted_rate: false,
                     charge,
                     tax_category_count: 1,
                     amount: value.0.value().map_err(core_error)?,

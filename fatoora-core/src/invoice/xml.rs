@@ -690,7 +690,7 @@ impl Serialize for AdjustmentXml<'_> {
             st.serialize_field(
                 "cac:TaxCategory",
                 &TaxCategoryXml {
-                    omit_percent: false,
+                    omit_percent: a.omitted_rate,
                     category: &a.category,
                     percent: a.rate,
                     exemption: &a.exemption,
@@ -1531,6 +1531,7 @@ mod tests {
     #[test]
     fn deserialized_adjustment_counts_fail_before_any_xml_is_written() {
         let adjustment = crate::invoice::AllowanceCharge {
+            omitted_rate: false,
             base_amount: None,
             percentage: None,
             tax_category_count: 1,
@@ -1643,6 +1644,7 @@ mod tests {
             latest_date: Some(InvoiceDate::parse("2024-01-02").unwrap()),
         };
         let adjustment = AllowanceCharge {
+            omitted_rate: false,
             base_amount: None,
             percentage: None,
             tax_category_count: 2,

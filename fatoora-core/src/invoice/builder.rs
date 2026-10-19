@@ -583,7 +583,8 @@ impl InvoiceBuilder {
                     reason_code: adjustment.reason_code.clone(),
                 }
                 .value()?;
-                if adjustment.amount < Decimal::ZERO
+                if (adjustment.omitted_rate && adjustment.category != VatCategory::OutOfScope)
+                    || adjustment.amount < Decimal::ZERO
                     || adjustment.amount.scale() > 2
                     || adjustment.rate < Decimal::ZERO
                     || adjustment.rate > Decimal::from(100)

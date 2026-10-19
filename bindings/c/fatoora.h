@@ -192,6 +192,17 @@ FatooraStatus fatoora_adjustment_reason_code(const FatooraAdjustment *self,
     char **out,
     FatooraError **error);
 void fatoora_adjustment_free(FatooraAdjustment *self);
+FatooraStatus fatoora_allowance_charge_has_vat_rate(const FatooraAllowanceCharge *self,
+    bool *out,
+    FatooraError **error);
+FatooraStatus fatoora_allowance_charge_without_vat_rate(const FatooraAllowanceCharge *self,
+    FatooraAllowanceCharge **out,
+    FatooraError **error);
+FatooraStatus fatoora_allowance_charge_with_percentage(const FatooraAllowanceCharge *self,
+    const char *base,
+    const char *percent,
+    FatooraAllowanceCharge **out,
+    FatooraError **error);
 FatooraStatus fatoora_allowance_charge_base_amount(const FatooraAllowanceCharge *self,
     char **out,
     FatooraError **error);

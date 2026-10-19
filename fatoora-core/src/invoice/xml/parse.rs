@@ -270,13 +270,14 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
             adjustment.aggregate("TaxCategory").basic("ID").content(),
             "AdjustmentVatCategory",
         )?;
-        let rate = decimal_required(
-            adjustment
-                .aggregate("TaxCategory")
-                .basic("Percent")
-                .content(),
-            "AdjustmentVatRate",
-        )?;
+        let rate_text = adjustment
+            .aggregate("TaxCategory")
+            .basic("Percent")
+            .content();
+        let rate = match rate_text.clone() {
+            None if category == "O" => Decimal::ZERO,
+            value => decimal_required(value, "AdjustmentVatRate")?,
+        };
         let category = match category.as_str() {
             "S" => VatCategory::Standard,
             "Z" => VatCategory::Zero,
@@ -296,9 +297,13 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
             for other in categories.iter().skip(1) {
                 let same_id = text_required(first.basic("ID").content(), "AdjustmentVatCategory")?
                     == text_required(other.basic("ID").content(), "AdjustmentVatCategory")?;
-                let other_rate =
-                    decimal_required(other.basic("Percent").content(), "AdjustmentVatRate")?;
-                if !same_id
+                let other_rate_text = other.basic("Percent").content();
+                let other_rate = match other_rate_text.clone() {
+                    None if category == VatCategory::OutOfScope => Decimal::ZERO,
+                    value => decimal_required(value, "AdjustmentVatRate")?,
+                };
+                if rate_text.is_none() != other_rate_text.is_none()
+                    || !same_id
                     || rate != other_rate
                     || parse_exemption(*first) != parse_exemption(*other)
                 {
@@ -331,6 +336,7 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
             });
         }
         builder = builder.adjustment(crate::invoice::AllowanceCharge {
+            omitted_rate: rate_text.is_none(),
             base_amount: adjustment
                 .basic("BaseAmount")
                 .content()

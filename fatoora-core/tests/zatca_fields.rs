@@ -635,3 +635,276 @@ fn vat_midpoint_tolerance_uses_the_pinned_rule_policy() {
         assert_eq!(result.is_ok(), accepted, "tax {tax}");
     }
 }
+
+#[test]
+fn imported_price_discounts_obey_constructor_ranges() {
+    let xml = builder()
+        .line_item(
+            line()
+                .item_gross_price(d("120"))
+                .item_price_discount(d("20"))
+                .build()
+                .unwrap(),
+        )
+        .build()
+        .unwrap()
+        .to_xml()
+        .unwrap();
+    let invalid = xml
+        .replace(
+            "<cbc:Amount currencyID=\"SAR\">20</cbc:Amount>",
+            "<cbc:Amount currencyID=\"SAR\">-1.00</cbc:Amount>",
+        )
+        .replace(
+            "<cbc:BaseAmount currencyID=\"SAR\">120</cbc:BaseAmount>",
+            "<cbc:BaseAmount currencyID=\"SAR\">99</cbc:BaseAmount>",
+        );
+    assert_ne!(xml, invalid);
+    assert!(
+        line()
+            .item_gross_price(d("99"))
+            .item_price_discount(d("-1"))
+            .build()
+            .is_err()
+    );
+    assert!(
+        parse(&invalid).is_err(),
+        "import accepted a negative price discount"
+    );
+}
+
+#[test]
+fn out_of_scope_document_adjustments_preserve_absent_rates() {
+    let xml = builder()
+        .line_item(
+            LineItem::new(
+                "item",
+                d("1"),
+                "PCE",
+                d("100"),
+                d("0"),
+                VatCategory::OutOfScope,
+            )
+            .unwrap(),
+        )
+        .charge(DocumentAdjustment::new(
+            Adjustment::amount(d("10")),
+            VatCategory::OutOfScope,
+            d("0"),
+        ))
+        .build()
+        .unwrap()
+        .to_xml()
+        .unwrap();
+    let source = xml.replace("<cbc:Percent>0</cbc:Percent>", "");
+    assert_ne!(source, xml);
+    validate_xml_invoice_from_str(&source, &Config::default()).unwrap();
+    let imported = parse(&source).unwrap();
+    assert!(imported.data().adjustments()[0].omitted_rate);
+    assert_eq!(leaves(&source), leaves(&imported.to_xml().unwrap()));
+}
+
+#[test]
+fn line_builder_requires_rates_except_out_of_scope() {
+    for category in [
+        VatCategory::Standard,
+        VatCategory::Zero,
+        VatCategory::Exempt,
+        VatCategory::OutOfScope,
+    ] {
+        let result = LineItem::builder()
+            .item_name("item")
+            .invoiced_quantity(d("1"))
+            .item_net_price(d("100"))
+            .vat_category(category)
+            .build();
+        if category == VatCategory::OutOfScope {
+            let xml = builder()
+                .line_item(result.unwrap())
+                .build()
+                .unwrap()
+                .to_xml()
+                .unwrap();
+            assert_eq!(
+                leaves(&xml),
+                leaves(&parse(&xml).unwrap().to_xml().unwrap())
+            );
+        } else {
+            assert!(result.is_err(), "missing rate accepted for {category:?}");
+        }
+    }
+}
+
+#[test]
+fn optional_line_inputs_reject_incomplete_and_inconsistent_prices() {
+    for invalid in [
+        LineItem::builder(),
+        LineItem::builder().item_name("item"),
+        LineItem::builder()
+            .item_name("item")
+            .invoiced_quantity(d("1")),
+        LineItem::builder()
+            .item_name("item")
+            .invoiced_quantity(d("1"))
+            .vat_category(VatCategory::OutOfScope),
+        line().item_name(" "),
+        line().id(" "),
+        line().invoiced_quantity_unit_code(" "),
+        line().item_price_base_quantity_unit_code(" "),
+        line().item_price_base_quantity_unit_code("PCE"),
+        line().item_price_base_quantity(d("0")),
+        line().item_price_base_quantity(d("-1")),
+        line().invoiced_quantity(d("-1")),
+        line().item_net_price(d("-1")),
+        line().vat_rate(d("100.01")),
+        line().vat_rate(d("15.001")),
+        line().vat_category(VatCategory::Exempt),
+        line().item_gross_price(d("120")),
+        line()
+            .item_gross_price(d("120"))
+            .item_price_discount(d("19")),
+        line().item_price_discount(d("-1")),
+        line().line_net_amount(d("3000.02")),
+        line().line_vat_amount(d("-1")),
+        line().line_vat_amount(d("1.001")),
+        line().line_amount_with_vat(d("3450.01")),
+        line().item_net_price(d("0")).line_net_amount(d("-0.01")),
+    ] {
+        assert!(invalid.build().is_err());
+    }
+    let gross_only = LineItem::builder()
+        .item_name("item")
+        .invoiced_quantity(d("1"))
+        .vat_category(VatCategory::Standard)
+        .vat_rate(d("15"))
+        .item_gross_price(d("120"))
+        .item_price_discount(d("20"))
+        .build()
+        .unwrap();
+    assert_eq!(gross_only.unit_price(), d("100"));
+    assert_eq!(
+        line()
+            .item_price_discount(d("20"))
+            .build()
+            .unwrap()
+            .item_gross_price(),
+        Some(d("120"))
+    );
+    for invalid in [
+        Adjustment::amount(d("-1")),
+        Adjustment::amount(d("1.001")),
+        Adjustment::amount(d("1")).base_amount(d("100")),
+        Adjustment::percentage(d("-1"), d("10")),
+        Adjustment::percentage(d("100"), d("-1")),
+        Adjustment::percentage(d("100"), d("10")).supplied_amount(d("9.99")),
+    ] {
+        assert!(line().allowance(invalid).build().is_err());
+    }
+}
+
+#[test]
+fn supplied_breakdowns_reject_ambiguous_ownership_and_invalid_amounts() {
+    let group = VatBreakdown::new(VatCategory::Standard, d("15"), d("3000"), d("450")).unwrap();
+    assert!(
+        builder()
+            .line_item(line().build().unwrap())
+            .vat_breakdown(group.clone())
+            .vat_breakdown(group.clone())
+            .build()
+            .is_err()
+    );
+    assert!(
+        builder()
+            .line_item(line().build().unwrap())
+            .vat_breakdown(
+                VatBreakdown::new(VatCategory::Standard, d("5"), d("3000"), d("150")).unwrap()
+            )
+            .build()
+            .is_err()
+    );
+    let reason = TaxExemption {
+        reason_code: None,
+        reason: Some("supplied".into()),
+    };
+    assert!(
+        builder()
+            .line_item(line().build().unwrap())
+            .vat_breakdown(group)
+            .tax_exemption(VatCategory::Standard, d("15"), reason.clone())
+            .build()
+            .is_err()
+    );
+    assert!(
+        builder()
+            .line_item(line().build().unwrap())
+            .tax_exemption(VatCategory::Standard, d("15"), reason.clone())
+            .tax_exemption(VatCategory::Standard, d("15"), reason.clone())
+            .build()
+            .is_ok()
+    );
+    let mut invalid_group = serde_json::to_value(
+        VatBreakdown::new(VatCategory::Standard, d("15"), d("3000"), d("450")).unwrap(),
+    )
+    .unwrap();
+    invalid_group["tax_amount"] = serde_json::json!("-0.01");
+    assert!(
+        builder()
+            .line_item(line().build().unwrap())
+            .vat_breakdown(serde_json::from_value(invalid_group).unwrap())
+            .build()
+            .is_err()
+    );
+    let error = builder()
+        .line_item(line().build().unwrap())
+        .buyer_identifier(OtherId::new("id"))
+        .build()
+        .unwrap_err();
+    if let InvoiceError::Validation(ref error) = error {
+        let report = fatoora_core::invoice::validation::ValidationReport::from(error);
+        assert!(format!("{report:?}").contains("buyer"));
+    } else {
+        panic!("expected buyer validation error");
+    }
+    let error: fatoora_core::Error = error.into();
+    assert!(
+        serde_json::to_string(&error.details_json())
+            .unwrap()
+            .contains("buyer")
+    );
+    let adjustment =
+        DocumentAdjustment::new(Adjustment::amount(d("1")), VatCategory::Standard, d("15"))
+            .reason("rebate")
+            .reason_code("95")
+            .exemption(reason);
+    let invoice = builder()
+        .line_item(line().build().unwrap())
+        .allowance(adjustment)
+        .build()
+        .unwrap();
+    assert_eq!(
+        invoice.data().adjustments()[0].reason.as_deref(),
+        Some("rebate")
+    );
+    assert_eq!(
+        invoice.data().adjustments()[0].reason_code.as_deref(),
+        Some("95")
+    );
+    assert_eq!(invoice.data().line_items()[0].item_name(), "سلعة & item");
+    assert_eq!(invoice.data().line_items()[0].item_net_price(), d("100"));
+    assert!(InvoiceTime::parse("1:02:03").is_err());
+}
+
+#[test]
+fn deserialized_price_metadata_is_checked_before_invoice_construction() {
+    let item = line()
+        .item_gross_price(d("120"))
+        .item_price_discount(d("20"))
+        .build()
+        .unwrap();
+    for gross in [serde_json::json!("119"), serde_json::Value::Null] {
+        let mut value = serde_json::to_value(&item).unwrap();
+        value["gross_price"] = gross;
+        let invalid: LineItem = serde_json::from_value(value).unwrap();
+        assert!(builder().line_item(invalid).build().is_err());
+    }
+}

@@ -7,6 +7,9 @@ import com.sun.jna.Structure
 
 internal interface AllowanceChargeLib: Library {
     fun fatoora_AllowanceCharge_destroy(handle: Pointer)
+    fun fatoora_AllowanceCharge_has_vat_rate(handle: Pointer): Byte
+    fun fatoora_AllowanceCharge_without_vat_rate(handle: Pointer): ResultPointerPointer
+    fun fatoora_AllowanceCharge_with_percentage(handle: Pointer, base: Slice, percent: Slice): ResultPointerPointer
     fun fatoora_AllowanceCharge_base_amount(handle: Pointer): ResultPointerPointer
     fun fatoora_AllowanceCharge_percentage(handle: Pointer): ResultPointerPointer
     fun fatoora_AllowanceCharge_new(charge: Boolean, amount: Slice, reason: OptionSlice, reasonCode: OptionSlice, category: FFIUint8, rate: Slice, exemption: Pointer): ResultPointerPointer
@@ -77,6 +80,56 @@ class AllowanceCharge internal constructor (
                 reasonCodeSliceMemory?.close()
                 rateSliceMemory.close()
             }
+        }
+    }
+
+    fun hasVatRate(): Boolean {
+
+        val returnVal = lib.fatoora_AllowanceCharge_has_vat_rate(handle);
+        return (returnVal > 0)
+    }
+
+    fun withoutVatRate(): Result<AllowanceCharge> {
+
+        val returnVal = lib.fatoora_AllowanceCharge_without_vat_rate(handle);
+        val nativeOkVal = returnVal.getNativeOk();
+        if (nativeOkVal != null) {
+            val selfEdges: List<Any> = listOf()
+            val handle = nativeOkVal
+            val returnOpaque = AllowanceCharge(handle, selfEdges, true)
+            return returnOpaque.ok()
+        } else {
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal.getNativeErr()!!
+            val returnOpaque = BindingError(handle, selfEdges, true)
+            return returnOpaque.err()
+        }
+    }
+
+    /**
+     * Retain this adjustment's metadata and check its percentage calculation.
+     */
+    fun withPercentage(base: String, percent: String): Result<AllowanceCharge> {
+        val baseSliceMemory = PrimitiveArrayTools.borrowUtf8(base)
+        val percentSliceMemory = PrimitiveArrayTools.borrowUtf8(percent)
+
+        val returnVal = lib.fatoora_AllowanceCharge_with_percentage(handle, baseSliceMemory.slice, percentSliceMemory.slice);
+        try {
+            val nativeOkVal = returnVal.getNativeOk();
+            if (nativeOkVal != null) {
+                val selfEdges: List<Any> = listOf()
+                val handle = nativeOkVal
+                val returnOpaque = AllowanceCharge(handle, selfEdges, true)
+                return returnOpaque.ok()
+            } else {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal.getNativeErr()!!
+                val returnOpaque = BindingError(handle, selfEdges, true)
+                return returnOpaque.err()
+            }
+        } finally {
+            baseSliceMemory.close()
+            percentSliceMemory.close()
         }
     }
 

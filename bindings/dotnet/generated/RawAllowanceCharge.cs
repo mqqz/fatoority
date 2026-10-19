@@ -9,6 +9,16 @@ namespace Fatoora.Raw;
 internal partial struct AllowanceCharge
 {
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_AllowanceCharge_has_vat_rate", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.U1)]
+    internal static unsafe extern bool HasVatRate(AllowanceCharge* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_AllowanceCharge_without_vat_rate", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultAllowanceChargeBindingError WithoutVatRate(AllowanceCharge* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_AllowanceCharge_with_percentage", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultAllowanceChargeBindingError WithPercentage(AllowanceCharge* handle, DiplomatSliceU8 @base, DiplomatSliceU8 percent);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_AllowanceCharge_base_amount", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultTextBindingError BaseAmount(AllowanceCharge* handle);
 

@@ -150,6 +150,7 @@ fn mixed_exemptions_and_repeated_adjustments_preserve_independent_metadata() {
             .tax_exemption(category, rate, exemption.clone());
         for charge in [false, true] {
             b = b.adjustment(AllowanceCharge {
+                omitted_rate: false,
                 base_amount: None,
                 percentage: None,
                 tax_category_count: 1,
@@ -409,6 +410,7 @@ fn unsupported_profiles_schemes_and_duplicate_line_totals_fail_explicitly() {
 
 fn balance_adjustment(charge: bool, amount: &str, category: VatCategory) -> AllowanceCharge {
     AllowanceCharge {
+        omitted_rate: false,
         base_amount: None,
         percentage: None,
         tax_category_count: 1,
@@ -503,6 +505,7 @@ fn adjustment_balances_still_reject_a_negative_final_vat_group() {
 #[test]
 fn builder_rejects_invalid_adjustments_and_inconsistent_accounting_metadata() {
     let adjustment = AllowanceCharge {
+        omitted_rate: false,
         base_amount: None,
         percentage: None,
         tax_category_count: 1,
@@ -617,6 +620,7 @@ fn line_prepayment_subtotals_preserve_every_vat_category_and_reject_invalid_valu
 #[test]
 fn serialized_adjustments_default_the_legacy_tax_category_count() {
     let adjustment = AllowanceCharge {
+        omitted_rate: false,
         base_amount: None,
         percentage: None,
         tax_category_count: 2,
@@ -790,6 +794,7 @@ fn document_adjustments_do_not_replace_the_line_derived_vat_category() {
             }
             let invoice = b
                 .adjustment(AllowanceCharge {
+                    omitted_rate: false,
                     base_amount: None,
                     percentage: None,
                     tax_category_count: 1,
@@ -896,6 +901,7 @@ fn reference_issue_times_accept_surrounding_whitespace_but_reject_invalid_values
 #[test]
 fn repeated_adjustment_classifications_compare_normalized_scalars() {
     let adjustment = AllowanceCharge {
+        omitted_rate: false,
         base_amount: None,
         percentage: None,
         tax_category_count: 2,
@@ -1201,6 +1207,7 @@ fn imported_note_instruction_presence_survives_xml_and_serde() {
 fn oversized_adjustment_counts_are_rejected_before_serialization() {
     for count in [AllowanceCharge::MAX_TAX_CATEGORY_COUNT + 1, usize::MAX] {
         let adjustment = AllowanceCharge {
+            omitted_rate: false,
             base_amount: None,
             percentage: None,
             tax_category_count: count,
@@ -1221,6 +1228,7 @@ fn adjustment_count_limit_accepts_boundary_and_rejects_oversized_imports() {
     let invoice = builder()
         .line_item(line(VatCategory::Standard))
         .adjustment(AllowanceCharge {
+            omitted_rate: false,
             base_amount: None,
             percentage: None,
             tax_category_count: AllowanceCharge::MAX_TAX_CATEGORY_COUNT,

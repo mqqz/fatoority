@@ -1606,12 +1606,12 @@
         "S": "C",
         "T": "C"
       },
-      "model": "AllowanceCharge/DocumentAdjustment",
+      "model": "AllowanceCharge.rate and omitted_rate",
       "treatment": "preserved",
-      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
-      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "parse": "Require a valid decimal rate except for category O, where absence is retained as omitted_rate=true.",
+      "serialize": "Omit Percent only when omitted_rate is true; require category O and effective rate zero.",
       "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
-      "regression_test": "dictionary_source_to_output_coverage",
+      "regression_test": "out_of_scope_document_adjustments_preserve_absent_rates; dictionary_source_to_output_coverage",
       "container_semantics": {
         "absent": "allowed where optional; no supplied value is invented",
         "partial": "accept only when required children of the supported aggregate are present",
@@ -1907,12 +1907,12 @@
         "S": "C",
         "T": "C"
       },
-      "model": "AllowanceCharge/DocumentAdjustment",
+      "model": "AllowanceCharge.rate and omitted_rate",
       "treatment": "preserved",
-      "parse": "parse_finalized_invoice_doc; supported malformed values fail",
-      "serialize": "typed serializer; retained original XML for signed-only fields",
+      "parse": "Require a valid decimal rate except for category O, where absence is retained as omitted_rate=true.",
+      "serialize": "Omit Percent only when omitted_rate is true; require category O and effective rate zero.",
       "normalization": "numeric lexical form, surrounding scalar whitespace, ISO code case; see invoice-model.md",
-      "regression_test": "dictionary_source_to_output_coverage",
+      "regression_test": "out_of_scope_document_adjustments_preserve_absent_rates; dictionary_source_to_output_coverage",
       "container_semantics": {
         "absent": "allowed where optional; no supplied value is invented",
         "partial": "accept only when required children of the supported aggregate are present",

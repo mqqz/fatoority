@@ -837,3 +837,236 @@ fn imported_notes_do_not_invent_payment_instructions() {
         assert_eq!(written(|out| ok(second.xml(out))), regenerated);
     }
 }
+
+#[test]
+fn optional_builder_fields_survive_binding_snapshots_and_xml() {
+    use fatoora_ffi::invoice::ffi::{
+        Adjustment, LineItemBuilder, OriginalInvoiceRef, PaymentMeans, TaxExemption, VatBreakdown,
+    };
+    let exemption = ok(TaxExemption::new(None, None));
+    let rebate = ok(Adjustment::percentage(b"250", b"10"));
+    let rebate = ok(rebate.with_supplied_amount(b"25"));
+    let rebate = ok(rebate.with_reason(Some(b"rebate"), Some(b"95")));
+    let freight = ok(Adjustment::amount(b"5"));
+    let reference = ok(OriginalInvoiceRef::new(
+        b"source",
+        None,
+        Some(b"2024-01-01"),
+        Some(b"12:00:00Z"),
+        Some(b"388"),
+    ));
+    let subtotal = ok(VatBreakdown::new(1, b"15", b"10", b"1.5", &exemption));
+    let mut line = LineItemBuilder::new();
+    assert!(line.set_invoiced_quantity(b"bad").is_err());
+    assert!(line.set_vat_category(255).is_err());
+    ok(line.set_item_name(b"case"));
+    ok(line.set_id(b"original"));
+    ok(line.set_invoiced_quantity(b"30"));
+    ok(line.set_invoiced_quantity_unit_code(b"PCE"));
+    ok(line.set_item_net_price(b"100"));
+    ok(line.set_item_gross_price(b"120"));
+    ok(line.set_item_price_discount(b"20"));
+    ok(line.set_item_price_base_quantity(b"12"));
+    ok(line.set_item_price_base_quantity_unit_code(b"PCE"));
+    ok(line.set_vat_category(1));
+    ok(line.set_vat_rate(b"15"));
+    ok(line.set_line_net_amount(b"230.01"));
+    ok(line.set_line_vat_amount(b"34.50"));
+    ok(line.set_line_amount_with_vat(b"264.51"));
+    ok(line.set_exemption(&exemption));
+    ok(line.set_item_seller_identifier(b"seller-sku", Some(b"OTH")));
+    ok(line.set_item_buyer_identifier(b"buyer-sku", None));
+    ok(line.set_item_standard_identifier(b"standard-sku", Some(b"0160")));
+    ok(line.add_allowance(&rebate));
+    ok(line.add_charge(&freight));
+    ok(line.add_document_reference(&reference));
+    ok(line.add_tax_subtotal(&subtotal));
+    let item = ok(line.build());
+    assert!(line.build().is_err());
+    assert!(line.set_item_name(b"used").is_err());
+    let mut b = builder();
+    ok(b.add_item(&item));
+    let allowance = ok(Adjustment::percentage(b"230", b"10"));
+    let charge = ok(Adjustment::amount(b"2"));
+    let breakdown = ok(VatBreakdown::new(1, b"15", b"209.01", b"31.36", &exemption));
+    ok(b.add_document_adjustment(false, &allowance, 1, b"15", &exemption));
+    ok(b.add_document_adjustment(true, &charge, 1, b"15", &exemption));
+    ok(b.add_vat_breakdown(&breakdown));
+    ok(b.set_purchase_order_id(b"PO"));
+    ok(b.set_contract_id(b"CON"));
+    ok(b.add_billing_reference(&reference));
+    ok(b.add_note(Some(b"en"), b"one"));
+    ok(b.add_note(None, b"two"));
+    ok(b.add_seller_identifier(b"seller-id", Some(b"OTH")));
+    ok(b.set_buyer_without_address(b"buyer", None, None, None));
+    ok(b.add_buyer_identifier(b"buyer-id", None));
+    let payment = ok(PaymentMeans::new(b"30", Some(b"first")));
+    let payment = ok(payment.with_instruction_note(b"second"));
+    let payment = ok(payment.with_account(Some(b"bank"), Some(b"net 30")));
+    ok(b.add_payment_means(&payment));
+    let invoice = ok(b.build());
+    let xml = written(|out| ok(invoice.xml(out)));
+    let imported = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
+    let data = ok(imported.data());
+    drop((
+        invoice, imported, item, payment, reference, rebate, freight, b,
+    ));
+    assert_eq!(written(|out| ok(data.issue_date(out))), "2024-01-01");
+    assert_eq!(written(|out| ok(data.issue_time(out))), "12:30:00Z");
+    assert_eq!(
+        optional_string(data.purchase_order_id()).as_deref(),
+        Some("PO")
+    );
+    assert_eq!(optional_string(data.contract_id()).as_deref(), Some("CON"));
+    assert_eq!(data.billing_references_len(), 1);
+    assert_eq!(
+        written(|out| ok(ok(data.billing_reference(0)).id(out))),
+        "source"
+    );
+    assert!(data.billing_reference(1).is_err());
+    assert_eq!(data.notes_len(), 2);
+    assert_eq!(written(|out| ok(ok(data.note_at(1)).text(out))), "two");
+    assert!(data.note_at(2).is_err());
+    let buyer = ok(data.buyer()).unwrap();
+    assert!(ok(buyer.address()).is_none());
+    assert_eq!(buyer.identifiers_len(), 1);
+    assert_eq!(
+        written(|out| ok(ok(buyer.identifier(0)).value(out))),
+        "buyer-id"
+    );
+    assert!(buyer.identifier(1).is_err());
+    assert!(ok(data.seller()).identifiers_len() >= 1);
+    assert_eq!(data.payment_means_len(), 2);
+    let payment = ok(data.payment_means(1));
+    assert_eq!(written(|out| ok(payment.code(out))), "30");
+    assert_eq!(
+        optional_string(payment.instruction_note()).as_deref(),
+        Some("first")
+    );
+    assert_eq!(payment.instruction_notes_len(), 2);
+    assert_eq!(
+        written(|out| ok(ok(payment.instruction_note_at(1)).value(out))),
+        "second"
+    );
+    assert!(payment.instruction_note_at(2).is_err());
+    assert!(data.payment_means(2).is_err());
+    assert!(payment.has_account());
+    assert_eq!(
+        optional_string(payment.account_identifier()).as_deref(),
+        Some("bank")
+    );
+    assert_eq!(
+        optional_string(payment.payment_terms()).as_deref(),
+        Some("net 30")
+    );
+    let item = ok(data.line_item(0));
+    assert_eq!(
+        optional_string(item.item_gross_price()).as_deref(),
+        Some("120")
+    );
+    assert_eq!(
+        optional_string(item.item_price_discount()).as_deref(),
+        Some("20")
+    );
+    assert_eq!(
+        optional_string(item.item_price_base_quantity()).as_deref(),
+        Some("12")
+    );
+    assert_eq!(
+        optional_string(item.item_price_base_quantity_unit_code()).as_deref(),
+        Some("PCE")
+    );
+    for (identifier, expected) in [
+        (item.item_seller_identifier(), "seller-sku"),
+        (item.item_buyer_identifier(), "buyer-sku"),
+        (item.item_standard_identifier(), "standard-sku"),
+    ] {
+        assert_eq!(
+            written(|out| ok(ok(identifier).unwrap().value(out))),
+            expected
+        );
+    }
+    assert_eq!(item.adjustments_len(), 2);
+    assert!(!ok(item.adjustment_is_charge(0)));
+    assert!(ok(item.adjustment_is_charge(1)));
+    assert!(item.adjustment_is_charge(2).is_err());
+    assert!(item.adjustment(2).is_err());
+    let a = ok(item.adjustment(0));
+    assert_eq!(written(|out| ok(a.value(out))), "25");
+    assert_eq!(optional_string(a.base_amount()).as_deref(), Some("250"));
+    assert_eq!(optional_string(a.percent()).as_deref(), Some("10"));
+    assert_eq!(optional_string(a.reason()).as_deref(), Some("rebate"));
+    assert_eq!(optional_string(a.reason_code()).as_deref(), Some("95"));
+    let a = ok(data.adjustment(0));
+    assert_eq!(optional_string(a.base_amount()).as_deref(), Some("230"));
+    assert_eq!(optional_string(a.percentage()).as_deref(), Some("10"));
+    assert!(a.has_vat_rate());
+    assert!(a.without_vat_rate().is_err());
+    let copy = ok(a.with_tax_category_count(3));
+    let copy = ok(copy.with_percentage(b"230", b"10"));
+    assert_eq!(copy.tax_category_count(), 3);
+    assert!(copy.with_percentage(b"230", b"20").is_err());
+    assert_eq!(a.tax_category_count(), 1);
+}
+
+#[test]
+fn optional_adjustments_and_party_metadata_preserve_absence() {
+    use fatoora_ffi::invoice::ffi::{
+        Adjustment, AllowanceCharge, LineItemBuilder, PaymentMeans, TaxExemption,
+    };
+    let exemption = ok(TaxExemption::new(None, None));
+    let a = ok(AllowanceCharge::new(
+        true, b"10", None, None, 3, b"0", &exemption,
+    ));
+    let a = ok(a.with_percentage(b"100", b"10"));
+    let a = ok(a.with_tax_category_count(2));
+    let a = ok(a.without_vat_rate());
+    assert!(!a.has_vat_rate());
+    let mut b = builder();
+    let address = ok(Address::new(
+        b"SA", b"Riyadh", b"Street", b"1234", b"12222", None, None, None,
+    ));
+    assert!(optional_string(address.province()).is_none());
+    let address = ok(address.with_province(b"Riyadh Province"));
+    ok(b.set_seller(b"Seller", &address, b"399999999900003", None, None));
+    ok(b.set_buyer_without_address(
+        b"Buyer",
+        Some(b"399999999900003"),
+        Some(b"buyer-id"),
+        Some(b"OTH"),
+    ));
+    ok(b.add_adjustment(&a));
+    ok(b.add_line_item(b"item", b"1", b"PCE", b"100", b"0", 3));
+    let bare = ok(PaymentMeans::new(b"30", None));
+    assert!(!bare.has_account());
+    assert!(optional_string(bare.instruction_note()).is_none());
+    assert!(optional_string(bare.account_identifier()).is_none());
+    assert!(optional_string(bare.payment_terms()).is_none());
+    ok(b.add_payment_means(&bare));
+    let xml = written(|out| ok(ok(b.build()).xml(out)));
+    let parsed = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
+    let data = ok(parsed.data());
+    assert_eq!(written(|out| ok(parsed.xml(out))), xml);
+    let restored = ok(data.adjustment(0));
+    assert!(!restored.has_vat_rate());
+    assert_eq!(restored.tax_category_count(), 2);
+    assert_eq!(
+        optional_string(restored.base_amount()).as_deref(),
+        Some("100")
+    );
+    let address = ok(ok(data.seller()).address()).unwrap();
+    assert_eq!(
+        optional_string(address.province()).as_deref(),
+        Some("Riyadh Province")
+    );
+    let flat = ok(Adjustment::amount(b"1"));
+    assert!(optional_string(flat.base_amount()).is_none());
+    assert!(optional_string(flat.percent()).is_none());
+    assert!(optional_string(flat.reason()).is_none());
+    assert!(optional_string(flat.reason_code()).is_none());
+    assert!(Adjustment::amount(b"NaN").is_err());
+    let mut missing = LineItemBuilder::new();
+    assert!(missing.build().is_err());
+    assert!(missing.set_item_net_price(b"1").is_err());
+    assert!(missing.build().is_err());
+}
