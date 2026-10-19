@@ -88,8 +88,9 @@ def test_repeated_adjustment_classifications_can_be_rebuilt():
             with pytest.raises((TypeError, OverflowError)):
                 b.add_adjustment(replace(restored, tax_category_count=invalid_count))
         b.add_adjustment(restored)
-        with pytest.raises(FfiError):
-            b.add_adjustment(replace(restored, tax_category_count=0))
+        for invalid_count in [0, 1025]:
+            with pytest.raises(FfiError):
+                b.add_adjustment(replace(restored, tax_category_count=invalid_count))
         rebuilt = b.build()
         assert rebuilt.adjustments() == [restored]
         assert rebuilt.totals() == invoice.totals()

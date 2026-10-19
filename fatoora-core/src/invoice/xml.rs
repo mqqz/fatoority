@@ -653,6 +653,11 @@ struct AdjustmentXml<'a>(&'a super::AllowanceCharge, &'a str);
 impl Serialize for AdjustmentXml<'_> {
     fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
         let a = self.0;
+        if !(1..=super::AllowanceCharge::MAX_TAX_CATEGORY_COUNT).contains(&a.tax_category_count) {
+            return Err(serde::ser::Error::custom(
+                "tax category count must be between 1 and 1024",
+            ));
+        }
         let mut st = s.serialize_struct("cac:AllowanceCharge", 0)?;
         st.serialize_field("cbc:ChargeIndicator", &a.charge)?;
         if let Some(code) = &a.reason_code {
@@ -1387,6 +1392,35 @@ mod tests {
         Address, CountryCode, InvoiceBuilder, InvoiceSubType, InvoiceType, LineItem, Party,
         SellerRole, VatCategory,
     };
+    #[test]
+    fn deserialized_adjustment_counts_fail_before_any_xml_is_written() {
+        let adjustment = crate::invoice::AllowanceCharge {
+            tax_category_count: 1,
+            charge: true,
+            amount: Decimal::from(1),
+            reason: None,
+            reason_code: None,
+            category: VatCategory::Standard,
+            rate: Decimal::from(15),
+            exemption: crate::invoice::TaxExemption::default(),
+        };
+        for count in [
+            0,
+            crate::invoice::AllowanceCharge::MAX_TAX_CATEGORY_COUNT + 1,
+            usize::MAX,
+        ] {
+            let mut value = serde_json::to_value(&adjustment).unwrap();
+            value["tax_category_count"] = serde_json::json!(count);
+            let decoded = serde_json::from_value(value).unwrap();
+            let mut output = String::new();
+            let error = AdjustmentXml(&decoded, "SAR")
+                .serialize(QuickXmlSerializer::new(&mut output))
+                .unwrap_err();
+            assert!(error.to_string().contains("tax category count"));
+            assert!(output.is_empty());
+        }
+    }
+
     #[test]
     fn test_invoice_xml_serialization() {
         let seller = Party::<SellerRole>::new(

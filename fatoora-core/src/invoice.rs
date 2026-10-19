@@ -922,6 +922,7 @@ fn one_tax_category() -> usize {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AllowanceCharge {
     /// Identical repeated VAT classifications, as used by the bundled SDK fixtures.
+    /// Must be in `1..=Self::MAX_TAX_CATEGORY_COUNT` (an implementation resource limit).
     #[serde(default = "one_tax_category")]
     pub tax_category_count: usize,
     pub charge: bool,
@@ -932,6 +933,11 @@ pub struct AllowanceCharge {
     pub rate: Decimal,
     #[serde(default)]
     pub exemption: TaxExemption,
+}
+
+impl AllowanceCharge {
+    /// Resource limit for repeated identical classifications, not a UBL or ZATCA rule.
+    pub const MAX_TAX_CATEGORY_COUNT: usize = 1024;
 }
 
 /// Single invoice line item.

@@ -575,10 +575,10 @@ impl InvoiceBuilder {
             || invoice
                 .tax_currency_amount
                 .is_some_and(|v| v < Decimal::ZERO || v.scale() > 2)
-            || invoice
-                .adjustments
-                .iter()
-                .any(|a| a.tax_category_count == 0)
+            || invoice.adjustments.iter().any(|a| {
+                !(1..=super::AllowanceCharge::MAX_TAX_CATEGORY_COUNT)
+                    .contains(&a.tax_category_count)
+            })
         {
             return Err(ValidationError::new(vec![ValidationIssue::new(
                 InvoiceField::InvoiceLevelCharge,

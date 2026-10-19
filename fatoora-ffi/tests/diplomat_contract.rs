@@ -753,7 +753,13 @@ fn repeated_adjustment_counts_preserve_owned_metadata_and_totals() {
             b"0",
             &exemption,
         ));
-        assert!(original.with_tax_category_count(0).is_err());
+        for count in [0, 1025, usize::MAX] {
+            assert!(original.with_tax_category_count(count).is_err());
+        }
+        assert_eq!(
+            ok(original.with_tax_category_count(1024)).tax_category_count(),
+            1024
+        );
         let repeated = ok(original.with_tax_category_count(3));
         assert_eq!(original.tax_category_count(), 1);
         assert_eq!(repeated.tax_category_count(), 3);

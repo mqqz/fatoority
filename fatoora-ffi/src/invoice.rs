@@ -280,8 +280,11 @@ pub mod ffi {
             count: usize,
         ) -> Result<Box<AllowanceCharge>, Box<BindingError>> {
             boundary(|| {
-                if count == 0 {
-                    return Err(local_error(1, "tax category count must be positive"));
+                if !(1..=inv_core::AllowanceCharge::MAX_TAX_CATEGORY_COUNT).contains(&count) {
+                    return Err(local_error(
+                        1,
+                        "tax category count must be between 1 and 1024",
+                    ));
                 }
                 let mut adjustment = self.0.clone();
                 adjustment.tax_category_count = count;

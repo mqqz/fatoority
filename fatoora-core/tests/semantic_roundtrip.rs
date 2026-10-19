@@ -1194,3 +1194,47 @@ fn imported_note_instruction_presence_survives_xml_and_serde() {
         }
     }
 }
+
+#[test]
+fn oversized_adjustment_counts_are_rejected_before_serialization() {
+    for count in [AllowanceCharge::MAX_TAX_CATEGORY_COUNT + 1, usize::MAX] {
+        let adjustment = AllowanceCharge {
+            tax_category_count: count,
+            ..balance_adjustment(true, "1", VatCategory::Standard)
+        };
+        assert!(
+            builder()
+                .line_item(line(VatCategory::Standard))
+                .adjustment(adjustment)
+                .build()
+                .is_err()
+        );
+    }
+}
+
+#[test]
+fn adjustment_count_limit_accepts_boundary_and_rejects_oversized_imports() {
+    let invoice = builder()
+        .line_item(line(VatCategory::Standard))
+        .adjustment(AllowanceCharge {
+            tax_category_count: AllowanceCharge::MAX_TAX_CATEGORY_COUNT,
+            ..balance_adjustment(true, "1", VatCategory::Standard)
+        })
+        .build()
+        .unwrap();
+    let xml = invoice.to_xml().unwrap();
+    assert_eq!(roundtrip(&xml), invoice);
+    let doc = roxmltree::Document::parse(&xml).unwrap();
+    let adjustment = doc
+        .root_element()
+        .children()
+        .find(|n| n.is_element() && n.tag_name().name() == "AllowanceCharge")
+        .unwrap();
+    let category = adjustment
+        .children()
+        .find(|n| n.is_element() && n.tag_name().name() == "TaxCategory")
+        .unwrap();
+    let mut oversized = xml.clone();
+    oversized.insert_str(category.range().end, &xml[category.range()]);
+    assert!(parse(&oversized).is_err());
+}
