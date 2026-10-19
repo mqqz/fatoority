@@ -164,11 +164,41 @@ static void optionals_and_arguments(void) {
     fatoora_config_free(NULL);
 }
 
+static void line_builder(void) {
+    FatooraError *error = NULL;
+    failure(fatoora_line_item_builder_new(NULL, &error), &error);
+    FatooraLineItemBuilder *line = NULL;
+    assert(fatoora_line_item_builder_new(&line, &error) == FATOORA_OK);
+    assert(line && !error);
+    assert(fatoora_line_item_builder_set_item_name(line, "case", NULL) == FATOORA_OK);
+    assert(fatoora_line_item_builder_set_invoiced_quantity(line, "12", NULL) == FATOORA_OK);
+    assert(fatoora_line_item_builder_set_item_net_price(line, "100", NULL) == FATOORA_OK);
+    assert(fatoora_line_item_builder_set_item_price_base_quantity(line, "12", NULL) == FATOORA_OK);
+    assert(fatoora_line_item_builder_set_vat_category(line, FATOORA_VAT_OUT_OF_SCOPE, NULL) == FATOORA_OK);
+    assert(fatoora_line_item_builder_set_tax_total_present(line, false, NULL) == FATOORA_OK);
+    FatooraInvoiceLineItem *item = NULL;
+    assert(fatoora_line_item_builder_build(line, &item, &error) == FATOORA_OK);
+    fatoora_line_item_builder_free(line);
+    FatooraInvoiceBuilder *b = builder();
+    assert(fatoora_invoice_builder_add_item(b, item, NULL) == FATOORA_OK);
+    fatoora_invoice_line_item_free(item);
+    FatooraFinalizedInvoice *invoice = NULL;
+    assert(fatoora_invoice_builder_build(b, &invoice, &error) == FATOORA_OK);
+    char *xml = NULL;
+    assert(fatoora_finalized_invoice_xml(invoice, &xml, NULL) == FATOORA_OK);
+    assert(strstr(xml, "<cbc:BaseQuantity>12</cbc:BaseQuantity>"));
+    fatoora_string_free(xml);
+    fatoora_finalized_invoice_free(invoice);
+    fatoora_invoice_builder_free(b);
+    fatoora_line_item_builder_free(NULL);
+}
+
 int main(int argc, char **argv) {
     assert(argc == 2);
     invoices(argv[1]);
     crypto();
     optionals_and_arguments();
+    line_builder();
     puts("C API contract passed");
     return 0;
 }

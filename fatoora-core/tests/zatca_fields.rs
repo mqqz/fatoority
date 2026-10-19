@@ -1091,3 +1091,75 @@ fn omitting_line_tax_must_not_hide_nonzero_tax_or_subtotals() {
             .is_err()
     );
 }
+
+#[test]
+fn deserialized_line_tax_presence_is_revalidated_with_line_indices() {
+    let standard = line().build().unwrap();
+    let outside = LineItem::builder()
+        .item_name("outside")
+        .invoiced_quantity(d("30"))
+        .item_net_price(d("100"))
+        .vat_category(VatCategory::OutOfScope)
+        .tax_total_present(false)
+        .build()
+        .unwrap();
+    let with_subtotal = outside.clone().tax_subtotal(
+        VatBreakdown::new(VatCategory::OutOfScope, d("0"), d("3000"), d("0")).unwrap(),
+    );
+    for (source, field, value, expected) in [
+        (
+            standard.clone(),
+            "omitted_vat_rate",
+            serde_json::json!(true),
+            "line_item_vat_rate",
+        ),
+        (
+            standard,
+            "omitted_tax_amount",
+            serde_json::json!(true),
+            "line_item_vat_amount",
+        ),
+        (
+            with_subtotal,
+            "omitted_tax_amount",
+            serde_json::json!(true),
+            "line_item_vat_amount",
+        ),
+        (
+            outside.clone(),
+            "omitted_gross_amount",
+            serde_json::json!(false),
+            "line_item_vat_amount",
+        ),
+        (
+            outside.clone(),
+            "vat_rate",
+            serde_json::json!("15"),
+            "line_item_vat_rate",
+        ),
+    ] {
+        let mut encoded = serde_json::to_value(source).unwrap();
+        encoded[field] = value;
+        let decoded: LineItem = serde_json::from_value(encoded).unwrap();
+        let error: fatoora_core::Error = builder().line_item(decoded).build().unwrap_err().into();
+        let details: serde_json::Value = serde_json::from_str(&error.details_json()).unwrap();
+        let issues = details["issues"].as_array().unwrap();
+        assert!(
+            issues
+                .iter()
+                .any(|issue| issue["field"] == expected && issue["line_item_index"] == 0),
+            "{details}"
+        );
+    }
+    let decoded: LineItem = serde_json::from_value(serde_json::to_value(outside).unwrap()).unwrap();
+    let xml = builder()
+        .line_item(decoded)
+        .build()
+        .unwrap()
+        .to_xml()
+        .unwrap();
+    assert_eq!(
+        leaves(&xml),
+        leaves(&parse(&xml).unwrap().to_xml().unwrap())
+    );
+}
