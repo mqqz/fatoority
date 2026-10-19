@@ -584,3 +584,26 @@ fn qr_tags(bytes: &[u8]) -> Checked<std::collections::BTreeMap<u8, Vec<u8>>> {
         .map_err(|e| bad("QR_TLV", e.to_string()))?;
     Ok(tags)
 }
+
+#[test]
+fn simplified_qr_rejects_a_different_certificate_signature() {
+    let verified = check_signature(SIMPLIFIED).unwrap();
+    let altered = qr_with_tag(SIMPLIFIED, 9, b"wrong certificate signature");
+    violation(qr(&Xml::parse(&altered).unwrap(), &verified), "QR_VALUE");
+}
+
+#[test]
+fn qr_payable_missing_or_over_limit_is_rejected() {
+    let verified = check_signature(SIMPLIFIED).unwrap();
+    let missing = SIMPLIFIED.replace("cbc:PayableAmount", "cbc:MissingPayableAmount");
+    assert!(qr(&Xml::parse(&missing).unwrap(), &verified).is_err());
+    let altered = SIMPLIFIED.replace(
+        ">115.00</cbc:PayableAmount>",
+        &format!(">{}</cbc:PayableAmount>", "1".repeat(4097)),
+    );
+    assert_ne!(altered, SIMPLIFIED);
+    assert!(matches!(
+        qr(&Xml::parse(&altered).unwrap(), &verified),
+        Err(CheckError::Backend(_))
+    ));
+}

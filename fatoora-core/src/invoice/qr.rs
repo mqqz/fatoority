@@ -565,6 +565,54 @@ mod tests {
     }
 
     #[test]
+    fn invalid_field_details_remain_structured() {
+        let error = crate::Error::from(QrCodeError::InvalidField("tag 9 Base64".into()));
+        let details: serde_json::Value = serde_json::from_str(&error.details_json()).unwrap();
+        assert!(details.to_string().contains("qr_invalid_field"));
+        assert!(details.to_string().contains("tag 9 Base64"));
+    }
+
+    #[test]
+    fn qr_rejects_prohibited_and_oversized_signing_material() {
+        let xml = sample_invoice().to_xml().unwrap();
+        let payload = QrPayload::from_xml(&xml).unwrap();
+        let key = Base64::encode_string(b"key");
+        let oversized = Base64::encode_string(&[0; 259]);
+        assert!(matches!(
+            payload
+                .clone()
+                .with_signing_parts(Some("hash"), Some("sig"), Some(&key), Some(&oversized))
+                .encode(),
+            Err(QrCodeError::ValueTooLong { tag: 9, .. })
+        ));
+        for parts in [
+            (None, Some("sig"), None, None),
+            (None, None, Some(key.as_str()), None),
+            (None, None, None, Some(key.as_str())),
+        ] {
+            assert!(
+                payload
+                    .clone()
+                    .with_signing_parts(parts.0, parts.1, parts.2, parts.3)
+                    .encode()
+                    .is_err()
+            );
+        }
+        let invalid_type = xml.replace("0200000", "0300000");
+        assert_ne!(invalid_type, xml);
+        assert!(QrPayload::from_xml(&invalid_type).is_err());
+        let mut standard = payload;
+        standard.applicability = QrApplicability::Standard;
+        assert!(matches!(
+            standard.with_signing_parts(Some("hash"), Some("sig"), Some(&key), Some(&key)).encode(),
+            Err(QrCodeError::InvalidField(message)) if message.contains("prohibits tag 9")
+        ));
+        assert!(decode_tlv("%%%=").is_err());
+        assert!(QrApplicability::from_xml("<broken").is_err());
+        assert!(QrPayload::from_xml("<broken").is_err());
+    }
+
+    #[test]
     fn subtype_and_tlv_boundaries_are_explicit() {
         for code in [
             "", "03", "0300000", "0200002", "02000000", "é00000", "0é0000",
