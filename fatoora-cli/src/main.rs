@@ -245,7 +245,29 @@ fn main() -> Result<ExitCode> {
                             "failed to parse invoice XML from {invoice}; signed parse error: {signed_parse_error}"
                         )
                     })?;
-                    generate_finalized_invoice_qr(&finalized)?
+                    // A failed signed import must never fall back to regeneration.
+                    let document = roxmltree::Document::parse(&xml).context("invalid XML")?;
+                    let cac =
+                        "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2";
+                    let cbc =
+                        "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2";
+                    let has_qr = document.root_element().children().any(|n| {
+                        n.has_tag_name((cac, "AdditionalDocumentReference"))
+                            && n.children()
+                                .any(|id| id.has_tag_name((cbc, "ID")) && id.text() == Some("QR"))
+                            && n.descendants().any(|value| {
+                                value.has_tag_name((cbc, "EmbeddedDocumentBinaryObject"))
+                                    && value.text().is_some_and(|text| !text.trim().is_empty())
+                            })
+                    });
+                    if has_qr
+                        || document.descendants().any(|n| {
+                            n.has_tag_name(("http://www.w3.org/2000/09/xmldsig#", "Signature"))
+                        })
+                    {
+                        return Err(signed_parse_error).context("signed invoice integrity failed");
+                    }
+                    generate_finalized_invoice_qr(&finalized, &xml)?
                 }
             };
             println!("{qr}");
@@ -501,29 +523,16 @@ fn validation_location(location: &ValidationLocation) -> String {
     }
 }
 
-fn generate_finalized_invoice_qr(invoice: &FinalizedInvoice) -> Result<String> {
-    build_qr_payload(invoice.data(), invoice.totals(), None)
+fn generate_finalized_invoice_qr(invoice: &FinalizedInvoice, xml: &str) -> Result<String> {
+    build_qr_payload(invoice.data(), xml)
 }
 
 fn generate_signed_invoice_qr(invoice: &SignedInvoice) -> Result<String> {
-    build_qr_payload(
-        invoice.data(),
-        invoice.totals(),
-        Some((
-            invoice.invoice_hash(),
-            invoice.signature(),
-            invoice.public_key(),
-            invoice.zatca_key_signature(),
-        )),
-    )
+    Ok(invoice.qr_code().to_owned())
 }
 
-fn build_qr_payload(
-    data: &fatoora_core::invoice::InvoiceData,
-    totals: &fatoora_core::invoice::InvoiceTotalsData,
-    signing_parts: Option<(&str, &str, &str, Option<&str>)>,
-) -> Result<String> {
-    let seller_name = data.seller().name().trim();
+fn build_qr_payload(data: &fatoora_core::invoice::InvoiceData, xml: &str) -> Result<String> {
+    let seller_name = data.seller().name();
     if seller_name.is_empty() {
         bail!("seller legal name is missing");
     }
@@ -534,9 +543,43 @@ fn build_qr_payload(
         .filter(|vat| !vat.is_empty())
         .ok_or_else(|| anyhow::anyhow!("seller VAT ID is missing"))?;
 
-    let timestamp = format!("{}T{}", data.issue_date(), data.issue_time());
-    let total_with_vat = format!("{:.2}", totals.payable_amount());
-    let total_vat = format!("{:.2}", totals.tax_amount());
+    let doc = roxmltree::Document::parse(xml).context("invalid XML")?;
+    let root = doc.root_element();
+    let cbc = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2";
+    let cac = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2";
+    let money = root
+        .children()
+        .find(|n| n.has_tag_name((cac, "LegalMonetaryTotal")))
+        .context("missing monetary total")?;
+    let value = |node: roxmltree::Node<'_, '_>, local| -> Result<String> {
+        let field = node
+            .children()
+            .find(|n| n.has_tag_name((cbc, local)))
+            .context("missing QR field")?;
+        let text: String = field
+            .descendants()
+            .filter_map(|n| n.is_text().then(|| n.text()).flatten())
+            .collect();
+        Ok(text.trim_matches([' ', '\t', '\r', '\n']).to_owned())
+    };
+    let timestamp = format!(
+        "{}T{}",
+        value(root, "IssueDate")?,
+        value(root, "IssueTime")?
+    );
+    let total_with_vat = value(money, "PayableAmount")?;
+    let currency = value(root, "DocumentCurrencyCode")?;
+    let tax = root
+        .children()
+        .find(|n| {
+            n.has_tag_name((cac, "TaxTotal"))
+                && n.children().any(|a| {
+                    a.has_tag_name((cbc, "TaxAmount"))
+                        && a.attribute("currencyID") == Some(currency.as_str())
+                })
+        })
+        .context("missing invoice-currency tax total")?;
+    let total_vat = value(tax, "TaxAmount")?;
 
     let mut tlv = Vec::new();
     push_tlv_field(&mut tlv, 1, seller_name.as_bytes())?;
@@ -544,20 +587,6 @@ fn build_qr_payload(
     push_tlv_field(&mut tlv, 3, timestamp.as_bytes())?;
     push_tlv_field(&mut tlv, 4, total_with_vat.as_bytes())?;
     push_tlv_field(&mut tlv, 5, total_vat.as_bytes())?;
-
-    if let Some((invoice_hash, signature, public_key_b64, zatca_key_signature_b64)) = signing_parts
-    {
-        push_tlv_field(&mut tlv, 6, invoice_hash.as_bytes())?;
-        push_tlv_field(&mut tlv, 7, signature.as_bytes())?;
-        let public_key_bytes = Base64::decode_vec(public_key_b64)
-            .context("failed to decode signed invoice public key (base64)")?;
-        push_tlv_field(&mut tlv, 8, &public_key_bytes)?;
-        if let Some(stamp_b64) = zatca_key_signature_b64 {
-            let stamp_bytes = Base64::decode_vec(stamp_b64)
-                .context("failed to decode ZATCA key signature (base64)")?;
-            push_tlv_field(&mut tlv, 9, &stamp_bytes)?;
-        }
-    }
 
     let encoded = Base64::encode_string(&tlv);
     if encoded.len() > 700 {
