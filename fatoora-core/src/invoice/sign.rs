@@ -236,12 +236,17 @@ impl InvoiceSigner {
             signing_time,
             zatca_key_signature: Some(certificate_signature_base64(&self.csid)?),
         };
+        let applicability = super::qr::QrApplicability::from_xml(xml)?;
         let qr = QrPayload::from_xml(xml)?
             .with_signing_parts(
                 Some(signing.invoice_hash()),
                 Some(signing.signature()),
                 Some(signing.public_key()),
-                signing.zatca_key_signature(),
+                if applicability == super::qr::QrApplicability::Simplified {
+                    signing.zatca_key_signature()
+                } else {
+                    None
+                },
             )
             .encode()?;
         let fragments = fragments::render(
@@ -316,7 +321,7 @@ fn certificate_hash_base64(cert: &Certificate) -> Result<String, SigningError> {
     Ok(hex_hash_to_base64(&hash))
 }
 
-fn certificate_signature_base64(cert: &Certificate) -> Result<String, SigningError> {
+pub(crate) fn certificate_signature_base64(cert: &Certificate) -> Result<String, SigningError> {
     let bytes = cert.signature().as_bytes().ok_or_else(|| {
         SigningError::InvalidInput(crate::Diagnostic::new(
             "certificate signature is not byte-aligned",

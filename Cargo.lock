@@ -966,6 +966,7 @@ dependencies = [
  "base64ct",
  "clap",
  "fatoora-core",
+ "roxmltree 0.21.1",
  "serde_json",
 ]
 

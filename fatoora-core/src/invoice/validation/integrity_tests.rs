@@ -275,7 +275,7 @@ fn qr_with_tag(input: &str, tag: u8, value: &[u8]) -> String {
         input,
         "/ubl:Invoice/cac:AdditionalDocumentReference[cbc:ID='QR']/cac:Attachment/cbc:EmbeddedDocumentBinaryObject",
     );
-    let mut tags = qr_tags(&decode(&original, 4096, "QR_BASE64").unwrap()).unwrap();
+    let mut tags = crate::invoice::qr::decode_tlv(&original).unwrap();
     tags.insert(tag, value.to_vec());
     let encoded = Base64::encode_string(&framed(&tags.into_iter().collect::<Vec<_>>()));
     replace(input, &original, &encoded)
@@ -520,4 +520,90 @@ fn generated_qr_uses_payable_for_rounding_and_prepayments() {
             }
         }
     }
+}
+
+#[test]
+fn both_qr_amounts_use_bounded_exact_decimal_equality() {
+    let verified = check_signature(SIMPLIFIED).unwrap();
+    for (xml_amount, qr_amount, valid) in [
+        ("300.0", "300.00", true),
+        ("300.00", "300.00", true),
+        ("300.01", "300.00", false),
+        ("45.0", "45.00", true),
+        ("45.01", "45.00", false),
+        ("0", "0.00", true),
+        (
+            "123456789012345678901234.0",
+            "123456789012345678901234.00",
+            true,
+        ),
+        ("300", "3e2", false),
+        ("NaN", "NaN", false),
+    ] {
+        for (tag, path, code) in [
+            (
+                4,
+                "/ubl:Invoice/cac:LegalMonetaryTotal/cbc:PayableAmount",
+                "QR_VALUE",
+            ),
+            (5, "(/ubl:Invoice/cac:TaxTotal/cbc:TaxAmount)[1]", "QR_VAT"),
+        ] {
+            // Isolate monetary comparison; cryptographic checks run independently.
+            let old = text(SIMPLIFIED, path);
+            let local = if tag == 4 {
+                "PayableAmount"
+            } else {
+                "TaxAmount"
+            };
+            let input = SIMPLIFIED.replace(
+                &format!(">{old}</cbc:{local}>"),
+                &format!(">{xml_amount}</cbc:{local}>"),
+            );
+            let input = qr_with_tag(&input, tag, qr_amount.as_bytes());
+            let xml = Xml::parse(&input).unwrap();
+            if valid {
+                qr_for_profile(&xml, &verified, QrProfile::Signing).unwrap();
+                if tag == 4 && xml_amount != qr_amount {
+                    violation(qr(&xml, &verified), "QR_VALUE");
+                } else {
+                    qr(&xml, &verified).unwrap();
+                }
+            } else {
+                violation(qr_for_profile(&xml, &verified, QrProfile::Signing), code);
+            }
+        }
+    }
+}
+
+// Exercise the production decoder and explicit simplified applicability together.
+fn qr_tags(bytes: &[u8]) -> Checked<std::collections::BTreeMap<u8, Vec<u8>>> {
+    let tags = crate::invoice::qr::decode_tlv(&Base64::encode_string(bytes))
+        .map_err(|e| bad("QR_TLV", e.to_string()))?;
+    crate::invoice::qr::QrApplicability::Simplified
+        .check_tags(&tags)
+        .map_err(|e| bad("QR_TLV", e.to_string()))?;
+    Ok(tags)
+}
+
+#[test]
+fn simplified_qr_rejects_a_different_certificate_signature() {
+    let verified = check_signature(SIMPLIFIED).unwrap();
+    let altered = qr_with_tag(SIMPLIFIED, 9, b"wrong certificate signature");
+    violation(qr(&Xml::parse(&altered).unwrap(), &verified), "QR_VALUE");
+}
+
+#[test]
+fn qr_payable_missing_or_over_limit_is_rejected() {
+    let verified = check_signature(SIMPLIFIED).unwrap();
+    let missing = SIMPLIFIED.replace("cbc:PayableAmount", "cbc:MissingPayableAmount");
+    assert!(qr(&Xml::parse(&missing).unwrap(), &verified).is_err());
+    let altered = SIMPLIFIED.replace(
+        ">115.00</cbc:PayableAmount>",
+        &format!(">{}</cbc:PayableAmount>", "1".repeat(4097)),
+    );
+    assert_ne!(altered, SIMPLIFIED);
+    assert!(matches!(
+        qr(&Xml::parse(&altered).unwrap(), &verified),
+        Err(CheckError::Backend(_))
+    ));
 }

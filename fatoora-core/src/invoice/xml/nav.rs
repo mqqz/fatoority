@@ -86,6 +86,21 @@ pub(crate) fn tax_totals<'a, 'input>(
 ) -> impl Iterator<Item = Element<'a, 'input>> {
     invoice.children(CAC_NS, "TaxTotal")
 }
+/// BT-110 is denominated in the document currency, not the accounting currency.
+/// Preserve the first matching total in the SDK's two-total layout.
+pub(crate) fn qr_tax_amount<'a, 'input>(invoice: Element<'a, 'input>) -> Element<'a, 'input> {
+    let currency = invoice
+        .basic("DocumentCurrencyCode")
+        .content()
+        .unwrap_or_default();
+    tax_totals(invoice)
+        .map(|total| total.basic("TaxAmount"))
+        .find(|amount| {
+            amount.attribute("currencyID").as_deref()
+                == Some(currency.trim_matches([' ', '\t', '\r', '\n']))
+        })
+        .unwrap_or(Element(None))
+}
 pub(crate) fn signature_extension<'a, 'input>(invoice: Element<'a, 'input>) -> Element<'a, 'input> {
     invoice
         .child(EXT_NS, "UBLExtensions")

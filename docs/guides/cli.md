@@ -122,7 +122,7 @@ To generate a payload from an unsigned invoice:
 fatoora qr --invoice invoice.xml
 ```
 
-`qr` can also regenerate from signed XML. Add `--fail-on-signed` when your workflow
+`qr` returns the existing payload for valid signed XML. Generation requires unsigned input without an existing nonempty QR payload; partial stamps and failed signed imports are rejected. Add `--fail-on-signed` when your workflow
 should reject signed input. Output is base64-encoded text; redirect it to `qr.txt`
 if needed. The [QR guide](qr.md) explains how to pass it to an image renderer.
 

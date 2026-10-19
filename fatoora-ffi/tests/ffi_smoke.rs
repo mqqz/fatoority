@@ -381,6 +381,17 @@ fn deep_recognized_xml_returns_binding_errors_before_model_recursion() {
         if depth == 128 {
             let finalized = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
             assert_eq!(written(|out| ok(ok(finalized.data()).id(out))), "SME00010");
+            assert!(SignedInvoice::from_xml(xml.as_bytes()).is_err());
+            let signer = fatoora_core::invoice::sign::InvoiceSigner::from_der(
+                include_bytes!(
+                    "../../fatoora-core/tests/fixtures/sdk-parity/credentials/certificate.der"
+                ),
+                include_bytes!(
+                    "../../fatoora-core/tests/fixtures/sdk-parity/credentials/private-key.der"
+                ),
+            )
+            .unwrap();
+            let xml = signer.sign_xml(&xml).unwrap();
             let signed = ok(SignedInvoice::from_xml(xml.as_bytes()));
             assert_eq!(written(|out| ok(signed.xml(out))), xml);
         } else {

@@ -28,6 +28,8 @@ Compatibility tests are evidence for the cases they cover. They do not establish
 | `SDK-QR-001` | QR generation, signing integrity and SDK-profile validation use `PayableAmount` (BT-115) for tag 4, including prepayment and payable rounding adjustments. This matches the recorded SDK behavior and the [Fatoora Developer Community clarification for SDK 3.3.1 and later](https://zatca1.discourse.group/t/how-to-show-advance-deductions-in-qr-code/890/2). |
 | `SDK-QR-002` | Tag 3 must contain a complete RFC3339 timestamp; a missing offset is interpreted as UTC. Comparison uses instants. Native validation rejects inconsistent offsets, a different day and malformed suffixes accepted by the recorded SDK CLI runs. |
 | `SDK-QR-003` | Tag 5 uses exact XML-decimal equality. Native validation rejects `NaN`, exponent syntax and distinct values that collapse to the same binary float. Captures also show the SDK accepting `16.0` against invoice VAT `15.00`; native validation rejects that mismatch. |
+| `SDK-QR-004` | Both money tags use bounded exact XML-decimal comparison. The SDK validation profile additionally requires Tag 4's spelling to match XML; the pinned SDK and development API reject `115.0` against `115.00`. Signed import checks monetary integrity separately from this full-profile formatting requirement. |
+| `SDK-QR-005` | Tag 5 selects BT-110 in the document currency. The historical foreign-currency advance-payment sample and SDK QR generator select SAR BT-111 instead; strict import rejects that original payload. Standard SDK-profile reports still skip QR checks. |
 | `LOCAL-INTEGRITY-001` | Signature algorithms, references and structure are restricted to the supported profile. Duplicate IDs, unbound references and malformed TLV data are rejected. This is a constrained invoice verifier; arbitrary XMLDSig transforms are unsupported. |
 
 
@@ -57,3 +59,13 @@ The frozen manifest retains the historical `SDK-QR-001` mismatch from its captur
 The [frozen corpus](https://github.com/mqqz/fatoority/tree/main/fatoora-core/tests/fixtures/sdk-parity) records SDK outputs and checksums. The [recorded verification report](sdk-parity-verification.json) identifies the source and artifacts checked in that run; it is not a verification of every subsequent commit.
 
 Contributors changing these behaviors should follow [validation testing](business-rules.md).
+
+## QR correctness change and migration
+
+Standard stamps omit Tag 9; simplified stamps require it. This follows the tag table in the [published May 2023 security standard](https://www.zatca.gov.sa/ar/E-Invoicing/SystemsDevelopers/Documents/20230519_ZATCA_Electronic_Invoice_Security_Features_Implementation_Standards_vF.pdf), section 4.1. That table lists Tags 7–8 generally. Section 2.2.1 assigns standard clearance stamping to the platform. Local standard signing remains an SDK preparation operation and does not imply clearance.
+
+Signed parsing now verifies local cryptographic integrity and QR consistency. Existing Rust and binding signatures are unchanged. Consumers that previously imported altered, partially signed or historically generated standard documents containing Tag 9 will receive errors. Retain the original XML for diagnosis; use finalized parsing to inspect supported invoice fields. Correct source documents and sign again when authorized. Do not edit an already-cleared document to make it importable.
+
+The signed QR accessor and CLI return the original embedded payload. They no longer construct it from normalized model totals. Certificate signature metadata is read from the certificate independently of Tag 9. Both monetary tags compare exact decimal values; the original XML and QR spelling remain unchanged.
+
+Frozen SDK captures and their native SDK-profile expectations remain unchanged. `SDK-QR-004` separates exact monetary equivalence from the additional Tag 4 formatting check. See [QR comparison evidence](qr-correctness-evidence.md) for the current run and its limits.

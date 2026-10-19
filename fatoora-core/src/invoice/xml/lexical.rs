@@ -2,6 +2,23 @@
 use quick_xml::{events::Event, name::ResolveResult, reader::NsReader};
 use std::collections::HashSet;
 
+/// Decode XML base64Binary with bounded input and decoded sizes.
+pub(crate) fn decode_base64(value: &str, maximum: usize) -> Result<Vec<u8>, &'static str> {
+    use base64ct::{Base64, Encoding};
+    if value.len() > maximum.saturating_mul(2) {
+        return Err("Encoded value exceeds the profile limit");
+    }
+    let compact: String = value
+        .chars()
+        .filter(|c| !matches!(c, ' ' | '\t' | '\r' | '\n'))
+        .collect();
+    let bytes = Base64::decode_vec(&compact).map_err(|_| "Invalid base64 value")?;
+    if bytes.len() > maximum {
+        return Err("Decoded value exceeds the profile limit");
+    }
+    Ok(bytes)
+}
+
 #[derive(Debug, thiserror::Error)]
 pub(crate) enum XmlError {
     #[error("invalid XML: {0}")]
@@ -162,6 +179,21 @@ pub(crate) fn preflight(input: &str, limits: &XmlLimits) -> Result<(), XmlError>
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn base64_limits_and_xml_whitespace() {
+        assert_eq!(decode_base64(" Y Q==\t\r\n", 8).unwrap(), b"a");
+        assert!(decode_base64("YQ==\u{a0}", 8).is_err());
+        assert_eq!(decode_base64("YWFhYQ==", 4).unwrap(), b"aaaa");
+        assert_eq!(
+            decode_base64("YWFhYWE=", 4),
+            Err("Decoded value exceeds the profile limit")
+        );
+        assert_eq!(
+            decode_base64("YQ==     ", 4),
+            Err("Encoded value exceeds the profile limit")
+        );
+    }
 
     #[test]
     fn declaration_policy_rejects_values_the_tree_parser_leaves_unchecked() {

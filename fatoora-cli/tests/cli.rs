@@ -60,6 +60,20 @@ fn strip_qr_reference(xml: &str) -> String {
     let mut output = String::with_capacity(xml.len());
     output.push_str(&xml[..start]);
     output.push_str(&xml[end..]);
+    let doc = roxmltree::Document::parse(&output).unwrap();
+    let range = doc
+        .root_element()
+        .children()
+        .find(|n| {
+            n.has_tag_name((
+                "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2",
+                "UBLExtensions",
+            ))
+        })
+        .map(|n| n.range());
+    if let Some(range) = range {
+        output.replace_range(range, "");
+    }
     output
 }
 
@@ -292,7 +306,17 @@ fn qr_command_uses_payable_amount_for_signed_and_unsigned_invoices() {
         assert!(parse_signed_invoice_xml(&unsigned).is_err());
         let signed = invoice.sign(&signer).unwrap();
         assert!(parse_signed_invoice_xml(signed.xml()).is_ok());
-        for (xml, expected_tags) in [(unsigned.as_str(), 5), (signed.xml(), 9)] {
+        for (xml, expected_tags) in [
+            (unsigned.as_str(), 5),
+            (
+                signed.xml(),
+                if signed.data().invoice_type().is_simplified() {
+                    9
+                } else {
+                    8
+                },
+            ),
+        ] {
             let path = unique_temp_path("qr-payable");
             std::fs::write(&path, xml).unwrap();
             let output = Command::new(cli_exe())
@@ -1097,4 +1121,47 @@ fn generate_hash_preserves_input_representation() {
         std::fs::remove_file(path).unwrap();
     }
     std::fs::remove_file(unsigned).unwrap();
+}
+
+#[test]
+fn qr_command_rejects_tampered_signed_xml_without_unsigned_fallback() {
+    let xml = std::fs::read_to_string(signed_invoice_fixture()).unwrap();
+    let signed = parse_signed_invoice_xml(&xml).unwrap();
+    let mut raw = Base64::decode_vec(signed.qr_code()).unwrap();
+    raw[2] ^= 1;
+    let modified = xml.replace(signed.qr_code(), &Base64::encode_string(&raw));
+    let file = unique_temp_path("tampered-qr.xml");
+    std::fs::write(&file, modified).unwrap();
+    for command in ["qr", "qr-read", "invoice-request"] {
+        let result = Command::new(cli_exe())
+            .args([command, "--invoice"])
+            .arg(&file)
+            .output()
+            .unwrap();
+        assert!(!result.status.success(), "{command}");
+        assert!(result.stdout.is_empty(), "{command}");
+    }
+    std::fs::remove_file(file).unwrap();
+}
+
+#[test]
+fn qr_command_rejects_a_stamp_with_its_signature_removed() {
+    let mut xml = std::fs::read_to_string(signed_invoice_fixture()).unwrap();
+    let doc = roxmltree::Document::parse(&xml).unwrap();
+    let range = doc
+        .descendants()
+        .find(|n| n.has_tag_name(("http://www.w3.org/2000/09/xmldsig#", "Signature")))
+        .unwrap()
+        .range();
+    xml.replace_range(range, "");
+    let file = unique_temp_path("missing-signature.xml");
+    std::fs::write(&file, xml).unwrap();
+    let result = Command::new(cli_exe())
+        .args(["qr", "--invoice"])
+        .arg(&file)
+        .output()
+        .unwrap();
+    assert!(!result.status.success());
+    assert!(result.stdout.is_empty());
+    std::fs::remove_file(file).unwrap();
 }

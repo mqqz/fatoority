@@ -120,7 +120,7 @@ test('clearance and compliance use their own acceptance fields', async () => {
   const client = new sdk.ZatcaClient(config, {fetch: async (url) => url.includes('/clearance/')
     ? json({validationResults: {status: 'PASS'}, clearanceStatus: 'CLEARED', reportingStatus: 'NOT_REPORTED'})
     : json({validationResults: {status: 'WARNING'}, reportingStatus: 'NOT_REPORTED'})});
-  const standard = sdk.SignedInvoice.fromXml(loadFixture('sdk-parity-typed/cases/standard-invoice/sdk-signed.xml'));
+  const standard = sdk.SignedInvoice.fromXml(loadFixture('sdk-parity/cases/standard-invoice/sdk-signed.xml'));
   assert.equal((await client.clearStandardInvoice(standard, pcsid())).outcome().value, 'Accepted');
   assert.equal((await client.checkInvoiceCompliance(invoice(), ccsid())).outcome().value, 'Accepted');
   await assert.rejects(client.clearStandardInvoice(invoice(), pcsid()));
@@ -194,4 +194,23 @@ test('optional line fields and repeated identifiers survive WASM import', () => 
   assert.equal(parsed.data().paymentMeans(0).instructionNotesLen(), 2);
   assert.equal(parsed.data().paymentMeans(0).instructionNoteAt(1).value(), 'two');
   assert.equal(parsed.xml(), invoice.xml());
+});
+
+test('signed import rejects the SDK fixture with a shifted QR timestamp', () => {
+  assert.throws(() => sdk.SignedInvoice.fromXml(
+    loadFixture('sdk-parity-typed/cases/standard-invoice/sdk-signed.xml')),
+    e => e.cause instanceof sdk.BindingError && e.cause.message().includes('QR_TIMESTAMP'));
+});
+
+test('signed import preserves XML with line-wrapped certificates', () => {
+  for (const kind of ['standard', 'simplified']) {
+    const xml = loadFixture(`sdk-parity/cases/${kind}-invoice/sdk-signed.xml`);
+    const wrapped = xml.replace(/(<ds:X509Certificate>)([^<]+)(<\/ds:X509Certificate>)/,
+      (_, start, certificate, end) => start + certificate.match(/.{1,64}/g).join(' \t\r\n') + end);
+    assert.notEqual(wrapped, xml);
+    const original = sdk.SignedInvoice.fromXml(xml);
+    const parsed = sdk.SignedInvoice.fromXml(wrapped);
+    assert.equal(parsed.xml(), wrapped);
+    assert.equal(parsed.qrCode(), original.qrCode());
+  }
 });

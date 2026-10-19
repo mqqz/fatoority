@@ -1,0 +1,2834 @@
+{
+  "sdk_version": "238-R3.4.8",
+  "jar_sha256": "48abeb828d453ef6fafba792fddbbb2701da5c7018c24bde918853e80ff5d530",
+  "run_utc": "2026-10-19T18:08:23.335078+00:00",
+  "sources": {
+    "scripts/qr_parity.py": "5042b0523f3e547fe63dc9e603593f15ab93ba0cc8abd5caa455887e5e723c0d",
+    "fatoora-core/src/invoice/qr.rs": "f0881ead0c49ec68704607686755f1140fabd49aff294b16631469827d9e1041",
+    "fatoora-core/src/invoice/sign.rs": "d6bf5243a65c8d1f24d5f53bc4c9dc2015755228400a9b0015f85431536a12c3",
+    "fatoora-core/src/invoice/builder.rs": "53b06009b3be7e9e9d9917e9e4ae01f212614aa2856eb268ee65f58f57ee7ff4",
+    "fatoora-core/src/invoice/xml/parse.rs": "4ff797d115e61695a3d66633fb245e4161500b856cc9a4104461aaa13110676f",
+    "fatoora-core/src/invoice/xml/nav.rs": "c412099e787748755ced6b07397cc04bedd8884ea592fa97406cc32a8b292149",
+    "fatoora-core/src/invoice/validation/integrity.rs": "649da078a6e6d78a01d364a5d518bbf736dadc5932e31f2432986fe9501f4a7d",
+    "fatoora-cli/src/main.rs": "ca867f55434acc60407782f42e01ec8e9940b2f8e721ea66f70debffa2bcb38c"
+  },
+  "results": {
+    "standard-invoice": {
+      "input_sha256": "84a7e52bb011067c8c8aaae2c981c77779691962eac15e709f37e2adcaa402b4",
+      "subtype": "0100000",
+      "sdk": {
+        "encoded": "ARZBY21lIEdsb2JhbCBUcmFkaW5nIENvAg8zOTk5OTk5OTk5MDAwMDMDEzIwMjQtMDItMTBUMDk6MTU6MDAEBzE1MTEuMzgFBjExOC44OAYsWG5vak5GR1lWYU5Xd3FFaDNOUk4wOXA4SXJ4Nm4wSDhsZGkrQStYb1J5Zz0HYE1FWUNJUURXWTR4K2dyZFJENXVBTGY1U1NRZldyeEhaSE5oRkM4dHprRG42N1N4RzZBSWhBUDVET0llZVR4M2RBbXNFK096Q1VYSjQrUEs3M3owcm1TMjB6Z01ScnJnRAhYMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEoWCKa0Sa9FIErTOv0uAkC1VIKXxU9nPpx2vlf4yhMejy8c02XJblDq7tPydo8mq0ahOMmNo8gwni7Xt1KT9UeA==",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "tag4": "1511.38",
+        "tag5": "118.88",
+        "tag9_base64": null
+      },
+      "fatoority": {
+        "encoded": "ARZBY21lIEdsb2JhbCBUcmFkaW5nIENvAg8zOTk5OTk5OTk5MDAwMDMDEzIwMjQtMDItMTBUMDk6MTU6MDAEBzE1MTEuMzgFBjExOC44OAYsWG5vak5GR1lWYU5Xd3FFaDNOUk4wOXA4SXJ4Nm4wSDhsZGkrQStYb1J5Zz0HYE1FVUNJUUQ4a0xwQzN1OFBNQjYwVjc1bWJ2Wm9KeFZYYWpiVHZZck1KS3dDUENVN0h3SWdOZ0hEOXQ0dnVKYXZsSXZMbjIzdldBUTRYdTBVZlEvNTBiaFdlcy9LS3lBPQhYMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEoWCKa0Sa9FIErTOv0uAkC1VIKXxU9nPpx2vlf4yhMejy8c02XJblDq7tPydo8mq0ahOMmNo8gwni7Xt1KT9UeA==",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "tag4": "1511.38",
+        "tag5": "118.88",
+        "tag9_base64": null
+      },
+      "sdk_validation_sdk": {
+        "layers": {
+          "xsd": "passed",
+          "en": "passed",
+          "ksa": "passed",
+          "qr": "not_run",
+          "signature": "not_run",
+          "pih": "passed",
+          "global": "passed"
+        },
+        "findings": [
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-19",
+            "message": "[BR-KSA-19]-Each Document level charge (BG-21) shall have a code for the reason for document level charge (BT-105)."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-69",
+            "message": "[BR-KSA-69]-A VAT breakdown (BG-23) with VAT Category code (BT-118) 'Zero rated' shall have a VAT exception reason code (BT-121)."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-15",
+            "message": "[BR-KSA-15]-The tax invoice ((invoice type code (BT-30) = 388) and (invoice transaction code (KSA-2) has \"01\" as first 2 digits)) must contain the supply date (KSA-5)."
+          }
+        ]
+      },
+      "sdk_validation_fatoority": {
+        "layers": {
+          "xsd": "passed",
+          "en": "passed",
+          "ksa": "passed",
+          "qr": "not_run",
+          "signature": "not_run",
+          "pih": "passed",
+          "global": "passed"
+        },
+        "findings": [
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-19",
+            "message": "[BR-KSA-19]-Each Document level charge (BG-21) shall have a code for the reason for document level charge (BT-105)."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-69",
+            "message": "[BR-KSA-69]-A VAT breakdown (BG-23) with VAT Category code (BT-118) 'Zero rated' shall have a VAT exception reason code (BT-121)."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-15",
+            "message": "[BR-KSA-15]-The tax invoice ((invoice type code (BT-30) = 388) and (invoice transaction code (KSA-2) has \"01\" as first 2 digits)) must contain the supply date (KSA-5)."
+          }
+        ]
+      },
+      "fatoority_validation": {
+        "profile": "zatca-sdk-238-R3.4.8",
+        "stages": {
+          "xsd": {
+            "status": "completed",
+            "findings": []
+          },
+          "cen": {
+            "status": "completed",
+            "findings": []
+          },
+          "ksa": {
+            "status": "completed",
+            "findings": [
+              {
+                "assertion_site": "ksa:081:BR-KSA-15",
+                "code": "BR-KSA-15",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='InvoiceTypeCode' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2'][1]"
+                },
+                "message": "[BR-KSA-15]-The tax invoice  ((invoice type code (BT-30) = 388) and (invoice transaction code (KSA-2) has \"01\" as first 2 digits)) must contain the supply date (KSA-5).",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "ksa:096:BR-KSA-19",
+                "code": "BR-KSA-19",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='AllowanceCharge' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][2]"
+                },
+                "message": "[BR-KSA-19]-Each Document level charge (BG-21) shall have a code for the reason for document level charge (BT-105).",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "ksa:118:BR-KSA-69",
+                "code": "BR-KSA-69",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][2]/*[local-name()='TaxSubtotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][2]/*[local-name()='TaxCategory' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-KSA-69]-A VAT breakdown (BG-23) with VAT Category code (BT-118) 'Zero rated' shall have a VAT exception reason code (BT-121).",
+                "severity": "warning"
+              }
+            ]
+          },
+          "signature": {
+            "status": "not_applicable",
+            "findings": []
+          },
+          "qr": {
+            "status": "not_applicable",
+            "findings": []
+          },
+          "previous_invoice_hash": {
+            "status": "context_required",
+            "findings": [
+              {
+                "assertion_site": null,
+                "code": "PIH_CONTEXT_REQUIRED",
+                "layer": "previous_invoice_hash",
+                "location": null,
+                "message": "Supply previous_invoice_hash to verify predecessor continuity",
+                "severity": "warning"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "standard-credit": {
+      "input_sha256": "e0ae3f76bb0c6e4221e5c4eba91296fb590e16bff90b94b7b2682217591605d6",
+      "subtype": "0100000",
+      "sdk": {
+        "encoded": "ARZBY21lIEdsb2JhbCBUcmFkaW5nIENvAg8zOTk5OTk5OTk5MDAwMDMDEzIwMjQtMDItMTJUMTA6MDA6MDAEBjI3MC4yNQUFMzUuMjUGLGhpRkNWeVh6eEpYNVZBd1JXVndHV2JGTTgwY1lJL1NxTnMrZDhnYW5RL3M9B2BNRVlDSVFEMmlHREd2R1VGQkVVeElqMzRSS2Q5d1VWZG5QS1ZQNEJjSENYMm9UamJvZ0loQUtVZlpFRWk3UVhHS3VKQXprOU9DU0tjWWFHcGhRWUpFTnZSUHdidERiVnoIWDBWMBAGByqGSM49AgEGBSuBBAAKA0IABKFgimtEmvRSBK0zr9LgJAtVSCl8VPZz6cdr5X+MoTHo8vHNNlyW5Q6u7T8naPJqtGoTjJjaPIMJ4u17dSk/VHg=",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "tag4": "270.25",
+        "tag5": "35.25",
+        "tag9_base64": null
+      },
+      "fatoority": {
+        "encoded": "ARZBY21lIEdsb2JhbCBUcmFkaW5nIENvAg8zOTk5OTk5OTk5MDAwMDMDEzIwMjQtMDItMTJUMTA6MDA6MDAEBjI3MC4yNQUFMzUuMjUGLGhpRkNWeVh6eEpYNVZBd1JXVndHV2JGTTgwY1lJL1NxTnMrZDhnYW5RL3M9B2BNRVVDSVFEcXhidkJFK2ZEMDdEYnFvei9sa3dFekVyVWVYVXFML2FVQ2NxZ2lPZTZUUUlnZFNCV1pjWUh3cEFkRmJzVXk2OS9wOS9PUkM0bkVXbkdwN0JNZDlvcithST0IWDBWMBAGByqGSM49AgEGBSuBBAAKA0IABKFgimtEmvRSBK0zr9LgJAtVSCl8VPZz6cdr5X+MoTHo8vHNNlyW5Q6u7T8naPJqtGoTjJjaPIMJ4u17dSk/VHg=",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "tag4": "270.25",
+        "tag5": "35.25",
+        "tag9_base64": null
+      },
+      "sdk_validation_sdk": {
+        "layers": {
+          "xsd": "passed",
+          "en": "passed",
+          "ksa": "passed",
+          "qr": "not_run",
+          "signature": "not_run",
+          "pih": "passed",
+          "global": "passed"
+        },
+        "findings": []
+      },
+      "sdk_validation_fatoority": {
+        "layers": {
+          "xsd": "passed",
+          "en": "passed",
+          "ksa": "passed",
+          "qr": "not_run",
+          "signature": "not_run",
+          "pih": "passed",
+          "global": "passed"
+        },
+        "findings": []
+      },
+      "fatoority_validation": {
+        "profile": "zatca-sdk-238-R3.4.8",
+        "stages": {
+          "xsd": {
+            "status": "completed",
+            "findings": []
+          },
+          "cen": {
+            "status": "completed",
+            "findings": []
+          },
+          "ksa": {
+            "status": "completed",
+            "findings": []
+          },
+          "signature": {
+            "status": "not_applicable",
+            "findings": []
+          },
+          "qr": {
+            "status": "not_applicable",
+            "findings": []
+          },
+          "previous_invoice_hash": {
+            "status": "context_required",
+            "findings": [
+              {
+                "assertion_site": null,
+                "code": "PIH_CONTEXT_REQUIRED",
+                "layer": "previous_invoice_hash",
+                "location": null,
+                "message": "Supply previous_invoice_hash to verify predecessor continuity",
+                "severity": "warning"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "standard-debit": {
+      "input_sha256": "6f285c97c7f9d6139f36a5e0ba0a564f3cbee199e92fbb8b392a618fc82448ef",
+      "subtype": "0100000",
+      "sdk": {
+        "encoded": "ARZBY21lIEdsb2JhbCBUcmFkaW5nIENvAg8zOTk5OTk5OTk5MDAwMDMDEzIwMjQtMDItMTVUMTQ6MjA6MDAEBjM3OS41MAUFNDkuNTAGLDkzYk5ndmhabHlsT3IvNVJwdmNsU3JiR3pZeFRrRDZLOXFneUVjUjhQdUU9B2BNRVVDSVFDVEhPRng5T2RLQm5YdkpjT1FqdGZjOWlNOE5pSWkvUjFkUjBXWWd5SnZwUUlnS1pZcmJqaHA3ZVBLUlgyZ2trbUw5eFRYTUw2L01qWU56a2dGUnlPbmxpZz0IWDBWMBAGByqGSM49AgEGBSuBBAAKA0IABKFgimtEmvRSBK0zr9LgJAtVSCl8VPZz6cdr5X+MoTHo8vHNNlyW5Q6u7T8naPJqtGoTjJjaPIMJ4u17dSk/VHg=",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "tag4": "379.50",
+        "tag5": "49.50",
+        "tag9_base64": null
+      },
+      "fatoority": {
+        "encoded": "ARZBY21lIEdsb2JhbCBUcmFkaW5nIENvAg8zOTk5OTk5OTk5MDAwMDMDEzIwMjQtMDItMTVUMTQ6MjA6MDAEBjM3OS41MAUFNDkuNTAGLDkzYk5ndmhabHlsT3IvNVJwdmNsU3JiR3pZeFRrRDZLOXFneUVjUjhQdUU9B2BNRVFDSUVRTEZYOTl6WUM1bnMybVRlZ1NXRU1laWdCTm5Db3FGc2dnTHkveGlYMnZBaUJYUmt5cEpSWnZyU2VKTnY4MExZSUw0TEdrcm1lUnh3YkVwQjRJTUNrL1ZRPT0IWDBWMBAGByqGSM49AgEGBSuBBAAKA0IABKFgimtEmvRSBK0zr9LgJAtVSCl8VPZz6cdr5X+MoTHo8vHNNlyW5Q6u7T8naPJqtGoTjJjaPIMJ4u17dSk/VHg=",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "tag4": "379.50",
+        "tag5": "49.50",
+        "tag9_base64": null
+      },
+      "sdk_validation_sdk": {
+        "layers": {
+          "xsd": "passed",
+          "en": "passed",
+          "ksa": "passed",
+          "qr": "not_run",
+          "signature": "not_run",
+          "pih": "passed",
+          "global": "passed"
+        },
+        "findings": [
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-19",
+            "message": "[BR-KSA-19]-Each Document level charge (BG-21) shall have a code for the reason for document level charge (BT-105)."
+          }
+        ]
+      },
+      "sdk_validation_fatoority": {
+        "layers": {
+          "xsd": "passed",
+          "en": "passed",
+          "ksa": "passed",
+          "qr": "not_run",
+          "signature": "not_run",
+          "pih": "passed",
+          "global": "passed"
+        },
+        "findings": [
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-19",
+            "message": "[BR-KSA-19]-Each Document level charge (BG-21) shall have a code for the reason for document level charge (BT-105)."
+          }
+        ]
+      },
+      "fatoority_validation": {
+        "profile": "zatca-sdk-238-R3.4.8",
+        "stages": {
+          "xsd": {
+            "status": "completed",
+            "findings": []
+          },
+          "cen": {
+            "status": "completed",
+            "findings": []
+          },
+          "ksa": {
+            "status": "completed",
+            "findings": [
+              {
+                "assertion_site": "ksa:096:BR-KSA-19",
+                "code": "BR-KSA-19",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='AllowanceCharge' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][2]"
+                },
+                "message": "[BR-KSA-19]-Each Document level charge (BG-21) shall have a code for the reason for document level charge (BT-105).",
+                "severity": "warning"
+              }
+            ]
+          },
+          "signature": {
+            "status": "not_applicable",
+            "findings": []
+          },
+          "qr": {
+            "status": "not_applicable",
+            "findings": []
+          },
+          "previous_invoice_hash": {
+            "status": "context_required",
+            "findings": [
+              {
+                "assertion_site": null,
+                "code": "PIH_CONTEXT_REQUIRED",
+                "layer": "previous_invoice_hash",
+                "location": null,
+                "message": "Supply previous_invoice_hash to verify predecessor continuity",
+                "severity": "warning"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "simplified-invoice": {
+      "input_sha256": "0259491577753c4e306052bf465dcb6654023cff330cd887e0e7d93d8c25b557",
+      "subtype": "0200000",
+      "sdk": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAxLTAxVDEyOjMwOjAwBAYxMTUuMDAFBTE1LjAwBixhcVk4ZnJXS3BhdURRcVhDc2RuZTVoWXdNUUNvMURVVU5LTGZTQXRUMm1nPQdgTUVVQ0lRRFBRQzRuMi90Nk05azlJelJ3ZDhLcncxdW9GaWYxU2hUT0o2OFB3QmZjMWdJZ0d5dDl3RVpUK1ZzMlRURCsvckVNcVF3SDJVSTZnZ3RSckFNYmNJcmJnaUk9CFgwVjAQBgcqhkjOPQIBBgUrgQQACgNCAAShYIprRJr0UgStM6/S4CQLVUgpfFT2c+nHa+V/jKEx6PLxzTZcluUOru0/J2jyarRqE4yY2jyDCeLte3UpP1R4CUcwRQIhALE/ichmnWXCUKUbca3yci8oqwaLvFdHVjQrveI9uqAbAiA9hC4M8jgMBADPSzmd2uiPJA6gKR3LE03U75eqbC/rXA==",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "115.00",
+        "tag5": "15.00",
+        "tag9_base64": "MEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w="
+      },
+      "fatoority": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAxLTAxVDEyOjMwOjAwBAYxMTUuMDAFBTE1LjAwBixhcVk4ZnJXS3BhdURRcVhDc2RuZTVoWXdNUUNvMURVVU5LTGZTQXRUMm1nPQdgTUVVQ0lRQ0xVRnIxOWcydWludmE3dWdOd2U4S2xOdzRBVUQ2cmtDb0phSElwZHhHMWdJZ0FZWUhLYUdaN0VtUlR6dllsN0ZVa0FMOFlpQU9IUjVobjkyZTFXOHBtT2c9CFgwVjAQBgcqhkjOPQIBBgUrgQQACgNCAAShYIprRJr0UgStM6/S4CQLVUgpfFT2c+nHa+V/jKEx6PLxzTZcluUOru0/J2jyarRqE4yY2jyDCeLte3UpP1R4CUcwRQIhALE/ichmnWXCUKUbca3yci8oqwaLvFdHVjQrveI9uqAbAiA9hC4M8jgMBADPSzmd2uiPJA6gKR3LE03U75eqbC/rXA==",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "115.00",
+        "tag5": "15.00",
+        "tag9_base64": "MEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w="
+      },
+      "sdk_validation_sdk": {
+        "layers": {
+          "xsd": "passed",
+          "en": "passed",
+          "ksa": "passed",
+          "qr": "passed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "passed"
+        },
+        "findings": [
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          }
+        ]
+      },
+      "sdk_validation_fatoority": {
+        "layers": {
+          "xsd": "passed",
+          "en": "passed",
+          "ksa": "passed",
+          "qr": "passed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "passed"
+        },
+        "findings": [
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          }
+        ]
+      },
+      "fatoority_validation": {
+        "profile": "zatca-sdk-238-R3.4.8",
+        "stages": {
+          "xsd": {
+            "status": "completed",
+            "findings": []
+          },
+          "cen": {
+            "status": "completed",
+            "findings": []
+          },
+          "ksa": {
+            "status": "completed",
+            "findings": [
+              {
+                "assertion_site": "ksa:002:BR-KSA-98",
+                "code": "BR-KSA-98",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]"
+                },
+                "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice.",
+                "severity": "warning"
+              }
+            ]
+          },
+          "signature": {
+            "status": "completed",
+            "findings": []
+          },
+          "qr": {
+            "status": "completed",
+            "findings": []
+          },
+          "previous_invoice_hash": {
+            "status": "context_required",
+            "findings": [
+              {
+                "assertion_site": null,
+                "code": "PIH_CONTEXT_REQUIRED",
+                "layer": "previous_invoice_hash",
+                "location": null,
+                "message": "Supply previous_invoice_hash to verify predecessor continuity",
+                "severity": "warning"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "simplified-credit": {
+      "input_sha256": "a72a466344ea8c07d61c0b299d63d3ef77a82486a16edfd4f6c6b64595532578",
+      "subtype": "0200000",
+      "sdk": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAyLTI2VDA5OjQ1OjAwBAYxMDMuNTAFBTEzLjUwBixYeU1TN2Z2d1ZqYW52bXhQUTlDU2xSUnUwVnRPNE5pbWhPUWwxL0U5WC80PQdgTUVVQ0lRQ1FMVENKOUVJUEpyRGUreVpGbldlaVFzTjB3RUdVM0hWdEFjK0Z5Qko3a3dJZ09zODJndWRTSFVtWnFudzEyeUIzZUlVN1d4NnZWOFJTVXM0ekhiVXNKOXc9CFgwVjAQBgcqhkjOPQIBBgUrgQQACgNCAAShYIprRJr0UgStM6/S4CQLVUgpfFT2c+nHa+V/jKEx6PLxzTZcluUOru0/J2jyarRqE4yY2jyDCeLte3UpP1R4CUcwRQIhALE/ichmnWXCUKUbca3yci8oqwaLvFdHVjQrveI9uqAbAiA9hC4M8jgMBADPSzmd2uiPJA6gKR3LE03U75eqbC/rXA==",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "103.50",
+        "tag5": "13.50",
+        "tag9_base64": "MEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w="
+      },
+      "fatoority": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAyLTI2VDA5OjQ1OjAwBAYxMDMuNTAFBTEzLjUwBixYeU1TN2Z2d1ZqYW52bXhQUTlDU2xSUnUwVnRPNE5pbWhPUWwxL0U5WC80PQdgTUVRQ0lBRWpwSTlSUmhDZXcwWDlZMUxzNDVjdkpmZkVzWDhML2FDVGl4dHZZSWpJQWlBdlk5b2VLaVIySEVOaStoMVpNZnlxekhEYWJmaDZXUDVDM0dXbGtHcEM1QT09CFgwVjAQBgcqhkjOPQIBBgUrgQQACgNCAAShYIprRJr0UgStM6/S4CQLVUgpfFT2c+nHa+V/jKEx6PLxzTZcluUOru0/J2jyarRqE4yY2jyDCeLte3UpP1R4CUcwRQIhALE/ichmnWXCUKUbca3yci8oqwaLvFdHVjQrveI9uqAbAiA9hC4M8jgMBADPSzmd2uiPJA6gKR3LE03U75eqbC/rXA==",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "103.50",
+        "tag5": "13.50",
+        "tag9_base64": "MEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w="
+      },
+      "sdk_validation_sdk": {
+        "layers": {
+          "xsd": "passed",
+          "en": "passed",
+          "ksa": "passed",
+          "qr": "passed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "passed"
+        },
+        "findings": [
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          }
+        ]
+      },
+      "sdk_validation_fatoority": {
+        "layers": {
+          "xsd": "passed",
+          "en": "passed",
+          "ksa": "passed",
+          "qr": "passed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "passed"
+        },
+        "findings": [
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          }
+        ]
+      },
+      "fatoority_validation": {
+        "profile": "zatca-sdk-238-R3.4.8",
+        "stages": {
+          "xsd": {
+            "status": "completed",
+            "findings": []
+          },
+          "cen": {
+            "status": "completed",
+            "findings": []
+          },
+          "ksa": {
+            "status": "completed",
+            "findings": [
+              {
+                "assertion_site": "ksa:002:BR-KSA-98",
+                "code": "BR-KSA-98",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]"
+                },
+                "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice.",
+                "severity": "warning"
+              }
+            ]
+          },
+          "signature": {
+            "status": "completed",
+            "findings": []
+          },
+          "qr": {
+            "status": "completed",
+            "findings": []
+          },
+          "previous_invoice_hash": {
+            "status": "context_required",
+            "findings": [
+              {
+                "assertion_site": null,
+                "code": "PIH_CONTEXT_REQUIRED",
+                "layer": "previous_invoice_hash",
+                "location": null,
+                "message": "Supply previous_invoice_hash to verify predecessor continuity",
+                "severity": "warning"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "simplified-debit": {
+      "input_sha256": "be1722a9cdea2acb95cddb8678a508269eb72e5dd058120968d1685a97e2a505",
+      "subtype": "0200000",
+      "sdk": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAyLTI3VDE1OjIwOjAwBAYxMDEuMjAFBTEzLjIwBixnS2V3ZlhXVlFGTlM3UDZjRmE2RmJzTXcrcHJ3V2orbkhyZVNKN05oeGowPQdgTUVVQ0lRRDZ2MndkekRyUVE5SnFEZkFiUnVpdFM1UWpQSnduUnoxdll0VHVSWEVaZ2dJZ1VicmhldzdJL0VxKzR0Visxc2tuTEEzdklpaVBDVy9iYVdaL3JUYTlYRGM9CFgwVjAQBgcqhkjOPQIBBgUrgQQACgNCAAShYIprRJr0UgStM6/S4CQLVUgpfFT2c+nHa+V/jKEx6PLxzTZcluUOru0/J2jyarRqE4yY2jyDCeLte3UpP1R4CUcwRQIhALE/ichmnWXCUKUbca3yci8oqwaLvFdHVjQrveI9uqAbAiA9hC4M8jgMBADPSzmd2uiPJA6gKR3LE03U75eqbC/rXA==",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "101.20",
+        "tag5": "13.20",
+        "tag9_base64": "MEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w="
+      },
+      "fatoority": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAyLTI3VDE1OjIwOjAwBAYxMDEuMjAFBTEzLjIwBixnS2V3ZlhXVlFGTlM3UDZjRmE2RmJzTXcrcHJ3V2orbkhyZVNKN05oeGowPQdgTUVRQ0lEZ1JtbjE1bGpvSkc0VHcvdWdoVkpnNW5BMk43bzBOYVBhWExua3c3T2lIQWlBRUkyR0tkZGJGTlZMcHJxaEY3cUdXMWVtcm1HNlo0dms2TEFHSmNBb0ROUT09CFgwVjAQBgcqhkjOPQIBBgUrgQQACgNCAAShYIprRJr0UgStM6/S4CQLVUgpfFT2c+nHa+V/jKEx6PLxzTZcluUOru0/J2jyarRqE4yY2jyDCeLte3UpP1R4CUcwRQIhALE/ichmnWXCUKUbca3yci8oqwaLvFdHVjQrveI9uqAbAiA9hC4M8jgMBADPSzmd2uiPJA6gKR3LE03U75eqbC/rXA==",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "101.20",
+        "tag5": "13.20",
+        "tag9_base64": "MEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w="
+      },
+      "sdk_validation_sdk": {
+        "layers": {
+          "xsd": "passed",
+          "en": "passed",
+          "ksa": "passed",
+          "qr": "passed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "passed"
+        },
+        "findings": [
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-19",
+            "message": "[BR-KSA-19]-Each Document level charge (BG-21) shall have a code for the reason for document level charge (BT-105)."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          }
+        ]
+      },
+      "sdk_validation_fatoority": {
+        "layers": {
+          "xsd": "passed",
+          "en": "passed",
+          "ksa": "passed",
+          "qr": "passed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "passed"
+        },
+        "findings": [
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-19",
+            "message": "[BR-KSA-19]-Each Document level charge (BG-21) shall have a code for the reason for document level charge (BT-105)."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          }
+        ]
+      },
+      "fatoority_validation": {
+        "profile": "zatca-sdk-238-R3.4.8",
+        "stages": {
+          "xsd": {
+            "status": "completed",
+            "findings": []
+          },
+          "cen": {
+            "status": "completed",
+            "findings": []
+          },
+          "ksa": {
+            "status": "completed",
+            "findings": [
+              {
+                "assertion_site": "ksa:002:BR-KSA-98",
+                "code": "BR-KSA-98",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]"
+                },
+                "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice.",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "ksa:096:BR-KSA-19",
+                "code": "BR-KSA-19",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='AllowanceCharge' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][2]"
+                },
+                "message": "[BR-KSA-19]-Each Document level charge (BG-21) shall have a code for the reason for document level charge (BT-105).",
+                "severity": "warning"
+              }
+            ]
+          },
+          "signature": {
+            "status": "completed",
+            "findings": []
+          },
+          "qr": {
+            "status": "completed",
+            "findings": []
+          },
+          "previous_invoice_hash": {
+            "status": "context_required",
+            "findings": [
+              {
+                "assertion_site": null,
+                "code": "PIH_CONTEXT_REQUIRED",
+                "layer": "previous_invoice_hash",
+                "location": null,
+                "message": "Supply previous_invoice_hash to verify predecessor continuity",
+                "severity": "warning"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "decimal-300": {
+      "input_sha256": "edaa8eef991adb9f907dcbda630ea7b98009bb6f376ef4d3b15c4fbffb84372b",
+      "subtype": "0200000",
+      "sdk": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAxLTAxVDEyOjMwOjAwBAMzMDAFAzMwMAYsZEIvY1k0VzZDTDNoU0ZLUU5WRmxQZzdrVDZuVWM5OUVGMXhLQi8vejhpOD0HYE1FVUNJUUNUSElYVHB5UDd5S2o3RjQ3elFVR1Q2bzQ1eEh0WDIvamxZekl3Y0NiY2VRSWdRM0xNWDhQdVM4YmxWZ2VUSE55TThSZklqaXZrVnRDM2xxOStWQ0Z2eEJFPQhYMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEoWCKa0Sa9FIErTOv0uAkC1VIKXxU9nPpx2vlf4yhMejy8c02XJblDq7tPydo8mq0ahOMmNo8gwni7Xt1KT9UeAlHMEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w=",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "300",
+        "tag5": "300",
+        "tag9_base64": "MEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w="
+      },
+      "fatoority": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAxLTAxVDEyOjMwOjAwBAMzMDAFAzMwMAYsZEIvY1k0VzZDTDNoU0ZLUU5WRmxQZzdrVDZuVWM5OUVGMXhLQi8vejhpOD0HYE1FVUNJUUNaL1pSN1FpVG9DWHN5SlB1ZXU1YzNkVXQ0YWJjMnlqaWF2cW1rbVY0RzRRSWdLT2FNL3huNGhSYlZuOTVHQjlnaFhCSmFjMUxMb2lWYVJ4VlVNc2x2UFY4PQhYMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEoWCKa0Sa9FIErTOv0uAkC1VIKXxU9nPpx2vlf4yhMejy8c02XJblDq7tPydo8mq0ahOMmNo8gwni7Xt1KT9UeAlHMEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w=",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "300",
+        "tag5": "300",
+        "tag9_base64": "MEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w="
+      },
+      "sdk_validation_sdk": {
+        "layers": {
+          "xsd": "passed",
+          "en": "failed",
+          "ksa": "passed",
+          "qr": "passed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "failed"
+        },
+        "findings": [
+          {
+            "source": "en",
+            "severity": "error",
+            "code": "BR-CO-15",
+            "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-17",
+            "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-16",
+            "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-S-09",
+            "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-51",
+            "message": "[BR-KSA-51]-The line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11)."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          }
+        ]
+      },
+      "sdk_validation_fatoority": {
+        "layers": {
+          "xsd": "passed",
+          "en": "failed",
+          "ksa": "passed",
+          "qr": "passed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "failed"
+        },
+        "findings": [
+          {
+            "source": "en",
+            "severity": "error",
+            "code": "BR-CO-15",
+            "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-17",
+            "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-16",
+            "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-S-09",
+            "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-51",
+            "message": "[BR-KSA-51]-The line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11)."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          }
+        ]
+      },
+      "fatoority_validation": {
+        "profile": "zatca-sdk-238-R3.4.8",
+        "stages": {
+          "xsd": {
+            "status": "completed",
+            "findings": []
+          },
+          "cen": {
+            "status": "completed",
+            "findings": [
+              {
+                "assertion_site": "cen:022:BR-CO-16",
+                "code": "BR-CO-16",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='LegalMonetaryTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114).",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "cen:048:BR-CO-15",
+                "code": "BR-CO-15",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]"
+                },
+                "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110).",
+                "severity": "error"
+              },
+              {
+                "assertion_site": "cen:078:BR-CO-17",
+                "code": "BR-CO-17",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][2]/*[local-name()='TaxSubtotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals.",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "cen:088:BR-S-09",
+                "code": "BR-S-09",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][2]/*[local-name()='TaxSubtotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]/*[local-name()='TaxCategory' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals.",
+                "severity": "warning"
+              }
+            ]
+          },
+          "ksa": {
+            "status": "completed",
+            "findings": [
+              {
+                "assertion_site": "ksa:002:BR-KSA-98",
+                "code": "BR-KSA-98",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]"
+                },
+                "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice.",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "ksa:060:BR-KSA-51",
+                "code": "BR-KSA-51",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='InvoiceLine' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-KSA-51]-The  line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11).",
+                "severity": "warning"
+              }
+            ]
+          },
+          "signature": {
+            "status": "completed",
+            "findings": []
+          },
+          "qr": {
+            "status": "completed",
+            "findings": []
+          },
+          "previous_invoice_hash": {
+            "status": "context_required",
+            "findings": [
+              {
+                "assertion_site": null,
+                "code": "PIH_CONTEXT_REQUIRED",
+                "layer": "previous_invoice_hash",
+                "location": null,
+                "message": "Supply previous_invoice_hash to verify predecessor continuity",
+                "severity": "warning"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "decimal-300.0": {
+      "input_sha256": "ba0f0548965775b90a046e47aadf2798ca6605f70151277c2b3b795c13c19ba0",
+      "subtype": "0200000",
+      "sdk": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAxLTAxVDEyOjMwOjAwBAUzMDAuMAUFMzAwLjAGLG5IbVRGQk4rOG9sdGRBYkJCWUp1RjFMcTc2SmNGaXJ3dDdkaFZYbWpGL2M9B2BNRVFDSUM2T3pxdEp2WC9WRzZKbGk4WXR0ekZrV2FMRURwYXVKZHZWV3JUeW5saE5BaUF6c3A2K3dCVGRwcFd3dHVvZlJvZ2l4RTF6UldTQWxNUnFvbWx6cEc0NkJ3PT0IWDBWMBAGByqGSM49AgEGBSuBBAAKA0IABKFgimtEmvRSBK0zr9LgJAtVSCl8VPZz6cdr5X+MoTHo8vHNNlyW5Q6u7T8naPJqtGoTjJjaPIMJ4u17dSk/VHgJRzBFAiEAsT+JyGadZcJQpRtxrfJyLyirBou8V0dWNCu94j26oBsCID2ELgzyOAwEAM9LOZ3a6I8kDqApHcsTTdTvl6psL+tc",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "300.0",
+        "tag5": "300.0",
+        "tag9_base64": "MEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w="
+      },
+      "fatoority": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAxLTAxVDEyOjMwOjAwBAUzMDAuMAUFMzAwLjAGLG5IbVRGQk4rOG9sdGRBYkJCWUp1RjFMcTc2SmNGaXJ3dDdkaFZYbWpGL2M9B2BNRVVDSVFEMmxOcEpJTXBuSmZzZ2ZnQ01aQmIxdWpSVUppVWVBRmZmd3FtYjRNZnVNQUlnWk1WY2N4Y0RLa1pmbWZaMnZEYVZKTkJxUGlwdkQrSW1LazVEWklndVcwVT0IWDBWMBAGByqGSM49AgEGBSuBBAAKA0IABKFgimtEmvRSBK0zr9LgJAtVSCl8VPZz6cdr5X+MoTHo8vHNNlyW5Q6u7T8naPJqtGoTjJjaPIMJ4u17dSk/VHgJRzBFAiEAsT+JyGadZcJQpRtxrfJyLyirBou8V0dWNCu94j26oBsCID2ELgzyOAwEAM9LOZ3a6I8kDqApHcsTTdTvl6psL+tc",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "300.0",
+        "tag5": "300.0",
+        "tag9_base64": "MEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w="
+      },
+      "sdk_validation_sdk": {
+        "layers": {
+          "xsd": "passed",
+          "en": "failed",
+          "ksa": "passed",
+          "qr": "passed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "failed"
+        },
+        "findings": [
+          {
+            "source": "en",
+            "severity": "error",
+            "code": "BR-CO-15",
+            "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-17",
+            "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-16",
+            "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-S-09",
+            "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-51",
+            "message": "[BR-KSA-51]-The line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11)."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          }
+        ]
+      },
+      "sdk_validation_fatoority": {
+        "layers": {
+          "xsd": "passed",
+          "en": "failed",
+          "ksa": "passed",
+          "qr": "passed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "failed"
+        },
+        "findings": [
+          {
+            "source": "en",
+            "severity": "error",
+            "code": "BR-CO-15",
+            "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-17",
+            "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-16",
+            "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-S-09",
+            "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-51",
+            "message": "[BR-KSA-51]-The line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11)."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          }
+        ]
+      },
+      "fatoority_validation": {
+        "profile": "zatca-sdk-238-R3.4.8",
+        "stages": {
+          "xsd": {
+            "status": "completed",
+            "findings": []
+          },
+          "cen": {
+            "status": "completed",
+            "findings": [
+              {
+                "assertion_site": "cen:022:BR-CO-16",
+                "code": "BR-CO-16",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='LegalMonetaryTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114).",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "cen:048:BR-CO-15",
+                "code": "BR-CO-15",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]"
+                },
+                "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110).",
+                "severity": "error"
+              },
+              {
+                "assertion_site": "cen:078:BR-CO-17",
+                "code": "BR-CO-17",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][2]/*[local-name()='TaxSubtotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals.",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "cen:088:BR-S-09",
+                "code": "BR-S-09",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][2]/*[local-name()='TaxSubtotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]/*[local-name()='TaxCategory' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals.",
+                "severity": "warning"
+              }
+            ]
+          },
+          "ksa": {
+            "status": "completed",
+            "findings": [
+              {
+                "assertion_site": "ksa:002:BR-KSA-98",
+                "code": "BR-KSA-98",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]"
+                },
+                "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice.",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "ksa:060:BR-KSA-51",
+                "code": "BR-KSA-51",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='InvoiceLine' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-KSA-51]-The  line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11).",
+                "severity": "warning"
+              }
+            ]
+          },
+          "signature": {
+            "status": "completed",
+            "findings": []
+          },
+          "qr": {
+            "status": "completed",
+            "findings": []
+          },
+          "previous_invoice_hash": {
+            "status": "context_required",
+            "findings": [
+              {
+                "assertion_site": null,
+                "code": "PIH_CONTEXT_REQUIRED",
+                "layer": "previous_invoice_hash",
+                "location": null,
+                "message": "Supply previous_invoice_hash to verify predecessor continuity",
+                "severity": "warning"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "decimal-300.00": {
+      "input_sha256": "fa9e109eb925a20e80cf913fda9d8a888a064dce04f540a0e025e119501d277c",
+      "subtype": "0200000",
+      "sdk": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAxLTAxVDEyOjMwOjAwBAYzMDAuMDAFBjMwMC4wMAYsZmcrQzc3ZHhSMTZoNGl0VC9uWHplVVdjRFBnRmlYRHhkOWhPLzNZWDNyMD0HYE1FVUNJUURCMmtxUXBLOHl5SndNV01IQWNqaXVsb3N6YktBVk82Nk9zNWRtMC9ERHNRSWdRcm9JOHBCa09yK3lUUnovR2VHQjdoVThzejU3RnQ3T0NPWThKZUpDNGdZPQhYMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEoWCKa0Sa9FIErTOv0uAkC1VIKXxU9nPpx2vlf4yhMejy8c02XJblDq7tPydo8mq0ahOMmNo8gwni7Xt1KT9UeAlHMEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w=",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "300.00",
+        "tag5": "300.00",
+        "tag9_base64": "MEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w="
+      },
+      "fatoority": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAxLTAxVDEyOjMwOjAwBAYzMDAuMDAFBjMwMC4wMAYsZmcrQzc3ZHhSMTZoNGl0VC9uWHplVVdjRFBnRmlYRHhkOWhPLzNZWDNyMD0HYE1FVUNJUURYZWczdVY0aThzUk0vU0dvVVpTZlYvVk9BWDJsRGtUN0IzT0t1VGtxTWxBSWdWVnVMdDVtaERUeGI0WEdXNjV5QnJMWFMxMEJpQWM4dTdxUUo4MisvTDVzPQhYMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEoWCKa0Sa9FIErTOv0uAkC1VIKXxU9nPpx2vlf4yhMejy8c02XJblDq7tPydo8mq0ahOMmNo8gwni7Xt1KT9UeAlHMEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w=",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "300.00",
+        "tag5": "300.00",
+        "tag9_base64": "MEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w="
+      },
+      "sdk_validation_sdk": {
+        "layers": {
+          "xsd": "passed",
+          "en": "failed",
+          "ksa": "passed",
+          "qr": "passed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "failed"
+        },
+        "findings": [
+          {
+            "source": "en",
+            "severity": "error",
+            "code": "BR-CO-15",
+            "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-17",
+            "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-16",
+            "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-S-09",
+            "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-51",
+            "message": "[BR-KSA-51]-The line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11)."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          }
+        ]
+      },
+      "sdk_validation_fatoority": {
+        "layers": {
+          "xsd": "passed",
+          "en": "failed",
+          "ksa": "passed",
+          "qr": "passed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "failed"
+        },
+        "findings": [
+          {
+            "source": "en",
+            "severity": "error",
+            "code": "BR-CO-15",
+            "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-17",
+            "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-16",
+            "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-S-09",
+            "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-51",
+            "message": "[BR-KSA-51]-The line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11)."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          }
+        ]
+      },
+      "fatoority_validation": {
+        "profile": "zatca-sdk-238-R3.4.8",
+        "stages": {
+          "xsd": {
+            "status": "completed",
+            "findings": []
+          },
+          "cen": {
+            "status": "completed",
+            "findings": [
+              {
+                "assertion_site": "cen:022:BR-CO-16",
+                "code": "BR-CO-16",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='LegalMonetaryTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114).",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "cen:048:BR-CO-15",
+                "code": "BR-CO-15",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]"
+                },
+                "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110).",
+                "severity": "error"
+              },
+              {
+                "assertion_site": "cen:078:BR-CO-17",
+                "code": "BR-CO-17",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][2]/*[local-name()='TaxSubtotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals.",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "cen:088:BR-S-09",
+                "code": "BR-S-09",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][2]/*[local-name()='TaxSubtotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]/*[local-name()='TaxCategory' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals.",
+                "severity": "warning"
+              }
+            ]
+          },
+          "ksa": {
+            "status": "completed",
+            "findings": [
+              {
+                "assertion_site": "ksa:002:BR-KSA-98",
+                "code": "BR-KSA-98",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]"
+                },
+                "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice.",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "ksa:060:BR-KSA-51",
+                "code": "BR-KSA-51",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='InvoiceLine' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-KSA-51]-The  line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11).",
+                "severity": "warning"
+              }
+            ]
+          },
+          "signature": {
+            "status": "completed",
+            "findings": []
+          },
+          "qr": {
+            "status": "completed",
+            "findings": []
+          },
+          "previous_invoice_hash": {
+            "status": "context_required",
+            "findings": [
+              {
+                "assertion_site": null,
+                "code": "PIH_CONTEXT_REQUIRED",
+                "layer": "previous_invoice_hash",
+                "location": null,
+                "message": "Supply previous_invoice_hash to verify predecessor continuity",
+                "severity": "warning"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "decimal-300.01": {
+      "input_sha256": "4314160f15a96f2da5790818b1fafefb182dd2a16d565a3584fd3d5ecffa095a",
+      "subtype": "0200000",
+      "sdk": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAxLTAxVDEyOjMwOjAwBAYzMDAuMDEFBjMwMC4wMQYsR2RDQmxveUVKYytFci9wWGhtdVAwWDlOTjREQWgwQUx6VzdzUk1UZTJMMD0HYE1FVUNJUUN0azVaTFd1TXhaNUZReVUyanplbWh4bDB4QUVMS1ZURGFacnV4MjJsVTVRSWdPeFVRZ3hxOXFjUVpOSlFyZ3A1M0xJU2pERUM1TlJOSlllLzJSZHVwNGtzPQhYMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEoWCKa0Sa9FIErTOv0uAkC1VIKXxU9nPpx2vlf4yhMejy8c02XJblDq7tPydo8mq0ahOMmNo8gwni7Xt1KT9UeAlHMEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w=",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "300.01",
+        "tag5": "300.01",
+        "tag9_base64": "MEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w="
+      },
+      "fatoority": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAxLTAxVDEyOjMwOjAwBAYzMDAuMDEFBjMwMC4wMQYsR2RDQmxveUVKYytFci9wWGhtdVAwWDlOTjREQWgwQUx6VzdzUk1UZTJMMD0HYE1FUUNJQUhreWhCei9hdkdHRlk3SldHWVp3N243bGtnL3lpazlGb2pwcCsyT29PZEFpQlZURmIvN2xVWHNsQmtoY1QxZytOSGJPUDFla2xjSW9HRmtRemE3SUIzNnc9PQhYMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEoWCKa0Sa9FIErTOv0uAkC1VIKXxU9nPpx2vlf4yhMejy8c02XJblDq7tPydo8mq0ahOMmNo8gwni7Xt1KT9UeAlHMEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w=",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "300.01",
+        "tag5": "300.01",
+        "tag9_base64": "MEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w="
+      },
+      "sdk_validation_sdk": {
+        "layers": {
+          "xsd": "passed",
+          "en": "failed",
+          "ksa": "passed",
+          "qr": "passed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "failed"
+        },
+        "findings": [
+          {
+            "source": "en",
+            "severity": "error",
+            "code": "BR-CO-15",
+            "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-17",
+            "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-16",
+            "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-S-09",
+            "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-51",
+            "message": "[BR-KSA-51]-The line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11)."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          }
+        ]
+      },
+      "sdk_validation_fatoority": {
+        "layers": {
+          "xsd": "passed",
+          "en": "failed",
+          "ksa": "passed",
+          "qr": "passed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "failed"
+        },
+        "findings": [
+          {
+            "source": "en",
+            "severity": "error",
+            "code": "BR-CO-15",
+            "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-17",
+            "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-16",
+            "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-S-09",
+            "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-51",
+            "message": "[BR-KSA-51]-The line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11)."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          }
+        ]
+      },
+      "fatoority_validation": {
+        "profile": "zatca-sdk-238-R3.4.8",
+        "stages": {
+          "xsd": {
+            "status": "completed",
+            "findings": []
+          },
+          "cen": {
+            "status": "completed",
+            "findings": [
+              {
+                "assertion_site": "cen:022:BR-CO-16",
+                "code": "BR-CO-16",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='LegalMonetaryTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114).",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "cen:048:BR-CO-15",
+                "code": "BR-CO-15",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]"
+                },
+                "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110).",
+                "severity": "error"
+              },
+              {
+                "assertion_site": "cen:078:BR-CO-17",
+                "code": "BR-CO-17",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][2]/*[local-name()='TaxSubtotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals.",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "cen:088:BR-S-09",
+                "code": "BR-S-09",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][2]/*[local-name()='TaxSubtotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]/*[local-name()='TaxCategory' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals.",
+                "severity": "warning"
+              }
+            ]
+          },
+          "ksa": {
+            "status": "completed",
+            "findings": [
+              {
+                "assertion_site": "ksa:002:BR-KSA-98",
+                "code": "BR-KSA-98",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]"
+                },
+                "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice.",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "ksa:060:BR-KSA-51",
+                "code": "BR-KSA-51",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='InvoiceLine' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-KSA-51]-The  line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11).",
+                "severity": "warning"
+              }
+            ]
+          },
+          "signature": {
+            "status": "completed",
+            "findings": []
+          },
+          "qr": {
+            "status": "completed",
+            "findings": []
+          },
+          "previous_invoice_hash": {
+            "status": "context_required",
+            "findings": [
+              {
+                "assertion_site": null,
+                "code": "PIH_CONTEXT_REQUIRED",
+                "layer": "previous_invoice_hash",
+                "location": null,
+                "message": "Supply previous_invoice_hash to verify predecessor continuity",
+                "severity": "warning"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "decimal-0.00": {
+      "input_sha256": "d81fe2e9114681e3dbbdb1648f0f786712065c550b9c68a8f1a312979396dbfc",
+      "subtype": "0200000",
+      "sdk": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAxLTAxVDEyOjMwOjAwBAQwLjAwBQQwLjAwBixEb2dHcjBNZkVWN25RcmdldHZUWkRZa1BTMmZFcUZ3Zk02VllmVllvdm5BPQdgTUVRQ0lDQVloZzU0cGNEbnc4dDhzaUNsdCtEaGpBVUJDQzRwRkNVWDNMNUlQOG5xQWlCa2Y2b2xpZkVoZDRkMzFlaSs4UGNCS2xtbmJ5UTdHWWxhK3B0emMyWjZOdz09CFgwVjAQBgcqhkjOPQIBBgUrgQQACgNCAAShYIprRJr0UgStM6/S4CQLVUgpfFT2c+nHa+V/jKEx6PLxzTZcluUOru0/J2jyarRqE4yY2jyDCeLte3UpP1R4CUcwRQIhALE/ichmnWXCUKUbca3yci8oqwaLvFdHVjQrveI9uqAbAiA9hC4M8jgMBADPSzmd2uiPJA6gKR3LE03U75eqbC/rXA==",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "0.00",
+        "tag5": "0.00",
+        "tag9_base64": "MEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w="
+      },
+      "fatoority": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAxLTAxVDEyOjMwOjAwBAQwLjAwBQQwLjAwBixEb2dHcjBNZkVWN25RcmdldHZUWkRZa1BTMmZFcUZ3Zk02VllmVllvdm5BPQdgTUVVQ0lRQ09YT0laVlA5Q0s5M3FNanVzSTByRXdOZjdGZm9MTkY4dC9raWdOZzdVaVFJZ05yN3Z1R1gxbnhNVmhqZGsrMWRhMlkzeHdORzRmSzFRVTRxQkQrVzludVE9CFgwVjAQBgcqhkjOPQIBBgUrgQQACgNCAAShYIprRJr0UgStM6/S4CQLVUgpfFT2c+nHa+V/jKEx6PLxzTZcluUOru0/J2jyarRqE4yY2jyDCeLte3UpP1R4CUcwRQIhALE/ichmnWXCUKUbca3yci8oqwaLvFdHVjQrveI9uqAbAiA9hC4M8jgMBADPSzmd2uiPJA6gKR3LE03U75eqbC/rXA==",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "0.00",
+        "tag5": "0.00",
+        "tag9_base64": "MEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w="
+      },
+      "sdk_validation_sdk": {
+        "layers": {
+          "xsd": "passed",
+          "en": "failed",
+          "ksa": "passed",
+          "qr": "passed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "failed"
+        },
+        "findings": [
+          {
+            "source": "en",
+            "severity": "error",
+            "code": "BR-CO-15",
+            "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-17",
+            "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-16",
+            "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-S-09",
+            "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-51",
+            "message": "[BR-KSA-51]-The line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11)."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          }
+        ]
+      },
+      "sdk_validation_fatoority": {
+        "layers": {
+          "xsd": "passed",
+          "en": "failed",
+          "ksa": "passed",
+          "qr": "passed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "failed"
+        },
+        "findings": [
+          {
+            "source": "en",
+            "severity": "error",
+            "code": "BR-CO-15",
+            "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-17",
+            "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-16",
+            "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-S-09",
+            "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-51",
+            "message": "[BR-KSA-51]-The line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11)."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          }
+        ]
+      },
+      "fatoority_validation": {
+        "profile": "zatca-sdk-238-R3.4.8",
+        "stages": {
+          "xsd": {
+            "status": "completed",
+            "findings": []
+          },
+          "cen": {
+            "status": "completed",
+            "findings": [
+              {
+                "assertion_site": "cen:022:BR-CO-16",
+                "code": "BR-CO-16",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='LegalMonetaryTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114).",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "cen:048:BR-CO-15",
+                "code": "BR-CO-15",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]"
+                },
+                "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110).",
+                "severity": "error"
+              },
+              {
+                "assertion_site": "cen:078:BR-CO-17",
+                "code": "BR-CO-17",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][2]/*[local-name()='TaxSubtotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals.",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "cen:088:BR-S-09",
+                "code": "BR-S-09",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][2]/*[local-name()='TaxSubtotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]/*[local-name()='TaxCategory' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals.",
+                "severity": "warning"
+              }
+            ]
+          },
+          "ksa": {
+            "status": "completed",
+            "findings": [
+              {
+                "assertion_site": "ksa:002:BR-KSA-98",
+                "code": "BR-KSA-98",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]"
+                },
+                "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice.",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "ksa:060:BR-KSA-51",
+                "code": "BR-KSA-51",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='InvoiceLine' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-KSA-51]-The  line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11).",
+                "severity": "warning"
+              }
+            ]
+          },
+          "signature": {
+            "status": "completed",
+            "findings": []
+          },
+          "qr": {
+            "status": "completed",
+            "findings": []
+          },
+          "previous_invoice_hash": {
+            "status": "context_required",
+            "findings": [
+              {
+                "assertion_site": null,
+                "code": "PIH_CONTEXT_REQUIRED",
+                "layer": "previous_invoice_hash",
+                "location": null,
+                "message": "Supply previous_invoice_hash to verify predecessor continuity",
+                "severity": "warning"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "decimal-45.0": {
+      "input_sha256": "255ff511a26614b1cd832b65b9c256bdb4833ab77fe86d731175e0a2945aeacc",
+      "subtype": "0200000",
+      "sdk": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAxLTAxVDEyOjMwOjAwBAQ0NS4wBQQ0NS4wBixBbnU4R2JaZmdQRnREdzFLSDkvdU5SUHJkT3pwaTVSVWJCMkp3WlRxT3RvPQdgTUVRQ0lIR1FVY2V6cmFyTVA2NzV2eGhwUExXbkpjOGwzRUZIclFTc2ZFSzVQQTZ5QWlCczVyOFdJLzNuenRkcW9JeUV4RFZ5TERIVitpVnJaaHJNNFV5R091Ynp6Zz09CFgwVjAQBgcqhkjOPQIBBgUrgQQACgNCAAShYIprRJr0UgStM6/S4CQLVUgpfFT2c+nHa+V/jKEx6PLxzTZcluUOru0/J2jyarRqE4yY2jyDCeLte3UpP1R4CUcwRQIhALE/ichmnWXCUKUbca3yci8oqwaLvFdHVjQrveI9uqAbAiA9hC4M8jgMBADPSzmd2uiPJA6gKR3LE03U75eqbC/rXA==",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "45.0",
+        "tag5": "45.0",
+        "tag9_base64": "MEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w="
+      },
+      "fatoority": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAxLTAxVDEyOjMwOjAwBAQ0NS4wBQQ0NS4wBixBbnU4R2JaZmdQRnREdzFLSDkvdU5SUHJkT3pwaTVSVWJCMkp3WlRxT3RvPQdgTUVVQ0lRRHFSTjZoNWM3a3RjR2hSaytnYUlFUCtVNEcxVjF5UDdDMUQ5NjRpSXhvNndJZ0VHdXUyOFczTndDYkJwL0YrRndNUXBHYjdLcTV4L25TdVcwby9lVmVpVXc9CFgwVjAQBgcqhkjOPQIBBgUrgQQACgNCAAShYIprRJr0UgStM6/S4CQLVUgpfFT2c+nHa+V/jKEx6PLxzTZcluUOru0/J2jyarRqE4yY2jyDCeLte3UpP1R4CUcwRQIhALE/ichmnWXCUKUbca3yci8oqwaLvFdHVjQrveI9uqAbAiA9hC4M8jgMBADPSzmd2uiPJA6gKR3LE03U75eqbC/rXA==",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "45.0",
+        "tag5": "45.0",
+        "tag9_base64": "MEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w="
+      },
+      "sdk_validation_sdk": {
+        "layers": {
+          "xsd": "passed",
+          "en": "failed",
+          "ksa": "passed",
+          "qr": "passed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "failed"
+        },
+        "findings": [
+          {
+            "source": "en",
+            "severity": "error",
+            "code": "BR-CO-15",
+            "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-17",
+            "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-16",
+            "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-S-09",
+            "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-51",
+            "message": "[BR-KSA-51]-The line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11)."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          }
+        ]
+      },
+      "sdk_validation_fatoority": {
+        "layers": {
+          "xsd": "passed",
+          "en": "failed",
+          "ksa": "passed",
+          "qr": "passed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "failed"
+        },
+        "findings": [
+          {
+            "source": "en",
+            "severity": "error",
+            "code": "BR-CO-15",
+            "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-17",
+            "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-16",
+            "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-S-09",
+            "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-51",
+            "message": "[BR-KSA-51]-The line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11)."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          }
+        ]
+      },
+      "fatoority_validation": {
+        "profile": "zatca-sdk-238-R3.4.8",
+        "stages": {
+          "xsd": {
+            "status": "completed",
+            "findings": []
+          },
+          "cen": {
+            "status": "completed",
+            "findings": [
+              {
+                "assertion_site": "cen:022:BR-CO-16",
+                "code": "BR-CO-16",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='LegalMonetaryTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114).",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "cen:048:BR-CO-15",
+                "code": "BR-CO-15",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]"
+                },
+                "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110).",
+                "severity": "error"
+              },
+              {
+                "assertion_site": "cen:078:BR-CO-17",
+                "code": "BR-CO-17",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][2]/*[local-name()='TaxSubtotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals.",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "cen:088:BR-S-09",
+                "code": "BR-S-09",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][2]/*[local-name()='TaxSubtotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]/*[local-name()='TaxCategory' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals.",
+                "severity": "warning"
+              }
+            ]
+          },
+          "ksa": {
+            "status": "completed",
+            "findings": [
+              {
+                "assertion_site": "ksa:002:BR-KSA-98",
+                "code": "BR-KSA-98",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]"
+                },
+                "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice.",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "ksa:060:BR-KSA-51",
+                "code": "BR-KSA-51",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='InvoiceLine' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-KSA-51]-The  line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11).",
+                "severity": "warning"
+              }
+            ]
+          },
+          "signature": {
+            "status": "completed",
+            "findings": []
+          },
+          "qr": {
+            "status": "completed",
+            "findings": []
+          },
+          "previous_invoice_hash": {
+            "status": "context_required",
+            "findings": [
+              {
+                "assertion_site": null,
+                "code": "PIH_CONTEXT_REQUIRED",
+                "layer": "previous_invoice_hash",
+                "location": null,
+                "message": "Supply previous_invoice_hash to verify predecessor continuity",
+                "severity": "warning"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "decimal-45.00": {
+      "input_sha256": "7e22371c1ca96f5824bdf2a8497b1fd3b870b37824dc437c45a3ca329b15def3",
+      "subtype": "0200000",
+      "sdk": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAxLTAxVDEyOjMwOjAwBAU0NS4wMAUFNDUuMDAGLHJIck0wekRmdVUwR0duNTRob1p1cW4zRmMrcWUwV2gwZFJ0Vjc1bk9xWjQ9B2BNRVlDSVFDdnVKR3VkZnFvTFdwVjhxbDRQNkdjK2Z1N1UwZXFoSWFBbXFHN0MrS2xPd0loQU5rUjh1MXZjUWw5VTlkL1NWbFFOK0RtU29jd3RXQ1pmYWt5MHhudVIrSG4IWDBWMBAGByqGSM49AgEGBSuBBAAKA0IABKFgimtEmvRSBK0zr9LgJAtVSCl8VPZz6cdr5X+MoTHo8vHNNlyW5Q6u7T8naPJqtGoTjJjaPIMJ4u17dSk/VHgJRzBFAiEAsT+JyGadZcJQpRtxrfJyLyirBou8V0dWNCu94j26oBsCID2ELgzyOAwEAM9LOZ3a6I8kDqApHcsTTdTvl6psL+tc",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "45.00",
+        "tag5": "45.00",
+        "tag9_base64": "MEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w="
+      },
+      "fatoority": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAxLTAxVDEyOjMwOjAwBAU0NS4wMAUFNDUuMDAGLHJIck0wekRmdVUwR0duNTRob1p1cW4zRmMrcWUwV2gwZFJ0Vjc1bk9xWjQ9B2BNRVVDSVFDTkl3VWtlWk4yQmVZdXpNa3A1UEpLbDFYVVZSa0d1MUdtQTlIVGtxeHZaZ0lnV3FtWWZiU01tZDF5SDZqSWtLeFZZTTlqK3RFUUMxL1BZUXVwRDFtUFAwMD0IWDBWMBAGByqGSM49AgEGBSuBBAAKA0IABKFgimtEmvRSBK0zr9LgJAtVSCl8VPZz6cdr5X+MoTHo8vHNNlyW5Q6u7T8naPJqtGoTjJjaPIMJ4u17dSk/VHgJRzBFAiEAsT+JyGadZcJQpRtxrfJyLyirBou8V0dWNCu94j26oBsCID2ELgzyOAwEAM9LOZ3a6I8kDqApHcsTTdTvl6psL+tc",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "45.00",
+        "tag5": "45.00",
+        "tag9_base64": "MEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w="
+      },
+      "sdk_validation_sdk": {
+        "layers": {
+          "xsd": "passed",
+          "en": "failed",
+          "ksa": "passed",
+          "qr": "passed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "failed"
+        },
+        "findings": [
+          {
+            "source": "en",
+            "severity": "error",
+            "code": "BR-CO-15",
+            "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-17",
+            "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-16",
+            "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-S-09",
+            "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-51",
+            "message": "[BR-KSA-51]-The line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11)."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          }
+        ]
+      },
+      "sdk_validation_fatoority": {
+        "layers": {
+          "xsd": "passed",
+          "en": "failed",
+          "ksa": "passed",
+          "qr": "passed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "failed"
+        },
+        "findings": [
+          {
+            "source": "en",
+            "severity": "error",
+            "code": "BR-CO-15",
+            "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-17",
+            "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-16",
+            "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-S-09",
+            "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-51",
+            "message": "[BR-KSA-51]-The line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11)."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          }
+        ]
+      },
+      "fatoority_validation": {
+        "profile": "zatca-sdk-238-R3.4.8",
+        "stages": {
+          "xsd": {
+            "status": "completed",
+            "findings": []
+          },
+          "cen": {
+            "status": "completed",
+            "findings": [
+              {
+                "assertion_site": "cen:022:BR-CO-16",
+                "code": "BR-CO-16",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='LegalMonetaryTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114).",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "cen:048:BR-CO-15",
+                "code": "BR-CO-15",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]"
+                },
+                "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110).",
+                "severity": "error"
+              },
+              {
+                "assertion_site": "cen:078:BR-CO-17",
+                "code": "BR-CO-17",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][2]/*[local-name()='TaxSubtotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals.",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "cen:088:BR-S-09",
+                "code": "BR-S-09",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][2]/*[local-name()='TaxSubtotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]/*[local-name()='TaxCategory' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals.",
+                "severity": "warning"
+              }
+            ]
+          },
+          "ksa": {
+            "status": "completed",
+            "findings": [
+              {
+                "assertion_site": "ksa:002:BR-KSA-98",
+                "code": "BR-KSA-98",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]"
+                },
+                "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice.",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "ksa:060:BR-KSA-51",
+                "code": "BR-KSA-51",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='InvoiceLine' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-KSA-51]-The  line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11).",
+                "severity": "warning"
+              }
+            ]
+          },
+          "signature": {
+            "status": "completed",
+            "findings": []
+          },
+          "qr": {
+            "status": "completed",
+            "findings": []
+          },
+          "previous_invoice_hash": {
+            "status": "context_required",
+            "findings": [
+              {
+                "assertion_site": null,
+                "code": "PIH_CONTEXT_REQUIRED",
+                "layer": "previous_invoice_hash",
+                "location": null,
+                "message": "Supply previous_invoice_hash to verify predecessor continuity",
+                "severity": "warning"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "decimal-123456789012345678901234.56": {
+      "input_sha256": "9a2d9e813a17c4bfad782a42feee16ae6d61b2af50725a13b014c20fe546a06e",
+      "subtype": "0200000",
+      "sdk": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAxLTAxVDEyOjMwOjAwBBsxMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQuNTYFGzEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNC41NgYsQURWdVFuQXZtbCtqRHZPdlpwTjRIYi9nM21xR3JJZDBrL1lEOEViNTJYOD0HYE1FVUNJUUNhODZaVGJuWnBPMndhK3E0R3FqTFc0OWY0Uk4vVVhhbkQraEMrSVNBUUNBSWdNYjBTVmR4WHRqNW1xZC9aclYzMEQzUXdqY0JPNEVyelJvNUxZWFQyR3VnPQhYMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEoWCKa0Sa9FIErTOv0uAkC1VIKXxU9nPpx2vlf4yhMejy8c02XJblDq7tPydo8mq0ahOMmNo8gwni7Xt1KT9UeAlHMEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w=",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "123456789012345678901234.56",
+        "tag5": "123456789012345678901234.56",
+        "tag9_base64": "MEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w="
+      },
+      "fatoority": {
+        "encoded": "AQhBY21lIEluYwIPMzk5OTk5OTk5OTAwMDAzAxMyMDI0LTAxLTAxVDEyOjMwOjAwBBsxMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQuNTYFGzEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNC41NgYsQURWdVFuQXZtbCtqRHZPdlpwTjRIYi9nM21xR3JJZDBrL1lEOEViNTJYOD0HYE1FVUNJUUQzaEx3WmZoWUtBVk11Y2luMmpuRE1paVd2TkgzNlczYmlleVZwbkpzb0JnSWdRUW85dGdtdCtlcEd6bTlZS0ZYN2JXY0lpL08xb0VtQzZhcW9uajRpbXhjPQhYMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEoWCKa0Sa9FIErTOv0uAkC1VIKXxU9nPpx2vlf4yhMejy8c02XJblDq7tPydo8mq0ahOMmNo8gwni7Xt1KT9UeAlHMEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w=",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "tag4": "123456789012345678901234.56",
+        "tag5": "123456789012345678901234.56",
+        "tag9_base64": "MEUCIQCxP4nIZp1lwlClG3Gt8nIvKKsGi7xXR1Y0K73iPbqgGwIgPYQuDPI4DAQAz0s5ndrojyQOoCkdyxNN1O+Xqmwv61w="
+      },
+      "sdk_validation_sdk": {
+        "layers": {
+          "xsd": "passed",
+          "en": "failed",
+          "ksa": "passed",
+          "qr": "passed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "failed"
+        },
+        "findings": [
+          {
+            "source": "en",
+            "severity": "error",
+            "code": "BR-CO-15",
+            "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-17",
+            "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-16",
+            "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-S-09",
+            "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-51",
+            "message": "[BR-KSA-51]-The line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11)."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          }
+        ]
+      },
+      "sdk_validation_fatoority": {
+        "layers": {
+          "xsd": "passed",
+          "en": "failed",
+          "ksa": "passed",
+          "qr": "passed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "failed"
+        },
+        "findings": [
+          {
+            "source": "en",
+            "severity": "error",
+            "code": "BR-CO-15",
+            "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-17",
+            "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-CO-16",
+            "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114)."
+          },
+          {
+            "source": "en",
+            "severity": "warning",
+            "code": "BR-S-09",
+            "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-51",
+            "message": "[BR-KSA-51]-The line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11)."
+          },
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          }
+        ]
+      },
+      "fatoority_validation": {
+        "profile": "zatca-sdk-238-R3.4.8",
+        "stages": {
+          "xsd": {
+            "status": "completed",
+            "findings": []
+          },
+          "cen": {
+            "status": "completed",
+            "findings": [
+              {
+                "assertion_site": "cen:022:BR-CO-16",
+                "code": "BR-CO-16",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='LegalMonetaryTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-CO-16]-Amount due for payment (BT-115) = Invoice total amount with VAT (BT-112) -Pre-Paid amount (BT-113) + Rounding amount (BT-114).",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "cen:048:BR-CO-15",
+                "code": "BR-CO-15",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]"
+                },
+                "message": "[BR-CO-15]-Invoice total amount with VAT (BT-112) = Invoice total amount without VAT (BT-109) + Invoice total VAT amount (BT-110).",
+                "severity": "error"
+              },
+              {
+                "assertion_site": "cen:078:BR-CO-17",
+                "code": "BR-CO-17",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][2]/*[local-name()='TaxSubtotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-CO-17]-VAT category tax amount (BT-117) = VAT category taxable amount (BT-116) x (VAT category rate (BT-119) / 100), rounded to two decimals.",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "cen:088:BR-S-09",
+                "code": "BR-S-09",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][2]/*[local-name()='TaxSubtotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]/*[local-name()='TaxCategory' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-S-09]-The VAT category tax amount (BT-117) in a VAT breakdown (BG-23) where VAT category code (BT-118) is \"Standard rated\" shall equal the VAT category taxable amount (BT-116) multiplied by the VAT category rate (BT-119) / 100), rounded to two decimals.",
+                "severity": "warning"
+              }
+            ]
+          },
+          "ksa": {
+            "status": "completed",
+            "findings": [
+              {
+                "assertion_site": "ksa:002:BR-KSA-98",
+                "code": "BR-KSA-98",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]"
+                },
+                "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice.",
+                "severity": "warning"
+              },
+              {
+                "assertion_site": "ksa:060:BR-KSA-51",
+                "code": "BR-KSA-51",
+                "layer": "business_rules",
+                "location": {
+                  "x_path": "/*[local-name()='Invoice' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'][1]/*[local-name()='InvoiceLine' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]/*[local-name()='TaxTotal' and namespace-uri()='urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'][1]"
+                },
+                "message": "[BR-KSA-51]-The  line amount with VAT (KSA-12) must be Invoice line net amount (BT-131) + Line VAT amount (KSA-11).",
+                "severity": "warning"
+              }
+            ]
+          },
+          "signature": {
+            "status": "completed",
+            "findings": []
+          },
+          "qr": {
+            "status": "completed",
+            "findings": []
+          },
+          "previous_invoice_hash": {
+            "status": "context_required",
+            "findings": [
+              {
+                "assertion_site": null,
+                "code": "PIH_CONTEXT_REQUIRED",
+                "layer": "previous_invoice_hash",
+                "location": null,
+                "message": "Supply previous_invoice_hash to verify predecessor continuity",
+                "severity": "warning"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "foreign-currency-vat": {
+      "input_sha256": "45cb49ce0f4cea4bf41ed54cb96298d6bf8bec26cebc1e7b17a1d5e946d7ec99",
+      "subtype": "0100000",
+      "sdk": {
+        "encoded": "AW/YtNix2YPYqSDYqtmI2LHZitivINin2YTYqtmD2YbZiNmE2YjYrNmK2Kcg2KjYo9mC2LXZiSDYs9ix2LnYqSDYp9mE2YXYrdiv2YjYr9ipIHwgTWF4aW11bSBTcGVlZCBUZWNoIFN1cHBseSBMVEQCDzM5OTk5OTk5OTkwMDAwMwMTMjAyMi0wOS0wN1QxNToyMzo1NQQEMTAzNQUHMTA2OC43NQYsWDhiSlRZV0hlRHZqNUxUNSszSVlhK1pNMVJzTUNiYitqZGl1SmFMUHRmST0HYE1FUUNJQzhCY3pPWUZDSzlGajhVYk94TWdXQnU1ZllnY3JBaStkcDJnVkd6V1M4U0FpQkxjQkNsWlVPanUrRUE2V1MvSGJ5NXJZemdkNzhsNExTeTlVeTdITjkwTEE9PQhYMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEoWCKa0Sa9FIErTOv0uAkC1VIKXxU9nPpx2vlf4yhMejy8c02XJblDq7tPydo8mq0ahOMmNo8gwni7Xt1KT9UeA==",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "tag4": "1035",
+        "tag5": "1068.75",
+        "tag9_base64": null
+      },
+      "fatoority": {
+        "encoded": "AW/YtNix2YPYqSDYqtmI2LHZitivINin2YTYqtmD2YbZiNmE2YjYrNmK2Kcg2KjYo9mC2LXZiSDYs9ix2LnYqSDYp9mE2YXYrdiv2YjYr9ipIHwgTWF4aW11bSBTcGVlZCBUZWNoIFN1cHBseSBMVEQCDzM5OTk5OTk5OTkwMDAwMwMTMjAyMi0wOS0wN1QxNToyMzo1NQQEMTAzNQUDMjg1BixYOGJKVFlXSGVEdmo1TFQ1KzNJWWErWk0xUnNNQ2JiK2pkaXVKYUxQdGZJPQdcTUVNQ0lHb0FTaHpoT3hwVjcxSXkwdTJkazdpbzRXSVRlSlRsMTBNQ1hoQVZua2JwQWg4ZkZ2eXA3dlArMStZcXNZRFZyT3pvK1FSSktKTkFjRjdvNXFJeHQzbjIIWDBWMBAGByqGSM49AgEGBSuBBAAKA0IABKFgimtEmvRSBK0zr9LgJAtVSCl8VPZz6cdr5X+MoTHo8vHNNlyW5Q6u7T8naPJqtGoTjJjaPIMJ4u17dSk/VHg=",
+        "tags": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "tag4": "1035",
+        "tag5": "285",
+        "tag9_base64": null
+      },
+      "sdk_validation_sdk": {
+        "layers": {
+          "xsd": "passed",
+          "en": "passed",
+          "ksa": "passed",
+          "qr": "not_run",
+          "signature": "not_run",
+          "pih": "passed",
+          "global": "passed"
+        },
+        "findings": []
+      },
+      "sdk_validation_fatoority": {
+        "layers": {
+          "xsd": "passed",
+          "en": "passed",
+          "ksa": "passed",
+          "qr": "not_run",
+          "signature": "not_run",
+          "pih": "passed",
+          "global": "passed"
+        },
+        "findings": []
+      },
+      "fatoority_validation": {
+        "profile": "zatca-sdk-238-R3.4.8",
+        "stages": {
+          "xsd": {
+            "status": "completed",
+            "findings": []
+          },
+          "cen": {
+            "status": "completed",
+            "findings": []
+          },
+          "ksa": {
+            "status": "completed",
+            "findings": []
+          },
+          "signature": {
+            "status": "not_applicable",
+            "findings": []
+          },
+          "qr": {
+            "status": "not_applicable",
+            "findings": []
+          },
+          "previous_invoice_hash": {
+            "status": "context_required",
+            "findings": [
+              {
+                "assertion_site": null,
+                "code": "PIH_CONTEXT_REQUIRED",
+                "layer": "previous_invoice_hash",
+                "location": null,
+                "message": "Supply previous_invoice_hash to verify predecessor continuity",
+                "severity": "warning"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "qr-total-scale": {
+      "input_sha256": "1da2bf1ecbe644682850397e4375d0c6ff116deef15595341138f88106b3ff1c",
+      "sdk_validation": {
+        "layers": {
+          "xsd": "passed",
+          "en": "passed",
+          "ksa": "passed",
+          "qr": "failed",
+          "signature": "passed",
+          "pih": "passed",
+          "global": "failed"
+        },
+        "findings": [
+          {
+            "source": "ksa",
+            "severity": "warning",
+            "code": "BR-KSA-98",
+            "message": "[BR-KSA-98] - The simplified invoice should be submitted within 24 hours of issuing the invoice."
+          },
+          {
+            "source": "qr",
+            "severity": "error",
+            "code": "invoiceTotal",
+            "message": "Amount due for payment (BT-115) in the Invoice does not match with QR code invoice total or Amount due for payment (BT-115) missing in the invoice"
+          }
+        ]
+      },
+      "fatoority_sdk_qr": {
+        "evaluated_assertions": [],
+        "findings": [
+          {
+            "assertion_site": null,
+            "code": "QR_VALUE",
+            "layer": "qr",
+            "location": null,
+            "message": "QR tag 4 formatting differs from the XML payable amount",
+            "severity": "error"
+          }
+        ],
+        "provenance": null,
+        "stage": "qr",
+        "status": "completed"
+      },
+      "fatoority_policy": "SDK-QR-004: equal money; SDK-profile lexical mismatch"
+    }
+  },
+  "installed_sdk_unchanged": true
+}

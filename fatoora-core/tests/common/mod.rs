@@ -685,3 +685,13 @@ pub fn parity_invoices() -> Vec<(&'static str, FinalizedInvoice)> {
         ("foreign-currency", foreign_currency_standard_invoice()),
     ]
 }
+
+/// Public dummy SDK credentials, used to re-sign mutated regression inputs.
+#[allow(dead_code)]
+pub fn fixture_signer() -> fatoora_core::invoice::sign::InvoiceSigner {
+    fatoora_core::invoice::sign::InvoiceSigner::from_der(
+        include_bytes!("../fixtures/sdk-parity/credentials/certificate.der"),
+        include_bytes!("../fixtures/sdk-parity/credentials/private-key.der"),
+    )
+    .unwrap()
+}

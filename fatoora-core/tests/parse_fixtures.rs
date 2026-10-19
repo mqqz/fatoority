@@ -36,9 +36,7 @@ fn parse_standard_and_simplified_invoices() {
         let xml = read_xml(&file);
         let invoice = parse_finalized_invoice_xml(&xml)
             .unwrap_or_else(|e| panic!("failed to parse {:?}: {e:?}", file));
-        assert_roundtrip(&xml, &invoice);
-        parse_signed_invoice_xml(&xml)
-            .unwrap_or_else(|e| panic!("failed to parse signed {:?}: {e:?}", file));
+        assert_roundtrip(&xml, &invoice, &file);
     }
 }
 
@@ -63,7 +61,7 @@ fn parse_credit_debit_invoices() {
         let xml = read_xml(&file);
         let invoice = parse_finalized_invoice_xml(&xml)
             .unwrap_or_else(|e| panic!("failed to parse {:?}: {e:?}", file));
-        assert_roundtrip(&xml, &invoice);
+        assert_roundtrip(&xml, &invoice, &file);
         match invoice.data().invoice_type() {
             fatoora_core::invoice::InvoiceType::CreditNote(_)
             | fatoora_core::invoice::InvoiceType::DebitNote(_) => {
@@ -71,12 +69,10 @@ fn parse_credit_debit_invoices() {
             }
             _ => panic!("expected credit/debit invoice type for {:?}", file),
         }
-        parse_signed_invoice_xml(&xml)
-            .unwrap_or_else(|e| panic!("failed to parse signed {:?}: {e:?}", file));
     }
 }
 
-fn assert_roundtrip(xml: &str, invoice: &fatoora_core::invoice::FinalizedInvoice) {
+fn assert_roundtrip(xml: &str, invoice: &fatoora_core::invoice::FinalizedInvoice, file: &Path) {
     let generated = invoice.to_xml().unwrap();
     let parsed = parse_finalized_invoice_xml(&generated).unwrap();
     assert_eq!(&parsed, invoice);
@@ -85,7 +81,16 @@ fn assert_roundtrip(xml: &str, invoice: &fatoora_core::invoice::FinalizedInvoice
         &fatoora_core::config::Config::default(),
     )
     .unwrap();
-    let signed = parse_signed_invoice_xml(xml).unwrap();
+    if file.file_name().unwrap() == "Advance Payment adjustments with foreign currency invoice.xml"
+    {
+        // Historical sample embeds BT-111 (SAR) rather than BT-110 (USD).
+        // Strict import rejects this; SDK-compatible standard validation skips QR.
+        let error = parse_signed_invoice_xml(xml).unwrap_err();
+        assert!(error.to_string().contains("QR_VAT"), "{error}");
+        return;
+    }
+    let signed =
+        parse_signed_invoice_xml(xml).unwrap_or_else(|e| panic!("{}: {e}", file.display()));
     assert_eq!(signed.xml(), xml);
     assert_ne!(signed.xml(), generated);
     let hash = fatoora_core::invoice::sign::invoice_hash_base64_from_xml_str(xml).unwrap();

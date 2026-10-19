@@ -1398,40 +1398,6 @@ impl InvoiceData {
                 .flatten()
         })
     }
-
-    pub(crate) fn seller_name(&self) -> QrResult<&str> {
-        let name = self.seller.name.as_str();
-        if name.trim().is_empty() {
-            return Err(QrCodeError::MissingSellerName);
-        }
-        Ok(name)
-    }
-
-    pub(crate) fn seller_vat(&self) -> QrResult<&str> {
-        let vat = self
-            .seller
-            .vat_id
-            .as_ref()
-            .ok_or(QrCodeError::MissingSellerVat)?
-            .as_str()
-            .trim();
-        if vat.is_empty() {
-            return Err(QrCodeError::MissingSellerVat);
-        }
-        Ok(vat)
-    }
-
-    pub(crate) fn issue_date_string(&self) -> String {
-        self.issue_date().to_string()
-    }
-
-    pub(crate) fn issue_time_string(&self) -> String {
-        self.issue_time().to_string()
-    }
-
-    pub(crate) fn format_amount(amount: Decimal) -> String {
-        amount.fixed(2)
-    }
 }
 /// Computed invoice totals.
 ///

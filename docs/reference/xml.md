@@ -12,7 +12,7 @@ Use these APIs to read invoice XML into an invoice model, serialize a finalized 
 | Operation | Input | Result and behavior |
 | --- | --- | --- |
 | Parse finalized invoice | Complete invoice XML text or a file path | A finalized invoice with supported fields and calculated totals. Supplied supported amounts are checked against calculations. |
-| Parse signed invoice | Complete signed invoice XML text or a file path | A signed invoice containing signature metadata and the exact supplied XML text. Parsing does not verify the signature. |
+| Parse signed invoice | Complete signed invoice XML text or a file path | A signed invoice containing signature metadata and the exact supplied XML text. Parsing checks the signature, digests and QR against the embedded certificate; issuer trust and clearance remain unverified. |
 | Serialize finalized invoice | Finalized invoice | XML text with default two-space indentation. Serialization creates a document from the model; it is not a lossless XML editor. |
 | Read signed XML | Signed invoice | Exact stored XML, without formatting changes. Newly signed invoices store the output of signing; imported invoices store the input text. |
 | Take signed XML | Signed invoice | Exact stored XML and consumption of the invoice state. |

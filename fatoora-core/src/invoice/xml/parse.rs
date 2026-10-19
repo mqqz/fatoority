@@ -98,8 +98,9 @@ pub fn parse_finalized_invoice_xml_file(
 /// Parse supported invoice fields and extract signature material.
 ///
 /// Applies the same field and amount checks as [`parse_finalized_invoice_xml`].
-/// Does not verify the signature, certificate trust, XSD, or full business rules.
-/// A successful parse must not be treated as proof of authenticity.
+/// Verifies local signature, digest and QR consistency using the embedded certificate.
+/// Does not establish certificate trust, clearance, XSD, or full business-rule compliance.
+/// A successful parse must not be treated as proof of issuer trust or ZATCA acceptance.
 ///
 /// # Errors
 /// Returns [`ParseError`] if the XML is invalid or required fields are missing.
@@ -113,7 +114,7 @@ pub fn parse_signed_invoice_xml(xml: &str) -> Result<SignedInvoice, ParseError> 
     Ok(signed)
 }
 
-/// File variant of [`parse_signed_invoice_xml`]; does not verify authenticity.
+/// File variant of [`parse_signed_invoice_xml`], with the same local integrity checks.
 ///
 /// # Errors
 /// Returns [`ParseError`] if the file cannot be read or the XML is invalid.
@@ -896,7 +897,34 @@ fn parse_signed_properties(doc: &Document<'_>) -> Result<SignedProperties, Parse
         .get(&8)
         .map(|v| Base64::encode_string(v))
         .ok_or(ParseError::MissingField("QR tag 8 (public key)"))?;
-    let zatca_key_signature = qr_fields.get(&9).map(|v| Base64::encode_string(v));
+    let certificate = text_required(
+        nav::signature(ctx)
+            .child(DS_NS, "KeyInfo")
+            .child(DS_NS, "X509Data")
+            .child(DS_NS, "X509Certificate")
+            .content(),
+        "X509Certificate",
+    )?;
+    use x509_cert::der::Decode;
+    let certificate = super::lexical::decode_base64(&certificate, 16 * 1024).map_err(|e| {
+        ParseError::InvalidValue {
+            field: "X509Certificate",
+            value: e.to_string(),
+        }
+    })?;
+    let certificate =
+        x509_cert::Certificate::from_der(&certificate).map_err(|e| ParseError::InvalidValue {
+            field: "X509Certificate",
+            value: e.to_string(),
+        })?;
+    let zatca_key_signature = Some(
+        super::super::sign::certificate_signature_base64(&certificate).map_err(|e| {
+            ParseError::InvalidValue {
+                field: "X509Certificate",
+                value: e.to_string(),
+            }
+        })?,
+    );
 
     let signing_time = text_required(
         nav::signed_properties(ctx)
@@ -969,26 +997,14 @@ fn parse_signed_properties(doc: &Document<'_>) -> Result<SignedProperties, Parse
 }
 
 fn parse_invoice_type(name_code: &str, body_code: &str) -> Result<InvoiceType, ParseError> {
-    if name_code.len() != 7
-        || !name_code.as_bytes()[2..]
-            .iter()
-            .all(|digit| matches!(digit, b'0' | b'1'))
-    {
-        return Err(ParseError::InvalidValue {
+    let subtype = match super::super::qr::QrApplicability::parse(name_code).map_err(|_| {
+        ParseError::InvalidValue {
             field: "InvoiceTypeCode@name",
-            value: name_code.to_string(),
-        });
-    }
-
-    let subtype = if name_code.starts_with("02") {
-        InvoiceSubType::Simplified
-    } else if name_code.starts_with("01") {
-        InvoiceSubType::Standard
-    } else {
-        return Err(ParseError::InvalidValue {
-            field: "InvoiceTypeCode@name",
-            value: name_code.to_string(),
-        });
+            value: name_code.into(),
+        }
+    })? {
+        super::super::qr::QrApplicability::Standard => InvoiceSubType::Standard,
+        super::super::qr::QrApplicability::Simplified => InvoiceSubType::Simplified,
     };
 
     match body_code {
@@ -1578,38 +1594,12 @@ fn content_optional(value: Option<String>) -> Result<Option<String>, ParseError>
 }
 
 fn decode_qr_tlv(qr_b64: &str) -> Result<std::collections::HashMap<u8, Vec<u8>>, ParseError> {
-    let raw = Base64::decode_vec(qr_b64).map_err(|e| ParseError::InvalidValue {
-        field: "QR",
-        value: format!("{e:?}"),
-    })?;
-    let mut entries = std::collections::HashMap::new();
-    let mut idx = 0;
-    while idx < raw.len() {
-        if raw.len() - idx < 2 {
-            return Err(ParseError::InvalidValue {
-                field: "QR",
-                value: "truncated TLV header".to_string(),
-            });
-        }
-        let tag = raw[idx];
-        let len = raw[idx + 1] as usize;
-        let start = idx + 2;
-        let end = start + len;
-        if end > raw.len() {
-            return Err(ParseError::InvalidValue {
-                field: "QR",
-                value: "truncated TLV".to_string(),
-            });
-        }
-        if entries.insert(tag, raw[start..end].to_vec()).is_some() {
-            return Err(ParseError::InvalidValue {
-                field: "QR",
-                value: format!("duplicate TLV tag {tag}"),
-            });
-        }
-        idx = end;
-    }
-    Ok(entries)
+    super::super::qr::decode_tlv(qr_b64)
+        .map(|tags| tags.into_iter().collect())
+        .map_err(|error| ParseError::InvalidValue {
+            field: "QR",
+            value: error.to_string(),
+        })
 }
 
 #[allow(clippy::ptr_arg)]

@@ -841,12 +841,131 @@ fn signed_hash_uses_retained_xml_and_does_not_trust_embedded_digest() {
     // A leading zero changes retained XML text without changing the numeric model.
     let changed = signed.xml().replacen("<cbc:Percent>", "<cbc:Percent>0", 1);
     assert_ne!(changed, signed.xml());
-    let imported = parse_signed_invoice_xml(&changed).unwrap();
+    assert!(parse_signed_invoice_xml(&changed).is_err());
     let model = parse_finalized_invoice_xml(&changed).unwrap();
     let raw_hash = invoice_hash_base64_from_xml_str(&changed).unwrap();
-    assert_eq!(imported.xml(), changed);
-    assert_eq!(imported.hash_base64().unwrap(), raw_hash);
     assert_ne!(model.hash_base64().unwrap(), raw_hash);
-    assert_eq!(imported.invoice_hash(), signed.invoice_hash());
-    assert_ne!(imported.hash_base64().unwrap(), imported.invoice_hash());
+    assert_ne!(raw_hash, signed.invoice_hash());
+}
+
+#[test]
+fn qr_invoice_type_matrix_preserves_embedded_payload_and_certificate_metadata() {
+    use fatoora_core::invoice::xml::parse::{
+        parse_finalized_invoice_xml, parse_signed_invoice_xml,
+    };
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/sdk-parity");
+    let signer = InvoiceSigner::from_der(
+        &std::fs::read(root.join("credentials/certificate.der")).unwrap(),
+        &std::fs::read(root.join("credentials/private-key.der")).unwrap(),
+    )
+    .unwrap();
+    for subtype in ["standard", "simplified"] {
+        for kind in ["invoice", "credit", "debit"] {
+            let input =
+                std::fs::read_to_string(root.join(format!("cases/{subtype}-{kind}/input.xml")))
+                    .unwrap();
+            let model = parse_finalized_invoice_xml(&input).unwrap();
+            let typed = model.sign(&signer).unwrap();
+            for xml in [typed.xml().to_owned(), signer.sign_xml(&input).unwrap()] {
+                let doc = roxmltree::Document::parse(&xml).unwrap();
+                let embedded = test_xml::text(&doc, "//cac:AdditionalDocumentReference[cbc:ID='QR']/cac:Attachment/cbc:EmbeddedDocumentBinaryObject").unwrap();
+                let parsed = parse_signed_invoice_xml(&xml).unwrap();
+                assert_eq!(parsed.xml(), xml);
+                assert_eq!(parsed.qr_code(), embedded);
+                assert!(parsed.zatca_key_signature().is_some());
+                let raw = Base64::decode_vec(&embedded).unwrap();
+                let mut at = 0;
+                let mut tags = Vec::new();
+                while at < raw.len() {
+                    tags.push(raw[at]);
+                    at += 2 + raw[at + 1] as usize;
+                }
+                assert_eq!(
+                    tags,
+                    (1..=if subtype == "simplified" { 9 } else { 8 }).collect::<Vec<_>>()
+                );
+                if subtype == "simplified" {
+                    let signature =
+                        Base64::decode_vec(parsed.zatca_key_signature().unwrap()).unwrap();
+                    assert!(raw.ends_with(&signature));
+                }
+                assert_eq!(signer.sign_xml(&xml).unwrap(), xml);
+                let mut invalid = raw.clone();
+                if subtype == "standard" {
+                    invalid.extend_from_slice(&[9, 1, 65]);
+                } else {
+                    let mut at = 0;
+                    while invalid[at] != 9 {
+                        at += 2 + invalid[at + 1] as usize;
+                    }
+                    invalid.truncate(at);
+                }
+                let modified = xml.replace(&embedded, &Base64::encode_string(&invalid));
+                assert!(parse_signed_invoice_xml(&modified).is_err());
+            }
+        }
+    }
+}
+
+#[test]
+fn xml_signing_preserves_money_lexemes_and_rejects_qr_tampering() {
+    use fatoora_core::invoice::xml::parse::parse_signed_invoice_xml;
+    let (signer, _) = build_test_signer();
+    let input = common::dummy_finalized_invoice().to_xml().unwrap();
+    for amount in [
+        "300",
+        "300.0",
+        "300.00",
+        "300.01",
+        "0.00",
+        "45.0",
+        "45.00",
+        "123456789012345678901234.56",
+    ] {
+        let doc = roxmltree::Document::parse(&input).unwrap();
+        let old = test_xml::text(&doc, "//cac:LegalMonetaryTotal/cbc:PayableAmount").unwrap();
+        let xml = input.replace(
+            &format!(">{old}</cbc:PayableAmount>"),
+            &format!(">{amount}</cbc:PayableAmount>"),
+        );
+        let signed = signer.sign_xml(&xml).unwrap();
+        let doc = roxmltree::Document::parse(&signed).unwrap();
+        let qr = test_xml::text(&doc, "//cac:AdditionalDocumentReference[cbc:ID='QR']/cac:Attachment/cbc:EmbeddedDocumentBinaryObject").unwrap();
+        let raw = Base64::decode_vec(&qr).unwrap();
+        let mut at = 0;
+        while raw[at] != 4 {
+            at += 2 + raw[at + 1] as usize;
+        }
+        assert_eq!(
+            &raw[at + 2..at + 2 + raw[at + 1] as usize],
+            amount.as_bytes()
+        );
+    }
+    let signed = common::dummy_finalized_invoice().sign(&signer).unwrap();
+    let mut raw = Base64::decode_vec(signed.qr_code()).unwrap();
+    raw[2] ^= 1; // QR excluded from XML digest: independent linkage check must catch this.
+    let modified = signed
+        .xml()
+        .replace(signed.qr_code(), &Base64::encode_string(&raw));
+    assert!(parse_signed_invoice_xml(&modified).is_err());
+}
+
+#[test]
+fn signed_import_keeps_noncanonical_but_valid_money_spelling() {
+    use fatoora_core::invoice::xml::parse::parse_signed_invoice_xml;
+    let (signer, _) = build_test_signer();
+    let input = common::dummy_finalized_invoice().to_xml().unwrap();
+    for (payable, vat) in [("115", "15"), ("115.0", "15.0"), ("115.00", "15.00")] {
+        let xml = input
+            .replace(
+                ">115.00</cbc:PayableAmount>",
+                &format!(">{payable}</cbc:PayableAmount>"),
+            )
+            .replace(">15.00</cbc:TaxAmount>", &format!(">{vat}</cbc:TaxAmount>"));
+        let xml = signer.sign_xml(&xml).unwrap();
+        let signed = parse_signed_invoice_xml(&xml).unwrap();
+        assert_eq!(signed.xml(), xml);
+        let doc = roxmltree::Document::parse(&xml).unwrap();
+        assert_eq!(signed.qr_code(), test_xml::text(&doc, "//cac:AdditionalDocumentReference[cbc:ID='QR']/cac:Attachment/cbc:EmbeddedDocumentBinaryObject").unwrap());
+    }
 }

@@ -178,6 +178,6 @@ and the [API guide](../../guides/api.md).
 | `signed_props_hash()` | Encoded signed-properties hash `str` |
 | `signing_time()` | UTC `str` formatted `YYYY-MM-DDTHH:MM:SS` |
 
-Parsing a signed invoice extracts these values; it does not verify authenticity.
-Use explicit validation when you need integrity checks. See the
+Parsing a signed invoice checks local signature, digest and QR integrity.
+Run explicit validation for schema and business-rule checks; issuer trust and clearance require separate evidence. See the
 [signing reference](../invoice-signing.md) for key/certificate formats and signing operations.

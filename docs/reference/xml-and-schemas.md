@@ -27,4 +27,4 @@ Invoice-model calculations and business-rule validation have separate precision 
 
 Invoice hashing applies the invoice-specific exclusions and C14N 1.1 canonicalization before calculating the digest. It is not a hash of the raw file bytes. Keep the returned signed XML unchanged when storing or submitting it: formatting or rebuilding it can change signature-relevant content.
 
-Parsing a signed invoice reads its embedded signature metadata; it does not verify the signature, certificate issuer trust or remote acceptance. Use the validation report to determine which checks actually completed.
+Parsing a signed invoice preserves its XML and embedded QR, and verifies local signature and digest consistency. Certificate issuer trust and remote acceptance are outside these checks. Use the validation report to determine which checks actually completed.

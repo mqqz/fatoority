@@ -51,3 +51,23 @@ def test_closed_facade_is_idempotent_and_rejects_use():
     with pytest.raises(FfiError) as caught:
         signed.into_xml()
     assert caught.value.code == 1
+
+
+def test_signed_import_rejects_tampered_qr():
+    import base64
+    import xml.etree.ElementTree as ET
+
+    path = Path(__file__).resolve().parents[3] / "fatoora-core/tests/fixtures/invoices/sample-simplified-invoice.xml"
+    xml = path.read_text()
+    signed = parse_signed_invoice_xml(xml)
+    qr = signed.qr_code()
+    ns = {"a": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+          "c": "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"}
+    embedded = next(n.findtext("a:Attachment/c:EmbeddedDocumentBinaryObject", namespaces=ns)
+                    for n in ET.fromstring(xml).findall("a:AdditionalDocumentReference", ns)
+                    if n.findtext("c:ID", namespaces=ns) == "QR")
+    assert qr == embedded
+    raw = bytearray(base64.b64decode(qr))
+    raw[2] ^= 1
+    with pytest.raises(FfiError):
+        parse_signed_invoice_xml(xml.replace(qr, base64.b64encode(raw).decode()))
