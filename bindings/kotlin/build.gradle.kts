@@ -10,7 +10,7 @@ plugins {
     `maven-publish`
 }
 group = "com.fatoority"
-version = "0.4.4"
+version = "0.5.0"
 
 kotlin {
     compilerOptions { jvmTarget.set(JvmTarget.JVM_1_8); freeCompilerArgs.add("-opt-in=kotlin.ExperimentalUnsignedTypes") }

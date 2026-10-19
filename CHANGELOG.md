@@ -2,15 +2,46 @@
 
 ## Unreleased
 
-- **Behavior change:** `SignedInvoice::hash_base64()` and all language bindings
+## [0.5.0] - Unreleased
+
+Upgrade language packages and their native libraries together. See the
+[invoice-model migration notes](docs/development/invoice-model.md) and
+[QR migration notes](docs/development/qr-correctness-evidence.md).
+
+### Breaking changes
+
+- `SignedInvoice::hash_base64()` and all language bindings
   now hash stored signed XML instead of reserializing its parsed model.
   CLI `generate-hash` likewise hashes the input XML directly for signed and
   unsigned documents, without requiring model conversion. Imported documents
   can therefore produce different results. `FinalizedInvoice::hash_base64()`
-  still hashes emitted XML; `invoice_hash()` still returns the unverified
-  embedded digest. No model-hash compatibility method is added.
+  still hashes emitted XML; `invoice_hash()` returns the embedded digest.
+- Credit/debit invoice variants now take only the subtype; supply references and
+  reasons through the invoice builder. Party addresses are optional, address
+  struct literals include `province`, and identifiers and payment instructions
+  use collections. Update Rust callers and rebuild native binding consumers.
+- Signed XML imports now verify signature, digest, certificate metadata and QR
+  consistency. Previously accepted malformed or inconsistent documents can fail
+  import. Original XML and its embedded QR are retained without reconstruction.
 
-## [0.4.4] - Unreleased
+### Added and fixed
+
+- Preserve supported invoice fields across XML, dictionary and language-binding
+  round trips, including buyer data, references, delivery dates, payment means,
+  adjustments, tax-field presence and price-base quantities. Add `LineItemBuilder`.
+  Retain accepted monetary values and distinguish omitted fields from empty input.
+- Use subtype-specific QR tags for tax invoices and notes: standard stamps use
+  Tags 1–8, simplified stamps use Tags 1–9. Preserve source decimal spellings and
+  compare monetary values with bounded exact arithmetic. Reject malformed signing
+  material and TLV framing through structured errors.
+- Preserve the embedded QR in signed CLI workflows and reject tampered signed
+  input. Accept XML whitespace in embedded signing certificates within size limits.
+- Record pinned SDK and development compliance API comparisons, including known
+  SDK and service validation gaps. These checks do not establish production
+  clearance or certificate trust.
+- Synchronize Rust, Python, npm, NuGet and JVM packages at 0.5.0.
+
+## [0.4.4] - 2026-10-17
 
 - Use `PayableAmount` (BT-115) for QR tag 4 in the library and CLI, including
   prepayment and payable rounding adjustments. Signing and SDK-profile validation
