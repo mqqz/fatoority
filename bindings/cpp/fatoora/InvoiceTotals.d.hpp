@@ -14,6 +14,8 @@
 namespace fatoora {
 namespace capi { struct BindingError; }
 class BindingError;
+namespace capi { struct VatBreakdown; }
+class VatBreakdown;
 } // namespace fatoora
 
 
@@ -28,6 +30,10 @@ namespace capi {
 namespace fatoora {
 class InvoiceTotals {
 public:
+
+  inline size_t vat_breakdown_len() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>> vat_breakdown(size_t index) const;
 
   inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> tax_inclusive() const;
   template<typename W>

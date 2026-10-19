@@ -20,7 +20,9 @@ void add_InvoiceTotals_binding(nb::module_ mod) {
         .def("prepaid_amount", std::move(maybe_op_unwrap(&_native::InvoiceTotals::prepaid_amount)))
         .def("tax_amount", std::move(maybe_op_unwrap(&_native::InvoiceTotals::tax_amount)))
         .def("tax_inclusive", std::move(maybe_op_unwrap(&_native::InvoiceTotals::tax_inclusive)))
-        .def("taxable_amount", std::move(maybe_op_unwrap(&_native::InvoiceTotals::taxable_amount)));
+        .def("taxable_amount", std::move(maybe_op_unwrap(&_native::InvoiceTotals::taxable_amount)))
+        .def("vat_breakdown", std::move(maybe_op_unwrap(&_native::InvoiceTotals::vat_breakdown)), "index"_a)
+        .def("vat_breakdown_len", &_native::InvoiceTotals::vat_breakdown_len);
 }
 
 } 

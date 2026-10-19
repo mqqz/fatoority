@@ -8,8 +8,12 @@
 #include "diplomat_runtime.h"
 
 #include "Address.d.h"
+#include "AllowanceCharge.d.h"
 #include "BindingError.d.h"
 #include "FinalizedInvoice.d.h"
+#include "InvoiceLineItem.d.h"
+#include "OriginalInvoiceRef.d.h"
+#include "TaxExemption.d.h"
 
 #include "InvoiceBuilder.d.h"
 
@@ -17,6 +21,36 @@
 
 
 
+
+typedef struct fatoora_InvoiceBuilder_new_with_reference_result {union {InvoiceBuilder* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_new_with_reference_result;
+fatoora_InvoiceBuilder_new_with_reference_result fatoora_InvoiceBuilder_new_with_reference(uint8_t kind, uint8_t subtype, const OriginalInvoiceRef* reference, DiplomatStringView reason);
+
+typedef struct fatoora_InvoiceBuilder_set_note_without_language_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_note_without_language_result;
+fatoora_InvoiceBuilder_set_note_without_language_result fatoora_InvoiceBuilder_set_note_without_language(InvoiceBuilder* self, DiplomatStringView value);
+
+typedef struct fatoora_InvoiceBuilder_set_payment_instruction_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_payment_instruction_result;
+fatoora_InvoiceBuilder_set_payment_instruction_result fatoora_InvoiceBuilder_set_payment_instruction(InvoiceBuilder* self, DiplomatStringView instruction);
+
+typedef struct fatoora_InvoiceBuilder_set_prepaid_amount_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_prepaid_amount_result;
+fatoora_InvoiceBuilder_set_prepaid_amount_result fatoora_InvoiceBuilder_set_prepaid_amount(InvoiceBuilder* self, DiplomatStringView amount);
+
+typedef struct fatoora_InvoiceBuilder_set_payable_rounding_amount_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_payable_rounding_amount_result;
+fatoora_InvoiceBuilder_set_payable_rounding_amount_result fatoora_InvoiceBuilder_set_payable_rounding_amount(InvoiceBuilder* self, DiplomatStringView amount);
+
+typedef struct fatoora_InvoiceBuilder_set_delivery_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_delivery_result;
+fatoora_InvoiceBuilder_set_delivery_result fatoora_InvoiceBuilder_set_delivery(InvoiceBuilder* self, OptionStringView actual, OptionStringView latest);
+
+typedef struct fatoora_InvoiceBuilder_set_tax_currency_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_tax_currency_result;
+fatoora_InvoiceBuilder_set_tax_currency_result fatoora_InvoiceBuilder_set_tax_currency(InvoiceBuilder* self, DiplomatStringView currency, DiplomatStringView amount);
+
+typedef struct fatoora_InvoiceBuilder_set_tax_exemption_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_set_tax_exemption_result;
+fatoora_InvoiceBuilder_set_tax_exemption_result fatoora_InvoiceBuilder_set_tax_exemption(InvoiceBuilder* self, uint8_t category, DiplomatStringView rate, const TaxExemption* exemption);
+
+typedef struct fatoora_InvoiceBuilder_add_adjustment_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_adjustment_result;
+fatoora_InvoiceBuilder_add_adjustment_result fatoora_InvoiceBuilder_add_adjustment(InvoiceBuilder* self, const AllowanceCharge* adjustment);
+
+typedef struct fatoora_InvoiceBuilder_add_item_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_add_item_result;
+fatoora_InvoiceBuilder_add_item_result fatoora_InvoiceBuilder_add_item(InvoiceBuilder* self, const InvoiceLineItem* item);
 
 typedef struct fatoora_InvoiceBuilder_new_result {union {InvoiceBuilder* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceBuilder_new_result;
 fatoora_InvoiceBuilder_new_result fatoora_InvoiceBuilder_new(uint8_t kind, uint8_t subtype, OptionStringView original_id, OptionStringView original_uuid, OptionStringView original_date, OptionStringView reason);

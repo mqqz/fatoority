@@ -15,7 +15,10 @@ def test_public_methods_and_argument_names_are_preserved():
         for method, expected in methods.items():
             parameters = inspect.signature(getattr(cls, method)).parameters
             actual = [p for p in parameters if p not in ("self", "cls")]
-            assert actual == expected, (name, method, actual, expected)
+            assert actual[:len(expected)] == expected, (name, method, actual, expected)
+            for added in actual[len(expected):]:
+                assert parameters[added].kind == inspect.Parameter.KEYWORD_ONLY
+                assert parameters[added].default is not inspect.Parameter.empty
 
 
 def test_distribution_has_no_legacy_loader_or_runtime_dependency():

@@ -1,5 +1,9 @@
 from .api import (
     Address,
+    TaxExemption,
+    DocumentReference,
+    AllowanceCharge,
+    VatBreakdown,
     FinalizedInvoice,
     InvoiceBuilder,
     InvoiceFlag,
@@ -22,6 +26,10 @@ from .api import (
 
 __all__ = [
     "Address",
+    "TaxExemption",
+    "DocumentReference",
+    "AllowanceCharge",
+    "VatBreakdown",
     "FinalizedInvoice",
     "InvoiceBuilder",
     "InvoiceFlag",

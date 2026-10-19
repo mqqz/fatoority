@@ -8,6 +8,7 @@
 #include "diplomat_runtime.h"
 
 #include "BindingError.d.h"
+#include "VatBreakdown.d.h"
 
 #include "InvoiceTotals.d.h"
 
@@ -15,6 +16,11 @@
 
 
 
+
+size_t fatoora_InvoiceTotals_vat_breakdown_len(const InvoiceTotals* self);
+
+typedef struct fatoora_InvoiceTotals_vat_breakdown_result {union {VatBreakdown* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceTotals_vat_breakdown_result;
+fatoora_InvoiceTotals_vat_breakdown_result fatoora_InvoiceTotals_vat_breakdown(const InvoiceTotals* self, size_t index);
 
 typedef struct fatoora_InvoiceTotals_tax_inclusive_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceTotals_tax_inclusive_result;
 fatoora_InvoiceTotals_tax_inclusive_result fatoora_InvoiceTotals_tax_inclusive(const InvoiceTotals* self, DiplomatWrite* write);

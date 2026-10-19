@@ -13,6 +13,8 @@
 namespace _native {
 namespace capi { struct BindingError; }
 class BindingError;
+namespace capi { struct OriginalInvoiceRef; }
+class OriginalInvoiceRef;
 namespace capi { struct Text; }
 class Text;
 } // namespace _native
@@ -28,6 +30,12 @@ namespace capi {
 namespace _native {
 class OriginalInvoiceRef {
 public:
+
+  inline static _native::diplomat::result<std::unique_ptr<_native::OriginalInvoiceRef>, std::unique_ptr<_native::BindingError>> new_(std::string_view id, std::optional<std::string_view> uuid, std::optional<std::string_view> date, std::optional<std::string_view> time, std::optional<std::string_view> type_code);
+
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> issue_time() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> document_type_code() const;
 
   inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> id() const;
   template<typename W>

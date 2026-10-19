@@ -58,6 +58,88 @@ public partial class OriginalInvoiceRef: IDisposable
     }
 
     /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>OriginalInvoiceRef</c> allocated on Rust side.
+    /// </returns>
+    public static OriginalInvoiceRef New(string id, string? uuid, string? date, string? time, string? typeCode)
+    {
+        unsafe
+        {
+            if (id == null) throw new ArgumentNullException(nameof(id));
+            byte[] idBytes = Diplomat.Utf8.Clone(id);
+            byte[]? uuidBytes = uuid == null ? null : Diplomat.Utf8.Clone(uuid);
+            byte[]? dateBytes = date == null ? null : Diplomat.Utf8.Clone(date);
+            byte[]? timeBytes = time == null ? null : Diplomat.Utf8.Clone(time);
+            byte[]? typeCodeBytes = typeCode == null ? null : Diplomat.Utf8.Clone(typeCode);
+            fixed (byte* idPtr = idBytes)
+            fixed (byte* uuidPtr = uuidBytes)
+            fixed (byte* datePtr = dateBytes)
+            fixed (byte* timePtr = timeBytes)
+            fixed (byte* typeCodePtr = typeCodeBytes)
+            {
+                var result = Raw.OriginalInvoiceRef.New(new DiplomatSliceU8 { Ptr = idPtr, Len = (nuint)idBytes.Length }, uuid == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = uuidPtr, Len = (nuint)uuidBytes!.Length }), date == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = datePtr, Len = (nuint)dateBytes!.Length }), time == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = timePtr, Len = (nuint)timeBytes!.Length }), typeCode == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = typeCodePtr, Len = (nuint)typeCodeBytes!.Length }));
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return new OriginalInvoiceRef(result.Ok);
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>Text</c> allocated on Rust side.
+    /// </returns>
+    public Text? IssueTime()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.OriginalInvoiceRef>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.OriginalInvoiceRef.IssueTime(selfLease!.Ptr);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return result.Ok == null ? null : new Text(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>Text</c> allocated on Rust side.
+    /// </returns>
+    public Text? DocumentTypeCode()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.OriginalInvoiceRef>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.OriginalInvoiceRef.DocumentTypeCode(selfLease!.Ptr);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return result.Ok == null ? null : new Text(result.Ok);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
     public string Id()
     {
         unsafe

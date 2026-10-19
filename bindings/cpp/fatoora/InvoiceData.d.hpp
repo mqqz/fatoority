@@ -12,6 +12,8 @@
 #include "../diplomat_runtime.hpp"
 
 namespace fatoora {
+namespace capi { struct AllowanceCharge; }
+class AllowanceCharge;
 namespace capi { struct BindingError; }
 class BindingError;
 namespace capi { struct InvoiceLineItem; }
@@ -38,6 +40,20 @@ namespace capi {
 namespace fatoora {
 class InvoiceData {
 public:
+
+  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> payment_instruction() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> actual_delivery_date() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> latest_delivery_date() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> tax_currency() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> tax_currency_amount() const;
+
+  inline size_t adjustments_len() const;
+
+  inline diplomat::result<std::unique_ptr<fatoora::AllowanceCharge>, std::unique_ptr<fatoora::BindingError>> adjustment(size_t index) const;
 
   inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> id() const;
   template<typename W>

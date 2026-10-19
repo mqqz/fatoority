@@ -361,3 +361,40 @@ fn signed_file_metadata_and_totals_remain_owned_after_consumption() {
         6
     );
 }
+
+#[test]
+fn deep_recognized_xml_returns_binding_errors_before_model_recursion() {
+    let source = std::str::from_utf8(INVOICE).unwrap();
+    for depth in [128, 129, 50_000] {
+        let xml = source.replace(
+            "</Invoice>",
+            &format!(
+                "{}{}</Invoice>",
+                "<cac:Party>".repeat(depth - 1),
+                "</cac:Party>".repeat(depth - 1)
+            ),
+        );
+        if depth == 128 {
+            let finalized = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
+            assert_eq!(written(|out| ok(ok(finalized.data()).id(out))), "SME00010");
+            let signed = ok(SignedInvoice::from_xml(xml.as_bytes()));
+            assert_eq!(written(|out| ok(signed.xml(out))), xml);
+        } else {
+            for error in [
+                FinalizedInvoice::from_xml(xml.as_bytes())
+                    .err()
+                    .expect("depth limit"),
+                SignedInvoice::from_xml(xml.as_bytes())
+                    .err()
+                    .expect("depth limit"),
+            ] {
+                assert!(written(|out| error.message(out)).contains("XML depth"));
+                let details: serde_json::Value =
+                    serde_json::from_str(&written(|out| error.details_json(out))).unwrap();
+                assert_eq!(details["type"], "xml_parse");
+            }
+        }
+    }
+    assert!(FinalizedInvoice::from_xml(INVOICE).is_ok());
+    assert!(SignedInvoice::from_xml(INVOICE).is_ok());
+}

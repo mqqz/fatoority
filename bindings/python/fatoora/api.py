@@ -46,6 +46,45 @@ class InvoiceFlag(IntEnum):
     SELF_BILLED = 16
 
 @dataclass(frozen=True)
+class TaxExemption:
+    reason_code: Optional[str] = None
+    reason: Optional[str] = None
+
+    def _native_value(self):
+        return _call(_native.TaxExemption.new, self.reason_code, self.reason)
+
+    @classmethod
+    def _from_native(cls, value):
+        return cls(_call(value.reason_code), _call(value.reason))
+
+@dataclass(frozen=True)
+class AllowanceCharge:
+    charge: bool
+    amount: Decimal
+    category: VatCategory
+    rate: Decimal
+    reason: Optional[str] = None
+    reason_code: Optional[str] = None
+    exemption: TaxExemption = TaxExemption()
+    tax_category_count: int = 1
+
+@dataclass(frozen=True)
+class VatBreakdown:
+    category: VatCategory
+    rate: Decimal
+    taxable_amount: Decimal
+    tax_amount: Decimal
+    exemption: TaxExemption
+
+@dataclass(frozen=True)
+class DocumentReference:
+    id: str
+    uuid: Optional[str] = None
+    issue_date: Optional[str] = None
+    issue_time: Optional[str] = None
+    document_type_code: Optional[str] = None
+
+@dataclass(frozen=True)
 class InvoiceLineItem:
     description: str
     unit_code: str
@@ -55,6 +94,10 @@ class InvoiceLineItem:
     vat_rate: Decimal
     vat_amount: Decimal
     vat_category: VatCategory
+    id: Optional[str] = None
+    exemption: TaxExemption = TaxExemption()
+    document_references: tuple[DocumentReference, ...] = ()
+    tax_subtotals: tuple[VatBreakdown, ...] = ()
 
 @dataclass(frozen=True)
 class InvoiceTotals:
@@ -373,6 +416,9 @@ class Party(_Owned):
         return _optional(OtherId, self._invoke("other_id"))
 
 class InvoiceNote(_Owned):
+    def language_id(self) -> Optional[str]:
+        return self._invoke("language_id")
+
     def language(self) -> str:
         return self._invoke("language")
 
@@ -380,6 +426,16 @@ class InvoiceNote(_Owned):
         return self._invoke("text")
 
 class OriginalInvoiceRef(_Owned):
+    @classmethod
+    def new(cls, id: str, uuid: Optional[str] = None, date: Optional[str] = None, time: Optional[str] = None, type_code: Optional[str] = None) -> 'OriginalInvoiceRef':
+        return cls(_call(_native.OriginalInvoiceRef.new, id, uuid, date, time, type_code))
+
+    def issue_time(self) -> Optional[str]:
+        return self._invoke("issue_time")
+
+    def document_type_code(self) -> Optional[str]:
+        return self._invoke("document_type_code")
+
     def id(self) -> str:
         return self._invoke("id")
 
@@ -470,6 +526,38 @@ class _Invoice(_Owned):
     def original_invoice_reason(self) -> Optional[str]:
         return self._data("original_invoice_reason")
 
+    def actual_delivery_date(self) -> Optional[str]:
+        return self._data("actual_delivery_date")
+
+    def latest_delivery_date(self) -> Optional[str]:
+        return self._data("latest_delivery_date")
+
+    def payment_instruction(self) -> Optional[str]:
+        return self._data("payment_instruction")
+
+    def tax_currency(self) -> Optional[str]:
+        return self._data("tax_currency")
+
+    def tax_currency_amount(self) -> Optional[Decimal]:
+        value = self._data("tax_currency_amount")
+        return None if value is None else Decimal(value)
+
+    def adjustments(self) -> list[AllowanceCharge]:
+        data = self._invoke("data")
+        result = []
+        for i in range(_call(data.adjustments_len)):
+            a = _call(data.adjustment, i)
+            result.append(AllowanceCharge(_call(a.is_charge), Decimal(_call(a.amount)), VatCategory(_call(a.category)), Decimal(_call(a.rate)), _call(a.reason), _call(a.reason_code), TaxExemption._from_native(_call(a.exemption)), _call(a.tax_category_count)))
+        return result
+
+    def vat_breakdown(self) -> list[VatBreakdown]:
+        totals = self._invoke("totals")
+        result = []
+        for i in range(_call(totals.vat_breakdown_len)):
+            group = _call(totals.vat_breakdown, i)
+            result.append(VatBreakdown(VatCategory(_call(group.category)), Decimal(_call(group.rate)), Decimal(_call(group.taxable_amount)), Decimal(_call(group.tax_amount)), TaxExemption._from_native(_call(group.exemption))))
+        return result
+
     def line_item_count(self) -> int:
         return self._data("line_items_len")
 
@@ -478,7 +566,15 @@ class _Invoice(_Owned):
 
     @staticmethod
     def _line_item_value(item) -> InvoiceLineItem:
-        return InvoiceLineItem(description=(_call(item.description)), unit_code=(_call(item.unit_code)), quantity=Decimal(_call(item.quantity)), unit_price=Decimal(_call(item.unit_price)), total_amount=Decimal(_call(item.total_amount)), vat_rate=Decimal(_call(item.vat_rate)), vat_amount=Decimal(_call(item.vat_amount)), vat_category=VatCategory(_call(item.vat_category)))
+        references = []
+        subtotals = []
+        for i in range(_call(item.document_references_len)):
+            ref = _call(item.document_reference, i)
+            references.append(DocumentReference(_call(ref.id), _call(ref.uuid), _call(ref.issue_date), _call(ref.issue_time), _call(ref.document_type_code)))
+        for i in range(_call(item.tax_subtotals_len)):
+            tax = _call(item.tax_subtotal, i)
+            subtotals.append(VatBreakdown(VatCategory(_call(tax.category)), Decimal(_call(tax.rate)), Decimal(_call(tax.taxable_amount)), Decimal(_call(tax.tax_amount)), TaxExemption._from_native(_call(tax.exemption))))
+        return InvoiceLineItem(description=(_call(item.description)), unit_code=(_call(item.unit_code)), quantity=Decimal(_call(item.quantity)), unit_price=Decimal(_call(item.unit_price)), total_amount=Decimal(_call(item.total_amount)), vat_rate=Decimal(_call(item.vat_rate)), vat_amount=Decimal(_call(item.vat_amount)), vat_category=VatCategory(_call(item.vat_category)), id=_call(item.id), exemption=TaxExemption._from_native(_call(item.exemption)), document_references=tuple(references), tax_subtotals=tuple(subtotals))
 
     def line_items(self) -> list[InvoiceLineItem]:
         data = self._invoke("data")
@@ -571,6 +667,36 @@ class InvoiceBuilder(_Owned):
     def new(cls, invoice_type: InvoiceTypeKind, invoice_subtype: InvoiceSubType, original_invoice_id: Optional[str]=None, original_invoice_uuid: Optional[str]=None, original_invoice_issue_date: Optional[str]=None, original_invoice_reason: Optional[str]=None) -> 'InvoiceBuilder':
         return cls(_call(_native.InvoiceBuilder.new, int(invoice_type), int(invoice_subtype), original_invoice_id, original_invoice_uuid, original_invoice_issue_date, original_invoice_reason))
 
+    @classmethod
+    def new_with_reference(cls, invoice_type: InvoiceTypeKind, invoice_subtype: InvoiceSubType, reference: OriginalInvoiceRef, reason: str) -> 'InvoiceBuilder':
+        return cls(_call(_native.InvoiceBuilder.new_with_reference, int(invoice_type), int(invoice_subtype), reference, reason))
+
+    def set_note_without_language(self, text: str) -> None:
+        self._invoke("set_note_without_language", text)
+
+    def set_delivery(self, actual: Optional[str] = None, latest: Optional[str] = None) -> None:
+        self._invoke("set_delivery", actual, latest)
+
+    def set_tax_currency(self, currency: str, amount: Decimal | str | int) -> None:
+        self._invoke("set_tax_currency", currency, _decimal(amount))
+
+    def set_tax_exemption(self, category: VatCategory, rate: Decimal | str | int, exemption: TaxExemption) -> None:
+        self._invoke("set_tax_exemption", int(category), _decimal(rate), exemption._native_value())
+
+    def set_payment_instruction(self, instruction: str) -> None:
+        self._invoke("set_payment_instruction", instruction)
+
+    def set_prepaid_amount(self, amount: Decimal | str | int) -> None:
+        self._invoke("set_prepaid_amount", _decimal(amount))
+
+    def set_payable_rounding_amount(self, amount: Decimal | str | int) -> None:
+        self._invoke("set_payable_rounding_amount", _decimal(amount))
+
+    def add_adjustment(self, adjustment: AllowanceCharge) -> None:
+        native = _call(_native.AllowanceCharge.new, adjustment.charge, _decimal(adjustment.amount), adjustment.reason, adjustment.reason_code, int(adjustment.category), _decimal(adjustment.rate), adjustment.exemption._native_value())
+        native = _call(native.with_tax_category_count, adjustment.tax_category_count)
+        self._invoke("add_adjustment", native)
+
     def set_id(self, invoice_id: str) -> None:
         self._invoke("set_id", invoice_id)
 
@@ -599,8 +725,16 @@ class InvoiceBuilder(_Owned):
         address = Address.new(country_code, city, street, building_number, postal_code, additional_street, additional_number, district)
         self._invoke("set_seller", name, address, vat_id, other_id, other_id_scheme)
 
-    def add_line_item(self, description: str, quantity: Decimal | str | int, unit_code: str, unit_price: Decimal | str | int, vat_rate: Decimal | str | int, vat_category: VatCategory) -> None:
-        self._invoke("add_line_item", description, _decimal(quantity), unit_code, _decimal(unit_price), _decimal(vat_rate), int(vat_category))
+    def add_line_item(self, description: str, quantity: Decimal | str | int, unit_code: str, unit_price: Decimal | str | int, vat_rate: Decimal | str | int, vat_category: VatCategory, *, id: Optional[str] = None, exemption: TaxExemption = TaxExemption(), document_references: tuple[DocumentReference, ...] = (), tax_subtotals: tuple[VatBreakdown, ...] = ()) -> None:
+        item = _call(_native.InvoiceLineItem.new, description, _decimal(quantity), unit_code, _decimal(unit_price), _decimal(vat_rate), int(vat_category))
+        item = _call(item.with_metadata, id, exemption._native_value())
+        for ref in document_references:
+            native = _call(_native.OriginalInvoiceRef.new, ref.id, ref.uuid, ref.issue_date, ref.issue_time, ref.document_type_code)
+            item = _call(item.with_document_reference, native)
+        for tax in tax_subtotals:
+            native = _call(_native.VatBreakdown.new, int(tax.category), _decimal(tax.rate), _decimal(tax.taxable_amount), _decimal(tax.tax_amount), tax.exemption._native_value())
+            item = _call(item.with_tax_subtotal, native)
+        self._invoke("add_item", item)
 
     def set_buyer(self, name: str, country_code: str, city: str, street: str, building_number: str, postal_code: str, vat_id: Optional[str]=None, other_id: Optional[str]=None, other_id_scheme: Optional[str]=None, additional_street: Optional[str]=None, additional_number: Optional[str]=None, district: Optional[str]=None) -> None:
         address = Address.new(country_code, city, street, building_number, postal_code, additional_street, additional_number, district)

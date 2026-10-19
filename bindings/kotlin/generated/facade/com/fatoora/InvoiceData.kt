@@ -9,6 +9,34 @@ class InvoiceData internal constructor(internal val raw: com.fatoora.raw.Invoice
         val handle = raw.handle
         attach { com.fatoora.raw.InvoiceData.lib.fatoora_InvoiceData_destroy(handle) }
     }
+    fun paymentInstruction(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.paymentInstruction())?.let(::Text)
+    }
+
+    fun actualDeliveryDate(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.actualDeliveryDate())?.let(::Text)
+    }
+
+    fun latestDeliveryDate(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.latestDeliveryDate())?.let(::Text)
+    }
+
+    fun taxCurrency(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.taxCurrency())?.let(::Text)
+    }
+
+    fun taxCurrencyAmount(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.taxCurrencyAmount())?.let(::Text)
+    }
+
+    fun adjustmentsLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
+        java.math.BigInteger(raw.adjustmentsLen().toString())
+    }
+
+    fun adjustment(index: java.math.BigInteger): AllowanceCharge = nativeCall(listOfNotNull(this)) {
+        AllowanceCharge(unwrap(raw.adjustment(checkedCounter(index))))
+    }
+
     fun id(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.id())
     }

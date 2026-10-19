@@ -9,6 +9,27 @@ namespace Fatoora.Raw;
 internal partial struct InvoiceData
 {
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_payment_instruction", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultTextBindingError PaymentInstruction(InvoiceData* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_actual_delivery_date", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultTextBindingError ActualDeliveryDate(InvoiceData* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_latest_delivery_date", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultTextBindingError LatestDeliveryDate(InvoiceData* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_tax_currency", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultTextBindingError TaxCurrency(InvoiceData* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_tax_currency_amount", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultTextBindingError TaxCurrencyAmount(InvoiceData* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_adjustments_len", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern nuint AdjustmentsLen(InvoiceData* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_adjustment", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultAllowanceChargeBindingError Adjustment(InvoiceData* handle, nuint index);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_id", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError Id(InvoiceData* handle, DiplomatWrite* writeable);
 

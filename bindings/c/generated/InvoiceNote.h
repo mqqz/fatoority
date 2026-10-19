@@ -8,6 +8,7 @@
 #include "diplomat_runtime.h"
 
 #include "BindingError.d.h"
+#include "Text.d.h"
 
 #include "InvoiceNote.d.h"
 
@@ -15,6 +16,9 @@
 
 
 
+
+typedef struct fatoora_InvoiceNote_language_id_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceNote_language_id_result;
+fatoora_InvoiceNote_language_id_result fatoora_InvoiceNote_language_id(const InvoiceNote* self);
 
 typedef struct fatoora_InvoiceNote_language_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceNote_language_result;
 fatoora_InvoiceNote_language_result fatoora_InvoiceNote_language(const InvoiceNote* self, DiplomatWrite* write);

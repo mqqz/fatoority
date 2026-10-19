@@ -34,8 +34,9 @@ fn parse_standard_and_simplified_invoices() {
 
     for file in files {
         let xml = read_xml(&file);
-        parse_finalized_invoice_xml(&xml)
+        let invoice = parse_finalized_invoice_xml(&xml)
             .unwrap_or_else(|e| panic!("failed to parse {:?}: {e:?}", file));
+        assert_roundtrip(&xml, &invoice);
         parse_signed_invoice_xml(&xml)
             .unwrap_or_else(|e| panic!("failed to parse signed {:?}: {e:?}", file));
     }
@@ -62,6 +63,7 @@ fn parse_credit_debit_invoices() {
         let xml = read_xml(&file);
         let invoice = parse_finalized_invoice_xml(&xml)
             .unwrap_or_else(|e| panic!("failed to parse {:?}: {e:?}", file));
+        assert_roundtrip(&xml, &invoice);
         match invoice.data().invoice_type() {
             fatoora_core::invoice::InvoiceType::CreditNote(_, original, _)
             | fatoora_core::invoice::InvoiceType::DebitNote(_, original, _) => {
@@ -72,4 +74,68 @@ fn parse_credit_debit_invoices() {
         parse_signed_invoice_xml(&xml)
             .unwrap_or_else(|e| panic!("failed to parse signed {:?}: {e:?}", file));
     }
+}
+
+fn assert_roundtrip(xml: &str, invoice: &fatoora_core::invoice::FinalizedInvoice) {
+    let generated = invoice.to_xml().unwrap();
+    let parsed = parse_finalized_invoice_xml(&generated).unwrap();
+    assert_eq!(&parsed, invoice);
+    fatoora_core::invoice::validation::validate_xml_invoice_from_str(
+        &generated,
+        &fatoora_core::config::Config::default(),
+    )
+    .unwrap();
+    let signed = parse_signed_invoice_xml(xml).unwrap();
+    assert_eq!(signed.xml(), xml);
+    assert_ne!(signed.xml(), generated);
+    let hash = fatoora_core::invoice::sign::invoice_hash_base64_from_xml_str(xml).unwrap();
+    assert_eq!(
+        hash,
+        fatoora_core::invoice::sign::invoice_hash_base64_from_xml_str(signed.xml()).unwrap()
+    );
+}
+
+#[test]
+fn regenerated_compliant_fixtures_retain_business_rule_compliance() {
+    use fatoora_core::invoice::validation::{
+        Severity, ZatcaStage, ZatcaValidationOptions, validate_zatca_invoice_from_str,
+    };
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/invoices");
+    let mut compliant = 0;
+    for family in ["Standard", "Simplified"] {
+        for kind in ["Invoice", "Credit", "Debit"] {
+            for file in collect_xml_files(&root.join(family).join(kind)) {
+                let source = read_xml(&file);
+                let invoice = parse_finalized_invoice_xml(&source).unwrap();
+                let options = ZatcaValidationOptions {
+                    evaluated_at: Some("2026-10-18T12:00:00Z".parse().unwrap()),
+                    previous_invoice_hash: Some(invoice.data().previous_invoice_hash().into()),
+                };
+                let original = validate_zatca_invoice_from_str(
+                    &source,
+                    &fatoora_core::config::Config::default(),
+                    &options,
+                )
+                .unwrap();
+                let errors = |report: &fatoora_core::invoice::validation::ZatcaValidationReport| -> Vec<String> {
+                    report.stages.iter().filter(|s| matches!(s.stage, ZatcaStage::Xsd | ZatcaStage::Cen | ZatcaStage::Ksa)).flat_map(|s| &s.findings).filter(|f| f.finding.severity == Severity::Error).map(|f| f.finding.code.clone()).collect()
+                };
+                if errors(&original).is_empty() {
+                    compliant += 1;
+                    let regenerated = validate_zatca_invoice_from_str(
+                        &invoice.to_xml().unwrap(),
+                        &fatoora_core::config::Config::default(),
+                        &options,
+                    )
+                    .unwrap();
+                    assert!(
+                        errors(&regenerated).is_empty(),
+                        "{file:?}: {:?}",
+                        errors(&regenerated)
+                    );
+                }
+            }
+        }
+    }
+    assert!(compliant > 0);
 }

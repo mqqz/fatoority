@@ -13,6 +13,16 @@
 namespace _native {
 namespace capi { struct BindingError; }
 class BindingError;
+namespace capi { struct InvoiceLineItem; }
+class InvoiceLineItem;
+namespace capi { struct OriginalInvoiceRef; }
+class OriginalInvoiceRef;
+namespace capi { struct TaxExemption; }
+class TaxExemption;
+namespace capi { struct Text; }
+class Text;
+namespace capi { struct VatBreakdown; }
+class VatBreakdown;
 } // namespace _native
 
 
@@ -26,6 +36,26 @@ namespace capi {
 namespace _native {
 class InvoiceLineItem {
 public:
+
+  inline _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std::unique_ptr<_native::BindingError>> with_document_reference(const _native::OriginalInvoiceRef& reference) const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std::unique_ptr<_native::BindingError>> with_tax_subtotal(const _native::VatBreakdown& subtotal) const;
+
+  inline size_t document_references_len() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::OriginalInvoiceRef>, std::unique_ptr<_native::BindingError>> document_reference(size_t index) const;
+
+  inline size_t tax_subtotals_len() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>> tax_subtotal(size_t index) const;
+
+  inline static _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std::unique_ptr<_native::BindingError>> new_(std::string_view description, std::string_view quantity, std::string_view unit_code, std::string_view unit_price, std::string_view rate, uint8_t category);
+
+  inline _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std::unique_ptr<_native::BindingError>> with_metadata(std::optional<std::string_view> id, const _native::TaxExemption& exemption) const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> id() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::TaxExemption>, std::unique_ptr<_native::BindingError>> exemption() const;
 
   inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> description() const;
   template<typename W>

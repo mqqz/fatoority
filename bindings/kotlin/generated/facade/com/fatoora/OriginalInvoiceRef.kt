@@ -9,6 +9,21 @@ class OriginalInvoiceRef internal constructor(internal val raw: com.fatoora.raw.
         val handle = raw.handle
         attach { com.fatoora.raw.OriginalInvoiceRef.lib.fatoora_OriginalInvoiceRef_destroy(handle) }
     }
+    companion object {
+        @JvmStatic
+        @JvmOverloads
+        fun create(id: String, uuid: String? = null, date: String? = null, time: String? = null, typeCode: String? = null): OriginalInvoiceRef = nativeCall(listOfNotNull()) {
+            OriginalInvoiceRef(unwrap(com.fatoora.raw.OriginalInvoiceRef.new_(checkedText(id), uuid?.let(::checkedText), date?.let(::checkedText), time?.let(::checkedText), typeCode?.let(::checkedText))))
+        }
+    }
+    fun issueTime(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.issueTime())?.let(::Text)
+    }
+
+    fun documentTypeCode(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.documentTypeCode())?.let(::Text)
+    }
+
     fun id(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.id())
     }

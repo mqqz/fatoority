@@ -12,6 +12,9 @@ void add_InvoiceData_binding(nb::module_ mod) {
     
     nb::class_<_native::InvoiceData> opaque(mod, "InvoiceData", nb::type_slots(_native_InvoiceData_slots));
     opaque
+        .def("actual_delivery_date", std::move(maybe_op_unwrap(&_native::InvoiceData::actual_delivery_date)))
+        .def("adjustment", std::move(maybe_op_unwrap(&_native::InvoiceData::adjustment)), "index"_a)
+        .def("adjustments_len", &_native::InvoiceData::adjustments_len)
         .def("allowance_reason", std::move(maybe_op_unwrap(&_native::InvoiceData::allowance_reason)))
         .def("buyer", std::move(maybe_op_unwrap(&_native::InvoiceData::buyer)))
         .def("currency", std::move(maybe_op_unwrap(&_native::InvoiceData::currency)))
@@ -23,14 +26,18 @@ void add_InvoiceData_binding(nb::module_ mod) {
         .def("invoice_sub_type", &_native::InvoiceData::invoice_sub_type)
         .def("invoice_type_kind", &_native::InvoiceData::invoice_type_kind)
         .def("issue_datetime", std::move(maybe_op_unwrap(&_native::InvoiceData::issue_datetime)))
+        .def("latest_delivery_date", std::move(maybe_op_unwrap(&_native::InvoiceData::latest_delivery_date)))
         .def("line_item", std::move(maybe_op_unwrap(&_native::InvoiceData::line_item)), "index"_a)
         .def("line_items_len", &_native::InvoiceData::line_items_len)
         .def("note", std::move(maybe_op_unwrap(&_native::InvoiceData::note)))
         .def("original_invoice_reason", std::move(maybe_op_unwrap(&_native::InvoiceData::original_invoice_reason)))
         .def("original_invoice_ref", std::move(maybe_op_unwrap(&_native::InvoiceData::original_invoice_ref)))
+        .def("payment_instruction", std::move(maybe_op_unwrap(&_native::InvoiceData::payment_instruction)))
         .def("payment_means_code", std::move(maybe_op_unwrap(&_native::InvoiceData::payment_means_code)))
         .def("previous_invoice_hash", std::move(maybe_op_unwrap(&_native::InvoiceData::previous_invoice_hash)))
         .def("seller", std::move(maybe_op_unwrap(&_native::InvoiceData::seller)))
+        .def("tax_currency", std::move(maybe_op_unwrap(&_native::InvoiceData::tax_currency)))
+        .def("tax_currency_amount", std::move(maybe_op_unwrap(&_native::InvoiceData::tax_currency_amount)))
         .def("uuid", std::move(maybe_op_unwrap(&_native::InvoiceData::uuid)))
         .def("vat_category", &_native::InvoiceData::vat_category);
 }

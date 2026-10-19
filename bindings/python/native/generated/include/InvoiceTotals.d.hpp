@@ -13,6 +13,8 @@
 namespace _native {
 namespace capi { struct BindingError; }
 class BindingError;
+namespace capi { struct VatBreakdown; }
+class VatBreakdown;
 } // namespace _native
 
 
@@ -26,6 +28,10 @@ namespace capi {
 namespace _native {
 class InvoiceTotals {
 public:
+
+  inline size_t vat_breakdown_len() const;
+
+  inline _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>> vat_breakdown(size_t index) const;
 
   inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> tax_inclusive() const;
   template<typename W>

@@ -17,6 +17,15 @@
 
 
 
+typedef struct fatoora_OriginalInvoiceRef_new_result {union {OriginalInvoiceRef* ok; BindingError* err;}; bool is_ok;} fatoora_OriginalInvoiceRef_new_result;
+fatoora_OriginalInvoiceRef_new_result fatoora_OriginalInvoiceRef_new(DiplomatStringView id, OptionStringView uuid, OptionStringView date, OptionStringView time, OptionStringView type_code);
+
+typedef struct fatoora_OriginalInvoiceRef_issue_time_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_OriginalInvoiceRef_issue_time_result;
+fatoora_OriginalInvoiceRef_issue_time_result fatoora_OriginalInvoiceRef_issue_time(const OriginalInvoiceRef* self);
+
+typedef struct fatoora_OriginalInvoiceRef_document_type_code_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_OriginalInvoiceRef_document_type_code_result;
+fatoora_OriginalInvoiceRef_document_type_code_result fatoora_OriginalInvoiceRef_document_type_code(const OriginalInvoiceRef* self);
+
 typedef struct fatoora_OriginalInvoiceRef_id_result {union { BindingError* err;}; bool is_ok;} fatoora_OriginalInvoiceRef_id_result;
 fatoora_OriginalInvoiceRef_id_result fatoora_OriginalInvoiceRef_id(const OriginalInvoiceRef* self, DiplomatWrite* write);
 

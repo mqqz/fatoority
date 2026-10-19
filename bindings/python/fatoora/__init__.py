@@ -1,5 +1,9 @@
 from .api import (
     Address,
+    TaxExemption,
+    DocumentReference,
+    AllowanceCharge,
+    VatBreakdown,
     Config,
     CsidCompliance,
     CsidProduction,
@@ -54,6 +58,10 @@ from .errors import (
 __all__ = [
     "Config",
     "Address",
+    "TaxExemption",
+    "DocumentReference",
+    "AllowanceCharge",
+    "VatBreakdown",
     "CsidCompliance",
     "CsidProduction",
     "Csr",

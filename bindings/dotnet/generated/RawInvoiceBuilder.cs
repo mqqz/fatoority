@@ -9,6 +9,36 @@ namespace Fatoora.Raw;
 internal partial struct InvoiceBuilder
 {
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_new_with_reference", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultInvoiceBuilderBindingError NewWithReference(byte kind, byte subtype, OriginalInvoiceRef* reference, DiplomatSliceU8 reason);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_note_without_language", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError SetNoteWithoutLanguage(InvoiceBuilder* handle, DiplomatSliceU8 value);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_payment_instruction", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError SetPaymentInstruction(InvoiceBuilder* handle, DiplomatSliceU8 instruction);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_prepaid_amount", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError SetPrepaidAmount(InvoiceBuilder* handle, DiplomatSliceU8 amount);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_payable_rounding_amount", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError SetPayableRoundingAmount(InvoiceBuilder* handle, DiplomatSliceU8 amount);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_delivery", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError SetDelivery(InvoiceBuilder* handle, DiplomatOptionSliceU8 actual, DiplomatOptionSliceU8 latest);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_tax_currency", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError SetTaxCurrency(InvoiceBuilder* handle, DiplomatSliceU8 currency, DiplomatSliceU8 amount);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_tax_exemption", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError SetTaxExemption(InvoiceBuilder* handle, byte category, DiplomatSliceU8 rate, TaxExemption* exemption);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_add_adjustment", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError AddAdjustment(InvoiceBuilder* handle, AllowanceCharge* adjustment);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_add_item", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError AddItem(InvoiceBuilder* handle, InvoiceLineItem* item);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_new", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultInvoiceBuilderBindingError New(byte kind, byte subtype, DiplomatOptionSliceU8 originalId, DiplomatOptionSliceU8 originalUuid, DiplomatOptionSliceU8 originalDate, DiplomatOptionSliceU8 reason);
 

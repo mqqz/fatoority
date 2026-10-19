@@ -380,7 +380,7 @@ fn parse_credit_note_rejects_invalid_original_issue_date() {
 }
 
 #[test]
-fn parse_credit_note_defaults_reason_when_missing() {
+fn parse_credit_note_does_not_invent_reason_when_missing() {
     let xml = load_credit_note_xml();
     let xml = xml.replace(
         "<cbc:InstructionNote>In case of goods or services refund | عند ترجيع السلع أو الخدمات</cbc:InstructionNote>",
@@ -390,15 +390,18 @@ fn parse_credit_note_defaults_reason_when_missing() {
     match invoice.data().invoice_type() {
         InvoiceType::CreditNote(_, original, reason) => {
             assert_eq!(original.id(), "SME00002");
-            assert_eq!(reason, "Adjustment");
+            assert_eq!(reason, "");
         }
         _ => panic!("expected credit note"),
     }
 }
 
 #[test]
-fn parse_credit_note_uses_note_when_instruction_missing_or_blank() {
-    for replacement in ["", "<cbc:InstructionNote> \t </cbc:InstructionNote>"] {
+fn parse_credit_note_uses_note_only_when_instruction_missing() {
+    for (replacement, expected) in [
+        ("", "fallback note"),
+        ("<cbc:InstructionNote> \t </cbc:InstructionNote>", " \t "),
+    ] {
         let xml = load_credit_note_xml();
         let xml = xml.replace(
             "<cbc:InstructionNote>In case of goods or services refund | عند ترجيع السلع أو الخدمات</cbc:InstructionNote>",
@@ -411,7 +414,7 @@ fn parse_credit_note_uses_note_when_instruction_missing_or_blank() {
         let invoice = parse_finalized_invoice_xml(&xml).expect("parse credit note");
         match invoice.data().invoice_type() {
             InvoiceType::CreditNote(_, _, reason) => {
-                assert_eq!(reason, "fallback note");
+                assert_eq!(reason, expected);
             }
             _ => panic!("expected credit note"),
         }
@@ -449,7 +452,7 @@ fn parse_debit_note_type_and_reason() {
 }
 
 #[test]
-fn credit_note_serialization_omits_instruction_note_when_reason_blank() {
+fn credit_note_serialization_preserves_whitespace_reason() {
     let seller = build_seller();
     let line_item = LineItem::new(
         "Item",
@@ -481,7 +484,7 @@ fn credit_note_serialization_omits_instruction_note_when_reason_blank() {
     let invoice = builder.build().expect("build credit note");
 
     let xml = invoice.to_xml().expect("serialize credit note");
-    assert!(!xml.contains("<cbc:InstructionNote>"));
+    assert!(xml.contains("<cbc:InstructionNote>   </cbc:InstructionNote>"));
 }
 
 #[test]

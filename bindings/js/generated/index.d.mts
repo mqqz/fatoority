@@ -40,6 +40,8 @@ export { SigningKey } from "./SigningKey.mjs"
 
 export { Address } from "./Address.mjs"
 
+export { AllowanceCharge } from "./AllowanceCharge.mjs"
+
 export { FinalizedInvoice } from "./FinalizedInvoice.mjs"
 
 export { InvoiceBuilder } from "./InvoiceBuilder.mjs"
@@ -59,6 +61,10 @@ export { OtherId } from "./OtherId.mjs"
 export { Party } from "./Party.mjs"
 
 export { SignedInvoice } from "./SignedInvoice.mjs"
+
+export { TaxExemption } from "./TaxExemption.mjs"
+
+export { VatBreakdown } from "./VatBreakdown.mjs"
 
 export { VatId } from "./VatId.mjs"
 

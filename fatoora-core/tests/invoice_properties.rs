@@ -207,8 +207,7 @@ proptest! {
         let xml = invoice.to_xml().unwrap();
         let parsed = parse_finalized_invoice_xml(&xml).unwrap();
         let (a, b) = (invoice.data(), parsed.data());
-        // Explicit supported projection: buyer and arbitrary UBL extensions are
-        // not imported. Signed XML byte identity has a separate contract.
+        // Supported model projection. Signed XML byte identity has a separate contract.
         prop_assert_eq!(a.id(), b.id());
         prop_assert_eq!(a.uuid(), b.uuid());
         prop_assert_eq!(a.issue_datetime(), b.issue_datetime());
@@ -216,6 +215,7 @@ proptest! {
         prop_assert_eq!(a.invoice_type(), b.invoice_type());
         prop_assert_eq!(a.flags(), b.flags());
         prop_assert_eq!(a.seller(), b.seller());
+        prop_assert_eq!(a.buyer(), b.buyer());
         prop_assert_eq!(a.note(), b.note());
         prop_assert_eq!(a.allowance_reason(), b.allowance_reason());
         prop_assert_eq!(a.line_items(), b.line_items());

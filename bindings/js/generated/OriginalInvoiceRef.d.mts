@@ -12,6 +12,12 @@ export class OriginalInvoiceRef {
     constructor();
 
 
+    static new_(id: string, uuid: string | null, date: string | null, time: string | null, typeCode: string | null): OriginalInvoiceRef;
+
+    issueTime(): Text | null;
+
+    documentTypeCode(): Text | null;
+
     id(): string;
 
     uuid(): Text | null;

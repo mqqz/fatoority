@@ -288,7 +288,7 @@ fn adjustment_vat_groups_cannot_be_merged_or_reassigned() {
             &format!("{ROOT}/cac:AllowanceCharge[1]/cac:TaxCategory[1]/cbc:Percent"),
             "5",
         ),
-        "AdjustmentVatRate",
+        "AllowanceCharge",
     );
     let start = XML.find("<cac:AllowanceCharge>").unwrap();
     let end = XML[start..].find("</cac:AllowanceCharge>").unwrap()
@@ -297,7 +297,12 @@ fn adjustment_vat_groups_cannot_be_merged_or_reassigned() {
     let second = XML[start..end].replace(">15<", ">5<");
     assert_ne!(second, XML[start..end]);
     let xml = format!("{}{}{}", &XML[..end], second, &XML[end..]);
-    invalid(&xml, "AllowanceCharge");
+    let parsed = parse_finalized_invoice_xml(&xml).unwrap();
+    assert_eq!(parsed.data().adjustments().len(), 2);
+    assert_eq!(
+        parsed.data().adjustments()[1].rate,
+        fatoora_core::Decimal::from(5)
+    );
 }
 
 #[test]
@@ -441,4 +446,152 @@ fn invalid_country_vat_category_and_monetary_totals_keep_specific_diagnostics() 
     ] {
         invalid(&change(XML, &format!("{ROOT}/{path}"), "INVALID"), field);
     }
+}
+
+#[test]
+fn unsupported_structure_and_duplicate_document_identifiers_are_rejected() {
+    invalid(
+        &XML.replace("<cbc:UUID>", "<cbc:UUID><cbc:ID>nested</cbc:ID>"),
+        "Content",
+    );
+    for id in ["ICV", "PIH", "QR"] {
+        let duplicate = format!(
+            "<cac:AdditionalDocumentReference><cbc:ID>{id}</cbc:ID></cac:AdditionalDocumentReference></Invoice>"
+        );
+        invalid(
+            &XML.replace("</Invoice>", &duplicate),
+            "AdditionalDocumentReference",
+        );
+    }
+    for xml in [
+        XML.replacen(
+            "<cac:InvoiceLine>",
+            "<cac:InvoiceLine><cac:AllowanceCharge/>",
+            1,
+        ),
+        XML.replacen("<cac:Price>", "<cac:Price><cac:AllowanceCharge/>", 1),
+    ] {
+        invalid(&xml, "InvoiceLine");
+    }
+    for quantity in ["0", "2", "0.5"] {
+        invalid(
+            &XML.replacen(
+                "<cac:Price>",
+                &format!("<cac:Price><cbc:BaseQuantity>{quantity}</cbc:BaseQuantity>"),
+                1,
+            ),
+            "BaseQuantity",
+        );
+    }
+    let unit_basis = XML.replacen(
+        "<cac:Price>",
+        "<cac:Price><cbc:BaseQuantity>1</cbc:BaseQuantity>",
+        1,
+    );
+    assert_eq!(
+        parse_finalized_invoice_xml(&unit_basis).unwrap(),
+        parse_finalized_invoice_xml(XML).unwrap()
+    );
+    assert!(
+        parse_finalized_invoice_xml(&XML.replacen(
+            "<cac:Price>",
+            "<cac:Price><cbc:BaseQuantity>bad</cbc:BaseQuantity>",
+            1
+        ))
+        .is_err()
+    );
+    let doc = roxmltree::Document::parse(XML).unwrap();
+    let customer = test_xml::select(&doc, "/ubl:Invoice/cac:AccountingCustomerParty")[0];
+    let mut malformed = XML.to_owned();
+    malformed.replace_range(
+        customer.range(),
+        "<cac:AccountingCustomerParty>not a party</cac:AccountingCustomerParty>",
+    );
+    assert!(
+        parse_finalized_invoice_xml(&malformed)
+            .unwrap_err()
+            .to_string()
+            .contains("BuyerParty")
+    );
+}
+
+#[test]
+fn supplied_invalid_party_identifiers_do_not_become_absent() {
+    let seller =
+        "/ubl:Invoice/cac:AccountingSupplierParty/cac:Party/cac:PartyIdentification/cbc:ID";
+    assert!(
+        parse_finalized_invoice_xml(&change(XML, seller, ""))
+            .unwrap_err()
+            .to_string()
+            .contains("SellerID")
+    );
+    let customer = "<cac:AccountingCustomerParty><cac:Party><cac:PartyIdentification><cbc:ID>buyer-id</cbc:ID></cac:PartyIdentification><cac:PostalAddress><cac:Country><cbc:IdentificationCode>SA</cbc:IdentificationCode></cac:Country></cac:PostalAddress><cac:PartyTaxScheme><cbc:CompanyID> </cbc:CompanyID><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:PartyTaxScheme><cac:PartyLegalEntity><cbc:RegistrationName>Buyer</cbc:RegistrationName></cac:PartyLegalEntity></cac:Party></cac:AccountingCustomerParty>";
+    let doc = roxmltree::Document::parse(XML).unwrap();
+    let old = test_xml::select(&doc, "/ubl:Invoice/cac:AccountingCustomerParty")[0];
+    let mut modified = XML.to_owned();
+    modified.replace_range(old.range(), customer);
+    assert!(parse_finalized_invoice_xml(&modified).is_err());
+    let invalid_customer = customer
+        .replace(
+            "<cbc:CompanyID> </cbc:CompanyID>",
+            "<cbc:CompanyID>310122393500003</cbc:CompanyID>",
+        )
+        .replace(
+            "<cbc:IdentificationCode>SA</cbc:IdentificationCode>",
+            "<cbc:IdentificationCode>INVALID</cbc:IdentificationCode>",
+        );
+    let mut invalid_address = XML.to_owned();
+    invalid_address.replace_range(old.range(), &invalid_customer);
+    assert!(parse_finalized_invoice_xml(&invalid_address).is_err());
+    let invalid_currency = change(XML, "/ubl:Invoice/cbc:DocumentCurrencyCode", "INVALID");
+    assert!(parse_finalized_invoice_xml(&invalid_currency).is_err());
+}
+
+#[test]
+fn recognized_aggregate_nesting_is_bounded_before_model_recursion() {
+    use fatoora_core::invoice::xml::parse::{
+        ParseError, parse_finalized_invoice_xml_file, parse_signed_invoice_xml_file,
+    };
+    // The Invoice root is level 1. These are recognized CAC nodes, so the model
+    // visitor traverses the entire accepted chain rather than skipping it.
+    let nested = |depth: usize| {
+        XML.replace(
+            "</Invoice>",
+            &format!(
+                "{}{} </Invoice>",
+                "<cac:Party>".repeat(depth - 1),
+                "</cac:Party>".repeat(depth - 1)
+            ),
+        )
+    };
+    let accepted = nested(128);
+    assert_eq!(
+        parse_finalized_invoice_xml(&accepted).unwrap(),
+        parse_finalized_invoice_xml(XML).unwrap()
+    );
+    assert_eq!(parse_signed_invoice_xml(&accepted).unwrap().xml(), accepted);
+    let file = tempfile::NamedTempFile::new().unwrap();
+    std::fs::write(file.path(), &accepted).unwrap();
+    assert_eq!(
+        parse_finalized_invoice_xml_file(file.path()).unwrap(),
+        parse_finalized_invoice_xml(XML).unwrap()
+    );
+    assert_eq!(
+        parse_signed_invoice_xml_file(file.path()).unwrap().xml(),
+        accepted
+    );
+    for depth in [129, 50_000] {
+        let rejected = nested(depth);
+        std::fs::write(file.path(), &rejected).unwrap();
+        for error in [
+            parse_finalized_invoice_xml(&rejected).unwrap_err(),
+            parse_signed_invoice_xml(&rejected).unwrap_err(),
+            parse_finalized_invoice_xml_file(file.path()).unwrap_err(),
+            parse_signed_invoice_xml_file(file.path()).unwrap_err(),
+        ] {
+            assert!(matches!(error, ParseError::XmlParse(_)), "{error}");
+            assert!(error.to_string().contains("XML depth"), "{error}");
+        }
+    }
+    assert!(parse_finalized_invoice_xml(XML).is_ok());
 }

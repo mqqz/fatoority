@@ -353,3 +353,482 @@ fn prepayment_handoff_preserves_transaction_identity_and_amounts() {
         assert_eq!(written(|out| ok(address.country_code(out))), "SAU");
     }
 }
+
+fn optional_string(
+    value: Result<Option<Box<fatoora_ffi::common::ffi::Text>>, Box<BindingError>>,
+) -> Option<String> {
+    ok(value).map(|text| written(|out| ok(text.value(out))))
+}
+
+#[test]
+fn roundtrip_metadata_crosses_binding_boundary_and_snapshots_own_their_data() {
+    use fatoora_ffi::invoice::ffi::{
+        AllowanceCharge, InvoiceLineItem, OriginalInvoiceRef, TaxExemption, VatBreakdown,
+    };
+    let exemption = ok(TaxExemption::new(
+        Some(b"VATEX-SA-32"),
+        Some("تصدير & exempt".as_bytes()),
+    ));
+    let reference = ok(OriginalInvoiceRef::new(
+        b"PRE-1",
+        Some(b"original-uuid"),
+        Some(b"2023-12-01"),
+        Some(b"10:20:30"),
+        Some(b"386"),
+    ));
+    let subtotal = ok(VatBreakdown::new(2, b"0", b"10", b"0", &exemption));
+    let item = ok(InvoiceLineItem::new(
+        b"Export", b"1", b"PCE", b"100", b"0", 2,
+    ));
+    let item = ok(item.with_metadata(Some(b"line-export"), &exemption));
+    let item = ok(item.with_document_reference(&reference));
+    let item = ok(item.with_tax_subtotal(&subtotal));
+    let adjustment = ok(AllowanceCharge::new(
+        false,
+        b"5",
+        Some(b"Discount & rebate"),
+        Some(b"95"),
+        2,
+        b"0",
+        &exemption,
+    ));
+    assert!(!adjustment.is_charge());
+    let mut b = builder();
+    ok(b.set_currency(b"USD"));
+    ok(b.set_tax_currency(b"SAR", b"0"));
+    ok(b.set_delivery(Some(b"2024-01-01"), Some(b"2024-01-02")));
+    ok(b.set_payment_instruction(b"Transfer & receipt"));
+    ok(b.set_prepaid_amount(b"10"));
+    ok(b.set_payable_rounding_amount(b"0.01"));
+    ok(b.set_note(b"ar", "فاتورة".as_bytes()));
+    ok(b.set_tax_exemption(2, b"0", &exemption));
+    ok(b.add_item(&item));
+    ok(b.add_adjustment(&adjustment));
+    let invoice = ok(b.build());
+    let xml = written(|out| ok(invoice.xml(out)));
+    let parsed = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
+    let data = ok(parsed.data());
+    let totals = ok(parsed.totals());
+    drop((
+        b, invoice, parsed, item, reference, subtotal, adjustment, exemption,
+    ));
+    assert_eq!(
+        optional_string(data.payment_instruction()).as_deref(),
+        Some("Transfer & receipt")
+    );
+    assert_eq!(
+        optional_string(data.actual_delivery_date()).as_deref(),
+        Some("2024-01-01")
+    );
+    assert_eq!(
+        optional_string(data.latest_delivery_date()).as_deref(),
+        Some("2024-01-02")
+    );
+    assert_eq!(optional_string(data.tax_currency()).as_deref(), Some("SAR"));
+    assert_eq!(
+        optional_string(data.tax_currency_amount()).as_deref(),
+        Some("0")
+    );
+    assert_eq!(
+        optional_string(ok(data.note()).unwrap().language_id()).as_deref(),
+        Some("ar")
+    );
+    assert_eq!(written(|out| ok(totals.prepaid_amount(out))), "10");
+    assert_eq!(
+        written(|out| ok(totals.payable_rounding_amount(out))),
+        "0.01"
+    );
+    assert_eq!(written(|out| ok(totals.payable_amount(out))), "85.01");
+    assert_eq!(data.adjustments_len(), 1);
+    let adjustment = ok(data.adjustment(0));
+    assert!(data.adjustment(1).is_err());
+    assert!(!adjustment.is_charge());
+    assert_eq!(adjustment.category(), 2);
+    assert_eq!(adjustment.tax_category_count(), 1);
+    assert_eq!(written(|out| ok(adjustment.amount(out))), "5");
+    assert_eq!(written(|out| ok(adjustment.rate(out))), "0");
+    assert_eq!(
+        optional_string(adjustment.reason()).as_deref(),
+        Some("Discount & rebate")
+    );
+    assert_eq!(
+        optional_string(adjustment.reason_code()).as_deref(),
+        Some("95")
+    );
+    let line = ok(data.line_item(0));
+    assert_eq!(optional_string(line.id()).as_deref(), Some("line-export"));
+    assert_eq!(line.document_references_len(), 1);
+    assert_eq!(line.tax_subtotals_len(), 1);
+    assert!(line.document_reference(1).is_err());
+    assert!(line.tax_subtotal(1).is_err());
+    let reference = ok(line.document_reference(0));
+    assert_eq!(written(|out| ok(reference.id(out))), "PRE-1");
+    assert_eq!(
+        optional_string(reference.uuid()).as_deref(),
+        Some("original-uuid")
+    );
+    assert_eq!(
+        optional_string(reference.issue_date()).as_deref(),
+        Some("2023-12-01")
+    );
+    assert_eq!(
+        optional_string(reference.issue_time()).as_deref(),
+        Some("10:20:30")
+    );
+    assert_eq!(
+        optional_string(reference.document_type_code()).as_deref(),
+        Some("386")
+    );
+    assert_eq!(totals.vat_breakdown_len(), 1);
+    assert!(totals.vat_breakdown(1).is_err());
+    let group = ok(totals.vat_breakdown(0));
+    assert_eq!(group.category(), 2);
+    assert_eq!(written(|out| ok(group.rate(out))), "0");
+    assert_eq!(written(|out| ok(group.taxable_amount(out))), "95");
+    assert_eq!(written(|out| ok(group.tax_amount(out))), "0");
+    let subtotal = ok(line.tax_subtotal(0));
+    assert_eq!(written(|out| ok(subtotal.taxable_amount(out))), "10");
+    for exemption in [
+        ok(line.exemption()),
+        ok(adjustment.exemption()),
+        ok(group.exemption()),
+        ok(subtotal.exemption()),
+    ] {
+        assert_eq!(
+            optional_string(exemption.reason_code()).as_deref(),
+            Some("VATEX-SA-32")
+        );
+        assert_eq!(
+            optional_string(exemption.reason()).as_deref(),
+            Some("تصدير & exempt")
+        );
+    }
+}
+
+#[test]
+fn optional_metadata_and_invalid_inputs_are_distinct_in_bindings() {
+    use fatoora_ffi::invoice::ffi::{
+        AllowanceCharge, InvoiceLineItem, OriginalInvoiceRef, TaxExemption, VatBreakdown,
+    };
+    let empty = ok(TaxExemption::new(None, None));
+    assert_eq!(optional_string(empty.reason()), None);
+    assert_eq!(optional_string(empty.reason_code()), None);
+    let reference = ok(OriginalInvoiceRef::new(b"PRE", None, None, None, None));
+    assert_eq!(optional_string(reference.issue_time()), None);
+    assert_eq!(optional_string(reference.document_type_code()), None);
+    assert!(OriginalInvoiceRef::new(b"PRE", None, Some(b"invalid"), None, None).is_err());
+    assert!(OriginalInvoiceRef::new(b"PRE", None, None, Some(b"25:00:00"), None).is_err());
+    assert!(TaxExemption::new(Some(&[0xff]), None).is_err());
+    assert!(AllowanceCharge::new(true, b"invalid", None, None, 1, b"15", &empty).is_err());
+    assert!(VatBreakdown::new(1, b"15", b"-1", b"0", &empty).is_err());
+    assert!(InvoiceLineItem::new(b"x", b"invalid", b"PCE", b"1", b"15", 1).is_err());
+    let item = ok(InvoiceLineItem::new(b"x", b"1", b"PCE", b"1", b"15", 1));
+    let item = ok(item.with_metadata(None, &empty));
+    assert_eq!(optional_string(item.id()), None);
+    let mut b = builder();
+    ok(b.set_delivery(None, None));
+    assert!(b.set_delivery(Some(b"2024-02-30"), None).is_err());
+    assert!(b.set_delivery(None, Some(b"2024-13-01")).is_err());
+    assert!(b.set_tax_currency(b"INVALID", b"0").is_err());
+    assert!(b.set_tax_currency(b"SAR", b"invalid").is_err());
+    assert!(b.set_tax_exemption(255, b"0", &empty).is_err());
+    assert!(b.set_prepaid_amount(b"bad").is_err());
+    assert!(b.set_payable_rounding_amount(b"bad").is_err());
+    assert!(b.set_payment_instruction(&[0xff]).is_err());
+    ok(b.add_item(&item));
+    let invoice = ok(b.build());
+    let data = ok(invoice.data());
+    assert_eq!(optional_string(data.actual_delivery_date()), None);
+    assert_eq!(optional_string(data.latest_delivery_date()), None);
+    assert_eq!(optional_string(data.payment_instruction()), None);
+    assert_eq!(optional_string(data.tax_currency()).as_deref(), Some("SAR"));
+    assert_eq!(
+        optional_string(data.tax_currency_amount()).as_deref(),
+        Some("0.15")
+    );
+    assert!(b.add_item(&item).is_err());
+    let xml = written(|out| ok(invoice.xml(out))).replace(
+        "<cbc:DocumentCurrencyCode>",
+        "<cbc:Note>no language</cbc:Note><cbc:DocumentCurrencyCode>",
+    );
+    let parsed = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
+    assert_eq!(
+        optional_string(ok(ok(parsed.data()).note()).unwrap().language_id()),
+        None
+    );
+}
+
+#[test]
+fn supplied_blank_line_ids_return_indexed_binding_validation_errors() {
+    use fatoora_ffi::invoice::ffi::{InvoiceLineItem, TaxExemption};
+    let exemption = ok(TaxExemption::new(None, None));
+    for id in ["", " ", "\t\r\n", "\u{2003}"] {
+        let item = ok(InvoiceLineItem::new(
+            b"Item", b"1", b"PCE", b"100", b"15", 1,
+        ));
+        let item = ok(item.with_metadata(Some(id.as_bytes()), &exemption));
+        let mut b = builder();
+        ok(b.add_line_item(b"First", b"1", b"PCE", b"10", b"15", 1));
+        ok(b.add_item(&item));
+        let error = b.build().err().expect("blank line ID must fail");
+        let details: serde_json::Value =
+            serde_json::from_str(&written(|out| error.details_json(out))).unwrap();
+        assert_eq!(details["type"], "invoice_validation");
+        assert_eq!(details["issues"][0]["field"], "line_item_id");
+        assert_eq!(details["issues"][0]["kind"], "empty");
+        assert_eq!(details["issues"][0]["line_item_index"], 1);
+    }
+}
+
+#[test]
+fn mixed_category_adjustment_preserves_invoice_and_adjustment_categories() {
+    use fatoora_ffi::invoice::ffi::{AllowanceCharge, TaxExemption};
+    let exemption = ok(TaxExemption::new(
+        Some(b"VATEX-SA-29"),
+        Some(b"Exempt charge"),
+    ));
+    let charge = ok(AllowanceCharge::new(
+        true,
+        b"5",
+        Some(b"Fee"),
+        None,
+        0,
+        b"0",
+        &exemption,
+    ));
+    let mut b = builder();
+    ok(b.add_line_item(b"Standard item", b"1", b"PCE", b"100", b"15", 1));
+    ok(b.add_adjustment(&charge));
+    let invoice = ok(b.build());
+    let xml = written(|out| ok(invoice.xml(out)));
+    let imported = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
+    let data = ok(imported.data());
+    assert_eq!(data.vat_category(), 1);
+    assert_eq!(ok(data.adjustment(0)).category(), 0);
+    assert_eq!(
+        written(|out| ok(ok(imported.totals()).payable_amount(out))),
+        "120"
+    );
+    assert_eq!(written(|out| ok(imported.xml(out))), xml);
+}
+
+#[test]
+fn line_reference_ids_and_times_are_validated_through_bindings() {
+    use fatoora_ffi::invoice::ffi::{InvoiceLineItem, OriginalInvoiceRef};
+    for id in ["", " \t\r\n ", "PRE-1"] {
+        let reference = ok(OriginalInvoiceRef::new(
+            id.as_bytes(),
+            None,
+            None,
+            Some(b" \t10:20:30\r\n "),
+            None,
+        ));
+        assert_eq!(
+            optional_string(reference.issue_time()).as_deref(),
+            Some("10:20:30")
+        );
+        let line = ok(InvoiceLineItem::new(
+            b"Item", b"1", b"PCE", b"100", b"15", 1,
+        ));
+        let line = ok(line.with_document_reference(&reference));
+        let mut b = builder();
+        ok(b.add_item(&line));
+        if id.trim().is_empty() {
+            let error = b.build().err().expect("blank reference ID");
+            let details: serde_json::Value =
+                serde_json::from_str(&written(|out| error.details_json(out))).unwrap();
+            assert_eq!(
+                details["issues"][0]["field"],
+                "line_item_document_reference_id"
+            );
+            assert_eq!(details["issues"][0]["kind"], "empty");
+            assert_eq!(details["issues"][0]["line_item_index"], 0);
+        } else {
+            let invoice = ok(b.build());
+            let xml = written(|out| ok(invoice.xml(out)));
+            let restored = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
+            let reference = ok(ok(ok(restored.data()).line_item(0)).document_reference(0));
+            assert_eq!(written(|out| ok(reference.id(out))), "PRE-1");
+            assert_eq!(
+                optional_string(reference.issue_time()).as_deref(),
+                Some("10:20:30")
+            );
+        }
+    }
+}
+
+#[test]
+fn full_billing_references_and_language_less_notes_are_constructible() {
+    use fatoora_ffi::invoice::ffi::OriginalInvoiceRef;
+    let reference = ok(OriginalInvoiceRef::new(
+        b"ORIGINAL",
+        Some(b"uuid"),
+        Some(b"2023-11-13"),
+        Some(b"10:20:30"),
+        Some(b"388"),
+    ));
+    for (kind, subtype) in [(0, 1), (1, 1), (255, 1), (2, 255)] {
+        assert!(InvoiceBuilder::new_with_reference(kind, subtype, &reference, b"reason").is_err());
+    }
+    assert!(InvoiceBuilder::new_with_reference(2, 1, &reference, &[0xff]).is_err());
+    for kind in [2, 3] {
+        let blank = ok(OriginalInvoiceRef::new(b" ", None, None, None, None));
+        for b in [
+            ok(InvoiceBuilder::new_with_reference(
+                kind, 1, &blank, b"reason",
+            )),
+            ok(InvoiceBuilder::new(
+                kind,
+                1,
+                Some(b" "),
+                None,
+                None,
+                Some(b"reason"),
+            )),
+        ] {
+            let mut b = configured(b);
+            ok(b.add_line_item(b"Item", b"1", b"PCE", b"100", b"15", 1));
+            let error = b.build().err().unwrap();
+            assert!(written(|out| error.details_json(out)).contains("original_invoice_id"));
+        }
+    }
+    for kind in [2, 3] {
+        for subtype in [0, 1] {
+            let mut b = configured(ok(InvoiceBuilder::new_with_reference(
+                kind,
+                subtype,
+                &reference,
+                "تصحيح &".as_bytes(),
+            )));
+            assert!(b.set_note_without_language(&[0xff]).is_err());
+            ok(b.set_note(b"en", b"old"));
+            ok(b.set_note_without_language("ملاحظة &".as_bytes()));
+            ok(b.add_line_item(b"Item", b"1", b"PCE", b"100", b"15", 1));
+            let invoice = ok(b.build());
+            assert!(b.set_note_without_language(b"consumed").is_err());
+            let xml = written(|out| ok(invoice.xml(out)));
+            let parsed = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
+            let data = ok(parsed.data());
+            assert_eq!(data.invoice_type_kind(), kind);
+            assert_eq!(data.invoice_sub_type(), subtype);
+            let restored = ok(data.original_invoice_ref()).unwrap();
+            let note = ok(data.note()).unwrap();
+            drop(parsed);
+            drop(data);
+            assert_eq!(
+                optional_string(restored.issue_time()).as_deref(),
+                Some("10:20:30")
+            );
+            assert_eq!(
+                optional_string(restored.document_type_code()).as_deref(),
+                Some("388")
+            );
+            assert_eq!(optional_string(note.language_id()), None);
+            assert_eq!(written(|out| ok(note.text(out))), "ملاحظة &");
+        }
+        let mut b = configured(ok(InvoiceBuilder::new_with_reference(
+            kind, 1, &reference, b"reason",
+        )));
+        ok(b.add_line_item(b"Item", b"1", b"PCE", b"100", b"15", 1));
+        ok(b.set_payment_instruction(b"different"));
+        let error = b.build().err().unwrap();
+        assert!(written(|out| error.details_json(out)).contains("payment_instruction"));
+    }
+}
+
+#[test]
+fn repeated_adjustment_counts_preserve_owned_metadata_and_totals() {
+    use fatoora_ffi::invoice::ffi::{AllowanceCharge, TaxExemption};
+    for charge in [false, true] {
+        let exemption = ok(TaxExemption::new(
+            Some(b"VATEX-SA-29"),
+            Some("إعفاء &".as_bytes()),
+        ));
+        let original = ok(AllowanceCharge::new(
+            charge,
+            b"1",
+            Some("رسوم &".as_bytes()),
+            Some(b"95"),
+            0,
+            b"0",
+            &exemption,
+        ));
+        for count in [0, 1025, usize::MAX] {
+            assert!(original.with_tax_category_count(count).is_err());
+        }
+        assert_eq!(
+            ok(original.with_tax_category_count(1024)).tax_category_count(),
+            1024
+        );
+        let repeated = ok(original.with_tax_category_count(3));
+        assert_eq!(original.tax_category_count(), 1);
+        assert_eq!(repeated.tax_category_count(), 3);
+        let single = ok(repeated.with_tax_category_count(1));
+        assert_eq!(repeated.tax_category_count(), 3);
+        assert_eq!(single.tax_category_count(), 1);
+        drop((original, exemption));
+        let mut b = builder();
+        ok(b.set_vat_category(0));
+        ok(b.add_line_item(b"Item", b"1", b"PCE", b"100", b"0", 0));
+        ok(b.add_adjustment(&repeated));
+        drop(repeated);
+        let invoice = ok(b.build());
+        let xml = written(|out| ok(invoice.xml(out)));
+        let parsed = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
+        assert_eq!(written(|out| ok(parsed.xml(out))), xml);
+        let data = ok(parsed.data());
+        let adjustment = ok(data.adjustment(0));
+        drop((parsed, data));
+        assert_eq!(adjustment.tax_category_count(), 3);
+        assert_eq!(adjustment.is_charge(), charge);
+        assert_eq!(
+            optional_string(adjustment.reason()).as_deref(),
+            Some("رسوم &")
+        );
+        assert_eq!(
+            optional_string(adjustment.reason_code()).as_deref(),
+            Some("95")
+        );
+        let tax = ok(adjustment.exemption());
+        assert_eq!(optional_string(tax.reason()).as_deref(), Some("إعفاء &"));
+        assert_eq!(
+            optional_string(tax.reason_code()).as_deref(),
+            Some("VATEX-SA-29")
+        );
+        assert_eq!(
+            written(|out| ok(ok(invoice.totals()).payable_amount(out))),
+            if charge { "101" } else { "99" }
+        );
+    }
+}
+
+#[test]
+fn imported_notes_do_not_invent_payment_instructions() {
+    for kind in [2, 3] {
+        let mut b = configured(ok(InvoiceBuilder::new(
+            kind,
+            1,
+            Some(b"ORIGINAL"),
+            None,
+            None,
+            Some(b"reason"),
+        )));
+        ok(b.set_note_without_language(b"fallback"));
+        ok(b.add_line_item(b"Item", b"1", b"PCE", b"100", b"15", 1));
+        let invoice = ok(b.build());
+        let source = written(|out| ok(invoice.xml(out)));
+        let xml = source.replace("<cbc:InstructionNote>reason</cbc:InstructionNote>", "");
+        assert_ne!(xml, source);
+        let imported = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
+        assert!(ok(ok(imported.data()).payment_instruction()).is_none());
+        assert_eq!(
+            optional_string(ok(imported.data()).original_invoice_reason()).as_deref(),
+            Some("fallback")
+        );
+        let regenerated = written(|out| ok(imported.xml(out)));
+        assert!(!regenerated.contains("InstructionNote"));
+        let second = ok(FinalizedInvoice::from_xml(regenerated.as_bytes()));
+        assert!(ok(ok(second.data()).payment_instruction()).is_none());
+        assert_eq!(written(|out| ok(second.xml(out))), regenerated);
+    }
+}
