@@ -1278,14 +1278,17 @@ impl<'a, T: InvoiceView + ?Sized> Serialize for InvoiceXml<'a, T> {
             )?;
         }
         // ---- payment ----
-        let instruction_note =
-            data.payment_instruction
-                .as_deref()
-                .or(match &data.invoice_type {
-                    InvoiceType::CreditNote(_, _, reason)
-                    | InvoiceType::DebitNote(_, _, reason) => Some(reason.as_str()),
-                    _ => None,
-                });
+        let instruction_note = data
+            .payment_instruction
+            .as_deref()
+            .or(match &data.invoice_type {
+                InvoiceType::CreditNote(_, _, reason) | InvoiceType::DebitNote(_, _, reason)
+                    if !data.payment_instruction_absent =>
+                {
+                    Some(reason.as_str())
+                }
+                _ => None,
+            });
         root.serialize_field(
             "cac:PaymentMeans",
             &payment_means(&data.payment_means_code, instruction_note),

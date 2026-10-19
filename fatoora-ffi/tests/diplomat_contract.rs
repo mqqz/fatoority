@@ -795,3 +795,34 @@ fn repeated_adjustment_counts_preserve_owned_metadata_and_totals() {
         );
     }
 }
+
+#[test]
+fn imported_notes_do_not_invent_payment_instructions() {
+    for kind in [2, 3] {
+        let mut b = configured(ok(InvoiceBuilder::new(
+            kind,
+            1,
+            Some(b"ORIGINAL"),
+            None,
+            None,
+            Some(b"reason"),
+        )));
+        ok(b.set_note_without_language(b"fallback"));
+        ok(b.add_line_item(b"Item", b"1", b"PCE", b"100", b"15", 1));
+        let invoice = ok(b.build());
+        let source = written(|out| ok(invoice.xml(out)));
+        let xml = source.replace("<cbc:InstructionNote>reason</cbc:InstructionNote>", "");
+        assert_ne!(xml, source);
+        let imported = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
+        assert!(ok(ok(imported.data()).payment_instruction()).is_none());
+        assert_eq!(
+            optional_string(ok(imported.data()).original_invoice_reason()).as_deref(),
+            Some("fallback")
+        );
+        let regenerated = written(|out| ok(imported.xml(out)));
+        assert!(!regenerated.contains("InstructionNote"));
+        let second = ok(FinalizedInvoice::from_xml(regenerated.as_bytes()));
+        assert!(ok(ok(second.data()).payment_instruction()).is_none());
+        assert_eq!(written(|out| ok(second.xml(out))), regenerated);
+    }
+}

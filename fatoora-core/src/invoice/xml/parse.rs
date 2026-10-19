@@ -362,6 +362,12 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
             builder = builder.tax_currency(tax_currency, amount);
         }
     }
+    builder.payment_instruction_absent = matches!(invoice_type_code.as_str(), "381" | "383")
+        && ctx
+            .aggregate("PaymentMeans")
+            .basic("InstructionNote")
+            .0
+            .is_none();
     let mut invoice = builder.build().map_err(ParseError::from)?;
     // Validate the amounts we model before returning a finalized imported invoice.
     for (field, expected) in [

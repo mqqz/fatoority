@@ -1162,6 +1162,10 @@ pub struct InvoiceData {
     payment_means_code: String,
     #[serde(default)]
     payment_instruction: Option<String>,
+    // Imported notes must retain absence instead of emitting their legacy reason fallback.
+    // Older serialized models and builders retain the historical reason-as-instruction behavior.
+    #[serde(default)]
+    payment_instruction_absent: bool,
     vat_category: VatCategory,
 
     flags: InvoiceFlags,

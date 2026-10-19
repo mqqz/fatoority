@@ -291,6 +291,7 @@ fn previous_serde_models_default_new_optional_fields() {
         "delivery",
         "adjustments",
         "payment_instruction",
+        "payment_instruction_absent",
         "tax_currency",
         "tax_currency_amount",
     ] {
@@ -1133,5 +1134,63 @@ fn numeric_xml_content_accepts_surrounding_whitespace_without_skipping_validatio
             &format!(" \t{value}\n "),
         );
         assert!(parse(&bad).is_err(), "{field}");
+    }
+}
+
+#[test]
+fn imported_note_instruction_presence_survives_xml_and_serde() {
+    let legacy = common::credit_note_standard_invoice();
+    let mut data = serde_json::to_value(legacy.data()).unwrap();
+    data.as_object_mut()
+        .unwrap()
+        .remove("payment_instruction_absent");
+    let decoded: InvoiceData = serde_json::from_value(data).unwrap();
+    assert_eq!(&decoded, legacy.data());
+    let source = common::credit_note_standard_invoice().to_xml().unwrap();
+    let doc = roxmltree::Document::parse(&source).unwrap();
+    let instruction = doc
+        .descendants()
+        .find(|n| n.is_element() && n.tag_name().name() == "InstructionNote")
+        .unwrap();
+    for code in ["381", "383"] {
+        for instruction_text in [None, Some(""), Some(" \t "), Some("reason &amp; تصحيح")] {
+            let mut xml = source.clone();
+            xml.replace_range(
+                instruction.range(),
+                &instruction_text
+                    .map(|s| format!("<cbc:InstructionNote>{s}</cbc:InstructionNote>"))
+                    .unwrap_or_default(),
+            );
+            xml = xml.replace(
+                ">381</cbc:InvoiceTypeCode>",
+                &format!(">{code}</cbc:InvoiceTypeCode>"),
+            );
+            for note in ["", "<cbc:Note>fallback &amp; تصحيح</cbc:Note>"] {
+                let mut xml = xml.clone();
+                // Replace any existing invoice note, then insert in UBL order.
+                let parsed = roxmltree::Document::parse(&xml).unwrap();
+                if let Some(existing) = parsed
+                    .root_element()
+                    .children()
+                    .find(|n| n.is_element() && n.tag_name().name() == "Note")
+                {
+                    let range = existing.range();
+                    xml.replace_range(range, "");
+                }
+                xml = xml.replace(
+                    "</cbc:InvoiceTypeCode>",
+                    &format!("</cbc:InvoiceTypeCode>{note}"),
+                );
+                let first = parse(&xml).unwrap();
+                assert_eq!(
+                    first.data().payment_instruction().is_some(),
+                    instruction_text.is_some()
+                );
+                assert_eq!(roundtrip(&xml), first);
+                let serialized = serde_json::to_string(first.data()).unwrap();
+                let restored: InvoiceData = serde_json::from_str(&serialized).unwrap();
+                assert_eq!(&restored, first.data());
+            }
+        }
     }
 }

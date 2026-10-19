@@ -96,6 +96,7 @@ pub struct InvoiceBuilder {
     line_items: LineItems,
     payment_means_code: Option<String>,
     payment_instruction: Option<String>,
+    pub(super) payment_instruction_absent: bool,
     prepaid_amount: Decimal,
     payable_rounding_amount: Decimal,
     vat_category: Option<VatCategory>,
@@ -167,6 +168,7 @@ impl InvoiceBuilder {
             line_items: Vec::new(),
             payment_means_code: None,
             payment_instruction: None,
+            payment_instruction_absent: false,
             prepaid_amount: Decimal::ZERO,
             payable_rounding_amount: Decimal::ZERO,
             vat_category: None,
@@ -557,6 +559,7 @@ impl InvoiceBuilder {
                 .payment_means_code
                 .expect("validated payment means code"),
             payment_instruction: self.payment_instruction,
+            payment_instruction_absent: self.payment_instruction_absent,
             vat_category: self.vat_category.expect("validated vat category"),
             flags: self.flags,
             invoice_level_charge: self.invoice_level_charge,
