@@ -122,13 +122,17 @@ fn builder() -> Box<InvoiceBuilder> {
 }
 
 fn configured(mut b: Box<InvoiceBuilder>) -> Box<InvoiceBuilder> {
+    ok(b.set_payment_means_code(b"10"));
+    configured_without_payment_code(b)
+}
+
+fn configured_without_payment_code(mut b: Box<InvoiceBuilder>) -> Box<InvoiceBuilder> {
     ok(b.set_id(b"INV-1"));
     ok(b.set_uuid(b"8e6000cf-1a98-4174-b3e7-b5d5954bc10d"));
     ok(b.set_issue_datetime(b"2024-01-01T12:30:00Z"));
     ok(b.set_previous_invoice_hash(b"hash"));
     ok(b.set_invoice_counter(1));
     ok(b.set_currency(b"SAR"));
-    ok(b.set_payment_means_code(b"10"));
     ok(b.set_vat_category(1));
     let address = ok(Address::new(
         b"SAU",
@@ -738,6 +742,34 @@ fn full_billing_references_and_language_less_notes_are_constructible() {
             optional_string(ok(invoice.data()).payment_instruction()).as_deref(),
             Some("different")
         );
+    }
+}
+
+#[test]
+fn referenced_notes_accept_payment_means_without_legacy_code_setter() {
+    use fatoora_ffi::invoice::ffi::{OriginalInvoiceRef, PaymentMeans};
+    let reference = ok(OriginalInvoiceRef::new(b"ORIGINAL", None, None, None, None));
+    for kind in [2, 3] {
+        let mut b = configured_without_payment_code(ok(InvoiceBuilder::new_with_reference(
+            kind,
+            1,
+            &reference,
+            b"correction reason",
+        )));
+        ok(b.add_line_item(b"Item", b"1", b"PCE", b"100", b"15", 1));
+        let payment = ok(PaymentMeans::new(b"30", Some(b"transfer")));
+        ok(b.add_payment_means(&payment));
+        let invoice = ok(b.build());
+        let xml = written(|out| ok(invoice.xml(out)));
+        let restored = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
+        let data = ok(restored.data());
+        assert_eq!(data.payment_means_len(), 1);
+        assert_eq!(
+            optional_string(data.payment_instruction()).as_deref(),
+            Some("correction reason")
+        );
+        assert!(xml.contains("transfer"));
+        assert_eq!(written(|out| ok(data.payment_means_code(out))), "30");
     }
 }
 

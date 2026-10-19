@@ -99,6 +99,7 @@ pub struct InvoiceBuilder {
     delivery: Option<super::Delivery>,
     line_items: LineItems,
     payment_means: Vec<super::PaymentMeans>,
+    payment_instruction_placeholder: bool,
     prepaid_amount: Decimal,
     payable_rounding_amount: Decimal,
     vat_category: Option<VatCategory>,
@@ -148,13 +149,24 @@ impl InvoiceBuilder {
         ));
         self
     }
-    pub fn payment_means(mut self, value: super::PaymentMeans) -> Self {
-        self.payment_means.push(value);
+    /// Append payment means, or fill the placeholder created by `payment_instruction`.
+    /// The existing instruction precedes any notes supplied on the payment means.
+    pub fn payment_means(mut self, mut value: super::PaymentMeans) -> Self {
+        if self.payment_instruction_placeholder {
+            let mut notes = std::mem::take(&mut self.payment_means[0].instruction_notes);
+            notes.append(&mut value.instruction_notes);
+            value.instruction_notes = notes;
+            self.payment_means[0] = value;
+            self.payment_instruction_placeholder = false;
+        } else {
+            self.payment_means.push(value);
+        }
         self
     }
     pub fn payment_instruction(mut self, instruction: impl Into<String>) -> Self {
         if self.payment_means.is_empty() {
             self.payment_means.push(super::PaymentMeans::new(""));
+            self.payment_instruction_placeholder = true;
         }
         self.payment_means[0].instruction_notes = vec![instruction.into()];
         self
@@ -215,6 +227,7 @@ impl InvoiceBuilder {
             delivery: None,
             line_items: Vec::new(),
             payment_means: Vec::new(),
+            payment_instruction_placeholder: false,
             prepaid_amount: Decimal::ZERO,
             payable_rounding_amount: Decimal::ZERO,
             vat_category: None,
@@ -304,6 +317,7 @@ impl InvoiceBuilder {
     }
 
     pub fn payment_means_code(mut self, code: impl Into<String>) -> Self {
+        self.payment_instruction_placeholder = false;
         if self.payment_means.is_empty() {
             self.payment_means.push(super::PaymentMeans::new(code));
         } else {

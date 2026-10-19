@@ -677,6 +677,46 @@ fn vat_midpoint_tolerance_uses_the_pinned_rule_policy() {
 }
 
 #[test]
+fn payment_instruction_placeholder_retains_notes_and_payment_metadata() {
+    let payment = PaymentMeans::new("30")
+        .instruction_note("transfer")
+        .payee_financial_account(PaymentAccount {
+            payment_account_identifier: Some("bank".into()),
+            payment_terms: Some("net 30".into()),
+        });
+    let invoice = builder()
+        .line_item(line().build().unwrap())
+        .payment_instruction("reason")
+        .payment_means(payment.clone())
+        .payment_means(PaymentMeans::new("10"))
+        .build()
+        .unwrap();
+    let mut expected = payment;
+    expected.instruction_notes.insert(0, "reason".into());
+    assert_eq!(
+        invoice.data().payment_means(),
+        &[expected, PaymentMeans::new("10")]
+    );
+    let xml = invoice.to_xml().unwrap();
+    assert_eq!(
+        leaves(&xml),
+        leaves(&parse(&xml).unwrap().to_xml().unwrap())
+    );
+    for b in [
+        builder().payment_instruction("reason"),
+        builder()
+            .payment_means(PaymentMeans::new(""))
+            .payment_means(PaymentMeans::new("30")),
+        builder()
+            .payment_instruction("reason")
+            .payment_means_code("")
+            .payment_means(PaymentMeans::new("30")),
+    ] {
+        assert!(b.line_item(line().build().unwrap()).build().is_err());
+    }
+}
+
+#[test]
 fn imported_tax_totals_reject_missing_or_duplicate_owners() {
     let xml = builder()
         .line_item(line().build().unwrap())
