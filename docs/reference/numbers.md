@@ -19,55 +19,67 @@ canonical decimal strings, without exponents or unnecessary trailing zeros.
 Negative zero is displayed as `0`. XML monetary fields use two decimal places;
 quantities and unit prices retain their supported precision.
 
-Arithmetic uses checked signed 128-bit integer intermediates. If an intermediate
-coefficient or the final decimal cannot be represented, calculation returns an
-error. Precision is never reduced to make an intermediate fit.
+Arithmetic is checked. Values outside the supported decimal range return an
+error. Price-base division uses integer rational arithmetic until rounding, so a
+non-terminating per-unit price does not lose precision before the line calculation.
 
 ## Calculation boundaries
 
-The calculation contract follows section 10 and the field-specific decimal
-constraints in the [ZATCA XML standard, May 2023](https://www.zatca.gov.sa/ar/E-Invoicing/SystemsDevelopers/Documents/20230519_ZATCA_Electronic_Invoice_XML_Implementation_Standard_%20vF.pdf).
+- Line net: round quantity × net price / price base to cents, subtract line
+  allowances, and add line charges. The default price base is one.
+- Calculated line VAT: round the accepted line net × rate / 100 to cents.
+  Supplied line VAT is retained after its precision and amount checks.
+- Line gross: accepted line net plus accepted line VAT.
+- Group taxable amount: sum accepted line nets by VAT category and rate,
+  subtract that group's document allowances, and add its document charges.
+- Calculated category VAT: round the group's taxable amount × rate / 100 to
+  cents. Document VAT is the sum of accepted category taxes.
+- Payable: tax-inclusive amount minus prepaid amount plus signed payable rounding.
 
-- Line net: calculate quantity × unit price, then round half-up to two decimals.
-- Calculated line VAT: calculate quantity × unit price × rate / 100, then round
-  once to two decimals. Do not round the intermediate product first.
-- Group lines by VAT category and rate. Sum their finalized line net amounts and
-  apply the document discounts and charges assigned to that group.
-- Category VAT: multiply that taxable base by its rate, divide by 100, then round
-  half-up to two decimals. Document VAT is the sum of these category VAT amounts.
-- Document totals use the finalized amounts. XML and QR rendering consume those
-  totals without introducing another calculation stage.
+Default calculated amounts use half-up rounding. For three lines of `0.03` at
+15%, each calculated line VAT is `0.00`, while document VAT is `0.01`.
+XML output and QR payloads use the accepted totals without recalculating them.
 
-For three lines of `0.03` at 15%, each calculated line VAT is `0.00`, while document
-VAT is `0.01`.
+Rates must be between 0 and 100 with at most two decimal places. Categories other
+than standard require a zero rate. Supplied monetary totals must already have at
+most two decimal places. Negative line quantities, prices, discounts, and charges
+are rejected; credit notes use positive amounts with the appropriate document
+type. Payable rounding can be signed. Price bases must be positive.
 
-Rates must be between 0 and 100 with at most two decimal places. Supplied amounts
-such as document discounts and charges must already have at most two decimals.
-Nonstandard VAT categories require a zero rate. Negative invoice line values and
-negative discounts/charges are rejected by the builder. Credit notes use positive
-amounts with the appropriate document type. A supplied signed payable-rounding
-adjustment is preserved exactly; it is not rounded during import.
-
-The builder's document VAT category assigns its scalar discount and charge to one
-matching category/rate group. If several rates match, building fails. XML imports
-can resolve that rate from the adjustment's explicit tax category. Multiple
-adjustment category/rate groups require a richer adjustment model and are rejected.
+Use `Adjustment::amount` or `Adjustment::percentage` for line adjustments, and
+`DocumentAdjustment` for invoice adjustments with independent VAT categories and
+rates. Scalar invoice discount/charge setters require an unambiguous VAT group;
+combining them with independent adjustment entries is rejected. See
+[pricing recipes](../guides/invoice-recipes.md) for examples.
 
 ## Calculated and supplied values
 
-Line-item construction calculates amounts. Importing supplied totals validates them
-against those calculations exactly; mismatches return validation issues containing
-the supplied and expected values.
+The model checks supplied amounts and retains accepted values. A mismatch reports
+both the expected and supplied amounts. Acceptance depends on the field:
 
-XML import preserves supplied line VAT. The May 2023 standard removed BR-KSA-50;
-BR-KSA-51 still relates line gross to line net plus supplied VAT. Import validates
-amount precision, the line net calculation, line gross when present, document
-adjustments, supplied category subtotals and document totals. It preserves prepaid
-amounts and payable-rounding adjustments and checks the payable equation.
+| Supplied value | Check |
+| --- | --- |
+| Net price | Exact agreement with gross price minus price discount, when both are supplied. |
+| Line net | Within `0.01` of the calculated line net. |
+| Line gross | Exact sum of accepted line net and line VAT. |
+| Adjustment amount and percentage | Exact agreement with the rounded base × percentage / 100 calculation. |
+| Standard-category breakdown tax | Within invoice-line count × `0.01` of the half-even rounded exact tax calculation. |
+| Other category tax | Zero. |
+| Document VAT and totals | Consistent with accepted breakdowns and the document total equations. |
 
-This numeric validation covers the model's supported calculations. It does not
-replace the complete ZATCA business-rule validator or add line allowances, line
-charges or price-base quantities to the model.
+Default construction and supplied-tax tolerance checks use different rounding
+rules. For example, `53.30` at 5% produces `2.67` during construction. The
+standard-category supplied-tax check centers its tolerance on `2.66`; with one
+invoice line, it accepts `2.65` through `2.67`.
+
+Prepayment adjustment lines contribute their taxable and tax subtotals to the
+prepaid amount, without increasing ordinary taxable sales. Imported XML also
+preserves supported optional-amount presence, including payable rounding.
+
+These checks are separate from schema and business-rule validation. The
+[model contract](../development/invoice-model.md) documents the field dependencies
+and differences between the published standard and the pinned SDK's executable
+rules. Run [local validation](../guides/validation.md) for that rule profile.
 
 
 ## Values in your language

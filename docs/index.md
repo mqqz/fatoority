@@ -1,18 +1,19 @@
 ---
-title: ZATCA E-Invoicing SDK and CLI
-description: Build Saudi e-invoicing integrations with fatoority. Sign invoices, validate XML, generate QR payloads, and connect to ZATCA APIs.
+title: Create Saudi E-Invoices - ZATCA SDK and CLI
+description: Create Saudi e-invoices from application data. Calculate VAT and totals, generate UBL XML, validate and sign locally, and submit through ZATCA APIs.
 ---
 
-# ZATCA e-invoicing for your application
+# Create Saudi e-invoices in your application
 
-fatoority is an open-source toolkit for developers building e-invoicing integrations
-in Saudi Arabia. Sign invoice XML, validate it locally, generate QR payloads, and
-connect to ZATCA APIs for Phase 1 and Phase 2 workflows.
+fatoority is an open-source SDK and CLI for Saudi e-invoicing. Build standard and
+simplified invoices from application data, including credit notes, debit notes,
+and prepayment invoices. Calculate totals and VAT, generate UBL XML, then sign
+and validate invoices locally before submitting them through the ZATCA APIs.
 
 Use the Rust library, add it to your application in Python, JavaScript/TypeScript,
 C#, Kotlin/Java (including Android), or C/C++, or run the command-line tool from your terminal.
 
-[Try it](#try-it-validate-an-invoice){ .md-button .md-button--primary }
+[Create an invoice](guides/invoice-creation.md){ .md-button .md-button--primary }
 [Choose your language](#choose-your-language){ .md-button }
 [View on GitHub](https://github.com/mqqz/fatoority)
 { .home-actions }
@@ -23,12 +24,20 @@ fatoority is an independent project and is not affiliated with ZATCA.
 
 | Task | How fatoority helps |
 | --- | --- |
-| [Create and sign invoices](guides/invoice-signing.md) | Build invoice data and sign XML for standard and simplified invoices, credit notes, and debit notes. |
-| [Validate invoice XML](guides/validation.md) | Check UBL schemas, local ZATCA business rules, and applicable signature and QR checks before submission. |
-| [Generate QR payloads](guides/qr.md) | Generate base64-encoded invoice QR data or read the payload embedded in signed XML. |
-| [Generate a certificate signing request](guides/csr.md) | Create a signing key and CSR for device onboarding. |
-| [Hash invoices](reference/invoice-signing.md) | Compute invoice hashes and prepare invoice request payloads for API submission. |
-| [Connect to ZATCA](guides/api.md) | Integrate onboarding, compliance checks, reporting, and clearance into your application. |
+| [Create invoices](guides/invoice-creation.md) | Build invoice data with calculated totals and UBL XML output. Choose standard or simplified tax invoices, credit/debit notes, or prepayments. |
+| [Handle pricing and VAT](guides/invoice-recipes.md) | Apply line or document discounts and charges, use price-base quantities, and group VAT by category and rate with exact decimal arithmetic. |
+| [Include business references](reference/invoice-model.md) | Carry purchase orders, contracts, delivery dates, payment instructions/accounts, and party/item identifiers into XML. |
+| [Read existing XML](reference/xml.md) | Inspect supported fields and totals. Signed import checks cryptographic integrity and QR consistency while retaining the original XML. |
+| [Validate locally](guides/validation.md) | Check UBL schemas and the pinned SDK's 257 business-rule assertions. Inspect rule findings, warnings, and incomplete stages before submission. |
+| [Sign invoices](guides/invoice-signing.md) | Sign with a matching certificate and private key. Compute invoice hashes and prepare API payloads. |
+| [Generate QR payloads](guides/qr.md) | Generate base64 invoice QR data or read the payload embedded in signed XML. |
+| [Onboard and submit](guides/api.md) | Generate a [CSR](guides/csr.md), obtain or renew credentials, run compliance checks, and integrate reporting or clearance. |
+
+Local invoice processing needs no official SDK installation or network access.
+The Rust core has no Java dependency.
+The JavaScript package includes WebAssembly for Node.js and browsers; Kotlin/Java
+also has an Android artifact. Use prepared API requests when your application
+needs its own HTTP transport.
 
 Local validation helps catch problems before submission. It does not establish
 ZATCA gateway acceptance or certificate issuer trust. See the
@@ -86,7 +95,7 @@ and most packages are named `fatoority`; existing API names such as Python's
     ```
 
     Import `fatoora_core` in your code.
-    [Start with invoice signing](guides/invoice-signing.md) or browse the
+    [Create your first invoice](guides/invoice-creation.md) or browse the
     [Rust API reference](https://docs.rs/fatoora-core/latest/fatoora_core/).
 
 === "Python"
@@ -152,8 +161,10 @@ and most packages are named `fatoority`; existing API names such as Python's
 ## Continue your integration
 
 If you are adding invoicing to an application, start with
-[building and signing an invoice](guides/invoice-signing.md), then
-[validate the XML](guides/validation.md) before sending it.
+[creating an invoice](guides/invoice-creation.md). The
+[business-case recipes](guides/invoice-recipes.md) cover pricing and document types.
+Then [sign](guides/invoice-signing.md) and [validate](guides/validation.md) the XML
+before sending it.
 
 For device onboarding, [generate a CSR](guides/csr.md), then use the
 [ZATCA API client](guides/api.md) to request credentials and submit invoices.

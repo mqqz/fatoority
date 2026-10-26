@@ -1,5 +1,5 @@
 site_name: fatoority
-site_description: Build Saudi e-invoicing integrations with fatoority. Sign invoices, validate XML, generate QR payloads, and connect to ZATCA APIs.
+site_description: Create Saudi e-invoices from application data. Calculate VAT and totals, generate UBL XML, validate and sign locally, and submit through ZATCA APIs.
 site_url: https://docs.fatoority.com/
 repo_name: mqqz/fatoority
 repo_url: https://github.com/mqqz/fatoority
@@ -19,6 +19,8 @@ theme:
 nav:
   - Home: index.md
   - Guides:
+      - Create an Invoice: guides/invoice-creation.md
+      - Pricing and Invoice Recipes: guides/invoice-recipes.md
       - CSR Generation: guides/csr.md
       - Invoice Signing: guides/invoice-signing.md
       - Validation: guides/validation.md
