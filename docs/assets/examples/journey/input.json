@@ -1,0 +1,16 @@
+{
+  "invoice_id": "SANDBOX-1001",
+  "invoice_counter": "1",
+  "previous_invoice_hash": "NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ==",
+  "seller": {
+    "name": "Example Store",
+    "vat_id": "399999999900003",
+    "crn": "7003339333",
+    "city": "Riyadh",
+    "street": "King Fahd Road",
+    "building_number": "1234",
+    "postal_code": "12222",
+    "additional_number": "5678",
+    "district": "Olaya"
+  }
+}

@@ -44,7 +44,11 @@ With bindings and support for many programming languages:
 > The official ZATCA website can be found at https://zatca.gov.sa.
 
 ## 🗂️ Documentation
-Start with [invoice creation](https://docs.fatoority.com/guides/invoice-creation/), browse the
+Follow the [complete sandbox walkthrough](https://docs.fatoority.com/guides/sandbox-walkthrough/)
+in Python, C#, or TypeScript: create an invoice, sign it, validate it, report it,
+and handle the response. The guide includes a ZATCA journey diagram and production changes.
+
+For local XML output, start with [invoice creation](https://docs.fatoority.com/guides/invoice-creation/), browse the
 [guides](https://docs.fatoority.com), or read the [Rust API reference](https://docs.rs/fatoora-core/latest/fatoora_core/).
 
 ## ⚡ Features

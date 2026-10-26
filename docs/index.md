@@ -13,12 +13,15 @@ and validate invoices locally before submitting them through the ZATCA APIs.
 Use the Rust library, add it to your application in Python, JavaScript/TypeScript,
 C#, Kotlin/Java (including Android), or C/C++, or run the command-line tool from your terminal.
 
-[Create an invoice](guides/invoice-creation.md){ .md-button .md-button--primary }
+[Run the sandbox walkthrough](guides/sandbox-walkthrough.md){ .md-button .md-button--primary }
 [Choose your language](#choose-your-language){ .md-button }
 [View on GitHub](https://github.com/mqqz/fatoority)
 { .home-actions }
 
 fatoority is an independent project and is not affiliated with ZATCA.
+
+Start with one [complete example in Python, C#, or TypeScript](guides/sandbox-walkthrough.md)
+covering creation through reporting, with a diagram of the ZATCA journey.
 
 ## What you can build
 
