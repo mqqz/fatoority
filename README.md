@@ -19,9 +19,7 @@
 
 #
 
-## Create Saudi e-invoices in your application
-
-fatoority is an open-source SDK and CLI for Saudi e-invoicing. Build standard and
+`fatoority` is an open-source SDK and CLI for Saudi e-invoicing. Build standard and
 simplified invoices from application data, including credit notes, debit notes,
 and prepayment invoices. Calculate totals and VAT, generate UBL XML, then sign
 and validate invoices locally before submitting them through the ZATCA APIs.
@@ -53,13 +51,13 @@ Start with [invoice creation](https://docs.fatoority.com/guides/invoice-creation
 
 | Build into your application | What fatoority provides |
 | --- | --- |
-| [Invoice creation](https://docs.fatoority.com/guides/invoice-creation/) | Typed builders for standard and simplified tax invoices, credit/debit notes, and prepayments; UBL XML output. |
-| [Pricing and VAT](https://docs.fatoority.com/guides/invoice-recipes/) | Exact decimal calculations, mixed VAT categories and rates, exemptions, line and document discounts/charges, price-base quantities, and payable totals. |
-| [Business document data](https://docs.fatoority.com/reference/invoice-model/) | Purchase orders, contracts, delivery dates, payment accounts/instructions, repeated references, and party/item identifiers. |
-| [XML import](https://docs.fatoority.com/reference/xml/) | Read supported invoice fields into structured data. Signed import checks signature, digest, and QR consistency and retains the original XML. |
+| 🧾 [Invoice creation](https://docs.fatoority.com/guides/invoice-creation/) | Typed builders for standard and simplified tax invoices, credit/debit notes, and prepayments; UBL XML output. |
+| 💰 [Pricing and VAT](https://docs.fatoority.com/guides/invoice-recipes/) | Exact decimal calculations, mixed VAT categories and rates, exemptions, line and document discounts/charges, price-base quantities, and payable totals. |
+| 💼 [Business document data](https://docs.fatoority.com/reference/invoice-model/) | Purchase orders, contracts, delivery dates, payment accounts/instructions, repeated references, and party/item identifiers. |
+| </>  [XML import](https://docs.fatoority.com/reference/xml/) | Read supported invoice fields into structured data. Signed import checks signature, digest, and QR consistency and retains the original XML. |
 | ✅ [Local validation](https://docs.fatoority.com/guides/validation/) | UBL schemas and all 257 business-rule assertions in the pinned SDK 238-R3.4.8 profile, with structured findings and explicit stage coverage. |
 | ✍️ [Invoice Signing](https://docs.fatoority.com/guides/invoice-signing/) | Sign XML with a matching certificate and key, and compute invoice hashes. |
-| 🧾 [QR Generation](https://docs.fatoority.com/guides/qr/) | Generate base64 QR payloads or read them from signed XML. |
+| 𖣯 [QR Generation](https://docs.fatoority.com/guides/qr/) | Generate base64 QR payloads or read them from signed XML. |
 | 📩 [CSR Generation](https://docs.fatoority.com/guides/csr/) | Generate signing keys and certificate requests for device onboarding. |
 | 📨 [API Requests](https://docs.fatoority.com/guides/api/) | Obtain and renew credentials, check compliance, report simplified invoices, and request standard-invoice clearance. |
 
@@ -195,7 +193,8 @@ Alternatively, you can grab the precompiled binary for your platform on the repo
 
 ## 💡 Examples
 
-### Create an invoice
+<details>
+<summary>Create an invoice</summary>
 
 Build a simplified invoice with two SAR 50 items and 15% VAT. The library
 calculates SAR 15 VAT and a SAR 115 payable total, then writes `invoice.xml`.
@@ -241,8 +240,7 @@ print("Saved invoice.xml")
 See [invoice creation](https://docs.fatoority.com/guides/invoice-creation/) for the
 Rust example and next steps. Building checks model fields and arithmetic; run
 local validation separately before submission.
-
-### Work with existing XML
+</details>
 
 <details>
 <summary>CSR Generation</summary>
