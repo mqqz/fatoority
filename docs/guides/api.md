@@ -9,6 +9,9 @@ Use the API client to submit invoices and inspect the gateway's response. This
 walkthrough reports a simplified invoice to the non-production environment and
 checks whether reporting was accepted. It requires network access and credentials.
 
+For one runnable program covering creation through reporting, follow the
+[sandbox walkthrough](sandbox-walkthrough.md).
+
 ## Choose the operation
 
 | Your task | Operation | Credentials |

@@ -14,6 +14,9 @@ previous-invoice hash. Replace them with your own data for an integration. Your
 application owns invoice numbering, UUIDs, counters, and predecessor history.
 Running the example replaces `invoice.xml` in the working folder.
 
+For one runnable program covering creation through reporting, follow the
+[sandbox walkthrough](sandbox-walkthrough.md).
+
 ## Run the example
 
 === "Rust"

@@ -9,6 +9,7 @@ on:
       - 'bindings/*/examples/**'
       - 'bindings/c/**'
       - 'scripts/check_c_reference.py'
+      - 'scripts/package_journey_examples.py'
   push:
     branches: [main]
     paths:
@@ -19,6 +20,7 @@ on:
       - 'bindings/*/examples/**'
       - 'bindings/c/**'
       - 'scripts/check_c_reference.py'
+      - 'scripts/package_journey_examples.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -31,6 +33,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install mkdocs-material mkdocs-macros-plugin
+      - run: python scripts/package_journey_examples.py --check
       - run: mkdocs build --strict
       - name: Compile C documentation examples
         run: python3 scripts/check_c_reference.py

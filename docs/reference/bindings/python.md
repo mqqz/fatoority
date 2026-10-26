@@ -5,9 +5,9 @@ description: Python package reference for fatoority. Learn accepted values, retu
 
 # Python package reference
 
-Use Python 3.9 or later. Install `fatoority` and import `fatoora` to build, sign, and validate invoices and
-send ZATCA API requests. Start with the [guides](../../guides/validation.md) for
-complete workflows; this page describes Python-specific values and behavior.
+The published 0.5.0 wheels support CPython 3.9–3.13. Use CPython 3.13 for the
+[complete sandbox walkthrough](../../guides/sandbox-walkthrough.md). Install
+`fatoority` and import `fatoora`; this page describes Python-specific values and behavior.
 
 ## Install and import
 

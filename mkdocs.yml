@@ -19,6 +19,7 @@ theme:
 nav:
   - Home: index.md
   - Guides:
+      - First Sandbox Invoice: guides/sandbox-walkthrough.md
       - Create an Invoice: guides/invoice-creation.md
       - Pricing and Invoice Recipes: guides/invoice-recipes.md
       - CSR Generation: guides/csr.md
@@ -71,7 +72,11 @@ markdown_extensions:
   - pymdownx.details
   - toc:
       permalink: true
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.snippets
   - pymdownx.tabbed:
       alternate_style: true
