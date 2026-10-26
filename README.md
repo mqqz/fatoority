@@ -19,9 +19,12 @@
 
 #
 
-`fatoority` is an unofficial open-source toolkit for developers building e-invoicing integrations
-in Saudi Arabia. Sign invoice XML, validate it locally, generate QR payloads, and
-connect to ZATCA APIs for Phase 1 and Phase 2 workflows.
+## Create Saudi e-invoices in your application
+
+fatoority is an open-source SDK and CLI for Saudi e-invoicing. Build standard and
+simplified invoices from application data, including credit notes, debit notes,
+and prepayment invoices. Calculate totals and VAT, generate UBL XML, then sign
+and validate invoices locally before submitting them through the ZATCA APIs.
 
 With bindings and support for many programming languages:
 - 🦀 Rust <a href="https://crates.io/crates/fatoora-core"><img src="https://img.shields.io/crates/v/fatoora-core?logo=rust&label=fatoora-core" alt="fatoora-core Crates.io Version"/></a>
@@ -43,25 +46,39 @@ With bindings and support for many programming languages:
 > The official ZATCA website can be found at https://zatca.gov.sa.
 
 ## 🗂️ Documentation
-Checkout the [homepage](https://docs.fatoority.com), also the Rust API at [docs.rs](https://docs.rs/fatoora-core/latest/fatoora_core/) may prove useful.
+Start with [invoice creation](https://docs.fatoority.com/guides/invoice-creation/), browse the
+[guides](https://docs.fatoority.com), or read the [Rust API reference](https://docs.rs/fatoora-core/latest/fatoora_core/).
 
 ## ⚡ Features
 
-Tools for your ZATCA integration:
-- 📩 [CSR Generation](https://docs.fatoority.com/guides/csr/)
-- ✍️ [Invoice Signing](https://docs.fatoority.com/guides/invoice-signing/) (Standard and simplified invoices, credit notes, and debit notes)
-- ✅ [Validation](https://docs.fatoority.com/guides/validation/) (UBL and local ZATCA rules)
-- 🧾 [QR Generation](https://docs.fatoority.com/guides/qr/)
-- 📨 [API Requests](https://docs.fatoority.com/guides/api/)
+| Build into your application | What fatoority provides |
+| --- | --- |
+| [Invoice creation](https://docs.fatoority.com/guides/invoice-creation/) | Typed builders for standard and simplified tax invoices, credit/debit notes, and prepayments; UBL XML output. |
+| [Pricing and VAT](https://docs.fatoority.com/guides/invoice-recipes/) | Exact decimal calculations, mixed VAT categories and rates, exemptions, line and document discounts/charges, price-base quantities, and payable totals. |
+| [Business document data](https://docs.fatoority.com/reference/invoice-model/) | Purchase orders, contracts, delivery dates, payment accounts/instructions, repeated references, and party/item identifiers. |
+| [XML import](https://docs.fatoority.com/reference/xml/) | Read supported invoice fields into structured data. Signed import checks signature, digest, and QR consistency and retains the original XML. |
+| ✅ [Local validation](https://docs.fatoority.com/guides/validation/) | UBL schemas and all 257 business-rule assertions in the pinned SDK 238-R3.4.8 profile, with structured findings and explicit stage coverage. |
+| ✍️ [Invoice Signing](https://docs.fatoority.com/guides/invoice-signing/) | Sign XML with a matching certificate and key, and compute invoice hashes. |
+| 🧾 [QR Generation](https://docs.fatoority.com/guides/qr/) | Generate base64 QR payloads or read them from signed XML. |
+| 📩 [CSR Generation](https://docs.fatoority.com/guides/csr/) | Generate signing keys and certificate requests for device onboarding. |
+| 📨 [API Requests](https://docs.fatoority.com/guides/api/) | Obtain and renew credentials, check compliance, report simplified invoices, and request standard-invoice clearance. |
 
-🚀 But we do it faster and better e.g. ~190x faster invoice hashing than ZATCA's SDK (see bench/)
+Local invoice processing needs no official SDK installation or network access.
+The Rust core has no Java dependency.
+Use the JavaScript WebAssembly package in Node.js or a browser, and the Android
+artifact in mobile applications. API calls require network access; prepared
+requests let you use your own HTTP transport.
 
-⚙️ Rigorously tested with fuzzing and ~97% coverage
+🚀 The recorded .NET benchmarks measured hashing at 8.5–14.1×, signing at 11.3–15.6×,
+and validation at about 44× the speed of the official .NET SDK on the tested
+fixtures. The separate CLI hashing benchmark measured about 187×, including
+process startup. See [benchmarks](https://docs.fatoority.com/benchmarks/) for
+hardware, versions, timings, and reproduction instructions.
 
-See the [benchmarks](https://docs.fatoority.com/benchmarks/) for measured performance
-and methodology, and [SDK compatibility notes](https://docs.fatoority.com/development/sdk-parity/)
-for the scope of comparison with the official SDK.
-Local validation does not establish certificate issuer trust or ZATCA gateway acceptance.
+⚙️ The test suite includes property tests, fuzzing, and recorded comparisons with
+the official SDK. See [SDK compatibility](https://docs.fatoority.com/development/sdk-parity/)
+for the tested scope. Local validation does not establish certificate issuer
+trust or ZATCA gateway acceptance.
 
 ## 📥 Installation
 <details>
@@ -177,6 +194,55 @@ Alternatively, you can grab the precompiled binary for your platform on the repo
 </details>
 
 ## 💡 Examples
+
+### Create an invoice
+
+Build a simplified invoice with two SAR 50 items and 15% VAT. The library
+calculates SAR 15 VAT and a SAR 115 payable total, then writes `invoice.xml`.
+This example uses demonstration identity and invoice-history data; replace them
+for your integration. Running it replaces `invoice.xml` in the working folder.
+
+Install with `pip install fatoority`, save as `creation.py`, and run `python creation.py`.
+
+```python
+from pathlib import Path
+from fatoora import InvoiceBuilder, InvoiceSubType, InvoiceTypeKind, VatCategory
+
+builder = InvoiceBuilder.new(InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED)
+builder.set_id("INV-1001")
+builder.set_uuid("8e6000cf-1a98-4174-b3e7-b5d5954bc10d")
+builder.set_issue_datetime("2026-10-26T09:00:00Z")
+builder.set_currency("SAR")
+# Demonstration predecessor; use your own invoice history in production.
+builder.set_previous_invoice_hash(
+    "NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ=="
+)
+builder.set_invoice_counter(1)
+builder.set_payment_means_code("10")
+builder.set_vat_category(VatCategory.STANDARD)
+builder.set_seller(
+    name="Example Store", country_code="SA", city="Riyadh",
+    street="King Fahd Road", building_number="1234", postal_code="12222",
+    district="Olaya", additional_number="5678", vat_id="399999999900003",
+    other_id="7003339333", other_id_scheme="CRN",
+)
+builder.add_line_item(
+    description="Notebook", quantity="2", unit_code="PCE", unit_price="50",
+    vat_rate="15", vat_category=VatCategory.STANDARD,
+)
+invoice = builder.build()
+Path("invoice.xml").write_text(invoice.to_xml(), encoding="utf-8")
+totals = invoice.totals()
+print(f"VAT: {totals.tax_amount} SAR")
+print(f"Payable: {totals.payable_amount} SAR")
+print("Saved invoice.xml")
+```
+
+See [invoice creation](https://docs.fatoority.com/guides/invoice-creation/) for the
+Rust example and next steps. Building checks model fields and arithmetic; run
+local validation separately before submission.
+
+### Work with existing XML
 
 <details>
 <summary>CSR Generation</summary>
@@ -338,7 +404,8 @@ fatoora invoice-request --invoice signed.xml --api-request request.json
 ```
 </details>
 
-And much more... see the guides in the [homepage](https://docs.fatoority.com/) for more info.
+For discounts, mixed VAT, credit notes, and prepayments, see the
+[invoice recipes](https://docs.fatoority.com/guides/invoice-recipes/).
 
 ## 🤝 Contributing
 

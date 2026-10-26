@@ -36,6 +36,18 @@ and [ZATCA developer portal](https://sandbox.zatca.gov.sa/IntegrationSandbox) fo
 request fields and environment-specific onboarding requirements. A successful
 compliance check alone is not reporting or clearance acceptance.
 
+## Renew credentials or use your own HTTP client
+
+The client also supports production-credential renewal with an existing credential,
+a new CSR, and an OTP. See [renewal inputs](../reference/api-client.md#renew_csid).
+Store the returned credentials for subsequent submissions.
+
+For applications with an existing HTTP stack, prepared requests expose the method,
+URL, headers, and body without sending a request. Send them with your transport,
+then decode the actual response status and bytes. See
+[custom transport](../reference/api-client.md#http-failures-and-custom-transport)
+for credential handling and redirect behavior.
+
 ## Prepare the inputs
 
 Use your own `signed.xml`: a simplified invoice signed with the certificate and

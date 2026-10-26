@@ -9,6 +9,9 @@ Sign an invoice using a certificate and its matching private key, then save the
 result as `signed.xml`. Signing generates signature material; run validation
 separately to check the invoice's local rule and integrity results.
 
+Need an invoice first? [Create one from application data](invoice-creation.md),
+then use its `invoice.xml` with the signing code below.
+
 ## Prepare the inputs
 
 For a local practice run, save these files in one folder:

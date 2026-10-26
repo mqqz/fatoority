@@ -1,23 +1,29 @@
 ---
 title: Invoice Model Reference
-description: Build and inspect ZATCA invoices with fatoority. Reference for required fields, amounts, invoice types, builder methods, return values, and object lifetimes.
+description: Invoice builder methods and field requirements for fatoority, with language-specific signatures and object lifetimes.
 ---
 
 # Invoice model
 
-Use the invoice model to assemble invoice data, calculate totals, and inspect imported or signed invoices. For an existing XML document, start with [XML parsing](xml.md). For signatures and certificate inputs, see [invoice signing](invoice-signing.md).
+Build invoices and calculate their totals with the typed model. Start with the
+[runnable creation guide](../guides/invoice-creation.md) or the
+[pricing recipes](../guides/invoice-recipes.md). For an existing XML document, start with [XML parsing](xml.md). For signatures and certificate inputs, see [invoice signing](invoice-signing.md).
 
 ## Building an invoice
 
 Create a builder, set the required fields, append one or more line items, then build a finalized invoice. Building checks supported field formats and amounts and calculates totals. It does not run schema validation, all ZATCA business rules, or signature verification; use [validation](invoice-validation.md) for those checks.
 
-Repeated configuration replaces the previous value. Adding a line item appends it in insertion order. An allowance sets the invoice-level discount and its reason; it does not add a second discount.
+Scalar setters replace their previous value. Lines, notes, billing references, and
+independent adjustments append in order. Rust `allowance(DocumentAdjustment)` and
+`charge(DocumentAdjustment)` append document adjustments; binding convenience
+methods such as `set_allowance(reason, amount)` set the scalar discount.
+Use collection getters to read every repeated entry.
 
 ## Fields and expected values
 
 | Field | Required | Expected value and behavior |
 | --- | --- | --- |
-| Invoice type and subtype | Yes | Tax invoice, prepayment, credit note, or debit note; standard or simplified subtype. Credit/debit notes also need an original invoice ID and reason. Original UUID and issue date are optional. |
+| Invoice type and subtype | Yes | Tax invoice, prepayment, credit note, or debit note; standard or simplified subtype. Supply original invoice references and correction reasons for credit/debit business validation. Original UUID and issue date are optional. |
 | ID | Yes | Nonblank invoice identifier, such as `INV-1001`. |
 | UUID | Yes | Invoice UUID text. The builder checks nonblank input, not UUID syntax. |
 | Issue datetime | Yes | UTC `YYYY-MM-DDTHH:MM:SSZ`, for example `2026-10-15T09:30:00Z`. |
@@ -25,41 +31,129 @@ Repeated configuration replaces the previous value. Adding a line item appends i
 | Previous invoice hash | Yes | Previous invoice hash text. The builder checks nonblank input; it does not verify the chain or decode the hash. |
 | Invoice counter | Yes | Unsigned 64-bit integer. The model accepts zero; check applicable business rules separately. |
 | Seller | Yes | Name, address, and VAT ID; optional other identification and scheme. |
-| Buyer | No in builder | Name and address, plus VAT ID or other identification. A supplied buyer must have at least one identifier. Additional requirements depend on invoice business rules. |
+| Buyer | No in builder | Name with optional address and identifiers. Identification requirements depend on the invoice type and are checked by business validation. |
 | Payment means code | Yes | Nonblank code text, for example `10` for cash. The builder does not validate the complete payment code list. |
 | VAT category | Yes | Standard, zero-rated, exempt, or out of scope. Each line also has its own category. |
-| Line items | Yes | At least one. Nonblank description and unit code; nonnegative quantity and unit price. |
-| VAT rate | Per line | Percentage from `0` to `100`, at most two decimal places. Categories other than standard require zero. |
+| Line items | Yes | At least one. Nonblank description; nonnegative quantity and unit price. Unit code can be omitted; a supplied code must be nonblank. |
+| VAT rate | Per line | Percentage in the inclusive range `0`–`100`, at most two decimal places. Categories other than standard require zero. |
 | Invoice charge / discount | No | Nonnegative decimal amount, at most two decimal places. Defaults to zero. |
-| Note | No | Language code and text. |
+| Line pricing | No | Price-base quantity, gross price and price discount, supplied amounts, line allowances/charges. |
+| Independent document adjustments | No | Repeated allowances/charges with their own VAT category and rate. |
+| VAT breakdowns and exemptions | No | Supplied category/rate totals and independent exemption code/text. |
+| Prepaid amount / payable rounding | No | Prepaid amount subtracts from payable; rounding is signed. |
+| Business references | No | Repeated billing references, purchase order ID, contract ID. |
+| Delivery | No | Independent actual/latest dates. |
+| Payment entries | No | Ordered payment codes with optional instructions and financial account data. |
+| Party and item identifiers | No | Multiple party IDs; seller, buyer, and standard item IDs. |
+| Notes | No | Repeated language/text entries in insertion order. |
 | Flags | No | Third party, nominal, export, summary, self-billed. Defaults to no flags. |
 
-Address inputs are country code, city, street, building number, and postal code, with optional additional street, additional number, and district. Country accepts recognized ISO alpha-2 or alpha-3 values (`SA` or `SAU`) and is stored as alpha-3. A VAT ID wrapper checks only that trimmed text is nonempty; use ZATCA validation for country-specific requirements.
+Address inputs are country code, city, street, building number, and postal code, with optional additional street, additional number, district, and province/state. Buyer addresses may be absent. Country accepts recognized ISO alpha-2 or alpha-3 values (`SA` or `SAU`) and is stored as alpha-3. A VAT ID wrapper checks only that trimmed text is nonempty; use ZATCA validation for country-specific requirements.
 
 Credit/debit note original issue dates use `YYYY-MM-DD`. Optional values mean absence; an empty string is still a supplied value.
 
-See [decimal numbers](numbers.md) for precision and rounding. Line totals are calculated from quantity and price. Explicitly supplied line totals must match the rounded calculation; imported amounts are not accepted merely because they parse.
+See [decimal numbers](numbers.md) for precision and rounding. Line totals are calculated from quantity and price. Explicitly supplied line net amounts have a `0.01` tolerance around the rounded calculation; imported amounts are not accepted merely because they parse.
 
 ## Returned data and totals
 
-A finalized invoice contains invoice data and calculated totals. A signed invoice additionally contains signed XML, QR payload, and signature metadata. Importing a signed invoice does not prove its signature is valid.
+A finalized invoice contains invoice data and calculated totals. A signed invoice also stores the original signed XML alongside its QR payload and signature metadata. Signed import checks the signature and digests against the embedded certificate
+and verifies QR consistency. Certificate issuer trust and gateway acceptance
+remain separate checks.
 
 | Result | Contents |
 | --- | --- |
 | Invoice data | Identity, type/subtype, parties, notes, original invoice reference, flags, line items, and invoice adjustments. |
 | Line item | Description, quantity, unit code, unit price, line total, VAT rate, VAT amount, and category. Indexed access is zero-based and rejects out-of-range indexes. |
 | Totals | Line extension, allowance total, charge total, taxable amount, tax amount, tax inclusive total, prepaid amount, payable rounding amount, and payable amount. |
-| Computed hash | `hash_base64()` hashes emitted XML for a finalized model and stored XML for a signed invoice. The signed result can differ from the embedded digest if the document was altered. |
+| Computed hash | `hash_base64()` hashes emitted XML for a finalized model and stored XML for a signed invoice. Signed import rejects digest mismatches and retains the original XML. |
+
+## Advanced building in the bindings
+
+The bindings expose `LineItemBuilder` for price bases and line adjustments. Build
+the line, then append it with the invoice builder's `add_item` equivalent.
+`add_line_item` remains the shortcut for a line with quantity and unit price.
+
+| Operation | Python | JavaScript / TypeScript | C# | Kotlin / Java |
+| --- | --- | --- | --- | --- |
+| Create a line builder | `LineItemBuilder.new()` | `LineItemBuilder.new_()` | `LineItemBuilder.New()` | `LineItemBuilder.create()` |
+| Set price base | `set_item_price_base_quantity(value)` | `setItemPriceBaseQuantity(value)` | `SetItemPriceBaseQuantity(value)` | `setItemPriceBaseQuantity(value)` |
+| Add line allowance | `add_allowance(adjustment)` | `addAllowance(adjustment)` | `AddAllowance(adjustment)` | `addAllowance(adjustment)` |
+| Add line charge | `add_charge(adjustment)` | `addCharge(adjustment)` | `AddCharge(adjustment)` | `addCharge(adjustment)` |
+| Finish line | `build()` | `build()` | `Build()` | `build()` |
+| Append built line to invoice | `add_item(item)` | `addItem(item)` | `AddItem(item)` | `addItem(item)` |
+| Append document adjustment | `add_document_adjustment(...)` | `addDocumentAdjustment(...)` | `AddDocumentAdjustment(...)` | `addDocumentAdjustment(...)` |
+| Set prepaid amount | `set_prepaid_amount(value)` | `setPrepaidAmount(value)` | `SetPrepaidAmount(value)` | `setPrepaidAmount(value)` |
+| Set payable rounding | `set_payable_rounding_amount(value)` | `setPayableRoundingAmount(value)` | `SetPayableRoundingAmount(value)` | `setPayableRoundingAmount(value)` |
+| Append billing reference | `add_billing_reference(reference)` | `addBillingReference(reference)` | `AddBillingReference(reference)` | `addBillingReference(reference)` |
+| Append payment entry | `add_payment_means(payment)` | `addPaymentMeans(payment)` | `AddPaymentMeans(payment)` | `addPaymentMeans(payment)` |
+
+Document-adjustment arguments are `(charge, adjustment, category, rate, exemption)`.
+Use `false` for an allowance and `true` for a charge (`False`/`True` in Python).
+Python defaults the exemption to empty metadata; the other bindings require a
+`TaxExemption` object. Category values and decimal representations follow the
+language reference below.
+
+For a prepayment adjustment line, use `add_document_reference` and
+`add_tax_subtotal` on the Python line builder (`addDocumentReference` and
+`addTaxSubtotal` in JavaScript/Kotlin/Java; PascalCase in C#).
+`OriginalInvoiceRef` constructors accept ID, UUID, date, time, and document type
+code in that order. Set the last argument to `"386"`; in Python it is the optional
+`type_code` keyword. The [prepayment recipe](../guides/invoice-recipes.md#prepayments-and-final-payable-amounts)
+shows which line amounts must be zero and how to supply the advance VAT subtotal.
+
+For C, use `fatoora_line_item_builder_new(&line, &error)` and
+`fatoora_line_item_builder_build(line, &item, &error)`. The setters above use the
+`fatoora_line_item_builder_` prefix with snake_case names. Invoice operations use
+`fatoora_invoice_builder_`, including `add_item`, `add_document_adjustment`, and
+`set_prepaid_amount`. Each accepts the builder first and `FatooraError **` last,
+and returns a status. Document adjustments take a `bool charge`, adjustment handle,
+category code, decimal rate text, and exemption handle. Free owned handles after
+use, including consumed builders. See [C ownership](bindings/c.md).
+
+### Python line discount example
+
+In the [Python creation example](../guides/invoice-creation.md), replace
+`builder.add_line_item(...)` with the following. It produces the same SAR 276
+payable amount as the Rust price-per-pack recipe:
+
+```python
+from fatoora import Adjustment, LineItemBuilder
+
+with LineItemBuilder.new() as line:
+    line.set_item_name("Notebook")
+    line.set_invoiced_quantity("25")
+    line.set_invoiced_quantity_unit_code("PCE")
+    line.set_item_net_price("100")
+    line.set_item_price_base_quantity("10")
+    line.set_vat_category(VatCategory.STANDARD)
+    line.set_vat_rate("15")
+    with Adjustment.amount("10") as amount:
+        with amount.with_reason("Volume discount") as discount:
+            line.add_allowance(discount)
+    builder.add_item(line.build())
+```
+
+For a document discount instead, keep the creation example's original line and
+insert this before `invoice = builder.build()`. The payable amount becomes SAR 103.50:
+
+```python
+from fatoora import Adjustment
+
+with Adjustment.amount("10") as amount:
+    with amount.with_reason("Loyalty discount") as discount:
+        builder.add_document_adjustment(False, discount, VatCategory.STANDARD, "15")
+```
 
 ## Language reference
 
-Choose your language for method names, argument types, return values, and lifecycle rules. The tables list callable signatures; their argument names correspond to the fields above.
+Choose your language for callable signatures and lifecycle rules. Argument names
+correspond to the fields above.
 
 === "Rust"
 
     **Create and configure**
 
-    Import model types from `fatoora_core::invoice`. `InvoiceBuilder::new(invoice_type: InvoiceType) -> InvoiceBuilder` accepts `InvoiceType::Tax(subtype)`, `Prepayment(subtype)`, `CreditNote(subtype, original, reason)`, or `DebitNote(subtype, original, reason)`. Subtype is `InvoiceSubType::Standard` or `Simplified`; credit/debit notes use `OriginalInvoiceRef::new(id)` with optional `with_uuid(uuid)` and `with_issue_date_str(date)`.
+    Import model types from `fatoora_core::invoice`. `InvoiceBuilder::new(invoice_type: InvoiceType) -> InvoiceBuilder` accepts `InvoiceType::Tax(subtype)`, `Prepayment(subtype)`, `CreditNote(subtype)`, or `DebitNote(subtype)`. Subtype is `InvoiceSubType::Standard` or `Simplified`; add references with `.billing_reference(OriginalInvoiceRef::new(id))` and a reason with `.payment_instruction(reason)`. References support `OriginalInvoiceRef::new(id)` with optional `with_uuid(uuid)` and `with_issue_date_str(date)`.
 
     Every setter consumes and returns `Self`: chain calls or reassign the result.
 
@@ -81,7 +175,17 @@ Choose your language for method names, argument types, return values, and lifecy
     | `invoice_level_charge(value: Decimal)` | `Self` |
     | `invoice_level_discount(value: Decimal)` | `Self` |
     | `line_item(value: LineItem)` | `Self` |
-    | `allowance(reason: impl Into<String>, amount: Decimal)` | `Self` |
+    | `allowance(value: DocumentAdjustment)` | `Self` |
+    | `charge(value: DocumentAdjustment)` | `Self` |
+    | `billing_reference(value: OriginalInvoiceRef)` | `Self` |
+    | `payment_instruction(value: impl Into<String>)` | `Self` |
+    | `payment_means(value: PaymentMeans)` | `Self` |
+    | `purchase_order_id(value: impl Into<String>)`, `contract_id(value: impl Into<String>)` | `Self` |
+    | `delivery(value: Delivery)` | `Self` |
+    | `prepaid_amount(value: Decimal)`, `payable_rounding_amount(value: Decimal)` | `Self` |
+    | `tax_currency(currency: CurrencyCode, amount: Decimal)` | `Self` |
+    | `tax_exemption(category: VatCategory, rate: Decimal, exemption: TaxExemption)` | `Self` |
+    | `vat_breakdown(value: VatBreakdown)` | `Self` |
     | `build(self)` | `Result<FinalizedInvoice, InvoiceError>` |
 
     `build(self)` consumes the builder on success or failure. `VatCategory` variants are `Standard`, `Zero`, `Exempt`, and `OutOfScope`. Combine `InvoiceFlags::THIRD_PARTY`, `NOMINAL`, `EXPORT`, `SUMMARY`, and `SELF_BILLED` with `\|`.
@@ -92,9 +196,15 @@ Choose your language for method names, argument types, return values, and lifecy
 
     Use `CountryCode::parse`, `CurrencyCode::parse`, `InvoiceTimestamp::parse`, `InvoiceDate::parse`, and `VatId::parse` for validated wrappers; each returns `Result<Wrapper, InvoiceError>`. `InvoiceNote::new(language, text)` returns a note. `OtherId::new(value)` creates an ID without a scheme; `OtherId::with_scheme(value, scheme_id)` supplies both.
 
-    Construct `Address` with its public fields: `country_code: CountryCode`, `city: String`, `street: String`, `building_number: String`, `postal_code: String`, and optional `additional_street`, `additional_number`, `district` (`Option<String>`).
+    Construct `Address` with its public fields: `country_code: CountryCode`, `city: String`, `street: String`, `building_number: String`, `postal_code: String`, and optional `additional_street`, `additional_number`, `district`, `province` (`Option<String>`).
 
-    `Seller::new(name: String, address: Address, vat_id: impl Into<String>, other_id: Option<OtherId>) -> Result<Seller, InvoiceError>` requires a VAT ID. `Buyer::new(name: String, address: Address, vat_id: Option<String>, other_id: Option<OtherId>) -> Result<Buyer, InvoiceError>` requires at least one identifier.
+    `Seller::new(name: String, address: Address, vat_id: impl Into<String>, other_id: Option<OtherId>) -> Result<Seller, InvoiceError>` requires a VAT ID. `Buyer::new(name: String, address: impl Into<Option<Address>>, vat_id: Option<String>, other_id: Option<OtherId>) -> Result<Buyer, InvoiceError>` accepts an absent address and identifiers; business validation checks applicability.
+
+    `LineItem::builder()` adds price-base quantities, gross pricing, line allowances
+    and charges. It also accepts supplied amounts and supports item identifiers
+    as well as prepayment references.
+    See [pricing recipes](../guides/invoice-recipes.md) for construction examples
+    and [model coverage](../development/invoice-model.md) for preservation rules.
 
     **Read invoice data**
 
