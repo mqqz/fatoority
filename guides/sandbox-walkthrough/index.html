@@ -1,0 +1,2566 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A runnable Saudi e-invoicing walkthrough for Python, C#, and TypeScript covering creation through sandbox reporting, with production setup explained.">
+      
+      
+      
+        <link rel="canonical" href="https://docs.fatoority.com/guides/sandbox-walkthrough/">
+      
+      
+        <link rel="prev" href="../..">
+      
+      
+        <link rel="next" href="../invoice-creation/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+      
+        <title>Create, Sign and Report Your First Sandbox Invoice - fatoority</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/home.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  
+  
+    
+    
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="fatoority">
+    <meta property="og:title" content="Create, Sign and Report Your First Sandbox Invoice - fatoority">
+    <meta property="og:description" content="A runnable Saudi e-invoicing walkthrough for Python, C#, and TypeScript covering creation through sandbox reporting, with production setup explained.">
+    <meta property="og:url" content="https://docs.fatoority.com/guides/sandbox-walkthrough/">
+    <meta property="og:image" content="https://docs.fatoority.com/assets/images/crab-logo.png">
+    <meta property="og:image:alt" content="fatoority crab logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Create, Sign and Report Your First Sandbox Invoice - fatoority">
+    <meta name="twitter:description" content="A runnable Saudi e-invoicing walkthrough for Python, C#, and TypeScript covering creation through sandbox reporting, with production setup explained.">
+    <meta name="twitter:image" content="https://docs.fatoority.com/assets/images/crab-logo.png">
+    <meta name="twitter:image:alt" content="fatoority crab logo">
+  
+
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#report-your-first-sandbox-invoice" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="fatoority" class="md-header__button md-logo" aria-label="fatoority" data-md-component="logo">
+      
+  <img src="../../assets/images/crab-logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            fatoority
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Create, Sign and Report Your First Sandbox Invoice
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/mqqz/fatoority" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mqqz/fatoority
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="fatoority" class="md-nav__button md-logo" aria-label="fatoority" data-md-component="logo">
+      
+  <img src="../../assets/images/crab-logo.png" alt="logo">
+
+    </a>
+    fatoority
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/mqqz/fatoority" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mqqz/fatoority
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First Sandbox Invoice
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First Sandbox Invoice
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#where-this-fits-in-the-zatca-journey" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where this fits in the ZATCA journey
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-get-the-sandbox-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Get the sandbox inputs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-download-one-complete-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Download one complete example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-run-creation-signing-and-validation-locally" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Run creation, signing and validation locally
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-report-with-your-sandbox-credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Report with your sandbox credentials
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-read-the-response-and-keep-the-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Read the response and keep the artifacts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-changes-for-production" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What changes for production
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../invoice-creation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Create an Invoice
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../invoice-recipes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pricing and Invoice Recipes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../csr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CSR Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../invoice-signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Invoice Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../qr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QR Codes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ZATCA API Client
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/csr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CSR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bindings
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Bindings
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/bindings/python/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/bindings/javascript/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JavaScript / TypeScript
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/bindings/csharp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C# / .NET
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/bindings/kotlin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kotlin / Java
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/bindings/c/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C/C++ (FFI)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Invoice
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Invoice
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/invoice-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/numbers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decimal numbers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/invoice-signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/invoice-validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/xml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/invoice-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XML Model Coverage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/xml-and-schemas/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XML and Schemas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/qr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/api-client/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Client
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/sdk-parity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SDK Compatibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/diplomat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Binding Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/business-rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Validation Tests
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/releases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Releases
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#where-this-fits-in-the-zatca-journey" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where this fits in the ZATCA journey
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-get-the-sandbox-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Get the sandbox inputs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-download-one-complete-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Download one complete example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-run-creation-signing-and-validation-locally" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Run creation, signing and validation locally
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-report-with-your-sandbox-credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Report with your sandbox credentials
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-read-the-response-and-keep-the-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Read the response and keep the artifacts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-changes-for-production" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What changes for production
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="report-your-first-sandbox-invoice">Report your first sandbox invoice<a class="headerlink" href="#report-your-first-sandbox-invoice" title="Permanent link">&para;</a></h1>
+<p>Pick Python, C#, or TypeScript and run one program that creates a simplified
+invoice for SAR 115, signs it, validates the signed XML, and reports it to ZATCA's
+Integration Sandbox. It saves the response and checks whether reporting was
+accepted. Each language follows the same steps and uses the same input file.</p>
+<p>You need a sandbox certificate and its matching private key. Reporting also needs
+the sandbox token and secret issued for that device. Without credentials, you can
+run the local steps with the public test certificate below; that run sends nothing.</p>
+<h2 id="where-this-fits-in-the-zatca-journey">Where this fits in the ZATCA journey<a class="headerlink" href="#where-this-fits-in-the-zatca-journey" title="Permanent link">&para;</a></h2>
+<p>An EGS is your electronic invoice generation system. Onboarding identifies each
+EGS unit and gives it credentials. Once onboarded, it can submit invoices and notes.</p>
+<pre class="mermaid"><code>flowchart TD
+    A[Select environment and EGS] --&gt; B[Private key, CSR and OTP]
+    B --&gt; C[Compliance credentials]
+    C --&gt; D[Check invoice and note samples]
+    D --&gt; E{Checks pass?}
+    E --&gt;|No| F[Correct and restart onboarding]
+    F --&gt; B
+    E --&gt;|Yes| G[Production-type credentials]
+    G --&gt; H[Create invoice and record history]
+    H --&gt; I{Subtype}
+    I --&gt;|Simplified| J[Sign and validate]
+    J --&gt; K[Issue to customer and report]
+    I --&gt;|Standard| L[Prepare XML and validate]
+    L --&gt; M[Request clearance before issue]
+    K --&gt; N{API outcome}
+    M --&gt; N
+    N --&gt;|Accepted| O[Store XML and response]
+    O --&gt; P[Standard only: deliver cleared XML]
+    N --&gt;|Rejected| Q[Follow correction procedure]
+    N --&gt;|Unknown| R[Reconcile before retry]</code></pre>
+<p>Keep credentials under lifecycle management too: renew them before expiry and
+revoke them when the EGS unit is retired or its credentials must be withdrawn.
+A connection failure can leave the API outcome unknown.</p>
+<p>The runnable examples cover the simplified branch: creation through reporting.
+In live operation, simplified documents are reported within 24 hours. Standard
+documents follow clearance before customer delivery; retain the returned cleared
+XML. These are separate submission paths. ZATCA describes both in sections 4.3.1
+and 4.3.2 of its <a href="https://www.zatca.gov.sa/ar/E-Invoicing/Introduction/Guidelines/Documents/E-invoicing%20Detailed%20Technical%20Guidelines.pdf">Detailed Technical Guidelines</a>.</p>
+<p>Local validation catches problems before an API call. ZATCA still makes the
+submission decision, and a sandbox result is only a test result.</p>
+<h2 id="1-get-the-sandbox-inputs">1. Get the sandbox inputs<a class="headerlink" href="#1-get-the-sandbox-inputs" title="Permanent link">&para;</a></h2>
+<p>If you already have sandbox production-type credentials, continue to the files below.
+Otherwise, use the <a href="https://sandbox.zatca.gov.sa/IntegrationSandbox">ZATCA Developer Portal</a>
+to complete this sequence for your test EGS unit:</p>
+<ol>
+<li>Generate a private key and CSR using the <strong>non-production</strong> environment and
+   your test seller identity. Keep the private key. The <a href="../csr/">CSR guide</a> has
+   runnable commands; declare the document types your unit supports.</li>
+<li>Send the CSR with the sandbox's OTP through <strong>Compliance CSID</strong> (<code>POST /compliance</code>).
+   Retain the returned compliance token, secret, certificate, and request ID.</li>
+<li>Sign and submit the required samples to <strong>Compliance Invoice</strong>
+   (<code>POST /compliance/invoices</code>) using the compliance credentials. The checks
+   cover invoice and credit/debit note types declared in the CSR. One successful
+   invoice check does not complete all onboarding checks.</li>
+<li>Use the compliance credentials and returned request ID to request
+   <strong>Production CSID</strong> (<code>POST /production/csids</code>). Save that response's token and
+   secret, and the issued certificate corresponding to your private key.</li>
+</ol>
+<p>The library exposes these operations as <code>post_csr_for_ccsid</code>,
+<code>check_invoice_compliance</code>, and <code>post_ccsid_for_pcsid</code> in Python, with corresponding
+methods in the <a href="../../reference/api-client/">other bindings</a>. ZATCA documents the
+onboarding sequence in section 3.3 of the
+<a href="https://www.zatca.gov.sa/ar/E-Invoicing/Introduction/Guidelines/Documents/E-invoicing%20Detailed%20Technical%20Guidelines.pdf">Detailed Technical Guidelines</a>.</p>
+<p>“Production CSID” is the credential's role. A production-type CSID issued by the
+Integration Sandbox belongs to the sandbox. It cannot authenticate against the
+live production environment. See ZATCA's
+<a href="https://www.zatca.gov.sa/en/E-Invoicing/SystemsDevelopers/ComplianceEnablementToolbox/Documents/Developer%20Portal%20User%20Manual.pdf">Developer Portal Manual</a>.</p>
+<p>Prepare these inputs:</p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>What to use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>certificate.pem</code></td>
+<td>PEM certificate issued for the sandbox device.</td>
+</tr>
+<tr>
+<td><code>private-key.pem</code></td>
+<td>The private key used to create that device's CSR.</td>
+</tr>
+<tr>
+<td><code>ZATCA_TOKEN</code></td>
+<td><code>binarySecurityToken</code> from the sandbox production-CSID response, unchanged.</td>
+</tr>
+<tr>
+<td><code>ZATCA_SECRET</code></td>
+<td><code>secret</code> from that same response.</td>
+</tr>
+<tr>
+<td><code>input.json</code></td>
+<td>Seller details matching your test device, plus invoice identity and trusted predecessor context.</td>
+</tr>
+</tbody>
+</table>
+<p>The token is an API credential; the signing examples expect a PEM certificate
+file. Export the issued certificate in PEM format. A newly generated key will
+not match a certificate issued for an earlier CSR.</p>
+<h2 id="2-download-one-complete-example">2. Download one complete example<a class="headerlink" href="#2-download-one-complete-example" title="Permanent link">&para;</a></h2>
+<p>Download one project and extract it into an empty working folder. Each archive
+contains the complete source, project configuration, and
+<a href="../../assets/examples/journey/input.json">input.json</a>. Open a terminal in that folder.</p>
+<p>Edit the seller in <code>input.json</code> to match your sandbox onboarding identity. The
+sample contains demonstration data. <code>invoice_counter</code> is a decimal string to
+avoid JavaScript integer precision loss; use the next counter for your EGS unit.
+The predecessor hash must come from your trusted invoice history. The sample
+value is for the demonstration's initial invoice, not a value to reuse for every
+invoice. Each run generates a new UUID and the current UTC issue time.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Python</label><label for="__tabbed_1_2">C#</label><label for="__tabbed_1_3">TypeScript</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p><a class="md-button" href="../../assets/examples/journey/python.zip">Download the Python project</a></p>
+<p>Use CPython 3.13 for this walkthrough. Version 0.5.0 publishes wheels for
+CPython 3.9–3.13; Python 3.14 needs a source build and is outside this setup. Individual files: <a href="../../assets/examples/journey/python/main.py">main.py</a> and
+<a href="../../assets/examples/journey/python/requirements.txt">requirements.txt</a>.</p>
+<div class="highlight"><pre><span></span><code>python3.13<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv
+.<span class="w"> </span>.venv/bin/activate
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+</code></pre></div>
+<p>On Windows PowerShell, create the environment with <code>py -3.13 -m venv .venv</code>
+and activate it with <code>.venv\Scripts\Activate.ps1</code>.</p>
+<details class="example">
+<summary>Complete Python program</summary>
+<div class="highlight"><pre><span></span><code><span class="sd">"""One simplified invoice: create, sign, validate, report, inspect the result."""</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">uuid4</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fatoora</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvoiceBuilder</span><span class="p">,</span> <span class="n">InvoiceSubType</span><span class="p">,</span> <span class="n">InvoiceTypeKind</span><span class="p">,</span> <span class="n">VatCategory</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fatoora.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">CsidProduction</span><span class="p">,</span> <span class="n">ZatcaClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fatoora.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span><span class="p">,</span> <span class="n">Environment</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fatoora.sign</span><span class="w"> </span><span class="kn">import</span> <span class="n">Signer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fatoora.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">FfiError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fatoora.validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_zatca_invoice_from_str</span>
+
+<span class="n">ENVIRONMENT</span> <span class="o">=</span> <span class="n">Environment</span><span class="o">.</span><span class="n">NON_PRODUCTION</span>  <span class="c1"># Integration Sandbox only.</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">required</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Set </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> first"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">save_json</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">messages</span><span class="p">(</span><span class="n">items</span><span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">item</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"code"</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">code</span><span class="p">(),</span> <span class="s2">"message"</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">message</span><span class="p">()})</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">handle_response</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">response</span><span class="o">.</span><span class="n">validation_results</span><span class="p">()</span> <span class="k">as</span> <span class="n">results</span><span class="p">:</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"http_status"</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">http_status</span><span class="p">(),</span>
+            <span class="s2">"outcome"</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">outcome</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="s2">"reporting_status"</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">reporting_status</span><span class="p">(),</span>
+            <span class="s2">"validation_status"</span><span class="p">:</span> <span class="n">results</span><span class="o">.</span><span class="n">status</span><span class="p">(),</span>
+            <span class="s2">"info"</span><span class="p">:</span> <span class="n">messages</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">info_messages</span><span class="p">()),</span>
+            <span class="s2">"warnings"</span><span class="p">:</span> <span class="n">messages</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">warning_messages</span><span class="p">()),</span>
+            <span class="s2">"errors"</span><span class="p">:</span> <span class="n">messages</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">error_messages</span><span class="p">()),</span>
+        <span class="p">}</span>
+    <span class="n">save_json</span><span class="p">(</span><span class="n">output</span> <span class="o">/</span> <span class="s2">"response.json"</span><span class="p">,</span> <span class="n">summary</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">summary</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">ensure_accepted</span><span class="p">()</span>  <span class="c1"># A successful HTTP status alone is insufficient.</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Sandbox reporting accepted. Keep any warnings in response.json."</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">input_path</span><span class="p">,</span> <span class="n">submit</span><span class="p">):</span>
+    <span class="c1"># Read credentials before creating an invoice; never write them into artifacts.</span>
+    <span class="n">certificate</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">required</span><span class="p">(</span><span class="s2">"ZATCA_CERT_PATH"</span><span class="p">))</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">required</span><span class="p">(</span><span class="s2">"ZATCA_KEY_PATH"</span><span class="p">))</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="n">token</span><span class="p">,</span> <span class="n">secret</span> <span class="o">=</span> <span class="p">(</span><span class="n">required</span><span class="p">(</span><span class="s2">"ZATCA_TOKEN"</span><span class="p">),</span> <span class="n">required</span><span class="p">(</span><span class="s2">"ZATCA_SECRET"</span><span class="p">))</span> <span class="k">if</span> <span class="n">submit</span> <span class="k">else</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">input_path</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
+    <span class="n">seller</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">"seller"</span><span class="p">]</span>
+    <span class="n">invoice_uuid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid4</span><span class="p">())</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"runs"</span><span class="p">)</span> <span class="o">/</span> <span class="n">invoice_uuid</span>
+    <span class="n">output</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Artifacts: </span><span class="si">{</span><span class="n">output</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"uuid"</span><span class="p">:</span> <span class="n">invoice_uuid</span><span class="p">,</span> <span class="s2">"invoice_id"</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s2">"invoice_id"</span><span class="p">],</span> <span class="s2">"stage"</span><span class="p">:</span> <span class="s2">"create"</span><span class="p">,</span> <span class="s2">"submitted"</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+    <span class="n">save_json</span><span class="p">(</span><span class="n">output</span> <span class="o">/</span> <span class="s2">"state.json"</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">InvoiceBuilder</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">InvoiceTypeKind</span><span class="o">.</span><span class="n">TAX</span><span class="p">,</span> <span class="n">InvoiceSubType</span><span class="o">.</span><span class="n">SIMPLIFIED</span><span class="p">)</span> <span class="k">as</span> <span class="n">builder</span><span class="p">:</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">set_id</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"invoice_id"</span><span class="p">])</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">set_uuid</span><span class="p">(</span><span class="n">invoice_uuid</span><span class="p">)</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">set_issue_datetime</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2">T%H:%M:%SZ"</span><span class="p">))</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">set_currency</span><span class="p">(</span><span class="s2">"SAR"</span><span class="p">)</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">set_invoice_counter</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"invoice_counter"</span><span class="p">]))</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">set_previous_invoice_hash</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"previous_invoice_hash"</span><span class="p">])</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">set_payment_means_code</span><span class="p">(</span><span class="s2">"10"</span><span class="p">)</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">set_vat_category</span><span class="p">(</span><span class="n">VatCategory</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">)</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">set_seller</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">seller</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span> <span class="n">country_code</span><span class="o">=</span><span class="s2">"SA"</span><span class="p">,</span> <span class="n">city</span><span class="o">=</span><span class="n">seller</span><span class="p">[</span><span class="s2">"city"</span><span class="p">],</span>
+                <span class="n">street</span><span class="o">=</span><span class="n">seller</span><span class="p">[</span><span class="s2">"street"</span><span class="p">],</span> <span class="n">building_number</span><span class="o">=</span><span class="n">seller</span><span class="p">[</span><span class="s2">"building_number"</span><span class="p">],</span>
+                <span class="n">postal_code</span><span class="o">=</span><span class="n">seller</span><span class="p">[</span><span class="s2">"postal_code"</span><span class="p">],</span> <span class="n">district</span><span class="o">=</span><span class="n">seller</span><span class="p">[</span><span class="s2">"district"</span><span class="p">],</span>
+                <span class="n">additional_number</span><span class="o">=</span><span class="n">seller</span><span class="p">[</span><span class="s2">"additional_number"</span><span class="p">],</span> <span class="n">vat_id</span><span class="o">=</span><span class="n">seller</span><span class="p">[</span><span class="s2">"vat_id"</span><span class="p">],</span>
+                <span class="n">other_id</span><span class="o">=</span><span class="n">seller</span><span class="p">[</span><span class="s2">"crn"</span><span class="p">],</span> <span class="n">other_id_scheme</span><span class="o">=</span><span class="s2">"CRN"</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">add_line_item</span><span class="p">(</span><span class="s2">"دفتر"</span><span class="p">,</span> <span class="s2">"2"</span><span class="p">,</span> <span class="s2">"PCE"</span><span class="p">,</span> <span class="s2">"50"</span><span class="p">,</span> <span class="s2">"15"</span><span class="p">,</span> <span class="n">VatCategory</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span> <span class="k">as</span> <span class="n">invoice</span><span class="p">,</span> <span class="n">Signer</span><span class="o">.</span><span class="n">from_pem</span><span class="p">(</span><span class="n">certificate</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="k">as</span> <span class="n">signer</span><span class="p">:</span>
+                <span class="p">(</span><span class="n">output</span> <span class="o">/</span> <span class="s2">"invoice.xml"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">invoice</span><span class="o">.</span><span class="n">to_xml</span><span class="p">(),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">"Created: SAR 100 net + SAR 15 VAT = SAR 115 payable"</span><span class="p">)</span>
+                <span class="n">state</span><span class="p">[</span><span class="s2">"stage"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"sign"</span>
+                <span class="k">with</span> <span class="n">invoice</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">signer</span><span class="p">)</span> <span class="k">as</span> <span class="n">signed</span><span class="p">,</span> <span class="n">Config</span><span class="p">(</span><span class="n">ENVIRONMENT</span><span class="p">)</span> <span class="k">as</span> <span class="n">config</span><span class="p">:</span>
+                    <span class="n">signed_xml</span> <span class="o">=</span> <span class="n">signed</span><span class="o">.</span><span class="n">xml</span><span class="p">()</span>
+                    <span class="p">(</span><span class="n">output</span> <span class="o">/</span> <span class="s2">"signed.xml"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">signed_xml</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+                    <span class="n">state</span><span class="p">[</span><span class="s2">"invoice_hash"</span><span class="p">]</span> <span class="o">=</span> <span class="n">signed</span><span class="o">.</span><span class="n">invoice_hash</span><span class="p">()</span>
+                    <span class="n">state</span><span class="p">[</span><span class="s2">"stage"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"validate"</span>
+                    <span class="n">report</span> <span class="o">=</span> <span class="n">validate_zatca_invoice_from_str</span><span class="p">(</span>
+                        <span class="n">config</span><span class="p">,</span> <span class="n">signed_xml</span><span class="p">,</span> <span class="n">previous_invoice_hash</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">"previous_invoice_hash"</span><span class="p">],</span>
+                    <span class="p">)</span>
+                    <span class="n">save_json</span><span class="p">(</span><span class="n">output</span> <span class="o">/</span> <span class="s2">"validation.json"</span><span class="p">,</span> <span class="n">report</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">report</span><span class="p">[</span><span class="s2">"is_valid"</span><span class="p">]:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Local validation failed; inspect validation.json. Nothing was submitted."</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">"Local validation passed; inspect validation.json for warnings"</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">submit</span><span class="p">:</span>
+                        <span class="n">state</span><span class="p">[</span><span class="s2">"stage"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"local_only"</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">"Local run complete. No reporting request sent. Use --submit with sandbox credentials."</span><span class="p">)</span>
+                        <span class="k">return</span>
+                    <span class="n">state</span><span class="p">[</span><span class="s2">"stage"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"report"</span>
+                    <span class="n">state</span><span class="p">[</span><span class="s2">"submitted"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Attempted; outcome may be unknown if the connection fails.</span>
+                    <span class="n">save_json</span><span class="p">(</span><span class="n">output</span> <span class="o">/</span> <span class="s2">"state.json"</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+                    <span class="k">with</span> <span class="n">CsidProduction</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">ENVIRONMENT</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">secret</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">as</span> <span class="n">credentials</span><span class="p">:</span>
+                        <span class="k">with</span> <span class="n">ZatcaClient</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+                            <span class="k">with</span> <span class="n">client</span><span class="o">.</span><span class="n">report_simplified_invoice</span><span class="p">(</span><span class="n">signed</span><span class="p">,</span> <span class="n">credentials</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"en"</span><span class="p">)</span> <span class="k">as</span> <span class="n">response</span><span class="p">:</span>
+                                <span class="n">handle_response</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+                    <span class="n">state</span><span class="p">[</span><span class="s2">"stage"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"accepted"</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="n">state</span><span class="p">[</span><span class="s2">"error_type"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">error</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="n">FfiError</span><span class="p">):</span>
+            <span class="n">save_json</span><span class="p">(</span><span class="n">output</span> <span class="o">/</span> <span class="s2">"error.json"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"code"</span><span class="p">:</span> <span class="n">error</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="s2">"details"</span><span class="p">:</span> <span class="n">error</span><span class="o">.</span><span class="n">details</span><span class="p">})</span>
+        <span class="k">raise</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">save_json</span><span class="p">(</span><span class="n">output</span> <span class="o">/</span> <span class="s2">"state.json"</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">"--input"</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">"input.json"</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">"--submit"</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Report to the Integration Sandbox"</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">run</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">submit</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Stopped: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"No automatic retry. Inspect saved artifacts before another run."</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div>
+</details>
+</div>
+<div class="tabbed-block">
+<p><a class="md-button" href="../../assets/examples/journey/csharp.zip">Download the C# project</a></p>
+<p>Requires the .NET 8 SDK and a <a href="../../reference/bindings/csharp/">supported native platform</a>.
+Individual files: <a href="../../assets/examples/journey/csharp/Program.cs">Program.cs</a> and
+<a href="../../assets/examples/journey/csharp/Journey.csproj">Journey.csproj</a>.</p>
+<div class="highlight"><pre><span></span><code>dotnet<span class="w"> </span>restore
+</code></pre></div>
+<p>The project enables nullable references and imports the <code>Fatoora</code> namespace.</p>
+<details class="example">
+<summary>Complete C# program</summary>
+<div class="highlight"><pre><span></span><code><span class="k">using</span><span class="w"> </span><span class="nn">System.Text.Json</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="nn">System.Globalization</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="nn">Fatoora</span><span class="p">;</span>
+
+<span class="k">public</span><span class="w"> </span><span class="k">static</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">Program</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">byte</span><span class="w"> </span><span class="n">Sandbox</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">// Integration Sandbox only.</span>
+<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">static</span><span class="w"> </span><span class="k">readonly</span><span class="w"> </span><span class="n">JsonSerializerOptions</span><span class="w"> </span><span class="n">JsonOptions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">WriteIndented</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span><span class="w"> </span><span class="p">};</span>
+<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">static</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="nf">Required</span><span class="p">(</span><span class="kt">string</span><span class="w"> </span><span class="n">name</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span>
+<span class="w">        </span><span class="o">!</span><span class="kt">string</span><span class="p">.</span><span class="n">IsNullOrWhiteSpace</span><span class="p">(</span><span class="n">Environment</span><span class="p">.</span><span class="n">GetEnvironmentVariable</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+<span class="w">            </span><span class="o">?</span><span class="w"> </span><span class="n">Environment</span><span class="p">.</span><span class="n">GetEnvironmentVariable</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">!</span><span class="p">.</span><span class="n">Trim</span><span class="p">()</span>
+<span class="w">            </span><span class="p">:</span><span class="w"> </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">InvalidOperationException</span><span class="p">(</span><span class="s">$"Set {name} first"</span><span class="p">);</span>
+<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">static</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Save</span><span class="p">(</span><span class="kt">string</span><span class="w"> </span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="kt">object</span><span class="w"> </span><span class="k">value</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span>
+<span class="w">        </span><span class="n">File</span><span class="p">.</span><span class="n">WriteAllText</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="n">JsonSerializer</span><span class="p">.</span><span class="n">Serialize</span><span class="p">(</span><span class="k">value</span><span class="p">,</span><span class="w"> </span><span class="n">JsonOptions</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">"\n"</span><span class="p">);</span>
+<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">static</span><span class="w"> </span><span class="kt">string?</span><span class="w"> </span><span class="n">ReadText</span><span class="p">(</span><span class="n">Text</span><span class="o">?</span><span class="w"> </span><span class="k">value</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">using</span><span class="w"> </span><span class="p">(</span><span class="k">value</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="k">value</span><span class="o">?.</span><span class="n">Value</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">private</span><span class="w"> </span><span class="k">static</span><span class="w"> </span><span class="kt">object</span><span class="p">[]</span><span class="w"> </span><span class="nf">Messages</span><span class="p">(</span><span class="k">nuint</span><span class="w"> </span><span class="n">count</span><span class="p">,</span><span class="w"> </span><span class="n">Func</span><span class="o">&lt;</span><span class="k">nuint</span><span class="p">,</span><span class="w"> </span><span class="n">ValidationMessage</span><span class="o">&gt;</span><span class="w"> </span><span class="k">get</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">var</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="kt">object</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">nuint</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">using</span><span class="w"> </span><span class="nn">var</span><span class="w"> </span><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">get</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+<span class="w">            </span><span class="n">result</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ReadText</span><span class="p">(</span><span class="n">message</span><span class="p">.</span><span class="n">Code</span><span class="p">()),</span><span class="w"> </span><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ReadText</span><span class="p">(</span><span class="n">message</span><span class="p">.</span><span class="n">Message</span><span class="p">())</span><span class="w"> </span><span class="p">});</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="n">ToArray</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="k">static</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">HandleResponse</span><span class="p">(</span><span class="n">ValidationResponse</span><span class="w"> </span><span class="n">response</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">output</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">using</span><span class="w"> </span><span class="nn">var</span><span class="w"> </span><span class="n">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">response</span><span class="p">.</span><span class="n">ValidationResults</span><span class="p">();</span>
+<span class="w">        </span><span class="kt">var</span><span class="w"> </span><span class="n">summary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">http_status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">response</span><span class="p">.</span><span class="n">HttpStatus</span><span class="p">(),</span><span class="w"> </span><span class="n">outcome</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">response</span><span class="p">.</span><span class="n">Outcome</span><span class="p">().</span><span class="n">ToString</span><span class="p">(),</span>
+<span class="w">            </span><span class="n">reporting_status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ReadText</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="n">ReportingStatus</span><span class="p">()),</span>
+<span class="w">            </span><span class="n">validation_status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ReadText</span><span class="p">(</span><span class="n">results</span><span class="p">.</span><span class="n">Status</span><span class="p">()),</span>
+<span class="w">            </span><span class="n">info</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Messages</span><span class="p">(</span><span class="n">results</span><span class="p">.</span><span class="n">InfoLen</span><span class="p">(),</span><span class="w"> </span><span class="n">results</span><span class="p">.</span><span class="n">InfoMessage</span><span class="p">),</span>
+<span class="w">            </span><span class="n">warnings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Messages</span><span class="p">(</span><span class="n">results</span><span class="p">.</span><span class="n">WarningLen</span><span class="p">(),</span><span class="w"> </span><span class="n">results</span><span class="p">.</span><span class="n">WarningMessage</span><span class="p">),</span>
+<span class="w">            </span><span class="n">errors</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Messages</span><span class="p">(</span><span class="n">results</span><span class="p">.</span><span class="n">ErrorLen</span><span class="p">(),</span><span class="w"> </span><span class="n">results</span><span class="p">.</span><span class="n">ErrorMessage</span><span class="p">),</span>
+<span class="w">        </span><span class="p">};</span>
+<span class="w">        </span><span class="n">Save</span><span class="p">(</span><span class="n">Path</span><span class="p">.</span><span class="n">Combine</span><span class="p">(</span><span class="n">output</span><span class="p">,</span><span class="w"> </span><span class="s">"response.json"</span><span class="p">),</span><span class="w"> </span><span class="n">summary</span><span class="p">);</span>
+<span class="w">        </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="n">JsonSerializer</span><span class="p">.</span><span class="n">Serialize</span><span class="p">(</span><span class="n">summary</span><span class="p">,</span><span class="w"> </span><span class="n">JsonOptions</span><span class="p">));</span>
+<span class="w">        </span><span class="n">response</span><span class="p">.</span><span class="n">EnsureAccepted</span><span class="p">();</span><span class="w"> </span><span class="c1">// A successful HTTP status alone is insufficient.</span>
+<span class="w">        </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">"Sandbox reporting accepted. Keep any warnings in response.json."</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="k">static</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Run</span><span class="p">(</span><span class="kt">string</span><span class="w"> </span><span class="n">inputPath</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">submit</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">string</span><span class="w"> </span><span class="n">certificate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">File</span><span class="p">.</span><span class="n">ReadAllText</span><span class="p">(</span><span class="n">Required</span><span class="p">(</span><span class="s">"ZATCA_CERT_PATH"</span><span class="p">));</span>
+<span class="w">        </span><span class="kt">string</span><span class="w"> </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">File</span><span class="p">.</span><span class="n">ReadAllText</span><span class="p">(</span><span class="n">Required</span><span class="p">(</span><span class="s">"ZATCA_KEY_PATH"</span><span class="p">));</span>
+<span class="w">        </span><span class="kt">string</span><span class="w"> </span><span class="n">token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">submit</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">Required</span><span class="p">(</span><span class="s">"ZATCA_TOKEN"</span><span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s">""</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">string</span><span class="w"> </span><span class="n">secret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">submit</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">Required</span><span class="p">(</span><span class="s">"ZATCA_SECRET"</span><span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s">""</span><span class="p">;</span>
+<span class="w">        </span><span class="k">using</span><span class="w"> </span><span class="nn">var</span><span class="w"> </span><span class="n">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">JsonDocument</span><span class="p">.</span><span class="n">Parse</span><span class="p">(</span><span class="n">File</span><span class="p">.</span><span class="n">ReadAllText</span><span class="p">(</span><span class="n">inputPath</span><span class="p">));</span>
+<span class="w">        </span><span class="kt">var</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">input</span><span class="p">.</span><span class="n">RootElement</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">var</span><span class="w"> </span><span class="n">seller</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">GetProperty</span><span class="p">(</span><span class="s">"seller"</span><span class="p">);</span>
+<span class="w">        </span><span class="kt">string</span><span class="w"> </span><span class="nf">Field</span><span class="p">(</span><span class="n">JsonElement</span><span class="w"> </span><span class="n">parent</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">name</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">parent</span><span class="p">.</span><span class="n">GetProperty</span><span class="p">(</span><span class="n">name</span><span class="p">).</span><span class="n">GetString</span><span class="p">()</span>
+<span class="w">            </span><span class="o">??</span><span class="w"> </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">InvalidOperationException</span><span class="p">(</span><span class="s">$"Missing input field: {name}"</span><span class="p">);</span>
+<span class="w">        </span><span class="kt">string</span><span class="w"> </span><span class="n">uuid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Guid</span><span class="p">.</span><span class="n">NewGuid</span><span class="p">().</span><span class="n">ToString</span><span class="p">();</span>
+<span class="w">        </span><span class="kt">string</span><span class="w"> </span><span class="n">output</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Path</span><span class="p">.</span><span class="n">Combine</span><span class="p">(</span><span class="s">"runs"</span><span class="p">,</span><span class="w"> </span><span class="n">uuid</span><span class="p">);</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Directory</span><span class="p">.</span><span class="n">Exists</span><span class="p">(</span><span class="n">output</span><span class="p">))</span><span class="w"> </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">IOException</span><span class="p">(</span><span class="s">"Output directory already exists"</span><span class="p">);</span>
+<span class="w">        </span><span class="n">Directory</span><span class="p">.</span><span class="n">CreateDirectory</span><span class="p">(</span><span class="n">output</span><span class="p">);</span>
+<span class="w">        </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$"Artifacts: {output}"</span><span class="p">);</span>
+<span class="w">        </span><span class="kt">var</span><span class="w"> </span><span class="n">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Dictionary</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">object</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="na">["uuid"]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">uuid</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s">"invoice_id"</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Field</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="s">"invoice_id"</span><span class="p">),</span>
+<span class="w">            </span><span class="na">["stage"]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"create"</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s">"submitted"</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">false</span><span class="p">,</span>
+<span class="w">        </span><span class="p">};</span>
+<span class="w">        </span><span class="n">Save</span><span class="p">(</span><span class="n">Path</span><span class="p">.</span><span class="n">Combine</span><span class="p">(</span><span class="n">output</span><span class="p">,</span><span class="w"> </span><span class="s">"state.json"</span><span class="p">),</span><span class="w"> </span><span class="n">state</span><span class="p">);</span>
+<span class="w">        </span><span class="k">try</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">using</span><span class="w"> </span><span class="nn">var</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">InvoiceBuilder</span><span class="p">.</span><span class="n">New</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="k">null</span><span class="p">,</span><span class="w"> </span><span class="k">null</span><span class="p">,</span><span class="w"> </span><span class="k">null</span><span class="p">,</span><span class="w"> </span><span class="k">null</span><span class="p">);</span>
+<span class="w">            </span><span class="n">builder</span><span class="p">.</span><span class="n">SetId</span><span class="p">(</span><span class="n">Field</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="s">"invoice_id"</span><span class="p">));</span>
+<span class="w">            </span><span class="n">builder</span><span class="p">.</span><span class="n">SetUuid</span><span class="p">(</span><span class="n">uuid</span><span class="p">);</span>
+<span class="w">            </span><span class="n">builder</span><span class="p">.</span><span class="n">SetIssueDatetime</span><span class="p">(</span><span class="n">DateTime</span><span class="p">.</span><span class="n">UtcNow</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">"yyyy-MM-dd'T'HH:mm:ss'Z'"</span><span class="p">,</span><span class="w"> </span><span class="n">CultureInfo</span><span class="p">.</span><span class="n">InvariantCulture</span><span class="p">));</span>
+<span class="w">            </span><span class="n">builder</span><span class="p">.</span><span class="n">SetCurrency</span><span class="p">(</span><span class="s">"SAR"</span><span class="p">);</span>
+<span class="w">            </span><span class="n">builder</span><span class="p">.</span><span class="n">SetInvoiceCounter</span><span class="p">(</span><span class="kt">ulong</span><span class="p">.</span><span class="n">Parse</span><span class="p">(</span><span class="n">Field</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="s">"invoice_counter"</span><span class="p">)));</span>
+<span class="w">            </span><span class="n">builder</span><span class="p">.</span><span class="n">SetPreviousInvoiceHash</span><span class="p">(</span><span class="n">Field</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="s">"previous_invoice_hash"</span><span class="p">));</span>
+<span class="w">            </span><span class="n">builder</span><span class="p">.</span><span class="n">SetPaymentMeansCode</span><span class="p">(</span><span class="s">"10"</span><span class="p">);</span>
+<span class="w">            </span><span class="n">builder</span><span class="p">.</span><span class="n">SetVatCategory</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="w">            </span><span class="k">using</span><span class="w"> </span><span class="nn">var</span><span class="w"> </span><span class="n">address</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Address</span><span class="p">.</span><span class="n">New</span><span class="p">(</span><span class="s">"SA"</span><span class="p">,</span><span class="w"> </span><span class="n">Field</span><span class="p">(</span><span class="n">seller</span><span class="p">,</span><span class="w"> </span><span class="s">"city"</span><span class="p">),</span><span class="w"> </span><span class="n">Field</span><span class="p">(</span><span class="n">seller</span><span class="p">,</span><span class="w"> </span><span class="s">"street"</span><span class="p">),</span>
+<span class="w">                </span><span class="n">Field</span><span class="p">(</span><span class="n">seller</span><span class="p">,</span><span class="w"> </span><span class="s">"building_number"</span><span class="p">),</span><span class="w"> </span><span class="n">Field</span><span class="p">(</span><span class="n">seller</span><span class="p">,</span><span class="w"> </span><span class="s">"postal_code"</span><span class="p">),</span><span class="w"> </span><span class="k">null</span><span class="p">,</span>
+<span class="w">                </span><span class="n">Field</span><span class="p">(</span><span class="n">seller</span><span class="p">,</span><span class="w"> </span><span class="s">"additional_number"</span><span class="p">),</span><span class="w"> </span><span class="n">Field</span><span class="p">(</span><span class="n">seller</span><span class="p">,</span><span class="w"> </span><span class="s">"district"</span><span class="p">));</span>
+<span class="w">            </span><span class="n">builder</span><span class="p">.</span><span class="n">SetSeller</span><span class="p">(</span><span class="n">Field</span><span class="p">(</span><span class="n">seller</span><span class="p">,</span><span class="w"> </span><span class="s">"name"</span><span class="p">),</span><span class="w"> </span><span class="n">address</span><span class="p">,</span><span class="w"> </span><span class="n">Field</span><span class="p">(</span><span class="n">seller</span><span class="p">,</span><span class="w"> </span><span class="s">"vat_id"</span><span class="p">),</span><span class="w"> </span><span class="n">Field</span><span class="p">(</span><span class="n">seller</span><span class="p">,</span><span class="w"> </span><span class="s">"crn"</span><span class="p">),</span><span class="w"> </span><span class="s">"CRN"</span><span class="p">);</span>
+<span class="w">            </span><span class="n">builder</span><span class="p">.</span><span class="n">AddLineItem</span><span class="p">(</span><span class="s">"دفتر"</span><span class="p">,</span><span class="w"> </span><span class="s">"2"</span><span class="p">,</span><span class="w"> </span><span class="s">"PCE"</span><span class="p">,</span><span class="w"> </span><span class="s">"50"</span><span class="p">,</span><span class="w"> </span><span class="s">"15"</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w">            </span><span class="k">using</span><span class="w"> </span><span class="nn">var</span><span class="w"> </span><span class="n">invoice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">Build</span><span class="p">();</span>
+<span class="w">            </span><span class="n">File</span><span class="p">.</span><span class="n">WriteAllText</span><span class="p">(</span><span class="n">Path</span><span class="p">.</span><span class="n">Combine</span><span class="p">(</span><span class="n">output</span><span class="p">,</span><span class="w"> </span><span class="s">"invoice.xml"</span><span class="p">),</span><span class="w"> </span><span class="n">invoice</span><span class="p">.</span><span class="n">Xml</span><span class="p">());</span>
+<span class="w">            </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">"Created: SAR 100 net + SAR 15 VAT = SAR 115 payable"</span><span class="p">);</span>
+<span class="w">            </span><span class="n">state</span><span class="p">[</span><span class="s">"stage"</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"sign"</span><span class="p">;</span>
+<span class="w">            </span><span class="k">using</span><span class="w"> </span><span class="nn">var</span><span class="w"> </span><span class="n">signer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Signer</span><span class="p">.</span><span class="n">FromPem</span><span class="p">(</span><span class="n">certificate</span><span class="p">,</span><span class="w"> </span><span class="n">key</span><span class="p">);</span>
+<span class="w">            </span><span class="k">using</span><span class="w"> </span><span class="nn">var</span><span class="w"> </span><span class="n">signed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">signer</span><span class="p">.</span><span class="n">Sign</span><span class="p">(</span><span class="n">invoice</span><span class="p">);</span>
+<span class="w">            </span><span class="kt">string</span><span class="w"> </span><span class="n">signedXml</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">signed</span><span class="p">.</span><span class="n">Xml</span><span class="p">();</span>
+<span class="w">            </span><span class="n">File</span><span class="p">.</span><span class="n">WriteAllText</span><span class="p">(</span><span class="n">Path</span><span class="p">.</span><span class="n">Combine</span><span class="p">(</span><span class="n">output</span><span class="p">,</span><span class="w"> </span><span class="s">"signed.xml"</span><span class="p">),</span><span class="w"> </span><span class="n">signedXml</span><span class="p">);</span>
+<span class="w">            </span><span class="n">state</span><span class="p">[</span><span class="s">"invoice_hash"</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">signed</span><span class="p">.</span><span class="n">InvoiceHash</span><span class="p">();</span>
+<span class="w">            </span><span class="n">state</span><span class="p">[</span><span class="s">"stage"</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"validate"</span><span class="p">;</span>
+<span class="w">            </span><span class="k">using</span><span class="w"> </span><span class="nn">var</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Config</span><span class="p">.</span><span class="n">New</span><span class="p">(</span><span class="n">Sandbox</span><span class="p">);</span>
+<span class="w">            </span><span class="kt">string</span><span class="w"> </span><span class="n">reportJson</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Xml</span><span class="p">.</span><span class="n">ValidateZatca</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="w"> </span><span class="n">signedXml</span><span class="p">,</span><span class="w"> </span><span class="n">JsonSerializer</span><span class="p">.</span><span class="n">Serialize</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">previous_invoice_hash</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Field</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="s">"previous_invoice_hash"</span><span class="p">),</span>
+<span class="w">            </span><span class="p">}));</span>
+<span class="w">            </span><span class="n">File</span><span class="p">.</span><span class="n">WriteAllText</span><span class="p">(</span><span class="n">Path</span><span class="p">.</span><span class="n">Combine</span><span class="p">(</span><span class="n">output</span><span class="p">,</span><span class="w"> </span><span class="s">"validation.json"</span><span class="p">),</span><span class="w"> </span><span class="n">reportJson</span><span class="p">);</span>
+<span class="w">            </span><span class="k">using</span><span class="w"> </span><span class="nn">var</span><span class="w"> </span><span class="n">report</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">JsonDocument</span><span class="p">.</span><span class="n">Parse</span><span class="p">(</span><span class="n">reportJson</span><span class="p">);</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">report</span><span class="p">.</span><span class="n">RootElement</span><span class="p">.</span><span class="n">GetProperty</span><span class="p">(</span><span class="s">"is_valid"</span><span class="p">).</span><span class="n">GetBoolean</span><span class="p">())</span>
+<span class="w">                </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">InvalidOperationException</span><span class="p">(</span><span class="s">"Local validation failed; inspect validation.json. Nothing was submitted."</span><span class="p">);</span>
+<span class="w">            </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">"Local validation passed; inspect validation.json for warnings"</span><span class="p">);</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">submit</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="n">state</span><span class="p">[</span><span class="s">"stage"</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"local_only"</span><span class="p">;</span>
+<span class="w">                </span><span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">"Local run complete. No reporting request sent. Use --submit with sandbox credentials."</span><span class="p">);</span>
+<span class="w">                </span><span class="k">return</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="n">state</span><span class="p">[</span><span class="s">"stage"</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"report"</span><span class="p">;</span>
+<span class="w">            </span><span class="n">state</span><span class="p">[</span><span class="s">"submitted"</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span><span class="p">;</span><span class="w"> </span><span class="c1">// Attempted; a failed connection can leave the outcome unknown.</span>
+<span class="w">            </span><span class="n">Save</span><span class="p">(</span><span class="n">Path</span><span class="p">.</span><span class="n">Combine</span><span class="p">(</span><span class="n">output</span><span class="p">,</span><span class="w"> </span><span class="s">"state.json"</span><span class="p">),</span><span class="w"> </span><span class="n">state</span><span class="p">);</span>
+<span class="w">            </span><span class="k">using</span><span class="w"> </span><span class="nn">var</span><span class="w"> </span><span class="n">credentials</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CsidProduction</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="n">Sandbox</span><span class="p">,</span><span class="w"> </span><span class="k">null</span><span class="p">,</span><span class="w"> </span><span class="n">token</span><span class="p">,</span><span class="w"> </span><span class="n">secret</span><span class="p">);</span>
+<span class="w">            </span><span class="k">using</span><span class="w"> </span><span class="nn">var</span><span class="w"> </span><span class="n">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ZatcaClient</span><span class="p">.</span><span class="n">Create</span><span class="p">(</span><span class="n">config</span><span class="p">);</span>
+<span class="w">            </span><span class="k">using</span><span class="w"> </span><span class="nn">var</span><span class="w"> </span><span class="n">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span><span class="p">.</span><span class="n">ReportSimplifiedInvoice</span><span class="p">(</span><span class="n">signed</span><span class="p">,</span><span class="w"> </span><span class="n">credentials</span><span class="p">,</span><span class="w"> </span><span class="k">false</span><span class="p">,</span><span class="w"> </span><span class="s">"en"</span><span class="p">);</span>
+<span class="w">            </span><span class="n">HandleResponse</span><span class="p">(</span><span class="n">response</span><span class="p">,</span><span class="w"> </span><span class="n">output</span><span class="p">);</span>
+<span class="w">            </span><span class="n">state</span><span class="p">[</span><span class="s">"stage"</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"accepted"</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">Exception</span><span class="w"> </span><span class="n">error</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">state</span><span class="p">[</span><span class="s">"error_type"</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">error</span><span class="p">.</span><span class="n">GetType</span><span class="p">().</span><span class="n">Name</span><span class="p">;</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">error</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">BindingErrorException</span><span class="w"> </span><span class="n">binding</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="k">using</span><span class="w"> </span><span class="nn">var</span><span class="w"> </span><span class="n">details</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">JsonDocument</span><span class="p">.</span><span class="n">Parse</span><span class="p">(</span><span class="n">binding</span><span class="p">.</span><span class="n">Inner</span><span class="p">.</span><span class="n">DetailsJson</span><span class="p">());</span>
+<span class="w">                </span><span class="n">Save</span><span class="p">(</span><span class="n">Path</span><span class="p">.</span><span class="n">Combine</span><span class="p">(</span><span class="n">output</span><span class="p">,</span><span class="w"> </span><span class="s">"error.json"</span><span class="p">),</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">binding</span><span class="p">.</span><span class="n">Inner</span><span class="p">.</span><span class="n">Code</span><span class="p">(),</span><span class="w"> </span><span class="n">details</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">details</span><span class="p">.</span><span class="n">RootElement</span><span class="w"> </span><span class="p">});</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="k">throw</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">finally</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Save</span><span class="p">(</span><span class="n">Path</span><span class="p">.</span><span class="n">Combine</span><span class="p">(</span><span class="n">output</span><span class="p">,</span><span class="w"> </span><span class="s">"state.json"</span><span class="p">),</span><span class="w"> </span><span class="n">state</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">Main</span><span class="p">(</span><span class="kt">string</span><span class="p">[]</span><span class="w"> </span><span class="n">args</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">try</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="kt">string</span><span class="w"> </span><span class="n">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"input.json"</span><span class="p">;</span>
+<span class="w">            </span><span class="kt">bool</span><span class="w"> </span><span class="n">submit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">false</span><span class="p">;</span>
+<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">args</span><span class="p">.</span><span class="n">Length</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">"--submit"</span><span class="p">)</span><span class="w"> </span><span class="n">submit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span><span class="p">;</span>
+<span class="w">                </span><span class="k">else</span><span class="w"> </span><span class="nf">if</span><span class="w"> </span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">"--input"</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">args</span><span class="p">.</span><span class="n">Length</span><span class="p">)</span><span class="w"> </span><span class="n">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">args</span><span class="p">[</span><span class="o">++</span><span class="n">i</span><span class="p">];</span>
+<span class="w">                </span><span class="k">else</span><span class="w"> </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="nf">ArgumentException</span><span class="p">(</span><span class="s">"Usage: dotnet run -- [--input input.json] [--submit]"</span><span class="p">);</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="n">Run</span><span class="p">(</span><span class="n">input</span><span class="p">,</span><span class="w"> </span><span class="n">submit</span><span class="p">);</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">Exception</span><span class="w"> </span><span class="n">error</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">Console</span><span class="p">.</span><span class="n">Error</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">$"Stopped: {error.Message}"</span><span class="p">);</span>
+<span class="w">            </span><span class="n">Console</span><span class="p">.</span><span class="n">Error</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">"No automatic retry. Inspect saved artifacts before another run."</span><span class="p">);</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+</details>
+</div>
+<div class="tabbed-block">
+<p><a class="md-button" href="../../assets/examples/journey/typescript.zip">Download the TypeScript project</a></p>
+<p>Requires Node.js 22+ and npm. This is a server-side Node program.
+Individual files: <a href="../../assets/examples/journey/typescript/main.ts">main.ts</a>,
+<a href="../../assets/examples/journey/typescript/package.json">package.json</a>, and
+<a href="../../assets/examples/journey/typescript/tsconfig.json">tsconfig.json</a>.</p>
+<div class="highlight"><pre><span></span><code>npm<span class="w"> </span>install
+npm<span class="w"> </span>run<span class="w"> </span>build
+</code></pre></div>
+<p>Keep the installed package's WASM file with its generated modules. Node loads
+it through the package; no browser asset setup is needed for this program.</p>
+<details class="example">
+<summary>Complete TypeScript program</summary>
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">mkdirSync</span><span class="p">,</span><span class="w"> </span><span class="nx">readFileSync</span><span class="p">,</span><span class="w"> </span><span class="nx">writeFileSync</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'node:fs'</span><span class="p">;</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">randomUUID</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'node:crypto'</span><span class="p">;</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">pathToFileURL</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'node:url'</span><span class="p">;</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">resolve</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'node:path'</span><span class="p">;</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">Address</span><span class="p">,</span><span class="w"> </span><span class="nx">BindingError</span><span class="p">,</span><span class="w"> </span><span class="nx">Config</span><span class="p">,</span><span class="w"> </span><span class="nx">CsidProduction</span><span class="p">,</span><span class="w"> </span><span class="nx">InvoiceBuilder</span><span class="p">,</span><span class="w"> </span><span class="nx">Signer</span><span class="p">,</span><span class="w"> </span><span class="nx">Xml</span><span class="p">,</span><span class="w"> </span><span class="nx">ZatcaClient</span><span class="p">,</span>
+<span class="w">  </span><span class="kr">type</span><span class="w"> </span><span class="nx">ValidationResponse</span><span class="p">,</span><span class="w"> </span><span class="kr">type</span><span class="w"> </span><span class="nx">ValidationMessage</span><span class="p">,</span>
+<span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'fatoority'</span><span class="p">;</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">ENVIRONMENT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="c1">// Integration Sandbox only.</span>
+<span class="kd">interface</span><span class="w"> </span><span class="nx">Input</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">invoice_id</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">invoice_counter</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">previous_invoice_hash</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">seller</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="nx">vat_id</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="nx">crn</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="nx">city</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="nx">street</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">building_number</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="nx">postal_code</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="nx">additional_number</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="nx">district</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">};</span>
+<span class="p">}</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">required</span><span class="p">(</span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">[</span><span class="nx">name</span><span class="p">]</span><span class="o">?</span><span class="p">.</span><span class="nx">trim</span><span class="p">();</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">value</span><span class="p">)</span><span class="w"> </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="ne">Error</span><span class="p">(</span><span class="sb">`Set </span><span class="si">${</span><span class="nx">name</span><span class="si">}</span><span class="sb"> first`</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">value</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">saveJson</span><span class="p">(</span><span class="nx">path</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="kt">unknown</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="ow">void</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">writeFileSync</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">'\n'</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">messages</span><span class="p">(</span><span class="nx">count</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">,</span><span class="w"> </span><span class="nx">get</span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="nx">index</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">ValidationMessage</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nb">Array</span><span class="p">.</span><span class="kr">from</span><span class="p">({</span><span class="w"> </span><span class="nx">length</span><span class="o">:</span><span class="w"> </span><span class="kt">count</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">(</span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">index</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">item</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">get</span><span class="p">(</span><span class="nx">index</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">code</span><span class="o">:</span><span class="w"> </span><span class="kt">item.code</span><span class="p">()</span><span class="o">?</span><span class="p">.</span><span class="nx">value</span><span class="p">()</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="nx">message</span><span class="o">:</span><span class="w"> </span><span class="kt">item.message</span><span class="p">()</span><span class="o">?</span><span class="p">.</span><span class="nx">value</span><span class="p">()</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">};</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="p">}</span>
+<span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">handleResponse</span><span class="p">(</span><span class="nx">response</span><span class="o">:</span><span class="w"> </span><span class="kt">ValidationResponse</span><span class="p">,</span><span class="w"> </span><span class="nx">output</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="ow">void</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">response</span><span class="p">.</span><span class="nx">validationResults</span><span class="p">();</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">summary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">http_status</span><span class="o">:</span><span class="w"> </span><span class="kt">response.httpStatus</span><span class="p">(),</span><span class="w"> </span><span class="nx">outcome</span><span class="o">:</span><span class="w"> </span><span class="kt">response.outcome</span><span class="p">().</span><span class="nx">value</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">reporting_status</span><span class="o">:</span><span class="w"> </span><span class="kt">response.reportingStatus</span><span class="p">()</span><span class="o">?</span><span class="p">.</span><span class="nx">value</span><span class="p">()</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">validation_status</span><span class="o">:</span><span class="w"> </span><span class="kt">results.status</span><span class="p">()</span><span class="o">?</span><span class="p">.</span><span class="nx">value</span><span class="p">()</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">info</span><span class="o">:</span><span class="w"> </span><span class="kt">messages</span><span class="p">(</span><span class="nx">results</span><span class="p">.</span><span class="nx">infoLen</span><span class="p">(),</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">results</span><span class="p">.</span><span class="nx">infoMessage</span><span class="p">(</span><span class="nx">i</span><span class="p">)),</span>
+<span class="w">    </span><span class="nx">warnings</span><span class="o">:</span><span class="w"> </span><span class="kt">messages</span><span class="p">(</span><span class="nx">results</span><span class="p">.</span><span class="nx">warningLen</span><span class="p">(),</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">results</span><span class="p">.</span><span class="nx">warningMessage</span><span class="p">(</span><span class="nx">i</span><span class="p">)),</span>
+<span class="w">    </span><span class="nx">errors</span><span class="o">:</span><span class="w"> </span><span class="kt">messages</span><span class="p">(</span><span class="nx">results</span><span class="p">.</span><span class="nx">errorLen</span><span class="p">(),</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">results</span><span class="p">.</span><span class="nx">errorMessage</span><span class="p">(</span><span class="nx">i</span><span class="p">)),</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="w">  </span><span class="nx">saveJson</span><span class="p">(</span><span class="sb">`</span><span class="si">${</span><span class="nx">output</span><span class="si">}</span><span class="sb">/response.json`</span><span class="p">,</span><span class="w"> </span><span class="nx">summary</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">summary</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">));</span>
+<span class="w">  </span><span class="nx">response</span><span class="p">.</span><span class="nx">ensureAccepted</span><span class="p">();</span><span class="w"> </span><span class="c1">// A successful HTTP status alone is insufficient.</span>
+<span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Sandbox reporting accepted. Keep any warnings in response.json.'</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="k">export</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">run</span><span class="p">(</span><span class="nx">inputPath</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">submit</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">,</span><span class="w"> </span><span class="nx">transport?</span><span class="o">:</span><span class="w"> </span><span class="kt">typeof</span><span class="w"> </span><span class="nx">fetch</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="nb">Promise</span><span class="o">&lt;</span><span class="ow">void</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">certificate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">readFileSync</span><span class="p">(</span><span class="nx">required</span><span class="p">(</span><span class="s1">'ZATCA_CERT_PATH'</span><span class="p">),</span><span class="w"> </span><span class="s1">'utf8'</span><span class="p">);</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">readFileSync</span><span class="p">(</span><span class="nx">required</span><span class="p">(</span><span class="s1">'ZATCA_KEY_PATH'</span><span class="p">),</span><span class="w"> </span><span class="s1">'utf8'</span><span class="p">);</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">submit</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">required</span><span class="p">(</span><span class="s1">'ZATCA_TOKEN'</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s1">''</span><span class="p">;</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">secret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">submit</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">required</span><span class="p">(</span><span class="s1">'ZATCA_SECRET'</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s1">''</span><span class="p">;</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="kt">Input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">readFileSync</span><span class="p">(</span><span class="nx">inputPath</span><span class="p">,</span><span class="w"> </span><span class="s1">'utf8'</span><span class="p">));</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">seller</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">data</span><span class="p">.</span><span class="nx">seller</span><span class="p">;</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">uuid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">randomUUID</span><span class="p">();</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">output</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`runs/</span><span class="si">${</span><span class="nx">uuid</span><span class="si">}</span><span class="sb">`</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">mkdirSync</span><span class="p">(</span><span class="s1">'runs'</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">recursive</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">});</span>
+<span class="w">  </span><span class="nx">mkdirSync</span><span class="p">(</span><span class="nx">output</span><span class="p">);</span><span class="w"> </span><span class="c1">// A new directory preserves earlier attempts.</span>
+<span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`Artifacts: </span><span class="si">${</span><span class="nx">output</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">state</span><span class="o">:</span><span class="w"> </span><span class="kt">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">unknown</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">uuid</span><span class="p">,</span><span class="w"> </span><span class="nx">invoice_id</span><span class="o">:</span><span class="w"> </span><span class="kt">data.invoice_id</span><span class="p">,</span><span class="w"> </span><span class="nx">stage</span><span class="o">:</span><span class="w"> </span><span class="s1">'create'</span><span class="p">,</span><span class="w"> </span><span class="nx">submitted</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="w">  </span><span class="nx">saveJson</span><span class="p">(</span><span class="sb">`</span><span class="si">${</span><span class="nx">output</span><span class="si">}</span><span class="sb">/state.json`</span><span class="p">,</span><span class="w"> </span><span class="nx">state</span><span class="p">);</span>
+<span class="w">  </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">builder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">InvoiceBuilder</span><span class="p">.</span><span class="nx">new_</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">);</span><span class="w"> </span><span class="c1">// Tax, simplified.</span>
+<span class="w">    </span><span class="nx">builder</span><span class="p">.</span><span class="nx">setId</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">invoice_id</span><span class="p">);</span>
+<span class="w">    </span><span class="nx">builder</span><span class="p">.</span><span class="nx">setUuid</span><span class="p">(</span><span class="nx">uuid</span><span class="p">);</span>
+<span class="w">    </span><span class="nx">builder</span><span class="p">.</span><span class="nx">setIssueDatetime</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nb">Date</span><span class="p">().</span><span class="nx">toISOString</span><span class="p">().</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/\.\d{3}Z$/</span><span class="p">,</span><span class="w"> </span><span class="s1">'Z'</span><span class="p">));</span>
+<span class="w">    </span><span class="nx">builder</span><span class="p">.</span><span class="nx">setCurrency</span><span class="p">(</span><span class="s1">'SAR'</span><span class="p">);</span>
+<span class="w">    </span><span class="nx">builder</span><span class="p">.</span><span class="nx">setInvoiceCounter</span><span class="p">(</span><span class="nb">BigInt</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">invoice_counter</span><span class="p">));</span>
+<span class="w">    </span><span class="nx">builder</span><span class="p">.</span><span class="nx">setPreviousInvoiceHash</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">previous_invoice_hash</span><span class="p">);</span>
+<span class="w">    </span><span class="nx">builder</span><span class="p">.</span><span class="nx">setPaymentMeansCode</span><span class="p">(</span><span class="s1">'10'</span><span class="p">);</span>
+<span class="w">    </span><span class="nx">builder</span><span class="p">.</span><span class="nx">setVatCategory</span><span class="p">(</span><span class="mf">1</span><span class="p">);</span><span class="w"> </span><span class="c1">// Standard VAT category.</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">address</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">Address</span><span class="p">.</span><span class="nx">new_</span><span class="p">(</span><span class="s1">'SA'</span><span class="p">,</span><span class="w"> </span><span class="nx">seller</span><span class="p">.</span><span class="nx">city</span><span class="p">,</span><span class="w"> </span><span class="nx">seller</span><span class="p">.</span><span class="nx">street</span><span class="p">,</span><span class="w"> </span><span class="nx">seller</span><span class="p">.</span><span class="nx">building_number</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">seller</span><span class="p">.</span><span class="nx">postal_code</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="nx">seller</span><span class="p">.</span><span class="nx">additional_number</span><span class="p">,</span><span class="w"> </span><span class="nx">seller</span><span class="p">.</span><span class="nx">district</span><span class="p">);</span>
+<span class="w">    </span><span class="nx">builder</span><span class="p">.</span><span class="nx">setSeller</span><span class="p">(</span><span class="nx">seller</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span><span class="w"> </span><span class="nx">address</span><span class="p">,</span><span class="w"> </span><span class="nx">seller</span><span class="p">.</span><span class="nx">vat_id</span><span class="p">,</span><span class="w"> </span><span class="nx">seller</span><span class="p">.</span><span class="nx">crn</span><span class="p">,</span><span class="w"> </span><span class="s1">'CRN'</span><span class="p">);</span>
+<span class="w">    </span><span class="nx">builder</span><span class="p">.</span><span class="nx">addLineItem</span><span class="p">(</span><span class="s1">'دفتر'</span><span class="p">,</span><span class="w"> </span><span class="s1">'2'</span><span class="p">,</span><span class="w"> </span><span class="s1">'PCE'</span><span class="p">,</span><span class="w"> </span><span class="s1">'50'</span><span class="p">,</span><span class="w"> </span><span class="s1">'15'</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">);</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">invoice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">builder</span><span class="p">.</span><span class="nx">build</span><span class="p">();</span>
+<span class="w">    </span><span class="nx">writeFileSync</span><span class="p">(</span><span class="sb">`</span><span class="si">${</span><span class="nx">output</span><span class="si">}</span><span class="sb">/invoice.xml`</span><span class="p">,</span><span class="w"> </span><span class="nx">invoice</span><span class="p">.</span><span class="nx">xml</span><span class="p">());</span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Created: SAR 100 net + SAR 15 VAT = SAR 115 payable'</span><span class="p">);</span>
+<span class="w">    </span><span class="nx">state</span><span class="p">.</span><span class="nx">stage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'sign'</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">signed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">Signer</span><span class="p">.</span><span class="nx">fromPem</span><span class="p">(</span><span class="nx">certificate</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="p">).</span><span class="nx">sign</span><span class="p">(</span><span class="nx">invoice</span><span class="p">);</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">signedXml</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">signed</span><span class="p">.</span><span class="nx">xml</span><span class="p">();</span>
+<span class="w">    </span><span class="nx">writeFileSync</span><span class="p">(</span><span class="sb">`</span><span class="si">${</span><span class="nx">output</span><span class="si">}</span><span class="sb">/signed.xml`</span><span class="p">,</span><span class="w"> </span><span class="nx">signedXml</span><span class="p">);</span>
+<span class="w">    </span><span class="nx">state</span><span class="p">.</span><span class="nx">invoice_hash</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">signed</span><span class="p">.</span><span class="nx">invoiceHash</span><span class="p">();</span>
+<span class="w">    </span><span class="nx">state</span><span class="p">.</span><span class="nx">stage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'validate'</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">Config</span><span class="p">.</span><span class="nx">new_</span><span class="p">(</span><span class="nx">ENVIRONMENT</span><span class="p">);</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">report</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">Xml</span><span class="p">.</span><span class="nx">validateZatca</span><span class="p">(</span><span class="nx">config</span><span class="p">,</span><span class="w"> </span><span class="nx">signedXml</span><span class="p">,</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">({</span>
+<span class="w">      </span><span class="nx">previous_invoice_hash</span><span class="o">:</span><span class="w"> </span><span class="kt">data.previous_invoice_hash</span><span class="p">,</span>
+<span class="w">    </span><span class="p">})));</span>
+<span class="w">    </span><span class="nx">saveJson</span><span class="p">(</span><span class="sb">`</span><span class="si">${</span><span class="nx">output</span><span class="si">}</span><span class="sb">/validation.json`</span><span class="p">,</span><span class="w"> </span><span class="nx">report</span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">report</span><span class="p">.</span><span class="nx">is_valid</span><span class="p">)</span><span class="w"> </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="ne">Error</span><span class="p">(</span><span class="s1">'Local validation failed; inspect validation.json. Nothing was submitted.'</span><span class="p">);</span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Local validation passed; inspect validation.json for warnings'</span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">submit</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">state</span><span class="p">.</span><span class="nx">stage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'local_only'</span><span class="p">;</span>
+<span class="w">      </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Local run complete. No reporting request sent. Use --submit with sandbox credentials.'</span><span class="p">);</span>
+<span class="w">      </span><span class="k">return</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="nx">state</span><span class="p">.</span><span class="nx">stage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'report'</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">state</span><span class="p">.</span><span class="nx">submitted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span><span class="w"> </span><span class="c1">// Attempted; a failed connection can leave the outcome unknown.</span>
+<span class="w">    </span><span class="nx">saveJson</span><span class="p">(</span><span class="sb">`</span><span class="si">${</span><span class="nx">output</span><span class="si">}</span><span class="sb">/state.json`</span><span class="p">,</span><span class="w"> </span><span class="nx">state</span><span class="p">);</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ZatcaClient</span><span class="p">(</span><span class="nx">config</span><span class="p">,</span><span class="w"> </span><span class="nx">transport</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">fetch</span><span class="o">:</span><span class="w"> </span><span class="kt">transport</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="p">{});</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">credentials</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">CsidProduction</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="nx">ENVIRONMENT</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="nx">token</span><span class="p">,</span><span class="w"> </span><span class="nx">secret</span><span class="p">);</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">reportSimplifiedInvoice</span><span class="p">(</span><span class="nx">signed</span><span class="p">,</span><span class="w"> </span><span class="nx">credentials</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="s1">'en'</span><span class="p">);</span>
+<span class="w">    </span><span class="nx">handleResponse</span><span class="p">(</span><span class="nx">response</span><span class="p">,</span><span class="w"> </span><span class="nx">output</span><span class="p">);</span>
+<span class="w">    </span><span class="nx">state</span><span class="p">.</span><span class="nx">stage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'accepted'</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">state</span><span class="p">.</span><span class="nx">error_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">error</span><span class="w"> </span><span class="ow">instanceof</span><span class="w"> </span><span class="ne">Error</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">error</span><span class="p">.</span><span class="nx">name</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s1">'UnknownError'</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="w"> </span><span class="ow">instanceof</span><span class="w"> </span><span class="ne">Error</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">error</span><span class="p">.</span><span class="nx">cause</span><span class="w"> </span><span class="ow">instanceof</span><span class="w"> </span><span class="nx">BindingError</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">saveJson</span><span class="p">(</span><span class="sb">`</span><span class="si">${</span><span class="nx">output</span><span class="si">}</span><span class="sb">/error.json`</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">code</span><span class="o">:</span><span class="w"> </span><span class="kt">error.cause.code</span><span class="p">(),</span><span class="w"> </span><span class="nx">details</span><span class="o">:</span><span class="w"> </span><span class="kt">JSON.parse</span><span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">cause</span><span class="p">.</span><span class="nx">detailsJson</span><span class="p">())</span><span class="w"> </span><span class="p">});</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">throw</span><span class="w"> </span><span class="nx">error</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">finally</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">saveJson</span><span class="p">(</span><span class="sb">`</span><span class="si">${</span><span class="nx">output</span><span class="si">}</span><span class="sb">/state.json`</span><span class="p">,</span><span class="w"> </span><span class="nx">state</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mf">1</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="k">import</span><span class="p">.</span><span class="nx">meta</span><span class="p">.</span><span class="nx">url</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="nx">pathToFileURL</span><span class="p">(</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mf">1</span><span class="p">])).</span><span class="nx">href</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">args</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mf">2</span><span class="p">);</span>
+<span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="nx">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'input.json'</span><span class="p">;</span>
+<span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="nx">submit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
+<span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="nx">valid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">args</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">args</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">'--submit'</span><span class="p">)</span><span class="w"> </span><span class="nx">submit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">args</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">'--input'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">args</span><span class="p">[</span><span class="nx">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="p">])</span><span class="w"> </span><span class="nx">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">args</span><span class="p">[</span><span class="o">++</span><span class="nx">i</span><span class="p">];</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="nx">valid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">valid</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">'Usage: npm start -- [--input input.json] [--submit]'</span><span class="p">);</span>
+<span class="w">    </span><span class="nx">process</span><span class="p">.</span><span class="nx">exitCode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">run</span><span class="p">(</span><span class="nx">input</span><span class="p">,</span><span class="w"> </span><span class="nx">submit</span><span class="p">).</span><span class="k">catch</span><span class="p">(</span><span class="nx">error</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="sb">`Stopped: </span><span class="si">${</span><span class="nx">error</span><span class="w"> </span><span class="ow">instanceof</span><span class="w"> </span><span class="ne">Error</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">error.message</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kt">String</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
+<span class="w">      </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">'No automatic retry. Inspect saved artifacts before another run.'</span><span class="p">);</span>
+<span class="w">      </span><span class="nx">process</span><span class="p">.</span><span class="nx">exitCode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">});</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+</details>
+</div>
+</div>
+</div>
+<h2 id="3-run-creation-signing-and-validation-locally">3. Run creation, signing and validation locally<a class="headerlink" href="#3-run-creation-signing-and-validation-locally" title="Permanent link">&para;</a></h2>
+<p>Set the certificate and private-key paths. Use absolute paths if you keep them
+outside the working folder.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Bash / zsh</label><label for="__tabbed_2_2">PowerShell</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">ZATCA_CERT_PATH</span><span class="o">=</span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/certificate.pem"</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">ZATCA_KEY_PATH</span><span class="o">=</span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/private-key.pem"</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="nv">$env:ZATCA_CERT_PATH</span> <span class="p">=</span> <span class="nb">Join-Path</span> <span class="nv">$PWD</span> <span class="s2">"certificate.pem"</span>
+<span class="nv">$env:ZATCA_KEY_PATH</span> <span class="p">=</span> <span class="nb">Join-Path</span> <span class="nv">$PWD</span> <span class="s2">"private-key.pem"</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>For a run without sandbox credentials, download the public
+<a href="../../assets/examples/certificate.pem">test certificate</a> and
+<a href="../../assets/examples/private-key.pem">matching test key</a>, keeping those filenames.
+Use the unmodified demonstration <code>input.json</code> with them. These files are for local
+testing; replace them with your issued sandbox pair before reporting.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="3:3"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><input id="__tabbed_3_3" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Python</label><label for="__tabbed_3_2">C#</label><label for="__tabbed_3_3">TypeScript</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>main.py
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>dotnet<span class="w"> </span>run
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>npm<span class="w"> </span>start
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>Expected output, with a different UUID on each run:</p>
+<div class="highlight"><pre><span></span><code>Artifacts: runs/&lt;uuid&gt;
+Created: SAR 100 net + SAR 15 VAT = SAR 115 payable
+Local validation passed; inspect validation.json for warnings
+Local run complete. No reporting request sent. Use --submit with sandbox credentials.
+</code></pre></div>
+<p>Open <code>runs/&lt;uuid&gt;/signed.xml</code> and <code>validation.json</code>. The validation report checks
+the exact signed XML, including the applicable signature and QR checks, using the
+predecessor supplied independently in <code>input.json</code>. If it fails, the program exits
+with a nonzero status before constructing a reporting request.</p>
+<h2 id="4-report-with-your-sandbox-credentials">4. Report with your sandbox credentials<a class="headerlink" href="#4-report-with-your-sandbox-credentials" title="Permanent link">&para;</a></h2>
+<p>Use your issued sandbox certificate/key pair and matching seller data. Load
+<code>ZATCA_TOKEN</code> and <code>ZATCA_SECRET</code> into the process environment through your shell or
+secret manager. They must come from the <strong>production-type sandbox</strong> response,
+not the compliance-CSID response. Do not put credentials in <code>input.json</code>.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Bash / zsh</label><label for="__tabbed_4_2">PowerShell</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">ZATCA_TOKEN</span><span class="o">=</span><span class="s1">'&lt;binarySecurityToken from sandbox production CSID&gt;'</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">ZATCA_SECRET</span><span class="o">=</span><span class="s1">'&lt;secret from that same response&gt;'</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="nv">$env:ZATCA_TOKEN</span> <span class="p">=</span> <span class="s1">'&lt;binarySecurityToken from sandbox production CSID&gt;'</span>
+<span class="nv">$env:ZATCA_SECRET</span> <span class="p">=</span> <span class="s1">'&lt;secret from that same response&gt;'</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>Run one command for the complete workflow:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="5:3"><input checked="checked" id="__tabbed_5_1" name="__tabbed_5" type="radio" /><input id="__tabbed_5_2" name="__tabbed_5" type="radio" /><input id="__tabbed_5_3" name="__tabbed_5" type="radio" /><div class="tabbed-labels"><label for="__tabbed_5_1">Python</label><label for="__tabbed_5_2">C#</label><label for="__tabbed_5_3">TypeScript</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>main.py<span class="w"> </span>--submit
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>dotnet<span class="w"> </span>run<span class="w"> </span>--<span class="w"> </span>--submit
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>npm<span class="w"> </span>start<span class="w"> </span>--<span class="w"> </span>--submit
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>This creates a new invoice and sends one reporting request. It does not submit the
+previous local run's artifact. Before repeated submissions, allocate a new invoice
+ID and counter and supply the correct predecessor in <code>input.json</code>. The examples
+do not maintain an invoice ledger or automatically advance those fields.</p>
+<h2 id="5-read-the-response-and-keep-the-artifacts">5. Read the response and keep the artifacts<a class="headerlink" href="#5-read-the-response-and-keep-the-artifacts" title="Permanent link">&para;</a></h2>
+<p>The program saves <code>response.json</code> before calling the library's acceptance check.
+It prints gateway messages alongside the HTTP status and reporting outcome. For an accepted
+response, the last line is:</p>
+<div class="highlight"><pre><span></span><code>Sandbox reporting accepted. Keep any warnings in response.json.
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Result</th>
+<th>What the example does</th>
+<th>What to do next</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Accepted</td>
+<td>Exits successfully and sets <code>state.json</code> stage to <code>accepted</code>.</td>
+<td>Store the invoice and response together.</td>
+</tr>
+<tr>
+<td>Accepted with warnings</td>
+<td>Succeeds and retains the warnings.</td>
+<td>Review the warning codes; acceptance does not erase them.</td>
+</tr>
+<tr>
+<td>Rejected or unknown outcome in a decoded response</td>
+<td>Saves <code>response.json</code>, then exits nonzero.</td>
+<td>Read the findings and resolve the outcome before creating another invoice.</td>
+</tr>
+<tr>
+<td>HTTP error, such as 400 or 401</td>
+<td>Exits nonzero; binding diagnostics go to <code>error.json</code>.</td>
+<td>Inspect status/body details; correct the reported issue or credentials.</td>
+</tr>
+<tr>
+<td>Connection failure or unreadable response</td>
+<td>Exits nonzero; <code>state.json</code> records the attempted stage.</td>
+<td>Treat acceptance as unresolved. Reconcile the attempt before retrying.</td>
+</tr>
+<tr>
+<td>Local validation failure</td>
+<td>Saves <code>validation.json</code> and sends nothing.</td>
+<td>Fix the input indicated by the local findings.</td>
+</tr>
+</tbody>
+</table>
+<p>HTTP 200 alone is insufficient. Each example calls <code>ensure_accepted</code> or
+<code>EnsureAccepted</code>/<code>ensureAccepted</code>, which checks the operation's reporting status
+and validation results. The API decoder raises an exception for non-2xx responses;
+such errors may have <code>error.json</code> instead of <code>response.json</code>.</p>
+<p>Every run writes to a new <code>runs/&lt;uuid&gt;/</code> directory:</p>
+<ul>
+<li><code>invoice.xml</code>: unsigned XML created from the input.</li>
+<li><code>signed.xml</code>: exact signed XML used for validation and reporting.</li>
+<li><code>validation.json</code>: local rule findings and stage coverage.</li>
+<li><code>response.json</code>: decoded reporting result, when one was returned.</li>
+<li><code>error.json</code>: structured binding diagnostics, when available.</li>
+<li><code>state.json</code>: invoice identity/hash and the last workflow stage.</li>
+</ul>
+<p>In <code>state.json</code>, <code>submitted: true</code> means a reporting call was attempted. It does
+not mean accepted. Preserve these files after a failure. The program has no retry
+loop, and running it again creates a different invoice. Protect invoice artifacts
+and error bodies as business data; the examples do not write credentials into them.</p>
+<h2 id="what-changes-for-production">What changes for production<a class="headerlink" href="#what-changes-for-production" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Sandbox walkthrough</th>
+<th>Production integration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Environment</td>
+<td>NonProduction / <code>0</code>, the <code>developer-portal</code> endpoint.</td>
+<td>Complete the required testing and onboarding for the live environment; configure Production / <code>2</code>, the <code>core</code> endpoint. Simulation / <code>1</code> is a separate test environment.</td>
+</tr>
+<tr>
+<td>Credentials</td>
+<td>Test device's certificate/key pair and API token/secret.</td>
+<td>Credentials issued for the live EGS unit. Changing an environment number does not convert credentials.</td>
+</tr>
+<tr>
+<td>Invoice data</td>
+<td>Fixed two-item SAR 115 sale and editable demonstration identity.</td>
+<td>Real seller/customer data, items, tax treatment, and applicable invoice subtype.</td>
+</tr>
+<tr>
+<td>History</td>
+<td>Manually supplied ID, counter, and previous hash.</td>
+<td>Durable per-unit sequencing and invoice history, safe under concurrent creation. History follows generated invoices; do not advance it only when reporting succeeds.</td>
+</tr>
+<tr>
+<td>Submission</td>
+<td>One blocking/awaited sandbox call.</td>
+<td>Durable submission records and response reconciliation. A retry policy must distinguish rejection from an unknown outcome and preserve invoice identity for retries.</td>
+</tr>
+<tr>
+<td>Operations</td>
+<td>Local files and process environment.</td>
+<td>Managed key storage, credential renewal/revocation, access controls, backups, and monitoring of pending submissions and warnings.</td>
+</tr>
+</tbody>
+</table>
+<p>Keep environment selection consistent in the client, credentials, and CSR creation.
+The example constants deliberately select the sandbox. Before adapting them for
+production, implement the history and submission behavior above and use the
+current <a href="https://zatca.gov.sa/en/E-Invoicing/SystemsDevelopers/Pages/default.aspx">ZATCA developer materials</a>
+for your integration requirements.</p>
+<p>For standard invoices, supply the required buyer data and use the clearance
+operation. The library accepts a <code>SignedInvoice</code> for that call; ZATCA clearance
+produces the document to deliver. Inspect <code>clearance_status</code>.
+On successful clearance, save <code>cleared_invoice_xml()</code> / <code>ClearedInvoiceXml()</code> /
+<code>clearedInvoiceXml()</code> and use the returned document for customer delivery. The
+<a href="../../reference/api-client/">API reference</a> explains those return types and the
+nullable cleared-document field.</p>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.tabs.link", "content.code.copy"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+    
+  </body>
+</html>
