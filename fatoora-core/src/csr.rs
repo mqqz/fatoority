@@ -32,56 +32,103 @@ use x509_cert::{
 #[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum CsrError {
+    /// The CSR properties file could not be read.
     #[error("failed to open CSR config file '{path}': {source}")]
     Io {
+        /// Path of the file that could not be read.
         path: PathBuf,
+        /// Underlying I/O error.
         #[source]
         source: std::io::Error,
     },
 
     #[error("failed to parse CSR properties from '{path}': {source}")]
+    /// The CSR properties text is not valid Java properties syntax.
     PropertiesRead {
+        /// Source file path, or `<properties>` when parsing an in-memory string.
         path: PathBuf,
+        /// Parser diagnostic, including the line number when known.
         #[source]
         source: crate::Diagnostic,
     },
 
+    /// A required `csr.*` property key is absent.
     #[error("missing required CSR property '{key}' in file '{path}'")]
-    MissingProperty { path: PathBuf, key: String },
+    MissingProperty {
+        /// Source file path, or `<properties>` when parsing an in-memory string.
+        path: PathBuf,
+        /// The missing property key, e.g. `csr.common.name`.
+        key: String,
+    },
 
+    /// The subject distinguished name built from the properties is invalid.
     #[error("invalid subject distinguished name constructed from provided fields: {message}")]
-    InvalidSubject { message: String },
-
-    #[error("invalid Subject Alternative Name (SAN) from fields: {message}")]
-    InvalidSan { message: String },
-
-    #[error("failed to construct CSR request: {message}")]
-    RequestBuild { message: String },
-
-    #[error("failed adding CSR extension '{which}': {message}")]
-    AddExtension {
-        which: &'static str,
+    InvalidSubject {
+        /// Description of the failure.
         message: String,
     },
 
+    /// The Subject Alternative Name built from the properties is invalid.
+    #[error("invalid Subject Alternative Name (SAN) from fields: {message}")]
+    InvalidSan {
+        /// Description of the failure.
+        message: String,
+    },
+
+    /// The CSR request builder could not be created.
+    #[error("failed to construct CSR request: {message}")]
+    RequestBuild {
+        /// Description of the failure.
+        message: String,
+    },
+
+    #[error("failed adding CSR extension '{which}': {message}")]
+    /// A CSR extension could not be added to the request.
+    AddExtension {
+        /// Name of the extension: `TemplateName` or `SubjectAltName`.
+        which: &'static str,
+        /// Description of the failure.
+        message: String,
+    },
+
+    /// Signing or assembling the final CSR failed.
     #[error("failed to build CSR: {message}")]
-    CsrBuild { message: String },
+    CsrBuild {
+        /// Description of the failure.
+        message: String,
+    },
 
+    /// A signing key could not be decoded from PKCS#8 DER or PEM.
     #[error("failed to decode signing key: {message}")]
-    KeyDecode { message: String },
+    KeyDecode {
+        /// Description of the failure.
+        message: String,
+    },
 
+    /// A signing key could not be encoded as PKCS#8 DER or PEM.
     #[error("failed to encode signing key: {message}")]
-    KeyEncode { message: String },
+    KeyEncode {
+        /// Description of the failure.
+        message: String,
+    },
 
     #[error("failed DER encoding for {context}: {source}")]
+    /// DER/PEM encoding or decoding of a certificate request failed.
     DerEncode {
+        /// What was being encoded or decoded.
         context: &'static str,
+        /// Encoder diagnostic.
         #[source]
         source: crate::Diagnostic,
     },
 
+    /// A CSR property value failed validation (empty, forbidden characters,
+    /// non alpha-2 country code, or an invoice type that is not four binary digits).
     #[error("validation error: {message}")]
-    Validation { message: String },
+    Validation {
+        /// Description of the failed rule.
+        message: String,
+    },
 }
 
 impl CsrError {
@@ -152,12 +199,18 @@ pub struct SigningKey {
 }
 
 impl SigningKey {
+    /// Generate a new random secp256k1 signing key.
     pub fn generate() -> Self {
         Self {
             inner: ecdsa::SigningKey::<Secp256k1>::generate(),
         }
     }
 
+    /// Decode a secp256k1 private key from PKCS#8 DER bytes.
+    ///
+    /// # Errors
+    /// Returns [`CsrError::KeyDecode`] if the bytes are not a valid PKCS#8
+    /// secp256k1 private key.
     pub fn from_der(der: &[u8]) -> Result<Self, CsrError> {
         let inner = K256SigningKey::from_pkcs8_der(der).map_err(|e| CsrError::KeyDecode {
             message: e.to_string(),
@@ -165,6 +218,11 @@ impl SigningKey {
         Ok(Self { inner })
     }
 
+    /// Decode a secp256k1 private key from a PKCS#8 PEM string (`BEGIN PRIVATE KEY`).
+    ///
+    /// # Errors
+    /// Returns [`CsrError::KeyDecode`] if the text is not a valid PKCS#8 PEM
+    /// secp256k1 private key.
     pub fn from_pem(pem: &str) -> Result<Self, CsrError> {
         let inner = K256SigningKey::from_pkcs8_pem(pem).map_err(|e| CsrError::KeyDecode {
             message: e.to_string(),
@@ -172,6 +230,10 @@ impl SigningKey {
         Ok(Self { inner })
     }
 
+    /// Encode the key as PKCS#8 DER bytes.
+    ///
+    /// # Errors
+    /// Returns [`CsrError::KeyEncode`] if PKCS#8 encoding fails.
     pub fn to_der(&self) -> Result<Vec<u8>, CsrError> {
         let doc =
             self.inner
@@ -182,6 +244,10 @@ impl SigningKey {
         Ok(doc.as_bytes().to_vec())
     }
 
+    /// Encode the key as a PKCS#8 PEM string with LF line endings.
+    ///
+    /// # Errors
+    /// Returns [`CsrError::KeyEncode`] if PKCS#8 encoding fails.
     pub fn to_pem(&self) -> Result<String, CsrError> {
         let pem = self
             .inner
@@ -204,6 +270,11 @@ pub struct Csr {
 }
 
 impl Csr {
+    /// Decode a PKCS#10 certificate request from DER bytes.
+    ///
+    /// # Errors
+    /// Returns [`CsrError::DerEncode`] if the bytes are not a valid DER
+    /// certificate request.
     pub fn from_der(der: &[u8]) -> Result<Self, CsrError> {
         let inner = CertReq::from_der(der).map_err(|e| CsrError::DerEncode {
             context: "certificate request (DER)",
@@ -212,6 +283,10 @@ impl Csr {
         Ok(Self { inner })
     }
 
+    /// Encode the certificate request as DER bytes.
+    ///
+    /// # Errors
+    /// Returns [`CsrError::DerEncode`] if DER encoding fails.
     pub fn to_der(&self) -> Result<Vec<u8>, CsrError> {
         let der_bytes = self.inner.to_der().map_err(|e| CsrError::DerEncode {
             context: "certificate request",
@@ -220,6 +295,10 @@ impl Csr {
         Ok(der_bytes)
     }
 
+    /// Encode the certificate request as PEM (`BEGIN CERTIFICATE REQUEST`) with LF line endings.
+    ///
+    /// # Errors
+    /// Returns [`CsrError::DerEncode`] if PEM encoding fails.
     pub fn to_pem(&self) -> Result<String, CsrError> {
         let pem = self
             .inner
@@ -231,20 +310,32 @@ impl Csr {
         Ok(pem)
     }
 
+    /// Base64-encode the DER form of the certificate request.
+    ///
+    /// # Errors
+    /// Returns [`CsrError::DerEncode`] if DER encoding fails.
     pub fn to_base64(&self) -> Result<String, CsrError> {
         let der_bytes = self.to_der()?;
         Ok(Base64::encode_string(&der_bytes))
     }
 
+    /// Base64-encode the PEM text of the certificate request; this is the
+    /// `csr` value expected by the ZATCA compliance CSID endpoint.
+    ///
+    /// # Errors
+    /// Returns [`CsrError::DerEncode`] if PEM encoding fails.
     pub fn to_pem_base64(&self) -> Result<String, CsrError> {
         let pem = self.to_pem()?;
         Ok(Base64::encode_string(pem.as_bytes()))
     }
 
+    /// The subject distinguished name in RFC 4514 string form.
     pub fn subject_string(&self) -> String {
         self.inner.info.subject.to_string()
     }
 
+    /// DER encodings of every attribute value in the request (such as the
+    /// extension request); values that fail to encode are skipped.
     pub fn extension_values_der(&self) -> Vec<Vec<u8>> {
         self.inner
             .info

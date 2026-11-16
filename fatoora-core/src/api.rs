@@ -27,31 +27,51 @@ pub enum ZatcaError {
     /// A successful HTTP response whose body could not be decoded.
     #[error("Invalid ZATCA response (HTTP {response}): {message}")]
     ResponseDecode {
+        /// The HTTP response whose body failed to decode.
         response: Box<HttpResponseError>,
+        /// Description of the decoding failure.
         message: String,
     },
     /// The response headers arrived but the body could not be read.
     #[error("Failed to read ZATCA response (HTTP {http_status}): {message}")]
-    ResponseRead { http_status: u16, message: String },
+    ResponseRead {
+        /// HTTP status code of the response.
+        http_status: u16,
+        /// Description of the read failure.
+        message: String,
+    },
     /// The endpoint response does not establish acceptance of this operation.
     #[error("ZATCA response does not confirm acceptance")]
     NotAccepted(Box<ValidationResponse>),
     /// The returned cleared invoice could not be decoded as nonempty UTF-8 XML text.
     #[error("Invalid cleared invoice: {message}")]
     ClearedInvoice {
+        /// HTTP status code of the response, when known.
         http_status: Option<u16>,
+        /// Description of the decoding failure.
         message: String,
     },
+    /// A network-level failure. Reserved for bindings and callers; the client
+    /// itself reports transport failures as [`ZatcaError::Http`].
     #[error("Network error: {0}")]
     NetworkError(String),
+    /// A CSID endpoint returned an invalid HTTP status, an unexpected status,
+    /// or a body that could not be decoded.
     #[error("Invalid response from ZATCA: {0}")]
     InvalidResponse(String),
+    /// A CSID endpoint returned HTTP 401; carries the parsed (or synthesized) body.
     #[error("Unauthorized: {0:?}")]
     Unauthorized(UnauthorizedResponse),
+    /// A CSID endpoint returned an HTTP 5xx status; carries the parsed (or
+    /// synthesized) body.
     #[error("Server error: {0:?}")]
     ServerError(ServerErrorResponse),
+    /// The HTTP client could not be built, the request method was invalid, or
+    /// the request could not be sent.
     #[error("HTTP client error: {0}")]
     Http(String),
+    /// The request was inconsistent with the client or credentials, e.g. an
+    /// environment mismatch or a missing compliance request ID.
     #[error("Client state error: {0}")]
     ClientState(String),
 }
@@ -139,22 +159,27 @@ pub struct ValidationResponse {
 }
 
 impl ValidationResponse {
+    /// Returns the info, warning and error messages reported by ZATCA.
     pub fn validation_results(&self) -> &ValidationResults {
         &self.validation_results
     }
 
+    /// Returns the `reportingStatus` (e.g. `REPORTED`), present for reporting responses.
     pub fn reporting_status(&self) -> Option<&str> {
         self.reporting_status.as_deref()
     }
 
+    /// Returns the `clearanceStatus` (e.g. `CLEARED`), present for clearance responses.
     pub fn clearance_status(&self) -> Option<&str> {
         self.clearance_status.as_deref()
     }
 
+    /// Returns the `qrSellertStatus` (sic) field from the response, if present.
     pub fn qr_seller_status(&self) -> Option<&str> {
         self.qr_seller_status.as_deref()
     }
 
+    /// Returns the `qrBuyertStatus` (sic) field from the response, if present.
     pub fn qr_buyer_status(&self) -> Option<&str> {
         self.qr_buyer_status.as_deref()
     }
@@ -174,18 +199,23 @@ pub struct ValidationResults {
 }
 
 impl ValidationResults {
+    /// Returns the informational messages (`infoMessages`), which ZATCA may
+    /// send as a single object or a list.
     pub fn info_messages(&self) -> &MessageList {
         &self.info_messages
     }
 
+    /// Returns the warning messages (`warningMessages`).
     pub fn warning_messages(&self) -> &[ValidationMessage] {
         &self.warning_messages
     }
 
+    /// Returns the error messages (`errorMessages`).
     pub fn error_messages(&self) -> &[ValidationMessage] {
         &self.error_messages
     }
 
+    /// Returns the overall validation status (e.g. `PASS`, `WARNING`, `ERROR`), if present.
     pub fn status(&self) -> Option<&str> {
         self.status.as_deref()
     }
@@ -204,22 +234,27 @@ pub struct ValidationMessage {
 }
 
 impl ValidationMessage {
+    /// Returns the message type (`type`, e.g. `INFO`, `WARNING`, `ERROR`), if present.
     pub fn message_type(&self) -> Option<&str> {
         self.message_type.as_deref()
     }
 
+    /// Returns the ZATCA rule or message code, if present.
     pub fn code(&self) -> Option<&str> {
         self.code.as_deref()
     }
 
+    /// Returns the message category (e.g. `XSD_SCHEMA_ERROR`, `KSA`), if present.
     pub fn category(&self) -> Option<&str> {
         self.category.as_deref()
     }
 
+    /// Returns the human-readable message text, if present.
     pub fn message(&self) -> Option<&str> {
         self.message.as_deref()
     }
 
+    /// Returns the per-message status, if present.
     pub fn status(&self) -> Option<&str> {
         self.status.as_deref()
     }
@@ -230,8 +265,11 @@ impl ValidationMessage {
 #[derive(Default)]
 /// Message list returned by the API.
 pub enum MessageList {
+    /// A single message object.
     One(ValidationMessage),
+    /// A list of messages.
     Many(Vec<ValidationMessage>),
+    /// No messages (field absent or `null`).
     #[default]
     Empty,
 }
@@ -246,18 +284,22 @@ pub struct UnauthorizedResponse {
 }
 
 impl UnauthorizedResponse {
+    /// Returns the `timestamp` field (as sent by the gateway), if present.
     pub fn timestamp(&self) -> Option<i64> {
         self.timestamp
     }
 
+    /// Returns the HTTP status reported in the body, if present.
     pub fn status(&self) -> Option<u16> {
         self.status
     }
 
+    /// Returns the short error label (e.g. `Unauthorized`), if present.
     pub fn error(&self) -> Option<&str> {
         self.error.as_deref()
     }
 
+    /// Returns the error message, or the raw body when it was not valid JSON.
     pub fn message(&self) -> Option<&str> {
         self.message.as_deref()
     }
@@ -272,14 +314,17 @@ pub struct ServerErrorResponse {
 }
 
 impl ServerErrorResponse {
+    /// Returns the error category, if present.
     pub fn category(&self) -> Option<&str> {
         self.category.as_deref()
     }
 
+    /// Returns the error code (`ServerError` when the body was not valid JSON).
     pub fn code(&self) -> Option<&str> {
         self.code.as_deref()
     }
 
+    /// Returns the error message, or the raw body when it was not valid JSON.
     pub fn message(&self) -> Option<&str> {
         self.message.as_deref()
     }
@@ -329,18 +374,24 @@ impl<T> CsidCredentials<T> {
         }
     }
 
+    /// Returns the environment these credentials were issued for.
     pub fn env(&self) -> EnvironmentType {
         self.env
     }
 
+    /// Returns the ZATCA `requestID`, required to exchange a compliance CSID
+    /// for a production CSID.
     pub fn request_id(&self) -> Option<&str> {
         self.request_id.as_deref()
     }
 
+    /// Returns the `binarySecurityToken` (base64-encoded certificate), used as
+    /// the basic-auth username.
     pub fn binary_security_token(&self) -> &str {
         &self.binary_security_token
     }
 
+    /// Returns the API secret, used as the basic-auth password.
     pub fn secret(&self) -> &str {
         &self.secret
     }
@@ -744,6 +795,19 @@ impl ZatcaClient {
 impl ZatcaClient {
     #[cfg(not(target_arch = "wasm32"))]
     /// Prepare, send through the native HTTP client, and decode the response.
+    ///
+    /// A decoded 2xx response is returned even if ZATCA did not accept the
+    /// invoice; check [`ValidationResponse::outcome`] or call
+    /// [`ValidationResponse::ensure_accepted`].
+    ///
+    /// # Errors
+    /// - [`ZatcaError::ClientState`] if the credentials' environment differs from
+    ///   the client's, or (reporting/clearance only) the invoice type does not
+    ///   match the endpoint.
+    /// - [`ZatcaError::Http`] if the request cannot be built or sent.
+    /// - [`ZatcaError::ResponseRead`] if the response body cannot be read.
+    /// - [`ZatcaError::Response`] for a non-2xx HTTP status.
+    /// - [`ZatcaError::ResponseDecode`] if a 2xx body is not a valid validation response.
     pub async fn report_simplified_invoice(
         &self,
         invoice: &SignedInvoice,
@@ -765,6 +829,19 @@ impl ZatcaClient {
 
     #[cfg(not(target_arch = "wasm32"))]
     /// Prepare, send through the native HTTP client, and decode the response.
+    ///
+    /// A decoded 2xx response is returned even if ZATCA did not accept the
+    /// invoice; check [`ValidationResponse::outcome`] or call
+    /// [`ValidationResponse::ensure_accepted`].
+    ///
+    /// # Errors
+    /// - [`ZatcaError::ClientState`] if the credentials' environment differs from
+    ///   the client's, or (reporting/clearance only) the invoice type does not
+    ///   match the endpoint.
+    /// - [`ZatcaError::Http`] if the request cannot be built or sent.
+    /// - [`ZatcaError::ResponseRead`] if the response body cannot be read.
+    /// - [`ZatcaError::Response`] for a non-2xx HTTP status.
+    /// - [`ZatcaError::ResponseDecode`] if a 2xx body is not a valid validation response.
     pub async fn clear_standard_invoice(
         &self,
         invoice: &SignedInvoice,
@@ -786,6 +863,19 @@ impl ZatcaClient {
 
     #[cfg(not(target_arch = "wasm32"))]
     /// Prepare, send through the native HTTP client, and decode the response.
+    ///
+    /// A decoded 2xx response is returned even if ZATCA did not accept the
+    /// invoice; check [`ValidationResponse::outcome`] or call
+    /// [`ValidationResponse::ensure_accepted`].
+    ///
+    /// # Errors
+    /// - [`ZatcaError::ClientState`] if the credentials' environment differs from
+    ///   the client's, or (reporting/clearance only) the invoice type does not
+    ///   match the endpoint.
+    /// - [`ZatcaError::Http`] if the request cannot be built or sent.
+    /// - [`ZatcaError::ResponseRead`] if the response body cannot be read.
+    /// - [`ZatcaError::Response`] for a non-2xx HTTP status.
+    /// - [`ZatcaError::ResponseDecode`] if a 2xx body is not a valid validation response.
     pub async fn check_invoice_compliance(
         &self,
         invoice: &SignedInvoice,
@@ -800,6 +890,14 @@ impl ZatcaClient {
 
     #[cfg(not(target_arch = "wasm32"))]
     /// Prepare, send through the native HTTP client, and decode the response.
+    ///
+    /// # Errors
+    /// - [`ZatcaError::InvalidResponse`] if the CSR cannot be PEM-encoded.
+    /// - [`ZatcaError::Http`] if the request cannot be built or sent.
+    /// - [`ZatcaError::Unauthorized`] for HTTP 401 and [`ZatcaError::ServerError`]
+    ///   for HTTP 5xx.
+    /// - [`ZatcaError::InvalidResponse`] for any other unexpected status or an
+    ///   undecodable body.
     pub async fn post_csr_for_ccsid(
         &self,
         csr: &Csr,
@@ -814,6 +912,15 @@ impl ZatcaClient {
 
     #[cfg(not(target_arch = "wasm32"))]
     /// Prepare, send through the native HTTP client, and decode the response.
+    ///
+    /// # Errors
+    /// - [`ZatcaError::ClientState`] if the credentials' environment differs from
+    ///   the client's or they have no compliance request ID.
+    /// - [`ZatcaError::Http`] if the request cannot be built or sent.
+    /// - [`ZatcaError::Unauthorized`] for HTTP 401 and [`ZatcaError::ServerError`]
+    ///   for HTTP 5xx.
+    /// - [`ZatcaError::InvalidResponse`] for any other unexpected status or an
+    ///   undecodable body.
     pub async fn post_ccsid_for_pcsid(
         &self,
         ccsid: &CsidCredentials<Compliance>,
@@ -827,6 +934,17 @@ impl ZatcaClient {
 
     #[cfg(not(target_arch = "wasm32"))]
     /// Prepare, send through the native HTTP client, and decode the response.
+    ///
+    /// # Errors
+    /// - [`ZatcaError::ClientState`] if the credentials' environment differs from
+    ///   the client's.
+    /// - [`ZatcaError::InvalidResponse`] if the CSR cannot be PEM-encoded.
+    /// - [`ZatcaError::Http`] if the request cannot be built or sent.
+    /// - [`ZatcaError::Unauthorized`] for HTTP 401 and [`ZatcaError::ServerError`]
+    ///   for HTTP 5xx.
+    /// - [`ZatcaError::InvalidResponse`] for any other unexpected status or an
+    ///   undecodable body. An HTTP 428 body carrying credentials is treated as
+    ///   success.
     pub async fn renew_csid(
         &self,
         pcsid: &CsidCredentials<Production>,

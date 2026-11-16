@@ -10,16 +10,31 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum QrCodeError {
+    /// The seller legal name (QR tag 1) is missing.
     #[error("seller legal name is missing")]
     MissingSellerName,
+    /// The seller VAT registration number (QR tag 2) is missing.
     #[error("seller VAT ID is missing")]
     MissingSellerVat,
+    /// A TLV value is longer than the 255-byte single-byte length allows.
     #[error("TLV field {tag} exceeds 255 bytes (len={len})")]
-    ValueTooLong { tag: u8, len: usize },
+    ValueTooLong {
+        /// TLV tag number of the oversized field.
+        tag: u8,
+        /// Actual value length in bytes.
+        len: usize,
+    },
+    /// The Base64-encoded QR payload exceeds ZATCA's 700-character limit.
     #[error("QR code payload exceeds 700 characters once base64 encoded (len={len})")]
-    EncodedTooLong { len: usize },
+    EncodedTooLong {
+        /// Encoded payload length in characters.
+        len: usize,
+    },
+    /// A QR field or TLV structure is malformed (bad Base64, truncated or empty TLV, invalid
+    /// amount, or a tag set that does not match the invoice type); the message names the field.
     #[error("invalid QR field: {0}")]
     InvalidField(String),
+    /// The invoice XML could not be parsed or lacks a value required for the QR payload.
     #[error("QR XML error: {0}")]
     Xml(String),
 }

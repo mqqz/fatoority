@@ -7,6 +7,9 @@
 //! let config = Config::new(EnvironmentType::NonProduction);
 //! # let _ = config;
 //! ```
+#![warn(missing_docs)]
+#![warn(clippy::missing_errors_doc)]
+#![warn(clippy::missing_panics_doc)]
 mod error;
 pub use error::{Diagnostic, DiagnosticSeverity, Error, ErrorKind};
 mod decimal;

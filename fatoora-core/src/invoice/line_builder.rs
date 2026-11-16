@@ -15,6 +15,7 @@ pub struct Adjustment {
     pub(crate) reason_code: Option<String>,
 }
 impl Adjustment {
+    /// Creates a fixed-amount adjustment with no calculation base or percentage.
     pub fn amount(amount: Decimal) -> Self {
         Self {
             amount: Some(amount),
@@ -24,6 +25,7 @@ impl Adjustment {
             reason_code: None,
         }
     }
+    /// Creates an adjustment calculated as `base_amount * percentage / 100`, rounded to two decimals.
     pub fn percentage(base_amount: Decimal, percentage: Decimal) -> Self {
         Self {
             amount: None,
@@ -33,22 +35,37 @@ impl Adjustment {
             reason_code: None,
         }
     }
+    /// Supplies an explicit amount; when a base and percentage are also set, [`value`](Self::value) checks it against the calculated amount.
     pub fn supplied_amount(mut self, amount: Decimal) -> Self {
         self.amount = Some(amount);
         self
     }
+    /// Sets the calculation base amount.
     pub fn base_amount(mut self, amount: Decimal) -> Self {
         self.base_amount = Some(amount);
         self
     }
+    /// Sets the free-text allowance/charge reason.
     pub fn reason(mut self, reason: impl Into<String>) -> Self {
         self.reason = Some(reason.into());
         self
     }
+    /// Sets the allowance/charge reason code.
     pub fn reason_code(mut self, code: impl Into<String>) -> Self {
         self.reason_code = Some(code.into());
         self
     }
+    /// Returns the adjustment amount: the supplied amount if set, otherwise `base * percentage / 100` rounded to two decimals.
+    ///
+    /// # Errors
+    /// Returns [`InvoiceError::Validation`] (field [`InvoiceField::InvoiceLevelDiscount`]) when:
+    /// - the base amount or percentage is negative or has more than two decimals, or the resulting amount does
+    ///   ([`ValidationKind::OutOfRange`]);
+    /// - only one of base amount and percentage is set, or neither an amount nor a base/percentage pair is set
+    ///   ([`ValidationKind::Missing`]);
+    /// - a supplied amount differs from the calculated amount ([`ValidationKind::Mismatch`]).
+    ///
+    /// Returns [`InvoiceError::Decimal`] if the calculation overflows the decimal range.
     pub fn value(&self) -> Result<Decimal> {
         let field = InvoiceField::InvoiceLevelDiscount;
         if self
@@ -77,15 +94,19 @@ impl Adjustment {
         }
         Ok(amount)
     }
+    /// Returns the free-text reason, if set.
     pub fn allowance_charge_reason(&self) -> Option<&str> {
         self.reason.as_deref()
     }
+    /// Returns the reason code, if set.
     pub fn allowance_charge_reason_code(&self) -> Option<&str> {
         self.reason_code.as_deref()
     }
+    /// Returns the calculation base amount, if set.
     pub fn calculation_base_amount(&self) -> Option<Decimal> {
         self.base_amount
     }
+    /// Returns the calculation percentage, if set.
     pub fn calculation_percentage(&self) -> Option<Decimal> {
         self.percentage
     }
@@ -98,16 +119,22 @@ impl Adjustment {
 /// One finalized line allowance or charge, in insertion order.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LineAdjustment {
+    /// `true` for a charge (increases the line amount), `false` for an allowance (decreases it).
     pub charge: bool,
+    /// The amount calculation and reason.
     pub adjustment: Adjustment,
 }
 
 /// A document adjustment has its own VAT allocation.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DocumentAdjustment {
+    /// The amount calculation and reason.
     pub adjustment: Adjustment,
+    /// VAT category applied to the adjustment.
     pub category: VatCategory,
+    /// VAT rate (percent) applied to the adjustment.
     pub rate: Decimal,
+    /// Exemption reason, for non-standard VAT categories.
     pub exemption: TaxExemption,
 }
 impl DocumentAdjustment {
@@ -126,6 +153,7 @@ impl DocumentAdjustment {
             exemption: self.exemption,
         })
     }
+    /// Creates a document adjustment with the given VAT category and rate and no exemption reason.
     pub fn new(adjustment: Adjustment, category: VatCategory, rate: Decimal) -> Self {
         Self {
             adjustment,
@@ -134,14 +162,17 @@ impl DocumentAdjustment {
             exemption: TaxExemption::default(),
         }
     }
+    /// Sets the free-text allowance/charge reason.
     pub fn reason(mut self, value: impl Into<String>) -> Self {
         self.adjustment = self.adjustment.reason(value);
         self
     }
+    /// Sets the allowance/charge reason code.
     pub fn reason_code(mut self, value: impl Into<String>) -> Self {
         self.adjustment = self.adjustment.reason_code(value);
         self
     }
+    /// Sets the VAT exemption reason.
     pub fn exemption(mut self, value: TaxExemption) -> Self {
         self.exemption = value;
         self
@@ -193,7 +224,7 @@ pub struct LineItemBuilder {
     standard_id: Option<OtherId>,
 }
 macro_rules! decimal_setters {
-    ($($name:ident => $field:ident),* $(,)?) => { $(pub fn $name(mut self, value: Decimal) -> Self { self.$field = Some(value); self })* };
+    ($($(#[$meta:meta])* $name:ident => $field:ident),* $(,)?) => { $($(#[$meta])* pub fn $name(mut self, value: Decimal) -> Self { self.$field = Some(value); self })* };
 }
 impl LineItemBuilder {
     /// Control whether the line tax container is emitted; omitted tax must be zero.
@@ -206,33 +237,57 @@ impl LineItemBuilder {
         self.omit_gross_amount = !present;
         self
     }
+    /// Sets the item name (required).
     pub fn item_name(mut self, value: impl Into<String>) -> Self {
         self.name = Some(value.into());
         self
     }
+    /// Sets the unit-of-measure code for the invoiced quantity; must not be blank.
     pub fn invoiced_quantity_unit_code(mut self, value: impl Into<String>) -> Self {
         self.unit = Some(value.into());
         self
     }
+    /// Sets the unit-of-measure code for the price base quantity; requires [`item_price_base_quantity`](Self::item_price_base_quantity) and must not be blank.
     pub fn item_price_base_quantity_unit_code(mut self, value: impl Into<String>) -> Self {
         self.basis_unit = Some(value.into());
         self
     }
+    /// Sets the line identifier; must not be blank.
     pub fn id(mut self, value: impl Into<String>) -> Self {
         self.id = Some(value.into());
         self
     }
-    decimal_setters! { invoiced_quantity => quantity, item_net_price => price, item_gross_price => gross_price,
-    item_price_discount => discount, item_price_base_quantity => basis, line_net_amount => net,
-    line_vat_amount => vat, line_amount_with_vat => gross, vat_rate => rate }
+    decimal_setters! {
+        /// Sets the invoiced quantity (required, non-negative).
+        invoiced_quantity => quantity,
+        /// Sets the item net price per base quantity; if omitted it is derived from gross price minus discount.
+        item_net_price => price,
+        /// Sets the item gross price before discount; requires [`item_price_discount`](Self::item_price_discount).
+        item_gross_price => gross_price,
+        /// Sets the per-unit price discount (gross price minus net price).
+        item_price_discount => discount,
+        /// Sets the quantity the item price applies to (defaults to 1).
+        item_price_base_quantity => basis,
+        /// Supplies the line net amount; checked against the calculated amount within `0.01`.
+        line_net_amount => net,
+        /// Supplies the line VAT amount instead of calculating `net * rate / 100`.
+        line_vat_amount => vat,
+        /// Supplies the line amount including VAT; must equal net plus VAT exactly.
+        line_amount_with_vat => gross,
+        /// Sets the VAT rate in percent (0 to 100, at most two decimals); optional only for out-of-scope lines.
+        vat_rate => rate,
+    }
+    /// Sets the VAT category (required).
     pub fn vat_category(mut self, value: VatCategory) -> Self {
         self.category = Some(value);
         self
     }
+    /// Sets the VAT exemption reason.
     pub fn exemption(mut self, value: TaxExemption) -> Self {
         self.exemption = value;
         self
     }
+    /// Appends a line-level allowance, which reduces the line net amount.
     pub fn allowance(mut self, adjustment: Adjustment) -> Self {
         self.adjustments.push(LineAdjustment {
             charge: false,
@@ -240,6 +295,7 @@ impl LineItemBuilder {
         });
         self
     }
+    /// Appends a line-level charge, which increases the line net amount.
     pub fn charge(mut self, adjustment: Adjustment) -> Self {
         self.adjustments.push(LineAdjustment {
             charge: true,
@@ -247,26 +303,51 @@ impl LineItemBuilder {
         });
         self
     }
+    /// Appends a document reference for this line.
     pub fn document_reference(mut self, value: OriginalInvoiceRef) -> Self {
         self.references.push(value);
         self
     }
+    /// Appends a line-level VAT subtotal.
     pub fn tax_subtotal(mut self, value: VatBreakdown) -> Self {
         self.subtotals.push(value);
         self
     }
+    /// Sets the seller's identifier for the item.
     pub fn item_seller_identifier(mut self, value: OtherId) -> Self {
         self.seller_id = Some(value);
         self
     }
+    /// Sets the buyer's identifier for the item.
     pub fn item_buyer_identifier(mut self, value: OtherId) -> Self {
         self.buyer_id = Some(value);
         self
     }
+    /// Sets the standard (e.g. GTIN) identifier for the item.
     pub fn item_standard_identifier(mut self, value: OtherId) -> Self {
         self.standard_id = Some(value);
         self
     }
+    /// Builds the line, calculating any amounts not supplied and checking supplied ones.
+    ///
+    /// The net amount defaults to `quantity * net_price / base_quantity` plus charges minus allowances,
+    /// and the VAT amount to `net * rate / 100`, each rounded to two decimals. A missing net price is
+    /// derived from gross price minus discount, and a supplied net amount may differ from the
+    /// calculated one by at most `0.01`.
+    ///
+    /// # Errors
+    /// Returns [`InvoiceError::Validation`] when:
+    /// - the item name, quantity, VAT category, unit price (net, or gross plus discount) or VAT rate
+    ///   (unless the category is out of scope) is missing ([`ValidationKind::Missing`]);
+    /// - the item name, line ID or a unit code is blank ([`ValidationKind::Empty`]);
+    /// - gross price minus discount does not equal the net price ([`ValidationKind::Mismatch`]);
+    /// - a quantity, price, discount or rate is negative, the rate exceeds 100 or has more than two
+    ///   decimals, a non-standard category has a non-zero rate, a base-quantity unit is set without a base
+    ///   quantity, or the net or VAT amount is negative ([`ValidationKind::OutOfRange`]);
+    /// - a supplied net, VAT-inclusive or adjustment amount disagrees with its calculated value;
+    /// - an omitted tax total is combined with a non-zero VAT amount or tax subtotals.
+    ///
+    /// Returns [`InvoiceError::Decimal`] if an intermediate calculation overflows the decimal range.
     pub fn build(self) -> Result<LineItem> {
         let missing = |field| invalid(field, ValidationKind::Missing);
         let name = self
@@ -423,36 +504,47 @@ impl LineItem {
         }
         None
     }
+    /// Returns an empty [`LineItemBuilder`].
     pub fn builder() -> LineItemBuilder {
         LineItemBuilder::default()
     }
+    /// Returns the item name.
     pub fn item_name(&self) -> &str {
         &self.description
     }
+    /// Returns the item net price (per base quantity).
     pub fn item_net_price(&self) -> Decimal {
         self.unit_price
     }
+    /// Returns the item gross price before the price discount, if set.
     pub fn item_gross_price(&self) -> Option<Decimal> {
         self.gross_price
     }
+    /// Returns the per-unit price discount, if set.
     pub fn item_price_discount(&self) -> Option<Decimal> {
         self.price_discount
     }
+    /// Returns the quantity the price applies to, if set (defaults to 1 in calculations).
     pub fn item_price_base_quantity(&self) -> Option<Decimal> {
         self.price_base_quantity
     }
+    /// Returns the unit code of the price base quantity, if set.
     pub fn item_price_base_quantity_unit_code(&self) -> Option<&str> {
         self.price_base_unit.as_deref()
     }
+    /// Returns the line allowances and charges in insertion order.
     pub fn adjustments(&self) -> &[LineAdjustment] {
         &self.adjustments
     }
+    /// Returns the seller's identifier for the item, if set.
     pub fn item_seller_identifier(&self) -> Option<&OtherId> {
         self.seller_item_id.as_ref()
     }
+    /// Returns the buyer's identifier for the item, if set.
     pub fn item_buyer_identifier(&self) -> Option<&OtherId> {
         self.buyer_item_id.as_ref()
     }
+    /// Returns the standard identifier for the item, if set.
     pub fn item_standard_identifier(&self) -> Option<&OtherId> {
         self.standard_item_id.as_ref()
     }

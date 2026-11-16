@@ -25,20 +25,38 @@ pub use report::{
 };
 use thiserror::Error;
 
+/// Result of XSD validation: `Ok(())` when the document conforms to the UBL schema.
 pub type ValidationResult = Result<(), XmlValidationError>;
 
 /// Errors emitted during XML schema validation.
 #[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum XmlValidationError {
+    /// An XSD path could not be used. Schemas are embedded, so current validators do not produce
+    /// this variant.
     #[error("invalid XSD path: {path}")]
-    InvalidXsdPath { path: String },
+    InvalidXsdPath {
+        /// The rejected path.
+        path: String,
+    },
+    /// The embedded UBL schemas failed to compile.
     #[error("schema parser error")]
-    SchemaParse { errors: Vec<crate::Diagnostic> },
+    SchemaParse {
+        /// Schema compiler diagnostics.
+        errors: Vec<crate::Diagnostic>,
+    },
+    /// The input is not well-formed or supported XML.
     #[error("XML parse error: {message}")]
-    XmlParse { message: String },
+    XmlParse {
+        /// Parser error description.
+        message: String,
+    },
+    /// The document does not conform to the UBL invoice schema.
     #[error("schema validation error")]
-    SchemaValidation { errors: Vec<crate::Diagnostic> },
+    SchemaValidation {
+        /// One diagnostic per schema violation.
+        errors: Vec<crate::Diagnostic>,
+    },
 }
 
 impl XmlValidationError {

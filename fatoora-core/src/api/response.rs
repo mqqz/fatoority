@@ -6,7 +6,11 @@ use std::fmt;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum InvoiceOutcome {
+    /// The endpoint confirmed acceptance (`REPORTED`, `CLEARED`, or a
+    /// compliance `PASS`/`WARNING`) with no error messages.
     Accepted,
+    /// The endpoint explicitly rejected the invoice (`NOT_REPORTED`,
+    /// `NOT_CLEARED`, or a compliance `ERROR`).
     Rejected,
     /// Missing, unrecognized, contradictory, or detached response context.
     Unknown,
@@ -28,6 +32,7 @@ pub struct HttpResponseError {
 }
 
 impl HttpResponseError {
+    /// Returns the HTTP status code of the response.
     pub fn http_status(&self) -> u16 {
         self.http_status
     }
@@ -35,6 +40,7 @@ impl HttpResponseError {
     pub fn body(&self) -> &str {
         &self.body
     }
+    /// Returns the body parsed as a [`ValidationResponse`], if it was one.
     pub fn validation_response(&self) -> Option<&ValidationResponse> {
         self.validation_response.as_ref()
     }
@@ -84,6 +90,10 @@ impl ValidationResponse {
     }
 
     /// Fail for rejected or unknown outcomes, retaining the response for inspection.
+    ///
+    /// # Errors
+    /// Returns [`ZatcaError::NotAccepted`] unless [`ValidationResponse::outcome`]
+    /// is [`InvoiceOutcome::Accepted`].
     pub fn ensure_accepted(&self) -> Result<(), ZatcaError> {
         if self.outcome() == InvoiceOutcome::Accepted {
             Ok(())
@@ -99,6 +109,10 @@ impl ValidationResponse {
 
     /// Decode the returned invoice without XML parsing, normalization, or signature verification.
     /// Missing content returns `None`; empty, invalid base64, NUL, or invalid UTF-8 content is an error.
+    ///
+    /// # Errors
+    /// Returns [`ZatcaError::ClearedInvoice`] if the field is not valid base64 or
+    /// decodes to empty content, content containing NUL, or invalid UTF-8.
     pub fn cleared_invoice_xml(&self) -> Result<Option<String>, ZatcaError> {
         let Some(encoded) = self.cleared_invoice_base64() else {
             return Ok(None);

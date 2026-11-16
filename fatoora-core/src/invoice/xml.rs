@@ -21,8 +21,10 @@ struct InvoiceXml<'a, T: InvoiceView + ?Sized>(&'a T);
 #[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum InvoiceXmlError {
+    /// The invoice model could not be written as UBL XML.
     #[error("failed to serialize invoice to XML: {source}")]
     Serialize {
+        /// Underlying serializer diagnostic.
         #[source]
         source: crate::Diagnostic,
     },
@@ -38,10 +40,14 @@ impl InvoiceXmlError {
 /// XML formatting options.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum XmlFormat {
+    /// No indentation or line breaks between elements.
     #[default]
     Compact,
+    /// Each element on its own line, indented per nesting level.
     Pretty {
+        /// Character used for indentation (e.g. `' '` or `'\t'`).
         indent_char: char,
+        /// Number of `indent_char` repetitions per nesting level.
         indent_size: usize,
     },
 }

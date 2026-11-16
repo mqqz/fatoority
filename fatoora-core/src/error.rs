@@ -16,6 +16,7 @@ pub struct Diagnostic {
 }
 
 impl Diagnostic {
+    /// Create a diagnostic with only a message and no location or severity.
     pub fn new(message: impl Into<String>) -> Self {
         Self {
             message: message.into(),
@@ -25,9 +26,11 @@ impl Diagnostic {
             severity: None,
         }
     }
+    /// Human-readable diagnostic text.
     pub fn message(&self) -> &str {
         &self.message
     }
+    /// Source file or document URI, when provided by the backend.
     pub fn file(&self) -> Option<&str> {
         self.file.as_deref()
     }
@@ -40,6 +43,7 @@ impl Diagnostic {
         self.column
     }
 
+    /// Severity, when provided by the backend.
     pub fn severity(&self) -> Option<DiagnosticSeverity> {
         self.severity
     }
@@ -72,8 +76,11 @@ impl Diagnostic {
 #[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DiagnosticSeverity {
+    /// A non-blocking issue.
     Warning,
+    /// An error that fails the operation.
     Error,
+    /// An unrecoverable error after which the backend stopped processing.
     Fatal,
 }
 
@@ -82,15 +89,26 @@ pub enum DiagnosticSeverity {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum ErrorKind {
+    /// A caller-supplied value is malformed or out of range.
     InvalidInput = 1,
+    /// Input is well-formed but fails invoice, CSR, or schema validation rules.
     Validation = 2,
+    /// Structured input could not be parsed, such as a properties file, an XSD
+    /// schema, or a ZATCA API response body.
     Parse = 3,
+    /// XML could not be serialized, parsed, or processed.
     Xml = 4,
+    /// Key handling, signing, hashing, or certificate processing failed.
     Crypto = 5,
+    /// A file or other I/O operation failed.
     Io = 6,
+    /// The HTTP request or response transport failed.
     Network = 7,
+    /// The ZATCA API rejected the supplied credentials.
     Unauthorized = 8,
+    /// An internal invariant or client state error.
     Internal = 9,
+    /// The ZATCA API returned an error or non-accepted response.
     Api = 10,
 }
 
@@ -98,26 +116,38 @@ pub enum ErrorKind {
 #[non_exhaustive]
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    /// Invalid environment name; see [`config::EnvironmentParseError`].
     #[error("{0}")]
     Environment(#[from] config::EnvironmentParseError),
+    /// Decimal parsing or arithmetic failed; see [`crate::DecimalError`].
     #[error("{0}")]
     Decimal(#[from] crate::DecimalError),
+    /// CSR or signing-key handling failed; see [`csr::CsrError`].
     #[error("{0}")]
     Csr(#[from] csr::CsrError),
+    /// Invoice construction or validation failed; see [`invoice::InvoiceError`].
     #[error("{0}")]
     Invoice(#[from] invoice::InvoiceError),
+    /// Invoice signing failed; see [`invoice::sign::SigningError`].
     #[error("{0}")]
     Signing(#[from] invoice::sign::SigningError),
+    /// QR payload generation failed; see [`invoice::QrCodeError`].
     #[error("{0}")]
     Qr(#[from] invoice::QrCodeError),
+    /// Invoice XML serialization failed; see [`invoice::xml::InvoiceXmlError`].
     #[error("{0}")]
     Xml(#[from] invoice::xml::InvoiceXmlError),
+    /// Parsing invoice XML into the model failed; see [`invoice::xml::parse::ParseError`].
     #[error("{0}")]
     Parse(#[from] invoice::xml::parse::ParseError),
+    /// XML schema/structure validation could not run or failed; see
+    /// [`invoice::validation::XmlValidationError`].
     #[error("{0}")]
     XmlValidation(#[from] invoice::validation::XmlValidationError),
+    /// ZATCA validation could not run; see [`invoice::validation::ZatcaValidationError`].
     #[error("{0}")]
     ZatcaValidation(#[from] invoice::validation::ZatcaValidationError),
+    /// A ZATCA API call failed; see [`api::ZatcaError`].
     #[error("{0}")]
     Api(#[from] api::ZatcaError),
 }

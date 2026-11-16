@@ -21,26 +21,41 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum ParseError {
+    /// The embedded QR payload is invalid or inconsistent with the document.
     #[error("{0}")]
     Qr(#[from] crate::invoice::QrCodeError),
+    /// A parsed value failed invoice construction or builder field checks.
     #[error("{0}")]
     Invoice(#[from] crate::invoice::InvoiceError),
+    /// A numeric value is not valid decimal notation or is out of range.
     #[error("{0}")]
     Decimal(#[from] crate::DecimalError),
+    /// The XML file could not be read.
     #[error("failed to read {path}: {source}")]
     Io {
+        /// Path that failed to read.
         path: std::path::PathBuf,
+        /// Underlying I/O error.
         #[source]
         source: std::io::Error,
     },
+    /// The input is not well-formed or supported XML.
     #[error("XML parse error: {0}")]
     XmlParse(String),
+    /// An XPath lookup failed. Current parsers do not produce this variant.
     #[error("XPath error: {0}")]
     XPath(String),
+    /// A required element or attribute is absent; the payload names it.
     #[error("Missing required field: {0}")]
     MissingField(&'static str),
+    /// An element or attribute has an unsupported or malformed value.
     #[error("Invalid value for {field}: {value}")]
-    InvalidValue { field: &'static str, value: String },
+    InvalidValue {
+        /// Name of the offending field.
+        field: &'static str,
+        /// The rejected value.
+        value: String,
+    },
 }
 
 impl ParseError {

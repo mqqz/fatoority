@@ -79,28 +79,39 @@ deserialize_validated_string!(
 #[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum InvoiceError {
+    /// A monetary or quantity value could not be parsed or represented as a [`Decimal`].
     #[error(transparent)]
     Decimal(#[from] crate::DecimalError),
+    /// One or more field-level validation issues; see [`ValidationError::issues`].
     #[error(transparent)]
     Validation(#[from] ValidationError),
+    /// The input (upper-cased) is not an ISO 3166-1 alpha-2 or alpha-3 country code.
     #[error("Invalid country code: {0}")]
     InvalidCountryCode(String),
+    /// The input (upper-cased) is not an ISO 4217 currency code.
     #[error("Invalid currency code: {0}")]
     InvalidCurrencyCode(String),
+    /// The input is not a valid `YYYY-MM-DDTHH:MM:SSZ` timestamp or `HH:MM:SS[Z]` time.
     #[error("Invalid invoice timestamp: {0}")]
     InvalidTimestamp(String),
+    /// The input is not a valid `YYYY-MM-DD` calendar date.
     #[error("Invalid invoice date: {0}")]
     InvalidIssueDate(String),
+    /// The seller party has no VAT registration number.
     #[error("Missing VAT ID for seller")]
     MissingVatForSeller,
+    /// The buyer party has no identifier.
     #[error("Missing Buyer ID for buyer")]
     MissingBuyerId,
+    /// A VAT ID was empty after trimming whitespace.
     #[error("Invalid VAT ID format")]
     InvalidVatFormat,
 }
 
 impl InvoiceError {
-    /// Shared classification used by bindings.
+    /// Returns the coarse [`ErrorKind`](crate::ErrorKind) shared with [`crate::Error`] and the bindings.
+    ///
+    /// [`Validation`](Self::Validation) maps to `Validation`; every other variant maps to `InvalidInput`.
     pub fn kind(&self) -> crate::ErrorKind {
         match self {
             Self::Decimal(_) => crate::ErrorKind::InvalidInput,
@@ -139,10 +150,12 @@ impl std::fmt::Display for ValidationError {
 }
 impl std::error::Error for ValidationError {}
 impl ValidationError {
+    /// Creates an error from a list of issues, preserving their order.
     pub fn new(issues: Vec<ValidationIssue>) -> Self {
         Self { issues }
     }
 
+    /// Returns the individual issues, in the order they were found.
     pub fn issues(&self) -> &[ValidationIssue] {
         &self.issues
     }
@@ -168,13 +181,22 @@ impl ValidationIssue {
             expected: Some(expected),
         }
     }
+    /// For [`ValidationKind::Mismatch`] issues on computed amounts, the value the caller supplied.
+    ///
+    /// `None` for issues created with [`ValidationIssue::new`].
     pub fn supplied(&self) -> Option<Decimal> {
         self.supplied
     }
+    /// For [`ValidationKind::Mismatch`] issues on computed amounts, the value the SDK calculated.
+    ///
+    /// `None` for issues created with [`ValidationIssue::new`].
     pub fn expected(&self) -> Option<Decimal> {
         self.expected
     }
 
+    /// Creates an issue for `field`, optionally tied to a zero-based line item index.
+    ///
+    /// The supplied/expected amounts are left unset.
     pub fn new(field: InvoiceField, kind: ValidationKind, line_item_index: Option<usize>) -> Self {
         Self {
             field,
@@ -185,14 +207,17 @@ impl ValidationIssue {
         }
     }
 
+    /// Returns the invoice field the issue refers to.
     pub fn field(&self) -> InvoiceField {
         self.field
     }
 
+    /// Returns what is wrong with the field.
     pub fn kind(&self) -> ValidationKind {
         self.kind
     }
 
+    /// Returns the zero-based index of the offending line item, if the issue is line-specific.
     pub fn line_item_index(&self) -> Option<usize> {
         self.line_item_index
     }
@@ -202,29 +227,53 @@ impl ValidationIssue {
 /// Field associated with a validation issue.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum InvoiceField {
+    /// Invoice number (`cbc:ID`).
     Id,
+    /// Invoice UUID (`cbc:UUID`).
     Uuid,
+    /// Issue date and time.
     IssueDateTime,
+    /// Invoice or tax currency.
     Currency,
+    /// Previous invoice hash (PIH).
     PreviousInvoiceHash,
+    /// Invoice counter value (ICV).
     InvoiceCounter,
+    /// Seller party.
     Seller,
+    /// Buyer party.
     Buyer,
+    /// The invoice's line items as a whole (for example, none were supplied).
     LineItems,
+    /// Payment means code.
     PaymentMeansCode,
+    /// Payment instruction note.
     PaymentInstruction,
+    /// ID of the original invoice referenced by a credit or debit note.
     OriginalInvoiceId,
+    /// VAT category of a line, allowance/charge or VAT breakdown.
     VatCategory,
+    /// Line item ID.
     LineItemId,
+    /// ID of a document reference on a line item.
     LineItemDocumentReferenceId,
+    /// Line item description (item name).
     LineItemDescription,
+    /// Line item unit of measure code.
     LineItemUnitCode,
+    /// Line item quantity.
     LineItemQuantity,
+    /// Line item unit price.
     LineItemUnitPrice,
+    /// Line item net total amount.
     LineItemTotalAmount,
+    /// Line item VAT rate.
     LineItemVatRate,
+    /// Line item VAT amount.
     LineItemVatAmount,
+    /// Document-level allowance (discount).
     InvoiceLevelDiscount,
+    /// Document-level charge.
     InvoiceLevelCharge,
 }
 
@@ -232,10 +281,15 @@ pub enum InvoiceField {
 /// Classification of validation issues.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ValidationKind {
+    /// A required value was not supplied.
     Missing,
+    /// A value was supplied but is empty or blank.
     Empty,
+    /// A value does not have the expected format.
     InvalidFormat,
+    /// A numeric value is outside its allowed range (for example, negative).
     OutOfRange,
+    /// A value disagrees with the value calculated from other fields.
     Mismatch,
 }
 
@@ -244,6 +298,12 @@ pub enum ValidationKind {
 pub struct CountryCode(String);
 
 impl CountryCode {
+    /// Parses an ISO 3166-1 alpha-2 or alpha-3 code (case-insensitive, trimmed) and
+    /// normalizes it to upper-case alpha-3 (for example `"sa"` becomes `"SAU"`).
+    ///
+    /// # Errors
+    /// Returns [`InvoiceError::InvalidCountryCode`] if the input is not a known
+    /// two- or three-letter ISO country code.
     pub fn parse<S: Into<String>>(s: S) -> Result<Self> {
         let value = s.into().trim().to_uppercase();
         let normalized = match value.len() {
@@ -260,6 +320,7 @@ impl CountryCode {
         Ok(Self(normalized))
     }
 
+    /// Returns the normalized upper-case ISO alpha-3 code.
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -310,6 +371,10 @@ impl TryFrom<&str> for CountryCode {
 pub struct CurrencyCode(String);
 
 impl CurrencyCode {
+    /// Parses an ISO 4217 currency code (case-insensitive, trimmed) and stores it upper-cased.
+    ///
+    /// # Errors
+    /// Returns [`InvoiceError::InvalidCurrencyCode`] if the input is not a known ISO 4217 code.
     pub fn parse<S: Into<String>>(s: S) -> Result<Self> {
         let value = s.into().trim().to_uppercase();
         IsoCurrency::from_code(&value)
@@ -317,6 +382,7 @@ impl CurrencyCode {
         Ok(Self(value))
     }
 
+    /// Returns the upper-case ISO 4217 code, for example `"SAR"`.
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -360,6 +426,11 @@ impl TryFrom<&str> for CurrencyCode {
 pub struct InvoiceTimestamp(String);
 
 impl InvoiceTimestamp {
+    /// Parses a trimmed `YYYY-MM-DDTHH:MM:SSZ` UTC timestamp and stores it in canonical form.
+    ///
+    /// # Errors
+    /// Returns [`InvoiceError::InvalidTimestamp`] if the input does not match that
+    /// format or is not a real date and time.
     pub fn parse<S: Into<String>>(s: S) -> Result<Self> {
         let value = s.into().trim().to_string();
         let parsed = NaiveDateTime::parse_from_str(&value, TIMESTAMP_FORMAT)
@@ -367,6 +438,7 @@ impl InvoiceTimestamp {
         Ok(Self(parsed.format(TIMESTAMP_FORMAT).to_string()))
     }
 
+    /// Returns the timestamp as `YYYY-MM-DDTHH:MM:SSZ`.
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -414,6 +486,11 @@ impl TryFrom<&str> for InvoiceTimestamp {
 pub struct InvoiceDate(String);
 
 impl InvoiceDate {
+    /// Parses a trimmed `YYYY-MM-DD` calendar date and stores it in canonical form.
+    ///
+    /// # Errors
+    /// Returns [`InvoiceError::InvalidIssueDate`] if the input does not match that
+    /// format or is not a real calendar date.
     pub fn parse<S: Into<String>>(s: S) -> Result<Self> {
         let value = s.into().trim().to_string();
         let parsed = NaiveDate::parse_from_str(&value, DATE_FORMAT)
@@ -421,6 +498,7 @@ impl InvoiceDate {
         Ok(Self(parsed.format(DATE_FORMAT).to_string()))
     }
 
+    /// Returns the date as `YYYY-MM-DD`.
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -463,6 +541,13 @@ impl TryFrom<&str> for InvoiceDate {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
 pub struct InvoiceTime(String);
 impl InvoiceTime {
+    /// Parses a trimmed `HH:MM:SS` time with an optional trailing `Z` (UTC), which is preserved.
+    ///
+    /// Exactly eight clock characters are required; `24:00:00` is also accepted.
+    ///
+    /// # Errors
+    /// Returns [`InvoiceError::InvalidTimestamp`] if the clock part is not a valid
+    /// two-digit `HH:MM:SS` time.
     pub fn parse(value: impl Into<String>) -> Result<Self> {
         let value = value.into().trim().to_owned();
         let clock = value.strip_suffix('Z').unwrap_or(&value);
@@ -477,6 +562,7 @@ impl InvoiceTime {
         let suffix = if value.ends_with('Z') { "Z" } else { "" };
         Ok(Self(format!("{}{suffix}", time.format("%H:%M:%S"))))
     }
+    /// Returns the time as `HH:MM:SS` or `HH:MM:SSZ`, matching the parsed input.
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -541,6 +627,11 @@ fn empty_field_error(field: InvoiceField) -> InvoiceError {
 pub struct InvoiceUuid(String);
 
 impl InvoiceUuid {
+    /// Trims the input and wraps it; the UUID syntax itself is not checked.
+    ///
+    /// # Errors
+    /// Returns [`InvoiceError::Validation`] with an [`InvoiceField::Uuid`] /
+    /// [`ValidationKind::Empty`] issue if the input is blank.
     pub fn parse<S: Into<String>>(s: S) -> Result<Self> {
         let value = s.into().trim().to_string();
         if value.is_empty() {
@@ -549,6 +640,7 @@ impl InvoiceUuid {
         Ok(Self(value))
     }
 
+    /// Returns the trimmed UUID string.
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -619,6 +711,11 @@ impl From<uuid::Uuid> for InvoiceUuid {
 pub struct InvoiceHash(String);
 
 impl InvoiceHash {
+    /// Trims the input and wraps it; the Base64 encoding is not checked.
+    ///
+    /// # Errors
+    /// Returns [`InvoiceError::Validation`] with an [`InvoiceField::PreviousInvoiceHash`] /
+    /// [`ValidationKind::Empty`] issue if the input is blank.
     pub fn parse<S: Into<String>>(s: S) -> Result<Self> {
         let value = s.into().trim().to_string();
         if value.is_empty() {
@@ -627,6 +724,7 @@ impl InvoiceHash {
         Ok(Self(value))
     }
 
+    /// Returns the trimmed hash string.
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -668,51 +766,68 @@ impl TryFrom<&str> for InvoiceHash {
 /// Postal address for parties.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Address {
+    /// Province or region, serialized as UBL `cbc:CountrySubentity`.
     #[serde(default)]
     pub province: Option<String>,
+    /// Country; serialized as its ISO alpha-2 code in `cac:Country/cbc:IdentificationCode`.
     pub country_code: CountryCode,
+    /// City name (`cbc:CityName`); omitted from XML when empty.
     pub city: String,
+    /// Street name (`cbc:StreetName`); omitted from XML when empty.
     pub street: String,
+    /// Additional street name (`cbc:AdditionalStreetName`).
     pub additional_street: Option<String>,
+    /// Building number (`cbc:BuildingNumber`); omitted from XML when empty.
     pub building_number: String,
+    /// Additional (plot) number, serialized as `cbc:PlotIdentification`.
     pub additional_number: Option<String>,
+    /// Postal code (`cbc:PostalZone`); omitted from XML when empty.
     pub postal_code: String, //fix 5 digits if country is KSA
     /// City district, serialized as UBL `cbc:CitySubdivisionName`.
     pub district: Option<String>,
 }
 
 impl Address {
+    /// Returns the province or region, if set.
     pub fn province(&self) -> Option<&str> {
         self.province.as_deref()
     }
+    /// Returns the country code.
     pub fn country_code(&self) -> &CountryCode {
         &self.country_code
     }
 
+    /// Returns the city name.
     pub fn city(&self) -> &str {
         &self.city
     }
 
+    /// Returns the street name.
     pub fn street(&self) -> &str {
         &self.street
     }
 
+    /// Returns the additional street name, if set.
     pub fn additional_street(&self) -> Option<&str> {
         self.additional_street.as_deref()
     }
 
+    /// Returns the building number.
     pub fn building_number(&self) -> &str {
         &self.building_number
     }
 
+    /// Returns the additional (plot) number, if set.
     pub fn additional_number(&self) -> Option<&str> {
         self.additional_number.as_deref()
     }
 
+    /// Returns the postal code.
     pub fn postal_code(&self) -> &str {
         &self.postal_code
     }
 
+    /// Returns the city district, if set.
     pub fn district(&self) -> Option<&str> {
         self.district.as_deref()
     }
@@ -734,6 +849,11 @@ impl Address {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
 pub struct VatId(String);
 impl VatId {
+    /// Trims the input and wraps it. Only emptiness is checked; the KSA 15-digit
+    /// format is enforced later by XML business-rule validation.
+    ///
+    /// # Errors
+    /// Returns [`InvoiceError::InvalidVatFormat`] if the input is blank.
     pub fn parse<S: Into<String>>(s: S) -> Result<Self> {
         let s = s.into().trim().to_string();
         if s.is_empty() {
@@ -742,6 +862,7 @@ impl VatId {
         // TODO: tighten validation (e.g., KSA = 15 digits)
         Ok(VatId(s))
     }
+    /// Returns the trimmed VAT registration number.
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -792,6 +913,7 @@ pub struct OtherId {
     scheme_id: Option<String>,
 }
 impl OtherId {
+    /// Creates an identifier without a scheme ID.
     pub fn new<S: Into<String>>(value: S) -> Self {
         OtherId {
             value: value.into(),
@@ -799,6 +921,7 @@ impl OtherId {
         }
     }
 
+    /// Creates an identifier with a scheme ID such as `"CRN"` or `"NAT"` (`schemeID` attribute).
     pub fn with_scheme<V: Into<String>, S: Into<String>>(value: V, scheme_id: S) -> Self {
         OtherId {
             value: value.into(),
@@ -806,10 +929,12 @@ impl OtherId {
         }
     }
 
+    /// Returns the identifier value (without the scheme).
     pub fn as_str(&self) -> &str {
         &self.value
     }
 
+    /// Returns the scheme ID, if one was given.
     pub fn scheme_id(&self) -> Option<&str> {
         self.scheme_id.as_deref()
     }
@@ -846,6 +971,10 @@ pub struct InvoiceNote {
 }
 
 impl InvoiceNote {
+    /// Creates a note with no `languageID` attribute.
+    ///
+    /// [`language`](Self::language) still reports `"en"`, but [`language_id`](Self::language_id)
+    /// returns `None` and no attribute is emitted in XML.
     pub fn without_language(text: impl Into<String>) -> Self {
         Self {
             language_omitted: true,
@@ -853,10 +982,13 @@ impl InvoiceNote {
             text: text.into(),
         }
     }
+    /// Returns the language emitted as the `languageID` attribute, or `None` for notes
+    /// created with [`without_language`](Self::without_language).
     pub fn language_id(&self) -> Option<&str> {
         (!self.language_omitted).then_some(self.language.as_str())
     }
 
+    /// Creates a note with an explicit language code (for example `"en"` or `"ar"`).
     pub fn new(language: impl Into<String>, text: impl Into<String>) -> Self {
         Self {
             language_omitted: false,
@@ -865,10 +997,12 @@ impl InvoiceNote {
         }
     }
 
+    /// Returns the note language, defaulting to `"en"` when none was given.
     pub fn language(&self) -> &str {
         &self.language
     }
 
+    /// Returns the note text.
     pub fn text(&self) -> &str {
         &self.text
     }
@@ -931,14 +1065,16 @@ pub struct Party<R: PartyRole> {
     identifiers: Vec<OtherId>,
 }
 
+/// A seller (supplier) party; its constructor requires an address and a VAT ID.
 pub type Seller = Party<SellerRole>;
+/// A buyer (customer) party; its constructor accepts an optional address and VAT ID.
 pub type Buyer = Party<BuyerRole>;
 
 impl Party<SellerRole> {
     /// Create a seller party from validated inputs.
     ///
     /// # Errors
-    /// Returns an error if the VAT ID is invalid.
+    /// Returns [`InvoiceError::InvalidVatFormat`] if the VAT ID is blank.
     pub fn new(
         name: String,
         address: Address,
@@ -960,7 +1096,7 @@ impl Party<BuyerRole> {
     /// Create a buyer party from validated inputs.
     ///
     /// # Errors
-    /// Returns an error if a supplied VAT ID is empty. Identification requirements
+    /// Returns [`InvoiceError::InvalidVatFormat`] if a supplied VAT ID is blank. Identification requirements
     /// depend on invoice type and are checked by XML business-rule validation.
     pub fn new(
         name: String,
@@ -983,14 +1119,17 @@ impl Party<BuyerRole> {
 }
 
 impl<R: PartyRole> Party<R> {
+    /// Returns the registration name.
     pub fn name(&self) -> &str {
         &self.name
     }
 
+    /// Returns the postal address, if any.
     pub fn address(&self) -> Option<&Address> {
         self.address.as_ref()
     }
 
+    /// Returns the VAT registration number, if any.
     pub fn vat_id(&self) -> Option<&VatId> {
         self.vat_id.as_ref()
     }
@@ -1000,9 +1139,11 @@ impl<R: PartyRole> Party<R> {
         self.identifiers.push(value);
         self
     }
+    /// Returns all additional identifications, in insertion order.
     pub fn identifiers(&self) -> &[OtherId] {
         &self.identifiers
     }
+    /// Returns the first additional identification, if any.
     pub fn other_id(&self) -> Option<&OtherId> {
         self.identifiers.first()
     }
@@ -1019,7 +1160,9 @@ impl<R: PartyRole> Party<R> {
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum InvoiceSubType {
+    /// Simplified (B2C) invoice, reported to ZATCA after issue.
     Simplified,
+    /// Standard (B2B) invoice, cleared by ZATCA before issue.
     Standard,
 }
 
@@ -1046,21 +1189,26 @@ pub struct OriginalInvoiceRef {
 }
 
 impl OriginalInvoiceRef {
+    /// Sets the referenced document's issue time (`cbc:IssueTime`).
     pub fn with_issue_time(mut self, time: InvoiceTime) -> Self {
         self.issue_time = Some(time);
         self
     }
+    /// Sets the referenced document's type code (`cbc:DocumentTypeCode`).
     pub fn with_document_type_code(mut self, code: impl Into<String>) -> Self {
         self.document_type_code = Some(code.into());
         self
     }
+    /// Returns the referenced document's issue time, if set.
     pub fn issue_time(&self) -> Option<&InvoiceTime> {
         self.issue_time.as_ref()
     }
+    /// Returns the referenced document's type code, if set.
     pub fn document_type_code(&self) -> Option<&str> {
         self.document_type_code.as_deref()
     }
 
+    /// Creates a reference to the document with the given ID (`cbc:ID`); all other fields are unset.
     pub fn new(id: impl Into<String>) -> Self {
         Self {
             id: id.into(),
@@ -1071,29 +1219,39 @@ impl OriginalInvoiceRef {
         }
     }
 
+    /// Sets the referenced document's UUID (`cbc:UUID`).
     pub fn with_uuid(mut self, uuid: impl Into<String>) -> Self {
         self.uuid = Some(uuid.into());
         self
     }
 
+    /// Sets the referenced document's issue date (`cbc:IssueDate`).
     pub fn with_issue_date(mut self, issue_date: InvoiceDate) -> Self {
         self.issue_date = Some(issue_date);
         self
     }
 
+    /// Parses and sets the referenced document's issue date from a `YYYY-MM-DD` string.
+    ///
+    /// # Errors
+    /// Returns [`InvoiceError::InvalidIssueDate`] if the string is not a valid date
+    /// (see [`InvoiceDate::parse`]).
     pub fn with_issue_date_str(mut self, issue_date: impl Into<String>) -> Result<Self> {
         self.issue_date = Some(InvoiceDate::parse(issue_date)?);
         Ok(self)
     }
 
+    /// Returns the referenced document's ID.
     pub fn id(&self) -> &str {
         &self.id
     }
 
+    /// Returns the referenced document's UUID, if set.
     pub fn uuid(&self) -> Option<&str> {
         self.uuid.as_deref()
     }
 
+    /// Returns the referenced document's issue date, if set.
     pub fn issue_date(&self) -> Option<&InvoiceDate> {
         self.issue_date.as_ref()
     }
@@ -1110,13 +1268,18 @@ impl OriginalInvoiceRef {
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum InvoiceType {
+    /// Tax invoice (UNTDID 1001 code `388`).
     Tax(InvoiceSubType),
+    /// Prepayment invoice (code `386`).
     Prepayment(InvoiceSubType),
+    /// Credit note (code `381`); supply the original-invoice reference and reason through the builder.
     CreditNote(InvoiceSubType),
+    /// Debit note (code `383`); supply the original-invoice reference and reason through the builder.
     DebitNote(InvoiceSubType),
 }
 
 impl InvoiceType {
+    /// Returns `true` if the subtype is [`InvoiceSubType::Simplified`].
     pub fn is_simplified(&self) -> bool {
         matches!(
             self,
@@ -1139,26 +1302,36 @@ impl InvoiceType {
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum VatCategory {
+    /// Exempt from VAT (UNCL 5305 code `E`).
     Exempt,
+    /// Standard rate (code `S`).
     Standard,
+    /// Zero-rated (code `Z`).
     Zero,
+    /// Not subject to VAT / out of scope (code `O`).
     OutOfScope,
 }
 /// Independent optional exemption code and description for a tax category.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TaxExemption {
+    /// Exemption reason code (`cbc:TaxExemptionReasonCode`), for example `VATEX-SA-29`.
     pub reason_code: Option<String>,
+    /// Free-text exemption reason (`cbc:TaxExemptionReason`).
     pub reason: Option<String>,
 }
 
 /// A payment instruction. Absence of the collection is distinct from an invalid empty code.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PaymentMeans {
+    /// UNTDID 4461 payment means code (`cbc:PaymentMeansCode`), for example `10` for cash.
     pub payment_means_type_code: String,
+    /// Instruction notes (`cbc:InstructionNote`), such as the reason for a credit or debit note.
     pub instruction_notes: Vec<String>,
+    /// Payee account details (`cac:PayeeFinancialAccount`).
     pub payee_financial_account: Option<PaymentAccount>,
 }
 impl PaymentMeans {
+    /// Creates payment means with the given code and no notes or account.
     pub fn new(code: impl Into<String>) -> Self {
         Self {
             payment_means_type_code: code.into(),
@@ -1166,25 +1339,32 @@ impl PaymentMeans {
             payee_financial_account: None,
         }
     }
+    /// Appends an instruction note.
     pub fn instruction_note(mut self, value: impl Into<String>) -> Self {
         self.instruction_notes.push(value.into());
         self
     }
+    /// Sets the payee financial account.
     pub fn payee_financial_account(mut self, value: PaymentAccount) -> Self {
         self.payee_financial_account = Some(value);
         self
     }
 }
+/// Payee financial account (`cac:PayeeFinancialAccount`) of a [`PaymentMeans`].
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PaymentAccount {
+    /// Account identifier such as an IBAN (`cbc:ID`).
     pub payment_account_identifier: Option<String>,
+    /// Payment terms, serialized as `cbc:PaymentNote`.
     pub payment_terms: Option<String>,
 }
 
 /// Supply date or supply period. Business-rule validation checks date ordering.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Delivery {
+    /// Supply date, or start of the supply period (`cbc:ActualDeliveryDate`).
     pub actual_date: Option<InvoiceDate>,
+    /// End of the supply period (`cbc:LatestDeliveryDate`).
     pub latest_date: Option<InvoiceDate>,
 }
 
@@ -1198,20 +1378,29 @@ pub struct AllowanceCharge {
     /// Preserve an absent VAT rate for an out-of-scope adjustment.
     #[serde(default)]
     pub omitted_rate: bool,
+    /// Base amount the percentage applies to (`cbc:BaseAmount`).
     #[serde(default)]
     pub base_amount: Option<Decimal>,
+    /// Percentage applied to the base amount (`cbc:MultiplierFactorNumeric`).
     #[serde(default)]
     pub percentage: Option<Decimal>,
     /// Identical repeated VAT classifications, as used by the bundled SDK fixtures.
     /// Must be in `1..=Self::MAX_TAX_CATEGORY_COUNT` (an implementation resource limit).
     #[serde(default = "one_tax_category")]
     pub tax_category_count: usize,
+    /// `true` for a charge, `false` for an allowance (`cbc:ChargeIndicator`).
     pub charge: bool,
+    /// Allowance or charge amount, excluding VAT (`cbc:Amount`).
     pub amount: Decimal,
+    /// Free-text reason (`cbc:AllowanceChargeReason`).
     pub reason: Option<String>,
+    /// Reason code (`cbc:AllowanceChargeReasonCode`).
     pub reason_code: Option<String>,
+    /// VAT category of the allowance or charge.
     pub category: VatCategory,
+    /// VAT rate percentage for the category.
     pub rate: Decimal,
+    /// Exemption code and reason for exempt, zero-rated or out-of-scope categories.
     #[serde(default)]
     pub exemption: TaxExemption,
 }
@@ -1274,23 +1463,30 @@ pub struct LineItem {
 }
 
 impl LineItem {
+    /// Returns `false` if the line was built without an explicit VAT rate
+    /// (out-of-scope lines), in which case no `cbc:Percent` is emitted.
     pub fn has_vat_rate(&self) -> bool {
         !self.omitted_vat_rate
     }
+    /// Returns `false` if the line-level `cac:TaxTotal` is omitted from XML.
     pub fn has_tax_total(&self) -> bool {
         !self.omitted_tax_amount
     }
+    /// Returns `false` if the VAT-inclusive line amount (`cbc:RoundingAmount`) is omitted from XML.
     pub fn has_gross_amount(&self) -> bool {
         !self.omitted_gross_amount
     }
+    /// Appends a document reference, such as a prepayment invoice settled by this line.
     pub fn document_reference(mut self, reference: OriginalInvoiceRef) -> Self {
         self.document_references.push(reference);
         self
     }
+    /// Appends a supplied line-level tax subtotal (used for prepayment adjustment lines).
     pub fn tax_subtotal(mut self, subtotal: VatBreakdown) -> Self {
         self.tax_subtotals.push(subtotal);
         self
     }
+    /// Returns the line's document references, in insertion order.
     pub fn document_references(&self) -> &[OriginalInvoiceRef] {
         &self.document_references
     }
@@ -1301,25 +1497,38 @@ impl LineItem {
             .any(|r| r.document_type_code().is_some_and(|v| v.trim() == "386"))
     }
 
+    /// Returns the supplied line-level tax subtotals, in insertion order.
     pub fn tax_subtotals(&self) -> &[VatBreakdown] {
         &self.tax_subtotals
     }
 
+    /// Sets the line ID (`cbc:ID`); lines without one are numbered sequentially in XML.
     pub fn with_id(mut self, id: impl Into<String>) -> Self {
         self.id = Some(id.into());
         self
     }
+    /// Returns the explicit line ID, if set.
     pub fn id(&self) -> Option<&str> {
         self.id.as_deref()
     }
+    /// Replaces the line's VAT exemption code and reason.
     pub fn with_exemption(mut self, exemption: TaxExemption) -> Self {
         self.exemption = exemption;
         self
     }
+    /// Returns the line's VAT exemption code and reason.
     pub fn exemption(&self) -> &TaxExemption {
         &self.exemption
     }
 
+    /// Creates a line, calculating the net amount (`quantity * unit_price`) and VAT amount.
+    ///
+    /// Shorthand for [`LineItem::builder`] with the corresponding setters.
+    ///
+    /// # Errors
+    /// Returns the errors of [`LineItemBuilder::build`], for example
+    /// [`InvoiceError::Validation`] for a blank description or unit code, a negative
+    /// quantity or price, or a rate outside `0..=100` (or non-zero for a non-standard category).
     pub fn new(
         description: impl Into<String>,
         quantity: Decimal,
@@ -1337,6 +1546,13 @@ impl LineItem {
             .vat_category(vat_category)
             .build()
     }
+    /// Creates a line with a supplied net total, which is checked against the calculated one.
+    ///
+    /// # Errors
+    /// Returns the errors of [`LineItem::new`], plus [`InvoiceError::Validation`] with a
+    /// [`ValidationKind::Mismatch`] issue on [`InvoiceField::LineItemTotalAmount`] if
+    /// `total_amount` has more than two decimal places or differs from
+    /// `quantity * unit_price` by more than `0.01`.
     #[allow(clippy::too_many_arguments)]
     pub fn from_totals(
         description: impl Into<String>,
@@ -1357,6 +1573,14 @@ impl LineItem {
             .line_net_amount(total_amount)
             .build()
     }
+    /// Creates a line with supplied net total and VAT amount, both checked against calculated values.
+    ///
+    /// The VAT amount is used as given rather than recalculated.
+    ///
+    /// # Errors
+    /// Returns the errors of [`LineItem::from_totals`], plus [`InvoiceError::Validation`] with a
+    /// [`ValidationKind::OutOfRange`] issue on [`InvoiceField::LineItemVatAmount`] if
+    /// `vat_amount` is negative or has more than two decimal places.
     #[allow(clippy::too_many_arguments)]
     pub fn try_from_parts(
         description: impl Into<String>,
@@ -1379,27 +1603,35 @@ impl LineItem {
             .line_vat_amount(vat_amount)
             .build()
     }
+    /// Returns the item name (same as [`LineItem::item_name`]).
     pub fn description(&self) -> &str {
         &self.description
     }
+    /// Returns the invoiced quantity.
     pub fn quantity(&self) -> Decimal {
         self.quantity
     }
+    /// Returns the quantity unit code; empty if none was set.
     pub fn unit_code(&self) -> &str {
         &self.unit_code
     }
+    /// Returns the net unit price (same as [`LineItem::item_net_price`]).
     pub fn unit_price(&self) -> Decimal {
         self.unit_price
     }
+    /// Returns the line net amount, excluding VAT.
     pub fn total_amount(&self) -> Decimal {
         self.total_amount
     }
+    /// Returns the VAT rate percentage (zero when the rate was omitted).
     pub fn vat_rate(&self) -> Decimal {
         self.vat_rate
     }
+    /// Returns the line VAT amount.
     pub fn vat_amount(&self) -> Decimal {
         self.vat_amount
     }
+    /// Returns the line VAT category.
     pub fn vat_category(&self) -> VatCategory {
         self.vat_category
     }
@@ -1479,47 +1711,60 @@ pub struct InvoiceData {
 }
 
 impl InvoiceData {
+    /// Returns references to original invoices (`cac:BillingReference`), in order.
     pub fn billing_references(&self) -> &[OriginalInvoiceRef] {
         &self.billing_references
     }
+    /// Returns all payment means, in order.
     pub fn payment_means(&self) -> &[PaymentMeans] {
         &self.payment_means
     }
+    /// Returns all invoice notes, in order.
     pub fn notes(&self) -> &[InvoiceNote] {
         &self.notes
     }
+    /// Returns the purchase order reference, if set.
     pub fn purchase_order_id(&self) -> Option<&str> {
         self.purchase_order_id.as_deref()
     }
+    /// Returns the contract reference, if set.
     pub fn contract_id(&self) -> Option<&str> {
         self.contract_id.as_deref()
     }
 
+    /// Returns the first instruction note of the first payment means, if any.
     pub fn payment_instruction(&self) -> Option<&str> {
         self.payment_means
             .first()
             .and_then(|p| p.instruction_notes.first().map(String::as_str))
     }
+    /// Returns the tax currency, if it differs from the document currency and was set.
     pub fn tax_currency(&self) -> Option<&CurrencyCode> {
         self.tax_currency.as_ref()
     }
+    /// Returns the total VAT amount expressed in the tax currency, if set.
     pub fn tax_currency_amount(&self) -> Option<Decimal> {
         self.tax_currency_amount
     }
+    /// Returns the individual document-level allowances and charges, in order.
     pub fn adjustments(&self) -> &[AllowanceCharge] {
         &self.adjustments
     }
+    /// Returns the supply date or period, if set.
     pub fn delivery(&self) -> Option<&Delivery> {
         self.delivery.as_ref()
     }
+    /// Returns the invoice type and subtype.
     pub fn invoice_type(&self) -> &InvoiceType {
         &self.invoice_type
     }
 
+    /// Returns the invoice number (`cbc:ID`).
     pub fn id(&self) -> &str {
         &self.id
     }
 
+    /// Returns the invoice UUID (`cbc:UUID`).
     pub fn uuid(&self) -> &str {
         &self.uuid
     }
@@ -1530,86 +1775,108 @@ impl InvoiceData {
             .as_ref()
             .map_or(&self.issue_datetime.as_str()[11..], InvoiceTime::as_str)
     }
+    /// Returns the issue date as `YYYY-MM-DD`, preserving the original value for imported documents.
     pub fn issue_date(&self) -> &str {
         self.issue_date_override
             .as_ref()
             .map_or(self.issue_datetime.date_str(), InvoiceDate::as_str)
     }
 
+    /// Returns the issue timestamp in UTC `YYYY-MM-DDTHH:MM:SSZ` form.
     pub fn issue_datetime(&self) -> &InvoiceTimestamp {
         &self.issue_datetime
     }
 
+    /// Returns the document currency.
     pub fn currency(&self) -> &CurrencyCode {
         &self.currency
     }
 
+    /// Returns the previous invoice hash (PIH), Base64-encoded.
     pub fn previous_invoice_hash(&self) -> &str {
         &self.previous_invoice_hash
     }
 
+    /// Returns the invoice counter value (ICV).
     pub fn invoice_counter(&self) -> u64 {
         self.invoice_counter
     }
 
+    /// Returns the first note, if any.
     pub fn note(&self) -> Option<&InvoiceNote> {
         self.notes.first()
     }
 
+    /// Returns the seller party.
     pub fn seller(&self) -> &Seller {
         &self.seller
     }
 
+    /// Returns the buyer party, if any (it may be absent on simplified invoices).
     pub fn buyer(&self) -> Option<&Buyer> {
         self.buyer.as_ref()
     }
 
+    /// Returns the line items, in order.
     pub fn line_items(&self) -> &[LineItem] {
         &self.line_items
     }
 
+    /// Returns the code of the first payment means, or `""` if there are none.
     pub fn payment_means_code(&self) -> &str {
         self.payment_means
             .first()
             .map_or("", |p| p.payment_means_type_code.as_str())
     }
 
+    /// Returns the document VAT category, used for the aggregate document-level
+    /// discount and charge.
     pub fn vat_category(&self) -> VatCategory {
         self.vat_category
     }
 
+    /// Returns the invoice transaction flags (third party, nominal, export, summary, self-billed).
     pub fn flags(&self) -> InvoiceFlags {
         self.flags
     }
 
+    /// Returns `true` if [`InvoiceFlags::THIRD_PARTY`] is set.
     pub fn is_third_party(&self) -> bool {
         self.flags.contains(InvoiceFlags::THIRD_PARTY)
     }
 
+    /// Returns `true` if [`InvoiceFlags::NOMINAL`] is set.
     pub fn is_nominal(&self) -> bool {
         self.flags.contains(InvoiceFlags::NOMINAL)
     }
 
+    /// Returns `true` if [`InvoiceFlags::EXPORT`] is set.
     pub fn is_export(&self) -> bool {
         self.flags.contains(InvoiceFlags::EXPORT)
     }
 
+    /// Returns `true` if [`InvoiceFlags::SUMMARY`] is set.
     pub fn is_summary(&self) -> bool {
         self.flags.contains(InvoiceFlags::SUMMARY)
     }
 
+    /// Returns `true` if [`InvoiceFlags::SELF_BILLED`] is set.
     pub fn is_self_billed(&self) -> bool {
         self.flags.contains(InvoiceFlags::SELF_BILLED)
     }
 
+    /// Returns the total of all document-level charges.
     pub fn invoice_level_charge(&self) -> Decimal {
         self.invoice_level_charge
     }
 
+    /// Returns the total of all document-level allowances (discounts).
     pub fn invoice_level_discount(&self) -> Decimal {
         self.invoice_level_discount
     }
 
+    /// Returns the document-level allowance reason: the explicitly set reason, or else the
+    /// reason shared by every document-level adjustment (`None` if they differ).
     pub fn allowance_reason(&self) -> Option<&str> {
         self.allowance_reason.as_deref().or_else(|| {
             let first = self.adjustments.first()?.reason.as_deref();
@@ -1658,9 +1925,16 @@ pub struct VatBreakdown {
     pub(crate) tax_amount: Decimal,
 }
 impl VatBreakdown {
+    /// Returns `false` if the VAT rate (`cbc:Percent`) is omitted from XML.
     pub fn has_vat_rate(&self) -> bool {
         !self.omitted_rate
     }
+    /// Marks the subtotal so its VAT rate is omitted from XML.
+    ///
+    /// # Errors
+    /// Returns [`InvoiceError::Validation`] with an [`InvoiceField::VatCategory`] /
+    /// [`ValidationKind::OutOfRange`] issue unless the category is
+    /// [`VatCategory::OutOfScope`] and the rate is zero.
     pub fn without_vat_rate(mut self) -> Result<Self> {
         if self.category != VatCategory::OutOfScope || self.rate != Decimal::ZERO {
             return Err(ValidationError::new(vec![ValidationIssue::new(
@@ -1702,6 +1976,11 @@ impl VatBreakdown {
     }
 
     /// Supplied line-level tax subtotal (for example a prepayment adjustment).
+    ///
+    /// # Errors
+    /// Returns [`InvoiceError::Validation`] with an [`InvoiceField::VatCategory`] /
+    /// [`ValidationKind::OutOfRange`] issue if the rate is outside `0..=100`, any value
+    /// is negative, or any value has more than two decimal places.
     pub fn new(
         category: VatCategory,
         rate: Decimal,
@@ -1732,23 +2011,29 @@ impl VatBreakdown {
             exemption: TaxExemption::default(),
         })
     }
+    /// Replaces the subtotal's VAT exemption code and reason.
     pub fn with_exemption(mut self, exemption: TaxExemption) -> Self {
         self.exemption = exemption;
         self
     }
 
+    /// Returns the VAT exemption code and reason.
     pub fn exemption(&self) -> &TaxExemption {
         &self.exemption
     }
+    /// Returns the VAT category.
     pub fn category(&self) -> VatCategory {
         self.category
     }
+    /// Returns the VAT rate percentage.
     pub fn rate(&self) -> Decimal {
         self.rate
     }
+    /// Returns the taxable amount for this category and rate.
     pub fn taxable_amount(&self) -> Decimal {
         self.taxable_amount
     }
+    /// Returns the VAT amount for this category and rate.
     pub fn tax_amount(&self) -> Decimal {
         self.tax_amount
     }
@@ -1858,33 +2143,43 @@ impl InvoiceTotalsData {
             groups,
         })
     }
+    /// Returns the sum of line net amounts (`cbc:LineExtensionAmount`), excluding prepayment adjustment lines.
     pub fn line_extension(&self) -> Decimal {
         self.line_extension
     }
+    /// Returns the total VAT amount in the document currency.
     pub fn tax_amount(&self) -> Decimal {
         self.tax_amount
     }
+    /// Returns the total of document-level allowances (`cbc:AllowanceTotalAmount`).
     pub fn allowance_total(&self) -> Decimal {
         self.allowance_total
     }
+    /// Returns the total of document-level charges (`cbc:ChargeTotalAmount`).
     pub fn charge_total(&self) -> Decimal {
         self.charge_total
     }
+    /// Returns the total excluding VAT (`cbc:TaxExclusiveAmount`): line total minus allowances plus charges.
     pub fn taxable_amount(&self) -> Decimal {
         self.taxable_amount
     }
+    /// Returns the total including VAT (`cbc:TaxInclusiveAmount`).
     pub fn tax_inclusive_amount(&self) -> Decimal {
         self.tax_inclusive_amount
     }
+    /// Returns the amount already paid (`cbc:PrepaidAmount`).
     pub fn prepaid_amount(&self) -> Decimal {
         self.prepaid_amount
     }
+    /// Returns the rounding applied to the payable amount (`cbc:PayableRoundingAmount`).
     pub fn payable_rounding_amount(&self) -> Decimal {
         self.payable_rounding_amount
     }
+    /// Returns the amount due for payment (`cbc:PayableAmount`).
     pub fn payable_amount(&self) -> Decimal {
         self.payable_amount
     }
+    /// Returns the VAT breakdown, one entry per VAT category and rate.
     pub fn vat_breakdown(&self) -> &[VatBreakdown] {
         &self.groups
     }

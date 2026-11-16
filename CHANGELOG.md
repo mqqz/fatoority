@@ -11,6 +11,11 @@
 - Optional `uuid` feature: `From<uuid::Uuid> for InvoiceUuid`.
 - Optional `chrono` feature: `From<chrono::DateTime<Utc>> for InvoiceTimestamp`
   and `From<chrono::NaiveDate> for InvoiceDate`.
+- `Display` for `CountryCode`, `CurrencyCode`, `InvoiceTimestamp`, `InvoiceDate`,
+  `InvoiceTime`, `VatId` and `OtherId` (value only), printing `as_str()`.
+- Every public `fatoora-core` item is documented, including `# Errors` and
+  `# Panics` sections; `missing_docs` and the Clippy error/panic doc lints are
+  now enforced for the crate.
 
 ## [0.5.0] - Unreleased
 
