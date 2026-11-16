@@ -1,7 +1,25 @@
-//! Common trait guarantees on public types (C-COMMON-TRAITS).
+//! Common trait guarantees on public types (C-COMMON-TRAITS, C-SEND-SYNC).
 
+use fatoora_core::api::{Compliance, CsidCredentials, Production, ZatcaClient};
+use fatoora_core::config::Config;
+use fatoora_core::csr::SigningKey;
+use fatoora_core::invoice::sign::InvoiceSigner;
 use fatoora_core::invoice::{
-    CountryCode, CurrencyCode, InvoiceDate, InvoiceTime, InvoiceTimestamp, OtherId, VatId,
+    CountryCode, CurrencyCode, FinalizedInvoice, InvoiceBuilder, InvoiceDate, InvoiceTime,
+    InvoiceTimestamp, OtherId, SignedInvoice, VatId,
+};
+
+const _: () = {
+    const fn assert_send_sync<T: Send + Sync>() {}
+    assert_send_sync::<ZatcaClient>();
+    assert_send_sync::<InvoiceSigner>();
+    assert_send_sync::<SigningKey>();
+    assert_send_sync::<FinalizedInvoice>();
+    assert_send_sync::<SignedInvoice>();
+    assert_send_sync::<Config>();
+    assert_send_sync::<CsidCredentials<Compliance>>();
+    assert_send_sync::<CsidCredentials<Production>>();
+    assert_send_sync::<InvoiceBuilder>();
 };
 
 #[test]
