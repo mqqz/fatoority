@@ -70,6 +70,20 @@ On Windows, use executables under `.venv\Scripts` instead of `.venv/bin`. The pr
 
 Use a temporary output directory suitable for your system. Guides should walk through a task; reference pages should document inputs, results and behavior. Keep language-specific examples and notes inside the appropriate language tab. Check changed links, narrow screens and every tab you edited.
 
+## Choose the target branch
+
+`main` ships non-breaking 0.5.x releases, so a pull request into `main` must not break the public Rust API. Breaking changes for 0.6.0 go to the `next` branch.
+
+CI runs [`cargo-semver-checks`](https://github.com/obi1kenobi/cargo-semver-checks) on `fatoora-core` and `fatoora-ffi` against the `v0.5.0` tag. The check fails a pull request into `main` that contains a breaking change. On a pull request into `next` it reports the result without failing. To run it locally:
+
+```sh
+cargo install --locked cargo-semver-checks@0.51.0
+cargo semver-checks -p fatoora-core --baseline-rev v0.5.0
+cargo semver-checks -p fatoora-ffi --baseline-rev v0.5.0
+```
+
+The baseline is built from the git tag, so your checkout needs the `v0.5.0` tag (`git fetch --tags`).
+
 ## Submit a pull request
 
 Explain the problem, the resulting behavior and how you checked it. Include any remaining limitations. CI runs additional platform and package checks; a local pass does not replace those checks.
