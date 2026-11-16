@@ -19,11 +19,17 @@ pub struct ZatcaValidationOptions {
 #[non_exhaustive]
 #[serde(rename_all = "snake_case")]
 pub enum ZatcaStage {
+    /// UBL XML schema (XSD) validation.
     Xsd,
+    /// CEN EN 16931 business rules.
     Cen,
+    /// ZATCA KSA-specific business rules.
     Ksa,
+    /// Cryptographic signature, digest and certificate checks.
     Signature,
+    /// QR payload consistency checks.
     Qr,
+    /// Comparison of the embedded previous invoice hash with the caller-supplied one.
     PreviousInvoiceHash,
 }
 
@@ -32,6 +38,7 @@ pub enum ZatcaStage {
 #[non_exhaustive]
 #[serde(rename_all = "snake_case")]
 pub enum ZatcaStageStatus {
+    /// The stage did not start, typically because an earlier stage failed.
     NotRun,
     /// All checks finished; findings can still contain validation errors.
     Completed,
@@ -46,14 +53,18 @@ pub enum ZatcaStageStatus {
 /// Pinned source used to implement a business-rule profile.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ZatcaRuleSource {
+    /// File name of the upstream rule stylesheet (e.g. `CEN-EN16931-UBL.xsl`).
     pub stylesheet: String,
+    /// Hex SHA-256 digest of the pinned stylesheet.
     pub sha256: String,
 }
 
 /// A finding with its individual source assertion, when applicable.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ZatcaFinding {
+    /// Identifier of the rule assertion that produced the finding, for business-rule findings.
     pub assertion_site: Option<String>,
+    /// The finding itself.
     #[serde(flatten)]
     pub finding: ValidationFinding,
 }
@@ -61,10 +72,15 @@ pub struct ZatcaFinding {
 /// Coverage and findings from one stage, including partial execution results.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ZatcaStageReport {
+    /// The stage this report covers.
     pub stage: ZatcaStage,
+    /// Whether the stage ran to completion.
     pub status: ZatcaStageStatus,
+    /// Pinned rule source, for the CEN and KSA business-rule stages.
     pub provenance: Option<ZatcaRuleSource>,
+    /// Assertion sites whose selected contexts were all evaluated.
     pub evaluated_assertions: Vec<String>,
+    /// Findings produced by the stage.
     pub findings: Vec<ZatcaFinding>,
 }
 
@@ -74,9 +90,13 @@ pub struct ZatcaStageReport {
 /// establish acceptance by a remote service or certificate issuer trust.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct ZatcaValidationReport {
+    /// Version of this report's serialized format.
     pub schema_version: u32,
+    /// Identifier of the validation profile (the ZATCA SDK release it mirrors).
     pub profile: String,
+    /// Instant used for time-dependent rules.
     pub evaluated_at: DateTime<FixedOffset>,
+    /// One report per [`ZatcaStage`], in stage order.
     pub stages: Vec<ZatcaStageReport>,
 }
 
@@ -182,12 +202,19 @@ impl ZatcaValidationReport {
 #[non_exhaustive]
 #[serde(rename_all = "snake_case")]
 pub enum ZatcaFailureKind {
+    /// The input is not well-formed XML.
     InvalidXml,
+    /// The XML uses constructs the validator does not support.
     UnsupportedXml,
+    /// An internal evaluation limit (e.g. decimal precision or rule context count) was exceeded.
     CapacityExceeded,
+    /// Caller-supplied options are invalid (e.g. a malformed previous invoice hash).
     InvalidContext,
+    /// A business rule could not be evaluated.
     RuleEvaluation,
+    /// XML schema validation could not be performed.
     Schema,
+    /// Signature or QR integrity checking could not be completed.
     Integrity,
 }
 
@@ -195,11 +222,17 @@ pub enum ZatcaFailureKind {
 #[derive(Debug, thiserror::Error, Serialize)]
 #[error("{message}")]
 pub struct ZatcaValidationError {
+    /// Classification of the failure.
     pub kind: ZatcaFailureKind,
+    /// Stage that was running when validation stopped, if known.
     pub stage: Option<ZatcaStage>,
+    /// Rule assertion being evaluated when validation stopped, if any.
     pub assertion_site: Option<String>,
+    /// Location in the document related to the failure, if known.
     pub location: Option<ValidationLocation>,
+    /// Human-readable description; wording is not a stable API.
     pub message: String,
+    /// Partial report with all stages and findings completed before the failure.
     pub report: Box<ZatcaValidationReport>,
 }
 

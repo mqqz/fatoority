@@ -21,15 +21,20 @@ impl std::fmt::Debug for HttpRequest {
 }
 
 impl HttpRequest {
+    /// Returns the HTTP method (e.g. `POST`, `PATCH`).
     pub fn method(&self) -> &str {
         self.method
     }
+    /// Returns the absolute request URL.
     pub fn url(&self) -> &str {
         &self.url
     }
+    /// Returns the request headers as `(name, value)` pairs, including the
+    /// `Authorization` header when credentials are used.
     pub fn headers(&self) -> &[(String, String)] {
         &self.headers
     }
+    /// Returns the request body (JSON) bytes.
     pub fn body(&self) -> &[u8] {
         &self.body
     }
@@ -80,9 +85,17 @@ impl InvoiceRequest {
     pub(super) fn new(request: HttpRequest, operation: InvoiceOperation) -> Self {
         Self { request, operation }
     }
+    /// Returns the HTTP request to send.
     pub fn request(&self) -> &HttpRequest {
         &self.request
     }
+    /// Decodes the endpoint's response into a [`ValidationResponse`] tagged with
+    /// this operation, so [`ValidationResponse::outcome`] can classify it.
+    ///
+    /// # Errors
+    /// - [`ZatcaError::InvalidResponse`] if `status` is not a valid HTTP status code.
+    /// - [`ZatcaError::Response`] for a non-2xx status.
+    /// - [`ZatcaError::ResponseDecode`] if a 2xx body is not a valid validation response.
     pub fn decode(&self, status: u16, body: &[u8]) -> Result<ValidationResponse, ZatcaError> {
         check_status(status)?;
         super::response::decode_validation_response(status, body, self.operation)
@@ -99,9 +112,15 @@ impl ComplianceRequest {
     pub(super) fn new(request: HttpRequest, env: EnvironmentType) -> Self {
         Self { request, env }
     }
+    /// Returns the HTTP request to send.
     pub fn request(&self) -> &HttpRequest {
         &self.request
     }
+    /// Decodes the response into compliance credentials for the request's environment.
+    ///
+    /// # Errors
+    /// Returns [`ZatcaError::InvalidResponse`] if `status` is invalid or not 2xx,
+    /// or the body is not a valid CSID response.
     pub fn decode(
         &self,
         status: u16,
@@ -132,9 +151,18 @@ impl ProductionRequest {
             renewal,
         }
     }
+    /// Returns the HTTP request to send.
     pub fn request(&self) -> &HttpRequest {
         &self.request
     }
+    /// Decodes the response into production credentials for the request's environment.
+    ///
+    /// # Errors
+    /// - [`ZatcaError::Unauthorized`] for HTTP 401 (renewal only).
+    /// - [`ZatcaError::ServerError`] for HTTP 5xx (renewal only).
+    /// - [`ZatcaError::InvalidResponse`] if `status` is invalid or otherwise
+    ///   unexpected, or the body is not a valid CSID response. Renewal also
+    ///   accepts an HTTP 428 body carrying credentials.
     pub fn decode(
         &self,
         status: u16,

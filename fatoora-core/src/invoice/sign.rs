@@ -18,16 +18,23 @@ use x509_cert::{
 #[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum SigningError {
+    /// A cryptographic or encoding step failed (e.g. certificate DER/PEM encoding or hash decoding).
     #[error("Signing error: {0}")]
     SigningError(String),
+    /// The XML could not be parsed, or the signed output failed its integrity postcondition.
     #[error("XML signing error: {0}")]
     Xml(#[source] crate::Diagnostic),
+    /// The certificate, private key or document is unusable for signing (e.g. malformed DER/PEM,
+    /// a key that does not match the certificate, or an inconsistent existing signature).
     #[error("invalid signing input: {0}")]
     InvalidInput(#[source] crate::Diagnostic),
+    /// Serializing the invoice to XML failed.
     #[error("{0}")]
     Serialize(#[from] super::xml::InvoiceXmlError),
+    /// The invoice data is invalid.
     #[error("{0}")]
     Invoice(#[from] super::InvoiceError),
+    /// Building the QR payload failed.
     #[error("{0}")]
     Qr(#[from] super::QrCodeError),
 }
@@ -61,38 +68,47 @@ pub struct SignedProperties {
 }
 
 impl SignedProperties {
+    /// Base64 SHA-256 digest of the canonicalized invoice.
     pub fn invoice_hash(&self) -> &str {
         &self.invoice_hash
     }
 
+    /// Base64 DER ECDSA signature over the invoice hash.
     pub fn signature(&self) -> &str {
         &self.signature
     }
 
+    /// Base64 DER `SubjectPublicKeyInfo` of the signing certificate.
     pub fn public_key(&self) -> &str {
         &self.public_key
     }
 
+    /// Base64 signature value of the signing certificate (made by its issuing CA), if available.
     pub fn zatca_key_signature(&self) -> Option<&str> {
         self.zatca_key_signature.as_deref()
     }
 
+    /// Issuer distinguished name of the signing certificate.
     pub fn issuer(&self) -> &str {
         &self.issuer
     }
 
+    /// Serial number of the signing certificate, in decimal.
     pub fn serial(&self) -> &str {
         &self.serial
     }
 
+    /// Base64-encoded hex SHA-256 digest of the Base64 certificate, as embedded in `xades:CertDigest`.
     pub fn cert_hash(&self) -> &str {
         &self.cert_hash
     }
 
+    /// Base64-encoded hex SHA-256 digest of the XAdES signed properties.
     pub fn signed_props_hash(&self) -> &str {
         &self.signed_props_hash
     }
 
+    /// XAdES signing time (`YYYY-MM-DDTHH:MM:SS`).
     pub fn signing_time(&self) -> &str {
         &self.signing_time
     }
@@ -265,6 +281,9 @@ impl InvoiceSigner {
         Ok((signing, output))
     }
     /// Export the certificate as DER bytes without exposing the certificate backend.
+    ///
+    /// # Errors
+    /// Returns [`SigningError::SigningError`] if the certificate cannot be DER-encoded.
     pub fn certificate_der(&self) -> Result<Vec<u8>, SigningError> {
         self.csid
             .to_der()
@@ -272,6 +291,9 @@ impl InvoiceSigner {
     }
 
     /// Export the certificate as PEM with LF line endings.
+    ///
+    /// # Errors
+    /// Returns [`SigningError::SigningError`] if the certificate cannot be PEM-encoded.
     pub fn certificate_pem(&self) -> Result<String, SigningError> {
         self.csid
             .to_pem(LineEnding::LF)

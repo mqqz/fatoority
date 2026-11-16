@@ -22,8 +22,11 @@ use thiserror::Error;
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum EnvironmentType {
+    /// ZATCA "Integration Sandbox" (developer portal); parsed from `"non_production"`.
     NonProduction,
+    /// ZATCA "Simulation Test Environment"; parsed from `"simulation"`.
     Simulation,
+    /// Live production environment; parsed from `"production"`.
     Production,
 }
 
@@ -31,8 +34,13 @@ pub enum EnvironmentType {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Error)]
 #[non_exhaustive]
 pub enum EnvironmentParseError {
+    /// The input did not match `non_production`, `simulation` or `production`
+    /// (case-insensitive).
     #[error("invalid environment type: {input}")]
-    Invalid { input: String },
+    Invalid {
+        /// The rejected input, as given.
+        input: String,
+    },
 }
 
 impl EnvironmentParseError {
@@ -57,6 +65,8 @@ impl FromStr for EnvironmentType {
 }
 
 impl EnvironmentType {
+    /// Returns the canonical lowercase name (`non_production`, `simulation` or
+    /// `production`), accepted by [`EnvironmentType::from_str`].
     pub fn as_str(&self) -> &'static str {
         match self {
             EnvironmentType::NonProduction => "non_production",
@@ -65,6 +75,8 @@ impl EnvironmentType {
         }
     }
 
+    /// Returns the base URL of this environment's ZATCA e-invoicing API, with a
+    /// trailing slash.
     pub fn endpoint_url(&self) -> &'static str {
         match self {
             EnvironmentType::NonProduction => {
@@ -98,6 +110,7 @@ impl Config {
         Self { env }
     }
 
+    /// Returns the configured ZATCA environment.
     pub fn env(&self) -> EnvironmentType {
         self.env
     }

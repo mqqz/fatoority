@@ -8,7 +8,9 @@ use serde::{Deserialize, Serialize};
 /// layers found no issues; it does not establish complete invoice compliance.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ValidationReport {
+    /// Layers whose checks completed; only these are covered by `issues`.
     pub layers_checked: Vec<ValidationLayer>,
+    /// Findings from the checked layers, including warnings.
     pub issues: Vec<ValidationFinding>,
 }
 
@@ -26,20 +28,28 @@ impl ValidationReport {
 #[non_exhaustive]
 #[serde(rename_all = "snake_case")]
 pub enum ValidationLayer {
+    /// Builder/model field checks (required values, formats and arithmetic).
     FieldChecks,
+    /// UBL XML schema (XSD) validation.
     Xsd,
+    /// CEN EN 16931 and KSA business rules.
     BusinessRules,
+    /// Cryptographic signature, digest and certificate checks.
     Signature,
+    /// QR payload consistency with the invoice and signature.
     Qr,
+    /// Comparison of the embedded previous invoice hash with the expected predecessor.
     PreviousInvoiceHash,
 }
 
 /// A stable code and location for a human-readable finding.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ValidationFinding {
+    /// Layer that produced the finding.
     pub layer: ValidationLayer,
     /// Library-owned rule identifier, independent of backend message wording.
     pub code: String,
+    /// Whether the finding is a warning or an error.
     pub severity: Severity,
     /// Human-readable text; wording is not a stable API.
     pub message: String,
@@ -47,13 +57,17 @@ pub struct ValidationFinding {
     pub location: Option<ValidationLocation>,
 }
 
+/// Severity of a validation finding.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Severity {
+    /// Reported but does not make the document invalid.
     Warning,
+    /// Makes the document invalid.
     Error,
 }
 
+/// Where a validation finding applies.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[non_exhaustive]
 #[serde(rename_all = "snake_case")]
@@ -63,7 +77,12 @@ pub enum ValidationLocation {
     /// Namespace-independent XPath selecting the original XML context.
     XPath(String),
     /// One-based XML source coordinates, when supplied by the backend.
-    Xml { line: u32, column: Option<u32> },
+    Xml {
+        /// One-based line number.
+        line: u32,
+        /// One-based column number, if known.
+        column: Option<u32>,
+    },
 }
 
 impl From<&ValidationError> for ValidationReport {

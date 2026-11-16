@@ -7,11 +7,16 @@ use std::{fmt, str::FromStr};
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Decimal(rust_decimal::Decimal);
 
+/// Error returned when parsing or computing a [`Decimal`] fails.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 #[non_exhaustive]
 pub enum DecimalError {
+    /// The input is not plain decimal notation: an optional sign, digits, and
+    /// optionally a `.` followed by digits (no exponent, no bare `.5` or `5.`).
     #[error("expected decimal notation with digits before and after any decimal point")]
     InvalidSyntax,
+    /// The value does not fit in 96 bits with a scale of at most 28, or an
+    /// arithmetic result overflowed.
     #[error("decimal precision or range exceeded")]
     OutOfRange,
 }
@@ -64,7 +69,14 @@ impl Decimal {
         }
         Self::coefficient(cents.to_i128().ok_or(DecimalError::OutOfRange)?, 2)
     }
+    /// The value zero.
     pub const ZERO: Self = Self(rust_decimal::Decimal::ZERO);
+    /// Parse a decimal from plain notation such as `"115"`, `"-0.5"` or `"+1.25"`.
+    ///
+    /// # Errors
+    /// Returns [`DecimalError::InvalidSyntax`] for malformed input (including
+    /// exponents and missing digits around `.`) and [`DecimalError::OutOfRange`]
+    /// if the value cannot be represented exactly.
     pub fn parse(value: &str) -> Result<Self, DecimalError> {
         value.parse()
     }

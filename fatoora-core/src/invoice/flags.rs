@@ -24,78 +24,105 @@ bitflags::bitflags! {
 pub struct InvoiceFlags(FlagBits);
 
 impl InvoiceFlags {
+    /// Invoice issued by a third party on behalf of the seller.
     pub const THIRD_PARTY: Self = Self(FlagBits::THIRD_PARTY);
+    /// Nominal supply (goods or services supplied for no or token consideration).
     pub const NOMINAL: Self = Self(FlagBits::NOMINAL);
+    /// Export invoice.
     pub const EXPORT: Self = Self(FlagBits::EXPORT);
+    /// Summary invoice covering multiple supplies.
     pub const SUMMARY: Self = Self(FlagBits::SUMMARY);
+    /// Self-billed invoice issued by the buyer.
     pub const SELF_BILLED: Self = Self(FlagBits::SELF_BILLED);
 
+    /// Returns a value with no flags set.
     pub const fn empty() -> Self {
         Self(FlagBits::empty())
     }
+    /// Returns a value with every known flag set.
     pub const fn all() -> Self {
         Self(FlagBits::all())
     }
+    /// Returns the raw bit representation.
     pub const fn bits(&self) -> u8 {
         self.0.bits()
     }
+    /// Converts raw bits, returning `None` if any bit does not correspond to a known flag.
     pub const fn from_bits(bits: u8) -> Option<Self> {
         match FlagBits::from_bits(bits) {
             Some(flags) => Some(Self(flags)),
             None => None,
         }
     }
+    /// Converts raw bits, silently dropping any unknown bits.
     pub const fn from_bits_truncate(bits: u8) -> Self {
         Self(FlagBits::from_bits_truncate(bits))
     }
+    /// Converts raw bits, keeping any unknown bits as-is.
     pub const fn from_bits_retain(bits: u8) -> Self {
         Self(FlagBits::from_bits_retain(bits))
     }
+    /// Looks up a single flag by its constant name (e.g. `"EXPORT"`), returning `None` if unknown.
     pub fn from_name(name: &str) -> Option<Self> {
         FlagBits::from_name(name).map(Self)
     }
+    /// Returns `true` if no flags are set.
     pub const fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
+    /// Returns `true` if every known flag is set.
     pub const fn is_all(&self) -> bool {
         self.0.is_all()
     }
+    /// Returns `true` if any flag in `other` is also set in `self`.
     pub const fn intersects(&self, other: Self) -> bool {
         self.0.intersects(other.0)
     }
+    /// Returns `true` if every flag in `other` is also set in `self`.
     pub const fn contains(&self, other: Self) -> bool {
         self.0.contains(other.0)
     }
+    /// Sets the flags in `other`.
     pub fn insert(&mut self, other: Self) {
         self.0.insert(other.0);
     }
+    /// Clears the flags in `other`.
     pub fn remove(&mut self, other: Self) {
         self.0.remove(other.0);
     }
+    /// Flips the flags in `other`.
     pub fn toggle(&mut self, other: Self) {
         self.0.toggle(other.0);
     }
+    /// Sets the flags in `other` if `value` is `true`, otherwise clears them.
     pub fn set(&mut self, other: Self, value: bool) {
         self.0.set(other.0, value);
     }
+    /// Returns the flags set in both `self` and `other`.
     pub const fn intersection(self, other: Self) -> Self {
         Self(self.0.intersection(other.0))
     }
+    /// Returns the flags set in either `self` or `other`.
     pub const fn union(self, other: Self) -> Self {
         Self(self.0.union(other.0))
     }
+    /// Returns the flags set in `self` but not in `other`.
     pub const fn difference(self, other: Self) -> Self {
         Self(self.0.difference(other.0))
     }
+    /// Returns the flags set in exactly one of `self` and `other`.
     pub const fn symmetric_difference(self, other: Self) -> Self {
         Self(self.0.symmetric_difference(other.0))
     }
+    /// Returns the known flags that are not set in `self` (unknown bits are cleared).
     pub const fn complement(self) -> Self {
         Self(self.0.complement())
     }
+    /// Iterates over the set flags as individual [`InvoiceFlags`] values.
     pub const fn iter(&self) -> InvoiceFlagsIter {
         InvoiceFlagsIter(self.0.iter())
     }
+    /// Iterates over the set flags as `(name, flag)` pairs.
     pub const fn iter_names(&self) -> InvoiceFlagNames {
         InvoiceFlagNames(self.0.iter_names())
     }

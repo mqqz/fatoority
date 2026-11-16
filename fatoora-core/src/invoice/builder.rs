@@ -487,7 +487,13 @@ impl InvoiceBuilder {
     /// full business rules, or signature verification.
     ///
     /// # Errors
-    /// Returns [`InvoiceError::Validation`] when required fields are missing or invalid.
+    /// Returns [`InvoiceError::Validation`] when required fields are missing or invalid,
+    /// or [`InvoiceError::Decimal`] if an amount calculation overflows.
+    ///
+    /// # Panics
+    /// Does not panic in practice. Internal `expect` calls unwrap required fields only after
+    /// every missing or invalid required field has been reported as an error, so they are
+    /// unreachable.
     ///
     /// Consumes the builder.
     pub fn build(mut self) -> Result<FinalizedInvoice, InvoiceError> {
@@ -988,6 +994,7 @@ impl FinalizedInvoice {
         &self.data
     }
 
+    /// Totals computed by [`InvoiceBuilder::build`].
     pub fn totals(&self) -> &InvoiceTotalsData {
         &self.totals
     }
@@ -1035,10 +1042,12 @@ impl SignedInvoice {
         self.finalized.data()
     }
 
+    /// Totals of the underlying finalized invoice.
     pub fn totals(&self) -> &InvoiceTotalsData {
         self.finalized.totals()
     }
 
+    /// Signature metadata (hashes, certificate details and signing time).
     pub fn signed_properties(&self) -> &SignedProperties {
         &self.signed_properties
     }
@@ -1058,6 +1067,7 @@ impl SignedInvoice {
         self.signed_xml
     }
 
+    /// Invoice UUID.
     pub fn uuid(&self) -> &str {
         self.finalized.data().uuid.as_str()
     }
@@ -1077,18 +1087,22 @@ impl SignedInvoice {
         invoice_hash_base64_from_xml_str(self.xml())
     }
 
+    /// Base64 DER ECDSA signature over the invoice hash.
     pub fn signature(&self) -> &str {
         self.signed_properties.signature()
     }
 
+    /// Base64 DER public key of the signing certificate.
     pub fn public_key(&self) -> &str {
         self.signed_properties.public_key()
     }
 
+    /// Base64 signature value of the signing certificate, if available.
     pub fn zatca_key_signature(&self) -> Option<&str> {
         self.signed_properties.zatca_key_signature()
     }
 
+    /// Base64-encode the stored signed XML, as submitted to the ZATCA API.
     pub fn to_xml_base64(&self) -> String {
         use base64ct::{Base64, Encoding};
         Base64::encode_string(self.signed_xml.as_bytes())
