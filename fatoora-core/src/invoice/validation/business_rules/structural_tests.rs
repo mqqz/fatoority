@@ -556,3 +556,54 @@ fn vat_presence_rate_and_accounting_currency_keep_vacuous_cases() {
         assert!(check(43, body).unwrap().is_empty());
     }
 }
+
+#[test]
+fn line_allowance_scope_excludes_top_level_lines_and_nested_charges() {
+    use structural::Context;
+    let applies = |body: &str| {
+        let xml = xml::XmlView::parse(
+            &format!(
+                "<Invoice xmlns='{}' xmlns:cac='{}' xmlns:cbc='{}'>{body}</Invoice>",
+                xml::UBL,
+                xml::CAC,
+                xml::CBC
+            ),
+            &Limits::default(),
+        )
+        .unwrap();
+        Context::LineAllowance
+            .nodes(&xml)
+            .into_iter()
+            .map(|id| Context::LineAllowance.applies(&xml, id))
+            .collect::<Vec<_>>()
+    };
+    let allowance = |indicators: &[&str]| {
+        let indicators: String = indicators
+            .iter()
+            .map(|v| format!("<cbc:ChargeIndicator>{v}</cbc:ChargeIndicator>"))
+            .collect();
+        format!("<cac:AllowanceCharge>{indicators}</cac:AllowanceCharge>")
+    };
+    let nested = |inner: String| {
+        format!("<cac:Wrapper><cac:InvoiceLine>{inner}</cac:InvoiceLine></cac:Wrapper>")
+    };
+
+    // A line directly under the document root is excluded.
+    assert_eq!(
+        applies(&format!(
+            "<cac:InvoiceLine>{}</cac:InvoiceLine>",
+            allowance(&["false"])
+        )),
+        [Ok(false)]
+    );
+    // A nested line applies unless the allowance also carries a true indicator.
+    assert_eq!(applies(&nested(allowance(&["false"]))), [Ok(true)]);
+    assert_eq!(applies(&nested(allowance(&["false", "true"]))), [Ok(false)]);
+    // An invalid indicator after the allowance match surfaces from the charge check.
+    assert_eq!(
+        applies(&nested(allowance(&["false", "maybe"]))),
+        [Err(FailureKind::InvalidBoolean)]
+    );
+    // A non-allowance never applies.
+    assert_eq!(applies(&nested(allowance(&["true"]))), [Ok(false)]);
+}
