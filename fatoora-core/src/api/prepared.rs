@@ -259,6 +259,47 @@ mod tests {
     }
 
     #[test]
+    fn prepared_request_debug_omits_credentials_and_authorization_header() {
+        const TOKEN: &str = "TUlJQ1BUQ0NBZU9nQXdJQkFnSTOKEN";
+        const SECRET: &str = "Dehvg1fc8GF6Jwt5bOxXwC6enSECRET";
+        let client = ZatcaClient::new(Config::default()).unwrap();
+        let invoice =
+            super::super::tests::build_signed_invoice(InvoiceType::Tax(InvoiceSubType::Simplified));
+        let credentials =
+            CsidCredentials::<Production>::new(EnvironmentType::NonProduction, None, TOKEN, SECRET);
+        let invoice_request = client
+            .prepare_report_simplified_invoice(&invoice, &credentials, false, None)
+            .unwrap();
+        let (_, authorization) = invoice_request
+            .request()
+            .headers()
+            .iter()
+            .find(|(name, _)| name == "Authorization")
+            .expect("authorization header")
+            .clone();
+        let encoded = authorization.trim_start_matches("Basic ").to_owned();
+        let http = invoice_request.request().clone();
+        let compliance = ComplianceRequest::new(http.clone(), EnvironmentType::Simulation);
+        let production = ProductionRequest::new(http.clone(), EnvironmentType::Simulation, true);
+        let rendered = [
+            format!("{http:?}"),
+            format!("{http:#?}"),
+            format!("{invoice_request:?}"),
+            format!("{invoice_request:#?}"),
+            format!("{compliance:?}"),
+            format!("{compliance:#?}"),
+            format!("{production:?}"),
+            format!("{production:#?}"),
+        ];
+        for rendered in rendered {
+            for needle in [TOKEN, SECRET, authorization.as_str(), encoded.as_str()] {
+                assert!(!rendered.contains(needle), "leaked {needle}: {rendered}");
+            }
+            assert!(!rendered.contains("Authorization"), "{rendered}");
+        }
+    }
+
+    #[test]
     fn preparation_rejects_mismatched_scope_and_invalid_headers() {
         let client = ZatcaClient::new(Config::default()).unwrap();
         let invoice =

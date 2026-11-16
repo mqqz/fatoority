@@ -302,7 +302,7 @@ impl ServerErrorResponse {
 ///     "Dehvg1fc8GF6Jwt5bOxXwC6en....",   // secret field
 /// );
 /// ```
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct CsidCredentials<T> {
     env: EnvironmentType,
     request_id: Option<String>,
@@ -346,7 +346,22 @@ impl<T> CsidCredentials<T> {
     }
 }
 
-#[derive(Debug, Deserialize)]
+/// Placeholder printed in place of credential material in `Debug` output.
+const REDACTED: &str = "<redacted>";
+
+// Manual impl: a derived `Debug` would print the binary security token and secret.
+impl<T> std::fmt::Debug for CsidCredentials<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CsidCredentials")
+            .field("env", &self.env)
+            .field("request_id", &self.request_id)
+            .field("binary_security_token", &format_args!("{REDACTED}"))
+            .field("secret", &format_args!("{REDACTED}"))
+            .finish()
+    }
+}
+
+#[derive(Deserialize)]
 struct CsidResponseBody {
     #[serde(rename = "requestID")]
     #[serde(deserialize_with = "deserialize_request_id")]
@@ -360,6 +375,17 @@ struct CsidResponseBody {
     #[allow(dead_code)]
     #[serde(rename = "dispositionMessage")]
     disposition_message: Option<String>,
+}
+
+// Manual impl: a derived `Debug` would print the binary security token and secret.
+impl std::fmt::Debug for CsidResponseBody {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CsidResponseBody")
+            .field("request_id", &self.request_id)
+            .field("binary_security_token", &format_args!("{REDACTED}"))
+            .field("secret", &format_args!("{REDACTED}"))
+            .finish_non_exhaustive()
+    }
 }
 
 fn deserialize_request_id<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
@@ -842,6 +868,76 @@ mod tests {
     };
     use httpmock::{Method::PATCH, Method::POST, MockServer};
     use std::path::Path;
+
+    const TEST_TOKEN: &str = "TUlJQ1BUQ0NBZU9nQXdJQkFnSTOKEN";
+    const TEST_SECRET: &str = "Dehvg1fc8GF6Jwt5bOxXwC6enSECRET";
+
+    fn assert_redacted(rendered: &str) {
+        assert!(!rendered.contains(TEST_TOKEN), "token leaked: {rendered}");
+        assert!(!rendered.contains(TEST_SECRET), "secret leaked: {rendered}");
+        assert!(
+            rendered.contains("<redacted>"),
+            "missing marker: {rendered}"
+        );
+    }
+
+    #[test]
+    fn csid_credentials_debug_redacts_token_and_secret() {
+        let compliance = CsidCredentials::<Compliance>::new(
+            EnvironmentType::Simulation,
+            Some("1234567890123".into()),
+            TEST_TOKEN,
+            TEST_SECRET,
+        );
+        let production = CsidCredentials::<Production>::new(
+            EnvironmentType::Production,
+            None,
+            TEST_TOKEN,
+            TEST_SECRET,
+        );
+        for rendered in [
+            format!("{compliance:?}"),
+            format!("{compliance:#?}"),
+            format!("{production:?}"),
+            format!("{production:#?}"),
+        ] {
+            assert_redacted(&rendered);
+            assert!(rendered.contains("CsidCredentials"));
+        }
+        let rendered = format!("{compliance:?}");
+        assert!(rendered.contains("Simulation"));
+        assert!(rendered.contains("1234567890123"));
+        // Accessors still expose the real values.
+        assert_eq!(compliance.binary_security_token(), TEST_TOKEN);
+        assert_eq!(compliance.secret(), TEST_SECRET);
+    }
+
+    #[test]
+    fn csid_response_body_debug_redacts_token_and_secret() {
+        let body = format!(
+            r#"{{"requestID":42,"binarySecurityToken":"{TEST_TOKEN}","secret":"{TEST_SECRET}"}}"#
+        );
+        let direct: CsidResponseBody = serde_json::from_str(&body).unwrap();
+        let wrapped: RenewalResponseBody =
+            serde_json::from_str(&format!(r#"{{"value":{body}}}"#)).unwrap();
+        for rendered in [
+            format!("{direct:?}"),
+            format!("{direct:#?}"),
+            format!("{wrapped:?}"),
+            format!("{wrapped:#?}"),
+        ] {
+            assert_redacted(&rendered);
+        }
+    }
+
+    #[test]
+    fn zatca_client_debug_contains_no_credentials() {
+        let client = ZatcaClient::new(Config::default()).unwrap();
+        for rendered in [format!("{client:?}"), format!("{client:#?}")] {
+            assert!(!rendered.contains("Authorization"));
+            assert!(!rendered.contains("secret"));
+        }
+    }
 
     #[test]
     fn deserialize_validation_response_with_info_object() {
