@@ -70,7 +70,9 @@ deserialize_validated_string!(
     InvoiceTimestamp,
     InvoiceDate,
     InvoiceTime,
-    VatId
+    VatId,
+    InvoiceUuid,
+    InvoiceHash
 );
 
 /// Invoice-related errors.
@@ -348,9 +350,9 @@ pub struct InvoiceTimestamp(String);
 impl InvoiceTimestamp {
     pub fn parse<S: Into<String>>(s: S) -> Result<Self> {
         let value = s.into().trim().to_string();
-        let parsed = NaiveDateTime::parse_from_str(&value, "%Y-%m-%dT%H:%M:%SZ")
+        let parsed = NaiveDateTime::parse_from_str(&value, TIMESTAMP_FORMAT)
             .map_err(|_| InvoiceError::InvalidTimestamp(value.clone()))?;
-        Ok(Self(parsed.format("%Y-%m-%dT%H:%M:%SZ").to_string()))
+        Ok(Self(parsed.format(TIMESTAMP_FORMAT).to_string()))
     }
 
     pub fn as_str(&self) -> &str {
@@ -396,9 +398,9 @@ pub struct InvoiceDate(String);
 impl InvoiceDate {
     pub fn parse<S: Into<String>>(s: S) -> Result<Self> {
         let value = s.into().trim().to_string();
-        let parsed = NaiveDate::parse_from_str(&value, "%Y-%m-%d")
+        let parsed = NaiveDate::parse_from_str(&value, DATE_FORMAT)
             .map_err(|_| InvoiceError::InvalidIssueDate(value.clone()))?;
-        Ok(Self(parsed.format("%Y-%m-%d").to_string()))
+        Ok(Self(parsed.format(DATE_FORMAT).to_string()))
     }
 
     pub fn as_str(&self) -> &str {
@@ -453,6 +455,183 @@ impl InvoiceTime {
     }
     pub fn as_str(&self) -> &str {
         &self.0
+    }
+}
+
+/// Format used by [`InvoiceTimestamp::parse`] and its chrono conversion.
+const TIMESTAMP_FORMAT: &str = "%Y-%m-%dT%H:%M:%SZ";
+/// Format used by [`InvoiceDate::parse`] and its chrono conversion.
+const DATE_FORMAT: &str = "%Y-%m-%d";
+
+#[cfg(feature = "chrono")]
+impl From<chrono::DateTime<chrono::Utc>> for InvoiceTimestamp {
+    /// Format as `YYYY-MM-DDTHH:MM:SSZ`, truncating sub-second precision.
+    fn from(value: chrono::DateTime<chrono::Utc>) -> Self {
+        Self(value.naive_utc().format(TIMESTAMP_FORMAT).to_string())
+    }
+}
+
+#[cfg(feature = "chrono")]
+impl From<NaiveDate> for InvoiceDate {
+    /// Format as `YYYY-MM-DD`.
+    fn from(value: NaiveDate) -> Self {
+        Self(value.format(DATE_FORMAT).to_string())
+    }
+}
+
+/// Builds the error reported for an empty identifier, matching `InvoiceBuilder::build`.
+fn empty_field_error(field: InvoiceField) -> InvoiceError {
+    InvoiceError::Validation(ValidationError::new(vec![ValidationIssue::new(
+        field,
+        ValidationKind::Empty,
+        None,
+    )]))
+}
+
+/// Invoice UUID (`cbc:UUID`).
+///
+/// Accepts any input that is non-empty after trimming surrounding whitespace,
+/// the same rule `InvoiceBuilder::build` applies to `uuid`. The stored value is
+/// trimmed.
+///
+/// # Examples
+/// ```rust
+/// use fatoora_core::invoice::InvoiceUuid;
+///
+/// let uuid = InvoiceUuid::parse("8e6000cf-1a98-4174-b3e7-b5d5954bc10d")?;
+/// assert_eq!(uuid.as_str(), "8e6000cf-1a98-4174-b3e7-b5d5954bc10d");
+/// assert!(InvoiceUuid::parse("  ").is_err());
+/// # Ok::<(), fatoora_core::invoice::InvoiceError>(())
+/// ```
+///
+/// # Errors
+/// [`InvoiceUuid::parse`] returns [`InvoiceError::Validation`] with an
+/// [`InvoiceField::Uuid`] / [`ValidationKind::Empty`] issue for blank input.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
+pub struct InvoiceUuid(String);
+
+impl InvoiceUuid {
+    pub fn parse<S: Into<String>>(s: S) -> Result<Self> {
+        let value = s.into().trim().to_string();
+        if value.is_empty() {
+            return Err(empty_field_error(InvoiceField::Uuid));
+        }
+        Ok(Self(value))
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl AsRef<str> for InvoiceUuid {
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl std::fmt::Display for InvoiceUuid {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl FromStr for InvoiceUuid {
+    type Err = InvoiceError;
+    fn from_str(s: &str) -> Result<Self> {
+        InvoiceUuid::parse(s)
+    }
+}
+
+impl TryFrom<String> for InvoiceUuid {
+    type Error = InvoiceError;
+    fn try_from(value: String) -> Result<Self> {
+        InvoiceUuid::parse(value)
+    }
+}
+
+impl TryFrom<&str> for InvoiceUuid {
+    type Error = InvoiceError;
+    fn try_from(value: &str) -> Result<Self> {
+        InvoiceUuid::parse(value)
+    }
+}
+
+#[cfg(feature = "uuid")]
+impl From<uuid::Uuid> for InvoiceUuid {
+    /// Format as the lowercase hyphenated form, e.g. `8e6000cf-1a98-4174-b3e7-b5d5954bc10d`.
+    fn from(value: uuid::Uuid) -> Self {
+        Self(value.hyphenated().to_string())
+    }
+}
+
+/// Previous invoice hash (the `PIH` additional document reference).
+///
+/// Accepts any input that is non-empty after trimming surrounding whitespace,
+/// the same rule `InvoiceBuilder::build` applies to `previous_invoice_hash`.
+/// The stored value is trimmed.
+///
+/// # Examples
+/// ```rust
+/// use fatoora_core::invoice::InvoiceHash;
+///
+/// let hash = InvoiceHash::parse("NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ==")?;
+/// assert!(hash.as_str().ends_with("=="));
+/// assert!(InvoiceHash::parse("").is_err());
+/// # Ok::<(), fatoora_core::invoice::InvoiceError>(())
+/// ```
+///
+/// # Errors
+/// [`InvoiceHash::parse`] returns [`InvoiceError::Validation`] with an
+/// [`InvoiceField::PreviousInvoiceHash`] / [`ValidationKind::Empty`] issue for
+/// blank input.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
+pub struct InvoiceHash(String);
+
+impl InvoiceHash {
+    pub fn parse<S: Into<String>>(s: S) -> Result<Self> {
+        let value = s.into().trim().to_string();
+        if value.is_empty() {
+            return Err(empty_field_error(InvoiceField::PreviousInvoiceHash));
+        }
+        Ok(Self(value))
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl AsRef<str> for InvoiceHash {
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl std::fmt::Display for InvoiceHash {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl FromStr for InvoiceHash {
+    type Err = InvoiceError;
+    fn from_str(s: &str) -> Result<Self> {
+        InvoiceHash::parse(s)
+    }
+}
+
+impl TryFrom<String> for InvoiceHash {
+    type Error = InvoiceError;
+    fn try_from(value: String) -> Result<Self> {
+        InvoiceHash::parse(value)
+    }
+}
+
+impl TryFrom<&str> for InvoiceHash {
+    type Error = InvoiceError;
+    fn try_from(value: &str) -> Result<Self> {
+        InvoiceHash::parse(value)
     }
 }
 
