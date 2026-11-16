@@ -132,8 +132,16 @@ fn expand_validate(ast: DeriveInput) -> syn::Result<TokenStream2> {
         }
     }
 
+    let error_doc = format!(
+        "Returns [`{}`] if a field fails one of its `#[validate(...)]` rules.",
+        quote!(#error_type).to_string().replace(' ', "")
+    );
     let out = quote! {
         impl #impl_generics #struct_name #ty_generics #where_clause {
+            /// Constructs a value from its fields, applying the `#[validate(...)]` rules.
+            ///
+            /// # Errors
+            #[doc = #error_doc]
             #[allow(clippy::too_many_arguments)]
             pub fn new(
                 #(#ctor_params),*
