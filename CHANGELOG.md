@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## [0.5.1] - Unreleased
+
+A compatible patch release: no public signature changed, and
+`cargo semver-checks` against v0.5.0 passes for `fatoora-core` and
+`fatoora-ffi`. Upgrade language packages and native libraries together.
+
+### Security
+
+- `CsidCredentials` no longer prints its binary security token or secret in
+  `Debug` output (`{:?}`, `tracing`); both show as `<redacted>`. Python
+  `CsidCompliance`/`CsidProduction` reprs redact them too.
+
 ### Added
 
 - `InvoiceBuilder::{notes, line_items, billing_references, seller_identifiers,
@@ -16,8 +28,28 @@
 - Every public `fatoora-core` item is documented, including `# Errors` and
   `# Panics` sections; `missing_docs` and the Clippy error/panic doc lints are
   now enforced for the crate.
+- Python: the package ships `py.typed`; file-path parameters accept
+  `os.PathLike`; handle objects have a `repr`; `InvalidInputError` is also a
+  `ValueError` and `IoError` an `OSError`; `InvoiceFlag` is an `IntFlag`, so
+  flags combine with `|`.
 
-## [0.5.0] - Unreleased
+### Deprecated
+
+- Python, changing in 0.6 (each emits `DeprecationWarning`): positional
+  arguments after `name` in `InvoiceBuilder.set_seller`/`set_buyer`, positional
+  `language` in `add_note`, positional `clearance_status`/`accept_language` in
+  `ZatcaClient.report_simplified_invoice`/`clear_standard_invoice`, positional
+  `CsrProperties.new`, and `set_note`/`set_note_without_language` (use
+  `add_note(text, language=...)`).
+
+### Changed
+
+- Dependencies: rustls 0.23.46 (with aws-lc-sys 0.47); Playwright 1.64.1 for
+  the browser test, which supports Ubuntu 26.04 CI runners.
+- CI: `cargo semver-checks` guards `main` against breaking changes, and the
+  required Rust checks report on every pull request.
+
+## [0.5.0] - 2026-10-19
 
 Upgrade language packages and their native libraries together. See the
 [invoice-model migration notes](docs/development/invoice-model.md) and
