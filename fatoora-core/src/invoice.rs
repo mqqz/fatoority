@@ -278,6 +278,12 @@ impl AsRef<str> for CountryCode {
     }
 }
 
+impl std::fmt::Display for CountryCode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
 impl FromStr for CountryCode {
     type Err = InvoiceError;
     fn from_str(s: &str) -> Result<Self> {
@@ -319,6 +325,12 @@ impl CurrencyCode {
 impl AsRef<str> for CurrencyCode {
     fn as_ref(&self) -> &str {
         self.as_str()
+    }
+}
+
+impl std::fmt::Display for CurrencyCode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
     }
 }
 
@@ -370,6 +382,12 @@ impl AsRef<str> for InvoiceTimestamp {
     }
 }
 
+impl std::fmt::Display for InvoiceTimestamp {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
 impl FromStr for InvoiceTimestamp {
     type Err = InvoiceError;
     fn from_str(s: &str) -> Result<Self> {
@@ -414,6 +432,12 @@ impl AsRef<str> for InvoiceDate {
     }
 }
 
+impl std::fmt::Display for InvoiceDate {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
 impl FromStr for InvoiceDate {
     type Err = InvoiceError;
     fn from_str(s: &str) -> Result<Self> {
@@ -455,6 +479,12 @@ impl InvoiceTime {
     }
     pub fn as_str(&self) -> &str {
         &self.0
+    }
+}
+
+impl std::fmt::Display for InvoiceTime {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
     }
 }
 
@@ -721,6 +751,12 @@ impl AsRef<str> for VatId {
         self.as_str()
     }
 }
+
+impl std::fmt::Display for VatId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
 impl FromStr for VatId {
     type Err = InvoiceError;
     fn from_str(s: &str) -> Result<Self> {
@@ -781,6 +817,13 @@ impl OtherId {
 impl AsRef<str> for OtherId {
     fn as_ref(&self) -> &str {
         self.as_str()
+    }
+}
+
+/// Formats only the identifier value; the scheme ID is omitted (see [`OtherId::scheme_id`]).
+impl std::fmt::Display for OtherId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
     }
 }
 
