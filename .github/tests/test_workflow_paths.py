@@ -148,6 +148,8 @@ class WorkflowPaths(unittest.TestCase):
         # leave them pending forever on PRs that skip the workflow.
         rust = WORKFLOWS['rust']
         self.assertNotIn('paths', rust['on']['pull_request'])
+        # Fail open: a failed filter leaves its output empty, which must not read as 'false'.
+        self.assertIn("steps.filter.outputs.rust != 'false'", rust['jobs']['changes']['outputs']['rust'])
         for job in ('coverage', 'fresh-consumer', 'semver-checks'):
             with self.subTest(job=job):
                 self.assertEqual(rust['jobs'][job]['needs'], 'changes')

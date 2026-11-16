@@ -59,8 +59,10 @@ jobs:
       contents: read
       pull-requests: read
     outputs:
-      # 'true' for every non-PR event; on PRs, whether a Rust input changed.
-      rust: ${{ github.event_name != 'pull_request' || steps.filter.outputs.rust == 'true' }}
+      # 'false' only when the filter ran and found no Rust input. A failed or
+      # skipped filter leaves its output empty, which reads as 'true' so the
+      # required Rust jobs run instead of passing as skipped.
+      rust: ${{ github.event_name != 'pull_request' || steps.filter.outputs.rust != 'false' }}
     steps:
       - uses: actions/checkout@v5
         if: github.event_name == 'pull_request'
