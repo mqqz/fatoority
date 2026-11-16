@@ -19,11 +19,27 @@ def matches(path, pattern):
     return re.fullmatch(''.join(expressions.get(t, re.escape(t)) for t in tokens), path) is not None
 
 
+def event_paths(workflow, event):
+    """Paths that start the workflow's jobs for ``event``.
+
+    A workflow whose required checks must report on every pull request has no
+    workflow-level ``pull_request.paths``; its ``changes`` job filters instead.
+    """
+    trigger = workflow['on'].get(event) or {}
+    if 'paths' in trigger:
+        return trigger['paths']
+    if event == 'pull_request' and 'changes' in workflow.get('jobs', {}):
+        for step in workflow['jobs']['changes']['steps']:
+            if step.get('uses', '').startswith('dorny/paths-filter@'):
+                return yaml.load(step['with']['filters'], Loader=yaml.BaseLoader)['rust']
+    return []
+
+
 def selected(path, event='pull_request'):
     return {
         name for name, workflow in WORKFLOWS.items()
         if event in workflow['on']
-        and any(matches(path, pattern) for pattern in workflow['on'][event].get('paths', []))
+        and any(matches(path, pattern) for pattern in event_paths(workflow, event))
     }
 
 
@@ -119,13 +135,24 @@ class WorkflowPaths(unittest.TestCase):
             for event in ('pull_request', 'push'):
                 if event not in events or (event == 'push' and name == 'release'):
                     continue
-                paths = events[event]['paths']
+                paths = event_paths(workflow, event)
                 self.assertTrue(paths, (name, event))
                 self.assertIn(name, selected(f'.github/workflows/{name}.yml', event))
                 # Keep matching semantics limited to this test's supported subset.
                 self.assertFalse(any(re.search(r'[!?+\[\]]', p) for p in paths))
             if 'push' in events and 'pull_request' in events and name != 'release':
-                self.assertEqual(events['push']['paths'], events['pull_request']['paths'], name)
+                self.assertEqual(event_paths(workflow, 'push'), event_paths(workflow, 'pull_request'), name)
+
+    def test_required_rust_checks_report_on_every_pull_request(self):
+        # Branch rules require these checks; a workflow-level path filter would
+        # leave them pending forever on PRs that skip the workflow.
+        rust = WORKFLOWS['rust']
+        self.assertNotIn('paths', rust['on']['pull_request'])
+        for job in ('coverage', 'fresh-consumer', 'semver-checks'):
+            with self.subTest(job=job):
+                self.assertEqual(rust['jobs'][job]['needs'], 'changes')
+                self.assertIn('!cancelled()', rust['jobs'][job]['if'])
+                self.assertIn("needs.changes.outputs.rust != 'false'", rust['jobs'][job]['if'])
 
     def test_publication_events_remain_unfiltered(self):
         for name in ('rust', 'python', 'javascript', 'dotnet', 'kotlin', 'release'):
