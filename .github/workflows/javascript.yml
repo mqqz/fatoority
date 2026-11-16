@@ -84,9 +84,7 @@ permissions:
   contents: read
 jobs:
   wasm:
-    # Playwright 1.56.1 cannot install Chromium on ubuntu-latest (26.04);
-    # pin until the lockfile moves to a Playwright release that supports it.
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v7
