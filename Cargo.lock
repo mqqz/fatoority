@@ -961,7 +961,7 @@ checksum = "37909eebbb50d72f9059c3b6d82c0463f2ff062c9e95845c43a6c9c0355411be"
 
 [[package]]
 name = "fatoora-cli"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "anyhow",
  "base64ct",
@@ -973,7 +973,7 @@ dependencies = [
 
 [[package]]
 name = "fatoora-core"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "base64ct",
  "bitflags",
@@ -1017,7 +1017,7 @@ dependencies = [
 
 [[package]]
 name = "fatoora-derive"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1027,7 +1027,7 @@ dependencies = [
 
 [[package]]
 name = "fatoora-ffi"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "base64ct",
  "diplomat",
