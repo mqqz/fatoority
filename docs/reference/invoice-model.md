@@ -232,7 +232,7 @@ correspond to the fields above.
     | `set_seller(name: str, country_code: str, city: str, street: str, building_number: str, postal_code: str, vat_id: str, additional_street: Optional[str]=None, additional_number: Optional[str]=None, district: Optional[str]=None, other_id: Optional[str]=None, other_id_scheme: Optional[str]=None)` | `None` |
     | `add_line_item(description: str, quantity: Decimal \| str \| int, unit_code: str, unit_price: Decimal \| str \| int, vat_rate: Decimal \| str \| int, vat_category: VatCategory)` | `None` |
     | `set_buyer(name: str, country_code: str, city: str, street: str, building_number: str, postal_code: str, vat_id: Optional[str]=None, other_id: Optional[str]=None, other_id_scheme: Optional[str]=None, additional_street: Optional[str]=None, additional_number: Optional[str]=None, district: Optional[str]=None)` | `None` |
-    | `set_note(language: str, text: str)` | `None` |
+    | `set_note(language: str, text: str)` | `None`. Deprecated: use `add_note(text, language=...)`. |
     | `set_allowance(reason: str, amount: Decimal \| str \| int)` | `None` |
     | `invoice_level_charge(charge: Decimal \| str \| int)` | `None` |
     | `invoice_level_discount(discount: Decimal \| str \| int)` | `None` |

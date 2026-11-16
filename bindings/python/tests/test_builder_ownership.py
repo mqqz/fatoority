@@ -40,10 +40,13 @@ def test_full_billing_reference_and_language_less_note(kind):
     b.set_seller(name="Acme", country_code="SA", city="Riyadh", street="King Fahd",
                  building_number="1234", postal_code="12222", vat_id="399999999900003")
     b.add_line_item("item", 1, "PCE", 100, 15, VatCategory.STANDARD)
-    b.set_note("en", "old")
-    b.set_note_without_language("ملاحظة &")
+    # Deprecated setters keep working until 0.6.
+    with pytest.warns(DeprecationWarning):
+        b.set_note("en", "old")
+    with pytest.warns(DeprecationWarning):
+        b.set_note_without_language("ملاحظة &")
     invoice = b.build()
-    with pytest.raises(FfiError):
+    with pytest.raises(FfiError), pytest.warns(DeprecationWarning):
         b.set_note_without_language("consumed")
     parsed = parse_finalized_invoice_xml(invoice.xml())
     restored = parsed.original_invoice_ref()

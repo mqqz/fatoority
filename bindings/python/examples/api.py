@@ -23,7 +23,7 @@ pcsid = CsidProduction.new(
     None,
 )
 
-response = client.report_simplified_invoice(signed, pcsid, False, "en")
+response = client.report_simplified_invoice(signed, pcsid, clearance_status=False, accept_language="en")
 
 response.ensure_accepted()
 assert response.reporting_status() == "REPORTED"

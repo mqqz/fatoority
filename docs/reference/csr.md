@@ -144,11 +144,13 @@ Constructors that take individual fields use the order in the property table abo
     ) -> CsrProperties
     ```
 
+    Pass every field as a keyword argument. Positional calls raise a `DeprecationWarning` and stop working in 0.6.
+
     | Call | Returns |
     | --- | --- |
     | `CsrProperties.from_properties_str(text: str)` | `CsrProperties` |
     | `CsrProperties.parse_csr_config(text: str)` | Alias of `from_properties_str`. |
-    | `CsrProperties.parse_csr_config_file(path: str)` | `CsrProperties` |
+    | `CsrProperties.parse_csr_config_file(path: str \| os.PathLike)` | `CsrProperties` |
     | `properties.build(key: SigningKey, env: Environment)` | `Csr` |
     | `SigningKey.generate()` | `SigningKey` |
     | `SigningKey.from_pem(pem: str)` / `SigningKey.from_der(der: bytes)` | `SigningKey` |

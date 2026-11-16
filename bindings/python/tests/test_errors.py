@@ -74,3 +74,43 @@ def test_generated_error_is_owned_and_preserves_missing_property():
     gc.collect()
     assert details["type"] == "missing_property"
     assert details["key"]
+
+
+@pytest.mark.parametrize("cls,builtin", [
+    ("InvalidInputError", ValueError),
+    ("IoError", OSError),
+])
+def test_error_classes_also_subclass_builtin_exceptions(cls, builtin):
+    import pickle
+    from fatoora import errors
+
+    error_type = getattr(errors, cls)
+    assert issubclass(error_type, builtin)
+    assert issubclass(error_type, FfiError)
+    details = {"type": "io", "path": "/tmp/x"}
+    code = 6 if cls == "IoError" else 1
+    error = error_type("file not found", code, details)
+    assert str(error) == "file not found"
+    assert error.args == ("file not found",)
+    assert error.code == code
+    assert error.kind == FfiErrorKind(code)
+    assert error.details == details
+    assert error_class_for_code(code) is error_type
+    # The three-argument constructor must not be reinterpreted as errno/strerror/filename.
+    if builtin is OSError:
+        assert error.errno is None and error.strerror is None and error.filename is None
+    for args in [("only message",), ("message", code)]:
+        e = error_type(*args)
+        assert str(e) == args[0] and e.args == (args[0],)
+    restored = pickle.loads(pickle.dumps(error))
+    assert type(restored) is error_type
+    assert (str(restored), restored.args, restored.code, restored.details) == (
+        "file not found", ("file not found",), code, details)
+
+
+def test_missing_invoice_file_is_catchable_as_oserror():
+    from fatoora import parse_finalized_invoice_xml_file
+
+    with pytest.raises(OSError) as caught:
+        parse_finalized_invoice_xml_file("/nonexistent/fatoora/invoice.xml")
+    assert isinstance(caught.value, FfiError)
