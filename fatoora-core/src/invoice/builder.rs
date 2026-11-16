@@ -116,22 +116,50 @@ pub struct InvoiceBuilder {
 }
 
 impl InvoiceBuilder {
+    /// Append an additional seller identifier, applied to the seller during `build`.
+    ///
+    /// Appends; earlier identifiers are kept in call order.
     pub fn seller_identifier(mut self, value: super::OtherId) -> Self {
         self.party_identifiers.push((true, value));
         self
     }
+    /// Append an additional buyer identifier, applied to the buyer during `build`.
+    ///
+    /// Appends; earlier identifiers are kept in call order. `build` fails if no
+    /// buyer is set.
     pub fn buyer_identifier(mut self, value: super::OtherId) -> Self {
         self.party_identifiers.push((false, value));
         self
     }
 
+    /// Append several seller identifiers, preserving iteration order.
+    ///
+    /// Appends; equivalent to calling [`seller_identifier`](Self::seller_identifier)
+    /// for each identifier.
+    pub fn seller_identifiers(self, values: impl IntoIterator<Item = super::OtherId>) -> Self {
+        values.into_iter().fold(self, Self::seller_identifier)
+    }
+
+    /// Append several buyer identifiers, preserving iteration order.
+    ///
+    /// Appends; equivalent to calling [`buyer_identifier`](Self::buyer_identifier)
+    /// for each identifier. `build` fails if no buyer is set and any identifier
+    /// was supplied.
+    pub fn buyer_identifiers(self, values: impl IntoIterator<Item = super::OtherId>) -> Self {
+        values.into_iter().fold(self, Self::buyer_identifier)
+    }
+
     /// Preserve a supplied VAT breakdown after checking the applicable arithmetic.
+    ///
+    /// Appends; each call adds another supplied breakdown.
     pub fn vat_breakdown(mut self, value: super::VatBreakdown) -> Self {
         self.supplied_breakdowns.push(value);
         self
     }
 
     /// Append a document allowance; validation occurs in `build`.
+    ///
+    /// Appends; allowances and charges keep their relative call order.
     pub fn allowance(mut self, adjustment: super::DocumentAdjustment) -> Self {
         self.pending_adjustments.push((
             self.adjustments.len() + self.pending_adjustments.len(),
@@ -141,6 +169,8 @@ impl InvoiceBuilder {
         self
     }
     /// Append a document charge; validation occurs in `build`.
+    ///
+    /// Appends; allowances and charges keep their relative call order.
     pub fn charge(mut self, adjustment: super::DocumentAdjustment) -> Self {
         self.pending_adjustments.push((
             self.adjustments.len() + self.pending_adjustments.len(),
@@ -151,6 +181,9 @@ impl InvoiceBuilder {
     }
     /// Append payment means, or fill the placeholder created by `payment_instruction`.
     /// The existing instruction precedes any notes supplied on the payment means.
+    ///
+    /// Appends, except that the first call after `payment_instruction` on an
+    /// empty builder replaces the placeholder it created.
     pub fn payment_means(mut self, mut value: super::PaymentMeans) -> Self {
         if self.payment_instruction_placeholder {
             let mut notes = std::mem::take(&mut self.payment_means[0].instruction_notes);
@@ -163,6 +196,10 @@ impl InvoiceBuilder {
         }
         self
     }
+    /// Set the instruction note on the first payment means, creating a placeholder
+    /// payment means if none exists.
+    ///
+    /// Replaces the first payment means' existing instruction notes.
     pub fn payment_instruction(mut self, instruction: impl Into<String>) -> Self {
         if self.payment_means.is_empty() {
             self.payment_means.push(super::PaymentMeans::new(""));
@@ -171,15 +208,24 @@ impl InvoiceBuilder {
         self.payment_means[0].instruction_notes = vec![instruction.into()];
         self
     }
+    /// Set the prepaid amount.
+    ///
+    /// Replaces any previously set value.
     pub fn prepaid_amount(mut self, amount: Decimal) -> Self {
         self.prepaid_amount = amount;
         self
     }
+    /// Set the payable rounding amount.
+    ///
+    /// Replaces any previously set value.
     pub fn payable_rounding_amount(mut self, amount: Decimal) -> Self {
         self.payable_rounding_amount = amount;
         self
     }
 
+    /// Set the tax currency and its tax amount.
+    ///
+    /// Replaces any previously set tax currency and amount.
     pub fn tax_currency(mut self, currency: super::CurrencyCode, amount: Decimal) -> Self {
         self.tax_currency = Some(currency);
         self.tax_currency_amount = Some(amount);
@@ -187,11 +233,16 @@ impl InvoiceBuilder {
     }
 
     /// Add an individual document adjustment. Do not combine with legacy aggregate setters.
+    ///
+    /// Appends; earlier adjustments are kept in call order.
     pub fn adjustment(mut self, adjustment: super::AllowanceCharge) -> Self {
         self.adjustments.push(adjustment);
         self
     }
 
+    /// Append a VAT exemption reason for a category and rate.
+    ///
+    /// Appends; conflicting exemptions for the same category and rate fail in `build`.
     pub fn tax_exemption(
         mut self,
         category: VatCategory,
@@ -201,12 +252,17 @@ impl InvoiceBuilder {
         self.exemptions.push((category, rate, exemption));
         self
     }
+    /// Set the delivery information.
+    ///
+    /// Replaces any previously set value.
     pub fn delivery(mut self, delivery: super::Delivery) -> Self {
         self.delivery = Some(delivery);
         self
     }
 
     /// Create a builder with the invoice type.
+    ///
+    /// All optional fields start unset and all collections start empty.
     pub fn new(invoice_type: InvoiceType) -> Self {
         Self {
             invoice_type,
@@ -244,78 +300,145 @@ impl InvoiceBuilder {
         }
     }
 
+    /// Set the invoice ID.
+    ///
+    /// Replaces any previously set value.
     pub fn id(mut self, id: impl Into<String>) -> Self {
         self.id = Some(id.into());
         self
     }
 
+    /// Set the invoice UUID.
+    ///
+    /// Replaces any previously set value.
     pub fn uuid(mut self, uuid: impl Into<String>) -> Self {
         self.uuid = Some(uuid.into());
         self
     }
 
+    /// Set the issue timestamp (`YYYY-MM-DDTHH:MM:SSZ`), validated in `build`.
+    ///
+    /// Replaces any previously set value.
     pub fn issue_datetime(mut self, issue_datetime: impl Into<String>) -> Self {
         self.issue_datetime = Some(issue_datetime.into());
         self
     }
 
+    /// Set the document currency code, validated in `build`.
+    ///
+    /// Replaces any previously set value.
     pub fn currency(mut self, currency: impl Into<String>) -> Self {
         self.currency = Some(currency.into());
         self
     }
 
+    /// Set the previous invoice hash.
+    ///
+    /// Replaces any previously set value.
     pub fn previous_invoice_hash(mut self, hash: impl Into<String>) -> Self {
         self.previous_invoice_hash = Some(hash.into());
         self
     }
 
+    /// Set the invoice counter value.
+    ///
+    /// Replaces any previously set value.
     pub fn invoice_counter(mut self, counter: u64) -> Self {
         self.invoice_counter = Some(counter);
         self
     }
 
+    /// Set the seller.
+    ///
+    /// Replaces any previously set value.
     pub fn seller(mut self, seller: Seller) -> Self {
         self.seller = Some(seller);
         self
     }
 
+    /// Set the legacy aggregate document-level charge.
+    ///
+    /// Replaces any previously set value.
     pub fn invoice_level_charge(mut self, charge: Decimal) -> Self {
         self.invoice_level_charge = charge;
         self
     }
 
+    /// Set the legacy aggregate document-level discount.
+    ///
+    /// Replaces any previously set value.
     pub fn invoice_level_discount(mut self, discount: Decimal) -> Self {
         self.invoice_level_discount = discount;
         self
     }
 
+    /// Set the legacy aggregate allowance reason.
+    ///
+    /// Replaces any previously set value.
     pub fn allowance_reason(mut self, reason: impl Into<String>) -> Self {
         self.allowance_reason = Some(reason.into());
         self
     }
 
+    /// Append a billing reference to an original invoice.
+    ///
+    /// Appends; earlier references are kept in call order.
     pub fn billing_reference(mut self, reference: super::OriginalInvoiceRef) -> Self {
         self.billing_references.push(reference);
         self
     }
+
+    /// Append several billing references, preserving iteration order.
+    ///
+    /// Appends; equivalent to calling [`billing_reference`](Self::billing_reference)
+    /// for each reference.
+    pub fn billing_references(
+        self,
+        references: impl IntoIterator<Item = super::OriginalInvoiceRef>,
+    ) -> Self {
+        references.into_iter().fold(self, Self::billing_reference)
+    }
+    /// Set the purchase order ID.
+    ///
+    /// Replaces any previously set value.
     pub fn purchase_order_id(mut self, value: impl Into<String>) -> Self {
         self.purchase_order_id = Some(value.into());
         self
     }
+    /// Set the contract ID.
+    ///
+    /// Replaces any previously set value.
     pub fn contract_id(mut self, value: impl Into<String>) -> Self {
         self.contract_id = Some(value.into());
         self
     }
+    /// Append an invoice note.
+    ///
+    /// Appends; earlier notes are kept in call order.
     pub fn note(mut self, note: InvoiceNote) -> Self {
         self.notes.push(note);
         self
     }
 
+    /// Append several invoice notes, preserving iteration order.
+    ///
+    /// Appends; equivalent to calling [`note`](Self::note) for each note.
+    pub fn notes(self, notes: impl IntoIterator<Item = InvoiceNote>) -> Self {
+        notes.into_iter().fold(self, Self::note)
+    }
+
+    /// Set the buyer.
+    ///
+    /// Replaces any previously set value.
     pub fn buyer(mut self, buyer: Buyer) -> Self {
         self.buyer = Some(buyer);
         self
     }
 
+    /// Set the payment means type code of the first payment means, creating
+    /// one if none exists.
+    ///
+    /// Replaces the first payment means' code; later payment means are unchanged.
     pub fn payment_means_code(mut self, code: impl Into<String>) -> Self {
         self.payment_instruction_placeholder = false;
         if self.payment_means.is_empty() {
@@ -326,17 +449,32 @@ impl InvoiceBuilder {
         self
     }
 
+    /// Set the document VAT category.
+    ///
+    /// Replaces any previously set value.
     pub fn vat_category(mut self, vat_category: VatCategory) -> Self {
         self.vat_category = Some(vat_category);
         self
     }
 
     /// Append a line item, preserving insertion order.
+    ///
+    /// Appends; earlier line items are kept.
     pub fn line_item(mut self, line_item: super::LineItem) -> Self {
         self.line_items.push(line_item);
         self
     }
 
+    /// Append several line items, preserving iteration order.
+    ///
+    /// Appends; equivalent to calling [`line_item`](Self::line_item) for each item.
+    pub fn line_items(self, line_items: impl IntoIterator<Item = super::LineItem>) -> Self {
+        line_items.into_iter().fold(self, Self::line_item)
+    }
+
+    /// Set the invoice flags.
+    ///
+    /// Replaces any previously set flags rather than merging them.
     pub fn flags(mut self, flags: InvoiceFlags) -> Self {
         self.flags = flags;
         self
@@ -350,6 +488,8 @@ impl InvoiceBuilder {
     ///
     /// # Errors
     /// Returns [`InvoiceError::Validation`] when required fields are missing or invalid.
+    ///
+    /// Consumes the builder.
     pub fn build(mut self) -> Result<FinalizedInvoice, InvoiceError> {
         for (index, charge, adjustment) in self.pending_adjustments {
             self.adjustments

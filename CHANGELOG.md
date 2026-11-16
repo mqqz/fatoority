@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Added
+
+- `InvoiceBuilder::{notes, line_items, billing_references, seller_identifiers,
+  buyer_identifiers}` append every item from an iterator, like repeated calls
+  to the singular methods.
+- `InvoiceUuid` and `InvoiceHash` validated newtypes (not yet used by the builder).
+- Optional `uuid` feature: `From<uuid::Uuid> for InvoiceUuid`.
+- Optional `chrono` feature: `From<chrono::DateTime<Utc>> for InvoiceTimestamp`
+  and `From<chrono::NaiveDate> for InvoiceDate`.
+
 ## [0.5.0] - Unreleased
 
 Upgrade language packages and their native libraries together. See the

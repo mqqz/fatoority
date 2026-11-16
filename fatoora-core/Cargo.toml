@@ -58,6 +58,14 @@ num-traits = "0.2.19"
 regex = "1.12.2"
 fancy-regex = "0.16.2"
 unicode-blocks = "0.1.9"
+uuid = { version = "1.18", default-features = false, optional = true }
+
+[features]
+# Public `From` conversions from chrono types. The `chrono` dependency itself is
+# always used internally; this feature only adds the conversions to the API.
+chrono = []
+# `From<uuid::Uuid>` for `InvoiceUuid`.
+uuid = ["dep:uuid"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 chrono = { version = "0.4.42", default-features = false, features = ["clock"] }
