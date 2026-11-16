@@ -109,7 +109,7 @@ def run(input_path, submit):
                     save_json(output / "state.json", state)
                     with CsidProduction.new(ENVIRONMENT, token, secret, None) as credentials:
                         with ZatcaClient(config) as client:
-                            with client.report_simplified_invoice(signed, credentials, False, "en") as response:
+                            with client.report_simplified_invoice(signed, credentials, clearance_status=False, accept_language="en") as response:
                                 handle_response(response, output)
                     state["stage"] = "accepted"
     except Exception as error:

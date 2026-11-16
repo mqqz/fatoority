@@ -156,6 +156,8 @@ calling thread and return owned objects:
 | `report_simplified_invoice(invoice, pcsid, clearance_status, accept_language=None)` | `SignedInvoice`, `CsidProduction`, Boolean, optional language | `ValidationResponse` |
 | `clear_standard_invoice(invoice, pcsid, clearance_status, accept_language=None)` | `SignedInvoice`, `CsidProduction`, Boolean, optional language | `ValidationResponse` |
 
+Pass `clearance_status` and `accept_language` as keyword arguments. Positional calls raise a `DeprecationWarning` and stop working in 0.6.
+
 `clearance_status` is a required Boolean controlling the request header; use
 `False` for ordinary reporting and `True` for clearance. It does not describe the
 result. `accept_language` is a string or `None` controlling the language header.

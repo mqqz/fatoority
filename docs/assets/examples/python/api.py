@@ -11,6 +11,6 @@ secret = os.environ["ZATCA_SECRET"]
 with Config(environment) as config, ZatcaClient(config) as client:
     with CsidProduction.new(environment, token, secret, None) as credentials:
         with parse_signed_invoice_xml(Path("signed.xml").read_text(encoding="utf-8")) as invoice:
-            with client.report_simplified_invoice(invoice, credentials, False, "en") as response:
+            with client.report_simplified_invoice(invoice, credentials, clearance_status=False, accept_language="en") as response:
                 response.ensure_accepted()
                 print("Invoice reporting accepted")
