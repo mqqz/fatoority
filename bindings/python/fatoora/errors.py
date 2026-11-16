@@ -30,7 +30,7 @@ class FfiError(FatooraError):
         self.kind = FfiErrorKind(code) if code in FfiErrorKind._value2member_map_ else None
 
 
-class InvalidInputError(FfiError):
+class InvalidInputError(FfiError, ValueError):
     pass
 
 
@@ -50,7 +50,7 @@ class CryptoError(FfiError):
     pass
 
 
-class IoError(FfiError):
+class IoError(FfiError, OSError):
     pass
 
 
