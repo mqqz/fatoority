@@ -2,41 +2,10 @@ name: rust
 
 on:
   pull_request:
-    # Include shared build inputs and the cross-package release metadata check.
-    paths:
-      - '.github/workflows/rust.yml'
-      - '**/Cargo.toml'
-      - '**/Cargo.lock'
-      - 'bindings/python/pyproject.toml'
-      - 'bindings/python/uv.lock'
-      - 'bindings/js/package.json'
-      - 'bindings/js/package-lock.json'
-      - 'bindings/dotnet/Fatoora.csproj'
-      - 'bindings/kotlin/build.gradle.kts'
-      - 'scripts/check_release.py'
-      - '.cargo/**'
-      - 'rust-toolchain*'
-      - 'fatoora-core/**'
-      - 'fatoora-derive/**'
-      - 'fatoora-ffi/**'
-      - 'LICENSE-*'
-      - 'THIRD_PARTY_NOTICES.md'
-      - 'fatoora-cli/**'
-      - 'bindings/c/**'
-      - 'bindings/cpp/**'
-      - 'bindings/python/native/generated/**'
-      - 'bindings/js/generated/**'
-      - 'bindings/dotnet/generated/**'
-      - 'bindings/kotlin/generated/**'
-      - 'scripts/**'
-      - 'bench/dotnet/**'
-      - 'README.md'
-      - 'rustfmt.toml'
-      - '.rustfmt.toml'
-      - 'clippy.toml'
-      - '.clippy.toml'
-      - 'codecov.yml'
-      - '.codecov.yml'
+    # No workflow-level paths: required checks must report on every PR.
+    # The `changes` job applies the same paths as `push` (kept equal by
+    # .github/tests/test_workflow_paths.py), and Rust jobs skip, which
+    # counts as passing, when none of them changed.
     branches: ["**"]
   push:
     # Include shared build inputs and the cross-package release metadata check.
@@ -84,7 +53,61 @@ on:
         required: false
         default: "false"
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      # 'false' only when the filter ran and found no Rust input. A failed or
+      # skipped filter leaves its output empty, which reads as 'true' so the
+      # required Rust jobs run instead of passing as skipped.
+      rust: ${{ github.event_name != 'pull_request' || steps.filter.outputs.rust != 'false' }}
+    steps:
+      - uses: actions/checkout@v5
+        if: github.event_name == 'pull_request'
+      - uses: dorny/paths-filter@v3
+        id: filter
+        if: github.event_name == 'pull_request'
+        with:
+          filters: |
+            rust:
+              - '.github/workflows/rust.yml'
+              - '**/Cargo.toml'
+              - '**/Cargo.lock'
+              - 'bindings/python/pyproject.toml'
+              - 'bindings/python/uv.lock'
+              - 'bindings/js/package.json'
+              - 'bindings/js/package-lock.json'
+              - 'bindings/dotnet/Fatoora.csproj'
+              - 'bindings/kotlin/build.gradle.kts'
+              - 'scripts/check_release.py'
+              - '.cargo/**'
+              - 'rust-toolchain*'
+              - 'fatoora-core/**'
+              - 'fatoora-derive/**'
+              - 'fatoora-ffi/**'
+              - 'LICENSE-*'
+              - 'THIRD_PARTY_NOTICES.md'
+              - 'fatoora-cli/**'
+              - 'bindings/c/**'
+              - 'bindings/cpp/**'
+              - 'bindings/python/native/generated/**'
+              - 'bindings/js/generated/**'
+              - 'bindings/dotnet/generated/**'
+              - 'bindings/kotlin/generated/**'
+              - 'scripts/**'
+              - 'bench/dotnet/**'
+              - 'README.md'
+              - 'rustfmt.toml'
+              - '.rustfmt.toml'
+              - 'clippy.toml'
+              - '.clippy.toml'
+              - 'codecov.yml'
+              - '.codecov.yml'
   fresh-consumer:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.rust != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -114,7 +137,45 @@ jobs:
           echo 'pub use fatoora_core::*;' > "$consumer/src/lib.rs"
           cargo build --manifest-path "$consumer/Cargo.toml"
 
+  semver-checks:
+    # Guards the 0.5.x line: PRs into main must stay compatible with v0.5.0.
+    # PRs into next (0.6.0 breaking work) still run the check and report the
+    # result, but a breaking change does not fail the job.
+    needs: changes
+    if: ${{ !cancelled() && github.event_name == 'pull_request' && needs.changes.outputs.rust != 'false' }}
+    runs-on: ubuntu-latest
+    env:
+      CARGO_TERM_COLOR: always
+      SEMVER_BASELINE: v0.5.0
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # The baseline is built from the git tag, so fetch history and tags.
+          fetch-depth: 0
+      - name: Install Rust
+        run: rustup update stable
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            .
+      - name: Install cargo-semver-checks
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-semver-checks@0.51.0
+      - name: Check API compatibility with ${{ env.SEMVER_BASELINE }}
+        id: semver
+        continue-on-error: ${{ github.base_ref == 'next' }}
+        run: cargo semver-checks -p fatoora-core -p fatoora-ffi --baseline-rev "$SEMVER_BASELINE"
+      - name: Report breaking changes allowed on next
+        if: steps.semver.outcome == 'failure'
+        run: |
+          echo "::warning title=semver-checks::Breaking changes against $SEMVER_BASELINE detected. Allowed because this PR targets next."
+          echo "cargo-semver-checks found breaking changes against \`$SEMVER_BASELINE\`. This is allowed for PRs into \`next\` (0.6.0); see the step log for details." >> "$GITHUB_STEP_SUMMARY"
+
   coverage:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.rust != 'false' }}
     runs-on: ubuntu-latest
     env:
       CARGO_TERM_COLOR: always

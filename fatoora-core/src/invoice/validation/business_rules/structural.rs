@@ -83,16 +83,13 @@ impl Context {
                     return Ok(false);
                 }
                 let parent = xml.node(node).parent.expect("selected line allowance");
-                if xml.is(parent, CAC, "InvoiceLine")
+                let excluded = xml.is(parent, CAC, "InvoiceLine")
                     && (xml
                         .node(parent)
                         .parent
                         .is_some_and(|root| xml.is_document_root(root))
-                        || indicator(xml, node, true)?)
-                {
-                    return Ok(false);
-                }
-                Ok(true)
+                        || indicator(xml, node, true)?);
+                Ok(!excluded)
             }
             _ => Ok(true),
         }
