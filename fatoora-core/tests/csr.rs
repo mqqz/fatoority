@@ -284,6 +284,28 @@ fn csr_names_preserve_literal_delimiters_in_subject_and_san() {
 }
 
 #[test]
+fn signing_key_debug_contains_no_key_material() {
+    let key = SigningKey::generate();
+    let der = key.to_der().unwrap();
+    let der_b64 = Base64::encode_string(&der);
+    let pem = key.to_pem().unwrap();
+    let scalar = {
+        use k256::pkcs8::DecodePrivateKey;
+        k256::SecretKey::from_pkcs8_der(&der).unwrap().to_bytes()
+    };
+    let scalar_hex: String = scalar.iter().map(|b| format!("{b:02x}")).collect();
+    let scalar_bytes = format!("{:?}", scalar.as_slice());
+    for rendered in [format!("{key:?}"), format!("{key:#?}")] {
+        assert!(!rendered.contains(&der_b64), "{rendered}");
+        assert!(!rendered.to_lowercase().contains(&scalar_hex), "{rendered}");
+        assert!(!rendered.contains(&scalar_bytes), "{rendered}");
+        for line in pem.lines().filter(|line| !line.starts_with("-----")) {
+            assert!(!rendered.contains(line), "{rendered}");
+        }
+    }
+}
+
+#[test]
 fn properties_alias_preserves_validation_failures_when_loaded_from_a_file() {
     let source = include_str!("fixtures/csr-configs/csr-config-example-EN.properties");
     assert_eq!(
