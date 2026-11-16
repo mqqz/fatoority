@@ -3,10 +3,13 @@ from __future__ import annotations
 from contextlib import ExitStack
 from dataclasses import dataclass
 from decimal import Decimal
-from enum import IntEnum
+from enum import Enum, IntEnum, IntFlag
+import functools
 import json
+import os
 from threading import RLock
-from typing import Any, Optional
+from typing import Any, Optional, Union
+import warnings
 
 from . import _native
 from .errors import InvalidInputError, error_class_for_code
@@ -38,7 +41,7 @@ class VatCategory(IntEnum):
     ZERO = 2
     OUT_OF_SCOPE = 3
 
-class InvoiceFlag(IntEnum):
+class InvoiceFlag(IntFlag):
     THIRD_PARTY = 1
     NOMINAL = 2
     EXPORT = 4
@@ -131,8 +134,37 @@ class InvoiceTotals:
     payable_amount: Decimal
 
 
+_StrPath = Union[str, "os.PathLike[str]"]
+
+
+def _deprecate_positional(max_positional: int, message: str):
+    """Warn when more than ``max_positional`` arguments (including self/cls) are positional.
+
+    ``functools.wraps`` sets ``__wrapped__`` so ``inspect.signature`` still reports
+    the original parameters.
+    """
+    def decorator(function):
+        @functools.wraps(function)
+        def wrapper(*args, **kwargs):
+            if len(args) > max_positional:
+                warnings.warn(message, DeprecationWarning, stacklevel=2)
+            return function(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def _repr_value(value):
+    if isinstance(value, Enum):
+        return f"{type(value).__name__}.{value.name}"
+    return repr(value)
+
+
 class _Owned:
     """Own a generated object; serialize calls that could consume its state."""
+    # Getter names shown by ``repr``; ``_repr_redacted`` names are never read.
+    _repr_fields: tuple[str, ...] = ()
+    _repr_redacted: tuple[str, ...] = ()
+
     def __init__(self, handle):
         self._handle = handle
         self._lock = RLock()
@@ -156,6 +188,17 @@ class _Owned:
 
     def _invoke(self, name, *args):
         return _call(lambda owner, *values: getattr(owner, name)(*values), self, *args)
+
+    def __repr__(self) -> str:
+        name = type(self).__name__
+        try:
+            if getattr(self, "_handle", None) is None:
+                return f"<{name} closed>"
+            parts = [f"{field}={_repr_value(getattr(self, field)())}" for field in self._repr_fields]
+            parts += [f"{field}='<redacted>'" for field in self._repr_redacted]
+            return f"{name}({', '.join(parts)})"
+        except Exception:
+            return f"<{name} object at {id(self):#x}>"
 
 
 def _call(function, *args):
@@ -202,6 +245,8 @@ def _optional(cls, value):
     return None if value is None else cls(value)
 
 class Config(_Owned):
+    _repr_fields = ('env',)
+
     def __init__(self, env: Environment = Environment.NON_PRODUCTION):
         super().__init__(_call(_native.Config.new, int(env)))
 
@@ -247,6 +292,7 @@ class SigningKey(_Owned):
 
 class CsrProperties(_Owned):
     @classmethod
+    @_deprecate_positional(1, "CsrProperties.new(): pass every field as a keyword argument (common_name=..., serial_number=..., ...); they become keyword-only in 0.6")
     def new(cls, common_name: str, serial_number: str, organization_identifier: str, organization_unit_name: str, organization_name: str, country_name: str, invoice_type: str, location_address: str, industry_business_category: str) -> 'CsrProperties':
         return CsrProperties(_call(_native.CsrProperties.new, common_name, serial_number, organization_identifier, organization_unit_name, organization_name, country_name, invoice_type, location_address, industry_business_category))
 
@@ -259,13 +305,15 @@ class CsrProperties(_Owned):
         return CsrProperties(_call(_native.CsrProperties.from_properties_str, properties))
 
     @classmethod
-    def parse_csr_config_file(cls, path: str) -> 'CsrProperties':
-        return CsrProperties(_call(_native.CsrProperties.parse_csr_config_file, path))
+    def parse_csr_config_file(cls, path: _StrPath) -> 'CsrProperties':
+        return CsrProperties(_call(_native.CsrProperties.parse_csr_config_file, os.fspath(path)))
 
     def build(self, key: SigningKey, env: Environment) -> 'Csr':
         return Csr(self._invoke("build", key, int(env)))
 
 class Csr(_Owned):
+    _repr_fields = ('subject_string',)
+
     @classmethod
     def from_der(cls, der: bytes) -> 'Csr':
         return Csr(_call(_native.Csr.from_der, der))
@@ -289,6 +337,9 @@ class Csr(_Owned):
         return self._invoke("extension_values_der")
 
 class CsidCompliance(_Owned):
+    _repr_fields = ('request_id', 'env')
+    _repr_redacted = ('binary_security_token', 'secret')
+
     @classmethod
     def new(cls, env: Environment, token: str, secret: str, request_id: Optional[str]=None) -> 'CsidCompliance':
         return CsidCompliance(_call(_native.CsidCompliance.create, int(env), request_id, token, secret))
@@ -306,6 +357,9 @@ class CsidCompliance(_Owned):
         return self._invoke("secret")
 
 class CsidProduction(_Owned):
+    _repr_fields = ('request_id', 'env')
+    _repr_redacted = ('binary_security_token', 'secret')
+
     @classmethod
     def new(cls, env: Environment, token: str, secret: str, request_id: Optional[str]=None) -> 'CsidProduction':
         return CsidProduction(_call(_native.CsidProduction.create, int(env), request_id, token, secret))
@@ -323,6 +377,8 @@ class CsidProduction(_Owned):
         return self._invoke("secret")
 
 class ValidationMessage(_Owned):
+    _repr_fields = ('message_type', 'code', 'status')
+
     def message_type(self) -> Optional[str]:
         return self._invoke("message_type")
 
@@ -339,6 +395,8 @@ class ValidationMessage(_Owned):
         return self._invoke("status")
 
 class ValidationResults(_Owned):
+    _repr_fields = ('status',)
+
     def status(self) -> Optional[str]:
         return self._invoke("status")
 
@@ -352,6 +410,8 @@ class ValidationResults(_Owned):
         return [ValidationMessage(self._invoke("error_message", i)) for i in range(self._invoke("error_len"))]
 
 class ValidationResponse(_Owned):
+    _repr_fields = ('http_status', 'outcome')
+
     def http_status(self) -> Optional[int]:
         return self._invoke("http_status")
 
@@ -388,10 +448,14 @@ class ValidationResponse(_Owned):
         return ValidationResults(self._invoke("validation_results"))
 
 class VatId(_Owned):
+    _repr_fields = ('value',)
+
     def value(self) -> str:
         return self._invoke("value")
 
 class OtherId(_Owned):
+    _repr_fields = ('value', 'scheme')
+
     def value(self) -> str:
         return self._invoke("value")
 
@@ -399,6 +463,8 @@ class OtherId(_Owned):
         return self._invoke("scheme")
 
 class Address(_Owned):
+    _repr_fields = ('country_code', 'city', 'street', 'building_number', 'postal_code')
+
     def with_province(self, province: str) -> "Address":
         return Address(self._invoke("with_province", province))
 
@@ -434,6 +500,8 @@ class Address(_Owned):
         return self._invoke("district")
 
 class Party(_Owned):
+    _repr_fields = ('name',)
+
     def identifiers(self) -> list[OtherId]:
         return [OtherId(self._invoke("identifier", i)) for i in range(self._invoke("identifiers_len"))]
 
@@ -450,6 +518,8 @@ class Party(_Owned):
         return _optional(OtherId, self._invoke("other_id"))
 
 class InvoiceNote(_Owned):
+    _repr_fields = ('language_id', 'text')
+
     def language_id(self) -> Optional[str]:
         return self._invoke("language_id")
 
@@ -460,6 +530,8 @@ class InvoiceNote(_Owned):
         return self._invoke("text")
 
 class OriginalInvoiceRef(_Owned):
+    _repr_fields = ('id', 'uuid')
+
     @classmethod
     def new(cls, id: str, uuid: Optional[str] = None, date: Optional[str] = None, time: Optional[str] = None, type_code: Optional[str] = None) -> 'OriginalInvoiceRef':
         return cls(_call(_native.OriginalInvoiceRef.new, id, uuid, date, time, type_code))
@@ -495,13 +567,17 @@ class ZatcaClient(_Owned):
     def check_invoice_compliance(self, invoice: 'SignedInvoice', ccsid: CsidCompliance) -> 'ValidationResponse':
         return ValidationResponse(self._invoke("_blocking_check_invoice_compliance", invoice, ccsid))
 
+    @_deprecate_positional(3, "ZatcaClient.report_simplified_invoice(): pass clearance_status and accept_language as keyword arguments; they become keyword-only in 0.6")
     def report_simplified_invoice(self, invoice: 'SignedInvoice', pcsid: CsidProduction, clearance_status: bool, accept_language: Optional[str]=None) -> 'ValidationResponse':
         return ValidationResponse(self._invoke("_blocking_report_simplified_invoice", invoice, pcsid, clearance_status, accept_language))
 
+    @_deprecate_positional(3, "ZatcaClient.clear_standard_invoice(): pass clearance_status and accept_language as keyword arguments; they become keyword-only in 0.6")
     def clear_standard_invoice(self, invoice: 'SignedInvoice', pcsid: CsidProduction, clearance_status: bool, accept_language: Optional[str]=None) -> 'ValidationResponse':
         return ValidationResponse(self._invoke("_blocking_clear_standard_invoice", invoice, pcsid, clearance_status, accept_language))
 
 class _Invoice(_Owned):
+    _repr_fields = ('id', 'uuid')
+
     def issue_time(self) -> str:
         return self._data("issue_time")
 
@@ -659,7 +735,8 @@ class _Invoice(_Owned):
 
     def flags(self) -> set[InvoiceFlag]:
         bits = self.flags_raw()
-        return {flag for flag in InvoiceFlag if bits & flag.value}
+        # Use the declared single-bit members rather than version-specific flag iteration.
+        return {flag for flag in InvoiceFlag.__members__.values() if bits & flag.value}
 
     def is_third_party(self) -> bool:
         return InvoiceFlag.THIRD_PARTY in self.flags()
@@ -732,6 +809,8 @@ class SignedInvoice(_Invoice):
         return self._invoke("serial")
 
 class Adjustment(_Owned):
+    _repr_fields = ('value',)
+
     @classmethod
     def amount(cls, value: Decimal | str | int) -> "Adjustment":
         return cls(_call(_native.Adjustment.amount, _decimal(value)))
@@ -764,6 +843,8 @@ class Adjustment(_Owned):
         return self._invoke("reason_code")
 
 class PaymentMeans(_Owned):
+    _repr_fields = ('code',)
+
     def with_instruction_note(self, value: str) -> "PaymentMeans":
         return PaymentMeans(self._invoke("with_instruction_note", value))
 
@@ -887,6 +968,7 @@ class InvoiceBuilder(_Owned):
     def add_payment_means(self, value: PaymentMeans) -> None:
         self._invoke("add_payment_means", value)
 
+    @_deprecate_positional(2, "InvoiceBuilder.add_note(): pass language as a keyword argument (add_note(text, language=...)); it becomes keyword-only in 0.6")
     def add_note(self, text: str, language: Optional[str] = None) -> None:
         self._invoke("add_note", language, text)
 
@@ -952,6 +1034,7 @@ class InvoiceBuilder(_Owned):
         return cls(_call(_native.InvoiceBuilder.new_with_reference, int(invoice_type), int(invoice_subtype), reference, reason))
 
     def set_note_without_language(self, text: str) -> None:
+        warnings.warn("InvoiceBuilder.set_note_without_language() is deprecated and changes in 0.6; use add_note(text) instead", DeprecationWarning, stacklevel=2)
         self._invoke("set_note_without_language", text)
 
     def set_delivery(self, actual: Optional[str] = None, latest: Optional[str] = None) -> None:
@@ -1007,6 +1090,7 @@ class InvoiceBuilder(_Owned):
     def set_vat_category(self, vat_category: VatCategory) -> None:
         self._invoke("set_vat_category", int(vat_category))
 
+    @_deprecate_positional(2, "InvoiceBuilder.set_seller(): pass every argument after name as a keyword argument; they become keyword-only in 0.6")
     def set_seller(self, name: str, country_code: str, city: str, street: str, building_number: str, postal_code: str, vat_id: str, additional_street: Optional[str]=None, additional_number: Optional[str]=None, district: Optional[str]=None, other_id: Optional[str]=None, other_id_scheme: Optional[str]=None, *, province: Optional[str]=None) -> None:
         address = Address.new(country_code, city, street, building_number, postal_code, additional_street, additional_number, district)
         if province is not None:
@@ -1024,6 +1108,7 @@ class InvoiceBuilder(_Owned):
             item = _call(item.with_tax_subtotal, native)
         self._invoke("add_item", item)
 
+    @_deprecate_positional(2, "InvoiceBuilder.set_buyer(): pass every argument after name as a keyword argument; they become keyword-only in 0.6")
     def set_buyer(self, name: str, country_code: str, city: str, street: str, building_number: str, postal_code: str, vat_id: Optional[str]=None, other_id: Optional[str]=None, other_id_scheme: Optional[str]=None, additional_street: Optional[str]=None, additional_number: Optional[str]=None, district: Optional[str]=None, *, province: Optional[str]=None) -> None:
         address = Address.new(country_code, city, street, building_number, postal_code, additional_street, additional_number, district)
         if province is not None:
@@ -1031,6 +1116,7 @@ class InvoiceBuilder(_Owned):
         self._invoke("set_buyer", name, address, vat_id, other_id, other_id_scheme)
 
     def set_note(self, language: str, text: str) -> None:
+        warnings.warn("InvoiceBuilder.set_note() is deprecated and changes in 0.6; use add_note(text, language=...) instead", DeprecationWarning, stacklevel=2)
         self._invoke("set_note", language, text)
 
     def set_allowance(self, reason: str, amount: Decimal | str | int) -> None:
@@ -1045,8 +1131,8 @@ class InvoiceBuilder(_Owned):
     def allowance_reason(self, reason: str) -> None:
         self._invoke("allowance_reason", reason)
 
-    def flags(self, flags: int) -> None:
-        self._invoke("flags", flags)
+    def flags(self, flags: int | InvoiceFlag) -> None:
+        self._invoke("flags", int(flags))
 
     def build(self) -> FinalizedInvoice:
         return FinalizedInvoice(self._invoke("build"))
@@ -1055,16 +1141,16 @@ def parse_finalized_invoice_xml(xml: str) -> FinalizedInvoice:
     return FinalizedInvoice(_call(_native.FinalizedInvoice.from_xml, xml))
 
 
-def parse_finalized_invoice_xml_file(path: str) -> FinalizedInvoice:
-    return FinalizedInvoice(_call(_native.FinalizedInvoice.from_file, str(path)))
+def parse_finalized_invoice_xml_file(path: _StrPath) -> FinalizedInvoice:
+    return FinalizedInvoice(_call(_native.FinalizedInvoice.from_file, os.fspath(path)))
 
 
 def parse_signed_invoice_xml(xml: str) -> SignedInvoice:
     return SignedInvoice(_call(_native.SignedInvoice.from_xml, xml))
 
 
-def parse_signed_invoice_xml_file(path: str) -> SignedInvoice:
-    return SignedInvoice(_call(_native.SignedInvoice.from_file, str(path)))
+def parse_signed_invoice_xml_file(path: _StrPath) -> SignedInvoice:
+    return SignedInvoice(_call(_native.SignedInvoice.from_file, os.fspath(path)))
 
 
 def validate_xml_invoice_from_str(config: Config, xml: str) -> bool:

@@ -10,7 +10,7 @@ from test_numeric_contract import builder
 def test_new_metadata_crosses_native_binding_and_xml():
     b = builder()
     b.set_delivery("2024-01-01", "2024-01-02")
-    b.set_buyer("المشتري", "SA", "Riyadh", "Street", "", "", vat_id=None)
+    b.set_buyer("المشتري", country_code="SA", city="Riyadh", street="Street", building_number="", postal_code="", vat_id=None)
     reason = TaxExemption("VATEX-SA-29", "إعفاء & <test>")
     b.add_line_item("سلعة", 2, "PCE", "10.1234", 0, VatCategory.EXEMPT,
                     id="original-line", exemption=reason)
@@ -120,7 +120,7 @@ def test_optional_line_builder_and_repeated_metadata():
     assert item.total_amount == Decimal("230")
     b = builder()
     b.add_item(item)
-    b.add_note("one", "en")
+    b.add_note("one", language="en")
     b.add_note("اثنان")
     b.add_payment_means(PaymentMeans.new("30", "first").with_instruction_note("second").with_account("account", "net 30"))
     b.add_seller_identifier("secondary", "OTH")
@@ -161,9 +161,9 @@ def test_percentage_adjustment_keeps_repeated_tax_categories():
 
 def test_python_party_setters_expose_province():
     b = builder()
-    b.set_seller("Seller", "SA", "Riyadh", "Street", "1234", "12222",
-                 "399999999900003", province="Riyadh Province")
-    b.set_buyer("Buyer", "SA", "Jeddah", "Street", "", "", province="Makkah Province")
+    b.set_seller("Seller", country_code="SA", city="Riyadh", street="Street", building_number="1234", postal_code="12222",
+                 vat_id="399999999900003", province="Riyadh Province")
+    b.set_buyer("Buyer", country_code="SA", city="Jeddah", street="Street", building_number="", postal_code="", province="Makkah Province")
     b.add_line_item("item", 1, "PCE", 100, 15, VatCategory.STANDARD)
     restored = parse_finalized_invoice_xml(b.build().xml())
     assert restored.seller().address().province() == "Riyadh Province"

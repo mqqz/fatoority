@@ -41,7 +41,7 @@ def report():
     with parse_signed_invoice_xml(fixture.read_text()) as invoice, \
          CsidProduction.new(Environment.NON_PRODUCTION, "test-token", "test-secret") as credentials, \
          ZatcaClient(Config(Environment.NON_PRODUCTION)) as client:
-        return client.report_simplified_invoice(invoice, credentials, False, "en")
+        return client.report_simplified_invoice(invoice, credentials, clearance_status=False, accept_language="en")
 
 
 @pytest.mark.parametrize("status", [400, 409, 401, 503])
@@ -182,7 +182,7 @@ def test_http_releases_gil_and_retains_locked_arguments(invoice_action):
         client = ZatcaClient(Config(Environment.NON_PRODUCTION))
         def request():
             try:
-                responses.append(client.report_simplified_invoice(invoice, credentials, False, "en"))
+                responses.append(client.report_simplified_invoice(invoice, credentials, clearance_status=False, accept_language="en"))
             except BaseException as exc:
                 failures.append(repr(exc))
         request_thread = Thread(target=request, daemon=True)
