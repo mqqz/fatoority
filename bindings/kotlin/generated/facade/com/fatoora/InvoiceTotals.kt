@@ -9,6 +9,58 @@ class InvoiceTotals internal constructor(internal val raw: com.fatoora.raw.Invoi
         val handle = raw.handle
         attach { com.fatoora.raw.InvoiceTotals.lib.fatoora_InvoiceTotals_destroy(handle) }
     }
+
+    val vatBreakdownLen: java.math.BigInteger
+        get() = nativeCall(listOfNotNull(this)) {
+            java.math.BigInteger(raw.vatBreakdownLen().toString())
+        }
+
+    val taxInclusive: java.math.BigDecimal
+        get() = nativeCall(listOfNotNull(this)) {
+            decimalOf(unwrap(raw.taxInclusive()))
+        }
+
+    val taxAmount: java.math.BigDecimal
+        get() = nativeCall(listOfNotNull(this)) {
+            decimalOf(unwrap(raw.taxAmount()))
+        }
+
+    val lineExtension: java.math.BigDecimal
+        get() = nativeCall(listOfNotNull(this)) {
+            decimalOf(unwrap(raw.lineExtension()))
+        }
+
+    val allowanceTotal: java.math.BigDecimal
+        get() = nativeCall(listOfNotNull(this)) {
+            decimalOf(unwrap(raw.allowanceTotal()))
+        }
+
+    val chargeTotal: java.math.BigDecimal
+        get() = nativeCall(listOfNotNull(this)) {
+            decimalOf(unwrap(raw.chargeTotal()))
+        }
+
+    val taxableAmount: java.math.BigDecimal
+        get() = nativeCall(listOfNotNull(this)) {
+            decimalOf(unwrap(raw.taxableAmount()))
+        }
+
+    val prepaidAmount: java.math.BigDecimal
+        get() = nativeCall(listOfNotNull(this)) {
+            decimalOf(unwrap(raw.prepaidAmount()))
+        }
+
+    val payableRoundingAmount: java.math.BigDecimal
+        get() = nativeCall(listOfNotNull(this)) {
+            decimalOf(unwrap(raw.payableRoundingAmount()))
+        }
+
+    val payableAmount: java.math.BigDecimal
+        get() = nativeCall(listOfNotNull(this)) {
+            decimalOf(unwrap(raw.payableAmount()))
+        }
+
+    @Deprecated("Use the vatBreakdownLen property.", ReplaceWith("vatBreakdownLen"))
     fun vatBreakdownLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
         java.math.BigInteger(raw.vatBreakdownLen().toString())
     }
@@ -17,38 +69,47 @@ class InvoiceTotals internal constructor(internal val raw: com.fatoora.raw.Invoi
         VatBreakdown(unwrap(raw.vatBreakdown(checkedCounter(index))))
     }
 
+    @Deprecated("Use the taxInclusive property.", ReplaceWith("taxInclusive.toPlainString()"))
     fun taxInclusive(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.taxInclusive())
     }
 
+    @Deprecated("Use the taxAmount property.", ReplaceWith("taxAmount.toPlainString()"))
     fun taxAmount(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.taxAmount())
     }
 
+    @Deprecated("Use the lineExtension property.", ReplaceWith("lineExtension.toPlainString()"))
     fun lineExtension(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.lineExtension())
     }
 
+    @Deprecated("Use the allowanceTotal property.", ReplaceWith("allowanceTotal.toPlainString()"))
     fun allowanceTotal(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.allowanceTotal())
     }
 
+    @Deprecated("Use the chargeTotal property.", ReplaceWith("chargeTotal.toPlainString()"))
     fun chargeTotal(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.chargeTotal())
     }
 
+    @Deprecated("Use the taxableAmount property.", ReplaceWith("taxableAmount.toPlainString()"))
     fun taxableAmount(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.taxableAmount())
     }
 
+    @Deprecated("Use the prepaidAmount property.", ReplaceWith("prepaidAmount.toPlainString()"))
     fun prepaidAmount(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.prepaidAmount())
     }
 
+    @Deprecated("Use the payableRoundingAmount property.", ReplaceWith("payableRoundingAmount.toPlainString()"))
     fun payableRoundingAmount(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.payableRoundingAmount())
     }
 
+    @Deprecated("Use the payableAmount property.", ReplaceWith("payableAmount.toPlainString()"))
     fun payableAmount(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.payableAmount())
     }

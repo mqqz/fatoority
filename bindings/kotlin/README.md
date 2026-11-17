@@ -58,7 +58,7 @@ SigningKey.generate().use { key ->
     }
 }
 Address.create("SA", "الرياض", "King Fahd Rd", "1234", "12345").use { address ->
-    println(address.city())
+    println(address.city) // value getters are properties; Java calls getCity()
 }
 ```
 
@@ -78,17 +78,20 @@ calls throw `IllegalStateException`. A phantom-reference queue is a fallback,
 not a substitute for closing secrets and large objects promptly. Native release
 does not erase managed strings or byte arrays.
 
-Native failures throw `BindingException` with `code`, `message`, and `detailsJson`
-(Java getters). Error data is copied and its native owner freed before throwing.
+Native failures throw a `BindingException` subclass per error kind, such as
+`InvalidInputException`, `ValidationException`, `XmlException` or
+`NetworkException`, each with `code`, `kind`, `message`, and `detailsJson` (Java
+getters). Error data is copied and its native owner freed before throwing.
 `null` and empty strings stay distinct; invalid UTF-16 and embedded NUL are
-rejected. Decimal values use invariant decimal strings. Unsigned counters use
+rejected. Amounts, rates and quantities are exact `java.math.BigDecimal` values.
+Getters that return copied values (text, amounts, numbers, enums, booleans) are
+Kotlin properties, seen from Java as `getX()`, `isX()` or `hasX()`; getters that
+return native owners stay methods so ownership is explicit. Unsigned counters use
 `BigInteger`; byte data uses `byte[]` / `ByteArray`. Enumerated codes are
 `com.fatoora` enums such as `Environment.NonProduction`, `VatCategory.Standard`
 and `ClearanceMode.Disabled`; response statuses return a nullable enum (with
-`Unknown` for unrecognized values), and `*Raw()` getters return the exact text.
-The coroutine `reportSimplifiedInvoiceAsync`/`clearStandardInvoiceAsync` helpers
-still take a `Boolean` clearance status. `Bytes.asSlice()` copies the
-native data while holding its owner's lock.
+`Unknown` for unrecognized values), and `*Raw` properties return the exact text.
+`Bytes.asSlice()` copies the native data while holding its owner's lock.
 
 The `com.fatoora.raw` package is an implementation detail. Its direct use bypasses
 ownership, text validation and concurrency guards. Import `com.fatoora` in apps.

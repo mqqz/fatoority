@@ -15,18 +15,43 @@ class ComplianceCsid internal constructor(internal val raw: com.fatoora.raw.Comp
             ComplianceCsid(unwrap(com.fatoora.raw.ComplianceCsid.create(com.fatoora.raw.Environment.valueOf(environment.name), requestId?.let(::checkedText), checkedText(token), checkedText(secret))))
         }
     }
+
+    val env: Environment
+        get() = nativeCall(listOfNotNull(this)) {
+            Environment.valueOf(unwrap(raw.env()).name)
+        }
+
+    val requestId: String?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.requestId())?.let(::readText)
+        }
+
+    val binarySecurityToken: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.binarySecurityToken())
+        }
+
+    val secret: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.secret())
+        }
+
+    @Deprecated("Use the env property.", ReplaceWith("env"))
     fun env(): Environment = nativeCall(listOfNotNull(this)) {
         Environment.valueOf(unwrap(raw.env()).name)
     }
 
+    @Deprecated("Use the requestId property.", ReplaceWith("requestId"))
     fun requestId(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.requestId())?.let(::Text)
     }
 
+    @Deprecated("Use the binarySecurityToken property.", ReplaceWith("binarySecurityToken"))
     fun binarySecurityToken(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.binarySecurityToken())
     }
 
+    @Deprecated("Use the secret property.", ReplaceWith("secret"))
     fun secret(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.secret())
     }

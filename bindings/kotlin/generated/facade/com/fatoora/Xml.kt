@@ -10,12 +10,23 @@ class Xml internal constructor(internal val raw: com.fatoora.raw.Xml) : NativeRe
         attach { com.fatoora.raw.Xml.lib.fatoora_Xml_destroy(handle) }
     }
     companion object {
+        /**
+         * Run the local ZATCA validation profile and return its owned report.
+         *
+         * Inspect `is_valid` before acceptance. Options default when absent;
+         * `options_json` is limited to 4 KiB. Validation needs no configuration:
+         * it mirrors the stateless core `Validator::validate_zatca`.
+         */
         @JvmStatic
         @JvmOverloads
         fun validateZatca(xml: String, optionsJson: String? = null): ZatcaValidationReport = nativeCall(listOfNotNull()) {
             ZatcaValidationReport(unwrap(com.fatoora.raw.Xml.validateZatca(checkedText(xml), optionsJson?.let(::checkedText))))
         }
 
+        /**
+         * Check the XML against the UBL schema and business rules, mirroring core
+         * `Validator::validate_xml`. Returns true or a validation error.
+         */
         @JvmStatic
         fun validate(xml: String): Boolean = nativeCall(listOfNotNull()) {
             unwrap(com.fatoora.raw.Xml.validate(checkedText(xml)))
@@ -26,5 +37,4 @@ class Xml internal constructor(internal val raw: com.fatoora.raw.Xml) : NativeRe
             unwrap(com.fatoora.raw.Xml.hash(checkedText(xml)))
         }
     }
-
 }

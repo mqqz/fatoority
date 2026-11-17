@@ -25,6 +25,7 @@ class SigningKey internal constructor(internal val raw: com.fatoora.raw.SigningK
             SigningKey(unwrap(com.fatoora.raw.SigningKey.fromDer(der.asUByteArray())))
         }
     }
+
     fun toPem(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.toPem())
     }

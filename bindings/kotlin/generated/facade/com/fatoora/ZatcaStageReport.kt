@@ -2,6 +2,9 @@
 @file:OptIn(ExperimentalUnsignedTypes::class)
 package com.fatoora
 
+/**
+ * Coverage and findings from one validation stage.
+ */
 class ZatcaStageReport internal constructor(internal val raw: com.fatoora.raw.ZatcaStageReport) : NativeResource() {
     init {
         check(raw.owned && raw.selfEdges.isEmpty()) { "Facade requires an independent owned handle" }
@@ -9,26 +12,57 @@ class ZatcaStageReport internal constructor(internal val raw: com.fatoora.raw.Za
         val handle = raw.handle
         attach { com.fatoora.raw.ZatcaStageReport.lib.fatoora_ZatcaStageReport_destroy(handle) }
     }
+
+    val stage: ZatcaStage
+        get() = nativeCall(listOfNotNull(this)) {
+            ZatcaStage.valueOf(raw.stage().name)
+        }
+
+    val status: ZatcaStageStatus
+        get() = nativeCall(listOfNotNull(this)) {
+            ZatcaStageStatus.valueOf(raw.status().name)
+        }
+
+    val evaluatedAssertionsLen: java.math.BigInteger
+        get() = nativeCall(listOfNotNull(this)) {
+            java.math.BigInteger(raw.evaluatedAssertionsLen().toString())
+        }
+
+    val findingsLen: java.math.BigInteger
+        get() = nativeCall(listOfNotNull(this)) {
+            java.math.BigInteger(raw.findingsLen().toString())
+        }
+
+    @Deprecated("Use the stage property.", ReplaceWith("stage"))
     fun stage(): ZatcaStage = nativeCall(listOfNotNull(this)) {
         ZatcaStage.valueOf(raw.stage().name)
     }
 
+    @Deprecated("Use the status property.", ReplaceWith("status"))
     fun status(): ZatcaStageStatus = nativeCall(listOfNotNull(this)) {
         ZatcaStageStatus.valueOf(raw.status().name)
     }
 
+    /**
+     * Pinned rule source, for the CEN and KSA business-rule stages.
+     */
     fun provenance(): ZatcaRuleSource? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.provenance())?.let(::ZatcaRuleSource)
     }
 
+    @Deprecated("Use the evaluatedAssertionsLen property.", ReplaceWith("evaluatedAssertionsLen"))
     fun evaluatedAssertionsLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
         java.math.BigInteger(raw.evaluatedAssertionsLen().toString())
     }
 
-    fun evaluatedAssertion(index: java.math.BigInteger): Text = nativeCall(listOfNotNull(this)) {
-        Text(unwrap(raw.evaluatedAssertion(checkedCounter(index))))
+    /**
+     * Assertion site at `index` whose selected contexts were all evaluated.
+     */
+    fun evaluatedAssertion(index: java.math.BigInteger): String = nativeCall(listOfNotNull(this)) {
+        readText(unwrap(raw.evaluatedAssertion(checkedCounter(index))))
     }
 
+    @Deprecated("Use the findingsLen property.", ReplaceWith("findingsLen"))
     fun findingsLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
         java.math.BigInteger(raw.findingsLen().toString())
     }

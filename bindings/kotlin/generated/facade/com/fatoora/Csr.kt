@@ -15,6 +15,12 @@ class Csr internal constructor(internal val raw: com.fatoora.raw.Csr) : NativeRe
             Csr(unwrap(com.fatoora.raw.Csr.fromDer(der.asUByteArray())))
         }
     }
+
+    val subjectString: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.subjectString())
+        }
+
     fun toDer(): Bytes = nativeCall(listOfNotNull(this)) {
         Bytes(unwrap(raw.toDer()))
     }
@@ -31,6 +37,7 @@ class Csr internal constructor(internal val raw: com.fatoora.raw.Csr) : NativeRe
         unwrap(raw.toPemBase64())
     }
 
+    @Deprecated("Use the subjectString property.", ReplaceWith("subjectString"))
     fun subjectString(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.subjectString())
     }

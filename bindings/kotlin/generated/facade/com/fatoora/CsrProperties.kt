@@ -15,16 +15,23 @@ class CsrProperties internal constructor(internal val raw: com.fatoora.raw.CsrPr
             CsrProperties(unwrap(com.fatoora.raw.CsrProperties.new_(checkedText(commonName), checkedText(serialNumber), checkedText(organizationIdentifier), checkedText(organizationUnitName), checkedText(organizationName), checkedText(countryName), checkedText(invoiceType), checkedText(locationAddress), checkedText(industryBusinessCategory))))
         }
 
+        /**
+         * Parse `csr.*` properties text, mirroring core `CsrProperties::from_str`.
+         */
         @JvmStatic
         fun fromStr(properties: String): CsrProperties = nativeCall(listOfNotNull()) {
             CsrProperties(unwrap(com.fatoora.raw.CsrProperties.fromStr(checkedText(properties))))
         }
 
+        /**
+         * Load a `csr.*` properties file, mirroring core `CsrProperties::from_file`.
+         */
         @JvmStatic
         fun fromFile(path: String): CsrProperties = nativeCall(listOfNotNull()) {
             CsrProperties(unwrap(com.fatoora.raw.CsrProperties.fromFile(checkedText(path))))
         }
     }
+
     fun build(key: SigningKey, env: Environment): Csr = nativeCall(listOfNotNull(this, key)) {
         Csr(unwrap(raw.build(key.raw, com.fatoora.raw.Environment.valueOf(env.name))))
     }

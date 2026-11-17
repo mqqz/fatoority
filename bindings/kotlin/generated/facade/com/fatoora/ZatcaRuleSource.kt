@@ -2,6 +2,9 @@
 @file:OptIn(ExperimentalUnsignedTypes::class)
 package com.fatoora
 
+/**
+ * Pinned upstream rule source of a business-rule stage.
+ */
 class ZatcaRuleSource internal constructor(internal val raw: com.fatoora.raw.ZatcaRuleSource) : NativeResource() {
     init {
         check(raw.owned && raw.selfEdges.isEmpty()) { "Facade requires an independent owned handle" }
@@ -9,10 +12,29 @@ class ZatcaRuleSource internal constructor(internal val raw: com.fatoora.raw.Zat
         val handle = raw.handle
         attach { com.fatoora.raw.ZatcaRuleSource.lib.fatoora_ZatcaRuleSource_destroy(handle) }
     }
+
+    /**
+     * File name of the upstream rule stylesheet.
+     */
+    val stylesheet: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.stylesheet())
+        }
+
+    /**
+     * Hex SHA-256 digest of the pinned stylesheet.
+     */
+    val sha256: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.sha256())
+        }
+
+    @Deprecated("Use the stylesheet property.", ReplaceWith("stylesheet"))
     fun stylesheet(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.stylesheet())
     }
 
+    @Deprecated("Use the sha256 property.", ReplaceWith("sha256"))
     fun sha256(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.sha256())
     }

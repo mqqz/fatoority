@@ -9,6 +9,13 @@ class Text internal constructor(internal val raw: com.fatoora.raw.Text) : Native
         val handle = raw.handle
         attach { com.fatoora.raw.Text.lib.fatoora_Text_destroy(handle) }
     }
+
+    val value: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.value())
+        }
+
+    @Deprecated("Use the value property.", ReplaceWith("value"))
     fun value(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.value())
     }

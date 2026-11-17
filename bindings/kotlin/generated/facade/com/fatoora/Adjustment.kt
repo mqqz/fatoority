@@ -11,15 +11,58 @@ class Adjustment internal constructor(internal val raw: com.fatoora.raw.Adjustme
     }
     companion object {
         @JvmStatic
+        fun amount(value: java.math.BigDecimal): Adjustment = nativeCall(listOfNotNull()) {
+            Adjustment(unwrap(com.fatoora.raw.Adjustment.amount(decimalText(value))))
+        }
+
+        @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("amount(BigDecimal(value))", "java.math.BigDecimal"))
+        @JvmStatic
         fun amount(value: String): Adjustment = nativeCall(listOfNotNull()) {
             Adjustment(unwrap(com.fatoora.raw.Adjustment.amount(checkedText(value))))
         }
 
         @JvmStatic
+        fun percentage(base: java.math.BigDecimal, percent: java.math.BigDecimal): Adjustment = nativeCall(listOfNotNull()) {
+            Adjustment(unwrap(com.fatoora.raw.Adjustment.percentage(decimalText(base), decimalText(percent))))
+        }
+
+        @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("percentage(BigDecimal(base), BigDecimal(percent))", "java.math.BigDecimal"))
+        @JvmStatic
         fun percentage(base: String, percent: String): Adjustment = nativeCall(listOfNotNull()) {
             Adjustment(unwrap(com.fatoora.raw.Adjustment.percentage(checkedText(base), checkedText(percent))))
         }
     }
+
+    val value: java.math.BigDecimal
+        get() = nativeCall(listOfNotNull(this)) {
+            decimalOf(unwrap(raw.value()))
+        }
+
+    val baseAmount: java.math.BigDecimal?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.baseAmount())?.let(::readText)?.let(::decimalOf)
+        }
+
+    val percent: java.math.BigDecimal?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.percent())?.let(::readText)?.let(::decimalOf)
+        }
+
+    val reason: String?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.reason())?.let(::readText)
+        }
+
+    val reasonCode: String?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.reasonCode())?.let(::readText)
+        }
+
+    fun withSuppliedAmount(value: java.math.BigDecimal): Adjustment = nativeCall(listOfNotNull(this)) {
+        Adjustment(unwrap(raw.withSuppliedAmount(decimalText(value))))
+    }
+
+    @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("withSuppliedAmount(BigDecimal(value))", "java.math.BigDecimal"))
     fun withSuppliedAmount(value: String): Adjustment = nativeCall(listOfNotNull(this)) {
         Adjustment(unwrap(raw.withSuppliedAmount(checkedText(value))))
     }
@@ -29,22 +72,27 @@ class Adjustment internal constructor(internal val raw: com.fatoora.raw.Adjustme
         Adjustment(unwrap(raw.withReason(reason?.let(::checkedText), code?.let(::checkedText))))
     }
 
+    @Deprecated("Use the value property.", ReplaceWith("value.toPlainString()"))
     fun value(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.value())
     }
 
+    @Deprecated("Use the baseAmount property.", ReplaceWith("baseAmount"))
     fun baseAmount(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.baseAmount())?.let(::Text)
     }
 
+    @Deprecated("Use the percent property.", ReplaceWith("percent"))
     fun percent(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.percent())?.let(::Text)
     }
 
+    @Deprecated("Use the reason property.", ReplaceWith("reason"))
     fun reason(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.reason())?.let(::Text)
     }
 
+    @Deprecated("Use the reasonCode property.", ReplaceWith("reasonCode"))
     fun reasonCode(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.reasonCode())?.let(::Text)
     }
