@@ -124,7 +124,7 @@ Execution details include `kind`, optional `stage`, `assertion_site`, `location`
     ) -> Result<ZatcaValidationReport, ZatcaValidationError>
     ```
 
-    `ZatcaValidationOptions` has `previous_invoice_hash: Option<String>` and `evaluated_at: Option<chrono::DateTime<chrono::FixedOffset>>`. `Default::default()` omits both. Native callers may omit evaluation time; direct WASM callers must supply it. The 4 KiB JSON limit applies to JSON binding inputs, not this typed options struct.
+    `ZatcaValidationOptions` has `previous_invoice_hash: Option<InvoiceHash>` (set it from `hash()`, `hash_xml` or `text.parse()?`) and `evaluated_at: Option<chrono::DateTime<chrono::FixedOffset>>`. `Default::default()` omits both. Native callers may omit evaluation time; direct WASM callers must supply it. The 4 KiB JSON limit applies to JSON binding inputs, not this typed options struct.
 
     `ZatcaValidationReport` exposes `schema_version`, `profile`, `evaluated_at`, and `stages`. Call `is_complete()`, `has_errors()`, and `is_valid()` for derived outcomes. `validation_report()` aggregates findings into the shared report; only completed stages contribute checked layers, and both CEN and KSA must complete before `BusinessRules` is listed. Partial findings remain in the aggregate.
 

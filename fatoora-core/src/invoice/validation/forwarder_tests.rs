@@ -52,7 +52,8 @@ fn options() -> ZatcaValidationOptions {
         evaluated_at: Some("2026-09-23T12:00:00+03:00".parse().unwrap()),
         previous_invoice_hash: Some(
             "NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ=="
-                .into(),
+                .parse()
+                .unwrap(),
         ),
     }
 }

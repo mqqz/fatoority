@@ -1662,6 +1662,34 @@ impl AdjustmentKind {
     pub const fn is_allowance(self) -> bool {
         matches!(self, Self::Allowance)
     }
+
+    /// Resolves a serialized adjustment's kind from the 0.6 `kind` field and/or
+    /// the 0.5 `charge` boolean, which must agree when both are present.
+    pub(crate) fn from_serialized(
+        kind: Option<Self>,
+        charge: Option<bool>,
+    ) -> std::result::Result<Self, &'static str> {
+        match (kind, charge.map(Self::from_charge_indicator)) {
+            (Some(kind), Some(legacy)) if kind != legacy => {
+                Err("conflicting adjustment `kind` and legacy `charge` fields")
+            }
+            (Some(kind), _) | (None, Some(kind)) => Ok(kind),
+            (None, None) => Err("missing field `kind`"),
+        }
+    }
+}
+
+/// Deserializes a field that is serialized bare (not as an `Option`) into
+/// `Some`, so formats with explicit options (such as RON) still round-trip.
+/// An absent field falls back to `None` through `#[serde(default)]`.
+pub(crate) fn deserialize_present<'de, D, T>(
+    deserializer: D,
+) -> std::result::Result<Option<T>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    T::deserialize(deserializer).map(Some)
 }
 
 /// One document allowance or charge, retaining its own VAT category and reason.
@@ -1688,7 +1716,7 @@ impl AdjustmentKind {
 /// assert_eq!(entry.reason(), Some("Freight"));
 /// # Ok::<(), fatoora_core::invoice::InvoiceError>(())
 /// ```
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct AllowanceCharge {
     /// Preserve an absent VAT rate for an out-of-scope adjustment.
     #[serde(default)]
@@ -1718,6 +1746,101 @@ pub struct AllowanceCharge {
     /// Exemption code and reason for exempt, zero-rated or out-of-scope categories.
     #[serde(default)]
     exemption: TaxExemption,
+}
+
+/// Deserialization shape of [`AllowanceCharge`]: accepts `kind`, or the 0.5
+/// `charge` boolean, and otherwise mirrors the struct's field attributes.
+#[derive(Deserialize)]
+#[serde(rename = "AllowanceCharge")]
+struct AllowanceChargeRepr {
+    #[serde(default)]
+    omitted_rate: bool,
+    #[serde(default)]
+    base_amount: Option<Decimal>,
+    #[serde(default)]
+    percentage: Option<Decimal>,
+    #[serde(default = "one_tax_category")]
+    tax_category_count: usize,
+    #[serde(default, deserialize_with = "deserialize_present")]
+    kind: Option<AdjustmentKind>,
+    #[serde(default, deserialize_with = "deserialize_present")]
+    charge: Option<bool>,
+    amount: Decimal,
+    reason: Option<String>,
+    reason_code: Option<String>,
+    category: VatCategory,
+    rate: Decimal,
+    #[serde(default)]
+    exemption: TaxExemption,
+}
+
+/// Exact serialized shape of [`AllowanceCharge`], used by compact formats
+/// (such as bincode) that read fields by position and can't skip a legacy one.
+#[derive(Deserialize)]
+#[serde(rename = "AllowanceCharge")]
+struct AllowanceChargeCompact {
+    #[serde(default)]
+    omitted_rate: bool,
+    #[serde(default)]
+    base_amount: Option<Decimal>,
+    #[serde(default)]
+    percentage: Option<Decimal>,
+    #[serde(default = "one_tax_category")]
+    tax_category_count: usize,
+    kind: AdjustmentKind,
+    amount: Decimal,
+    reason: Option<String>,
+    reason_code: Option<String>,
+    category: VatCategory,
+    rate: Decimal,
+    #[serde(default)]
+    exemption: TaxExemption,
+}
+
+impl<'de> Deserialize<'de> for AllowanceCharge {
+    fn deserialize<D: serde::Deserializer<'de>>(
+        deserializer: D,
+    ) -> std::result::Result<Self, D::Error> {
+        if !deserializer.is_human_readable() {
+            let c = AllowanceChargeCompact::deserialize(deserializer)?;
+            return Ok(Self {
+                omitted_rate: c.omitted_rate,
+                base_amount: c.base_amount,
+                percentage: c.percentage,
+                tax_category_count: c.tax_category_count,
+                kind: c.kind,
+                amount: c.amount,
+                reason: c.reason,
+                reason_code: c.reason_code,
+                category: c.category,
+                rate: c.rate,
+                exemption: c.exemption,
+            });
+        }
+        AllowanceChargeRepr::deserialize(deserializer)?
+            .try_into()
+            .map_err(serde::de::Error::custom)
+    }
+}
+
+impl TryFrom<AllowanceChargeRepr> for AllowanceCharge {
+    type Error = &'static str;
+
+    fn try_from(repr: AllowanceChargeRepr) -> std::result::Result<Self, Self::Error> {
+        Ok(Self {
+            omitted_rate: repr.omitted_rate,
+            base_amount: repr.base_amount,
+            percentage: repr.percentage,
+            tax_category_count: repr.tax_category_count,
+            kind: AdjustmentKind::from_serialized(repr.kind, repr.charge)?,
+            amount: repr.amount,
+            reason: repr.reason,
+            reason_code: repr.reason_code,
+            category: repr.category,
+            rate: repr.rate,
+            exemption: repr.exemption,
+        })
+    }
 }
 
 impl AllowanceCharge {

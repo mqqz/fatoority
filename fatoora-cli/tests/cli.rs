@@ -422,7 +422,7 @@ fn generate_hash_outputs_expected() {
     let fixture = signed_invoice_fixture();
     let xml = std::fs::read_to_string(&fixture).expect("read fixture");
     let signed = parse_signed_invoice_xml(&xml).expect("parse signed invoice");
-    let expected = signed.hash_base64().expect("compute hash");
+    let expected = signed.hash().expect("compute hash");
 
     let output = Command::new(cli_exe())
         .args(["generate-hash", "--invoice"])
@@ -436,7 +436,7 @@ fn generate_hash_outputs_expected() {
         String::from_utf8_lossy(&output.stderr)
     );
     let actual = String::from_utf8_lossy(&output.stdout);
-    assert_eq!(actual.trim(), expected);
+    assert_eq!(actual.trim(), expected.as_str());
 }
 
 #[test]
@@ -629,6 +629,21 @@ fn zatca_cli_reports_file_and_option_errors_without_inventing_a_report() {
     );
     assert_eq!(invalid_hash["kind"], "invalid_context");
     assert!(invalid_hash.get("report").is_some());
+    let blank_hash = validation_json(
+        &validate_zatca(
+            &standard_invoice_fixture(),
+            &["--previous-invoice-hash", " "],
+        ),
+        3,
+    );
+    assert_eq!(blank_hash["kind"], "invalid_options");
+    assert!(
+        blank_hash["message"]
+            .as_str()
+            .unwrap()
+            .starts_with("invalid validation context: previous_invoice_hash")
+    );
+    assert!(blank_hash.get("report").is_none());
 }
 
 #[test]
@@ -795,10 +810,7 @@ fn sign_pem_stdout_preserves_invoice_hash_and_rejects_mixed_formats() {
         signed.invoice_hash().as_str(),
         expected["hash"].as_str().unwrap()
     );
-    assert_eq!(
-        signed.hash_base64().unwrap(),
-        signed.invoice_hash().as_str()
-    );
+    assert_eq!(&signed.hash().unwrap(), signed.invoice_hash());
     for (cert, key) in [("pem", "der"), ("der", "pem")] {
         let result = run(cert, key);
         assert!(!result.status.success());

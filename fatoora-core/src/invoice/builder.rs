@@ -5,9 +5,7 @@ use super::{
     QrResult, Seller, ValidationError, ValidationIssue, ValidationKind, VatCategory,
 };
 use crate::Decimal;
-use crate::invoice::sign::{
-    InvoiceSigner, SignedProperties, SigningError, invoice_hash_base64_from_xml,
-};
+use crate::invoice::sign::{InvoiceSigner, SignedProperties, SigningError};
 
 /// An invoice with computed totals and the implemented builder field checks.
 ///
@@ -1041,13 +1039,25 @@ impl FinalizedInvoice {
 
     /// Hash the XML serialization of this finalized model.
     ///
+    /// This is the value the next invoice in the chain passes to
+    /// [`InvoiceBuilder::previous_invoice_hash`].
+    ///
     /// # Errors
     /// Returns [`SigningError`] if XML serialization, parsing, or hashing fails.
-    pub fn hash_base64(&self) -> Result<String, SigningError> {
+    pub fn hash(&self) -> Result<InvoiceHash, SigningError> {
         let xml = self
             .to_xml()
             .map_err(|e| SigningError::SigningError(e.to_string()))?;
-        invoice_hash_base64_from_xml(&xml)
+        super::hash_xml(&xml)
+    }
+
+    /// Hash the XML serialization of this finalized model, as Base64 text.
+    ///
+    /// # Errors
+    /// Returns [`SigningError`] if XML serialization, parsing, or hashing fails.
+    #[deprecated(since = "0.6.0", note = "use `hash()` instead")]
+    pub fn hash_base64(&self) -> Result<String, SigningError> {
+        self.hash().map(|hash| hash.0)
     }
 
     /// Sign the invoice with the provided signer.
@@ -1114,17 +1124,29 @@ impl SignedInvoice {
 
     /// Return the embedded digest without recomputing or verifying it.
     ///
-    /// Equality with `hash_base64()` alone does not verify signature authenticity.
+    /// Equality with [`hash()`](Self::hash) alone does not verify signature authenticity.
     pub fn invoice_hash(&self) -> &InvoiceHash {
         self.signed_properties.invoice_hash()
     }
 
     /// Recompute the invoice digest from the exact stored XML using ZATCA exclusions.
     ///
+    /// This is the value the next invoice in the chain passes to
+    /// [`InvoiceBuilder::previous_invoice_hash`].
+    ///
     /// # Errors
     /// Returns [`SigningError`] if XML parsing or hashing fails.
+    pub fn hash(&self) -> Result<InvoiceHash, SigningError> {
+        super::hash_xml(self.xml())
+    }
+
+    /// Recompute the invoice digest from the exact stored XML, as Base64 text.
+    ///
+    /// # Errors
+    /// Returns [`SigningError`] if XML parsing or hashing fails.
+    #[deprecated(since = "0.6.0", note = "use `hash()` instead")]
     pub fn hash_base64(&self) -> Result<String, SigningError> {
-        invoice_hash_base64_from_xml(self.xml())
+        self.hash().map(|hash| hash.0)
     }
 
     /// Base64 DER ECDSA signature over the invoice hash.

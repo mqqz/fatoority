@@ -31,6 +31,10 @@ Migration guide with a before-and-after table of every change: [Migrate from 0.5
 - `invoice::hash_xml(xml)`, returning the invoice hash as an `InvoiceHash`
   (the base64 SHA-256 of the canonicalised invoice, ready to pass on as the
   next invoice's previous invoice hash).
+- `FinalizedInvoice::hash()` and `SignedInvoice::hash()`, returning
+  `Result<InvoiceHash, SigningError>`: the same digest as `hash_base64()`, typed
+  so it can be passed straight to `InvoiceBuilder::previous_invoice_hash` or
+  `ZatcaValidationOptions::previous_invoice_hash`.
 - `AsRef<str>`, `FromStr`, `TryFrom<&str>` and `TryFrom<String>` for
   `InvoiceTime`, matching the other validated wrappers.
 - `invoice::AdjustmentKind::{Allowance, Charge}`, with `is_charge()`,
@@ -139,6 +143,14 @@ or invalid). Every wrapper has `as_str()` and `Display`.
 - `Buyer::new` (`Party::<BuyerRole>::new`) takes `name: impl Into<String>` and
   `vat_id: Option<VatId>` (was `String` and `Option<String>`) and returns
   `Buyer` (was `Result<Buyer, InvoiceError>`).
+- `ZatcaValidationOptions::previous_invoice_hash` is `Option<InvoiceHash>`
+  (was `Option<String>`). Set it from `hash()`, `hash_xml` or `text.parse()?`.
+  Blank text is now rejected when the hash is parsed (or when options are
+  deserialized), and surrounding whitespace is trimmed; `validate_zatca` still
+  rejects a malformed digest as `InvalidContext`. The CLI
+  `--previous-invoice-hash` flag and the FFI options JSON are unchanged; a
+  blank value now fails as invalid options (CLI exit code 3, FFI error code 1,
+  as before).
 
 **Private fields**
 
@@ -176,10 +188,12 @@ or invalid). Every wrapper has `as_str()` and `Display`.
 - `AllowanceCharge::charge: bool` and `LineAdjustment::charge: bool` are
   replaced by `kind: AdjustmentKind`, read with `kind()`.
   `AdjustmentKind::from_charge_indicator(flag)` converts a `charge` flag
-  (`true` is `Charge`). The serde field is now `"kind"` with the values
-  `"allowance"`/`"charge"`, so serialized `InvoiceData` and `LineItem` values
-  change too, and JSON written by 0.5 with a `"charge"` field no longer
-  deserializes.
+  (`true` is `Charge`). Serialization now writes a `"kind"` field with the
+  values `"allowance"`/`"charge"` instead of `"charge"`, so serialized
+  `InvoiceData` and `LineItem` values change too. JSON written by 0.5 is still
+  accepted on read: a legacy `"charge": true`/`false` deserializes as `Charge`/
+  `Allowance`. Input with both fields is accepted if they agree and rejected
+  if they conflict.
 
 **Setters renamed so the plain name is the getter**
 
@@ -215,6 +229,9 @@ replacement, and will be removed in 0.7.
   ignore their `Config` argument.
 - `invoice::sign::invoice_hash_base64_from_xml_str`: use `invoice::hash_xml`.
   It still returns `String`.
+- `FinalizedInvoice::hash_base64()` and `SignedInvoice::hash_base64()`: use
+  `hash()`, which returns `InvoiceHash`. They still return `String`. The FFI
+  `hash_base64` methods are unchanged.
 - `InvoiceBuilder::adjustment(AllowanceCharge)`: forwards to `allowance` or
   `charge` by the entry's `kind`. Use
   `allowance(DocumentAdjustment::from(entry))` (or `charge`).

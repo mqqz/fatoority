@@ -92,7 +92,7 @@ fn assert_roundtrip(xml: &str, invoice: &fatoora_core::invoice::FinalizedInvoice
     assert_eq!(signed.xml(), xml);
     assert_ne!(signed.xml(), generated);
     let hash = fatoora_core::invoice::hash_xml(xml).unwrap();
-    assert_eq!(signed.hash_base64().unwrap(), hash.as_str());
+    assert_eq!(signed.hash().unwrap(), hash);
     assert_eq!(hash, fatoora_core::invoice::hash_xml(signed.xml()).unwrap());
 }
 
@@ -110,7 +110,7 @@ fn regenerated_compliant_fixtures_retain_business_rule_compliance() {
                 let invoice = parse_finalized_invoice_xml(&source).unwrap();
                 let options = ZatcaValidationOptions {
                     evaluated_at: Some("2026-10-18T12:00:00Z".parse().unwrap()),
-                    previous_invoice_hash: Some(invoice.data().previous_invoice_hash().to_string()),
+                    previous_invoice_hash: Some(invoice.data().previous_invoice_hash().clone()),
                 };
                 let original = Validator::new().validate_zatca(&source, &options).unwrap();
                 let errors = |report: &fatoora_core::invoice::validation::ZatcaValidationReport| -> Vec<String> {

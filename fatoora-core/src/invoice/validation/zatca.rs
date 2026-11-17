@@ -7,6 +7,7 @@ use super::{
     integrity,
 };
 use crate::config::Config;
+use crate::invoice::InvoiceHash;
 
 /// Validate raw XML against the pinned ZATCA SDK profile using local checks.
 ///
@@ -69,8 +70,8 @@ pub(super) fn validate_zatca(
     }
     if options
         .previous_invoice_hash
-        .as_deref()
-        .is_some_and(|hash| !integrity::valid_previous_hash(hash))
+        .as_ref()
+        .is_some_and(|hash| !integrity::valid_previous_hash(hash.as_str()))
     {
         return Err(failure(report, ZatcaFailureKind::InvalidContext,None,"previous_invoice_hash must be a canonical base64 SHA-256 digest or SDK hexadecimal digest".into()));
     }
@@ -161,9 +162,14 @@ pub(super) fn validate_zatca(
         error.location = location.map(ValidationLocation::XPath);
         return Err(error);
     }
-    if let Err((stage, message)) =
-        integrity::apply(xml, options.previous_invoice_hash.as_deref(), &mut report)
-    {
+    if let Err((stage, message)) = integrity::apply(
+        xml,
+        options
+            .previous_invoice_hash
+            .as_ref()
+            .map(InvoiceHash::as_str),
+        &mut report,
+    ) {
         return Err(failure(
             report,
             ZatcaFailureKind::Integrity,

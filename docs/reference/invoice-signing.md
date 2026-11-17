@@ -32,7 +32,7 @@ All getters below leave the signed invoice usable. Signed imports verify local s
 | XML Base64 | Base64 of that stored XML text |
 | QR code | Base64 TLV payload for rendering; see [QR reference](qr.md) |
 | Invoice hash | Embedded invoice digest from signature metadata |
-| Computed hash | `hash_base64()` recomputes the digest of the stored signed XML using ZATCA exclusions |
+| Computed hash | `hash()` (Rust) or `hash_base64()` (bindings) recomputes the digest of the stored signed XML using ZATCA exclusions |
 | Signature | Encoded invoice signature |
 | Public key | Encoded public-key material |
 | ZATCA key signature | Optional encoded certificate-signature material |
@@ -41,7 +41,7 @@ All getters below leave the signed invoice usable. Signed imports verify local s
 | Signed properties hash | Encoded signed-properties digest |
 | Signing time | UTC text in `YYYY-MM-DDTHH:MM:SS` format |
 
-Signed `hash_base64()` equals the XML hash operation on `xml()`. Signed imports reject altered digests, signatures and inconsistent QR data. Local integrity checks do not establish certificate issuer trust. See [XML reference](xml.md) for parsing and consuming XML access.
+The signed computed hash equals the XML hash operation on `xml()`. Signed imports reject altered digests, signatures and inconsistent QR data. Local integrity checks do not establish certificate issuer trust. See [XML reference](xml.md) for parsing and consuming XML access.
 
 ## Methods by language
 
@@ -58,6 +58,7 @@ Signed `hash_base64()` equals the XML hash operation on `xml()`. Signed imports 
 <span id="to_xml_base64"></span>
 <span id="qr_code"></span>
 <span id="invoice_hash"></span>
+<span id="hash"></span>
 <span id="hash_base64"></span>
 <span id="signature"></span>
 <span id="public_key"></span>
@@ -90,7 +91,7 @@ Signed `hash_base64()` equals the XML hash operation on `xml()`. Signed imports 
 
     `hash_xml` returns the base64 SHA-256 invoice hash as an `InvoiceHash`, the value the next invoice carries as its previous invoice hash; use `as_str()` for the text. It replaces `sign::invoice_hash_base64_from_xml_str`, which is deprecated and returns `String`.
 
-    `invoice.sign` takes a `FinalizedInvoice` by value. `SignedInvoice::xml`, `qr_code`, `signature` and `public_key` return borrowed `&str`; `invoice_hash` returns `&InvoiceHash` and `uuid` returns `&InvoiceUuid` (call `.as_str()` for text); `zatca_key_signature` returns `Option<&str>`. `to_xml_base64` returns `String`; `hash_base64` returns `Result<String, SigningError>`.
+    `invoice.sign` takes a `FinalizedInvoice` by value. `SignedInvoice::xml`, `qr_code`, `signature` and `public_key` return borrowed `&str`; `invoice_hash` returns `&InvoiceHash` and `uuid` returns `&InvoiceUuid` (call `.as_str()` for text); `zatca_key_signature` returns `Option<&str>`. `to_xml_base64` returns `String`; `hash` returns `Result<InvoiceHash, SigningError>`. `hash_base64`, which returns `Result<String, SigningError>`, is deprecated in favour of `hash`.
 
     Use `signed.signed_properties()` for `issuer()`, `serial()`, `cert_hash()` and `signed_props_hash()`, all borrowed `&str`, plus `invoice_hash() -> &InvoiceHash` and `signing_time() -> &InvoiceTimestamp`. The XAdES `SigningTime` element has no zone suffix; `signing_time().as_str()` returns the same clock value in canonical `YYYY-MM-DDTHH:MM:SSZ` form. Copy borrowed strings to retain them after dropping the invoice. Failures expose `SigningError::kind()` and structured details through the shared error type.
 

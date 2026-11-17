@@ -4,7 +4,7 @@ const SEED: &str =
 fn options() -> ZatcaValidationOptions {
     ZatcaValidationOptions {
         evaluated_at: Some("2026-09-23T12:00:00+03:00".parse().unwrap()),
-        previous_invoice_hash: Some(SEED.into()),
+        previous_invoice_hash: Some(SEED.parse().unwrap()),
     }
 }
 const STANDARD: &str =
@@ -76,7 +76,11 @@ fn missing_chain_context_is_explicit_and_wrong_context_rejects() {
     assert!(!report.is_valid());
     assert!(!report.has_errors());
     assert_eq!(report.stages[5].status, ZatcaStageStatus::ContextRequired);
-    opts.previous_invoice_hash = Some("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=".into());
+    opts.previous_invoice_hash = Some(
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+            .parse()
+            .unwrap(),
+    );
     let report = Validator::new().validate_zatca(STANDARD, &opts).unwrap();
     assert!(report.is_complete());
     assert!(report.has_errors());
@@ -150,7 +154,7 @@ fn execution_failures_keep_completed_sources_and_original_locations() {
 #[test]
 fn invalid_context_is_reported_before_validation() {
     let mut opts = options();
-    opts.previous_invoice_hash = Some("bad".into());
+    opts.previous_invoice_hash = Some("bad".parse().unwrap());
     let error = Validator::new()
         .validate_zatca(STANDARD, &opts)
         .unwrap_err();
