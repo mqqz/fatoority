@@ -4,7 +4,7 @@ const EXAMPLE_SECRET: &str = "CkYsEXfV8c1gFHAtFWoZv73pGMvh/Qyo4LzKM2h/8Hg=";
 
 // --8<-- [start:example]
 use fatoora_core::api::{CsidCredentials, Production, ZatcaClient};
-use fatoora_core::config::{Config, EnvironmentType};
+use fatoora_core::config::{Config, Environment};
 use fatoora_core::invoice::xml::parse::parse_signed_invoice_xml;
 
 #[tokio::main]
@@ -16,13 +16,13 @@ pub async fn main() {
     let signed = parse_signed_invoice_xml(&xml).unwrap();
 
     // initialize the API client and credentials
-    let config = Config::new(EnvironmentType::NonProduction);
+    let config = Config::new(Environment::NonProduction);
     let client = ZatcaClient::new(config).unwrap();
 
     // you can get the sandbox credentials from the ZATCA developer portal:
     // at https://sandbox.zatca.gov.sa/IntegrationSandbox/reporting-api
     let pcsid = CsidCredentials::<Production>::new(
-        EnvironmentType::NonProduction,
+        Environment::NonProduction,
         None,
         EXAMPLE_BST,
         EXAMPLE_SECRET,

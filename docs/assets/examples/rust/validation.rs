@@ -1,10 +1,10 @@
-use fatoora_core::config::{Config, EnvironmentType};
+use fatoora_core::config::{Config, Environment};
 use fatoora_core::invoice::validation::{
     validate_xml_invoice_from_str, validate_zatca_invoice_from_str, ZatcaValidationOptions,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let config = Config::new(EnvironmentType::NonProduction);
+    let config = Config::new(Environment::NonProduction);
     let xml = std::fs::read_to_string("invoice.xml")?;
     if std::env::args().any(|arg| arg == "--zatca") {
         let options = ZatcaValidationOptions {

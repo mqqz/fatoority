@@ -32,14 +32,14 @@ Clients reject credentials issued for a different environment before sending a r
 ## Language reference
 
 === "Rust"
-    Import `Config` and `EnvironmentType` from `fatoora_core::config`.
+    Import `Config` and `Environment` from `fatoora_core::config`.
 
     | Operation | Returns | Behavior |
     | --- | --- | --- |
-    | `Config::new(env: EnvironmentType)` | `Config` | Stores the selected environment. |
-    | `Config::default()` | `Config` | Selects `EnvironmentType::NonProduction`. |
-    | `config.env()` | `EnvironmentType` | Returns the stored value. |
-    | `EnvironmentType::from_str(value: &str)` | `Result<EnvironmentType, EnvironmentParseError>` | Requires `std::str::FromStr` in scope. |
+    | `Config::new(env: Environment)` | `Config` | Stores the selected environment. |
+    | `Config::default()` | `Config` | Selects `Environment::NonProduction`. |
+    | `config.env()` | `Environment` | Returns the stored value. |
+    | `Environment::from_str(value: &str)` | `Result<Environment, EnvironmentParseError>` | Requires `std::str::FromStr` in scope. |
     | `env.as_str()` | `&'static str` | Returns the canonical string below. |
     | `env.endpoint_url()` | `&'static str` | Returns the base URL above. |
 

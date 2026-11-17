@@ -205,7 +205,7 @@ proptest! {
         prop_assert_eq!(a.flags(), b.flags());
         prop_assert_eq!(a.seller(), b.seller());
         prop_assert_eq!(a.buyer(), b.buyer());
-        prop_assert_eq!(a.note(), b.note());
+        prop_assert_eq!(a.notes(), b.notes());
         prop_assert_eq!(a.allowance_reason(), b.allowance_reason());
         prop_assert_eq!(a.line_items(), b.line_items());
         prop_assert_eq!(a.previous_invoice_hash(), b.previous_invoice_hash());
@@ -310,12 +310,12 @@ fn free_text_survives_xml_serialization_and_signing() {
         ] {
             let xml = invoice.to_xml_with_format(format).unwrap();
             let parsed = parse_finalized_invoice_xml(&xml).unwrap();
-            assert_eq!(parsed.data().note().unwrap().text(), text);
+            assert_eq!(parsed.data().notes().first().unwrap().text(), text);
             assert_eq!(parsed.data().line_items()[0].description(), text);
         }
         let signed = invoice.sign(&signer).unwrap();
         let parsed = parse_signed_invoice_xml(signed.xml()).unwrap();
-        assert_eq!(parsed.data().note().unwrap().text(), text);
+        assert_eq!(parsed.data().notes().first().unwrap().text(), text);
         assert_eq!(parsed.data().line_items()[0].description(), text);
         assert_eq!(parsed.hash_base64().unwrap(), signed.invoice_hash());
     }

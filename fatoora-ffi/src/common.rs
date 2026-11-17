@@ -58,8 +58,8 @@ pub(crate) fn write(
 }
 pub(crate) fn environment(
     value: u8,
-) -> Result<fatoora_core::config::EnvironmentType, Box<ffi::BindingError>> {
-    use fatoora_core::config::EnvironmentType::*;
+) -> Result<fatoora_core::config::Environment, Box<ffi::BindingError>> {
+    use fatoora_core::config::Environment::*;
     match value {
         0 => Ok(NonProduction),
         1 => Ok(Simulation),

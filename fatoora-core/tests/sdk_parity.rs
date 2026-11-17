@@ -283,7 +283,7 @@ fn sdk_and_fresh_rust_signatures_and_qr_are_verified() {
 #[test]
 fn csr_characteristics_and_proof_of_possession_match_sdk() {
     use fatoora_core::{
-        config::EnvironmentType,
+        config::Environment,
         csr::{CsrProperties, SigningKey},
     };
     use k256::ecdsa::{Signature, VerifyingKey, signature::Verifier};
@@ -300,15 +300,12 @@ fn csr_characteristics_and_proof_of_possession_match_sdk() {
         let reference = CertReq::from_der(&fs::read(dir.join("sdk.csr.der")).unwrap()).unwrap();
         let key = SigningKey::from_der(&fs::read(dir.join("sdk-key.der")).unwrap()).unwrap();
         let environment = match case["environment"].as_str().unwrap() {
-            "production" => EnvironmentType::Production,
-            "simulation" => EnvironmentType::Simulation,
-            "nonproduction" => EnvironmentType::NonProduction,
+            "production" => Environment::Production,
+            "simulation" => Environment::Simulation,
+            "nonproduction" => Environment::NonProduction,
             _ => panic!("unknown environment"),
         };
-        let properties = CsrProperties::from_properties_str(
-            &fs::read_to_string(dir.join("csr.properties")).unwrap(),
-        )
-        .unwrap();
+        let properties = CsrProperties::from_file(dir.join("csr.properties")).unwrap();
         let actual = CertReq::from_der(
             &properties
                 .build(&key, environment)
@@ -532,7 +529,9 @@ fn csr_rejections_match_explicit_sdk_failures() {
         let dir = root().join("cases").join(id);
         let properties = fs::read_to_string(dir.join("csr.properties")).unwrap();
         assert!(
-            fatoora_core::csr::CsrProperties::from_properties_str(&properties).is_err(),
+            properties
+                .parse::<fatoora_core::csr::CsrProperties>()
+                .is_err(),
             "{id}"
         );
         let expected: Value =

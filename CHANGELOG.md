@@ -2,6 +2,39 @@
 
 ## Unreleased
 
+Breaking 0.6 phase. Renamed `fatoora-core` items keep their old names as
+deprecated aliases until 0.7. The `fatoora-ffi` exported API and the generated
+bindings do not change yet.
+
+### Added
+
+- `fatoora_core::api::{ComplianceCsid, ProductionCsid}` aliases for
+  `CsidCredentials<Compliance>` and `CsidCredentials<Production>`.
+- `impl FromStr for CsrProperties` (`text.parse::<CsrProperties>()`) and
+  `CsrProperties::from_file(path)`.
+
+### Changed
+
+- `config::EnvironmentType` is renamed `config::Environment`.
+- `ZatcaClient::post_csr_for_ccsid` is renamed `request_compliance_csid`,
+  `post_ccsid_for_pcsid` is renamed `request_production_csid`, and
+  `prepare_post_csr_for_ccsid`/`prepare_post_ccsid_for_pcsid` are renamed
+  `prepare_request_compliance_csid`/`prepare_request_production_csid`.
+- `invoice::InvoiceTotalsData` is renamed `invoice::InvoiceTotals`.
+
+### Deprecated
+
+- `EnvironmentType`, `InvoiceTotalsData`, `ZatcaClient::{post_csr_for_ccsid,
+  post_ccsid_for_pcsid, prepare_post_csr_for_ccsid,
+  prepare_post_ccsid_for_pcsid}` and `CsrProperties::{from_properties_str,
+  parse_csr_config, parse_csr_config_file}` forward to the new names and will
+  be removed in 0.7.
+
+### Removed
+
+- `InvoiceData::note()`, which returned only the first note. Use
+  `notes().first()`.
+
 ## [0.5.1] - 2026-11-17
 
 A compatible patch release: no public signature changed, and

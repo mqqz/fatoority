@@ -273,7 +273,10 @@ fn optional_language_and_payment_instructions_are_preserved() {
     let xml = invoice.to_xml().unwrap();
     assert!(!xml.contains("languageID"));
     let parsed = roundtrip(&xml);
-    assert_eq!(parsed.data().note(), invoice.data().note());
+    assert_eq!(
+        parsed.data().notes().first(),
+        invoice.data().notes().first()
+    );
     assert_eq!(
         parsed.data().payment_instruction(),
         invoice.data().payment_instruction()

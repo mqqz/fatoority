@@ -271,12 +271,15 @@ fn imported_note_preserves_language_text_and_default_language() {
         (xml.replace(" languageID=\"ar\"", ""), "en"),
     ] {
         let invoice = parse_finalized_invoice_xml(&xml).unwrap();
-        let note = invoice.data().note().unwrap();
+        let note = invoice.data().notes().first().unwrap();
         assert_eq!(note.text(), text);
         assert_eq!(note.language(), language);
         let serialized = invoice.to_xml().unwrap();
         let reparsed = parse_finalized_invoice_xml(&serialized).unwrap();
-        assert_eq!(reparsed.data().note(), invoice.data().note());
+        assert_eq!(
+            reparsed.data().notes().first(),
+            invoice.data().notes().first()
+        );
     }
 }
 

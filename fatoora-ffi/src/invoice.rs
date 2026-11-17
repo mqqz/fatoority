@@ -1539,7 +1539,14 @@ pub mod ffi {
             boundary(|| Ok(self.0.buyer().map(|p| Box::new(party(p)))))
         }
         pub fn note(&self) -> Result<Option<Box<InvoiceNote>>, Box<BindingError>> {
-            boundary(|| Ok(self.0.note().cloned().map(|v| Box::new(InvoiceNote(v)))))
+            boundary(|| {
+                Ok(self
+                    .0
+                    .notes()
+                    .first()
+                    .cloned()
+                    .map(|v| Box::new(InvoiceNote(v))))
+            })
         }
         pub fn line_items_len(&self) -> usize {
             self.0.line_items().len()
@@ -1819,7 +1826,7 @@ pub mod ffi {
     }
     #[diplomat::opaque]
     #[diplomat::attr(dotnet, manually_disposable)]
-    pub struct InvoiceTotals(pub(crate) inv_core::InvoiceTotalsData);
+    pub struct InvoiceTotals(pub(crate) inv_core::InvoiceTotals);
     impl InvoiceTotals {
         pub fn vat_breakdown_len(&self) -> usize {
             self.0.vat_breakdown().len()

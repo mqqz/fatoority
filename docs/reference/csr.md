@@ -69,6 +69,8 @@ for invoice signing. Serialization returns data and does not write files.
 <span id="from_properties_str"></span>
 <span id="parse_csr_config"></span>
 <span id="parse_csr_config_file"></span>
+<span id="from_str"></span>
+<span id="from_file"></span>
 <span id="build"></span>
 <span id="generate"></span>
 <span id="from_pem"></span>
@@ -93,7 +95,7 @@ Constructors that take individual fields use the order in the property table abo
 
 === "Rust"
     Import `CsrProperties`, `SigningKey`, and `Csr` from `fatoora_core::csr`, and
-    `EnvironmentType` from `fatoora_core::config`.
+    `Environment` from `fatoora_core::config`.
 
     **Properties**
 
@@ -109,10 +111,9 @@ Constructors that take individual fields use the order in the property table abo
 
     | Call | Returns |
     | --- | --- |
-    | `CsrProperties::from_properties_str(text: &str)` | `Result<CsrProperties, CsrError>` |
-    | `CsrProperties::parse_csr_config(text: &str)` | Same as `from_properties_str`. |
-    | `CsrProperties::parse_csr_config_file(path: impl AsRef<Path>)` | `Result<CsrProperties, CsrError>` |
-    | `properties.build(key: &SigningKey, env: EnvironmentType)` | `Result<Csr, CsrError>` |
+    | `text.parse::<CsrProperties>()` / `CsrProperties::from_str(text: &str)` | `Result<CsrProperties, CsrError>` |
+    | `CsrProperties::from_file(path: impl AsRef<Path>)` | `Result<CsrProperties, CsrError>` |
+    | `properties.build(key: &SigningKey, env: Environment)` | `Result<Csr, CsrError>` |
 
     **Private keys and CSRs**
 

@@ -106,10 +106,10 @@ impl InvoiceRequest {
 #[derive(Debug, Clone)]
 pub struct ComplianceRequest {
     request: HttpRequest,
-    env: EnvironmentType,
+    env: Environment,
 }
 impl ComplianceRequest {
-    pub(super) fn new(request: HttpRequest, env: EnvironmentType) -> Self {
+    pub(super) fn new(request: HttpRequest, env: Environment) -> Self {
         Self { request, env }
     }
     /// Returns the HTTP request to send.
@@ -140,11 +140,11 @@ impl ComplianceRequest {
 #[derive(Debug, Clone)]
 pub struct ProductionRequest {
     request: HttpRequest,
-    env: EnvironmentType,
+    env: Environment,
     renewal: bool,
 }
 impl ProductionRequest {
-    pub(super) fn new(request: HttpRequest, env: EnvironmentType, renewal: bool) -> Self {
+    pub(super) fn new(request: HttpRequest, env: Environment, renewal: bool) -> Self {
         Self {
             request,
             env,
@@ -237,12 +237,8 @@ mod tests {
         let client = ZatcaClient::new(Config::default()).unwrap();
         let invoice =
             super::super::tests::build_signed_invoice(InvoiceType::Tax(InvoiceSubType::Simplified));
-        let credentials = CsidCredentials::<Production>::new(
-            EnvironmentType::NonProduction,
-            None,
-            "token",
-            "secret",
-        );
+        let credentials =
+            CsidCredentials::<Production>::new(Environment::NonProduction, None, "token", "secret");
         let prepared = client
             .prepare_report_simplified_invoice(&invoice, &credentials, true, Some("ar"))
             .unwrap();
@@ -294,7 +290,7 @@ mod tests {
         let invoice =
             super::super::tests::build_signed_invoice(InvoiceType::Tax(InvoiceSubType::Simplified));
         let credentials =
-            CsidCredentials::<Production>::new(EnvironmentType::NonProduction, None, TOKEN, SECRET);
+            CsidCredentials::<Production>::new(Environment::NonProduction, None, TOKEN, SECRET);
         let invoice_request = client
             .prepare_report_simplified_invoice(&invoice, &credentials, false, None)
             .unwrap();
@@ -307,8 +303,8 @@ mod tests {
             .clone();
         let encoded = authorization.trim_start_matches("Basic ").to_owned();
         let http = invoice_request.request().clone();
-        let compliance = ComplianceRequest::new(http.clone(), EnvironmentType::Simulation);
-        let production = ProductionRequest::new(http.clone(), EnvironmentType::Simulation, true);
+        let compliance = ComplianceRequest::new(http.clone(), Environment::Simulation);
+        let production = ProductionRequest::new(http.clone(), Environment::Simulation, true);
         let rendered = [
             format!("{http:?}"),
             format!("{http:#?}"),
@@ -332,23 +328,15 @@ mod tests {
         let client = ZatcaClient::new(Config::default()).unwrap();
         let invoice =
             super::super::tests::build_signed_invoice(InvoiceType::Tax(InvoiceSubType::Standard));
-        let credentials = CsidCredentials::<Production>::new(
-            EnvironmentType::NonProduction,
-            None,
-            "token",
-            "secret",
-        );
+        let credentials =
+            CsidCredentials::<Production>::new(Environment::NonProduction, None, "token", "secret");
         assert!(
             client
                 .prepare_report_simplified_invoice(&invoice, &credentials, false, None)
                 .is_err()
         );
-        let credentials = CsidCredentials::<Production>::new(
-            EnvironmentType::Production,
-            None,
-            "token",
-            "secret",
-        );
+        let credentials =
+            CsidCredentials::<Production>::new(Environment::Production, None, "token", "secret");
         assert!(
             client
                 .prepare_clear_standard_invoice(&invoice, &credentials, true, None)
@@ -365,11 +353,11 @@ mod tests {
     #[test]
     fn credential_decoding_retains_environment_and_renewal_contract() {
         let request = HttpRequest::new("PATCH", "https://example.test/".into());
-        let renewal = ProductionRequest::new(request.clone(), EnvironmentType::Simulation, true);
+        let renewal = ProductionRequest::new(request.clone(), Environment::Simulation, true);
         let body =
             br#"{"value":{"requestID":123,"binarySecurityToken":"token","secret":"secret"}}"#;
         let credentials = renewal.decode(428, body).unwrap();
-        assert_eq!(credentials.env(), EnvironmentType::Simulation);
+        assert_eq!(credentials.env(), Environment::Simulation);
         assert_eq!(credentials.request_id(), Some("123"));
         assert!(matches!(
             renewal.decode(401, b"bad"),
@@ -379,7 +367,7 @@ mod tests {
             renewal.decode(500, b"bad"),
             Err(ZatcaError::ServerError(_))
         ));
-        let issuance = ProductionRequest::new(request, EnvironmentType::Simulation, false);
+        let issuance = ProductionRequest::new(request, Environment::Simulation, false);
         assert!(issuance.decode(428, body).is_err());
     }
 }

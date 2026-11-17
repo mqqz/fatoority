@@ -1,7 +1,7 @@
 mod common;
 
 use base64ct::{Base64, Encoding};
-use fatoora_core::config::EnvironmentType;
+use fatoora_core::config::Environment;
 use fatoora_core::csr::{CsrProperties, SigningKey as CoreSigningKey};
 use fatoora_core::invoice::sign::{InvoiceSigner, SigningError};
 use k256::ecdsa::SigningKey as K256SigningKey;
@@ -25,10 +25,10 @@ fn sign_invoice_emits_signature_and_qr() {
     let config_path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures/csr-configs/csr-config-example-EN.properties");
     let csr_props = std::fs::read_to_string(&config_path).expect("read csr config");
-    let csr_config = CsrProperties::from_properties_str(&csr_props).expect("csr config");
+    let csr_config = CsrProperties::from_str(&csr_props).expect("csr config");
     let signer_key = CoreSigningKey::generate();
     let _csr = csr_config
-        .build(&signer_key, EnvironmentType::NonProduction)
+        .build(&signer_key, Environment::NonProduction)
         .expect("csr build");
     let key_der = signer_key.to_der().expect("key der");
     let k256_key = K256SigningKey::from_pkcs8_der(&key_der).expect("key der");
@@ -167,10 +167,10 @@ fn build_test_signing_material() -> (CoreSigningKey, Vec<u8>, Vec<u8>) {
     let config_path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures/csr-configs/csr-config-example-EN.properties");
     let csr_props = std::fs::read_to_string(&config_path).expect("read csr config");
-    let csr_config = CsrProperties::from_properties_str(&csr_props).expect("csr config");
+    let csr_config = CsrProperties::from_str(&csr_props).expect("csr config");
     let signer_key = CoreSigningKey::generate();
     let _csr = csr_config
-        .build(&signer_key, EnvironmentType::NonProduction)
+        .build(&signer_key, Environment::NonProduction)
         .expect("csr build");
     let key_der = signer_key.to_der().expect("key der");
     let k256_key = K256SigningKey::from_pkcs8_der(&key_der).expect("key der");

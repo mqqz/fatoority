@@ -958,12 +958,10 @@ fn zatca_text_failure_distinguishes_execution_from_rejection() {
 #[test]
 fn csr_stdout_contains_only_the_request_when_the_key_has_a_file() {
     use fatoora_core::{
-        config::EnvironmentType,
+        config::Environment,
         csr::{CsrProperties, SigningKey},
     };
-    let properties =
-        CsrProperties::from_properties_str(&std::fs::read_to_string(csr_config_fixture()).unwrap())
-            .unwrap();
+    let properties = CsrProperties::from_file(csr_config_fixture()).unwrap();
     let key_path = unique_temp_path("csr-key-only");
     for pem in [false, true] {
         let mut command = Command::new(cli_exe());
@@ -989,9 +987,7 @@ fn csr_stdout_contains_only_the_request_when_the_key_has_a_file() {
         };
         // Compare against the core contract to check the CLI's encoding and
         // output routing. Core tests independently verify CSR signatures.
-        let expected = properties
-            .build(&key, EnvironmentType::NonProduction)
-            .unwrap();
+        let expected = properties.build(&key, Environment::NonProduction).unwrap();
         let expected = if pem {
             expected.to_pem().unwrap()
         } else {

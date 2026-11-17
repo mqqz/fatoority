@@ -281,8 +281,8 @@ async fn response_contract_all_invoice_endpoints_reject_http_400() {
     let standard = super::tests::build_signed_invoice(crate::invoice::InvoiceType::Tax(
         crate::invoice::InvoiceSubType::Standard,
     ));
-    let pcsid = CsidCredentials::new(EnvironmentType::NonProduction, None, "token", "secret");
-    let ccsid = CsidCredentials::new(EnvironmentType::NonProduction, None, "token", "secret");
+    let pcsid = CsidCredentials::new(Environment::NonProduction, None, "token", "secret");
+    let ccsid = CsidCredentials::new(Environment::NonProduction, None, "token", "secret");
     assert_eq!(
         client
             .report_simplified_invoice(&simplified, &pcsid, false, None)

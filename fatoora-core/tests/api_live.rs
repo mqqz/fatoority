@@ -2,7 +2,7 @@ mod common;
 
 use base64ct::{Base64, Encoding};
 use fatoora_core::api::ZatcaClient;
-use fatoora_core::config::{Config, EnvironmentType};
+use fatoora_core::config::{Config, Environment};
 use fatoora_core::csr::Csr;
 use fatoora_core::csr::{CsrProperties, SigningKey};
 use std::path::Path;
@@ -32,7 +32,7 @@ async fn post_compliance_csid_sandbox() {
     let client = ZatcaClient::new(Config::default()).expect("client builds");
 
     let response = client
-        .post_csr_for_ccsid(&csr, otp)
+        .request_compliance_csid(&csr, otp)
         .await
         .expect("CSID request succeeds");
     assert!(
@@ -60,12 +60,12 @@ async fn post_production_csid_sandbox() {
     let csr = Csr::from_der(&csr_der).expect("parse CSR");
     let client = ZatcaClient::new(Config::default()).expect("client builds");
     let compliance_response = client
-        .post_csr_for_ccsid(&csr, otp)
+        .request_compliance_csid(&csr, otp)
         .await
         .expect("CSID request succeeds");
     println!("Compliance CSID Response: {:?}", compliance_response);
     let production_response = client
-        .post_ccsid_for_pcsid(&compliance_response)
+        .request_production_csid(&compliance_response)
         .await
         .expect("Production CSID request succeeds");
     println!("Production CSID Response: {:?}", production_response);
@@ -90,14 +90,14 @@ async fn check_compliance_with_live_ccsid() {
     let config_path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures/csr-configs/csr-config-example-EN.properties");
     let csr_props = std::fs::read_to_string(&config_path).expect("read csr config");
-    let csr_config = CsrProperties::from_properties_str(&csr_props).expect("csr config");
+    let csr_config = csr_props.parse::<CsrProperties>().expect("csr config");
     let signer_key = SigningKey::generate();
     let csr = csr_config
-        .build(&signer_key, EnvironmentType::NonProduction)
+        .build(&signer_key, Environment::NonProduction)
         .expect("csr build");
     let client = ZatcaClient::new(Config::default()).expect("client");
     let ccsid_response = client
-        .post_csr_for_ccsid(&csr, otp)
+        .request_compliance_csid(&csr, otp)
         .await
         .expect("csid response");
 
@@ -125,20 +125,20 @@ async fn report_invoice_with_live_pcsid() {
     let config_path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures/csr-configs/csr-config-example-EN.properties");
     let csr_props = std::fs::read_to_string(&config_path).expect("read csr config");
-    let csr_config = CsrProperties::from_properties_str(&csr_props).expect("csr config");
+    let csr_config = csr_props.parse::<CsrProperties>().expect("csr config");
 
     let key_path =
         Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/pkeys/test_zatca_pkey.der");
     let zatca_pkey = SigningKey::from_der(&std::fs::read(key_path).unwrap()).unwrap();
     let csr = csr_config
-        .build(&zatca_pkey, EnvironmentType::NonProduction)
+        .build(&zatca_pkey, Environment::NonProduction)
         .unwrap();
 
     // now we obtain the ccsids
     let otp = "123345";
     let client = ZatcaClient::new(Config::default()).expect("client");
     let ccsid_response = client
-        .post_csr_for_ccsid(&csr, otp)
+        .request_compliance_csid(&csr, otp)
         .await
         .expect("csid response");
 
@@ -157,7 +157,7 @@ async fn report_invoice_with_live_pcsid() {
         "Compliance check failed!"
     );
     let pcsid_response = client
-        .post_ccsid_for_pcsid(&ccsid_response)
+        .request_production_csid(&ccsid_response)
         .await
         .expect("csid response");
     let signer = common::signer_from_csid(pcsid_response.binary_security_token(), &zatca_pkey);
@@ -189,22 +189,22 @@ async fn renew_csid_returns_request_id() {
     let config_path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures/csr-configs/csr-config-example-EN.properties");
     let csr_props = std::fs::read_to_string(&config_path).expect("read csr config");
-    let csr_config = CsrProperties::from_properties_str(&csr_props).expect("csr config");
+    let csr_config = csr_props.parse::<CsrProperties>().expect("csr config");
 
     let key_path =
         Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/pkeys/test_zatca_pkey.der");
     let zatca_pkey = SigningKey::from_der(&std::fs::read(key_path).unwrap()).unwrap();
     let csr = csr_config
-        .build(&zatca_pkey, EnvironmentType::NonProduction)
+        .build(&zatca_pkey, Environment::NonProduction)
         .unwrap();
     let client = ZatcaClient::new(Config::default()).expect("client");
 
     let ccsid_response = client
-        .post_csr_for_ccsid(&csr, otp)
+        .request_compliance_csid(&csr, otp)
         .await
         .expect("csid response");
     let pcsid_response = client
-        .post_ccsid_for_pcsid(&ccsid_response)
+        .request_production_csid(&ccsid_response)
         .await
         .expect("pcsid response");
 
@@ -227,23 +227,23 @@ async fn clear_invoice_with_live_pcsid() {
     let config_path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures/csr-configs/csr-config-example-EN.properties");
     let csr_props = std::fs::read_to_string(&config_path).expect("read csr config");
-    let csr_config = CsrProperties::from_properties_str(&csr_props).expect("csr config");
+    let csr_config = csr_props.parse::<CsrProperties>().expect("csr config");
 
     let key_path =
         Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/pkeys/test_zatca_pkey.der");
     let zatca_pkey = SigningKey::from_der(&std::fs::read(key_path).unwrap()).unwrap();
     let csr = csr_config
-        .build(&zatca_pkey, EnvironmentType::NonProduction)
+        .build(&zatca_pkey, Environment::NonProduction)
         .unwrap();
 
     let otp = "123345";
     let client = ZatcaClient::new(Config::default()).expect("client");
     let ccsid_response = client
-        .post_csr_for_ccsid(&csr, otp)
+        .request_compliance_csid(&csr, otp)
         .await
         .expect("csid response");
     let pcsid_response = client
-        .post_ccsid_for_pcsid(&ccsid_response)
+        .request_production_csid(&ccsid_response)
         .await
         .expect("pcsid response");
 

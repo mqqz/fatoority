@@ -61,9 +61,9 @@ pub mod ffi {
         }
         pub fn env(&self) -> u8 {
             match self.0.env() {
-                fatoora_core::config::EnvironmentType::NonProduction => 0,
-                fatoora_core::config::EnvironmentType::Simulation => 1,
-                fatoora_core::config::EnvironmentType::Production => 2,
+                fatoora_core::config::Environment::NonProduction => 0,
+                fatoora_core::config::Environment::Simulation => 1,
+                fatoora_core::config::Environment::Production => 2,
             }
         }
     }
@@ -137,7 +137,8 @@ pub mod ffi {
         ) -> Result<Box<CsrProperties>, Box<BindingError>> {
             boundary(|| {
                 Ok(Box::new(Self(
-                    fatoora_core::csr::CsrProperties::from_properties_str(text(properties)?)
+                    text(properties)?
+                        .parse::<fatoora_core::csr::CsrProperties>()
                         .map_err(core_error)?,
                 )))
             })
@@ -148,8 +149,7 @@ pub mod ffi {
         ) -> Result<Box<CsrProperties>, Box<BindingError>> {
             boundary(|| {
                 Ok(Box::new(Self(
-                    fatoora_core::csr::CsrProperties::parse_csr_config_file(text(path)?)
-                        .map_err(core_error)?,
+                    fatoora_core::csr::CsrProperties::from_file(text(path)?).map_err(core_error)?,
                 )))
             })
         }

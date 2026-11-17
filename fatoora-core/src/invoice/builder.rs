@@ -1,7 +1,7 @@
 //! Invoice builder and view types.
 use super::{
     Buyer, CurrencyCode, InvoiceData, InvoiceError, InvoiceField, InvoiceFlags, InvoiceNote,
-    InvoiceTimestamp, InvoiceTotalsData, InvoiceType, LineItems, QrCodeError, QrResult, Seller,
+    InvoiceTimestamp, InvoiceTotals, InvoiceType, LineItems, QrCodeError, QrResult, Seller,
     ValidationError, ValidationIssue, ValidationKind, VatCategory,
 };
 use crate::Decimal;
@@ -18,7 +18,7 @@ use crate::invoice::sign::{
 #[derive(Debug, Clone, PartialEq)]
 pub struct FinalizedInvoice {
     data: InvoiceData,
-    pub(crate) totals: InvoiceTotalsData,
+    pub(crate) totals: InvoiceTotals,
 }
 
 /// An invoice carrying signature material, QR payload, and signed XML.
@@ -835,7 +835,7 @@ impl InvoiceBuilder {
             )])
             .into());
         }
-        let mut totals = InvoiceTotalsData::from_data(&invoice)?;
+        let mut totals = InvoiceTotals::from_data(&invoice)?;
         let mut seen_groups = Vec::new();
         for supplied in self.supplied_breakdowns {
             let key = (supplied.category, supplied.rate);
@@ -995,7 +995,7 @@ impl FinalizedInvoice {
     }
 
     /// Totals computed by [`InvoiceBuilder::build`].
-    pub fn totals(&self) -> &InvoiceTotalsData {
+    pub fn totals(&self) -> &InvoiceTotals {
         &self.totals
     }
 
@@ -1043,7 +1043,7 @@ impl SignedInvoice {
     }
 
     /// Totals of the underlying finalized invoice.
-    pub fn totals(&self) -> &InvoiceTotalsData {
+    pub fn totals(&self) -> &InvoiceTotals {
         self.finalized.totals()
     }
 
@@ -1113,7 +1113,7 @@ pub(super) trait InvoiceView {
     /// Invoice data.
     fn data(&self) -> &InvoiceData;
     /// Computed totals.
-    fn totals(&self) -> &InvoiceTotalsData;
+    fn totals(&self) -> &InvoiceTotals;
     /// Optional QR payload.
     fn qr_code(&self) -> Option<&str>;
 }
@@ -1123,7 +1123,7 @@ impl InvoiceView for FinalizedInvoice {
         self.data()
     }
 
-    fn totals(&self) -> &InvoiceTotalsData {
+    fn totals(&self) -> &InvoiceTotals {
         self.totals()
     }
 
@@ -1137,7 +1137,7 @@ impl InvoiceView for SignedInvoice {
         self.data()
     }
 
-    fn totals(&self) -> &InvoiceTotalsData {
+    fn totals(&self) -> &InvoiceTotals {
         self.totals()
     }
 
