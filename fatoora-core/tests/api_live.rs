@@ -261,17 +261,15 @@ async fn clear_invoice_with_live_pcsid() {
 
         let seller = Party::<SellerRole>::new(
             "Acme Inc",
-            Address {
-                province: None,
-                country_code: CountryCode::parse("SAU").expect("country code"),
-                city: "Riyadh".into(),
-                street: "King Fahd".into(),
-                additional_street: None,
-                building_number: "1234".into(),
-                additional_number: Some("5678".into()),
-                postal_code: "12222".into(),
-                district: Some("Olaya".into()),
-            },
+            Address::new(
+                CountryCode::parse("SAU").expect("country code"),
+                "Riyadh",
+                "King Fahd",
+                "1234",
+                "12222",
+            )
+            .with_additional_number("5678")
+            .with_district("Olaya"),
             "399999999900003".parse().unwrap(),
             Some(OtherId::with_scheme("7003339333", "CRN")),
         );

@@ -29,13 +29,13 @@ let item = LineItem::builder()
     .item_price_base_quantity("10".parse()?)
     .vat_category(VatCategory::Standard)
     .vat_rate("15".parse()?)
-    .allowance(Adjustment::amount("10".parse()?).reason("Volume discount"))
+    .allowance(Adjustment::amount("10".parse()?).with_reason("Volume discount"))
     .build()?;
 ```
 
-Use `.charge(...)` for a line surcharge. An `Adjustment::percentage(base, percent)`
+Use `.charge(...)` for a line surcharge. An `Adjustment::percent_of(base, percent)`
 calculates an adjustment using the supplied base. For example, a 10% allowance on
-SAR 250 is `Adjustment::percentage("250".parse()?, "10".parse()?)`.
+SAR 250 is `Adjustment::percent_of("250".parse()?, "10".parse()?)`.
 
 For gross pricing, supply `.item_gross_price(...)` and `.item_price_discount(...)`.
 The builder derives the net price and checks it if you also supply `.item_net_price(...)`.
@@ -49,7 +49,7 @@ from the creation example's SAR 100 taxable amount, add this call before `.build
 
 ```rust
 .allowance(fatoora_core::invoice::DocumentAdjustment::new(
-    fatoora_core::invoice::Adjustment::amount("10".parse()?).reason("Loyalty discount"),
+    fatoora_core::invoice::Adjustment::amount("10".parse()?).with_reason("Loyalty discount"),
     VatCategory::Standard,
     "15".parse()?,
 ))
@@ -59,8 +59,8 @@ The resulting VAT is SAR 13.50 and payable is SAR 103.50. Use `.charge(...)` for
 shipping or another document charge with its own tax treatment. Repeated calls
 append adjustments.
 
-`DocumentAdjustment` also takes a `.reason_code(...)`, an `.exemption(...)` for
-non-standard categories, and `Adjustment::percentage(base, percent)` for a
+`DocumentAdjustment` also takes a `.with_reason_code(...)`, a `.with_exemption(...)` for
+non-standard categories, and `Adjustment::percent_of(base, percent)` for a
 percentage of a base amount. An out-of-scope entry can omit its rate with
 `.omit_vat_rate()`.
 
@@ -79,7 +79,7 @@ before other adjustments. Use `VatCategory::Zero` for the zero-rated line.
 `Exempt` and `OutOfScope` are also available; those categories use a zero rate.
 
 Set exemption metadata where the invoice's tax treatment requires it. A line
-builder accepts `.exemption(TaxExemption { reason_code, reason })`; document
+builder accepts `.exemption(TaxExemption::default().with_reason_code(code).with_reason(text))`; document
 breakdown metadata uses `.tax_exemption(category, rate, exemption)` on the invoice
 builder. Both fields are optional strings in the model. Choose the applicable
 code and explanation for the transaction, then run local business validation.
@@ -166,8 +166,8 @@ Setting that amount alone does not create references or adjustment lines. See th
 | Application data | Rust builder API |
 | --- | --- |
 | Purchase order or contract | `purchase_order_id(...)`, `contract_id(...)` |
-| Actual/latest delivery dates | `delivery(Delivery { actual_date, latest_date })` |
-| Payment code with instructions and account | `payment_means(PaymentMeans::new(code).instruction_note(text).payee_financial_account(account))` |
+| Actual/latest delivery dates | `delivery(Delivery::default().with_actual_date(date).with_latest_date(date))` |
+| Payment code with instructions and account | `payment_means(PaymentMeans::new(code).with_instruction_note(text).with_payee_financial_account(account))` |
 | Additional party identifiers | `seller_identifier(...)`, `buyer_identifier(...)` |
 | Item identifiers | Line builder `item_seller_identifier(...)`, `item_buyer_identifier(...)`, `item_standard_identifier(...)` |
 | Notes in different languages | Repeated `note(InvoiceNote::new(language, text))` calls |

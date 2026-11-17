@@ -33,7 +33,7 @@ bindings do not change yet.
 - `AsRef<str>`, `FromStr`, `TryFrom<&str>` and `TryFrom<String>` for
   `InvoiceTime`, matching the other validated wrappers.
 - `DocumentAdjustment::omit_vat_rate()`, `has_vat_rate()` and
-  `tax_category_count(count)`, so `InvoiceBuilder::allowance`/`charge` can
+  `with_tax_category_count(count)`, so `InvoiceBuilder::allowance`/`charge` can
   express everything `adjustment(AllowanceCharge)` could, and
   `impl From<AllowanceCharge> for DocumentAdjustment` to convert an existing
   entry.
@@ -41,6 +41,31 @@ bindings do not change yet.
   rate on `LineItem` (`omit_vat_rate` returns `Result`, like `VatBreakdown`),
   `VatBreakdown` (`omit_vat_rate` returns `Result`) and `AllowanceCharge`
   (`omit_vat_rate` returns `Self`; `build` checks it).
+- Constructors, getters and `with_*` setters for the invoice value types whose
+  fields are now private (see "Changed (breaking)"):
+  - `Address::new(country_code, city, street, building_number, postal_code)`
+    with `with_province`, `with_additional_street`, `with_additional_number`
+    and `with_district`. The existing getters are unchanged.
+  - `TaxExemption::{with_reason_code, with_reason}` (start from
+    `TaxExemption::default()`) and getters `reason_code()`, `reason()`.
+  - `PaymentMeans::{with_instruction_note, with_payee_financial_account}` and
+    getters `code()`, `instruction_notes()`, `payee_financial_account()`.
+  - `PaymentAccount::{with_payment_account_identifier, with_payment_terms}`
+    (start from `PaymentAccount::default()`) and getters of the same names
+    without `with_`.
+  - `Delivery::{with_actual_date, with_latest_date}` (start from
+    `Delivery::default()`) and getters `actual_date()`, `latest_date()`.
+  - `AllowanceCharge::new(kind, amount, category, rate)` with
+    `with_base_amount`, `with_percentage`, `with_reason`, `with_reason_code`,
+    `with_exemption` and `with_tax_category_count`, and getters `kind()`,
+    `amount()`, `base_amount()`, `percentage()`, `reason()`, `reason_code()`,
+    `category()`, `rate()`, `exemption()`, `tax_category_count()`.
+  - `DocumentAdjustment::{with_reason, with_reason_code, with_exemption}` and
+    getters `adjustment()`, `reason()`, `reason_code()`, `category()`,
+    `rate()`, `exemption()`, `tax_category_count()`.
+  - `LineAdjustment::{kind(), adjustment()}`.
+  - `Adjustment::{reason(), reason_code(), base_amount(), percentage()}`
+    getters.
 
 ### Changed
 
@@ -85,10 +110,52 @@ deprecation period.
   `Option<&str>`).
 - `ValidationMessage::status()` returns `Option<&ValidationStatus>` (was
   `Option<&str>`).
-- `DocumentAdjustment` has two new public fields, `omitted_rate: bool` and
-  `tax_category_count: usize`. Struct literals must set them (`false` and `1`
-  match the previous behaviour), or use `DocumentAdjustment::new`. Both fields
-  default when deserializing.
+- The fields of `Address`, `TaxExemption`, `PaymentMeans`, `PaymentAccount`,
+  `Delivery`, `AllowanceCharge`, `DocumentAdjustment` and `LineAdjustment` are
+  private, so these types can gain fields without a breaking change. Replace
+  struct literals with the constructor and `with_*` setters, and field reads
+  with the getter of the same name (`address.city` becomes `address.city()`):
+  - `Address { .. }`: `Address::new(country_code, city, street,
+    building_number, postal_code)` plus `with_province`,
+    `with_additional_street`, `with_additional_number`, `with_district`.
+  - `TaxExemption { reason_code, reason }`:
+    `TaxExemption::default().with_reason_code(code).with_reason(text)`.
+  - `PaymentAccount { .. }`: `PaymentAccount::default()
+    .with_payment_account_identifier(id).with_payment_terms(terms)`.
+  - `Delivery { actual_date, latest_date }`:
+    `Delivery::default().with_actual_date(date).with_latest_date(date)`.
+  - `AllowanceCharge { .. }`: `AllowanceCharge::new(kind, amount, category,
+    rate)` plus `with_base_amount`, `with_percentage`, `with_reason`,
+    `with_reason_code`, `with_exemption`, `with_tax_category_count` and
+    `omit_vat_rate()`; read `omitted_rate` as `!has_vat_rate()`.
+  - `DocumentAdjustment { .. }`: `DocumentAdjustment::new(adjustment,
+    category, rate)` plus the `with_*` setters and `omit_vat_rate()`. (Its
+    `omitted_rate` and `tax_category_count` fields, public only in unreleased
+    0.6 work, are private too.)
+  - `LineAdjustment` is read-only: use `kind()` and `adjustment()`. Line
+    adjustments are added with `LineItemBuilder::allowance`/`charge`.
+  - `PaymentMeans::payment_means_type_code` is read with `code()`, matching
+    `PaymentMeans::new(code)`; `instruction_notes` and
+    `payee_financial_account` with the getters of the same names.
+
+  The serde field names and formats of all these types are unchanged.
+- `PaymentMeans::payee_financial_account(account)` is renamed
+  `with_payee_financial_account(account)`; `payee_financial_account()` is now
+  the getter.
+- `Adjustment` and `DocumentAdjustment` setters take a `with_` prefix so the
+  plain names can be getters: `Adjustment::{reason, reason_code,
+  base_amount}(value)` become `with_reason`, `with_reason_code`,
+  `with_base_amount`, and `DocumentAdjustment::{reason, reason_code,
+  exemption}(value)` become `with_reason`, `with_reason_code`,
+  `with_exemption`. `reason()`, `reason_code()`, `base_amount()` and
+  `exemption()` are now getters. `DocumentAdjustment::tax_category_count(count)`
+  (unreleased) is `with_tax_category_count(count)`.
+- `Adjustment::percentage(base, percent)` is renamed
+  `Adjustment::percent_of(base, percent)`; `percentage()` is now the getter.
+  The FFI `Adjustment.percentage` constructor is unchanged.
+- `config::Environment` is `#[non_exhaustive]`. Matches on it outside
+  `fatoora-core` need a wildcard arm. `VatCategory`, `InvoiceType` and
+  `InvoiceSubType` stay exhaustive.
 
 For the status getters, compare with the enum (`Some(&ReportingStatus::Reported)`)
 or call `.map(ReportingStatus::as_str)` for the previous `Option<&str>`. The JSON
@@ -147,12 +214,17 @@ reports these four fields only as missing.
   first line in that category, and the reason is shared by both (on its own it
   emits a zero-amount allowance). Use `allowance`/`charge` with
   `DocumentAdjustment::new(Adjustment::amount(amount), category, rate)
-  .reason(reason)` instead; each call appends an entry with an explicit VAT
+  .with_reason(reason)` instead; each call appends an entry with an explicit VAT
   category and rate.
 - `InvoiceBuilder::payment_means_code(code)` keeps its behaviour: it changes
   the code of the first payment means, creating one if there is none. Use
   `payment_means(PaymentMeans::new(code))`, which appends.
 - `VatBreakdown::without_vat_rate()` forwards to `omit_vat_rate()`.
+- `Adjustment::{allowance_charge_reason, allowance_charge_reason_code,
+  calculation_base_amount, calculation_percentage}` forward to `reason()`,
+  `reason_code()`, `base_amount()` and `percentage()`.
+- `PaymentMeans::instruction_note(text)` forwards to
+  `with_instruction_note(text)`.
 - All of these will be removed in 0.7. The `fatoora-ffi` exported methods
   (`set_payment_means_code`, `invoice_level_charge`, `invoice_level_discount`,
   `allowance_reason`, `set_allowance`, `AllowanceCharge::without_vat_rate`,
@@ -160,6 +232,8 @@ reports these four fields only as missing.
 
 ### Removed
 
+- The `invoice::LineItems` alias (`Vec<LineItem>`) is removed. Use
+  `Vec<LineItem>`.
 - `InvoiceData::note()`, which returned only the first note. Use
   `notes().first()`.
 - `OriginalInvoiceRef::with_issue_date_str`. Use

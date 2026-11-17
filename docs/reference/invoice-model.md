@@ -184,7 +184,7 @@ correspond to the fields above.
     | `vat_breakdown(value: VatBreakdown)` | `Self` |
     | `build(self)` | `Result<FinalizedInvoice, InvoiceError>` |
 
-    `payment_means` appends a payment means; use `.payment_means(PaymentMeans::new(code))` to set the payment means code. Add document-level allowances and charges with `.allowance(DocumentAdjustment)` and `.charge(DocumentAdjustment)`; `DocumentAdjustment` carries the amount or percentage calculation, `reason`, `reason_code`, VAT category and rate, `exemption`, and `omit_vat_rate()` for out-of-scope entries.
+    `payment_means` appends a payment means; use `.payment_means(PaymentMeans::new(code))` to set the payment means code. Add document-level allowances and charges with `.allowance(DocumentAdjustment)` and `.charge(DocumentAdjustment)`; `DocumentAdjustment` carries the amount or percentage calculation, `with_reason`, `with_reason_code`, VAT category and rate, `with_exemption`, and `omit_vat_rate()` for out-of-scope entries.
 
     Deprecated since 0.6.0 and removed in 0.7: `payment_means_code` (changes the code of the first payment means), `invoice_level_charge`, `invoice_level_discount` and `allowance_reason` (one aggregate allowance and charge in the document VAT category), and `adjustment(AllowanceCharge)` (convert with `DocumentAdjustment::from`). `VatBreakdown::without_vat_rate` is replaced by `omit_vat_rate`; `LineItem`, `VatBreakdown`, `AllowanceCharge` and `DocumentAdjustment` all report an omitted rate through `has_vat_rate()`.
 
@@ -196,7 +196,9 @@ correspond to the fields above.
 
     Use `CountryCode::parse`, `CurrencyCode::parse`, `InvoiceTimestamp::parse`, `InvoiceDate::parse`, `InvoiceTime::parse`, `InvoiceUuid::parse`, `InvoiceHash::parse`, and `VatId::parse` for validated wrappers; each returns `Result<Wrapper, InvoiceError>`, and each wrapper also implements `FromStr` and `TryFrom<&str>`. With the `chrono` feature, `InvoiceTimestamp` and `InvoiceDate` convert from chrono values via `From`; with the `uuid` feature, `InvoiceUuid` converts from `uuid::Uuid`. `InvoiceNote::new(language, text)` returns a note. `OtherId::new(value)` creates an ID without a scheme; `OtherId::with_scheme(value, scheme_id)` supplies both.
 
-    Construct `Address` with its public fields: `country_code: CountryCode`, `city: String`, `street: String`, `building_number: String`, `postal_code: String`, and optional `additional_street`, `additional_number`, `district`, `province` (`Option<String>`).
+    Construct `Address` with `Address::new(country_code: CountryCode, city, street, building_number, postal_code)` (text as `impl Into<String>`) and add the optional parts with `with_additional_street`, `with_additional_number`, `with_district` and `with_province`; read them back with the getters of the same names.
+
+    `TaxExemption`, `PaymentAccount` and `Delivery` start from `Default` and take `with_*` setters (`with_reason_code`/`with_reason`, `with_payment_account_identifier`/`with_payment_terms`, `with_actual_date`/`with_latest_date`); `PaymentMeans::new(code)` takes `with_instruction_note` and `with_payee_financial_account`, and `code()` returns the code. Line and document adjustments use `Adjustment::amount(amount)` or `Adjustment::percent_of(base, percent)` with `with_reason`, `with_reason_code` and `with_base_amount`; `DocumentAdjustment::new(adjustment, category, rate)` adds `with_reason`, `with_reason_code`, `with_exemption` and `with_tax_category_count`. Fields are private; each has a getter without a `get_` prefix.
 
     `Seller::new(name: impl Into<String>, address: Address, vat_id: VatId, other_id: Option<OtherId>) -> Seller` requires a VAT ID. `Buyer::new(name: impl Into<String>, address: impl Into<Option<Address>>, vat_id: Option<VatId>, other_id: Option<OtherId>) -> Buyer` accepts an absent address and identifiers; business validation checks applicability.
 

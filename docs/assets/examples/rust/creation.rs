@@ -6,17 +6,15 @@ use fatoora_core::invoice::{
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let seller = Party::<SellerRole>::new(
         "Example Store",
-        Address {
-            country_code: CountryCode::parse("SA")?,
-            city: "Riyadh".into(),
-            street: "King Fahd Road".into(),
-            building_number: "1234".into(),
-            postal_code: "12222".into(),
-            district: Some("Olaya".into()),
-            additional_number: Some("5678".into()),
-            additional_street: None,
-            province: None,
-        },
+        Address::new(
+            CountryCode::parse("SA")?,
+            "Riyadh",
+            "King Fahd Road",
+            "1234",
+            "12222",
+        )
+        .with_additional_number("5678")
+        .with_district("Olaya"),
         VatId::parse("399999999900003")?,
         Some(OtherId::with_scheme("7003339333", "CRN")),
     );

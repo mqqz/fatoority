@@ -1,7 +1,7 @@
 //! Invoice builder and view types.
 use super::{
     Buyer, CurrencyCode, InvoiceData, InvoiceError, InvoiceField, InvoiceFlags, InvoiceHash,
-    InvoiceNote, InvoiceTimestamp, InvoiceTotals, InvoiceType, InvoiceUuid, LineItems, QrCodeError,
+    InvoiceNote, InvoiceTimestamp, InvoiceTotals, InvoiceType, InvoiceUuid, LineItem, QrCodeError,
     QrResult, Seller, ValidationError, ValidationIssue, ValidationKind, VatCategory,
 };
 use crate::Decimal;
@@ -96,7 +96,7 @@ pub struct InvoiceBuilder {
     seller: Option<Seller>,
     buyer: Option<Buyer>,
     delivery: Option<super::Delivery>,
-    line_items: LineItems,
+    line_items: Vec<LineItem>,
     payment_means: Vec<super::PaymentMeans>,
     payment_instruction_placeholder: bool,
     prepaid_amount: Decimal,
@@ -179,18 +179,18 @@ impl InvoiceBuilder {
     ///             VatCategory::Standard,
     ///             rate,
     ///         )
-    ///         .reason("Loyalty discount"),
+    ///         .with_reason("Loyalty discount"),
     ///     )
     ///     .charge(
     ///         DocumentAdjustment::new(
-    ///             Adjustment::percentage(
+    ///             Adjustment::percent_of(
     ///                 Decimal::parse("100").unwrap(),
     ///                 Decimal::parse("5").unwrap(),
     ///             ),
     ///             VatCategory::Standard,
     ///             rate,
     ///         )
-    ///         .reason_code("FC"),
+    ///         .with_reason_code("FC"),
     ///     );
     /// # let _ = builder;
     /// ```
@@ -706,7 +706,7 @@ impl InvoiceBuilder {
                         || item
                             .adjustments()
                             .iter()
-                            .any(|a| a.adjustment.value().is_ok_and(|v| v != Decimal::ZERO)))
+                            .any(|a| a.adjustment().value().is_ok_and(|v| v != Decimal::ZERO)))
                 {
                     push_issue(
                         InvoiceField::LineItemTotalAmount,

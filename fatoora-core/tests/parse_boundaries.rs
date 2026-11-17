@@ -315,7 +315,7 @@ fn adjustment_vat_groups_cannot_be_merged_or_reassigned() {
     let parsed = parse_finalized_invoice_xml(&xml).unwrap();
     assert_eq!(parsed.data().adjustments().len(), 2);
     assert_eq!(
-        parsed.data().adjustments()[1].rate,
+        parsed.data().adjustments()[1].rate(),
         fatoora_core::Decimal::from(5)
     );
 }

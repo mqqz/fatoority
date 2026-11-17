@@ -105,11 +105,22 @@ fn build(
     flags: u8,
 ) -> FinalizedInvoice {
     let template = common::dummy_finalized_invoice();
-    let mut address = template.data().seller().address().unwrap().clone();
-    address.street = text.to_owned();
-    address.city = text.to_owned();
-    address.district = Some(text.to_owned());
-    address.additional_street = Some(text.to_owned());
+    let original = template.data().seller().address().unwrap();
+    let mut address = fatoora_core::invoice::Address::new(
+        original.country_code().clone(),
+        text,
+        text,
+        original.building_number(),
+        original.postal_code(),
+    )
+    .with_district(text)
+    .with_additional_street(text);
+    if let Some(province) = original.province() {
+        address = address.with_province(province);
+    }
+    if let Some(number) = original.additional_number() {
+        address = address.with_additional_number(number);
+    }
     let seller = fatoora_core::invoice::Seller::new(
         text.to_owned(),
         address,
@@ -137,7 +148,7 @@ fn build(
             category(selected),
             vat_rate,
         )
-        .reason(text)
+        .with_reason(text)
     };
     // The reason is always present, so an allowance is always emitted, as the
     // former aggregate setters did.

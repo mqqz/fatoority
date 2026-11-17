@@ -14,7 +14,7 @@ pub fn document_adjustment(amount: &str, reason: &str) -> DocumentAdjustment {
         VatCategory::Standard,
         fatoora_core::Decimal::parse("15.0").unwrap(),
     )
-    .reason(reason)
+    .with_reason(reason)
 }
 
 #[allow(dead_code)]
@@ -590,32 +590,28 @@ pub fn signer_from_csid(
 
 #[allow(dead_code)]
 fn dummy_seller_address() -> Address {
-    Address {
-        province: None,
-        country_code: fatoora_core::invoice::CountryCode::parse("SAU").expect("country code"),
-        city: "Riyadh".into(),
-        street: "King Fahd".into(),
-        additional_street: None,
-        building_number: "1234".into(),
-        additional_number: Some("5678".into()),
-        postal_code: "12222".into(),
-        district: Some("Olaya".into()),
-    }
+    Address::new(
+        fatoora_core::invoice::CountryCode::parse("SAU").expect("country code"),
+        "Riyadh",
+        "King Fahd",
+        "1234",
+        "12222",
+    )
+    .with_additional_number("5678")
+    .with_district("Olaya")
 }
 
 #[allow(dead_code)]
 fn dummy_buyer_address() -> Address {
-    Address {
-        province: None,
-        country_code: fatoora_core::invoice::CountryCode::parse("SAU").expect("country code"),
-        city: "Jeddah".into(),
-        street: "King Abdulaziz".into(),
-        additional_street: Some("Al Zahra".into()),
-        building_number: "4321".into(),
-        additional_number: None,
-        postal_code: "21577".into(),
-        district: Some("North".into()),
-    }
+    Address::new(
+        fatoora_core::invoice::CountryCode::parse("SAU").expect("country code"),
+        "Jeddah",
+        "King Abdulaziz",
+        "4321",
+        "21577",
+    )
+    .with_additional_street("Al Zahra")
+    .with_district("North")
 }
 
 #[allow(dead_code)]

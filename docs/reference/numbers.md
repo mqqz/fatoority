@@ -46,7 +46,7 @@ most two decimal places. Negative line quantities, prices, discounts, and charge
 are rejected; credit notes use positive amounts with the appropriate document
 type. Payable rounding can be signed. Price bases must be positive.
 
-Use `Adjustment::amount` or `Adjustment::percentage` for line adjustments, and
+Use `Adjustment::amount` or `Adjustment::percent_of` for line adjustments, and
 `DocumentAdjustment` for invoice adjustments with independent VAT categories and
 rates. Scalar invoice discount/charge setters require an unambiguous VAT group;
 combining them with independent adjustment entries is rejected. See

@@ -64,11 +64,11 @@ fn complete_line_and_metadata_preserve_source_fields_and_schema() {
         .item_buyer_identifier(OtherId::new("BUY-1"))
         .item_standard_identifier(OtherId::with_scheme("1234567890123", "0160"))
         .allowance(
-            Adjustment::percentage(d("250"), d("10"))
-                .reason("rebate")
-                .reason_code("95"),
+            Adjustment::percent_of(d("250"), d("10"))
+                .with_reason("rebate")
+                .with_reason_code("95"),
         )
-        .charge(Adjustment::amount(d("5")).reason("delivery"))
+        .charge(Adjustment::amount(d("5")).with_reason("delivery"))
         .build()
         .unwrap();
     assert_eq!(item.total_amount(), d("230"));
@@ -78,15 +78,17 @@ fn complete_line_and_metadata_preserve_source_fields_and_schema() {
         .note(InvoiceNote::without_language("second & note"))
         .purchase_order_id("PO-1")
         .contract_id("CON-1")
-        .delivery(Delivery {
-            actual_date: Some("2024-01-01".parse().unwrap()),
-            latest_date: Some("2024-01-02".parse().unwrap()),
-        })
+        .delivery(
+            Delivery::default()
+                .with_actual_date("2024-01-01".parse().unwrap())
+                .with_latest_date("2024-01-02".parse().unwrap()),
+        )
         .payment_means(
-            PaymentMeans::new("30").payee_financial_account(PaymentAccount {
-                payment_account_identifier: Some("ACCOUNT".into()),
-                payment_terms: Some("30 days".into()),
-            }),
+            PaymentMeans::new("30").with_payee_financial_account(
+                PaymentAccount::default()
+                    .with_payment_account_identifier("ACCOUNT")
+                    .with_payment_terms("30 days"),
+            ),
         )
         .payment_means(PaymentMeans::new("10"))
         .build()
@@ -159,18 +161,12 @@ fn duplicate_group_metadata_errors_and_line_metadata_stays_independent() {
         .tax_exemption(
             VatCategory::Standard,
             d("15"),
-            TaxExemption {
-                reason_code: None,
-                reason: Some("one".into()),
-            },
+            TaxExemption::default().with_reason("one"),
         )
         .tax_exemption(
             VatCategory::Standard,
             d("15"),
-            TaxExemption {
-                reason_code: None,
-                reason: Some("two".into()),
-            },
+            TaxExemption::default().with_reason("two"),
         );
     assert!(invoice.build().is_err());
 }
@@ -202,14 +198,14 @@ fn dictionary_source_to_output_coverage() {
         &std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/invoices"),
         &mut sources,
     );
-    let mut address = common::dummy_finalized_invoice()
+    let address = common::dummy_finalized_invoice()
         .data()
         .seller()
         .address()
         .unwrap()
-        .clone();
-    address.province = Some("Riyadh Province".into());
-    address.additional_street = Some("Second street".into());
+        .clone()
+        .with_province("Riyadh Province")
+        .with_additional_street("Second street");
     let seller = Seller::new(
         "Seller",
         address.clone(),
@@ -225,14 +221,14 @@ fn dictionary_source_to_output_coverage() {
         .item_buyer_identifier(OtherId::new("buyer-sku"))
         .item_standard_identifier(OtherId::with_scheme("123", "0160"))
         .allowance(
-            Adjustment::percentage(d("250"), d("10"))
-                .reason("line allowance")
-                .reason_code("95"),
+            Adjustment::percent_of(d("250"), d("10"))
+                .with_reason("line allowance")
+                .with_reason_code("95"),
         )
         .charge(
-            Adjustment::percentage(d("250"), d("2"))
-                .reason("line charge")
-                .reason_code("AA"),
+            Adjustment::percent_of(d("250"), d("2"))
+                .with_reason("line charge")
+                .with_reason_code("AA"),
         )
         .build()
         .unwrap();
@@ -251,23 +247,24 @@ fn dictionary_source_to_output_coverage() {
         .note(InvoiceNote::without_language("note two"))
         .payment_means(
             PaymentMeans::new("30")
-                .instruction_note("terms")
-                .payee_financial_account(PaymentAccount {
-                    payment_account_identifier: Some("bank".into()),
-                    payment_terms: Some("net 30".into()),
-                }),
+                .with_instruction_note("terms")
+                .with_payee_financial_account(
+                    PaymentAccount::default()
+                        .with_payment_account_identifier("bank")
+                        .with_payment_terms("net 30"),
+                ),
         )
         .allowance(DocumentAdjustment::new(
-            Adjustment::percentage(d("230"), d("10"))
-                .reason("allowance")
-                .reason_code("95"),
+            Adjustment::percent_of(d("230"), d("10"))
+                .with_reason("allowance")
+                .with_reason_code("95"),
             VatCategory::Standard,
             d("15"),
         ))
         .charge(DocumentAdjustment::new(
-            Adjustment::percentage(d("230"), d("2"))
-                .reason("charge")
-                .reason_code("AA"),
+            Adjustment::percent_of(d("230"), d("2"))
+                .with_reason("charge")
+                .with_reason_code("AA"),
             VatCategory::Standard,
             d("15"),
         ))
@@ -380,12 +377,9 @@ fn supported_container_shapes_have_distinct_validation_outcomes() {
     // A partial financial account is structurally permitted; it remains present.
     let invoice = builder()
         .line_item(line().build().unwrap())
-        .payment_means(
-            PaymentMeans::new("30").payee_financial_account(PaymentAccount {
-                payment_account_identifier: None,
-                payment_terms: Some("terms only".into()),
-            }),
-        )
+        .payment_means(PaymentMeans::new("30").with_payee_financial_account(
+            PaymentAccount::default().with_payment_terms("terms only"),
+        ))
         .build()
         .unwrap();
     let xml = invoice.to_xml().unwrap();
@@ -494,8 +488,8 @@ fn repeated_identifiers_and_payment_instructions_keep_order() {
         .seller_identifier(OtherId::with_scheme("second", "OTH"))
         .payment_means(
             PaymentMeans::new("10")
-                .instruction_note("first")
-                .instruction_note("second"),
+                .with_instruction_note("first")
+                .with_instruction_note("second"),
         )
         .build()
         .unwrap();
@@ -504,7 +498,7 @@ fn repeated_identifiers_and_payment_instructions_keep_order() {
     let parsed = parse(&xml).unwrap();
     assert_eq!(parsed.data().buyer().unwrap().identifiers().len(), 2);
     assert_eq!(
-        parsed.data().payment_means()[0].instruction_notes,
+        parsed.data().payment_means()[0].instruction_notes(),
         ["first", "second"]
     );
     assert_eq!(leaves(&xml), leaves(&parsed.to_xml().unwrap()));
@@ -670,11 +664,12 @@ fn vat_midpoint_tolerance_uses_the_pinned_rule_policy() {
 #[test]
 fn payment_instruction_placeholder_retains_notes_and_payment_metadata() {
     let payment = PaymentMeans::new("30")
-        .instruction_note("transfer")
-        .payee_financial_account(PaymentAccount {
-            payment_account_identifier: Some("bank".into()),
-            payment_terms: Some("net 30".into()),
-        });
+        .with_instruction_note("transfer")
+        .with_payee_financial_account(
+            PaymentAccount::default()
+                .with_payment_account_identifier("bank")
+                .with_payment_terms("net 30"),
+        );
     let invoice = builder()
         .line_item(line().build().unwrap())
         .payment_instruction("reason")
@@ -682,8 +677,14 @@ fn payment_instruction_placeholder_retains_notes_and_payment_metadata() {
         .payment_means(PaymentMeans::new("10"))
         .build()
         .unwrap();
-    let mut expected = payment;
-    expected.instruction_notes.insert(0, "reason".into());
+    let expected = PaymentMeans::new("30")
+        .with_instruction_note("reason")
+        .with_instruction_note("transfer")
+        .with_payee_financial_account(
+            PaymentAccount::default()
+                .with_payment_account_identifier("bank")
+                .with_payment_terms("net 30"),
+        );
     assert_eq!(
         invoice.data().payment_means(),
         &[expected, PaymentMeans::new("10")]
@@ -864,7 +865,7 @@ fn out_of_scope_document_adjustments_preserve_absent_rates() {
     assert_ne!(source, xml);
     Validator::new().validate_xml(&source).unwrap();
     let imported = parse(&source).unwrap();
-    assert!(imported.data().adjustments()[0].omitted_rate);
+    assert!(!imported.data().adjustments()[0].has_vat_rate());
     assert_eq!(leaves(&source), leaves(&imported.to_xml().unwrap()));
 }
 
@@ -957,10 +958,10 @@ fn optional_line_inputs_reject_incomplete_and_inconsistent_prices() {
     for invalid in [
         Adjustment::amount(d("-1")),
         Adjustment::amount(d("1.001")),
-        Adjustment::amount(d("1")).base_amount(d("100")),
-        Adjustment::percentage(d("-1"), d("10")),
-        Adjustment::percentage(d("100"), d("-1")),
-        Adjustment::percentage(d("100"), d("10")).supplied_amount(d("9.99")),
+        Adjustment::amount(d("1")).with_base_amount(d("100")),
+        Adjustment::percent_of(d("-1"), d("10")),
+        Adjustment::percent_of(d("100"), d("-1")),
+        Adjustment::percent_of(d("100"), d("10")).supplied_amount(d("9.99")),
     ] {
         assert!(line().allowance(invalid).build().is_err());
     }
@@ -986,10 +987,7 @@ fn supplied_breakdowns_reject_ambiguous_ownership_and_invalid_amounts() {
             .build()
             .is_err()
     );
-    let reason = TaxExemption {
-        reason_code: None,
-        reason: Some("supplied".into()),
-    };
+    let reason = TaxExemption::default().with_reason("supplied");
     assert!(
         builder()
             .line_item(line().build().unwrap())
@@ -1037,22 +1035,16 @@ fn supplied_breakdowns_reject_ambiguous_ownership_and_invalid_amounts() {
     );
     let adjustment =
         DocumentAdjustment::new(Adjustment::amount(d("1")), VatCategory::Standard, d("15"))
-            .reason("rebate")
-            .reason_code("95")
-            .exemption(reason);
+            .with_reason("rebate")
+            .with_reason_code("95")
+            .with_exemption(reason);
     let invoice = builder()
         .line_item(line().build().unwrap())
         .allowance(adjustment)
         .build()
         .unwrap();
-    assert_eq!(
-        invoice.data().adjustments()[0].reason.as_deref(),
-        Some("rebate")
-    );
-    assert_eq!(
-        invoice.data().adjustments()[0].reason_code.as_deref(),
-        Some("95")
-    );
+    assert_eq!(invoice.data().adjustments()[0].reason(), Some("rebate"));
+    assert_eq!(invoice.data().adjustments()[0].reason_code(), Some("95"));
     assert_eq!(invoice.data().line_items()[0].item_name(), "سلعة & item");
     assert_eq!(invoice.data().line_items()[0].item_net_price(), d("100"));
     assert!(InvoiceTime::parse("1:02:03").is_err());

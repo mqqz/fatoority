@@ -12,17 +12,15 @@ const HASH: &str =
     "NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ==";
 
 fn address() -> Address {
-    Address {
-        province: None,
-        country_code: CountryCode::parse("SAU").unwrap(),
-        city: "Riyadh".into(),
-        street: "King Fahd".into(),
-        additional_street: None,
-        building_number: "1234".into(),
-        additional_number: Some("5678".into()),
-        postal_code: "12222".into(),
-        district: Some("Olaya".into()),
-    }
+    Address::new(
+        CountryCode::parse("SAU").unwrap(),
+        "Riyadh",
+        "King Fahd",
+        "1234",
+        "12222",
+    )
+    .with_additional_number("5678")
+    .with_district("Olaya")
 }
 
 fn seller() -> Seller {

@@ -997,9 +997,9 @@ struct BasisQuantity<'a> {
 struct LineAdjustmentXml<'a>(&'a super::LineAdjustment, &'a str);
 impl Serialize for LineAdjustmentXml<'_> {
     fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-        let a = &self.0.adjustment;
+        let a = self.0.adjustment();
         let mut st = s.serialize_struct("cac:AllowanceCharge", 0)?;
-        st.serialize_field("cbc:ChargeIndicator", &self.0.kind.charge_indicator())?;
+        st.serialize_field("cbc:ChargeIndicator", &self.0.kind().charge_indicator())?;
         if let Some(code) = &a.reason_code {
             st.serialize_field("cbc:AllowanceChargeReasonCode", code)?;
         }
@@ -1742,13 +1742,10 @@ mod tests {
         for field in ["cbc:BaseQuantity", "cac:AllowanceCharge"] {
             fails(invoice_line_price("SAR", &priced_line), field);
         }
-        let line_adjustment = crate::invoice::LineAdjustment {
-            kind: crate::invoice::AdjustmentKind::Allowance,
-            adjustment: crate::invoice::Adjustment::percentage(
-                Decimal::from(10),
-                Decimal::from(10),
-            ),
-        };
+        let line_adjustment = crate::invoice::LineAdjustment::new(
+            crate::invoice::AdjustmentKind::Allowance,
+            crate::invoice::Adjustment::percent_of(Decimal::from(10), Decimal::from(10)),
+        );
         for field in ["cbc:Amount", "cbc:BaseAmount"] {
             fails(LineAdjustmentXml(&line_adjustment, "SAR"), field);
         }
@@ -1756,7 +1753,7 @@ mod tests {
         for field in ["cac:AllowanceCharge", "cac:TaxTotal"] {
             fails(InvoiceLineXml(1, &priced_line, invoice.data()), field);
         }
-        let payment = crate::invoice::PaymentMeans::new("30").payee_financial_account(
+        let payment = crate::invoice::PaymentMeans::new("30").with_payee_financial_account(
             crate::invoice::PaymentAccount {
                 payment_account_identifier: Some("bank".into()),
                 payment_terms: None,

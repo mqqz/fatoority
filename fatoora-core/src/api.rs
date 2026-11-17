@@ -2012,17 +2012,14 @@ mod tests {
     pub(super) fn build_signed_invoice(invoice_type: InvoiceType) -> SignedInvoice {
         let seller = Party::<SellerRole>::new(
             "Acme Inc",
-            Address {
-                province: None,
-                country_code: CountryCode::parse("SAU").expect("country code"),
-                city: "Riyadh".into(),
-                street: "King Fahd".into(),
-                additional_street: None,
-                building_number: "1234".into(),
-                additional_number: Some("5678".into()),
-                postal_code: "12222".into(),
-                district: None,
-            },
+            Address::new(
+                CountryCode::parse("SAU").expect("country code"),
+                "Riyadh",
+                "King Fahd",
+                "1234",
+                "12222",
+            )
+            .with_additional_number("5678"),
             "301121971500003".parse().unwrap(),
             None,
         );
