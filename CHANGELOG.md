@@ -2,26 +2,27 @@
 
 ## Unreleased
 
-Breaking 0.6 phase. Renamed `fatoora-core` items keep their old names as
-deprecated aliases until 0.7. The `fatoora-ffi` exported API and the generated
-bindings do not change yet.
+Breaking 0.6 phase for the `fatoora-core` Rust crate. Renamed items keep their
+old names as deprecated aliases until 0.7 (see "Deprecated"); items whose type,
+signature or fields changed in place have no deprecation period (see "Changed
+(breaking)"). The `fatoora-ffi` exported API and the generated bindings do not
+change yet.
+
+Migration guide with a before-and-after table of every change: [Migrate from 0.5 to 0.6 (Rust)](https://docs.fatoority.com/guides/migrate-0.6/).
 
 ### Added
 
-- `fatoora_core::api::{ComplianceCsid, ProductionCsid}` aliases for
+- `api::{ComplianceCsid, ProductionCsid}` aliases for
   `CsidCredentials<Compliance>` and `CsidCredentials<Production>`.
-- `impl FromStr for CsrProperties` (`text.parse::<CsrProperties>()`) and
-  `CsrProperties::from_file(path)`.
-- `fatoora_core::api::{ReportingStatus, ClearanceStatus, ValidationStatus,
-  MessageType}`: non-exhaustive enums for ZATCA response status values. Each
-  has an `Other(String)` variant that keeps unrecognized values verbatim,
-  `as_str()`, `Display`, infallible `From<&str>`/`From<String>`/`FromStr`, and
-  serializes as the plain wire string.
-- `invoice::AdjustmentKind::{Allowance, Charge}`, with `is_charge()`,
-  `is_allowance()`, `from_charge_indicator(bool)` and `charge_indicator()`
-  mapping to UBL `cbc:ChargeIndicator`.
 - `api::ClearanceMode::{Enabled, Disabled}` for the `Clearance-Status`
   request header (`1`/`0`), with `From<bool>`.
+- `api::{ReportingStatus, ClearanceStatus, ValidationStatus, MessageType}`:
+  non-exhaustive enums for ZATCA response status values. Each has an
+  `Other(String)` variant that keeps unrecognized values verbatim, `as_str()`,
+  `Display`, infallible `From<&str>`/`From<String>`/`FromStr`, and serializes
+  as the plain wire string.
+- `impl FromStr for CsrProperties` (`text.parse::<CsrProperties>()`) and
+  `CsrProperties::from_file(path)`.
 - `invoice::validation::Validator`, the single entry point for local
   validation: `validate_xml(xml)` (UBL XSD only), `validate_xml_report(xml)`
   (XSD findings as a `ValidationReport`) and `validate_zatca(xml, options)`
@@ -32,15 +33,18 @@ bindings do not change yet.
   next invoice's previous invoice hash).
 - `AsRef<str>`, `FromStr`, `TryFrom<&str>` and `TryFrom<String>` for
   `InvoiceTime`, matching the other validated wrappers.
-- `DocumentAdjustment::omit_vat_rate()`, `has_vat_rate()` and
-  `with_tax_category_count(count)`, so `InvoiceBuilder::allowance`/`charge` can
-  express everything `adjustment(AllowanceCharge)` could, and
-  `impl From<AllowanceCharge> for DocumentAdjustment` to convert an existing
-  entry.
-- `omit_vat_rate()` and `has_vat_rate()` as the one name for an omitted VAT
-  rate on `LineItem` (`omit_vat_rate` returns `Result`, like `VatBreakdown`),
-  `VatBreakdown` (`omit_vat_rate` returns `Result`) and `AllowanceCharge`
-  (`omit_vat_rate` returns `Self`; `build` checks it).
+- `invoice::AdjustmentKind::{Allowance, Charge}`, with `is_charge()`,
+  `is_allowance()`, `from_charge_indicator(bool)` and `charge_indicator()`
+  mapping to UBL `cbc:ChargeIndicator`.
+- `DocumentAdjustment::{omit_vat_rate(), has_vat_rate(),
+  with_tax_category_count(count)}` and `impl From<AllowanceCharge> for
+  DocumentAdjustment`, so `InvoiceBuilder::allowance`/`charge` can express
+  everything `adjustment(AllowanceCharge)` could.
+- `omit_vat_rate()` as the one name for omitting a VAT rate: new on
+  `LineItem` (returns `Result`), `VatBreakdown` (returns `Result`; replaces
+  `without_vat_rate`), `AllowanceCharge` (returns `Self`; `build` checks it)
+  and `DocumentAdjustment`. `AllowanceCharge` and `DocumentAdjustment` gain
+  `has_vat_rate()`, which `LineItem` and `VatBreakdown` already had.
 - Constructors, getters and `with_*` setters for the invoice value types whose
   fields are now private (see "Changed (breaking)"):
   - `Address::new(country_code, city, street, building_number, postal_code)`
@@ -69,47 +73,75 @@ bindings do not change yet.
 
 ### Changed
 
-- `config::EnvironmentType` is renamed `config::Environment`.
-- `ZatcaClient::post_csr_for_ccsid` is renamed `request_compliance_csid`,
-  `post_ccsid_for_pcsid` is renamed `request_production_csid`, and
-  `prepare_post_csr_for_ccsid`/`prepare_post_ccsid_for_pcsid` are renamed
-  `prepare_request_compliance_csid`/`prepare_request_production_csid`.
-- `invoice::InvoiceTotalsData` is renamed `invoice::InvoiceTotals`.
 - `InvoiceBuilder::allowance(DocumentAdjustment)` and
   `charge(DocumentAdjustment)` are the one way to add document-level
   allowances and charges, and `payment_means(PaymentMeans::new(code))` the way
-  to add payment means. A `DocumentAdjustment` whose calculation is invalid is
-  now reported with the other adjustment checks in `build`, after missing or
-  invalid fields, instead of before them.
+  to add payment means; the alternatives are deprecated (see "Deprecated").
+- A `DocumentAdjustment` whose calculation is invalid is now reported with the
+  other adjustment checks in `InvoiceBuilder::build`, after missing or invalid
+  fields, instead of before them.
 
 ### Changed (breaking)
 
-These change a field, parameter or return type in place, so they have no
+These change a type, field, parameter or return type in place, so they have no
 deprecation period.
 
-- `AllowanceCharge::charge: bool` is replaced by `AllowanceCharge::kind:
-  AdjustmentKind`. Write `kind: AdjustmentKind::Charge` for `charge: true` and
-  `AdjustmentKind::Allowance` for `charge: false`, or use
-  `AdjustmentKind::from_charge_indicator(flag)`. The serde field is now
-  `"kind"` with the values `"allowance"`/`"charge"`.
-- `LineAdjustment::charge: bool` is likewise replaced by
-  `LineAdjustment::kind: AdjustmentKind`.
+**Configuration**
+
+- `config::Environment` is `#[non_exhaustive]`. Matches on it outside
+  `fatoora-core` need a wildcard arm. `VatCategory`, `InvoiceType` and
+  `InvoiceSubType` stay exhaustive.
+
+**API client and responses**
+
 - `ZatcaClient::{report_simplified_invoice, clear_standard_invoice,
   prepare_report_simplified_invoice, prepare_clear_standard_invoice}` take
   `clearance_mode: ClearanceMode` instead of `clearance_status: bool`. Pass
   `ClearanceMode::Enabled` for `true` and `ClearanceMode::Disabled` for
   `false`, or `ClearanceMode::from(flag)`. The FFI and language bindings still
   take a Boolean.
-- `ValidationResponse::reporting_status()` returns `Option<&ReportingStatus>`
-  (was `Option<&str>`).
-- `ValidationResponse::clearance_status()` returns `Option<&ClearanceStatus>`
-  (was `Option<&str>`).
-- `ValidationResults::status()` returns `Option<&ValidationStatus>` (was
-  `Option<&str>`).
-- `ValidationMessage::message_type()` returns `Option<&MessageType>` (was
-  `Option<&str>`).
-- `ValidationMessage::status()` returns `Option<&ValidationStatus>` (was
-  `Option<&str>`).
+- Response status getters return the new enums instead of `Option<&str>`:
+  `ValidationResponse::reporting_status()` returns `Option<&ReportingStatus>`,
+  `ValidationResponse::clearance_status()` returns `Option<&ClearanceStatus>`,
+  `ValidationResults::status()` and `ValidationMessage::status()` return
+  `Option<&ValidationStatus>`, and `ValidationMessage::message_type()` returns
+  `Option<&MessageType>`. Compare with the enum
+  (`Some(&ReportingStatus::Reported)`) or call `.map(ReportingStatus::as_str)`
+  for the previous `Option<&str>`. The JSON wire format and the `fatoora-ffi`
+  getters, which still return text, are unchanged.
+
+**Typed invoice inputs and getters**
+
+Parse strings with the wrapper's `parse`, `FromStr` or `TryFrom<&str>` (for
+example `"SAR".parse()?`). Invalid values now fail when the wrapper is parsed
+instead of in `InvoiceBuilder::build`, so `build` reports the UUID, issue
+date-time, currency and previous invoice hash only as missing (never as empty
+or invalid). Every wrapper has `as_str()` and `Display`.
+
+- `InvoiceBuilder::uuid` takes `InvoiceUuid`, `issue_datetime` takes
+  `InvoiceTimestamp`, `currency` takes `CurrencyCode` and
+  `previous_invoice_hash` takes `InvoiceHash` (each was `impl Into<String>`).
+- `InvoiceData::uuid` returns `&InvoiceUuid`, `issue_date` returns
+  `InvoiceDate`, `issue_time` returns `InvoiceTime` and
+  `previous_invoice_hash` returns `&InvoiceHash` (each was `&str`).
+- `SignedInvoice::uuid` returns `&InvoiceUuid`, and
+  `SignedInvoice::invoice_hash` and `SignedProperties::invoice_hash` return
+  `&InvoiceHash` (each was `&str`).
+- `SignedProperties::signing_time` returns `&InvoiceTimestamp` (was `&str`).
+  Its `as_str()` is the canonical `YYYY-MM-DDTHH:MM:SSZ` form; the XAdES
+  `SigningTime` element in the XML is unchanged and still has no `Z`.
+- `OriginalInvoiceRef::with_uuid` takes `InvoiceUuid` (was
+  `impl Into<String>`), and `OriginalInvoiceRef::uuid` returns
+  `Option<&InvoiceUuid>` (was `Option<&str>`).
+- `Seller::new` (`Party::<SellerRole>::new`) takes `name: impl Into<String>`
+  and `vat_id: VatId` (was `String` and `impl Into<String>`) and returns
+  `Seller` (was `Result<Seller, InvoiceError>`); it can no longer fail.
+- `Buyer::new` (`Party::<BuyerRole>::new`) takes `name: impl Into<String>` and
+  `vat_id: Option<VatId>` (was `String` and `Option<String>`) and returns
+  `Buyer` (was `Result<Buyer, InvoiceError>`).
+
+**Private fields**
+
 - The fields of `Address`, `TaxExemption`, `PaymentMeans`, `PaymentAccount`,
   `Delivery`, `AllowanceCharge`, `DocumentAdjustment` and `LineAdjustment` are
   private, so these types can gain fields without a breaking change. Replace
@@ -129,111 +161,89 @@ deprecation period.
     `with_reason_code`, `with_exemption`, `with_tax_category_count` and
     `omit_vat_rate()`; read `omitted_rate` as `!has_vat_rate()`.
   - `DocumentAdjustment { .. }`: `DocumentAdjustment::new(adjustment,
-    category, rate)` plus the `with_*` setters and `omit_vat_rate()`. (Its
-    `omitted_rate` and `tax_category_count` fields, public only in unreleased
-    0.6 work, are private too.)
+    category, rate)` plus the `with_*` setters and `omit_vat_rate()`.
   - `LineAdjustment` is read-only: use `kind()` and `adjustment()`. Line
     adjustments are added with `LineItemBuilder::allowance`/`charge`.
   - `PaymentMeans::payment_means_type_code` is read with `code()`, matching
     `PaymentMeans::new(code)`; `instruction_notes` and
     `payee_financial_account` with the getters of the same names.
 
-  The serde field names and formats of all these types are unchanged.
-- `PaymentMeans::payee_financial_account(account)` is renamed
-  `with_payee_financial_account(account)`; `payee_financial_account()` is now
-  the getter.
-- `Adjustment` and `DocumentAdjustment` setters take a `with_` prefix so the
-  plain names can be getters: `Adjustment::{reason, reason_code,
-  base_amount}(value)` become `with_reason`, `with_reason_code`,
-  `with_base_amount`, and `DocumentAdjustment::{reason, reason_code,
-  exemption}(value)` become `with_reason`, `with_reason_code`,
-  `with_exemption`. `reason()`, `reason_code()`, `base_amount()` and
-  `exemption()` are now getters. `DocumentAdjustment::tax_category_count(count)`
-  (unreleased) is `with_tax_category_count(count)`.
+  Apart from the `charge` to `kind` change below, the serde field names and
+  formats of these types are unchanged.
+
+**Allowance or charge kind**
+
+- `AllowanceCharge::charge: bool` and `LineAdjustment::charge: bool` are
+  replaced by `kind: AdjustmentKind`, read with `kind()`.
+  `AdjustmentKind::from_charge_indicator(flag)` converts a `charge` flag
+  (`true` is `Charge`). The serde field is now `"kind"` with the values
+  `"allowance"`/`"charge"`, so serialized `InvoiceData` and `LineItem` values
+  change too, and JSON written by 0.5 with a `"charge"` field no longer
+  deserializes.
+
+**Setters renamed so the plain name is the getter**
+
+- `Adjustment::{reason, reason_code, base_amount}(value)` are renamed
+  `with_reason`, `with_reason_code`, `with_base_amount`;
+  `DocumentAdjustment::{reason, reason_code, exemption}(value)` are renamed
+  `with_reason`, `with_reason_code`, `with_exemption`. `reason()`,
+  `reason_code()`, `base_amount()` and `exemption()` are now getters.
 - `Adjustment::percentage(base, percent)` is renamed
   `Adjustment::percent_of(base, percent)`; `percentage()` is now the getter.
   The FFI `Adjustment.percentage` constructor is unchanged.
-- `config::Environment` is `#[non_exhaustive]`. Matches on it outside
-  `fatoora-core` need a wildcard arm. `VatCategory`, `InvoiceType` and
-  `InvoiceSubType` stay exhaustive.
-
-For the status getters, compare with the enum (`Some(&ReportingStatus::Reported)`)
-or call `.map(ReportingStatus::as_str)` for the previous `Option<&str>`. The JSON
-wire format and the `fatoora-ffi` getters, which still return text, are unchanged.
-
-Typed inputs and getters: parse strings with the wrapper's `parse`, `FromStr`
-or `TryFrom<&str>` (for example `"SAR".parse()?`). Invalid values now fail
-when the wrapper is parsed instead of in `InvoiceBuilder::build`, so `build`
-reports these four fields only as missing.
-
-- `InvoiceBuilder::uuid` takes `InvoiceUuid` (was `impl Into<String>`).
-- `InvoiceBuilder::issue_datetime` takes `InvoiceTimestamp` (was
-  `impl Into<String>`).
-- `InvoiceBuilder::currency` takes `CurrencyCode` (was `impl Into<String>`).
-- `InvoiceBuilder::previous_invoice_hash` takes `InvoiceHash` (was
-  `impl Into<String>`).
-- `InvoiceData::uuid` returns `&InvoiceUuid` (was `&str`).
-- `InvoiceData::issue_date` returns `InvoiceDate` (was `&str`).
-- `InvoiceData::issue_time` returns `InvoiceTime` (was `&str`).
-- `InvoiceData::previous_invoice_hash` returns `&InvoiceHash` (was `&str`).
-- `SignedInvoice::uuid` returns `&InvoiceUuid` (was `&str`).
-- `SignedInvoice::invoice_hash` and `SignedProperties::invoice_hash` return
-  `&InvoiceHash` (was `&str`).
-- `SignedProperties::signing_time` returns `&InvoiceTimestamp` (was `&str`).
-  Its `as_str()` is the canonical `YYYY-MM-DDTHH:MM:SSZ` form; the XAdES
-  `SigningTime` element in the XML is unchanged and still has no `Z`.
-- `OriginalInvoiceRef::with_uuid` takes `InvoiceUuid` (was
-  `impl Into<String>`), and `OriginalInvoiceRef::uuid` returns
-  `Option<&InvoiceUuid>` (was `Option<&str>`).
-- `Seller::new` (`Party::<SellerRole>::new`) takes `name: impl Into<String>`
-  and `vat_id: VatId` (was `String` and `impl Into<String>`) and returns
-  `Seller` (was `Result<Seller, InvoiceError>`); it can no longer fail.
-- `Buyer::new` (`Party::<BuyerRole>::new`) takes `name: impl Into<String>` and
-  `vat_id: Option<VatId>` (was `String` and `Option<String>`) and returns
-  `Buyer` (was `Result<Buyer, InvoiceError>`).
+- `PaymentMeans::payee_financial_account(account)` is renamed
+  `with_payee_financial_account(account)`; `payee_financial_account()` is now
+  the getter.
 
 ### Deprecated
 
-- `EnvironmentType`, `InvoiceTotalsData`, `ZatcaClient::{post_csr_for_ccsid,
-  post_ccsid_for_pcsid, prepare_post_csr_for_ccsid,
-  prepare_post_ccsid_for_pcsid}` and `CsrProperties::{from_properties_str,
-  parse_csr_config, parse_csr_config_file}` forward to the new names and will
-  be removed in 0.7.
+Each of these still compiles with a deprecation warning, forwards to its
+replacement, and will be removed in 0.7.
+
+- `config::EnvironmentType`: renamed `config::Environment`.
+- `ZatcaClient::post_csr_for_ccsid` and `post_ccsid_for_pcsid`: renamed
+  `request_compliance_csid` and `request_production_csid`.
+  `prepare_post_csr_for_ccsid` and `prepare_post_ccsid_for_pcsid`: renamed
+  `prepare_request_compliance_csid` and `prepare_request_production_csid`.
+- `CsrProperties::{from_properties_str, parse_csr_config}`: use
+  `text.parse::<CsrProperties>()`. `CsrProperties::parse_csr_config_file`: use
+  `CsrProperties::from_file`.
+- `invoice::InvoiceTotalsData`: renamed `invoice::InvoiceTotals`.
 - `invoice::validation::{validate_xml_invoice_from_str,
-  validate_xml_invoice_report_from_str, validate_zatca_invoice_from_str}`
-  forward to `Validator::{validate_xml, validate_xml_report, validate_zatca}`
-  and ignore their `Config` argument. `invoice::sign::invoice_hash_base64_from_xml_str`
-  forwards to `invoice::hash_xml` and still returns `String`. They will be
-  removed in 0.7.
-- `InvoiceBuilder::adjustment(AllowanceCharge)` forwards to `allowance` or
+  validate_xml_invoice_report_from_str, validate_zatca_invoice_from_str}`: use
+  `Validator::{validate_xml, validate_xml_report, validate_zatca}`. They
+  ignore their `Config` argument.
+- `invoice::sign::invoice_hash_base64_from_xml_str`: use `invoice::hash_xml`.
+  It still returns `String`.
+- `InvoiceBuilder::adjustment(AllowanceCharge)`: forwards to `allowance` or
   `charge` by the entry's `kind`. Use
-  `allowance(DocumentAdjustment::from(entry))` (or `charge`) instead.
+  `allowance(DocumentAdjustment::from(entry))` (or `charge`).
 - `InvoiceBuilder::{invoice_level_discount, invoice_level_charge,
-  allowance_reason}` keep their behaviour: each call replaces one aggregate
-  allowance or charge in the document VAT category, with a rate taken from the
-  first line in that category, and the reason is shared by both (on its own it
-  emits a zero-amount allowance). Use `allowance`/`charge` with
-  `DocumentAdjustment::new(Adjustment::amount(amount), category, rate)
-  .with_reason(reason)` instead; each call appends an entry with an explicit VAT
-  category and rate.
-- `InvoiceBuilder::payment_means_code(code)` keeps its behaviour: it changes
+  allowance_reason}`: these keep their behaviour. Each call replaces one
+  aggregate allowance or charge in the document VAT category, with a rate
+  taken from the first line in that category, and the reason is shared by
+  both (on its own it emits a zero-amount allowance). Use
+  `allowance`/`charge` with `DocumentAdjustment::new(Adjustment::amount(amount),
+  category, rate).with_reason(reason)`; each call appends an entry with an
+  explicit VAT category and rate.
+- `InvoiceBuilder::payment_means_code(code)`: keeps its behaviour of changing
   the code of the first payment means, creating one if there is none. Use
   `payment_means(PaymentMeans::new(code))`, which appends.
-- `VatBreakdown::without_vat_rate()` forwards to `omit_vat_rate()`.
+- `VatBreakdown::without_vat_rate()`: renamed `omit_vat_rate()`.
 - `Adjustment::{allowance_charge_reason, allowance_charge_reason_code,
-  calculation_base_amount, calculation_percentage}` forward to `reason()`,
+  calculation_base_amount, calculation_percentage}`: renamed `reason()`,
   `reason_code()`, `base_amount()` and `percentage()`.
-- `PaymentMeans::instruction_note(text)` forwards to
+- `PaymentMeans::instruction_note(text)`: renamed
   `with_instruction_note(text)`.
-- All of these will be removed in 0.7. The `fatoora-ffi` exported methods
-  (`set_payment_means_code`, `invoice_level_charge`, `invoice_level_discount`,
-  `allowance_reason`, `set_allowance`, `AllowanceCharge::without_vat_rate`,
-  `VatBreakdown::without_vat_rate`) are unchanged.
+
+The `fatoora-ffi` exported methods (`set_payment_means_code`,
+`invoice_level_charge`, `invoice_level_discount`, `allowance_reason`,
+`set_allowance`, `AllowanceCharge::without_vat_rate`,
+`VatBreakdown::without_vat_rate`) are unchanged.
 
 ### Removed
 
-- The `invoice::LineItems` alias (`Vec<LineItem>`) is removed. Use
-  `Vec<LineItem>`.
+- The `invoice::LineItems` alias (`Vec<LineItem>`). Use `Vec<LineItem>`.
 - `InvoiceData::note()`, which returned only the first note. Use
   `notes().first()`.
 - `OriginalInvoiceRef::with_issue_date_str`. Use
