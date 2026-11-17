@@ -6,7 +6,8 @@ EXAMPLE_BST = "TUlJRDNqQ0NBNFNnQXdJQkFnSVRFUUFBT0FQRjkwQWpzL3hjWHdBQkFBQTRBekFLQ
 EXAMPLE_SECRET = "CkYsEXfV8c1gFHAtFWoZv73pGMvh/Qyo4LzKM2h/8Hg="
 
 # --8<-- [start:example]
-from fatoora import Config, Environment, ProductionCsid, SignedInvoice, ZatcaClient
+from fatoora import (ClearanceMode, Config, Environment, ProductionCsid, ReportingStatus,
+                     SignedInvoice, ZatcaClient)
 
 # signed_xml_path = "path/to/signed_invoice.xml"
 signed = SignedInvoice.from_file(signed_xml_path)
@@ -14,10 +15,10 @@ signed = SignedInvoice.from_file(signed_xml_path)
 config = Config(Environment.NON_PRODUCTION)
 client = ZatcaClient(config)
 
-pcsid = ProductionCsid.new(Environment.NON_PRODUCTION, EXAMPLE_BST, EXAMPLE_SECRET)
+pcsid = ProductionCsid(Environment.NON_PRODUCTION, token=EXAMPLE_BST, secret=EXAMPLE_SECRET)
 
-response = client.report_simplified_invoice(signed, pcsid, clearance_status=False, accept_language="en")
+response = client.report_simplified_invoice(signed, pcsid, clearance=ClearanceMode.DISABLED, accept_language="en")
 
 response.ensure_accepted()
-assert response.reporting_status == "REPORTED"
+assert response.reporting_status is ReportingStatus.REPORTED
 # --8<-- [end:example]

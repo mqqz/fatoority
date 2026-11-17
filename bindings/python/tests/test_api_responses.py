@@ -9,16 +9,19 @@ from threading import Thread
 import time
 
 import pytest
-from fatoora import ProductionCsid, ZatcaClient, InvoiceOutcome, SignedInvoice
+from fatoora import (ClearanceMode, ClearanceStatus, InvoiceOutcome, MessageType, ProductionCsid,
+                     ReportingStatus, SignedInvoice, ValidationStatus, ZatcaClient)
 from fatoora.config import Config, Environment
 from fatoora.errors import ApiError, NetworkError, ParseError, UnauthorizedError
 
 
 @contextmanager
-def gateway(monkeypatch, status, body, delay=0.0):
+def gateway(monkeypatch, status, body, delay=0.0, headers=None):
     class Handler(BaseHTTPRequestHandler):
         def do_POST(self):
             self.rfile.read(int(self.headers["Content-Length"]))
+            if headers is not None:
+                headers.update((k.lower(), v) for k, v in self.headers.items())
             time.sleep(delay)
             payload = body.encode()
             self.send_response(status)
@@ -39,12 +42,14 @@ def gateway(monkeypatch, status, body, delay=0.0):
         thread.join()
 
 
-def report(**client_options):
+def report(clearance_options=None, **client_options):
     fixture = Path(__file__).resolve().parents[3] / "fatoora-core/tests/fixtures/invoices/sample-simplified-invoice.xml"
+    if clearance_options is None:
+        clearance_options = {"clearance": ClearanceMode.DISABLED}
     with SignedInvoice.from_xml(fixture.read_text()) as invoice, \
-         ProductionCsid.new(Environment.NON_PRODUCTION, "test-token", "test-secret") as credentials, \
+         ProductionCsid(Environment.NON_PRODUCTION, token="test-token", secret="test-secret") as credentials, \
          ZatcaClient(Config(Environment.NON_PRODUCTION), **client_options) as client:
-        return client.report_simplified_invoice(invoice, credentials, clearance_status=False, accept_language="en")
+        return client.report_simplified_invoice(invoice, credentials, accept_language="en", **clearance_options)
 
 
 @pytest.mark.parametrize("status", [400, 409, 401, 503])
@@ -67,6 +72,8 @@ def test_receipt_outcome_and_copied_invoice(monkeypatch, wire_status, outcome):
     with gateway(monkeypatch, 202, body), report() as response:
         assert response.http_status == 202
         assert response.outcome == outcome
+        assert response.reporting_status == wire_status
+        assert isinstance(response.reporting_status, ReportingStatus)
         copied = response.cleared_invoice_xml
         assert response.cleared_invoice_base64 == encoded
         if outcome == InvoiceOutcome.ACCEPTED:
@@ -77,6 +84,52 @@ def test_receipt_outcome_and_copied_invoice(monkeypatch, wire_status, outcome):
             assert caught.value.details["outcome"] == outcome.name.lower()
             assert caught.value.details["http_status"] == 202
     assert copied == xml
+
+
+def test_response_statuses_are_string_enums(monkeypatch):
+    body = json.dumps({"validationResults": {
+        "status": "PASS", "infoMessages": [{"type": "INFO", "status": "PASS", "code": "I"}],
+        "warningMessages": [{"type": "WARN", "status": "WARN", "code": "W"}], "errorMessages": [],
+    }, "reportingStatus": "REPORTED", "clearanceStatus": "CLEARED"})
+    with gateway(monkeypatch, 200, body), report() as response:
+        assert response.reporting_status is ReportingStatus.REPORTED
+        assert response.clearance_status is ClearanceStatus.CLEARED
+        results = response.validation_results
+        assert results.status is ValidationStatus.PASS
+        info, warning = results.info_messages[0], results.warning_messages[0]
+        assert (info.message_type, info.status) == (MessageType.INFO, ValidationStatus.PASS)
+        # 0.5 returned plain strings: comparisons, formatting and JSON are unchanged.
+        assert response.reporting_status == "REPORTED" and f"{response.reporting_status}" == "REPORTED"
+        assert str(results.status) == "PASS" and json.dumps(results.status) == '"PASS"'
+        # Unrecognised values are kept verbatim, like core's Other(String).
+        for value in (warning.message_type, warning.status):
+            assert value == "WARN" and value.value == "WARN" and value.name == "OTHER"
+            assert {"WARN": 1}[value] == 1
+        assert isinstance(warning.message_type, MessageType)
+        assert isinstance(warning.status, ValidationStatus)
+    body = json.dumps({"validationResults": {}})
+    with gateway(monkeypatch, 200, body), report() as response:
+        assert response.reporting_status is None and response.clearance_status is None
+        assert response.validation_results.status is None
+
+
+@pytest.mark.parametrize("mode,header", [(ClearanceMode.DISABLED, "0"), (ClearanceMode.ENABLED, "1")])
+def test_clearance_mode_sets_the_header(monkeypatch, mode, header):
+    seen = {}
+    body = '{"validationResults":{"status":"PASS"},"reportingStatus":"REPORTED"}'
+    with gateway(monkeypatch, 200, body, headers=seen), report(clearance_options={"clearance": mode}):
+        pass
+    assert seen["clearance-status"] == header
+
+
+@pytest.mark.parametrize("value,header", [(False, "0"), (True, "1")])
+def test_deprecated_clearance_status_still_sets_the_header(monkeypatch, value, header):
+    seen = {}
+    body = '{"validationResults":{"status":"PASS"},"reportingStatus":"REPORTED"}'
+    with gateway(monkeypatch, 200, body, headers=seen):
+        with pytest.warns(DeprecationWarning, match=f"clearance=ClearanceMode.{'ENABLED' if value else 'DISABLED'}"):
+            report(clearance_options={"clearance_status": value}).close()
+    assert seen["clearance-status"] == header
 
 
 @pytest.mark.parametrize("value", [None, "", "%%%", "/w==", "AA=="])
@@ -155,7 +208,7 @@ def test_http_releases_gil_and_retains_locked_arguments(invoice_action):
         import sys
         from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
         from threading import Event, Thread
-        from fatoora import ProductionCsid, ZatcaClient, SignedInvoice
+        from fatoora import ClearanceMode, ProductionCsid, ZatcaClient, SignedInvoice
         from fatoora.config import Config, Environment
         from fatoora.errors import InvalidInputError
 
@@ -183,11 +236,11 @@ def test_http_releases_gil_and_retains_locked_arguments(invoice_action):
         os.environ["FATOORA_ZATCA_BASE_URL"] = f"http://127.0.0.1:{server.server_port}"
         xml = Path(sys.argv[1]).read_text()
         invoice = SignedInvoice.from_xml(xml)
-        credentials = ProductionCsid.new(Environment.NON_PRODUCTION, "test-token", "test-secret")
+        credentials = ProductionCsid(Environment.NON_PRODUCTION, token="test-token", secret="test-secret")
         client = ZatcaClient(Config(Environment.NON_PRODUCTION))
         def request():
             try:
-                responses.append(client.report_simplified_invoice(invoice, credentials, clearance_status=False, accept_language="en"))
+                responses.append(client.report_simplified_invoice(invoice, credentials, clearance=ClearanceMode.DISABLED, accept_language="en"))
             except BaseException as exc:
                 failures.append(repr(exc))
         request_thread = Thread(target=request, daemon=True)

@@ -36,6 +36,10 @@ def closed(value):
 
 
 ADDRESS = ("SA", "Riyadh", "King Fahd", "1234", "12222")
+CSR_FIELDS = dict(common_name="TST-886431145-399999999900003", serial_number="1-TST|2-TST|3-ed22f1d8",
+                  organization_identifier="399999999900003", organization_unit_name="Riyadh Branch",
+                  organization_name="Example LTD", country_name="SA", invoice_type="1100",
+                  location_address="RRRD2929", industry_business_category="Supply activities")
 
 
 def fake_client(monkeypatch):
@@ -78,6 +82,9 @@ CASES = {
     "InvoiceBuilder.invoice_level_discount": (lambda mp: builder().invoice_level_discount(1), "add_allowance"),
     "InvoiceBuilder.allowance_reason": (lambda mp: builder().allowance_reason("r"), "reason=reason"),
     "LineItemBuilder.new": (lambda mp: LineItemBuilder.new(), "LineItemBuilder()"),
+    "CsrProperties.new": (lambda mp: CsrProperties.new(**CSR_FIELDS), "CsrProperties(common_name="),
+    "ComplianceCsid.new": (lambda mp: ComplianceCsid.new(Environment.SIMULATION, "token", "secret"), "ComplianceCsid(env, token="),
+    "ProductionCsid.new": (lambda mp: ProductionCsid.new(Environment.SIMULATION, "token", "secret", "1"), "ProductionCsid(env, token="),
     "ZatcaClient.post_csr_for_ccsid": (lambda mp: fake_client(mp).post_csr_for_ccsid(None, "1"), "request_compliance_csid"),
     "ZatcaClient.post_ccsid_for_pcsid": (lambda mp: fake_client(mp).post_ccsid_for_pcsid(None), "request_production_csid"),
     # Value models: frozen dataclasses since 0.6.

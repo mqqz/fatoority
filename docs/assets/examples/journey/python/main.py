@@ -7,9 +7,9 @@ from pathlib import Path
 import sys
 from uuid import uuid4
 
-from fatoora import (Address, Config, Environment, InvoiceBuilder, InvoiceSigner, InvoiceSubType,
-                     InvoiceTypeKind, PaymentMeans, ProductionCsid, VatCategory, ZatcaClient,
-                     validate_zatca)
+from fatoora import (Address, ClearanceMode, Config, Environment, InvoiceBuilder, InvoiceSigner,
+                     InvoiceSubType, InvoiceTypeKind, PaymentMeans, ProductionCsid, VatCategory,
+                     ZatcaClient, validate_zatca)
 from fatoora.errors import FfiError
 
 ENVIRONMENT = Environment.NON_PRODUCTION  # Integration Sandbox only.
@@ -107,9 +107,9 @@ def run(input_path, submit):
                     state["stage"] = "report"
                     state["submitted"] = True  # Attempted; outcome may be unknown if the connection fails.
                     save_json(output / "state.json", state)
-                    with ProductionCsid.new(ENVIRONMENT, token, secret) as credentials, \
+                    with ProductionCsid(ENVIRONMENT, token=token, secret=secret) as credentials, \
                             Config(ENVIRONMENT) as config, ZatcaClient(config) as client:
-                        with client.report_simplified_invoice(signed, credentials, clearance_status=False, accept_language="en") as response:
+                        with client.report_simplified_invoice(signed, credentials, clearance=ClearanceMode.DISABLED, accept_language="en") as response:
                             handle_response(response, output)
                     state["stage"] = "accepted"
     except Exception as error:

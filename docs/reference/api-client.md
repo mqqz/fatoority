@@ -205,8 +205,8 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     The request owns its data and can outlive the client, invoice, and credentials.
 
 === "Python"
-    Import `ZatcaClient`, `ComplianceCsid`, `ProductionCsid`, and `InvoiceOutcome`
-    from `fatoora`. Construct `ZatcaClient(config: Config, *, timeout=None)`;
+    Import `ZatcaClient`, `ComplianceCsid`, `ProductionCsid`, `ClearanceMode`, and
+    `InvoiceOutcome` from `fatoora`. Construct `ZatcaClient(config: Config, *, timeout=None)`;
     `timeout` is seconds (`int`/`float`) or a `datetime.timedelta`, and a request
     that exceeds it raises `NetworkError`. HTTP calls block until they
     finish and raise classified exceptions on failure; see [errors](errors.md).
@@ -219,18 +219,22 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     | `request_production_csid(ccsid: ComplianceCsid)` | `ProductionCsid` |
     | `renew_csid(pcsid: ProductionCsid, csr: Csr, otp: str, accept_language: Optional[str] = None)` | `ProductionCsid` |
     | `check_invoice_compliance(invoice: SignedInvoice, ccsid: ComplianceCsid)` | `ValidationResponse` |
-    | `report_simplified_invoice(invoice: SignedInvoice, pcsid: ProductionCsid, *, clearance_status: bool, accept_language: Optional[str] = None)` | `ValidationResponse` |
-    | `clear_standard_invoice(invoice: SignedInvoice, pcsid: ProductionCsid, *, clearance_status: bool, accept_language: Optional[str] = None)` | `ValidationResponse` |
+    | `report_simplified_invoice(invoice: SignedInvoice, pcsid: ProductionCsid, *, clearance: ClearanceMode, accept_language: Optional[str] = None)` | `ValidationResponse` |
+    | `clear_standard_invoice(invoice: SignedInvoice, pcsid: ProductionCsid, *, clearance: ClearanceMode, accept_language: Optional[str] = None)` | `ValidationResponse` |
 
-    `clearance_status` and `accept_language` are keyword-only. The 0.5 names
-    `post_csr_for_ccsid` and `post_ccsid_for_pcsid` still work until 0.7, with a
-    `DeprecationWarning`.
+    `clearance` (required) and `accept_language` are keyword-only.
+    `ClearanceMode.DISABLED` sends `Clearance-Status: 0` and `ClearanceMode.ENABLED`
+    sends `1`. The 0.5 form `clearance_status=False`/`True`, and the 0.5 names
+    `post_csr_for_ccsid` and `post_ccsid_for_pcsid`, still work until 0.7, with a
+    `DeprecationWarning`; passing both `clearance` and `clearance_status` raises
+    `TypeError`.
 
     **Credentials**
 
-    `ComplianceCsid.new(env: Environment, token: str, secret: str, request_id: Optional[str] = None)`
-    returns `ComplianceCsid`. `ProductionCsid.new` accepts the same arguments and returns
-    `ProductionCsid`. The `env` property is an `Environment`; `binary_security_token` and
+    `ComplianceCsid(env: Environment, *, token: str, secret: str, request_id: Optional[str] = None)`
+    builds compliance credentials from stored values; `ProductionCsid(...)` takes the
+    same arguments. The deprecated `ComplianceCsid.new(env, token, secret, request_id=None)`
+    and `ProductionCsid.new(...)` keep their 0.5 positional order until 0.7. The `env` property is an `Environment`; `binary_security_token` and
     `secret` are `str`; `request_id` is `Optional[str]`, `None` when absent. The 0.5 class
     names `CsidCompliance` and `CsidProduction` are deprecated aliases until 0.7.
 
@@ -242,12 +246,21 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     | `response.outcome` | `InvoiceOutcome.ACCEPTED`, `.REJECTED`, or `.UNKNOWN` |
     | `response.ensure_accepted()` | `None`; raises `ApiError` if not accepted. |
     | `response.validation_results` | `ValidationResults` |
-    | `response.reporting_status` / `clearance_status` / `qr_seller_status` / `qr_buyer_status` | `Optional[str]` |
+    | `response.reporting_status` | `Optional[ReportingStatus]`: `REPORTED`, `NOT_REPORTED` |
+    | `response.clearance_status` | `Optional[ClearanceStatus]`: `CLEARED`, `NOT_CLEARED` |
+    | `response.qr_seller_status` / `qr_buyer_status` | `Optional[str]` |
     | `response.cleared_invoice_base64` | `Optional[str]` |
     | `response.cleared_invoice_xml` | `Optional[str]`; raises `ParseError` for invalid content. |
-    | `results.status` | `Optional[str]` |
+    | `results.status` | `Optional[ValidationStatus]`: `PASS`, `WARNING`, `ERROR` |
     | `results.info_messages` / `warning_messages` / `error_messages` | `list[ValidationMessage]` |
-    | `message.message_type` / `code` / `category` / `message` / `status` | `Optional[str]` |
+    | `message.message_type` | `Optional[MessageType]`: `INFO`, `WARNING`, `ERROR` |
+    | `message.status` | `Optional[ValidationStatus]` |
+    | `message.code` / `category` / `message` | `Optional[str]` |
+
+    The status enums are `str` subclasses whose values are the wire text, so
+    `response.reporting_status == "REPORTED"` holds. A value this version does not
+    recognize is kept verbatim, like the core's `Other(String)`: it is an instance of
+    the enum whose `name` is `"OTHER"` and whose `value` is the text ZATCA sent.
 
     Client, credential, response, result, and message objects support `with` and
     `close()`. Child results are independently owned. Calls do not consume their

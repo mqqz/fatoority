@@ -8,7 +8,7 @@ import warnings
 
 import pytest
 
-from fatoora import (Address, Config, ComplianceCsid, ProductionCsid, CsrProperties, Environment,
+from fatoora import (Address, ClearanceMode, Config, ComplianceCsid, ProductionCsid, CsrProperties, Environment,
                      InvoiceBuilder, InvoiceFlag, SigningKey, InvoiceSubType, InvoiceTypeKind, VatCategory,
                      ZatcaClient, FinalizedInvoice, SignedInvoice)
 from test_numeric_contract import builder
@@ -85,7 +85,7 @@ def test_repr_never_raises_when_a_getter_fails():
 
 @pytest.mark.parametrize("cls", [ComplianceCsid, ProductionCsid])
 def test_credential_repr_redacts_secrets(cls):
-    creds = cls.new(Environment.SIMULATION, TOKEN, SECRET, "req-42")
+    creds = cls(Environment.SIMULATION, token=TOKEN, secret=SECRET, request_id="req-42")
     text = repr(creds)
     assert text == (f"{cls.__name__}(request_id='req-42', env=Environment.SIMULATION, "
                     "binary_security_token='<redacted>', secret='<redacted>')")
@@ -142,14 +142,55 @@ def test_builder_keyword_only_arguments_are_enforced(call):
 def test_client_flags_are_keyword_only(monkeypatch, method):
     client = _fake_client(monkeypatch)
     with pytest.raises(TypeError, match="positional argument"):
-        getattr(client, method)(None, None, False)
-    with pytest.raises(TypeError, match="clearance_status"):
+        getattr(client, method)(None, None, ClearanceMode.DISABLED)
+    with pytest.raises(TypeError, match="'clearance'"):
         getattr(client, method)(None, None)
+    with pytest.raises(TypeError, match="not both"):
+        getattr(client, method)(None, None, clearance=ClearanceMode.DISABLED, clearance_status=False)
+    for value in (False, "1"):
+        with pytest.raises(TypeError, match="ClearanceMode"):
+            getattr(client, method)(None, None, clearance=value)
+    with pytest.raises(TypeError, match="bool"):
+        getattr(client, method)(None, None, clearance_status=1)
 
 
-def test_csr_properties_new_is_keyword_only():
+@pytest.mark.parametrize("method", ["report_simplified_invoice", "clear_standard_invoice"])
+def test_clearance_status_bool_warns_at_caller(monkeypatch, method):
+    client = _fake_client(monkeypatch)
+    with pytest.warns(DeprecationWarning, match="clearance=ClearanceMode.ENABLED") as record:
+        getattr(client, method)(None, None, clearance_status=True)
+    assert record[0].filename == __file__ and "removed in 0.7" in str(record[0].message)
+
+
+def test_csr_properties_is_keyword_only():
     with pytest.raises(TypeError, match="positional argument"):
+        CsrProperties(*CSR_FIELDS.values())
+    with pytest.raises(TypeError, match="positional argument"), pytest.warns(DeprecationWarning):
         CsrProperties.new(*CSR_FIELDS.values())
+
+
+@pytest.mark.parametrize("cls", [ComplianceCsid, ProductionCsid])
+def test_credentials_take_keywords_after_env(cls):
+    with pytest.raises(TypeError, match="positional argument"):
+        cls(Environment.SIMULATION, TOKEN, SECRET)
+    creds = cls(Environment.SIMULATION, token=TOKEN, secret=SECRET, request_id="r")
+    assert (creds.binary_security_token, creds.secret, creds.request_id) == (TOKEN, SECRET, "r")
+    # The deprecated factory keeps the 0.5 order: (env, token, secret, request_id).
+    with pytest.warns(DeprecationWarning, match=f"{cls.__name__}\\(env, token="):
+        old = cls.new(Environment.SIMULATION, TOKEN, SECRET, "r")
+    assert (old.binary_security_token, old.secret, old.request_id) == (TOKEN, SECRET, "r")
+
+
+@pytest.mark.parametrize("cls,hint", [
+    ("InvoiceSigner", "from_pem"), ("SigningKey", "generate"), ("Csr", "CsrProperties.build"),
+    ("FinalizedInvoice", "from_xml"), ("SignedInvoice", "from_xml"),
+    ("ValidationResponse", "ZatcaClient"), ("ValidationResults", "validation_results"),
+    ("ValidationMessage", "messages"),
+])
+def test_types_without_a_constructor_name_their_factories(cls, hint):
+    import fatoora
+    with pytest.raises(TypeError, match=f"{cls} has no public constructor; use .*{hint}"):
+        getattr(fatoora, cls)()
 
 
 def test_keyword_calls_do_not_warn(monkeypatch):
@@ -162,21 +203,26 @@ def test_keyword_calls_do_not_warn(monkeypatch):
         b.add_note("hello")
         b.add_note("hello", language="en")
         b.add_note(text="hello", language="en")
-        CsrProperties.new(**CSR_FIELDS)
+        CsrProperties(**CSR_FIELDS)
+        ComplianceCsid(Environment.SIMULATION, token=TOKEN, secret=SECRET)
         client = _fake_client(monkeypatch)
         for method in ("report_simplified_invoice", "clear_standard_invoice"):
-            getattr(client, method)(None, None, clearance_status=False)
-            getattr(client, method)(None, None, clearance_status=True, accept_language="en")
-            getattr(client, method)(invoice=None, pcsid=None, clearance_status=False)
+            getattr(client, method)(None, None, clearance=ClearanceMode.DISABLED)
+            getattr(client, method)(None, None, clearance=ClearanceMode.ENABLED, accept_language="en")
+            getattr(client, method)(invoice=None, pcsid=None, clearance=ClearanceMode.DISABLED)
 
 
 def test_keyword_only_signatures():
     kinds = {name: p.kind for name, p in inspect.signature(InvoiceBuilder.set_seller).parameters.items()}
     assert list(kinds)[:2] == ["self", "name"]
     assert all(kind is inspect.Parameter.KEYWORD_ONLY for kind in list(kinds.values())[2:])
-    params = inspect.signature(CsrProperties.new).parameters
-    assert list(params) == list(CSR_FIELDS)
-    assert all(p.kind is inspect.Parameter.KEYWORD_ONLY for p in params.values())
+    for factory in (CsrProperties, CsrProperties.new):
+        params = inspect.signature(factory).parameters
+        assert list(params) == list(CSR_FIELDS)
+        assert all(p.kind is inspect.Parameter.KEYWORD_ONLY for p in params.values())
     params = inspect.signature(ZatcaClient.report_simplified_invoice).parameters
-    assert [p.kind for p in params.values()][-2:] == [inspect.Parameter.KEYWORD_ONLY] * 2
+    assert [p.kind for p in params.values()][-3:] == [inspect.Parameter.KEYWORD_ONLY] * 3
+    params = inspect.signature(ProductionCsid).parameters
+    assert [(name, p.kind is inspect.Parameter.KEYWORD_ONLY) for name, p in params.items()] == [
+        ("env", False), ("token", True), ("secret", True), ("request_id", True)]
     assert InvoiceBuilder.add_note.__name__ == "add_note"
