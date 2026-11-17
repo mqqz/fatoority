@@ -1,6 +1,6 @@
 #![no_main]
 
-use fatoora_core::invoice::sign::{InvoiceSigner, invoice_hash_base64_from_xml_str};
+use fatoora_core::invoice::{hash_xml, sign::InvoiceSigner};
 use libfuzzer_sys::fuzz_target;
 
 const CERT: &[u8] = include_bytes!("../seeds/signing_inputs/certificate-der")
@@ -14,10 +14,7 @@ const XML: &str = include_str!("../seeds/xml_parse/signed.xml");
 fn check_signature(signer: &InvoiceSigner, xml: &str) {
     if let Ok(signed) = signer.sign_xml(xml) {
         // Adding signature/QR nodes must not change the signed invoice digest.
-        assert_eq!(
-            invoice_hash_base64_from_xml_str(xml).unwrap(),
-            invoice_hash_base64_from_xml_str(&signed).unwrap()
-        );
+        assert_eq!(hash_xml(xml).unwrap(), hash_xml(&signed).unwrap());
     }
 }
 

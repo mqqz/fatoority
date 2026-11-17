@@ -763,6 +763,30 @@ impl TryFrom<&str> for InvoiceHash {
     }
 }
 
+/// Compute the ZATCA invoice hash of an XML invoice.
+///
+/// The hash is the base64-encoded SHA-256 digest of the invoice after ZATCA
+/// canonicalisation (the `UBLExtensions`, `cac:Signature` and QR document
+/// reference removed, then canonicalised). It is the value signed into the invoice and the value the
+/// next invoice in the chain carries as its previous invoice hash (`PIH`).
+///
+/// # Examples
+/// ```rust
+/// use fatoora_core::invoice::hash_xml;
+///
+/// let xml = include_str!("../tests/fixtures/invoices/sample-simplified-invoice.xml");
+/// let hash = hash_xml(xml)?;
+/// assert_eq!(hash.as_str().len(), 44);
+/// # Ok::<(), fatoora_core::invoice::sign::SigningError>(())
+/// ```
+///
+/// # Errors
+/// Returns [`sign::SigningError::Xml`] if the XML cannot be parsed or
+/// canonicalised.
+pub fn hash_xml(xml: &str) -> std::result::Result<InvoiceHash, sign::SigningError> {
+    sign::invoice_hash_base64_from_xml(xml).map(InvoiceHash)
+}
+
 /// Postal address for parties.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Address {

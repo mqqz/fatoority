@@ -313,18 +313,14 @@ fatoora sign --invoice invoice.xml --cert cert.pem --key key.pem --signed-invoic
 
 Rust
 ```rust
-use fatoora_core::config::Config;
-use fatoora_core::invoice::validation::{
-    validate_zatca_invoice_from_str, ZatcaValidationOptions,
-};
+use fatoora_core::invoice::validation::{Validator, ZatcaValidationOptions};
 
-let config = Config::new(fatoora_core::config::Environment::NonProduction);
 let xml = std::fs::read_to_string("invoice.xml")?;
 let options = ZatcaValidationOptions {
     previous_invoice_hash: Some(previous_hash_from_history),
     ..Default::default()
 };
-let report = validate_zatca_invoice_from_str(&xml, &config, &options)?;
+let report = Validator::new().validate_zatca(&xml, &options)?;
 if !report.is_valid() {
     // Inspect stages and findings; missing predecessor context is incomplete.
 }
@@ -340,7 +336,7 @@ The local profile implements all 257 business-rule assertions from SDK
 `238-R3.4.8`, plus applicable signature, QR and predecessor checks. It preserves
 warnings and partial reports. Standard invoices skip signature/QR checks under
 this SDK profile. Local validation does not establish issuer trust or remote
-acceptance. Existing `validate_xml_invoice_from_str` and the default CLI profile
+acceptance. `Validator::validate_xml` and the default CLI profile
 continue to check XSD only.
 </details>
 

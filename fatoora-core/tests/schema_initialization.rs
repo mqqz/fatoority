@@ -1,4 +1,4 @@
-use fatoora_core::{config::Config, invoice::validation::validate_xml_invoice_from_str};
+use fatoora_core::invoice::validation::Validator;
 use std::{
     process::Command,
     sync::Barrier,
@@ -18,7 +18,7 @@ fn concurrent_first_schema_use_completes() {
                 let start = &start;
                 scope.spawn(move || {
                     start.wait();
-                    validate_xml_invoice_from_str(INVOICE, &Config::default()).unwrap();
+                    Validator::new().validate_xml(INVOICE).unwrap();
                 });
             }
         });

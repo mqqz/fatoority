@@ -76,11 +76,9 @@ fn assert_roundtrip(xml: &str, invoice: &fatoora_core::invoice::FinalizedInvoice
     let generated = invoice.to_xml().unwrap();
     let parsed = parse_finalized_invoice_xml(&generated).unwrap();
     assert_eq!(&parsed, invoice);
-    fatoora_core::invoice::validation::validate_xml_invoice_from_str(
-        &generated,
-        &fatoora_core::config::Config::default(),
-    )
-    .unwrap();
+    fatoora_core::invoice::validation::Validator::new()
+        .validate_xml(&generated)
+        .unwrap();
     if file.file_name().unwrap() == "Advance Payment adjustments with foreign currency invoice.xml"
     {
         // Historical sample embeds BT-111 (SAR) rather than BT-110 (USD).
@@ -93,18 +91,15 @@ fn assert_roundtrip(xml: &str, invoice: &fatoora_core::invoice::FinalizedInvoice
         parse_signed_invoice_xml(xml).unwrap_or_else(|e| panic!("{}: {e}", file.display()));
     assert_eq!(signed.xml(), xml);
     assert_ne!(signed.xml(), generated);
-    let hash = fatoora_core::invoice::sign::invoice_hash_base64_from_xml_str(xml).unwrap();
-    assert_eq!(signed.hash_base64().unwrap(), hash);
-    assert_eq!(
-        hash,
-        fatoora_core::invoice::sign::invoice_hash_base64_from_xml_str(signed.xml()).unwrap()
-    );
+    let hash = fatoora_core::invoice::hash_xml(xml).unwrap();
+    assert_eq!(signed.hash_base64().unwrap(), hash.as_str());
+    assert_eq!(hash, fatoora_core::invoice::hash_xml(signed.xml()).unwrap());
 }
 
 #[test]
 fn regenerated_compliant_fixtures_retain_business_rule_compliance() {
     use fatoora_core::invoice::validation::{
-        Severity, ZatcaStage, ZatcaValidationOptions, validate_zatca_invoice_from_str,
+        Severity, Validator, ZatcaStage, ZatcaValidationOptions,
     };
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/invoices");
     let mut compliant = 0;
@@ -117,23 +112,15 @@ fn regenerated_compliant_fixtures_retain_business_rule_compliance() {
                     evaluated_at: Some("2026-10-18T12:00:00Z".parse().unwrap()),
                     previous_invoice_hash: Some(invoice.data().previous_invoice_hash().into()),
                 };
-                let original = validate_zatca_invoice_from_str(
-                    &source,
-                    &fatoora_core::config::Config::default(),
-                    &options,
-                )
-                .unwrap();
+                let original = Validator::new().validate_zatca(&source, &options).unwrap();
                 let errors = |report: &fatoora_core::invoice::validation::ZatcaValidationReport| -> Vec<String> {
                     report.stages.iter().filter(|s| matches!(s.stage, ZatcaStage::Xsd | ZatcaStage::Cen | ZatcaStage::Ksa)).flat_map(|s| &s.findings).filter(|f| f.finding.severity == Severity::Error).map(|f| f.finding.code.clone()).collect()
                 };
                 if errors(&original).is_empty() {
                     compliant += 1;
-                    let regenerated = validate_zatca_invoice_from_str(
-                        &invoice.to_xml().unwrap(),
-                        &fatoora_core::config::Config::default(),
-                        &options,
-                    )
-                    .unwrap();
+                    let regenerated = Validator::new()
+                        .validate_zatca(&invoice.to_xml().unwrap(), &options)
+                        .unwrap();
                     assert!(
                         errors(&regenerated).is_empty(),
                         "{file:?}: {:?}",

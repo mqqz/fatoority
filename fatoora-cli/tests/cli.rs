@@ -1088,7 +1088,7 @@ fn malformed_xml_has_command_context_and_no_success_output() {
 
 #[test]
 fn generate_hash_preserves_input_representation() {
-    use fatoora_core::invoice::sign::invoice_hash_base64_from_xml_str;
+    use fatoora_core::invoice::hash_xml;
     let unsigned = unique_temp_path("unsigned-hash-input");
     let source = std::fs::read_to_string(signed_invoice_fixture()).unwrap();
     let finalized =
@@ -1112,7 +1112,7 @@ fn generate_hash_preserves_input_representation() {
         );
         assert_eq!(
             String::from_utf8(output.stdout).unwrap().trim(),
-            invoice_hash_base64_from_xml_str(&changed).unwrap()
+            hash_xml(&changed).unwrap().as_str()
         );
         std::fs::remove_file(path).unwrap();
     }
@@ -1160,4 +1160,43 @@ fn qr_command_rejects_a_stamp_with_its_signature_removed() {
     assert!(!result.status.success());
     assert!(result.stdout.is_empty());
     std::fs::remove_file(file).unwrap();
+}
+
+#[test]
+fn text_validation_reports_assertion_site_and_missing_xsd_input() {
+    let xml = std::fs::read_to_string(standard_invoice_fixture()).unwrap();
+    let changed = xml.replacen(
+        "<cbc:LineExtensionAmount currencyID=\"SAR\">300.00",
+        "<cbc:LineExtensionAmount currencyID=\"[\">300.00",
+        1,
+    );
+    assert_ne!(changed, xml);
+    let path = unique_temp_path("text-rule-execution-failure");
+    std::fs::write(&path, changed).unwrap();
+    let output = Command::new(cli_exe())
+        .args(["validate", "--profile=zatca", "--invoice"])
+        .arg(&path)
+        .output()
+        .unwrap();
+    std::fs::remove_file(&path).unwrap();
+    assert_eq!(output.status.code(), Some(3));
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains("Validation: execution_failed"), "{stdout}");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("Assertion: ksa:112:BR-KSA-CL-02"),
+        "{stderr}"
+    );
+    assert!(stderr.contains("Location: "), "{stderr}");
+
+    let missing = unique_temp_path("missing-xsd-invoice");
+    let output = Command::new(cli_exe())
+        .args(["validate", "--invoice"])
+        .arg(&missing)
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    assert!(output.stdout.is_empty());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("failed to read invoice file"), "{stderr}");
 }

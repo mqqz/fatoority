@@ -1897,12 +1897,12 @@ pub mod ffi {
                         })?
                     }
                 };
-                let report = inv_core::validation::validate_zatca_invoice_from_str(
-                    text(xml)?,
-                    &config.0,
-                    &options,
-                )
-                .map_err(core_error)?;
+                // Validation is environment-independent; the exported API keeps
+                // `config` for compatibility.
+                let _ = config;
+                let report = inv_core::validation::Validator::new()
+                    .validate_zatca(text(xml)?, &options)
+                    .map_err(core_error)?;
                 let json = serde_json::to_string(&report).map_err(|error| {
                     local_error(
                         9,
@@ -1915,7 +1915,9 @@ pub mod ffi {
 
         pub fn validate(config: &Config, xml: &DiplomatStr) -> Result<bool, Box<BindingError>> {
             boundary(|| {
-                inv_core::validation::validate_xml_invoice_from_str(text(xml)?, &config.0)
+                let _ = config;
+                inv_core::validation::Validator::new()
+                    .validate_xml(text(xml)?)
                     .map(|()| true)
                     .map_err(core_error)
             })
@@ -1923,8 +1925,7 @@ pub mod ffi {
         pub fn hash(xml: &DiplomatStr, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
             boundary(|| {
                 write(
-                    &inv_core::sign::invoice_hash_base64_from_xml_str(text(xml)?)
-                        .map_err(core_error)?,
+                    inv_core::hash_xml(text(xml)?).map_err(core_error)?.as_str(),
                     out,
                 )
             })

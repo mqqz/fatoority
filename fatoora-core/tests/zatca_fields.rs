@@ -1,11 +1,7 @@
 mod common;
 use fatoora_core::{
     Decimal,
-    config::Config,
-    invoice::{
-        validation::validate_xml_invoice_from_str,
-        xml::parse::parse_finalized_invoice_xml as parse, *,
-    },
+    invoice::{validation::Validator, xml::parse::parse_finalized_invoice_xml as parse, *},
 };
 fn d(v: &str) -> Decimal {
     v.parse().unwrap()
@@ -96,10 +92,10 @@ fn complete_line_and_metadata_preserve_source_fields_and_schema() {
         .build()
         .unwrap();
     let xml = invoice.to_xml().unwrap();
-    validate_xml_invoice_from_str(&xml, &Config::default()).unwrap();
+    Validator::new().validate_xml(&xml).unwrap();
     let imported = parse(&xml).unwrap();
     let regenerated = imported.to_xml().unwrap();
-    validate_xml_invoice_from_str(&regenerated, &Config::default()).unwrap();
+    Validator::new().validate_xml(&regenerated).unwrap();
     assert_eq!(leaves(&xml), leaves(&regenerated));
     assert_eq!(invoice, imported);
 }
@@ -147,7 +143,7 @@ fn optional_containers_are_not_missing_required_children() {
         .build()
         .unwrap();
     let xml = invoice.to_xml().unwrap();
-    validate_xml_invoice_from_str(&xml, &Config::default()).unwrap();
+    Validator::new().validate_xml(&xml).unwrap();
     assert_eq!(
         leaves(&xml),
         leaves(&parse(&xml).unwrap().to_xml().unwrap())
@@ -374,7 +370,7 @@ fn supported_container_shapes_have_distinct_validation_outcomes() {
         .unwrap();
     for container in ["<cac:PaymentMeans/>", "<cac:AllowanceCharge/>"] {
         let malformed = source.replacen("<cac:TaxTotal>", &format!("{container}<cac:TaxTotal>"), 1);
-        assert!(validate_xml_invoice_from_str(&malformed, &Config::default()).is_err());
+        assert!(Validator::new().validate_xml(&malformed).is_err());
         assert!(parse(&malformed).is_err());
     }
     let empty_totals = source_xml::select(
@@ -397,7 +393,7 @@ fn supported_container_shapes_have_distinct_validation_outcomes() {
         .build()
         .unwrap();
     let xml = invoice.to_xml().unwrap();
-    validate_xml_invoice_from_str(&xml, &Config::default()).unwrap();
+    Validator::new().validate_xml(&xml).unwrap();
     assert_eq!(
         leaves(&xml),
         leaves(&parse(&xml).unwrap().to_xml().unwrap())
@@ -509,7 +505,7 @@ fn repeated_identifiers_and_payment_instructions_keep_order() {
         .build()
         .unwrap();
     let xml = invoice.to_xml().unwrap();
-    validate_xml_invoice_from_str(&xml, &Config::default()).unwrap();
+    Validator::new().validate_xml(&xml).unwrap();
     let parsed = parse(&xml).unwrap();
     assert_eq!(parsed.data().buyer().unwrap().identifiers().len(), 2);
     assert_eq!(
@@ -531,13 +527,13 @@ fn absent_line_tax_container_remains_absent_and_empty_is_rejected() {
     let range = source_xml::select(&doc, "/ubl:Invoice/cac:InvoiceLine/cac:TaxTotal")[0].range();
     let mut absent = xml.clone();
     absent.replace_range(range.clone(), "");
-    validate_xml_invoice_from_str(&absent, &Config::default()).unwrap();
+    Validator::new().validate_xml(&absent).unwrap();
     let regenerated = parse(&absent).unwrap().to_xml().unwrap();
-    validate_xml_invoice_from_str(&regenerated, &Config::default()).unwrap();
+    Validator::new().validate_xml(&regenerated).unwrap();
     assert_eq!(leaves(&absent), leaves(&regenerated));
     let mut malformed = xml;
     malformed.replace_range(range, "<cac:TaxTotal/>");
-    assert!(validate_xml_invoice_from_str(&malformed, &Config::default()).is_err());
+    assert!(Validator::new().validate_xml(&malformed).is_err());
     assert!(parse(&malformed).is_err());
 }
 
@@ -563,10 +559,10 @@ fn document_tax_order_and_optional_accounting_total_are_preserved() {
     assert_eq!(leaves(&reordered), leaves(&output));
     let mut without_accounting = xml.clone();
     without_accounting.replace_range(first, "");
-    validate_xml_invoice_from_str(&without_accounting, &Config::default()).unwrap();
+    Validator::new().validate_xml(&without_accounting).unwrap();
     let output = parse(&without_accounting).unwrap().to_xml().unwrap();
     assert_eq!(leaves(&without_accounting), leaves(&output));
-    validate_xml_invoice_from_str(&output, &Config::default()).unwrap();
+    Validator::new().validate_xml(&output).unwrap();
 }
 
 #[test]
@@ -586,7 +582,7 @@ fn utc_and_ast_clock_values_survive_import_including_midnight() {
     let local = xml.replacen(">01:30:00Z</cbc:IssueTime>", ">01:30:00</cbc:IssueTime>", 1);
     for source in [&xml, &local] {
         let parsed = parse(source).unwrap();
-        validate_xml_invoice_from_str(source, &Config::default()).unwrap();
+        Validator::new().validate_xml(source).unwrap();
         assert_eq!(leaves(source), leaves(&parsed.to_xml().unwrap()));
         assert_eq!(
             parsed.data().billing_references()[0]
@@ -637,7 +633,7 @@ fn utc_and_ast_clock_values_survive_import_including_midnight() {
             assert_eq!(parsed.data().issue_time(), time);
             let output = parsed.to_xml().unwrap();
             assert_eq!(leaves(&source), leaves(&output));
-            validate_xml_invoice_from_str(&output, &Config::default()).unwrap();
+            Validator::new().validate_xml(&output).unwrap();
         }
     }
     for time in ["24:00:01", "24:01:00Z", "25:00:00Z"] {
@@ -866,7 +862,7 @@ fn out_of_scope_document_adjustments_preserve_absent_rates() {
         .unwrap();
     let source = xml.replace("<cbc:Percent>0</cbc:Percent>", "");
     assert_ne!(source, xml);
-    validate_xml_invoice_from_str(&source, &Config::default()).unwrap();
+    Validator::new().validate_xml(&source).unwrap();
     let imported = parse(&source).unwrap();
     assert!(imported.data().adjustments()[0].omitted_rate);
     assert_eq!(leaves(&source), leaves(&imported.to_xml().unwrap()));

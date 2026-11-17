@@ -2,11 +2,7 @@
 mod common;
 
 use base64ct::{Base64, Encoding};
-use fatoora_core::config::Config;
-use fatoora_core::invoice::sign::{InvoiceSigner, invoice_hash_base64_from_xml_str};
-use fatoora_core::invoice::validation::{
-    ValidationLayer, XmlValidationError, validate_xml_invoice_report_from_str,
-};
+use fatoora_core::invoice::validation::{ValidationLayer, Validator, XmlValidationError};
 use fatoora_core::invoice::xml::{
     InvoiceXmlError, XmlFormat,
     parse::{parse_finalized_invoice_xml, parse_signed_invoice_xml},
@@ -14,6 +10,7 @@ use fatoora_core::invoice::xml::{
 use fatoora_core::invoice::{
     FinalizedInvoice, InvoiceBuilder, InvoiceError, InvoiceSubType, InvoiceType,
 };
+use fatoora_core::invoice::{hash_xml, sign::InvoiceSigner};
 use fatoora_core::{Decimal, ErrorKind};
 
 #[test]
@@ -34,7 +31,7 @@ fn construction_import_signing_and_validation_use_direct_methods() {
     assert_eq!(imported.data().id(), invoice.data().id());
     assert_eq!(imported.data().line_items(), invoice.data().line_items());
     assert_eq!(imported.totals(), invoice.totals());
-    let report = validate_xml_invoice_report_from_str(&xml, &Config::default()).unwrap();
+    let report = Validator::new().validate_xml_report(&xml).unwrap();
     assert_eq!(report.layers_checked, [ValidationLayer::Xsd]);
     assert!(!report.has_errors());
 
@@ -51,7 +48,7 @@ fn construction_import_signing_and_validation_use_direct_methods() {
     );
     assert_eq!(
         signed.invoice_hash(),
-        invoice_hash_base64_from_xml_str(signed.xml()).unwrap()
+        hash_xml(signed.xml()).unwrap().as_str()
     );
     let imported = parse_signed_invoice_xml(signed.xml()).unwrap();
     assert_eq!(imported.into_xml(), signed.xml());
@@ -73,10 +70,10 @@ fn consumer_can_inspect_failures_without_backend_types() {
     };
     assert!(!fields.issues().is_empty());
     assert!(matches!(
-        validate_xml_invoice_report_from_str("<", &Config::default()),
+        Validator::new().validate_xml_report("<"),
         Err(XmlValidationError::XmlParse { .. })
     ));
-    let report = validate_xml_invoice_report_from_str("<wrong/>", &Config::default()).unwrap();
+    let report = Validator::new().validate_xml_report("<wrong/>").unwrap();
     assert!(report.has_errors());
     assert_eq!(report.layers_checked, [ValidationLayer::Xsd]);
 }

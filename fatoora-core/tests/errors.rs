@@ -1,10 +1,9 @@
 use std::error::Error as StdError;
 
 use fatoora_core::api::{ServerErrorResponse, ZatcaError};
-use fatoora_core::config::Config;
 use fatoora_core::csr::{Csr, CsrError, CsrProperties};
 use fatoora_core::invoice::sign::SigningError;
-use fatoora_core::invoice::validation::{XmlValidationError, validate_xml_invoice_from_str};
+use fatoora_core::invoice::validation::{Validator, XmlValidationError};
 use fatoora_core::invoice::{InvoiceError, InvoiceField, LineItem, VatCategory};
 use fatoora_core::{Decimal, Diagnostic, Error, ErrorKind};
 use serde_json::{Value, json};
@@ -65,7 +64,8 @@ fn nested_signing_error_retains_validation_details() {
 
 #[test]
 fn schema_diagnostics_survive_conversion() {
-    let error: Error = validate_xml_invoice_from_str("<Invoice/>\n", &Config::default())
+    let error: Error = Validator::new()
+        .validate_xml("<Invoice/>\n")
         .unwrap_err()
         .into();
     assert_eq!(error.kind(), ErrorKind::Validation);
