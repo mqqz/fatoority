@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## [0.5.1] - Unreleased
+## [0.5.1] - 2026-11-17
 
 A compatible patch release: no public signature changed, and
 `cargo semver-checks` against v0.5.0 passes for `fatoora-core` and
