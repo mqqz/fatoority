@@ -672,10 +672,10 @@ fn signing_document_limits_apply_before_parsing_and_after_generation() {
     let sample = common::dummy_finalized_invoice();
     let typed = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified))
         .id("INV-LARGE")
-        .uuid("8e6000cf-1a98-4174-b3e7-b5d5954bc10d")
-        .issue_datetime("2024-01-01T12:30:00Z")
-        .currency("SAR")
-        .previous_invoice_hash("hash")
+        .uuid("8e6000cf-1a98-4174-b3e7-b5d5954bc10d".parse().unwrap())
+        .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+        .currency("SAR".parse().unwrap())
+        .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(0)
         .seller(sample.data().seller().clone())
         .payment_means_code("10")
@@ -833,7 +833,10 @@ fn signed_hash_uses_retained_xml_and_does_not_trust_embedded_digest() {
         signed.hash_base64().unwrap(),
         hash_xml(signed.xml()).unwrap().as_str()
     );
-    assert_eq!(signed.hash_base64().unwrap(), signed.invoice_hash());
+    assert_eq!(
+        signed.hash_base64().unwrap(),
+        signed.invoice_hash().as_str()
+    );
 
     // A leading zero changes retained XML text without changing the numeric model.
     let changed = signed.xml().replacen("<cbc:Percent>", "<cbc:Percent>0", 1);
@@ -842,7 +845,7 @@ fn signed_hash_uses_retained_xml_and_does_not_trust_embedded_digest() {
     let model = parse_finalized_invoice_xml(&changed).unwrap();
     let raw_hash = hash_xml(&changed).unwrap();
     assert_ne!(model.hash_base64().unwrap(), raw_hash.as_str());
-    assert_ne!(raw_hash.as_str(), signed.invoice_hash());
+    assert_ne!(&raw_hash, signed.invoice_hash());
 }
 
 #[test]

@@ -750,7 +750,7 @@ pub(crate) fn signing_postcondition(
     let xml = Xml::parse(input)?;
     let checked = || -> Checked<()> {
         let verified = signature(&xml, input)?;
-        if verified.hash != intended.invoice_hash()
+        if verified.hash != intended.invoice_hash().as_str()
             || verified.signature
                 != Base64::decode_vec(intended.signature())
                     .map_err(|_| bad("SIGNING_POSTCONDITION", "invalid intended signature"))?
@@ -777,7 +777,8 @@ pub(crate) fn signing_postcondition(
                 .children(XADES, "SignedSignatureProperties")
                 .children(XADES, "SigningTime"),
         )?;
-        if time != intended.signing_time() || xml.text(&xml.document_reference("QR"))? != qr_payload
+        if time != intended.signing_time().xades_str()
+            || xml.text(&xml.document_reference("QR"))? != qr_payload
         {
             return Err(bad(
                 "SIGNING_POSTCONDITION",

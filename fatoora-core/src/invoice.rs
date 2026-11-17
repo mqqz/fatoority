@@ -446,6 +446,30 @@ impl InvoiceTimestamp {
     pub(crate) fn date_str(&self) -> &str {
         &self.0[..10]
     }
+
+    /// Returns the `HH:MM:SSZ` clock part.
+    pub(crate) fn time_str(&self) -> &str {
+        &self.0[11..]
+    }
+
+    /// Returns the timestamp without the trailing `Z` (`YYYY-MM-DDTHH:MM:SS`),
+    /// the form used by the XAdES `SigningTime` element.
+    pub(crate) fn xades_str(&self) -> &str {
+        &self.0[..19]
+    }
+
+    /// Parses a XAdES `SigningTime` value (`YYYY-MM-DDTHH:MM:SS`, no zone suffix).
+    pub(crate) fn parse_xades(value: &str) -> Result<Self> {
+        let value = value.trim();
+        let parsed = NaiveDateTime::parse_from_str(value, XADES_FORMAT)
+            .map_err(|_| InvoiceError::InvalidTimestamp(value.to_owned()))?;
+        Ok(Self::from_naive_utc(parsed))
+    }
+
+    /// Wraps a UTC wall-clock value, truncating sub-second precision.
+    pub(crate) fn from_naive_utc(value: NaiveDateTime) -> Self {
+        Self(value.format(TIMESTAMP_FORMAT).to_string())
+    }
 }
 
 impl AsRef<str> for InvoiceTimestamp {
@@ -574,8 +598,37 @@ impl std::fmt::Display for InvoiceTime {
     }
 }
 
+impl AsRef<str> for InvoiceTime {
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl FromStr for InvoiceTime {
+    type Err = InvoiceError;
+    fn from_str(s: &str) -> Result<Self> {
+        InvoiceTime::parse(s)
+    }
+}
+
+impl TryFrom<String> for InvoiceTime {
+    type Error = InvoiceError;
+    fn try_from(value: String) -> Result<Self> {
+        InvoiceTime::parse(value)
+    }
+}
+
+impl TryFrom<&str> for InvoiceTime {
+    type Error = InvoiceError;
+    fn try_from(value: &str) -> Result<Self> {
+        InvoiceTime::parse(value)
+    }
+}
+
 /// Format used by [`InvoiceTimestamp::parse`] and its chrono conversion.
 const TIMESTAMP_FORMAT: &str = "%Y-%m-%dT%H:%M:%SZ";
+/// Format of the XAdES `SigningTime` element (no zone suffix).
+const XADES_FORMAT: &str = "%Y-%m-%dT%H:%M:%S";
 /// Format used by [`InvoiceDate::parse`] and its chrono conversion.
 const DATE_FORMAT: &str = "%Y-%m-%d";
 
@@ -583,7 +636,7 @@ const DATE_FORMAT: &str = "%Y-%m-%d";
 impl From<chrono::DateTime<chrono::Utc>> for InvoiceTimestamp {
     /// Format as `YYYY-MM-DDTHH:MM:SSZ`, truncating sub-second precision.
     fn from(value: chrono::DateTime<chrono::Utc>) -> Self {
-        Self(value.naive_utc().format(TIMESTAMP_FORMAT).to_string())
+        Self::from_naive_utc(value.naive_utc())
     }
 }
 
@@ -595,7 +648,7 @@ impl From<NaiveDate> for InvoiceDate {
     }
 }
 
-/// Builds the error reported for an empty identifier, matching `InvoiceBuilder::build`.
+/// Builds the validation error reported for a blank identifier.
 fn empty_field_error(field: InvoiceField) -> InvoiceError {
     InvoiceError::Validation(ValidationError::new(vec![ValidationIssue::new(
         field,
@@ -606,9 +659,9 @@ fn empty_field_error(field: InvoiceField) -> InvoiceError {
 
 /// Invoice UUID (`cbc:UUID`).
 ///
-/// Accepts any input that is non-empty after trimming surrounding whitespace,
-/// the same rule `InvoiceBuilder::build` applies to `uuid`. The stored value is
-/// trimmed.
+/// Accepts any input that is non-empty after trimming surrounding whitespace;
+/// the stored value is trimmed. Pass it to [`InvoiceBuilder::uuid`] and
+/// [`OriginalInvoiceRef::with_uuid`].
 ///
 /// # Examples
 /// ```rust
@@ -689,9 +742,8 @@ impl From<uuid::Uuid> for InvoiceUuid {
 
 /// Previous invoice hash (the `PIH` additional document reference).
 ///
-/// Accepts any input that is non-empty after trimming surrounding whitespace,
-/// the same rule `InvoiceBuilder::build` applies to `previous_invoice_hash`.
-/// The stored value is trimmed.
+/// Accepts any input that is non-empty after trimming surrounding whitespace;
+/// the stored value is trimmed. Pass it to [`InvoiceBuilder::previous_invoice_hash`].
 ///
 /// # Examples
 /// ```rust
@@ -1055,11 +1107,11 @@ impl PartyRole for BuyerRole {}
 ///
 /// # Examples
 /// ```rust
-/// use fatoora_core::invoice::{Party, SellerRole, Address, OtherId};
+/// use fatoora_core::invoice::{Party, SellerRole, Address, OtherId, VatId};
 /// use fatoora_core::invoice::CountryCode;
 ///
 /// let seller = Party::<SellerRole>::new(
-///     "Acme Inc".into(),
+///     "Acme Inc",
 ///     Address {
 ///         province: None,
 ///         country_code: CountryCode::parse("SAU")?,
@@ -1071,10 +1123,10 @@ impl PartyRole for BuyerRole {}
 ///         postal_code: "12222".into(),
 ///         district: None,
 ///     },
-///     "399999999900003",
+///     VatId::parse("399999999900003")?,
 ///     Some(OtherId::with_scheme("7003339333", "CRN")),
-/// )?;
-/// # let _ = seller;
+/// );
+/// assert_eq!(seller.vat_id().map(VatId::as_str), Some("399999999900003"));
 /// use fatoora_core::invoice::InvoiceError;
 /// # Ok::<(), InvoiceError>(())
 /// ```
@@ -1095,50 +1147,43 @@ pub type Seller = Party<SellerRole>;
 pub type Buyer = Party<BuyerRole>;
 
 impl Party<SellerRole> {
-    /// Create a seller party from validated inputs.
+    /// Create a seller party; the address and VAT ID are required.
     ///
-    /// # Errors
-    /// Returns [`InvoiceError::InvalidVatFormat`] if the VAT ID is blank.
+    /// Parse the VAT ID with [`VatId::parse`] (or `str::parse`) first.
     pub fn new(
-        name: String,
+        name: impl Into<String>,
         address: Address,
-        vat_id: impl Into<String>, // required
-        other_id: Option<OtherId>, // optional
-    ) -> Result<Self> {
-        let vat = VatId::parse(vat_id.into())?;
-        Ok(Party {
+        vat_id: VatId,
+        other_id: Option<OtherId>,
+    ) -> Self {
+        Party {
             _marker: PhantomData,
-            name,
+            name: name.into(),
             address: Some(address),
-            vat_id: Some(vat),
+            vat_id: Some(vat_id),
             identifiers: other_id.into_iter().collect(),
-        })
+        }
     }
 }
 
 impl Party<BuyerRole> {
-    /// Create a buyer party from validated inputs.
+    /// Create a buyer party; the address, VAT ID and other identifier are optional.
     ///
-    /// # Errors
-    /// Returns [`InvoiceError::InvalidVatFormat`] if a supplied VAT ID is blank. Identification requirements
-    /// depend on invoice type and are checked by XML business-rule validation.
+    /// Identification requirements depend on the invoice type and are checked by
+    /// XML business-rule validation, not here.
     pub fn new(
-        name: String,
+        name: impl Into<String>,
         address: impl Into<Option<Address>>,
-        vat_id: Option<String>,    // optional
-        other_id: Option<OtherId>, // required if vat_id is None
-    ) -> Result<Self> {
-        let vat = match vat_id {
-            Some(v) => Some(VatId::parse(v)?),
-            None => None,
-        };
-        Ok(Party {
+        vat_id: Option<VatId>,
+        other_id: Option<OtherId>,
+    ) -> Self {
+        Party {
             _marker: PhantomData,
-            name,
+            name: name.into(),
             address: address.into(),
-            vat_id: vat,
+            vat_id,
             identifiers: other_id.into_iter().collect(),
-        })
+        }
     }
 }
 
@@ -1194,17 +1239,20 @@ pub enum InvoiceSubType {
 ///
 /// # Examples
 /// ```rust
-/// use fatoora_core::invoice::OriginalInvoiceRef;
+/// use fatoora_core::invoice::{InvoiceDate, InvoiceUuid, OriginalInvoiceRef};
 ///
 /// let original = OriginalInvoiceRef::new("INV-ORIG")
-///     .with_uuid("uuid-orig");
+///     .with_uuid(InvoiceUuid::parse("uuid-orig")?)
+///     .with_issue_date("2024-01-01".parse()?);
 /// assert_eq!(original.id(), "INV-ORIG");
-/// assert_eq!(original.uuid(), Some("uuid-orig"));
+/// assert_eq!(original.uuid().map(InvoiceUuid::as_str), Some("uuid-orig"));
+/// assert_eq!(original.issue_date().map(InvoiceDate::as_str), Some("2024-01-01"));
+/// # Ok::<(), fatoora_core::invoice::InvoiceError>(())
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct OriginalInvoiceRef {
     id: String,
-    uuid: Option<String>,
+    uuid: Option<InvoiceUuid>,
     issue_date: Option<InvoiceDate>,
     #[serde(default)]
     issue_time: Option<InvoiceTime>,
@@ -1244,25 +1292,18 @@ impl OriginalInvoiceRef {
     }
 
     /// Sets the referenced document's UUID (`cbc:UUID`).
-    pub fn with_uuid(mut self, uuid: impl Into<String>) -> Self {
-        self.uuid = Some(uuid.into());
+    pub fn with_uuid(mut self, uuid: InvoiceUuid) -> Self {
+        self.uuid = Some(uuid);
         self
     }
 
     /// Sets the referenced document's issue date (`cbc:IssueDate`).
+    ///
+    /// Parse a `YYYY-MM-DD` string with [`InvoiceDate::parse`], `str::parse` or
+    /// `InvoiceDate::try_from`.
     pub fn with_issue_date(mut self, issue_date: InvoiceDate) -> Self {
         self.issue_date = Some(issue_date);
         self
-    }
-
-    /// Parses and sets the referenced document's issue date from a `YYYY-MM-DD` string.
-    ///
-    /// # Errors
-    /// Returns [`InvoiceError::InvalidIssueDate`] if the string is not a valid date
-    /// (see [`InvoiceDate::parse`]).
-    pub fn with_issue_date_str(mut self, issue_date: impl Into<String>) -> Result<Self> {
-        self.issue_date = Some(InvoiceDate::parse(issue_date)?);
-        Ok(self)
     }
 
     /// Returns the referenced document's ID.
@@ -1271,8 +1312,8 @@ impl OriginalInvoiceRef {
     }
 
     /// Returns the referenced document's UUID, if set.
-    pub fn uuid(&self) -> Option<&str> {
-        self.uuid.as_deref()
+    pub fn uuid(&self) -> Option<&InvoiceUuid> {
+        self.uuid.as_ref()
     }
 
     /// Returns the referenced document's issue date, if set.
@@ -1749,14 +1790,14 @@ pub struct InvoiceData {
     document_tax_first: bool,
     invoice_type: InvoiceType,
     id: String,
-    uuid: String,
+    uuid: InvoiceUuid,
     issue_datetime: InvoiceTimestamp,
     currency: CurrencyCode,
     #[serde(default)]
     tax_currency: Option<CurrencyCode>,
     #[serde(default)]
     tax_currency_amount: Option<Decimal>,
-    previous_invoice_hash: String,
+    previous_invoice_hash: InvoiceHash,
     invoice_counter: u64,
     notes: Vec<InvoiceNote>,
     billing_references: Vec<OriginalInvoiceRef>,
@@ -1838,21 +1879,25 @@ impl InvoiceData {
     }
 
     /// Returns the invoice UUID (`cbc:UUID`).
-    pub fn uuid(&self) -> &str {
+    pub fn uuid(&self) -> &InvoiceUuid {
         &self.uuid
     }
 
-    /// Original clock representation; a missing suffix denotes AST, `Z` denotes UTC.
-    pub fn issue_time(&self) -> &str {
+    /// Returns the issue time (`cbc:IssueTime`) in its original clock representation;
+    /// a missing suffix denotes AST, `Z` denotes UTC.
+    ///
+    /// Built invoices report the clock part of [`issue_datetime`](Self::issue_datetime);
+    /// parsed invoices keep the value from the XML.
+    pub fn issue_time(&self) -> InvoiceTime {
         self.issue_time_override
-            .as_ref()
-            .map_or(&self.issue_datetime.as_str()[11..], InvoiceTime::as_str)
+            .clone()
+            .unwrap_or_else(|| InvoiceTime(self.issue_datetime.time_str().to_owned()))
     }
-    /// Returns the issue date as `YYYY-MM-DD`, preserving the original value for imported documents.
-    pub fn issue_date(&self) -> &str {
+    /// Returns the issue date (`cbc:IssueDate`), preserving the original value for imported documents.
+    pub fn issue_date(&self) -> InvoiceDate {
         self.issue_date_override
-            .as_ref()
-            .map_or(self.issue_datetime.date_str(), InvoiceDate::as_str)
+            .clone()
+            .unwrap_or_else(|| InvoiceDate(self.issue_datetime.date_str().to_owned()))
     }
 
     /// Returns the issue timestamp in UTC `YYYY-MM-DDTHH:MM:SSZ` form.
@@ -1866,7 +1911,7 @@ impl InvoiceData {
     }
 
     /// Returns the previous invoice hash (PIH), Base64-encoded.
-    pub fn previous_invoice_hash(&self) -> &str {
+    pub fn previous_invoice_hash(&self) -> &InvoiceHash {
         &self.previous_invoice_hash
     }
 

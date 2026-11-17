@@ -201,8 +201,6 @@ fn invalid_imported_line_reports_zero_based_locations_and_numeric_ranges() {
     }))
     .unwrap();
     let original = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified))
-        .issue_datetime("not-a-date")
-        .currency("invalid")
         .invoice_level_discount(decimal("-1"))
         .invoice_level_charge(decimal("0.001"))
         .line_item(good)
@@ -222,8 +220,8 @@ fn invalid_imported_line_reports_zero_based_locations_and_numeric_ranges() {
         ("line_items[1].vat_amount", "FIELD_OUT_OF_RANGE"),
         ("invoice_level_discount", "FIELD_OUT_OF_RANGE"),
         ("invoice_level_charge", "FIELD_OUT_OF_RANGE"),
-        ("issue_datetime", "FIELD_INVALID_FORMAT"),
-        ("currency", "FIELD_INVALID_FORMAT"),
+        ("issue_datetime", "FIELD_REQUIRED"),
+        ("currency", "FIELD_REQUIRED"),
     ] {
         assert!(
             report.issues.iter().any(|finding| finding.code == code

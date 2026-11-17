@@ -460,11 +460,11 @@ fn invoice_request_emits_json_payload() {
         serde_json::from_slice::<serde_json::Value>(&output.stdout).expect("parse json output");
     assert_eq!(
         payload.get("invoiceHash").and_then(|v| v.as_str()),
-        Some(signed.invoice_hash())
+        Some(signed.invoice_hash().as_str())
     );
     assert_eq!(
         payload.get("uuid").and_then(|v| v.as_str()),
-        Some(signed.uuid())
+        Some(signed.uuid().as_str())
     );
     let expected_invoice = signed.to_xml_base64();
     assert_eq!(
@@ -791,8 +791,14 @@ fn sign_pem_stdout_preserves_invoice_hash_and_rejects_mixed_formats() {
         &std::fs::read(corpus.join("cases/simplified-invoice/expected.json")).unwrap(),
     )
     .unwrap();
-    assert_eq!(signed.invoice_hash(), expected["hash"].as_str().unwrap());
-    assert_eq!(signed.hash_base64().unwrap(), signed.invoice_hash());
+    assert_eq!(
+        signed.invoice_hash().as_str(),
+        expected["hash"].as_str().unwrap()
+    );
+    assert_eq!(
+        signed.hash_base64().unwrap(),
+        signed.invoice_hash().as_str()
+    );
     for (cert, key) in [("pem", "der"), ("der", "pem")] {
         let result = run(cert, key);
         assert!(!result.status.success());

@@ -110,15 +110,18 @@ fn build(
     address.city = text.to_owned();
     address.district = Some(text.to_owned());
     address.additional_street = Some(text.to_owned());
-    let seller =
-        fatoora_core::invoice::Seller::new(text.to_owned(), address, "399999999900003", None)
-            .unwrap();
+    let seller = fatoora_core::invoice::Seller::new(
+        text.to_owned(),
+        address,
+        "399999999900003".parse().unwrap(),
+        None,
+    );
     let mut builder = InvoiceBuilder::new(kind)
         .id("PROPERTY-1")
-        .uuid("property-uuid")
-        .issue_datetime("2024-01-01T12:30:00Z")
-        .currency("SAR")
-        .previous_invoice_hash("hash")
+        .uuid("property-uuid".parse().unwrap())
+        .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+        .currency("SAR".parse().unwrap())
+        .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(42)
         .seller(seller)
         .payment_means_code("10")
@@ -317,6 +320,9 @@ fn free_text_survives_xml_serialization_and_signing() {
         let parsed = parse_signed_invoice_xml(signed.xml()).unwrap();
         assert_eq!(parsed.data().notes().first().unwrap().text(), text);
         assert_eq!(parsed.data().line_items()[0].description(), text);
-        assert_eq!(parsed.hash_base64().unwrap(), signed.invoice_hash());
+        assert_eq!(
+            parsed.hash_base64().unwrap(),
+            signed.invoice_hash().as_str()
+        );
     }
 }

@@ -1,8 +1,8 @@
 //! Invoice builder and view types.
 use super::{
-    Buyer, CurrencyCode, InvoiceData, InvoiceError, InvoiceField, InvoiceFlags, InvoiceNote,
-    InvoiceTimestamp, InvoiceTotals, InvoiceType, LineItems, QrCodeError, QrResult, Seller,
-    ValidationError, ValidationIssue, ValidationKind, VatCategory,
+    Buyer, CurrencyCode, InvoiceData, InvoiceError, InvoiceField, InvoiceFlags, InvoiceHash,
+    InvoiceNote, InvoiceTimestamp, InvoiceTotals, InvoiceType, InvoiceUuid, LineItems, QrCodeError,
+    QrResult, Seller, ValidationError, ValidationIssue, ValidationKind, VatCategory,
 };
 use crate::Decimal;
 use crate::invoice::sign::{
@@ -55,10 +55,10 @@ pub struct SignedInvoice {
 /// let seller: Seller = unimplemented!();
 /// let invoice = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified))
 ///     .id("INV-1")
-///     .uuid("uuid-1")
-///     .issue_datetime("2024-01-01T12:30:00Z")
-///     .currency("SAR")
-///     .previous_invoice_hash("hash")
+///     .uuid("uuid-1".parse()?)
+///     .issue_datetime("2024-01-01T12:30:00Z".parse()?)
+///     .currency("SAR".parse()?)
+///     .previous_invoice_hash("hash".parse()?)
 ///     .invoice_counter(1)
 ///     .seller(seller)
 ///     .payment_means_code("10")
@@ -82,12 +82,12 @@ pub struct SignedInvoice {
 pub struct InvoiceBuilder {
     invoice_type: InvoiceType,
     id: Option<String>,
-    uuid: Option<String>,
-    issue_datetime: Option<String>,
-    currency: Option<String>,
+    uuid: Option<InvoiceUuid>,
+    issue_datetime: Option<InvoiceTimestamp>,
+    currency: Option<CurrencyCode>,
     tax_currency: Option<super::CurrencyCode>,
     tax_currency_amount: Option<Decimal>,
-    previous_invoice_hash: Option<String>,
+    previous_invoice_hash: Option<InvoiceHash>,
     invoice_counter: Option<u64>,
     notes: Vec<InvoiceNote>,
     billing_references: Vec<super::OriginalInvoiceRef>,
@@ -307,35 +307,38 @@ impl InvoiceBuilder {
         self
     }
 
-    /// Set the invoice UUID.
+    /// Set the invoice UUID (`cbc:UUID`).
     ///
-    /// Replaces any previously set value.
-    pub fn uuid(mut self, uuid: impl Into<String>) -> Self {
-        self.uuid = Some(uuid.into());
+    /// Parse a string with [`InvoiceUuid::parse`]; with the `uuid` feature a
+    /// `uuid::Uuid` converts via `From`. Replaces any previously set value.
+    pub fn uuid(mut self, uuid: InvoiceUuid) -> Self {
+        self.uuid = Some(uuid);
         self
     }
 
-    /// Set the issue timestamp (`YYYY-MM-DDTHH:MM:SSZ`), validated in `build`.
+    /// Set the issue timestamp; `cbc:IssueDate` and `cbc:IssueTime` are derived from it.
     ///
-    /// Replaces any previously set value.
-    pub fn issue_datetime(mut self, issue_datetime: impl Into<String>) -> Self {
-        self.issue_datetime = Some(issue_datetime.into());
+    /// Parse a `YYYY-MM-DDTHH:MM:SSZ` string with [`InvoiceTimestamp::parse`]; with the
+    /// `chrono` feature a `chrono::DateTime<Utc>` converts via `From`. Replaces any
+    /// previously set value.
+    pub fn issue_datetime(mut self, issue_datetime: InvoiceTimestamp) -> Self {
+        self.issue_datetime = Some(issue_datetime);
         self
     }
 
-    /// Set the document currency code, validated in `build`.
+    /// Set the document currency (`cbc:DocumentCurrencyCode`).
     ///
-    /// Replaces any previously set value.
-    pub fn currency(mut self, currency: impl Into<String>) -> Self {
-        self.currency = Some(currency.into());
+    /// Parse an ISO 4217 code with [`CurrencyCode::parse`]. Replaces any previously set value.
+    pub fn currency(mut self, currency: CurrencyCode) -> Self {
+        self.currency = Some(currency);
         self
     }
 
-    /// Set the previous invoice hash.
+    /// Set the previous invoice hash (PIH).
     ///
-    /// Replaces any previously set value.
-    pub fn previous_invoice_hash(mut self, hash: impl Into<String>) -> Self {
-        self.previous_invoice_hash = Some(hash.into());
+    /// Parse a string with [`InvoiceHash::parse`]. Replaces any previously set value.
+    pub fn previous_invoice_hash(mut self, hash: InvoiceHash) -> Self {
+        self.previous_invoice_hash = Some(hash);
         self
     }
 
@@ -523,63 +526,21 @@ impl InvoiceBuilder {
             }
             _ => {}
         }
-        match self.uuid.as_deref() {
-            None => push_issue(InvoiceField::Uuid, ValidationKind::Missing, None),
-            Some(value) if value.trim().is_empty() => {
-                push_issue(InvoiceField::Uuid, ValidationKind::Empty, None)
-            }
-            _ => {}
+        if self.uuid.is_none() {
+            push_issue(InvoiceField::Uuid, ValidationKind::Missing, None);
         }
-        let issue_datetime = match self.issue_datetime.as_deref() {
-            None => {
-                push_issue(InvoiceField::IssueDateTime, ValidationKind::Missing, None);
-                None
-            }
-            Some(value) if value.trim().is_empty() => {
-                push_issue(InvoiceField::IssueDateTime, ValidationKind::Empty, None);
-                None
-            }
-            Some(value) => match InvoiceTimestamp::parse(value) {
-                Ok(parsed) => Some(parsed),
-                Err(_) => {
-                    push_issue(
-                        InvoiceField::IssueDateTime,
-                        ValidationKind::InvalidFormat,
-                        None,
-                    );
-                    None
-                }
-            },
-        };
-        let currency = match self.currency.as_deref() {
-            None => {
-                push_issue(InvoiceField::Currency, ValidationKind::Missing, None);
-                None
-            }
-            Some(value) if value.trim().is_empty() => {
-                push_issue(InvoiceField::Currency, ValidationKind::Empty, None);
-                None
-            }
-            Some(value) => match CurrencyCode::parse(value) {
-                Ok(parsed) => Some(parsed),
-                Err(_) => {
-                    push_issue(InvoiceField::Currency, ValidationKind::InvalidFormat, None);
-                    None
-                }
-            },
-        };
-        match self.previous_invoice_hash.as_deref() {
-            None => push_issue(
+        if self.issue_datetime.is_none() {
+            push_issue(InvoiceField::IssueDateTime, ValidationKind::Missing, None);
+        }
+        if self.currency.is_none() {
+            push_issue(InvoiceField::Currency, ValidationKind::Missing, None);
+        }
+        if self.previous_invoice_hash.is_none() {
+            push_issue(
                 InvoiceField::PreviousInvoiceHash,
                 ValidationKind::Missing,
                 None,
-            ),
-            Some(value) if value.trim().is_empty() => push_issue(
-                InvoiceField::PreviousInvoiceHash,
-                ValidationKind::Empty,
-                None,
-            ),
-            _ => {}
+            );
         }
         if self.invoice_counter.is_none() {
             push_issue(InvoiceField::InvoiceCounter, ValidationKind::Missing, None);
@@ -789,8 +750,8 @@ impl InvoiceBuilder {
             invoice_type: self.invoice_type,
             id: self.id.expect("validated id"),
             uuid: self.uuid.expect("validated uuid"),
-            issue_datetime: issue_datetime.expect("validated issue datetime"),
-            currency: currency.expect("validated currency"),
+            issue_datetime: self.issue_datetime.expect("validated issue datetime"),
+            currency: self.currency.expect("validated currency"),
             tax_currency: self.tax_currency,
             tax_currency_amount: self.tax_currency_amount,
             previous_invoice_hash: self
@@ -1066,14 +1027,14 @@ impl SignedInvoice {
     }
 
     /// Invoice UUID.
-    pub fn uuid(&self) -> &str {
-        self.finalized.data().uuid.as_str()
+    pub fn uuid(&self) -> &InvoiceUuid {
+        self.finalized.data().uuid()
     }
 
     /// Return the embedded digest without recomputing or verifying it.
     ///
     /// Equality with `hash_base64()` alone does not verify signature authenticity.
-    pub fn invoice_hash(&self) -> &str {
+    pub fn invoice_hash(&self) -> &InvoiceHash {
         self.signed_properties.invoice_hash()
     }
 

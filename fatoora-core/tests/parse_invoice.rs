@@ -17,11 +17,11 @@ fn parse_sample_simplified_invoice() {
     let data = invoice.data();
 
     assert_eq!(data.id(), "SME00010");
-    assert_eq!(data.uuid(), "8e6000cf-1a98-4174-b3e7-b5d5954bc10d");
+    assert_eq!(data.uuid().as_str(), "8e6000cf-1a98-4174-b3e7-b5d5954bc10d");
     assert_eq!(data.issue_datetime().as_str(), "2022-08-17T14:41:08Z");
     assert_eq!(data.currency().as_str(), "SAR");
     assert_eq!(
-        data.previous_invoice_hash(),
+        data.previous_invoice_hash().as_str(),
         "NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ=="
     );
     assert_eq!(data.invoice_counter(), 10);
@@ -130,13 +130,13 @@ fn parse_signed_invoice_from_fixture() {
     assert!(signed.xml().contains("<ds:Signature"));
     assert!(!signed.qr_code().trim().is_empty());
     assert_eq!(
-        signed.invoice_hash(),
+        signed.invoice_hash().as_str(),
         "z5F9qsS6oWyDhehD8u8S0DaxV+2CUiUz9Y+UsR61JgQ="
     );
     assert!(signed.zatca_key_signature().is_some());
 
     let props = signed.signed_properties();
-    assert_eq!(props.signing_time(), "2025-07-22T15:51:28");
+    assert_eq!(props.signing_time().as_str(), "2025-07-22T15:51:28Z");
     assert_eq!(
         props.cert_hash(),
         "ZDMwMmI0MTE1NzVjOTU2NTk4YzVlODhhYmI0ODU2NDUyNTU2YTVhYjhhMDFmN2FjYjk1YTA2OWQ0NjY2MjQ4NQ=="
@@ -262,19 +262,18 @@ fn credit_note_serializes_billing_reference_and_reason() {
     .unwrap();
 
     let original = OriginalInvoiceRef::new("INV-ORIG")
-        .with_uuid("uuid-orig")
-        .with_issue_date_str("2023-12-31")
-        .expect("issue date");
+        .with_uuid("uuid-orig".parse().unwrap())
+        .with_issue_date("2023-12-31".parse().unwrap());
 
     let mut builder = InvoiceBuilder::new(InvoiceType::CreditNote(InvoiceSubType::Standard))
         .billing_reference(original)
         .payment_instruction("pricing correction");
     builder = builder
         .id("CR-1")
-        .uuid("uuid-cr-1")
-        .issue_datetime("2024-01-01T12:30:00Z")
-        .currency("SAR")
-        .previous_invoice_hash("hash")
+        .uuid("uuid-cr-1".parse().unwrap())
+        .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+        .currency("SAR".parse().unwrap())
+        .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(0)
         .seller(seller)
         .payment_means_code("10")
@@ -304,19 +303,18 @@ fn debit_note_serializes_billing_reference_and_reason() {
     .unwrap();
 
     let original = OriginalInvoiceRef::new("INV-ORIG")
-        .with_uuid("uuid-orig")
-        .with_issue_date_str("2023-12-31")
-        .expect("issue date");
+        .with_uuid("uuid-orig".parse().unwrap())
+        .with_issue_date("2023-12-31".parse().unwrap());
 
     let mut builder = InvoiceBuilder::new(InvoiceType::DebitNote(InvoiceSubType::Simplified))
         .billing_reference(original)
         .payment_instruction("pricing adjustment");
     builder = builder
         .id("DB-1")
-        .uuid("uuid-db-1")
-        .issue_datetime("2024-01-01T12:30:00Z")
-        .currency("SAR")
-        .previous_invoice_hash("hash")
+        .uuid("uuid-db-1".parse().unwrap())
+        .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+        .currency("SAR".parse().unwrap())
+        .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(0)
         .seller(seller)
         .payment_means_code("10")
@@ -467,10 +465,10 @@ fn credit_note_serialization_preserves_whitespace_reason() {
         .payment_instruction("   ");
     builder = builder
         .id("CR-NO-REASON")
-        .uuid("uuid-cr-no-reason")
-        .issue_datetime("2024-01-01T12:30:00Z")
-        .currency("SAR")
-        .previous_invoice_hash("hash")
+        .uuid("uuid-cr-no-reason".parse().unwrap())
+        .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+        .currency("SAR".parse().unwrap())
+        .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(0)
         .seller(seller)
         .payment_means_code("10")
@@ -501,10 +499,10 @@ fn credit_note_allowance_discount_round_trip() {
         .payment_instruction("pricing correction");
     builder = builder
         .id("CR-DISC-1")
-        .uuid("uuid-cr-disc-1")
-        .issue_datetime("2024-01-01T12:30:00Z")
-        .currency("SAR")
-        .previous_invoice_hash("hash")
+        .uuid("uuid-cr-disc-1".parse().unwrap())
+        .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+        .currency("SAR".parse().unwrap())
+        .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(0)
         .seller(seller)
         .payment_means_code("10")
@@ -563,10 +561,10 @@ fn debit_note_charge_serializes_allowance_charge() {
         .payment_instruction("pricing adjustment");
     builder = builder
         .id("DB-CHG-1")
-        .uuid("uuid-db-chg-1")
-        .issue_datetime("2024-01-01T12:30:00Z")
-        .currency("SAR")
-        .previous_invoice_hash("hash")
+        .uuid("uuid-db-chg-1".parse().unwrap())
+        .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+        .currency("SAR".parse().unwrap())
+        .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(0)
         .seller(seller)
         .payment_means_code("10")
@@ -611,10 +609,10 @@ fn debit_note_allowance_round_trip() {
         .payment_instruction("pricing adjustment");
     builder = builder
         .id("DB-DISC-1")
-        .uuid("uuid-db-disc-1")
-        .issue_datetime("2024-01-01T12:30:00Z")
-        .currency("SAR")
-        .previous_invoice_hash("hash")
+        .uuid("uuid-db-disc-1".parse().unwrap())
+        .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+        .currency("SAR".parse().unwrap())
+        .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(0)
         .seller(seller)
         .payment_means_code("10")
@@ -664,19 +662,18 @@ fn credit_note_round_trip_preserves_original_ref_and_reason() {
     .unwrap();
 
     let original = OriginalInvoiceRef::new("INV-ORIG")
-        .with_uuid("uuid-orig")
-        .with_issue_date_str("2023-12-31")
-        .expect("issue date");
+        .with_uuid("uuid-orig".parse().unwrap())
+        .with_issue_date("2023-12-31".parse().unwrap());
 
     let mut builder = InvoiceBuilder::new(InvoiceType::CreditNote(InvoiceSubType::Standard))
         .billing_reference(original)
         .payment_instruction("pricing correction");
     builder = builder
         .id("CR-RT-1")
-        .uuid("uuid-cr-rt-1")
-        .issue_datetime("2024-01-01T12:30:00Z")
-        .currency("SAR")
-        .previous_invoice_hash("hash")
+        .uuid("uuid-cr-rt-1".parse().unwrap())
+        .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+        .currency("SAR".parse().unwrap())
+        .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(0)
         .seller(seller)
         .payment_means_code("10")
@@ -692,7 +689,7 @@ fn credit_note_round_trip_preserves_original_ref_and_reason() {
             let reason = parsed.data().payment_instruction().unwrap_or("");
             assert_eq!(*subtype, InvoiceSubType::Standard);
             assert_eq!(original.id(), "INV-ORIG");
-            assert_eq!(original.uuid(), Some("uuid-orig"));
+            assert_eq!(original.uuid().map(|u| u.as_str()), Some("uuid-orig"));
             assert_eq!(original.issue_date().unwrap().as_str(), "2023-12-31");
             assert_eq!(reason, "pricing correction");
         }
@@ -702,7 +699,7 @@ fn credit_note_round_trip_preserves_original_ref_and_reason() {
 
 fn build_seller() -> Party<SellerRole> {
     Party::<SellerRole>::new(
-        "Acme Inc".into(),
+        "Acme Inc",
         Address {
             province: None,
             country_code: CountryCode::parse("SAU").expect("country code"),
@@ -714,10 +711,9 @@ fn build_seller() -> Party<SellerRole> {
             postal_code: "12222".into(),
             district: None,
         },
-        "301121971500003",
+        "301121971500003".parse().unwrap(),
         None,
     )
-    .expect("valid seller")
 }
 
 fn load_sample_xml() -> String {

@@ -48,7 +48,7 @@ fn construction_import_signing_and_validation_use_direct_methods() {
     );
     assert_eq!(
         signed.invoice_hash(),
-        hash_xml(signed.xml()).unwrap().as_str()
+        &hash_xml(signed.xml()).unwrap()
     );
     let imported = parse_signed_invoice_xml(signed.xml()).unwrap();
     assert_eq!(imported.into_xml(), signed.xml());
