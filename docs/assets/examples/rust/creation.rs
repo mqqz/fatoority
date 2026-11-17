@@ -1,11 +1,11 @@
 use fatoora_core::invoice::{
     Address, CountryCode, InvoiceBuilder, InvoiceSubType, InvoiceType, LineItem, OtherId, Party,
-    SellerRole, VatCategory,
+    SellerRole, VatCategory, VatId,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let seller = Party::<SellerRole>::new(
-        "Example Store".into(),
+        "Example Store",
         Address {
             country_code: CountryCode::parse("SA")?,
             city: "Riyadh".into(),
@@ -17,9 +17,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             additional_street: None,
             province: None,
         },
-        "399999999900003",
+        VatId::parse("399999999900003")?,
         Some(OtherId::with_scheme("7003339333", "CRN")),
-    )?;
+    );
     let item = LineItem::new(
         "Notebook",
         "2".parse()?,
@@ -30,11 +30,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
     let invoice = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified))
         .id("INV-1001")
-        .uuid("8e6000cf-1a98-4174-b3e7-b5d5954bc10d")
-        .issue_datetime("2026-10-26T09:00:00Z")
-        .currency("SAR")
+        .uuid("8e6000cf-1a98-4174-b3e7-b5d5954bc10d".parse()?)
+        .issue_datetime("2026-10-26T09:00:00Z".parse()?)
+        .currency("SAR".parse()?)
         // Demonstration predecessor; use your own invoice history in production.
-        .previous_invoice_hash("NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ==")
+        .previous_invoice_hash("NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ==".parse()?)
         .invoice_counter(1)
         .seller(seller)
         .payment_means_code("10")
