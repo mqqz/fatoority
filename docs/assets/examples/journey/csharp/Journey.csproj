@@ -6,6 +6,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Fatoority" Version="0.5.0" />
+    <PackageReference Include="Fatoority" Version="0.5.1" />
   </ItemGroup>
 </Project>

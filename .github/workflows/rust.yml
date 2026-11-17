@@ -138,7 +138,7 @@ jobs:
           cargo build --manifest-path "$consumer/Cargo.toml"
 
   semver-checks:
-    # Guards the 0.5.x line: PRs into main must stay compatible with v0.5.0.
+    # Guards the 0.5.x line: PRs into main must stay compatible with v0.5.1.
     # PRs into next (0.6.0 breaking work) still run the check and report the
     # result, but a breaking change does not fail the job.
     needs: changes
@@ -146,7 +146,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CARGO_TERM_COLOR: always
-      SEMVER_BASELINE: v0.5.0
+      SEMVER_BASELINE: v0.5.1
     steps:
       - uses: actions/checkout@v5
         with:
