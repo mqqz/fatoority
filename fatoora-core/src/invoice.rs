@@ -1716,8 +1716,7 @@ where
 /// assert_eq!(entry.reason(), Some("Freight"));
 /// # Ok::<(), fatoora_core::invoice::InvoiceError>(())
 /// ```
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(try_from = "AllowanceChargeRepr")]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct AllowanceCharge {
     /// Preserve an absent VAT rate for an out-of-scope adjustment.
     #[serde(default)]
@@ -1752,6 +1751,7 @@ pub struct AllowanceCharge {
 /// Deserialization shape of [`AllowanceCharge`]: accepts `kind`, or the 0.5
 /// `charge` boolean, and otherwise mirrors the struct's field attributes.
 #[derive(Deserialize)]
+#[serde(rename = "AllowanceCharge")]
 struct AllowanceChargeRepr {
     #[serde(default)]
     omitted_rate: bool,
@@ -1772,6 +1772,55 @@ struct AllowanceChargeRepr {
     rate: Decimal,
     #[serde(default)]
     exemption: TaxExemption,
+}
+
+/// Exact serialized shape of [`AllowanceCharge`], used by compact formats
+/// (such as bincode) that read fields by position and can't skip a legacy one.
+#[derive(Deserialize)]
+#[serde(rename = "AllowanceCharge")]
+struct AllowanceChargeCompact {
+    #[serde(default)]
+    omitted_rate: bool,
+    #[serde(default)]
+    base_amount: Option<Decimal>,
+    #[serde(default)]
+    percentage: Option<Decimal>,
+    #[serde(default = "one_tax_category")]
+    tax_category_count: usize,
+    kind: AdjustmentKind,
+    amount: Decimal,
+    reason: Option<String>,
+    reason_code: Option<String>,
+    category: VatCategory,
+    rate: Decimal,
+    #[serde(default)]
+    exemption: TaxExemption,
+}
+
+impl<'de> Deserialize<'de> for AllowanceCharge {
+    fn deserialize<D: serde::Deserializer<'de>>(
+        deserializer: D,
+    ) -> std::result::Result<Self, D::Error> {
+        if !deserializer.is_human_readable() {
+            let c = AllowanceChargeCompact::deserialize(deserializer)?;
+            return Ok(Self {
+                omitted_rate: c.omitted_rate,
+                base_amount: c.base_amount,
+                percentage: c.percentage,
+                tax_category_count: c.tax_category_count,
+                kind: c.kind,
+                amount: c.amount,
+                reason: c.reason,
+                reason_code: c.reason_code,
+                category: c.category,
+                rate: c.rate,
+                exemption: c.exemption,
+            });
+        }
+        AllowanceChargeRepr::deserialize(deserializer)?
+            .try_into()
+            .map_err(serde::de::Error::custom)
+    }
 }
 
 impl TryFrom<AllowanceChargeRepr> for AllowanceCharge {

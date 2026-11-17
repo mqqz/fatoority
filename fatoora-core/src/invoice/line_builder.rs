@@ -140,8 +140,7 @@ impl Adjustment {
 ///
 /// Read from [`LineItem::adjustments`]; add one with
 /// [`LineItemBuilder::allowance`] or [`LineItemBuilder::charge`].
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(try_from = "LineAdjustmentRepr")]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct LineAdjustment {
     /// A charge increases the line amount; an allowance decreases it (`cbc:ChargeIndicator`).
     kind: AdjustmentKind,
@@ -150,12 +149,34 @@ pub struct LineAdjustment {
 }
 /// Deserialization shape of [`LineAdjustment`]: accepts `kind`, or the 0.5 `charge` boolean.
 #[derive(Deserialize)]
+#[serde(rename = "LineAdjustment")]
 struct LineAdjustmentRepr {
     #[serde(default, deserialize_with = "crate::invoice::deserialize_present")]
     kind: Option<AdjustmentKind>,
     #[serde(default, deserialize_with = "crate::invoice::deserialize_present")]
     charge: Option<bool>,
     adjustment: Adjustment,
+}
+/// Exact serialized shape of [`LineAdjustment`], used by compact formats
+/// (such as bincode) that read fields by position and can't skip a legacy one.
+#[derive(Deserialize)]
+#[serde(rename = "LineAdjustment")]
+struct LineAdjustmentCompact {
+    kind: AdjustmentKind,
+    adjustment: Adjustment,
+}
+impl<'de> Deserialize<'de> for LineAdjustment {
+    fn deserialize<D: serde::Deserializer<'de>>(
+        deserializer: D,
+    ) -> std::result::Result<Self, D::Error> {
+        if !deserializer.is_human_readable() {
+            let c = LineAdjustmentCompact::deserialize(deserializer)?;
+            return Ok(Self::new(c.kind, c.adjustment));
+        }
+        LineAdjustmentRepr::deserialize(deserializer)?
+            .try_into()
+            .map_err(serde::de::Error::custom)
+    }
 }
 impl TryFrom<LineAdjustmentRepr> for LineAdjustment {
     type Error = &'static str;

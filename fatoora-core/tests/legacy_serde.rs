@@ -220,6 +220,13 @@ fn option_aware_formats_round_trip_adjustments() {
     let ron_text = ron::to_string(&data).unwrap();
     assert!(!ron_text.contains("Some(allowance)"), "{ron_text}");
     assert_eq!(ron::from_str::<InvoiceData>(&ron_text).unwrap(), data);
+    // With struct names on, the shadow types must read back under the public names.
+    let named =
+        ron::ser::to_string_pretty(&data, ron::ser::PrettyConfig::default().struct_names(true))
+            .unwrap();
+    assert!(named.contains("AllowanceCharge("), "{named}");
+    assert!(named.contains("LineAdjustment("), "{named}");
+    assert_eq!(ron::from_str::<InvoiceData>(&named).unwrap(), data);
 
     for entry in data.adjustments() {
         let text = ron::to_string(entry).unwrap();
@@ -231,4 +238,31 @@ fn option_aware_formats_round_trip_adjustments() {
             assert_eq!(&ron::from_str::<LineAdjustment>(&text).unwrap(), adjustment);
         }
     }
+}
+
+#[test]
+fn compact_formats_round_trip_adjustments() {
+    // bincode reads fields by position, so it must see exactly the serialized
+    // shape with no legacy `charge` slot.
+    let data = current_invoice();
+    let mut checked = 0;
+    for entry in data.adjustments() {
+        let bytes = bincode::serialize(entry).unwrap();
+        assert_eq!(
+            &bincode::deserialize::<AllowanceCharge>(&bytes).unwrap(),
+            entry
+        );
+        checked += 1;
+    }
+    for line in data.line_items() {
+        for adjustment in line.adjustments() {
+            let bytes = bincode::serialize(adjustment).unwrap();
+            assert_eq!(
+                &bincode::deserialize::<LineAdjustment>(&bytes).unwrap(),
+                adjustment
+            );
+            checked += 1;
+        }
+    }
+    assert_eq!(checked, 4);
 }
