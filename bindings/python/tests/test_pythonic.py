@@ -35,7 +35,7 @@ def header(**overrides):
 
 def complete(builder: InvoiceBuilder) -> InvoiceBuilder:
     return (builder.set_seller("Acme", vat_id="399999999900003", **SELLER_ADDRESS)
-            .add_payment_means(PaymentMeans.new("10"))
+            .add_payment_means(PaymentMeans("10"))
             .add_line_item("item", 2, "PCE", 50, 15, VatCategory.STANDARD))
 
 
@@ -56,13 +56,13 @@ def test_every_builder_setter_returns_the_builder():
                .set_vat_category(VatCategory.STANDARD).set_flags(InvoiceFlag.EXPORT)
                .set_delivery(date(2024, 1, 1)).set_payment_instruction("pay")
                .set_purchase_order_id("PO").set_contract_id("C").add_note("n")
-               .add_payment_means(PaymentMeans.new("10"))
+               .add_payment_means(PaymentMeans("10"))
                .set_seller("Acme", vat_id="399999999900003", **SELLER_ADDRESS)
                .add_seller_identifier("7003339333", "CRN")
                .set_buyer_without_address("Buyer").add_buyer_identifier("1", "NAT")
                .add_line_item("item", 1, "PCE", 100, 15, VatCategory.STANDARD)
-               .add_allowance(Adjustment.amount(1).with_reason("discount"), VatCategory.STANDARD, 15)
-               .add_charge(Adjustment.amount(2).with_reason("fee"), VatCategory.STANDARD, 15)
+               .add_allowance(Adjustment(1).with_reason("discount"), VatCategory.STANDARD, 15)
+               .add_charge(Adjustment(2).with_reason("fee"), VatCategory.STANDARD, 15)
                .set_prepaid_amount(0).set_payable_rounding_amount(0))
     assert chained is b
     line = LineItemBuilder()
@@ -73,10 +73,10 @@ def test_every_builder_setter_returns_the_builder():
 
 
 def test_getters_are_properties_returning_plain_values():
-    for cls, name in [(Address, "city"), (FinalizedInvoice, "id"), (SignedInvoice, "qr_code"),
+    for cls, name in [(FinalizedInvoice, "id"), (SignedInvoice, "qr_code"),
                       (Config, "env"), (ProductionCsid, "secret")]:
         assert isinstance(getattr(cls, name), property)
-    address = Address.new("SA", "Riyadh", "King Fahd", "1234", "12222")
+    address = Address("SA", "Riyadh", "King Fahd", "1234", "12222")
     assert type(address.city) is str and address.district is None
     with pytest.raises(AttributeError):
         address.city = "Jeddah"
@@ -114,7 +114,7 @@ def test_naive_and_wrongly_typed_values_are_rejected():
 
 
 def test_original_invoice_reference_in_constructor():
-    reference = OriginalInvoiceRef.new("INV-1", UUID, date(2023, 11, 13))
+    reference = OriginalInvoiceRef("INV-1", UUID, date(2023, 11, 13))
     assert reference.uuid == str(UUID) and reference.issue_date == date(2023, 11, 13)
     note = complete(InvoiceBuilder(
         InvoiceTypeKind.CREDIT_NOTE, InvoiceSubType.SIMPLIFIED,
@@ -130,10 +130,10 @@ def test_original_invoice_reference_in_constructor():
 
 
 def test_party_setters_accept_an_address():
-    address = Address.new("SA", "Riyadh", "King Fahd", "1234", "12222", district="Olaya").with_province("Riyadh")
+    address = Address("SA", "Riyadh", "King Fahd", "1234", "12222", district="Olaya").with_province("Riyadh")
     b = header().set_seller("Acme", vat_id="399999999900003", address=address)
     b.set_buyer("Buyer", address=address)
-    invoice = b.add_payment_means(PaymentMeans.new("10")).add_line_item(
+    invoice = b.add_payment_means(PaymentMeans("10")).add_line_item(
         "item", 1, "PCE", 100, 15, VatCategory.STANDARD).build()
     assert address.city == "Riyadh"  # borrowed, not consumed
     assert invoice.seller.address.district == "Olaya"
@@ -148,7 +148,7 @@ def test_party_setters_accept_an_address():
     (lambda b, a: b.set_seller("Acme", **SELLER_ADDRESS), "vat_id"),
 ])
 def test_party_setter_argument_errors(call, match):
-    address = Address.new("SA", "Riyadh", "King Fahd", "1234", "12222")
+    address = Address("SA", "Riyadh", "King Fahd", "1234", "12222")
     with pytest.raises(TypeError, match=match):
         call(InvoiceBuilder(InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED), address)
 
@@ -161,10 +161,10 @@ def test_add_note_language_is_keyword_only():
 def test_document_adjustments_and_tax_exemptions():
     exemption = TaxExemption("VATEX-SA-29", "exempt")
     b = header(vat_category=VatCategory.EXEMPT).set_seller("Acme", vat_id="399999999900003", **SELLER_ADDRESS)
-    b.add_payment_means(PaymentMeans.new("10")).add_line_item(
+    b.add_payment_means(PaymentMeans("10")).add_line_item(
         "item", 1, "PCE", 100, 0, VatCategory.EXEMPT, exemption=exemption)
     b.add_tax_exemption(VatCategory.EXEMPT, 0, exemption)
-    b.add_allowance(Adjustment.amount(10).with_reason("discount"), VatCategory.EXEMPT, 0, exemption)
+    b.add_allowance(Adjustment(10).with_reason("discount"), VatCategory.EXEMPT, 0, exemption)
     invoice = b.build()
     assert invoice.totals.allowance_total == Decimal("10")
     assert invoice.adjustments[0].exemption == exemption
@@ -186,7 +186,12 @@ def test_invoice_signer_signs_finalized_invoices():
     signer = InvoiceSigner.from_der((CREDENTIALS / "certificate.der").read_bytes(),
                                     (CREDENTIALS / "private-key.der").read_bytes())
     assert "BEGIN CERTIFICATE" in signer.certificate_pem
-    signed = complete(header()).build().sign(signer)
+    invoice = complete(header()).build()
+    invoice_id = invoice.id  # caches the invoice data
+    signed = invoice.sign(signer)
+    with pytest.raises(FfiError, match="consumed"):
+        invoice.id  # signing consumed the finalized invoice, cached data included
+    assert signed.id == invoice_id
     assert isinstance(signed, SignedInvoice)
     assert signed.hash() == signed.invoice_hash
     assert SignedInvoice.from_xml(signed.xml).qr_code == signed.qr_code

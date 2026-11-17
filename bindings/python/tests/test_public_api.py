@@ -11,7 +11,8 @@ and review the JSON diff. For each exported name the contract records:
   the start of keyword-only parameters;
 * functions: the parameter list;
 * ``__deprecated__``: every name that still works but warns (removed in 0.7),
-  including the class aliases served by the module ``__getattr__``.
+  including deprecated properties and the class aliases served by the module
+  ``__getattr__``.
 """
 from __future__ import annotations
 
@@ -59,11 +60,19 @@ def _class_contract(cls, deprecated: list[str]) -> dict:
             if name == "__init__" and owner.__name__ != "_Owned":
                 members[name] = _parameters(raw)  # public constructor
                 continue
-            if name.startswith("_") or name in members:
+            if name.startswith("_"):
+                continue
+            if name in members:
+                # A deprecated 0.5 factory whose name is now a dataclass field
+                # (``Adjustment.amount(value)``) is a class-level descriptor.
+                if _is_deprecated(raw):
+                    deprecated.append(f"{cls.__name__}.{name}")
                 continue
             value = raw.__func__ if isinstance(raw, (classmethod, staticmethod)) else raw
             if isinstance(value, property):
                 members[name] = "property"
+                if _is_deprecated(value.fget):
+                    deprecated.append(f"{cls.__name__}.{name}")
             elif callable(value):
                 members[name] = _parameters(value)
                 if _is_deprecated(value):
@@ -118,11 +127,15 @@ def test_deprecated_aliases_resolve_to_the_new_classes():
 
     for alias, (replacement, _) in api.DEPRECATED_ALIASES.items():
         assert alias not in fatoora.__all__
+        target = getattr(fatoora, replacement)
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
-            assert getattr(fatoora, alias) is getattr(fatoora, replacement)
-            assert getattr(api, alias) is getattr(fatoora, replacement)
+            value = getattr(fatoora, alias)
+            assert getattr(api, alias) is value
         assert [w.category for w in caught] == [DeprecationWarning, DeprecationWarning]
+        # Either the new class itself, or an adapter keeping the 0.5 constructor
+        # (``AllowanceCharge``) whose instances are the new class.
+        assert value is target or issubclass(target, value)
 
 
 def test_distribution_has_no_legacy_loader_or_runtime_dependency():

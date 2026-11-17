@@ -9,10 +9,11 @@ import warnings
 import pytest
 
 import fatoora
-from fatoora import (Adjustment, Config, CsrProperties, Environment, FinalizedInvoice,
-                     InvoiceBuilder, InvoiceSigner, InvoiceSubType, InvoiceTypeKind,
-                     LineItemBuilder, OriginalInvoiceRef, PaymentMeans, SignedInvoice,
-                     TaxExemption, VatCategory, ZatcaClient, ComplianceCsid, ProductionCsid)
+from fatoora import (Address, Adjustment, Config, CsrProperties, Environment, FinalizedInvoice,
+                     Identifier, InvoiceBuilder, InvoiceNote, InvoiceSigner, InvoiceSubType,
+                     InvoiceTypeKind, LineItemBuilder, OriginalInvoiceRef, Party, PaymentMeans,
+                     SignedInvoice, TaxExemption, VatCategory, ZatcaClient, ComplianceCsid,
+                     ProductionCsid)
 from test_numeric_contract import builder
 
 FIXTURES = Path(__file__).resolve().parents[3] / "fatoora-core/tests/fixtures"
@@ -27,6 +28,14 @@ def built():
 
 def signed():
     return SignedInvoice.from_file(SIGNED_XML)
+
+
+def closed(value):
+    value.close()
+    return value
+
+
+ADDRESS = ("SA", "Riyadh", "King Fahd", "1234", "12222")
 
 
 def fake_client(monkeypatch):
@@ -57,20 +66,40 @@ CASES = {
     "SignedInvoice.into_xml": (lambda mp: signed().into_xml(), "xml property"),
     "InvoiceBuilder.new": (lambda mp: InvoiceBuilder.new(InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED), "InvoiceBuilder(invoice_type"),
     "InvoiceBuilder.new_with_reference": (lambda mp: InvoiceBuilder.new_with_reference(
-        InvoiceTypeKind.CREDIT_NOTE, InvoiceSubType.SIMPLIFIED, OriginalInvoiceRef.new("1"), "r"), "original_invoice="),
+        InvoiceTypeKind.CREDIT_NOTE, InvoiceSubType.SIMPLIFIED, OriginalInvoiceRef("1"), "r"), "original_invoice="),
     "InvoiceBuilder.set_note": (lambda mp: builder().set_note("en", "hello"), "add_note(text, language=...)"),
     "InvoiceBuilder.set_note_without_language": (lambda mp: builder().set_note_without_language("hello"), "add_note(text)"),
     "InvoiceBuilder.set_payment_means_code": (lambda mp: builder().set_payment_means_code("10"), "add_payment_means"),
     "InvoiceBuilder.flags": (lambda mp: builder().flags(1), "set_flags"),
     "InvoiceBuilder.set_tax_exemption": (lambda mp: builder().set_tax_exemption(VatCategory.EXEMPT, 0, TaxExemption("VATEX-SA-29")), "add_tax_exemption"),
-    "InvoiceBuilder.add_document_adjustment": (lambda mp: builder().add_document_adjustment(True, Adjustment.amount(1), VatCategory.STANDARD, 15), "add_charge"),
+    "InvoiceBuilder.add_document_adjustment": (lambda mp: builder().add_document_adjustment(True, Adjustment(1), VatCategory.STANDARD, 15), "add_charge"),
     "InvoiceBuilder.set_allowance": (lambda mp: builder().set_allowance("r", 1), "add_allowance"),
     "InvoiceBuilder.invoice_level_charge": (lambda mp: builder().invoice_level_charge(1), "add_charge"),
     "InvoiceBuilder.invoice_level_discount": (lambda mp: builder().invoice_level_discount(1), "add_allowance"),
-    "InvoiceBuilder.allowance_reason": (lambda mp: builder().allowance_reason("r"), "with_reason"),
+    "InvoiceBuilder.allowance_reason": (lambda mp: builder().allowance_reason("r"), "reason=reason"),
     "LineItemBuilder.new": (lambda mp: LineItemBuilder.new(), "LineItemBuilder()"),
     "ZatcaClient.post_csr_for_ccsid": (lambda mp: fake_client(mp).post_csr_for_ccsid(None, "1"), "request_compliance_csid"),
     "ZatcaClient.post_ccsid_for_pcsid": (lambda mp: fake_client(mp).post_ccsid_for_pcsid(None), "request_production_csid"),
+    # Value models: frozen dataclasses since 0.6.
+    "AllowanceCharge": (lambda mp: fatoora.AllowanceCharge(False, 1, VatCategory.STANDARD, 15), "Adjustment"),
+    "DocumentReference": (lambda mp: fatoora.DocumentReference, "OriginalInvoiceRef"),
+    "VatId": (lambda mp: fatoora.VatId, "Identifier"),
+    "OtherId": (lambda mp: fatoora.OtherId, "Identifier"),
+    "Address.new": (lambda mp: Address.new(*ADDRESS), "Address(country_code"),
+    "OriginalInvoiceRef.new": (lambda mp: OriginalInvoiceRef.new("1", None, "2024-01-01"), "OriginalInvoiceRef(id"),
+    "PaymentMeans.new": (lambda mp: PaymentMeans.new("10", "note"), "PaymentMeans(code)"),
+    "Adjustment.amount": (lambda mp: Adjustment.amount(1), "Adjustment(value)"),
+    "Adjustment.percentage": (lambda mp: Adjustment.percentage(100, 10), "Adjustment.percent_of"),
+    "Adjustment.with_supplied_amount": (lambda mp: Adjustment.percent_of(100, 10).with_supplied_amount(10), "amount=value"),
+    "Adjustment.value": (lambda mp: Adjustment(1).value, "amount"),
+    "Adjustment.percent": (lambda mp: Adjustment.percent_of(100, 10).percent, "percentage"),
+    "Address.close": (lambda mp: closed(Address(*ADDRESS)), "needs no cleanup"),
+    "Adjustment.close": (lambda mp: closed(Adjustment(1)), "needs no cleanup"),
+    "Identifier.close": (lambda mp: closed(Identifier("1")), "needs no cleanup"),
+    "InvoiceNote.close": (lambda mp: closed(InvoiceNote("hi")), "needs no cleanup"),
+    "OriginalInvoiceRef.close": (lambda mp: closed(OriginalInvoiceRef("1")), "needs no cleanup"),
+    "Party.close": (lambda mp: closed(Party("Acme")), "needs no cleanup"),
+    "PaymentMeans.close": (lambda mp: closed(PaymentMeans("10")), "needs no cleanup"),
 }
 
 
@@ -140,8 +169,53 @@ def test_aggregate_setters_still_build_and_chain():
     invoice = b.build()
     assert (invoice.totals.allowance_total, invoice.totals.charge_total) == (Decimal("10"), Decimal("5"))
     b = builder().add_line_item("item", 1, "PCE", 100, 15, VatCategory.STANDARD)
-    b.add_document_adjustment(False, Adjustment.amount(3), VatCategory.STANDARD, 15)
+    b.add_document_adjustment(False, Adjustment(3), VatCategory.STANDARD, 15)
     assert b.build().totals.allowance_total == Decimal("3")
     b = builder().set_payment_means_code("30")
     assert [p.code for p in b.add_line_item("i", 1, "PCE", 1, 15, VatCategory.STANDARD).build().payment_means] == ["10", "30"]
     assert isinstance(PaymentMeans.new("10"), PaymentMeans)
+
+
+# --- 0.5 value-model behaviour kept until 0.7 ------------------------------------------
+
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+def test_0_5_adjustment_and_reference_forms_still_work():
+    from fatoora import AllowanceCharge, DocumentReference, OtherId, VatId
+    entry = AllowanceCharge(True, "2", VatCategory.STANDARD, "15", "fee", None, TaxExemption(), 1, None, None, False)
+    assert isinstance(entry, Adjustment) and isinstance(entry, AllowanceCharge)
+    assert entry == Adjustment(2, reason="fee", charge=True, category=VatCategory.STANDARD, rate=15)
+    assert Adjustment.amount(5).value == Decimal("5")
+    percent = Adjustment.percentage(250, 10).with_supplied_amount("25.00").with_reason("discount", "95")
+    assert (percent.base_amount, percent.percent, percent.value) == (Decimal(250), Decimal(10), Decimal("25.00"))
+    assert DocumentReference is OriginalInvoiceRef and VatId is Identifier and OtherId is Identifier
+    with Address.new(*ADDRESS) as address:
+        assert address.country_code == "SAU"
+    reference = OriginalInvoiceRef.new("INV-1", None, "2024-01-01", "10:00:00", "388")
+    assert reference.issue_date.isoformat() == "2024-01-01"
+    means = PaymentMeans.new("30", "first").with_account("SA01", "net 30")
+    assert means.instruction_notes == ("first",) and means.has_account()
+    b = builder().add_line_item("item", 1, "PCE", 100, 15, VatCategory.STANDARD)
+    b.add_adjustment(entry).add_charge(Adjustment.amount(1).with_reason("fee"), VatCategory.STANDARD, 15)
+    assert b.build().totals.charge_total == Decimal("3")
+
+
+def test_identifier_tuple_forms_warn_at_caller():
+    item = Identifier("SKU", "SRV")
+    with pytest.warns(DeprecationWarning, match="unpacking an Identifier") as record:
+        value, scheme = item
+    assert (value, scheme) == ("SKU", "SRV") and record[0].filename == __file__
+    with pytest.warns(DeprecationWarning, match="indexing an Identifier") as record:
+        assert item[0] == "SKU"
+    assert record[0].filename == __file__
+    from fatoora import InvoiceLineItem
+    with pytest.warns(DeprecationWarning, match="Identifier\\(value, scheme\\)") as record:
+        line = InvoiceLineItem("item", "PCE", 1, 100, vat_rate=15, vat_category=VatCategory.STANDARD,
+                               item_seller_identifier=("SKU", None))
+    assert line.item_seller_identifier == Identifier("SKU") and record[0].filename == __file__
+
+
+def test_value_models_in_a_with_block_warn():
+    with pytest.warns(DeprecationWarning, match="with block") as record:
+        with Party("Acme") as party:
+            assert party.name == "Acme"
+    assert record[0].filename == __file__

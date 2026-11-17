@@ -14,7 +14,7 @@ def builder():
     b.set_currency("SAR")
     b.set_previous_invoice_hash("hash")
     b.set_invoice_counter(1)
-    b.add_payment_means(PaymentMeans.new("10"))
+    b.add_payment_means(PaymentMeans("10"))
     b.set_vat_category(VatCategory.STANDARD)
     b.set_seller(name="Acme", country_code="SA", city="Riyadh", street="King Fahd",
                  building_number="1234", postal_code="12222", vat_id="399999999900003")
@@ -66,11 +66,11 @@ def test_import_preserves_signed_payable_adjustment():
 def test_district_is_the_only_city_subdivision_field():
     from fatoora import Address, FinalizedInvoice
 
-    with Address.new("SA", "Riyadh", "King Fahd", "1234", "12222", district="Olaya") as address:
-        assert address.district == "Olaya"
-        assert not hasattr(address, "subdivision")
+    address = Address("SA", "Riyadh", "King Fahd", "1234", "12222", district="Olaya")
+    assert address.district == "Olaya"
+    assert not hasattr(address, "subdivision")
     with pytest.raises(TypeError):
-        Address.new("SA", "Riyadh", "King Fahd", "1234", "12222", subdivision="old")
+        Address("SA", "Riyadh", "King Fahd", "1234", "12222", subdivision="old")
 
     b = builder()
     b.set_seller(name="Acme", country_code="SA", city="Riyadh", street="King Fahd",
@@ -81,8 +81,7 @@ def test_district_is_the_only_city_subdivision_field():
         xml = invoice.xml
         assert "<cbc:CitySubdivisionName>Olaya</cbc:CitySubdivisionName>" in xml
         with FinalizedInvoice.from_xml(xml) as imported:
-            with imported.seller as seller:
-                with seller.address as address:
-                    assert address.district == "Olaya"
-                    assert address.additional_number == "0123"
-                    assert address.additional_street == "Second street"
+            address = imported.seller.address
+            assert address.district == "Olaya"
+            assert address.additional_number == "0123"
+            assert address.additional_street == "Second street"

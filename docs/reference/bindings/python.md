@@ -45,7 +45,7 @@ Configuration, CSR generation, and credentials must agree on the environment.
 | Date input / output | `datetime.date` or `"YYYY-MM-DD"` / `datetime.date` |
 | UUID input / output | `uuid.UUID` or `str` / `str` (core keeps the UUID text verbatim) |
 | Local ZATCA report | frozen `ZatcaReport` dataclass |
-| Line item / totals snapshot | `InvoiceLineItem` / `InvoiceTotals` dataclass |
+| Invoice data (parties, addresses, notes, references, payment means, adjustments, line items, totals) | frozen dataclasses: `Party`, `Address`, `Identifier`, `InvoiceNote`, `OriginalInvoiceRef`, `PaymentMeans`, `Adjustment`, `InvoiceLineItem`, `InvoiceTotals`, `VatBreakdown`, `TaxExemption` |
 
 Use exact decimal text such as `"0.3333"`, rather than constructing a `Decimal`
 from a binary float. See [decimal numbers and rounding](../numbers.md).
@@ -79,17 +79,17 @@ whole invoice is one expression:
 ```python
 from datetime import datetime, timezone
 from uuid import uuid4
-from fatoora import (Address, InvoiceBuilder, InvoiceSubType, InvoiceTypeKind,
+from fatoora import (Address, InvoiceBuilder, InvoiceSubType, InvoiceTypeKind, Party,
                      PaymentMeans, VatCategory)
 
+seller = Party("Acme", Address("SA", "Riyadh", "King Fahd", "1234", "12222"),
+               vat_id="399999999900003")
 invoice = (
     InvoiceBuilder(InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED,
                    id="INV-1", uuid=uuid4(), issue_datetime=datetime.now(timezone.utc),
                    currency="SAR", previous_invoice_hash=previous_hash,
-                   invoice_counter=1, vat_category=VatCategory.STANDARD)
-    .set_seller("Acme", vat_id="399999999900003",
-                address=Address.new("SA", "Riyadh", "King Fahd", "1234", "12222"))
-    .add_payment_means(PaymentMeans.new("10"))
+                   invoice_counter=1, vat_category=VatCategory.STANDARD, seller=seller)
+    .add_payment_means(PaymentMeans("10"))
     .add_line_item("Item", 1, "PCE", "100", "15", VatCategory.STANDARD)
     .build()
 )
@@ -98,8 +98,8 @@ invoice = (
 Arguments after the first are keyword-only for `set_seller`, `set_buyer`,
 `add_note(text, *, language=None)`, `CsrProperties.new(*, ...)`, and the
 `clearance_status`/`accept_language` arguments of the report and clear methods.
-`set_seller` and `set_buyer` take either `address=Address.new(...)` or the address
-fields, not both. Parse invoices with `FinalizedInvoice.from_xml(xml)` /
+`set_seller` and `set_buyer` take a `Party`, or a name with either
+`address=Address(...)` or the address fields, not both. Parse invoices with `FinalizedInvoice.from_xml(xml)` /
 `from_file(path)` and `SignedInvoice.from_xml(xml)` / `from_file(path)`.
 
 ## Object lifetime
@@ -115,9 +115,43 @@ validation fails. `FinalizedInvoice.sign(signer)` consumes the finalized invoice
 to close, but further use of consumed state fails. Create a new input object to
 retry after a consuming operation fails.
 
-Plain strings, bytes, decimal values, and dataclass snapshots do not need
-`close()`. Returned object snapshots are independent of their parent, but still
-need their own cleanup.
+Plain strings, bytes, decimal values, and the dataclass models do not need
+`close()`. Returned owners (such as a `ValidationResponse` and its
+`validation_results`) are independent of their parent, but still need their own
+cleanup.
+
+## Invoice data models
+
+Everything read from an invoice is a frozen dataclass. Values compare with `==`,
+copy with `dataclasses.replace`, and go straight back into a builder, so an
+invoice read from XML can be rebuilt from its parts. An invoice reads its data
+from the native object once, on first access, and caches it.
+
+| Model | Constructor and notes |
+| --- | --- |
+| `Party` | `Party(name, address=None, vat_id=None, identifiers=())`. `vat_id` and each identifier take an `Identifier` or a string. `other_id` is the first identifier. |
+| `Identifier` | `Identifier(value, scheme=None)`: replaces the `VatId`/`OtherId` handles and the `(value, scheme)` tuples of line item identifiers. |
+| `Address` | `Address(country_code, city, street, building_number, postal_code, additional_street=None, additional_number=None, district=None, province=None)`. Validated on construction; `"SA"` reads back as `"SAU"`. |
+| `InvoiceNote` | `InvoiceNote(text, language_id=None)`; `language` defaults to `"en"`. |
+| `OriginalInvoiceRef` | `OriginalInvoiceRef(id, uuid=None, issue_date=None, issue_time=None, document_type_code=None)`: billing references, the referenced original invoice, and line document references. |
+| `PaymentMeans` | `PaymentMeans(code, instruction_notes=(), account_identifier=None, payment_terms=None)`. |
+| `Adjustment` | `Adjustment(amount, reason=None, reason_code=None, ...)` or `Adjustment.percent_of(base, percent, ...)`: line and document allowances and charges. Document entries read back with `charge`, `category`, `rate`, `exemption`, `tax_category_count` and `omitted_rate`, and round-trip through `builder.add_adjustment(entry)`. |
+| `InvoiceLineItem` | As input to `add_item`, `total_amount` and `vat_amount` are optional: they are calculated when `None` and checked when given. |
+
+```python
+from fatoora import Adjustment, FinalizedInvoice, InvoiceBuilder, InvoiceLineItem, VatCategory
+
+parsed = FinalizedInvoice.from_file("invoice.xml")
+print(parsed.seller.name, parsed.seller.vat_id.value, parsed.seller.address.city)
+
+line = InvoiceLineItem("Notebook", "PCE", quantity=2, unit_price="50", vat_rate=15,
+                       vat_category=VatCategory.STANDARD,
+                       adjustments=(Adjustment(10, reason="Volume discount"),))
+builder = InvoiceBuilder(parsed.invoice_type_kind, parsed.invoice_sub_type,
+                         seller=parsed.seller, buyer=parsed.buyer)
+builder.add_item(line)
+builder.add_charge(Adjustment.percent_of(90, 5, reason="Delivery"), VatCategory.STANDARD, 15)
+```
 
 ## Errors
 
@@ -256,15 +290,22 @@ replacement; they are removed in 0.7. Run your tests with
 | `issue_date()`, `actual_delivery_date()`, `latest_delivery_date()`, `OriginalInvoiceRef.issue_date()` return `str` (hard break) | Properties of type `datetime.date` |
 | `InvoiceBuilder.new(type, subtype, ...)` / `new_with_reference(type, subtype, ref, reason)` | `InvoiceBuilder(type, subtype, *, id=..., ..., original_invoice=ref, original_invoice_reason=reason)` |
 | Setters return `None` | Setters return the builder |
-| `set_seller(name, country_code, ...)` positional (enforced) | `set_seller(name, *, vat_id=..., address=Address.new(...))` or the address keywords |
+| `set_seller(name, country_code, ...)` positional (enforced) | `set_seller(Party(...))`, or `set_seller(name, *, vat_id=..., address=Address(...))` or the address keywords |
 | `set_buyer(name, country_code, ...)` positional (enforced) | `set_buyer(name, *, address=..., ...)` |
 | `add_note(text, language)` positional (enforced) | `add_note(text, language=...)` |
 | `set_note(language, text)` / `set_note_without_language(text)` | `add_note(text, language=...)` / `add_note(text)` |
-| `set_payment_means_code(code)` | `add_payment_means(PaymentMeans.new(code))` |
+| `set_payment_means_code(code)` | `add_payment_means(PaymentMeans(code))` |
 | `builder.flags(value)` | `builder.set_flags(value)` |
 | `set_tax_exemption(category, rate, exemption)` | `add_tax_exemption(category, rate, exemption)` |
 | `add_document_adjustment(charge, value, category, rate)` | `add_allowance(value, category, rate)` / `add_charge(value, category, rate)` |
-| `set_allowance`, `invoice_level_discount`, `invoice_level_charge`, `allowance_reason` | `add_allowance` / `add_charge` with an explicit category and rate, and `Adjustment.with_reason` |
+| `set_allowance`, `invoice_level_discount`, `invoice_level_charge`, `allowance_reason` | `add_allowance` / `add_charge` with an explicit category and rate, and `Adjustment(amount, reason=...)` |
+| `Address.new(...)`, `PaymentMeans.new(code, instruction)`, `OriginalInvoiceRef.new(id, uuid, date, time, type_code)` | `Address(...)`, `PaymentMeans(code, (instruction,))`, `OriginalInvoiceRef(id, uuid, issue_date, issue_time, document_type_code)` |
+| `Address`, `Party`, `InvoiceNote`, `OriginalInvoiceRef`, `PaymentMeans`, `Adjustment`, `VatId`, `OtherId` were native handles: `close()`, `with` | Frozen dataclasses; `close()` and `with` are no-ops that warn |
+| `AllowanceCharge(charge, amount, category, rate, ...)` and `Adjustment.amount(value)` / `Adjustment.percentage(base, percent)` | One `Adjustment` model: `Adjustment(amount, ..., charge=..., category=..., rate=...)` / `Adjustment.percent_of(base, percent)`; `invoice.adjustments` returns `Adjustment` values |
+| `adjustment.value`, `adjustment.percent`, `adjustment.with_supplied_amount(value)` | `adjustment.amount`, `adjustment.percentage`, `Adjustment.percent_of(base, percent, amount=value)` |
+| `DocumentReference(id, uuid, issue_date, issue_time, document_type_code)` | `OriginalInvoiceRef(...)` with the same arguments; line `document_references` hold `OriginalInvoiceRef` values and their `issue_date` is a `date` (hard break) |
+| `VatId`, `OtherId`, `item.item_seller_identifier` as a `(value, scheme)` tuple | `Identifier(value, scheme)`; unpacking or indexing an `Identifier` warns |
+| `party.identifiers`, `payment_means.instruction_notes` return lists (hard break) | Tuples |
 | `LineItemBuilder.new()` | `LineItemBuilder()` |
 | `CsrProperties.new(...)` positional (enforced) | `CsrProperties.new(*, ...)` |
 | `CsrProperties.from_properties_str(text)` / `parse_csr_config(text)` | `CsrProperties.from_str(text)` |

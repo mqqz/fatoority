@@ -78,31 +78,31 @@ the line, then append it with the invoice builder's `add_item` equivalent.
 
 | Operation | Python | JavaScript / TypeScript | C# | Kotlin / Java |
 | --- | --- | --- | --- | --- |
-| Create a line builder | `LineItemBuilder.new()` | `LineItemBuilder.create()` | `LineItemBuilder.New()` | `LineItemBuilder.create()` |
+| Create a line builder | `LineItemBuilder()` | `LineItemBuilder.create()` | `LineItemBuilder.New()` | `LineItemBuilder.create()` |
 | Set price base | `set_item_price_base_quantity(value)` | `setItemPriceBaseQuantity(value)` | `SetItemPriceBaseQuantity(value)` | `setItemPriceBaseQuantity(value)` |
 | Add line allowance | `add_allowance(adjustment)` | `addAllowance(adjustment)` | `AddAllowance(adjustment)` | `addAllowance(adjustment)` |
 | Add line charge | `add_charge(adjustment)` | `addCharge(adjustment)` | `AddCharge(adjustment)` | `addCharge(adjustment)` |
 | Finish line | `build()` | `build()` | `Build()` | `build()` |
 | Append built line to invoice | `add_item(item)` | `addItem(item)` | `AddItem(item)` | `addItem(item)` |
-| Append document allowance | `add_document_adjustment(False, ...)` | `addAllowance(...)` | `AddAllowance(...)` | `addAllowance(...)` |
-| Append document charge | `add_document_adjustment(True, ...)` | `addCharge(...)` | `AddCharge(...)` | `addCharge(...)` |
+| Append document allowance | `add_allowance(...)` | `addAllowance(...)` | `AddAllowance(...)` | `addAllowance(...)` |
+| Append document charge | `add_charge(...)` | `addCharge(...)` | `AddCharge(...)` | `addCharge(...)` |
 | Set prepaid amount | `set_prepaid_amount(value)` | `setPrepaidAmount(value)` | `SetPrepaidAmount(value)` | `setPrepaidAmount(value)` |
 | Set payable rounding | `set_payable_rounding_amount(value)` | `setPayableRoundingAmount(value)` | `SetPayableRoundingAmount(value)` | `setPayableRoundingAmount(value)` |
 | Append billing reference | `add_billing_reference(reference)` | `addBillingReference(reference)` | `AddBillingReference(reference)` | `addBillingReference(reference)` |
 | Append payment entry | `add_payment_means(payment)` | `addPaymentMeans(payment)` | `AddPaymentMeans(payment)` | `addPaymentMeans(payment)` |
 
 Document allowance and charge arguments are `(adjustment, category, rate, exemption)`,
-mirroring Rust `allowance` and `charge`. Python keeps one method with a Boolean first
-argument, `charge`: `False` for an allowance and `True` for a charge. Python defaults
-the exemption to empty metadata; the other bindings require a `TaxExemption` object. Category values and decimal representations follow the
-language reference below.
+mirroring Rust `allowance` and `charge`. In Python the category, rate and exemption
+default to the fields of the `Adjustment` value, and the exemption to empty metadata;
+the other bindings require a `TaxExemption` object. Category values and decimal
+representations follow the language reference below.
 
 For a prepayment adjustment line, use `add_document_reference` and
 `add_tax_subtotal` on the Python line builder (`addDocumentReference` and
 `addTaxSubtotal` in JavaScript/Kotlin/Java; PascalCase in C#).
 `OriginalInvoiceRef` constructors accept ID, UUID, date, time, and document type
 code in that order. Set the last argument to `"386"`; in Python it is the optional
-`type_code` keyword. The [prepayment recipe](../guides/invoice-recipes.md#prepayments-and-final-payable-amounts)
+`document_type_code` keyword. The [prepayment recipe](../guides/invoice-recipes.md#prepayments-and-final-payable-amounts)
 shows which line amounts must be zero and how to supply the advance VAT subtotal.
 
 For C, use `fatoora_line_item_builder_new(&line, &error)` and
@@ -132,7 +132,7 @@ line = (
     .set_item_price_base_quantity("10")
     .set_vat_category(VatCategory.STANDARD)
     .set_vat_rate("15")
-    .add_allowance(Adjustment.amount("10").with_reason("Volume discount"))
+    .add_allowance(Adjustment("10", reason="Volume discount"))
     .build()
 )
 ```
@@ -141,7 +141,7 @@ For a document discount instead, keep the creation example's original line and
 add this call before `.build()`. The payable amount becomes SAR 103.50:
 
 ```python
-    .add_allowance(Adjustment.amount("10").with_reason("Loyalty discount"),
+    .add_allowance(Adjustment("10", reason="Loyalty discount"),
                    VatCategory.STANDARD, "15")
 ```
 
@@ -230,6 +230,7 @@ correspond to the fields above.
         vat_category: VatCategory | None = None, flags: int | InvoiceFlag | None = None,
         original_invoice: OriginalInvoiceRef | None = None,
         original_invoice_reason: str | None = None,
+        seller: Party | None = None, buyer: Party | None = None,
     )
     ```
 
@@ -245,14 +246,18 @@ correspond to the fields above.
     | `set_invoice_counter(invoice_counter: int)` | |
     | `set_vat_category(vat_category: VatCategory)` | |
     | `set_flags(flags: int \| InvoiceFlag)` | |
-    | `set_seller(name: str, *, vat_id: str, address: Address \| None = None, country_code=..., city=..., street=..., building_number=..., postal_code=..., additional_street=None, additional_number=None, district=None, province=None, other_id=None, other_id_scheme=None)` | Pass `address=Address.new(...)` or the address fields, not both. |
+    | `set_seller(party: Party)` | The seller needs an address and a VAT ID. The first of `party.identifiers` is the other ID; the rest are additional identifiers. |
+    | `set_seller(name: str, *, vat_id: str, address: Address \| None = None, country_code=..., city=..., street=..., building_number=..., postal_code=..., additional_street=None, additional_number=None, district=None, province=None, other_id=None, other_id_scheme=None)` | Pass `address=Address(...)` or the address fields, not both. |
+    | `set_buyer(party: Party)` | The buyer's address and VAT ID are optional. |
     | `set_buyer(name: str, *, address: Address \| None = None, vat_id=None, other_id=None, other_id_scheme=None, ...address fields...)` | As `set_seller`; `vat_id` is optional. |
     | `set_buyer_without_address(name: str, vat_id=None, other_id=None, scheme=None)` | |
-    | `add_line_item(description: str, quantity, unit_code: str, unit_price, vat_rate, vat_category: VatCategory, *, id=None, exemption=TaxExemption(), document_references=(), tax_subtotals=())` | |
+    | `add_line_item(description: str, quantity, unit_code: str, unit_price, vat_rate, vat_category: VatCategory, *, id=None, exemption=TaxExemption(), document_references=(), tax_subtotals=())` | `document_references` holds `OriginalInvoiceRef` values. |
+    | `add_item(item: InvoiceLineItem)` | `total_amount` and `vat_amount` are calculated when `None` and checked when given. |
     | `add_note(text: str, *, language: str \| None = None)` | Appends a note. |
     | `add_payment_means(value: PaymentMeans)` | Appends a payment means. |
-    | `add_allowance(value: Adjustment, category: VatCategory, rate, exemption=TaxExemption())` | Document-level allowance (discount). |
-    | `add_charge(value: Adjustment, category: VatCategory, rate, exemption=TaxExemption())` | Document-level charge. |
+    | `add_allowance(value: Adjustment, category: VatCategory \| None = None, rate=None, exemption=None)` | Document-level allowance (discount). Omitted arguments come from the `Adjustment`. |
+    | `add_charge(value: Adjustment, category: VatCategory \| None = None, rate=None, exemption=None)` | Document-level charge. |
+    | `add_adjustment(value: Adjustment)` | Allowance or charge described entirely by the value (`charge`, `category`, `rate`, tax category count, omitted rate), such as one read from `invoice.adjustments`. |
     | `add_tax_exemption(category: VatCategory, rate, exemption: TaxExemption)` | |
     | `set_delivery(actual: date \| str \| None = None, latest: date \| str \| None = None)` | |
     | `build()` | Returns `FinalizedInvoice`. |
@@ -278,20 +283,35 @@ correspond to the fields above.
     | `original_invoice_ref` / `original_invoice_reason` | `Optional[OriginalInvoiceRef]` / `Optional[str]` |
     | `actual_delivery_date` / `latest_delivery_date` | `Optional[date]` |
     | `line_items` | `list[InvoiceLineItem]` |
-    | `adjustments` / `vat_breakdown` | `list[AllowanceCharge]` / `list[VatBreakdown]` |
+    | `adjustments` / `vat_breakdown` | `list[Adjustment]` / `list[VatBreakdown]` |
     | `totals` | `InvoiceTotals` |
     | `flags` | `set[InvoiceFlag]` |
     | `xml` | `str` |
 
     Methods: `line_item(index: int) -> InvoiceLineItem`, `hash() -> str` (recomputes the base64 invoice hash), and the queries `is_third_party()`, `is_nominal()`, `is_export()`, `is_summary()`, `is_self_billed()` and `is_simplified()`.
 
-    `totals` is an `InvoiceTotals` value with decimal amount fields. Party, address, note and reference values are owned objects with read-only properties (`party.name`, `party.address.city`, ...); optional fields are `None` when absent. `Address.new(country_code, city, street, building_number, postal_code, additional_street=None, additional_number=None, district=None)` returns an `Address`.
+    The invoice data is read from the native invoice once, on first access, and cached; invoices do not change after `build()` or parsing.
+
+    **Value models**
+
+    Everything read from an invoice is a frozen dataclass: compare values with `==`, copy them with `dataclasses.replace`, and pass them back to the builder. They need no `close()`. Optional fields are `None` when absent.
+
+    | Model | Fields |
+    | --- | --- |
+    | `Party(name, address=None, vat_id=None, identifiers=())` | `vat_id` and `identifiers` hold `Identifier` values (strings are accepted as input); `other_id` is the first identifier. |
+    | `Identifier(value, scheme=None)` | An identifier and its `schemeID`, such as `Identifier("7003339333", "CRN")`. |
+    | `Address(country_code, city, street, building_number, postal_code, additional_street=None, additional_number=None, district=None, province=None)` | Validated on construction; the country code becomes ISO alpha-3 (`"SA"` reads back as `"SAU"`). |
+    | `InvoiceNote(text, language_id=None)` | `language` is `language_id` or `"en"`. |
+    | `OriginalInvoiceRef(id, uuid=None, issue_date=None, issue_time=None, document_type_code=None)` | Billing references and line document references. `issue_date` is a `date`. |
+    | `PaymentMeans(code, instruction_notes=(), account_identifier=None, payment_terms=None)` | `with_instruction_note(note)` and `with_account(id, terms)` return copies. |
+    | `Adjustment(amount, reason=None, reason_code=None, base_amount=None, percentage=None, charge=False, category=None, rate=None, exemption=TaxExemption(), tax_category_count=1, omitted_rate=False)` | `Adjustment.percent_of(base, percent, **fields)` calculates `amount`. Line adjustments read back with their line's category and rate. |
+    | `InvoiceLineItem(description, unit_code, quantity, unit_price, total_amount=None, vat_rate, vat_amount=None, vat_category, ...)` | `vat_rate` and `vat_category` are required; pass them by keyword when you leave out `total_amount`. |
 
     `FinalizedInvoice.sign(signer: InvoiceSigner) -> SignedInvoice` consumes the finalized invoice on success or signing failure; the signer remains reusable. See [signing](invoice-signing.md) for metadata and [XML](xml.md) for serialization.
 
     **Deprecated in 0.6 (removed in 0.7)**
 
-    Getters became properties as a hard break in 0.6: drop the parentheses (`invoice.id()` becomes `invoice.id`). `InvoiceBuilder.new(...)` and `new_with_reference(...)` become the `InvoiceBuilder(...)` constructor; `set_note(language, text)` and `set_note_without_language(text)` become `add_note(text, language=...)`; `set_payment_means_code(code)` becomes `add_payment_means(PaymentMeans.new(code))`; `flags(value)` becomes `set_flags(value)`; `set_tax_exemption` becomes `add_tax_exemption`; `add_document_adjustment(charge, ...)` becomes `add_allowance(...)` / `add_charge(...)`. The aggregate setters `set_allowance`, `invoice_level_discount`, `invoice_level_charge` and `allowance_reason` keep their 0.5 behaviour (one allowance and one charge in the document VAT category, at the single VAT rate of that category's lines) but are deprecated in favour of `add_allowance` / `add_charge` with an explicit category and rate.
+    Getters became properties as a hard break in 0.6: drop the parentheses (`invoice.id()` becomes `invoice.id`). `InvoiceBuilder.new(...)` and `new_with_reference(...)` become the `InvoiceBuilder(...)` constructor; `set_note(language, text)` and `set_note_without_language(text)` become `add_note(text, language=...)`; `set_payment_means_code(code)` becomes `add_payment_means(PaymentMeans(code))`; `flags(value)` becomes `set_flags(value)`; `set_tax_exemption` becomes `add_tax_exemption`; `add_document_adjustment(charge, ...)` becomes `add_allowance(...)` / `add_charge(...)`. The aggregate setters `set_allowance`, `invoice_level_discount`, `invoice_level_charge` and `allowance_reason` keep their 0.5 behaviour (one allowance and one charge in the document VAT category, at the single VAT rate of that category's lines) but are deprecated in favour of `add_allowance` / `add_charge` with an explicit category and rate. The value models replace `Address.new`, `PaymentMeans.new` and `OriginalInvoiceRef.new` with their constructors, `AllowanceCharge` with `Adjustment` (`Adjustment.amount(value)` becomes `Adjustment(value)` and `Adjustment.percentage(base, percent)` becomes `Adjustment.percent_of(base, percent)`), `DocumentReference` with `OriginalInvoiceRef`, and `VatId`/`OtherId` and `(value, scheme)` tuples with `Identifier`. See the [Python migration table](bindings/python.md#migrate-from-05).
 
 === "JavaScript"
 

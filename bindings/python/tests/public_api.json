@@ -1,12 +1,23 @@
 {
   "Address": {
-    "additional_number": "property",
-    "additional_street": "property",
-    "building_number": "property",
-    "city": "property",
+    "__init__": [
+      "country_code",
+      "city",
+      "street",
+      "building_number",
+      "postal_code",
+      "additional_street",
+      "additional_number",
+      "district",
+      "province"
+    ],
+    "additional_number": "field",
+    "additional_street": "field",
+    "building_number": "field",
+    "city": "field",
     "close": [],
-    "country_code": "property",
-    "district": "property",
+    "country_code": "field",
+    "district": "field",
     "new": [
       "country_code",
       "city",
@@ -17,26 +28,45 @@
       "additional_number",
       "district"
     ],
-    "postal_code": "property",
-    "province": "property",
-    "street": "property",
+    "postal_code": "field",
+    "province": "field",
+    "street": "field",
     "with_province": [
       "province"
     ]
   },
   "Adjustment": {
-    "amount": [
-      "value"
+    "__init__": [
+      "amount",
+      "reason",
+      "reason_code",
+      "base_amount",
+      "percentage",
+      "charge",
+      "category",
+      "rate",
+      "exemption",
+      "tax_category_count",
+      "omitted_rate"
     ],
-    "base_amount": "property",
+    "amount": "field",
+    "base_amount": "field",
+    "category": "field",
+    "charge": "field",
     "close": [],
+    "exemption": "field",
+    "omitted_rate": "field",
     "percent": "property",
-    "percentage": [
+    "percent_of": [
       "base",
-      "percent"
+      "percent",
+      "**fields"
     ],
-    "reason": "property",
-    "reason_code": "property",
+    "percentage": "field",
+    "rate": "field",
+    "reason": "field",
+    "reason_code": "field",
+    "tax_category_count": "field",
     "value": "property",
     "with_reason": [
       "reason",
@@ -45,32 +75,6 @@
     "with_supplied_amount": [
       "value"
     ]
-  },
-  "AllowanceCharge": {
-    "__init__": [
-      "charge",
-      "amount",
-      "category",
-      "rate",
-      "reason",
-      "reason_code",
-      "exemption",
-      "tax_category_count",
-      "base_amount",
-      "percentage",
-      "omitted_rate"
-    ],
-    "amount": "field",
-    "base_amount": "field",
-    "category": "field",
-    "charge": "field",
-    "exemption": "field",
-    "omitted_rate": "field",
-    "percentage": "field",
-    "rate": "field",
-    "reason": "field",
-    "reason_code": "field",
-    "tax_category_count": "field"
   },
   "ApiError": {},
   "ComplianceCsid": {
@@ -139,20 +143,6 @@
     "parse_csr_config_file": [
       "path"
     ]
-  },
-  "DocumentReference": {
-    "__init__": [
-      "id",
-      "uuid",
-      "issue_date",
-      "issue_time",
-      "document_type_code"
-    ],
-    "document_type_code": "field",
-    "id": "field",
-    "issue_date": "field",
-    "issue_time": "field",
-    "uuid": "field"
   },
   "Environment": {
     "NON_PRODUCTION": "member",
@@ -224,6 +214,15 @@
     "vat_category": "property",
     "xml": "property"
   },
+  "Identifier": {
+    "__init__": [
+      "value",
+      "scheme"
+    ],
+    "close": [],
+    "scheme": "field",
+    "value": "field"
+  },
   "InternalError": {},
   "InvalidInputError": {},
   "InvoiceBuilder": {
@@ -240,7 +239,9 @@
       "vat_category",
       "flags",
       "original_invoice",
-      "original_invoice_reason"
+      "original_invoice_reason",
+      "seller",
+      "buyer"
     ],
     "add_adjustment": [
       "adjustment"
@@ -500,10 +501,14 @@
     "vat_rate": "field"
   },
   "InvoiceNote": {
+    "__init__": [
+      "text",
+      "language_id"
+    ],
     "close": [],
     "language": "property",
-    "language_id": "property",
-    "text": "property"
+    "language_id": "field",
+    "text": "field"
   },
   "InvoiceOutcome": {
     "UNKNOWN": "member",
@@ -642,11 +647,18 @@
   },
   "NetworkError": {},
   "OriginalInvoiceRef": {
+    "__init__": [
+      "id",
+      "uuid",
+      "issue_date",
+      "issue_time",
+      "document_type_code"
+    ],
     "close": [],
-    "document_type_code": "property",
-    "id": "property",
-    "issue_date": "property",
-    "issue_time": "property",
+    "document_type_code": "field",
+    "id": "field",
+    "issue_date": "field",
+    "issue_time": "field",
     "new": [
       "id",
       "uuid",
@@ -654,34 +666,41 @@
       "time",
       "type_code"
     ],
-    "uuid": "property"
-  },
-  "OtherId": {
-    "close": [],
-    "scheme": "property",
-    "value": "property"
+    "uuid": "field"
   },
   "ParseError": {},
   "Party": {
-    "address": "property",
+    "__init__": [
+      "name",
+      "address",
+      "vat_id",
+      "identifiers"
+    ],
+    "address": "field",
     "close": [],
-    "identifiers": "property",
-    "name": "property",
+    "identifiers": "field",
+    "name": "field",
     "other_id": "property",
-    "vat_id": "property"
+    "vat_id": "field"
   },
   "PaymentMeans": {
-    "account_identifier": "property",
+    "__init__": [
+      "code",
+      "instruction_notes",
+      "account_identifier",
+      "payment_terms"
+    ],
+    "account_identifier": "field",
     "close": [],
-    "code": "property",
+    "code": "field",
     "has_account": [],
     "instruction_note": "property",
-    "instruction_notes": "property",
+    "instruction_notes": "field",
     "new": [
       "code",
       "instruction"
     ],
-    "payment_terms": "property",
+    "payment_terms": "field",
     "with_account": [
       "id",
       "terms"
@@ -877,10 +896,6 @@
     "ZERO": "member",
     "OUT_OF_SCOPE": "member"
   },
-  "VatId": {
-    "close": [],
-    "value": "property"
-  },
   "XmlError": {},
   "ZatcaClient": {
     "__init__": [
@@ -1047,13 +1062,24 @@
     "evaluated_at"
   ],
   "__deprecated__": [
+    "Address.close",
+    "Address.new",
+    "Adjustment.amount",
+    "Adjustment.close",
+    "Adjustment.percent",
+    "Adjustment.percentage",
+    "Adjustment.value",
+    "Adjustment.with_supplied_amount",
+    "AllowanceCharge",
     "CsidCompliance",
     "CsidProduction",
     "CsrProperties.from_properties_str",
     "CsrProperties.parse_csr_config",
     "CsrProperties.parse_csr_config_file",
+    "DocumentReference",
     "FinalizedInvoice.hash_base64",
     "FinalizedInvoice.to_xml",
+    "Identifier.close",
     "InvoiceBuilder.add_document_adjustment",
     "InvoiceBuilder.allowance_reason",
     "InvoiceBuilder.flags",
@@ -1066,11 +1092,19 @@
     "InvoiceBuilder.set_note_without_language",
     "InvoiceBuilder.set_payment_means_code",
     "InvoiceBuilder.set_tax_exemption",
+    "InvoiceNote.close",
     "LineItemBuilder.new",
+    "OriginalInvoiceRef.close",
+    "OriginalInvoiceRef.new",
+    "OtherId",
+    "Party.close",
+    "PaymentMeans.close",
+    "PaymentMeans.new",
     "SignedInvoice.hash_base64",
     "SignedInvoice.into_xml",
     "SignedInvoice.to_xml",
     "Signer",
+    "VatId",
     "ZatcaClient.post_ccsid_for_pcsid",
     "ZatcaClient.post_csr_for_ccsid",
     "invoice_hash_base64_from_xml_str",

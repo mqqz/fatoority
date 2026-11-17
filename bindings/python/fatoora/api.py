@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from contextlib import ExitStack
+import dataclasses
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from decimal import Decimal
@@ -13,7 +14,8 @@ from typing import Any, Optional, Union
 import uuid as _uuid
 
 from . import _native
-from ._compat import alias_getattr, deprecated
+from ._compat import (ValueCompat, alias_getattr, deprecated, deprecated_classmethod,
+                      deprecated_property, warn)
 from .errors import InvalidInputError, error_class_for_code
 
 class Environment(IntEnum):
@@ -63,20 +65,6 @@ class TaxExemption:
         return cls(_call(value.reason_code), _call(value.reason))
 
 @dataclass(frozen=True)
-class AllowanceCharge:
-    charge: bool
-    amount: Decimal
-    category: VatCategory
-    rate: Decimal
-    reason: Optional[str] = None
-    reason_code: Optional[str] = None
-    exemption: TaxExemption = TaxExemption()
-    tax_category_count: int = 1
-    base_amount: Optional[Decimal] = None
-    percentage: Optional[Decimal] = None
-    omitted_rate: bool = False
-
-@dataclass(frozen=True)
 class VatBreakdown:
     category: VatCategory
     rate: Decimal
@@ -88,40 +76,6 @@ class VatBreakdown:
     def _native_value(self):
         value = _call(_native.VatBreakdown.new, int(self.category), _decimal(self.rate), _decimal(self.taxable_amount), _decimal(self.tax_amount), self.exemption._native_value())
         return _call(value.without_vat_rate) if self.omitted_rate else value
-
-@dataclass(frozen=True)
-class DocumentReference:
-    id: str
-    uuid: Optional[str] = None
-    issue_date: Optional[str] = None
-    issue_time: Optional[str] = None
-    document_type_code: Optional[str] = None
-
-@dataclass(frozen=True)
-class InvoiceLineItem:
-    description: str
-    unit_code: str
-    quantity: Decimal
-    unit_price: Decimal
-    total_amount: Decimal
-    vat_rate: Decimal
-    vat_amount: Decimal
-    vat_category: VatCategory
-    id: Optional[str] = None
-    exemption: TaxExemption = TaxExemption()
-    document_references: tuple[DocumentReference, ...] = ()
-    tax_subtotals: tuple[VatBreakdown, ...] = ()
-    item_price_base_quantity: Optional[Decimal] = None
-    item_price_base_quantity_unit_code: Optional[str] = None
-    item_gross_price: Optional[Decimal] = None
-    item_price_discount: Optional[Decimal] = None
-    adjustments: tuple[AllowanceCharge, ...] = ()
-    item_seller_identifier: Optional[tuple[str, Optional[str]]] = None
-    item_buyer_identifier: Optional[tuple[str, Optional[str]]] = None
-    item_standard_identifier: Optional[tuple[str, Optional[str]]] = None
-    omitted_vat_rate: bool = False
-    omitted_tax_amount: bool = False
-    omitted_gross_amount: bool = False
 
 @dataclass(frozen=True)
 class InvoiceTotals:
@@ -277,11 +231,45 @@ def _decimal(value: _DecimalIn) -> str:
 def _optional_decimal(value):
     return None if value is None else Decimal(value)
 
-def _identifier(value):
-    return None if value is None else (_call(value.value), _call(value.scheme))
 
-def _optional(cls, value):
-    return None if value is None else cls._wrap(value)
+def _to_decimal(value: _DecimalIn, name: str) -> Decimal:
+    """Validate a decimal input (``Decimal``, ``str`` or ``int``) and return it as ``Decimal``."""
+    try:
+        text = _decimal(value)
+    except TypeError:
+        raise TypeError(f"{name} must be a Decimal, str or int") from None
+    try:
+        result = Decimal(text)
+    except ArithmeticError:
+        result = None
+    if result is None or not result.is_finite():
+        raise ValueError(f"{name} is not a decimal number: {text!r}")
+    return result
+
+
+def _to_optional_decimal(value: Optional[_DecimalIn], name: str) -> Optional[Decimal]:
+    return None if value is None else _to_decimal(value, name)
+
+
+def _check_text(value, name: str, optional: bool = False) -> None:
+    if value is None and optional:
+        return
+    if not isinstance(value, str):
+        raise TypeError(f"{name} must be a str" + (" or None" if optional else ""))
+
+
+def _frozen(cls, **values):
+    """Build a frozen dataclass from trusted native data, skipping ``__post_init__``."""
+    obj = object.__new__(cls)
+    for name, value in values.items():
+        object.__setattr__(obj, name, value)
+    return obj
+
+
+def _set(obj, **values) -> None:
+    """Normalize fields of a frozen dataclass from ``__post_init__``."""
+    for name, value in values.items():
+        object.__setattr__(obj, name, value)
 
 
 # --- dates, times and UUIDs ---------------------------------------------------------
@@ -568,135 +556,463 @@ class ValidationResponse(_Owned):
     def validation_results(self) -> ValidationResults:
         return ValidationResults._wrap(self._invoke("validation_results"))
 
-class VatId(_Owned):
-    _repr_fields = ('value',)
+# --- invoice value models -------------------------------------------------------------
+#
+# Frozen dataclasses for the data an invoice holds. Their constructors validate
+# their input; values read from an invoice are built straight from native data.
 
-    @property
-    def value(self) -> str:
-        return self._invoke("value")
+@dataclass(frozen=True)
+class Identifier(ValueCompat):
+    """An identifier and its optional scheme (``schemeID``), such as ``Identifier("7003339333", "CRN")``."""
+    value: str
+    scheme: Optional[str] = None
 
-class OtherId(_Owned):
-    _repr_fields = ('value', 'scheme')
+    def __post_init__(self) -> None:
+        _check_text(self.value, "value")
+        _check_text(self.scheme, "scheme", optional=True)
 
-    @property
-    def value(self) -> str:
-        return self._invoke("value")
+    # 0.5 returned item identifiers as ``(value, scheme)`` tuples.
+    def __iter__(self):
+        warn("unpacking an Identifier as a (value, scheme) tuple is deprecated; "
+             "use .value and .scheme instead")
+        return iter((self.value, self.scheme))
 
-    @property
-    def scheme(self) -> Optional[str]:
-        return self._invoke("scheme")
-
-class Address(_Owned):
-    _repr_fields = ('country_code', 'city', 'street', 'building_number', 'postal_code')
-
-    def with_province(self, province: str) -> "Address":
-        return Address._wrap(self._invoke("with_province", province))
-
-    @property
-    def province(self) -> Optional[str]:
-        return self._invoke("province")
+    def __getitem__(self, index):
+        warn("indexing an Identifier as a (value, scheme) tuple is deprecated; "
+             "use .value and .scheme instead")
+        return (self.value, self.scheme)[index]
 
     @classmethod
-    def new(cls, country_code: str, city: str, street: str, building_number: str, postal_code: str, additional_street: Optional[str]=None, additional_number: Optional[str]=None, district: Optional[str]=None) -> 'Address':
-        return cls._wrap(_call(_native.Address.new, country_code, city, street, building_number, postal_code, additional_street, additional_number, district))
+    def _from_native(cls, native) -> "Identifier":
+        return _frozen(cls, value=_call(native.value), scheme=_call(native.scheme))
+
+
+def _identifier_in(value, name: str, skip: int) -> Optional[Identifier]:
+    """Accept an ``Identifier`` or a bare value string; ``(value, scheme)`` tuples warn."""
+    if value is None or isinstance(value, Identifier):
+        return value
+    if isinstance(value, str):
+        return Identifier(value)
+    if isinstance(value, tuple) and len(value) == 2:
+        warn(f"passing {name} as a (value, scheme) tuple is deprecated; "
+             "use Identifier(value, scheme) instead", skip)
+        return Identifier(*value)
+    raise TypeError(f"{name} must be an Identifier or str")
+
+
+def _optional_identifier(native) -> Optional[Identifier]:
+    return None if native is None else Identifier._from_native(native)
+
+
+def _vat_breakdown_value(native) -> VatBreakdown:
+    return VatBreakdown(VatCategory(_call(native.category)), Decimal(_call(native.rate)),
+                        Decimal(_call(native.taxable_amount)), Decimal(_call(native.tax_amount)),
+                        TaxExemption._from_native(_call(native.exemption)), not _call(native.has_vat_rate))
+
+
+def _address_fields(native) -> dict[str, Any]:
+    return {name: _call(getattr(native, name)) for name in (
+        "country_code", "city", "street", "building_number", "postal_code",
+        "additional_street", "additional_number", "district", "province")}
+
+
+@dataclass(frozen=True)
+class Address(ValueCompat):
+    """A postal address.
+
+    The constructor validates the address and normalizes the country code to
+    its ISO 3166-1 alpha-3 form (``"SA"`` becomes ``"SAU"``).
+    """
+    country_code: str
+    city: str
+    street: str
+    building_number: str
+    postal_code: str
+    additional_street: Optional[str] = None
+    additional_number: Optional[str] = None
+    district: Optional[str] = None
+    province: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        _set(self, **_address_fields(self._native_value()))
+
+    def _native_value(self):
+        native = _call(_native.Address.new, self.country_code, self.city, self.street,
+                       self.building_number, self.postal_code, self.additional_street,
+                       self.additional_number, self.district)
+        return native if self.province is None else _call(native.with_province, self.province)
+
+    @classmethod
+    def _from_native(cls, native) -> "Address":
+        return _frozen(cls, **_address_fields(native))
+
+    def with_province(self, province: str) -> "Address":
+        """Return a copy with ``province`` (the country subdivision) set."""
+        return dataclasses.replace(self, province=province)
+
+    @classmethod
+    @deprecated("Address(country_code, city, street, building_number, postal_code, ...)")
+    def new(cls, country_code: str, city: str, street: str, building_number: str, postal_code: str,
+            additional_street: Optional[str] = None, additional_number: Optional[str] = None,
+            district: Optional[str] = None) -> "Address":
+        return cls(country_code, city, street, building_number, postal_code, additional_street,
+                   additional_number, district)
+
+
+@dataclass(frozen=True)
+class Party(ValueCompat):
+    """A seller or buyer.
+
+    ``vat_id`` and the entries of ``identifiers`` accept an ``Identifier`` or a
+    plain string. The first of ``identifiers`` is the party's main other
+    identifier (``other_id``); the rest are additional identifiers.
+    """
+    name: str
+    address: Optional[Address] = None
+    vat_id: Optional[Identifier] = None
+    identifiers: tuple[Identifier, ...] = ()
+
+    def __post_init__(self) -> None:
+        _check_text(self.name, "name")
+        if self.address is not None and not isinstance(self.address, Address):
+            raise TypeError("address must be an Address or None")
+        if isinstance(self.identifiers, (str, Identifier)):
+            raise TypeError("identifiers must be a sequence of Identifier")
+        _set(self, vat_id=_identifier_in(self.vat_id, "vat_id", 4),
+             identifiers=tuple(_identifier_in(v, "identifiers", 4) for v in self.identifiers))
 
     @property
-    def country_code(self) -> str:
-        return self._invoke("country_code")
+    def other_id(self) -> Optional[Identifier]:
+        """The first identifier, or ``None``."""
+        return self.identifiers[0] if self.identifiers else None
 
-    @property
-    def city(self) -> str:
-        return self._invoke("city")
+    @classmethod
+    def _from_native(cls, native) -> "Party":
+        address = _call(native.address)
+        vat_id = _call(native.vat_id)
+        return _frozen(
+            cls, name=_call(native.name),
+            address=None if address is None else Address._from_native(address),
+            vat_id=None if vat_id is None else _frozen(Identifier, value=_call(vat_id.value), scheme=None),
+            identifiers=tuple(Identifier._from_native(_call(native.identifier, i))
+                              for i in range(_call(native.identifiers_len))))
 
-    @property
-    def street(self) -> str:
-        return self._invoke("street")
 
-    @property
-    def additional_street(self) -> Optional[str]:
-        return self._invoke("additional_street")
+@dataclass(frozen=True)
+class InvoiceNote(ValueCompat):
+    """An invoice note; ``language_id`` is ``None`` when the note has no language."""
+    text: str
+    language_id: Optional[str] = None
 
-    @property
-    def building_number(self) -> str:
-        return self._invoke("building_number")
-
-    @property
-    def additional_number(self) -> Optional[str]:
-        return self._invoke("additional_number")
-
-    @property
-    def postal_code(self) -> str:
-        return self._invoke("postal_code")
-
-    @property
-    def district(self) -> Optional[str]:
-        return self._invoke("district")
-
-class Party(_Owned):
-    _repr_fields = ('name',)
-
-    @property
-    def identifiers(self) -> list[OtherId]:
-        return [OtherId._wrap(self._invoke("identifier", i)) for i in range(self._invoke("identifiers_len"))]
-
-    @property
-    def name(self) -> str:
-        return self._invoke("name")
-
-    @property
-    def address(self) -> Optional[Address]:
-        return _optional(Address, self._invoke("address"))
-
-    @property
-    def vat_id(self) -> Optional[VatId]:
-        return _optional(VatId, self._invoke("vat_id"))
-
-    @property
-    def other_id(self) -> Optional[OtherId]:
-        return _optional(OtherId, self._invoke("other_id"))
-
-class InvoiceNote(_Owned):
-    _repr_fields = ('language_id', 'text')
-
-    @property
-    def language_id(self) -> Optional[str]:
-        return self._invoke("language_id")
+    def __post_init__(self) -> None:
+        _check_text(self.text, "text")
+        _check_text(self.language_id, "language_id", optional=True)
 
     @property
     def language(self) -> str:
-        return self._invoke("language")
-
-    @property
-    def text(self) -> str:
-        return self._invoke("text")
-
-class OriginalInvoiceRef(_Owned):
-    _repr_fields = ('id', 'uuid')
+        """The note language, ``"en"`` when the note has none."""
+        return "en" if self.language_id is None else self.language_id
 
     @classmethod
-    def new(cls, id: str, uuid: Optional[_UuidIn] = None, date: Optional[_DateIn] = None, time: Optional[str] = None, type_code: Optional[str] = None) -> 'OriginalInvoiceRef':
-        return cls._wrap(_call(_native.OriginalInvoiceRef.new, id, _uuid_text(uuid), _date_text(date, "date"), time, type_code))
+    def _from_native(cls, native) -> "InvoiceNote":
+        return _frozen(cls, text=_call(native.text), language_id=_call(native.language_id))
+
+
+def _reference_fields(native) -> dict[str, Any]:
+    return {"id": _call(native.id), "uuid": _call(native.uuid),
+            "issue_date": _parse_date(_call(native.issue_date)),
+            "issue_time": _call(native.issue_time),
+            "document_type_code": _call(native.document_type_code)}
+
+
+@dataclass(frozen=True)
+class OriginalInvoiceRef(ValueCompat):
+    """A reference to another document: the billing reference of a credit or
+    debit note, or a line's document reference (a prepayment invoice).
+
+    ``uuid`` accepts ``uuid.UUID`` or text and ``issue_date`` a ``datetime.date``
+    or ``"YYYY-MM-DD"``; ``issue_time`` is ``HH:MM:SS`` (AST) or ``HH:MM:SSZ`` (UTC).
+    """
+    id: str
+    uuid: Optional[str] = None
+    issue_date: Optional[date] = None
+    issue_time: Optional[str] = None
+    document_type_code: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        _set(self, **_reference_fields(self._native_value()))
+
+    def _native_value(self):
+        return _call(_native.OriginalInvoiceRef.new, self.id, _uuid_text(self.uuid),
+                     _date_text(self.issue_date, "issue_date"), self.issue_time, self.document_type_code)
+
+    @classmethod
+    def _from_native(cls, native) -> "OriginalInvoiceRef":
+        return _frozen(cls, **_reference_fields(native))
+
+    @classmethod
+    @deprecated("OriginalInvoiceRef(id, uuid=..., issue_date=..., issue_time=..., document_type_code=...)")
+    def new(cls, id: str, uuid: Optional[_UuidIn] = None, date: Optional[_DateIn] = None,
+            time: Optional[str] = None, type_code: Optional[str] = None) -> "OriginalInvoiceRef":
+        return cls(id, uuid, date, time, type_code)  # type: ignore[arg-type]
+
+
+@dataclass(frozen=True)
+class PaymentMeans(ValueCompat):
+    """A payment means: the UNTDID 4461 ``code`` (``"10"`` cash, ``"30"`` credit
+    transfer, ...), instruction notes, and an optional payee account."""
+    code: str
+    instruction_notes: tuple[str, ...] = ()
+    account_identifier: Optional[str] = None
+    payment_terms: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        if isinstance(self.instruction_notes, str):
+            raise TypeError("instruction_notes must be a sequence of str, not a str")
+        _set(self, instruction_notes=tuple(self.instruction_notes))
+        for note in self.instruction_notes:
+            _check_text(note, "instruction note")
+        self._native_value()
+
+    def _native_value(self):
+        native = _call(_native.PaymentMeans.new, self.code, None)
+        for note in self.instruction_notes:
+            native = _call(native.with_instruction_note, note)
+        if self.has_account():
+            native = _call(native.with_account, self.account_identifier, self.payment_terms)
+        return native
+
+    @classmethod
+    def _from_native(cls, native) -> "PaymentMeans":
+        return _frozen(cls, code=_call(native.code),
+                       instruction_notes=tuple(_call(native.instruction_note_at, i)
+                                               for i in range(_call(native.instruction_notes_len))),
+                       account_identifier=_call(native.account_identifier),
+                       payment_terms=_call(native.payment_terms))
 
     @property
-    def issue_time(self) -> Optional[str]:
-        """``HH:MM:SS`` (AST) or ``HH:MM:SSZ`` (UTC), as written in the invoice."""
-        return self._invoke("issue_time")
+    def instruction_note(self) -> Optional[str]:
+        """The first instruction note, or ``None``."""
+        return self.instruction_notes[0] if self.instruction_notes else None
 
-    @property
-    def document_type_code(self) -> Optional[str]:
-        return self._invoke("document_type_code")
+    def has_account(self) -> bool:
+        """Whether a payee account identifier or payment terms are set."""
+        return self.account_identifier is not None or self.payment_terms is not None
 
-    @property
-    def id(self) -> str:
-        return self._invoke("id")
+    def with_instruction_note(self, value: str) -> "PaymentMeans":
+        """Return a copy with ``value`` appended to the instruction notes."""
+        return dataclasses.replace(self, instruction_notes=self.instruction_notes + (value,))
 
-    @property
-    def uuid(self) -> Optional[str]:
-        return self._invoke("uuid")
+    def with_account(self, id: Optional[str] = None, terms: Optional[str] = None) -> "PaymentMeans":
+        """Return a copy with the payee account identifier and payment terms set."""
+        return dataclasses.replace(self, account_identifier=id, payment_terms=terms)
 
-    @property
-    def issue_date(self) -> Optional[date]:
-        return _parse_date(self._invoke("issue_date"))
+    @classmethod
+    @deprecated("PaymentMeans(code)")
+    def new(cls, code: str, instruction: Optional[str] = None) -> "PaymentMeans":
+        return cls(code, () if instruction is None else (instruction,))
+
+
+@dataclass(frozen=True)
+class Adjustment(ValueCompat):
+    """An allowance or charge, on the document or on a line.
+
+    Give a fixed ``amount``, or use :meth:`percent_of` for a percentage of a
+    base amount. ``reason``/``reason_code`` describe it. The other fields
+    apply to document-level entries: ``charge`` (``False`` for an allowance),
+    the VAT ``category`` and ``rate`` (or ``omitted_rate=True`` for an
+    out-of-scope entry without a rate), the ``exemption`` and the number of
+    identical ``cac:TaxCategory`` elements (``tax_category_count``).
+    ``InvoiceBuilder.add_allowance``/``add_charge`` take the category and rate
+    as arguments instead; values read from an invoice carry all fields (line
+    adjustments report their line's category and rate).
+    """
+    amount: Decimal
+    reason: Optional[str] = None
+    reason_code: Optional[str] = None
+    base_amount: Optional[Decimal] = None
+    percentage: Optional[Decimal] = None
+    charge: bool = False
+    category: Optional[VatCategory] = None
+    rate: Optional[Decimal] = None
+    exemption: TaxExemption = TaxExemption()
+    tax_category_count: int = 1
+    omitted_rate: bool = False
+
+    def __post_init__(self) -> None:
+        if (self.base_amount is None) != (self.percentage is None):
+            raise ValueError("base_amount and percentage must be given together")
+        if not isinstance(self.charge, bool):
+            raise TypeError("charge must be a bool")
+        if not isinstance(self.omitted_rate, bool):
+            raise TypeError("omitted_rate must be a bool")
+        if isinstance(self.tax_category_count, bool) or not isinstance(self.tax_category_count, int):
+            raise TypeError("tax_category_count must be an int")
+        if not isinstance(self.exemption, TaxExemption):
+            raise TypeError("exemption must be a TaxExemption")
+        _check_text(self.reason, "reason", optional=True)
+        _check_text(self.reason_code, "reason_code", optional=True)
+        _set(self, amount=_to_decimal(self.amount, "amount"),
+             base_amount=_to_optional_decimal(self.base_amount, "base_amount"),
+             percentage=_to_optional_decimal(self.percentage, "percentage"),
+             category=None if self.category is None else VatCategory(self.category),
+             rate=_to_optional_decimal(self.rate, "rate"))
+
+    @classmethod
+    def percent_of(cls, base: _DecimalIn, percent: _DecimalIn, **fields: Any) -> "Adjustment":
+        """``percent`` percent of ``base``, for example ``Adjustment.percent_of(250, 10)``.
+
+        The amount is calculated as the core does; pass ``amount=`` to supply
+        it instead (it must then match). Other keyword arguments set the
+        remaining fields.
+        """
+        base_text, percent_text = _decimal(base), _decimal(percent)
+        if fields.get("amount") is None:
+            native = _call(_native.Adjustment.percentage, base_text, percent_text)
+            fields["amount"] = _call(native.value)
+        return cls(base_amount=Decimal(base_text), percentage=Decimal(percent_text), **fields)
+
+    def with_reason(self, reason: Optional[str] = None, code: Optional[str] = None) -> "Adjustment":
+        """Return a copy with the reason text and/or reason code set."""
+        return dataclasses.replace(self, reason=self.reason if reason is None else reason,
+                                   reason_code=self.reason_code if code is None else code)
+
+    @deprecated("Adjustment.percent_of(base, percent, amount=value)")
+    def with_supplied_amount(self, value: _DecimalIn) -> "Adjustment":
+        return dataclasses.replace(self, amount=_to_decimal(value, "amount"))
+
+    def _line_native(self):
+        """The native line adjustment (category and rate come from the line)."""
+        base, percentage = self.base_amount, self.percentage
+        if base is None or percentage is None:
+            native = _call(_native.Adjustment.amount, _decimal(self.amount))
+        else:
+            native = _call(_native.Adjustment.percentage, _decimal(base), _decimal(percentage))
+            native = _call(native.with_supplied_amount, _decimal(self.amount))
+        if self.reason is not None or self.reason_code is not None:
+            native = _call(native.with_reason, self.reason, self.reason_code)
+        return native
+
+    def _document_native(self, charge: bool, category: VatCategory, rate: _DecimalIn, exemption: TaxExemption):
+        """The native document-level entry, keeping the tax category count and an omitted rate."""
+        native = _call(_native.AllowanceCharge.new, _flag(charge, "charge"), _decimal(self.amount),
+                       self.reason, self.reason_code, int(category), _decimal(rate), exemption._native_value())
+        native = _call(native.with_tax_category_count, self.tax_category_count)
+        if self.base_amount is not None and self.percentage is not None:
+            native = _call(native.with_percentage, _decimal(self.base_amount), _decimal(self.percentage))
+        if self.omitted_rate:
+            native = _call(native.without_vat_rate)
+        return native
+
+    @classmethod
+    def _from_native_entry(cls, native) -> "Adjustment":
+        return _frozen(
+            cls, amount=Decimal(_call(native.amount)), reason=_call(native.reason),
+            reason_code=_call(native.reason_code), base_amount=_optional_decimal(_call(native.base_amount)),
+            percentage=_optional_decimal(_call(native.percentage)), charge=_call(native.kind) == _CHARGE,
+            category=VatCategory(_call(native.category)), rate=Decimal(_call(native.rate)),
+            exemption=TaxExemption._from_native(_call(native.exemption)),
+            tax_category_count=_call(native.tax_category_count), omitted_rate=not _call(native.has_vat_rate))
+
+    @classmethod
+    def _from_native_line(cls, native, charge: bool, category: VatCategory, rate: Decimal) -> "Adjustment":
+        return _frozen(
+            cls, amount=Decimal(_call(native.value)), reason=_call(native.reason),
+            reason_code=_call(native.reason_code), base_amount=_optional_decimal(_call(native.base_amount)),
+            percentage=_optional_decimal(_call(native.percent)), charge=charge, category=category, rate=rate,
+            exemption=TaxExemption(), tax_category_count=1, omitted_rate=False)
+
+
+# 0.5 names whose identifiers are now dataclass fields: the class attribute is
+# the deprecated factory, the instance attribute the field value.
+Adjustment.amount = deprecated_classmethod(  # type: ignore[assignment]
+    "Adjustment(value)", lambda cls, value: cls(value), "Adjustment.amount")
+Adjustment.percentage = deprecated_classmethod(  # type: ignore[assignment]
+    "Adjustment.percent_of(base, percent)", lambda cls, base, percent: cls.percent_of(base, percent),
+    "Adjustment.percentage")
+Adjustment.value = deprecated_property(  # type: ignore[attr-defined]
+    "the amount field", lambda self: self.amount, "Adjustment.value")
+Adjustment.percent = deprecated_property(  # type: ignore[attr-defined]
+    "the percentage field", lambda self: self.percentage, "Adjustment.percent")
+
+
+class _AllowanceChargeType(type):
+    def __instancecheck__(cls, obj) -> bool:
+        return isinstance(obj, Adjustment)
+
+    def __subclasscheck__(cls, sub) -> bool:
+        return issubclass(sub, Adjustment)
+
+
+class _AllowanceCharge(metaclass=_AllowanceChargeType):
+    """The 0.5 ``AllowanceCharge(charge, amount, category, rate, ...)``; builds an ``Adjustment``."""
+
+    def __new__(cls, charge: bool, amount: _DecimalIn, category: VatCategory, rate: _DecimalIn,
+                reason: Optional[str] = None, reason_code: Optional[str] = None,
+                exemption: TaxExemption = TaxExemption(), tax_category_count: int = 1,
+                base_amount: Optional[_DecimalIn] = None, percentage: Optional[_DecimalIn] = None,
+                omitted_rate: bool = False) -> Any:  # an Adjustment
+        return Adjustment(amount, reason, reason_code, base_amount, percentage, charge,  # type: ignore[arg-type]
+                          category, rate, exemption, tax_category_count, omitted_rate)
+
+
+@dataclass(frozen=True)
+class InvoiceLineItem:
+    """A line item, as read from an invoice or added with ``InvoiceBuilder.add_item``.
+
+    As input only ``description``, ``unit_code``, ``quantity``, ``unit_price``,
+    ``vat_rate`` and ``vat_category`` are required: the line net amount
+    (``total_amount``) and VAT (``vat_amount``) are calculated when omitted
+    and checked when given. Values read from an invoice always carry them.
+    """
+    description: str
+    unit_code: str
+    quantity: Decimal
+    unit_price: Decimal
+    total_amount: Optional[Decimal] = None
+    vat_rate: Decimal = field(default=None)  # type: ignore[assignment]  # required; defaulted to follow total_amount
+    vat_amount: Optional[Decimal] = None
+    vat_category: VatCategory = field(default=None)  # type: ignore[assignment]  # required
+    id: Optional[str] = None
+    exemption: TaxExemption = TaxExemption()
+    document_references: tuple[OriginalInvoiceRef, ...] = ()
+    tax_subtotals: tuple[VatBreakdown, ...] = ()
+    item_price_base_quantity: Optional[Decimal] = None
+    item_price_base_quantity_unit_code: Optional[str] = None
+    item_gross_price: Optional[Decimal] = None
+    item_price_discount: Optional[Decimal] = None
+    adjustments: tuple[Adjustment, ...] = ()
+    item_seller_identifier: Optional[Identifier] = None
+    item_buyer_identifier: Optional[Identifier] = None
+    item_standard_identifier: Optional[Identifier] = None
+    omitted_vat_rate: bool = False
+    omitted_tax_amount: bool = False
+    omitted_gross_amount: bool = False
+
+    def __post_init__(self) -> None:
+        for name in ("vat_rate", "vat_category"):
+            if getattr(self, name) is None:
+                raise TypeError(f"InvoiceLineItem() missing required argument: {name!r}")
+        _check_text(self.description, "description")
+        _check_text(self.unit_code, "unit_code")
+        if not isinstance(self.exemption, TaxExemption):
+            raise TypeError("exemption must be a TaxExemption")
+        values: dict[str, Any] = {"vat_category": VatCategory(self.vat_category)}
+        for name in ("quantity", "unit_price", "vat_rate"):
+            values[name] = _to_decimal(getattr(self, name), name)
+        for name in ("total_amount", "vat_amount", "item_price_base_quantity", "item_gross_price",
+                     "item_price_discount"):
+            values[name] = _to_optional_decimal(getattr(self, name), name)
+        for name, kind in (("document_references", OriginalInvoiceRef), ("tax_subtotals", VatBreakdown),
+                           ("adjustments", Adjustment)):
+            items = tuple(getattr(self, name))
+            if not all(isinstance(item, kind) for item in items):
+                raise TypeError(f"{name} must contain {kind.__name__} values")
+            values[name] = items
+        for name in ("item_seller_identifier", "item_buyer_identifier", "item_standard_identifier"):
+            values[name] = _identifier_in(getattr(self, name), name, 4)
+        _set(self, **values)
+
 
 class ZatcaClient(_Owned):
     def __init__(self, config: Config):
@@ -741,207 +1057,257 @@ class _Invoice(_Owned):
     def from_file(cls, path: _StrPath):
         return cls._wrap(_call(cls._native_type.from_file, os.fspath(path)))
 
-    def _data(self, name, *args):
+    # Invoices are immutable once built or parsed, so their data is read from
+    # the native object once, on first access, and cached. ``close()`` drops it.
+
+    def close(self):
+        with self._lock:
+            self._cache = None
+            super().close()
+
+    def _get(self, name: str):
+        with self._lock:
+            self._require_open()
+            cache = getattr(self, "_cache", None)
+            if cache is None:
+                cache = self._cache = self._read()
+            return cache[name]
+
+    def _read(self) -> dict[str, Any]:
         data = self._invoke("data")
-        return _call(getattr(data, name), *args)
+        totals = self._invoke("totals")
+
+        def get(name, *args):
+            return _call(getattr(data, name), *args)
+
+        def items(name, length, convert):
+            return tuple(convert(get(name, i)) for i in range(get(length)))
+
+        buyer, reference = get("buyer"), get("original_invoice_ref")
+        values = {name: get(name) for name in (
+            "id", "uuid", "issue_time", "currency", "previous_invoice_hash", "invoice_counter",
+            "payment_means_code", "allowance_reason", "original_invoice_reason", "payment_instruction",
+            "tax_currency", "purchase_order_id", "contract_id", "flags")}
+        values.update(
+            issue_date=_parse_date(get("issue_date")),
+            issue_datetime=_parse_timestamp(get("issue_datetime")),
+            vat_category=VatCategory(get("vat_category")),
+            invoice_type_kind=InvoiceTypeKind(get("invoice_type_kind")),
+            invoice_sub_type=InvoiceSubType(get("invoice_sub_type")),
+            invoice_level_charge=Decimal(get("invoice_level_charge")),
+            invoice_level_discount=Decimal(get("invoice_level_discount")),
+            actual_delivery_date=_parse_date(get("actual_delivery_date")),
+            latest_delivery_date=_parse_date(get("latest_delivery_date")),
+            tax_currency_amount=_optional_decimal(get("tax_currency_amount")),
+            seller=Party._from_native(get("seller")),
+            buyer=None if buyer is None else Party._from_native(buyer),
+            original_invoice_ref=None if reference is None else OriginalInvoiceRef._from_native(reference),
+            notes=items("note_at", "notes_len", InvoiceNote._from_native),
+            billing_references=items("billing_reference", "billing_references_len", OriginalInvoiceRef._from_native),
+            payment_means=items("payment_means", "payment_means_len", PaymentMeans._from_native),
+            adjustments=items("adjustment", "adjustments_len", Adjustment._from_native_entry),
+            line_items=items("line_item", "line_items_len", self._line_item_value),
+            totals=InvoiceTotals(**{name: Decimal(_call(getattr(totals, name)))
+                                    for name in InvoiceTotals.__dataclass_fields__}),
+            vat_breakdown=tuple(_vat_breakdown_value(_call(totals.vat_breakdown, i))
+                                for i in range(_call(totals.vat_breakdown_len))),
+        )
+        return values
 
     @property
     def issue_time(self) -> str:
         """``HH:MM:SS`` (AST) or ``HH:MM:SSZ`` (UTC), as written in the invoice."""
-        return self._data("issue_time")
+        return self._get("issue_time")
 
     @property
     def issue_date(self) -> date:
-        return _parse_date(self._data("issue_date"))
+        return self._get("issue_date")
 
     @property
     def id(self) -> str:
-        return self._data("id")
+        return self._get("id")
 
     @property
     def uuid(self) -> str:
         """The invoice UUID text (core keeps it verbatim; it may not be RFC 4122)."""
-        return self._data("uuid")
+        return self._get("uuid")
 
     @property
     def issue_datetime(self) -> datetime:
         """Issue timestamp as a timezone-aware (UTC) ``datetime``."""
-        return _parse_timestamp(self._data("issue_datetime"))
+        return self._get("issue_datetime")
 
     @property
     def currency(self) -> str:
-        return self._data("currency")
+        return self._get("currency")
 
     @property
     def previous_invoice_hash(self) -> str:
-        return self._data("previous_invoice_hash")
+        return self._get("previous_invoice_hash")
 
     @property
     def invoice_counter(self) -> int:
-        return self._data("invoice_counter")
+        return self._get("invoice_counter")
 
     @property
     def payment_means_code(self) -> str:
-        return self._data("payment_means_code")
+        return self._get("payment_means_code")
 
     @property
     def vat_category(self) -> VatCategory:
-        return VatCategory(self._data("vat_category"))
+        return self._get("vat_category")
 
     @property
     def invoice_level_charge(self) -> Decimal:
-        return Decimal(self._data("invoice_level_charge"))
+        return self._get("invoice_level_charge")
 
     @property
     def invoice_level_discount(self) -> Decimal:
-        return Decimal(self._data("invoice_level_discount"))
+        return self._get("invoice_level_discount")
 
     @property
     def allowance_reason(self) -> Optional[str]:
-        return self._data("allowance_reason")
+        return self._get("allowance_reason")
 
     @property
     def seller(self) -> Party:
-        return Party._wrap(self._data("seller"))
+        return self._get("seller")
 
     @property
     def buyer(self) -> Optional[Party]:
-        return _optional(Party, self._data("buyer"))
+        return self._get("buyer")
 
     @property
     def note(self) -> Optional[InvoiceNote]:
-        return _optional(InvoiceNote, self._data("note"))
+        """The first note, or ``None``."""
+        notes = self._get("notes")
+        return notes[0] if notes else None
 
     @property
     def invoice_type_kind(self) -> InvoiceTypeKind:
-        return InvoiceTypeKind(self._data("invoice_type_kind"))
+        return self._get("invoice_type_kind")
 
     @property
     def invoice_sub_type(self) -> InvoiceSubType:
-        return InvoiceSubType(self._data("invoice_sub_type"))
+        return self._get("invoice_sub_type")
 
     @property
     def original_invoice_ref(self) -> Optional[OriginalInvoiceRef]:
-        return _optional(OriginalInvoiceRef, self._data("original_invoice_ref"))
+        return self._get("original_invoice_ref")
 
     @property
     def original_invoice_reason(self) -> Optional[str]:
-        return self._data("original_invoice_reason")
+        return self._get("original_invoice_reason")
 
     @property
     def actual_delivery_date(self) -> Optional[date]:
-        return _parse_date(self._data("actual_delivery_date"))
+        return self._get("actual_delivery_date")
 
     @property
     def latest_delivery_date(self) -> Optional[date]:
-        return _parse_date(self._data("latest_delivery_date"))
+        return self._get("latest_delivery_date")
 
     @property
     def payment_instruction(self) -> Optional[str]:
-        return self._data("payment_instruction")
+        return self._get("payment_instruction")
 
     @property
     def tax_currency(self) -> Optional[str]:
-        return self._data("tax_currency")
+        return self._get("tax_currency")
 
     @property
     def tax_currency_amount(self) -> Optional[Decimal]:
-        return _optional_decimal(self._data("tax_currency_amount"))
+        return self._get("tax_currency_amount")
 
     @property
     def notes(self) -> list[InvoiceNote]:
-        data = self._invoke("data")
-        return [InvoiceNote._wrap(_call(data.note_at, i)) for i in range(_call(data.notes_len))]
+        return list(self._get("notes"))
 
     @property
     def billing_references(self) -> list[OriginalInvoiceRef]:
-        data = self._invoke("data")
-        return [OriginalInvoiceRef._wrap(_call(data.billing_reference, i)) for i in range(_call(data.billing_references_len))]
+        return list(self._get("billing_references"))
 
     @property
     def payment_means(self) -> list[PaymentMeans]:
-        data = self._invoke("data")
-        return [PaymentMeans._wrap(_call(data.payment_means, i)) for i in range(_call(data.payment_means_len))]
+        return list(self._get("payment_means"))
 
     @property
     def purchase_order_id(self) -> Optional[str]:
-        return self._data("purchase_order_id")
+        return self._get("purchase_order_id")
 
     @property
     def contract_id(self) -> Optional[str]:
-        return self._data("contract_id")
+        return self._get("contract_id")
 
     @property
-    def adjustments(self) -> list[AllowanceCharge]:
-        data = self._invoke("data")
-        result = []
-        for i in range(_call(data.adjustments_len)):
-            a = _call(data.adjustment, i)
-            result.append(AllowanceCharge(_call(a.kind) == _CHARGE, Decimal(_call(a.amount)), VatCategory(_call(a.category)), Decimal(_call(a.rate)), _call(a.reason), _call(a.reason_code), TaxExemption._from_native(_call(a.exemption)), _call(a.tax_category_count), _optional_decimal(_call(a.base_amount)), _optional_decimal(_call(a.percentage)), not _call(a.has_vat_rate)))
-        return result
+    def adjustments(self) -> list[Adjustment]:
+        """Document-level allowances and charges."""
+        return list(self._get("adjustments"))
 
     @property
     def vat_breakdown(self) -> list[VatBreakdown]:
-        totals = self._invoke("totals")
-        result = []
-        for i in range(_call(totals.vat_breakdown_len)):
-            group = _call(totals.vat_breakdown, i)
-            result.append(VatBreakdown(VatCategory(_call(group.category)), Decimal(_call(group.rate)), Decimal(_call(group.taxable_amount)), Decimal(_call(group.tax_amount)), TaxExemption._from_native(_call(group.exemption)), not _call(group.has_vat_rate)))
-        return result
+        return list(self._get("vat_breakdown"))
 
     @property
     def line_item_count(self) -> int:
-        return self._data("line_items_len")
+        return len(self._get("line_items"))
 
     def line_item(self, index: int) -> InvoiceLineItem:
-        return self._line_item_value(self._data("line_item", index))
+        line_items = self._get("line_items")
+        if not 0 <= index < len(line_items):
+            raise InvalidInputError("line item index out of range", 1, {"type": "binding_error"})
+        return line_items[index]
 
     @staticmethod
     def _line_item_value(item) -> InvoiceLineItem:
-        references = []
-        subtotals = []
-        for i in range(_call(item.document_references_len)):
-            ref = _call(item.document_reference, i)
-            references.append(DocumentReference(_call(ref.id), _call(ref.uuid), _call(ref.issue_date), _call(ref.issue_time), _call(ref.document_type_code)))
-        for i in range(_call(item.tax_subtotals_len)):
-            tax = _call(item.tax_subtotal, i)
-            subtotals.append(VatBreakdown(VatCategory(_call(tax.category)), Decimal(_call(tax.rate)), Decimal(_call(tax.taxable_amount)), Decimal(_call(tax.tax_amount)), TaxExemption._from_native(_call(tax.exemption)), not _call(tax.has_vat_rate)))
-        return InvoiceLineItem(description=(_call(item.description)), unit_code=(_call(item.unit_code)), quantity=Decimal(_call(item.quantity)), unit_price=Decimal(_call(item.unit_price)), total_amount=Decimal(_call(item.total_amount)), vat_rate=Decimal(_call(item.vat_rate)), vat_amount=Decimal(_call(item.vat_amount)), vat_category=VatCategory(_call(item.vat_category)), id=_call(item.id), exemption=TaxExemption._from_native(_call(item.exemption)), document_references=tuple(references), tax_subtotals=tuple(subtotals),
+        category = VatCategory(_call(item.vat_category))
+        rate = Decimal(_call(item.vat_rate))
+        return _frozen(
+            InvoiceLineItem,
+            description=_call(item.description), unit_code=_call(item.unit_code),
+            quantity=Decimal(_call(item.quantity)), unit_price=Decimal(_call(item.unit_price)),
+            total_amount=Decimal(_call(item.total_amount)), vat_rate=rate,
+            vat_amount=Decimal(_call(item.vat_amount)), vat_category=category,
+            id=_call(item.id), exemption=TaxExemption._from_native(_call(item.exemption)),
+            document_references=tuple(OriginalInvoiceRef._from_native(_call(item.document_reference, i))
+                                      for i in range(_call(item.document_references_len))),
+            tax_subtotals=tuple(_vat_breakdown_value(_call(item.tax_subtotal, i))
+                                for i in range(_call(item.tax_subtotals_len))),
             item_price_base_quantity=_optional_decimal(_call(item.item_price_base_quantity)),
             item_price_base_quantity_unit_code=_call(item.item_price_base_quantity_unit_code),
             item_gross_price=_optional_decimal(_call(item.item_gross_price)),
             item_price_discount=_optional_decimal(_call(item.item_price_discount)),
-            adjustments=tuple(AllowanceCharge(_call(item.adjustment_kind, i) == _CHARGE, Decimal(_call(a.value)), VatCategory(_call(item.vat_category)), Decimal(_call(item.vat_rate)), _call(a.reason), _call(a.reason_code), base_amount=_optional_decimal(_call(a.base_amount)), percentage=_optional_decimal(_call(a.percent))) for i in range(_call(item.adjustments_len)) for a in [_call(item.adjustment, i)]),
-            item_seller_identifier=_identifier(_call(item.item_seller_identifier)),
-            item_buyer_identifier=_identifier(_call(item.item_buyer_identifier)),
-            item_standard_identifier=_identifier(_call(item.item_standard_identifier)),
+            adjustments=tuple(Adjustment._from_native_line(_call(item.adjustment, i),
+                                                           _call(item.adjustment_kind, i) == _CHARGE,
+                                                           category, rate)
+                              for i in range(_call(item.adjustments_len))),
+            item_seller_identifier=_optional_identifier(_call(item.item_seller_identifier)),
+            item_buyer_identifier=_optional_identifier(_call(item.item_buyer_identifier)),
+            item_standard_identifier=_optional_identifier(_call(item.item_standard_identifier)),
             omitted_vat_rate=not _call(item.has_vat_rate),
             omitted_tax_amount=not _call(item.has_tax_total),
             omitted_gross_amount=not _call(item.has_gross_amount))
 
     @property
     def line_items(self) -> list[InvoiceLineItem]:
-        data = self._invoke("data")
-        return [self._line_item_value(_call(data.line_item, i))
-                for i in range(_call(data.line_items_len))]
+        return list(self._get("line_items"))
 
     @property
     def totals(self) -> InvoiceTotals:
-        totals = self._invoke("totals")
-        return InvoiceTotals(**{name: Decimal(_call(getattr(totals, name))) for name in InvoiceTotals.__dataclass_fields__})
+        return self._get("totals")
 
     @property
     def flags_raw(self) -> int:
-        return self._data("flags")
+        return self._get("flags")
 
     @property
     def flags(self) -> set[InvoiceFlag]:
-        bits = self._data("flags")
+        bits = self._get("flags")
         # Use the declared single-bit members rather than version-specific flag iteration.
         return {flag for flag in InvoiceFlag.__members__.values() if bits & flag.value}
 
     def _has_flag(self, flag: InvoiceFlag) -> bool:
-        return bool(self._data("flags") & flag.value)
+        return bool(self._get("flags") & flag.value)
 
     def is_third_party(self) -> bool:
         return self._has_flag(InvoiceFlag.THIRD_PARTY)
@@ -959,7 +1325,7 @@ class _Invoice(_Owned):
         return self._has_flag(InvoiceFlag.SELF_BILLED)
 
     def is_simplified(self) -> bool:
-        return InvoiceSubType(self._data("invoice_sub_type")) == InvoiceSubType.SIMPLIFIED
+        return self._get("invoice_sub_type") == InvoiceSubType.SIMPLIFIED
 
     @property
     def xml(self) -> str:
@@ -993,7 +1359,11 @@ class FinalizedInvoice(_Invoice):
         return super().from_file(path)
 
     def sign(self, signer: InvoiceSigner) -> SignedInvoice:
-        return SignedInvoice._wrap(signer._invoke("sign", self))
+        with self._lock:
+            try:
+                return SignedInvoice._wrap(signer._invoke("sign", self))
+            finally:
+                self._cache = None  # consumed: later reads fail like other uses
 
 
 class SignedInvoice(_Invoice):
@@ -1011,7 +1381,11 @@ class SignedInvoice(_Invoice):
 
     @deprecated("the xml property")
     def into_xml(self) -> str:
-        return self._invoke("into_xml")
+        with self._lock:
+            try:
+                return self._invoke("into_xml")
+            finally:
+                self._cache = None  # consumed
 
     def to_xml_base64(self) -> str:
         return self._invoke("to_xml_base64")
@@ -1057,79 +1431,6 @@ class SignedInvoice(_Invoice):
     @property
     def serial(self) -> str:
         return self._invoke("serial")
-
-class Adjustment(_Owned):
-    _repr_fields = ('value',)
-
-    @classmethod
-    def amount(cls, value: _DecimalIn) -> "Adjustment":
-        return cls._wrap(_call(_native.Adjustment.amount, _decimal(value)))
-
-    @classmethod
-    def percentage(cls, base: _DecimalIn, percent: _DecimalIn) -> "Adjustment":
-        return cls._wrap(_call(_native.Adjustment.percentage, _decimal(base), _decimal(percent)))
-
-    def with_supplied_amount(self, value: _DecimalIn) -> "Adjustment":
-        return Adjustment._wrap(self._invoke("with_supplied_amount", _decimal(value)))
-
-    def with_reason(self, reason: Optional[str] = None, code: Optional[str] = None) -> "Adjustment":
-        return Adjustment._wrap(self._invoke("with_reason", reason, code))
-
-    @property
-    def value(self) -> Decimal:
-        return Decimal(self._invoke("value"))
-
-    @property
-    def base_amount(self) -> Optional[Decimal]:
-        return _optional_decimal(self._invoke("base_amount"))
-
-    @property
-    def percent(self) -> Optional[Decimal]:
-        return _optional_decimal(self._invoke("percent"))
-
-    @property
-    def reason(self) -> Optional[str]:
-        return self._invoke("reason")
-
-    @property
-    def reason_code(self) -> Optional[str]:
-        return self._invoke("reason_code")
-
-class PaymentMeans(_Owned):
-    _repr_fields = ('code',)
-
-    def with_instruction_note(self, value: str) -> "PaymentMeans":
-        return PaymentMeans._wrap(self._invoke("with_instruction_note", value))
-
-    @property
-    def instruction_notes(self) -> list[str]:
-        return [self._invoke("instruction_note_at", i) for i in range(self._invoke("instruction_notes_len"))]
-
-    @classmethod
-    def new(cls, code: str, instruction: Optional[str] = None) -> "PaymentMeans":
-        return cls._wrap(_call(_native.PaymentMeans.new, code, instruction))
-
-    def with_account(self, id: Optional[str] = None, terms: Optional[str] = None) -> "PaymentMeans":
-        return PaymentMeans._wrap(self._invoke("with_account", id, terms))
-
-    @property
-    def code(self) -> str:
-        return self._invoke("code")
-
-    @property
-    def instruction_note(self) -> Optional[str]:
-        return self._invoke("instruction_note")
-
-    def has_account(self) -> bool:
-        return self._invoke("has_account")
-
-    @property
-    def account_identifier(self) -> Optional[str]:
-        return self._invoke("account_identifier")
-
-    @property
-    def payment_terms(self) -> Optional[str]:
-        return self._invoke("payment_terms")
 
 class LineItemBuilder(_Owned):
     """Builds one line item for ``InvoiceBuilder.add_item``-style use; setters chain."""
@@ -1201,25 +1502,53 @@ class LineItemBuilder(_Owned):
         return self._set("set_exemption", value._native_value())
 
     def add_allowance(self, value: Adjustment) -> "LineItemBuilder":
-        return self._set("add_allowance", value)
+        """Add a line allowance; its VAT category and rate are the line's."""
+        return self._set("add_allowance", _adjustment_in(value, "add_allowance")._line_native())
 
     def add_charge(self, value: Adjustment) -> "LineItemBuilder":
-        return self._set("add_charge", value)
+        """Add a line charge; its VAT category and rate are the line's."""
+        return self._set("add_charge", _adjustment_in(value, "add_charge")._line_native())
 
     def add_document_reference(self, value: OriginalInvoiceRef) -> "LineItemBuilder":
-        return self._set("add_document_reference", value)
+        return self._set("add_document_reference", _reference_in(value)._native_value())
 
     def add_tax_subtotal(self, value: VatBreakdown) -> "LineItemBuilder":
         return self._set("add_tax_subtotal", value._native_value())
 
-    def set_item_seller_identifier(self, value: str, scheme: Optional[str] = None) -> "LineItemBuilder":
-        return self._set("set_item_seller_identifier", value, scheme)
+    def set_item_seller_identifier(self, value: Union[str, Identifier], scheme: Optional[str] = None) -> "LineItemBuilder":
+        return self._set("set_item_seller_identifier", *_identifier_args(value, scheme))
 
-    def set_item_buyer_identifier(self, value: str, scheme: Optional[str] = None) -> "LineItemBuilder":
-        return self._set("set_item_buyer_identifier", value, scheme)
+    def set_item_buyer_identifier(self, value: Union[str, Identifier], scheme: Optional[str] = None) -> "LineItemBuilder":
+        return self._set("set_item_buyer_identifier", *_identifier_args(value, scheme))
 
-    def set_item_standard_identifier(self, value: str, scheme: Optional[str] = None) -> "LineItemBuilder":
-        return self._set("set_item_standard_identifier", value, scheme)
+    def set_item_standard_identifier(self, value: Union[str, Identifier], scheme: Optional[str] = None) -> "LineItemBuilder":
+        return self._set("set_item_standard_identifier", *_identifier_args(value, scheme))
+
+
+def _identifier_args(value: Union[str, Identifier], scheme: Optional[str]) -> tuple[str, Optional[str]]:
+    if isinstance(value, Identifier):
+        if scheme is not None:
+            raise TypeError("pass the scheme in the Identifier, not as a separate argument")
+        return value.value, value.scheme
+    return value, scheme
+
+
+def _adjustment_in(value: Adjustment, method: str) -> Adjustment:
+    if not isinstance(value, Adjustment):
+        raise TypeError(f"{method}() takes an Adjustment")
+    return value
+
+
+def _party_only(method: str, others: dict[str, Any]) -> None:
+    given = sorted(name for name, value in others.items() if value is not None)
+    if given:
+        raise TypeError(f"{method}(): pass either a Party or the party fields, not both (got {', '.join(given)})")
+
+
+def _reference_in(value: OriginalInvoiceRef) -> OriginalInvoiceRef:
+    if not isinstance(value, OriginalInvoiceRef):
+        raise TypeError("expected an OriginalInvoiceRef")
+    return value
 
 
 _ADDRESS_FIELDS = ("country_code", "city", "street", "building_number", "postal_code")
@@ -1238,9 +1567,8 @@ def _party_address(method: str, address: Optional[Address], fields: dict[str, Op
     missing = [name for name in _ADDRESS_FIELDS if fields[name] is None]
     if missing:
         raise TypeError(f"{method}() missing required keyword argument(s): {', '.join(missing)} "
-                        "(or pass address=Address.new(...))")
-    result = Address.new(**fields)
-    return result.with_province(province) if province is not None else result
+                        "(or pass address=Address(...))")
+    return Address(**fields, province=province)  # type: ignore[arg-type]
 
 
 class InvoiceBuilder(_Owned):
@@ -1252,9 +1580,11 @@ class InvoiceBuilder(_Owned):
                                   id="INV-1", uuid=uuid4(), issue_datetime=now,
                                   currency="SAR", previous_invoice_hash=seed,
                                   invoice_counter=1, vat_category=VatCategory.STANDARD)
-                   .set_seller("Acme", vat_id="399999999900003", address=address)
+                   .set_seller(Party("Acme", address, vat_id="399999999900003"))
                    .add_line_item("Item", 1, "PCE", 100, 15, VatCategory.STANDARD)
                    .build())
+
+    ``seller=`` and ``buyer=`` take a :class:`Party` (see ``set_seller``/``set_buyer``).
     """
 
     def __init__(self, invoice_type: InvoiceTypeKind, invoice_subtype: InvoiceSubType, *,
@@ -1267,12 +1597,14 @@ class InvoiceBuilder(_Owned):
                  vat_category: Optional[VatCategory] = None,
                  flags: Optional[Union[int, InvoiceFlag]] = None,
                  original_invoice: Optional[OriginalInvoiceRef] = None,
-                 original_invoice_reason: Optional[str] = None) -> None:
+                 original_invoice_reason: Optional[str] = None,
+                 seller: Optional[Party] = None,
+                 buyer: Optional[Party] = None) -> None:
         if original_invoice is not None:
             if original_invoice_reason is None:
                 raise TypeError("InvoiceBuilder(): original_invoice requires original_invoice_reason")
             handle = _call(_native.InvoiceBuilder.new_with_reference, int(invoice_type), int(invoice_subtype),
-                           original_invoice, original_invoice_reason)
+                           _reference_in(original_invoice)._native_value(), original_invoice_reason)
         else:
             handle = _call(_native.InvoiceBuilder.new, int(invoice_type), int(invoice_subtype),
                            None, None, None, original_invoice_reason)
@@ -1281,7 +1613,7 @@ class InvoiceBuilder(_Owned):
         for name, value in (("set_id", id), ("set_uuid", uuid), ("set_issue_datetime", issue_datetime),
                             ("set_currency", currency), ("set_previous_invoice_hash", previous_invoice_hash),
                             ("set_invoice_counter", invoice_counter), ("set_vat_category", vat_category),
-                            ("set_flags", flags)):
+                            ("set_flags", flags), ("set_seller", seller), ("set_buyer", buyer)):
             if value is not None:
                 getattr(self, name)(value)
 
@@ -1306,7 +1638,7 @@ class InvoiceBuilder(_Owned):
     @classmethod
     @deprecated("InvoiceBuilder(invoice_type, invoice_subtype, original_invoice=reference, original_invoice_reason=reason)")
     def new_with_reference(cls, invoice_type: InvoiceTypeKind, invoice_subtype: InvoiceSubType, reference: OriginalInvoiceRef, reason: str) -> 'InvoiceBuilder':
-        return cls._wrap(_call(_native.InvoiceBuilder.new_with_reference, int(invoice_type), int(invoice_subtype), reference, reason))
+        return cls._wrap(_call(_native.InvoiceBuilder.new_with_reference, int(invoice_type), int(invoice_subtype), _reference_in(reference)._native_value(), reason))
 
     def _set(self, name, *args) -> "InvoiceBuilder":
         self._invoke(name, *args)
@@ -1378,63 +1710,94 @@ class InvoiceBuilder(_Owned):
         return self.add_note(text)
 
     def add_billing_reference(self, value: OriginalInvoiceRef) -> "InvoiceBuilder":
-        return self._set("add_billing_reference", value)
+        return self._set("add_billing_reference", _reference_in(value)._native_value())
 
     def add_payment_means(self, value: PaymentMeans) -> "InvoiceBuilder":
-        return self._set("add_payment_means", value)
+        if not isinstance(value, PaymentMeans):
+            raise TypeError("add_payment_means() takes a PaymentMeans")
+        return self._set("add_payment_means", value._native_value())
 
-    @deprecated("add_payment_means(PaymentMeans.new(code))")
+    @deprecated("add_payment_means(PaymentMeans(code))")
     def set_payment_means_code(self, payment_means_code: str) -> "InvoiceBuilder":
         """Append a payment means with this code."""
-        return self.add_payment_means(PaymentMeans.new(payment_means_code))
+        return self.add_payment_means(PaymentMeans(payment_means_code))
 
     # --- parties ----------------------------------------------------------------------
 
-    def set_seller(self, name: str, *, vat_id: str, address: Optional[Address] = None,
+    def set_seller(self, name: Union[str, Party], *, vat_id: Optional[str] = None,
+                   address: Optional[Address] = None,
                    country_code: Optional[str] = None, city: Optional[str] = None,
                    street: Optional[str] = None, building_number: Optional[str] = None,
                    postal_code: Optional[str] = None, additional_street: Optional[str] = None,
                    additional_number: Optional[str] = None, district: Optional[str] = None,
                    province: Optional[str] = None, other_id: Optional[str] = None,
                    other_id_scheme: Optional[str] = None) -> "InvoiceBuilder":
-        """Set the seller. Pass ``address=Address.new(...)`` or the address fields."""
-        resolved = _party_address("set_seller", address, dict(
-            country_code=country_code, city=city, street=street, building_number=building_number,
-            postal_code=postal_code, additional_street=additional_street,
-            additional_number=additional_number, district=district), province)
-        return self._set("set_seller", name, resolved, vat_id, other_id, other_id_scheme)
+        """Set the seller from a :class:`Party` (with an address and VAT ID), or from
+        ``name``, ``vat_id=`` and ``address=Address(...)`` or the address fields."""
+        fields = dict(country_code=country_code, city=city, street=street, building_number=building_number,
+                      postal_code=postal_code, additional_street=additional_street,
+                      additional_number=additional_number, district=district)
+        if isinstance(name, Party):
+            _party_only("set_seller", dict(fields, vat_id=vat_id, address=address, province=province,
+                                           other_id=other_id, other_id_scheme=other_id_scheme))
+            return self._apply_party(True, name)
+        if vat_id is None:
+            raise TypeError("set_seller() missing required keyword argument: 'vat_id'")
+        resolved = _party_address("set_seller", address, fields, province)
+        return self._set("set_seller", name, resolved._native_value(), vat_id, other_id, other_id_scheme)
 
-    def set_buyer(self, name: str, *, address: Optional[Address] = None,
+    def set_buyer(self, name: Union[str, Party], *, address: Optional[Address] = None,
                   country_code: Optional[str] = None, city: Optional[str] = None,
                   street: Optional[str] = None, building_number: Optional[str] = None,
                   postal_code: Optional[str] = None, vat_id: Optional[str] = None,
                   other_id: Optional[str] = None, other_id_scheme: Optional[str] = None,
                   additional_street: Optional[str] = None, additional_number: Optional[str] = None,
                   district: Optional[str] = None, province: Optional[str] = None) -> "InvoiceBuilder":
-        """Set the buyer. Pass ``address=Address.new(...)`` or the address fields."""
-        resolved = _party_address("set_buyer", address, dict(
-            country_code=country_code, city=city, street=street, building_number=building_number,
-            postal_code=postal_code, additional_street=additional_street,
-            additional_number=additional_number, district=district), province)
-        return self._set("set_buyer", name, resolved, vat_id, other_id, other_id_scheme)
+        """Set the buyer from a :class:`Party` (its address is optional), or from
+        ``name`` and ``address=Address(...)`` or the address fields."""
+        fields = dict(country_code=country_code, city=city, street=street, building_number=building_number,
+                      postal_code=postal_code, additional_street=additional_street,
+                      additional_number=additional_number, district=district)
+        if isinstance(name, Party):
+            _party_only("set_buyer", dict(fields, vat_id=vat_id, address=address, province=province,
+                                          other_id=other_id, other_id_scheme=other_id_scheme))
+            return self._apply_party(False, name)
+        resolved = _party_address("set_buyer", address, fields, province)
+        return self._set("set_buyer", name, resolved._native_value(), vat_id, other_id, other_id_scheme)
+
+    def _apply_party(self, seller: bool, party: Party) -> "InvoiceBuilder":
+        role = "seller" if seller else "buyer"
+        vat_id = None if party.vat_id is None else party.vat_id.value
+        other = party.other_id
+        other_args = (None, None) if other is None else (other.value, other.scheme)
+        if seller:
+            if party.address is None or vat_id is None:
+                raise ValueError("the seller Party needs an address and a vat_id")
+            self._invoke("set_seller", party.name, party.address._native_value(), vat_id, *other_args)
+        elif party.address is None:
+            self._invoke("set_buyer_without_address", party.name, vat_id, *other_args)
+        else:
+            self._invoke("set_buyer", party.name, party.address._native_value(), vat_id, *other_args)
+        for identifier in party.identifiers[1:]:
+            self._invoke(f"add_{role}_identifier", identifier.value, identifier.scheme)
+        return self
 
     def set_buyer_without_address(self, name: str, vat_id: Optional[str] = None, other_id: Optional[str] = None, scheme: Optional[str] = None) -> "InvoiceBuilder":
         return self._set("set_buyer_without_address", name, vat_id, other_id, scheme)
 
-    def add_seller_identifier(self, value: str, scheme: Optional[str] = None) -> "InvoiceBuilder":
-        return self._set("add_seller_identifier", value, scheme)
+    def add_seller_identifier(self, value: Union[str, Identifier], scheme: Optional[str] = None) -> "InvoiceBuilder":
+        return self._set("add_seller_identifier", *_identifier_args(value, scheme))
 
-    def add_buyer_identifier(self, value: str, scheme: Optional[str] = None) -> "InvoiceBuilder":
-        return self._set("add_buyer_identifier", value, scheme)
+    def add_buyer_identifier(self, value: Union[str, Identifier], scheme: Optional[str] = None) -> "InvoiceBuilder":
+        return self._set("add_buyer_identifier", *_identifier_args(value, scheme))
 
     # --- lines ------------------------------------------------------------------------
 
-    def add_line_item(self, description: str, quantity: _DecimalIn, unit_code: str, unit_price: _DecimalIn, vat_rate: _DecimalIn, vat_category: VatCategory, *, id: Optional[str] = None, exemption: TaxExemption = TaxExemption(), document_references: tuple[DocumentReference, ...] = (), tax_subtotals: tuple[VatBreakdown, ...] = ()) -> "InvoiceBuilder":
+    def add_line_item(self, description: str, quantity: _DecimalIn, unit_code: str, unit_price: _DecimalIn, vat_rate: _DecimalIn, vat_category: VatCategory, *, id: Optional[str] = None, exemption: TaxExemption = TaxExemption(), document_references: tuple[OriginalInvoiceRef, ...] = (), tax_subtotals: tuple[VatBreakdown, ...] = ()) -> "InvoiceBuilder":
         item = _call(_native.InvoiceLineItem.new, description, _decimal(quantity), unit_code, _decimal(unit_price), _decimal(vat_rate), int(vat_category))
         item = _call(item.with_metadata, id, exemption._native_value())
         for ref in document_references:
-            native = _call(_native.OriginalInvoiceRef.new, ref.id, ref.uuid, ref.issue_date, ref.issue_time, ref.document_type_code)
-            item = _call(item.with_document_reference, native)
+            item = _call(item.with_document_reference, _reference_in(ref)._native_value())
         for tax in tax_subtotals:
             native = tax._native_value()
             item = _call(item.with_tax_subtotal, native)
@@ -1443,6 +1806,9 @@ class InvoiceBuilder(_Owned):
         return self
 
     def add_item(self, item: InvoiceLineItem) -> "InvoiceBuilder":
+        """Add a line item. ``total_amount`` and ``vat_amount`` are calculated when ``None``."""
+        if not isinstance(item, InvoiceLineItem):
+            raise TypeError("add_item() takes an InvoiceLineItem")
         b = LineItemBuilder()
         b.set_item_name(item.description)
         b.set_invoiced_quantity(item.quantity)
@@ -1454,8 +1820,10 @@ class InvoiceBuilder(_Owned):
         elif item.vat_rate != 0:
             raise ValueError("omitted VAT rate must be zero")
         b.set_vat_category(item.vat_category)
-        b.set_line_net_amount(item.total_amount)
-        b.set_line_vat_amount(item.vat_amount)
+        if item.total_amount is not None:
+            b.set_line_net_amount(item.total_amount)
+        if item.vat_amount is not None:
+            b.set_line_vat_amount(item.vat_amount)
         b.set_tax_total_present(not item.omitted_tax_amount)
         b.set_gross_amount_present(not item.omitted_gross_amount)
         b.set_exemption(item.exemption)
@@ -1468,13 +1836,11 @@ class InvoiceBuilder(_Owned):
         for name in ("item_seller_identifier", "item_buyer_identifier", "item_standard_identifier"):
             value = getattr(item, name)
             if value is not None:
-                getattr(b, "set_" + name)(*value)
-        for a in item.adjustments:
-            adjustment = Adjustment.amount(a.amount) if a.percentage is None else Adjustment.percentage(a.base_amount, a.percentage).with_supplied_amount(a.amount)
-            adjustment = adjustment.with_reason(a.reason, a.reason_code)
-            (b.add_charge if a.charge else b.add_allowance)(adjustment)
+                getattr(b, "set_" + name)(value)
+        for adjustment in item.adjustments:
+            (b.add_charge if adjustment.charge else b.add_allowance)(adjustment)
         for ref in item.document_references:
-            b.add_document_reference(OriginalInvoiceRef.new(ref.id, ref.uuid, ref.issue_date, ref.issue_time, ref.document_type_code))
+            b.add_document_reference(ref)
         for tax in item.tax_subtotals:
             b.add_tax_subtotal(tax)
         self._invoke("add_item", b._invoke("build"))
@@ -1493,33 +1859,47 @@ class InvoiceBuilder(_Owned):
     def set_tax_exemption(self, category: VatCategory, rate: _DecimalIn, exemption: TaxExemption) -> "InvoiceBuilder":
         return self.add_tax_exemption(category, rate, exemption)
 
-    def add_allowance(self, value: Adjustment, category: VatCategory, rate: _DecimalIn, exemption: TaxExemption = TaxExemption()) -> "InvoiceBuilder":
-        """Append a document-level allowance (discount) in ``category`` at ``rate``."""
-        self._invoke("add_allowance", value, int(category), _decimal(rate), exemption._native_value())
-        self._explicit_adjustments = True
-        return self
+    def add_allowance(self, value: Adjustment, category: Optional[VatCategory] = None,
+                      rate: Optional[_DecimalIn] = None, exemption: Optional[TaxExemption] = None) -> "InvoiceBuilder":
+        """Append a document-level allowance (discount) in ``category`` at ``rate``.
 
-    def add_charge(self, value: Adjustment, category: VatCategory, rate: _DecimalIn, exemption: TaxExemption = TaxExemption()) -> "InvoiceBuilder":
-        """Append a document-level charge in ``category`` at ``rate``."""
-        self._invoke("add_charge", value, int(category), _decimal(rate), exemption._native_value())
-        self._explicit_adjustments = True
-        return self
+        ``category``, ``rate`` and ``exemption`` default to the adjustment's own fields.
+        """
+        return self._add_document_adjustment(False, value, category, rate, exemption, "add_allowance")
+
+    def add_charge(self, value: Adjustment, category: Optional[VatCategory] = None,
+                   rate: Optional[_DecimalIn] = None, exemption: Optional[TaxExemption] = None) -> "InvoiceBuilder":
+        """Append a document-level charge in ``category`` at ``rate``.
+
+        ``category``, ``rate`` and ``exemption`` default to the adjustment's own fields.
+        """
+        return self._add_document_adjustment(True, value, category, rate, exemption, "add_charge")
 
     @deprecated("add_allowance(value, category, rate) or add_charge(value, category, rate)")
     def add_document_adjustment(self, charge: bool, value: Adjustment, category: VatCategory, rate: _DecimalIn, exemption: TaxExemption = TaxExemption()) -> "InvoiceBuilder":
         _flag(charge, "charge")
         return (self.add_charge if charge else self.add_allowance)(value, category, rate, exemption)
 
-    def add_adjustment(self, adjustment: AllowanceCharge) -> "InvoiceBuilder":
-        if (adjustment.base_amount is None) != (adjustment.percentage is None):
-            raise ValueError("adjustment base_amount and percentage must be supplied together")
-        native = _call(_native.AllowanceCharge.new, _flag(adjustment.charge, "charge"), _decimal(adjustment.amount), adjustment.reason, adjustment.reason_code, int(adjustment.category), _decimal(adjustment.rate), adjustment.exemption._native_value())
-        native = _call(native.with_tax_category_count, adjustment.tax_category_count)
-        if adjustment.percentage is not None:
-            native = _call(native.with_percentage, _decimal(adjustment.base_amount), _decimal(adjustment.percentage))
-        if adjustment.omitted_rate:
-            native = _call(native.without_vat_rate)
-        self._invoke("add_adjustment", native)
+    def add_adjustment(self, adjustment: Adjustment) -> "InvoiceBuilder":
+        """Append a document-level allowance or charge described entirely by ``adjustment``:
+        its ``charge`` flag, VAT ``category`` and ``rate`` (all required here), exemption,
+        tax category count and omitted rate. Values read from ``invoice.adjustments``
+        round-trip through it unchanged."""
+        return self._add_document_adjustment(adjustment.charge if isinstance(adjustment, Adjustment) else False,
+                                             adjustment, None, None, None, "add_adjustment")
+
+    def _add_document_adjustment(self, charge: bool, value: Adjustment, category: Optional[VatCategory],
+                                 rate: Optional[_DecimalIn], exemption: Optional[TaxExemption],
+                                 method: str) -> "InvoiceBuilder":
+        if not isinstance(value, Adjustment):
+            raise TypeError(f"{method}() takes an Adjustment")
+        category = value.category if category is None else category
+        rate = value.rate if rate is None else rate
+        if category is None or rate is None:
+            raise TypeError(f"{method}() needs a VAT category and rate: pass them as arguments "
+                            "or set them on the Adjustment")
+        exemption = value.exemption if exemption is None else exemption
+        self._invoke("add_adjustment", value._document_native(charge, VatCategory(category), rate, exemption))
         self._explicit_adjustments = True
         return self
 
@@ -1528,23 +1908,23 @@ class InvoiceBuilder(_Owned):
     # the single VAT rate of the lines in that category. They cannot be combined
     # with ``add_allowance``, ``add_charge`` or ``add_adjustment``.
 
-    @deprecated("add_allowance(Adjustment.amount(amount).with_reason(reason), category, rate)")
+    @deprecated("add_allowance(Adjustment(amount, reason=reason), category, rate)")
     def set_allowance(self, reason: str, amount: _DecimalIn) -> "InvoiceBuilder":
         self._aggregate_set("discount", amount)
         self._aggregate_set("reason", reason)
         return self
 
-    @deprecated("add_charge(Adjustment.amount(charge), category, rate)")
+    @deprecated("add_charge(Adjustment(charge), category, rate)")
     def invoice_level_charge(self, charge: _DecimalIn) -> "InvoiceBuilder":
         self._aggregate_set("charge", charge)
         return self
 
-    @deprecated("add_allowance(Adjustment.amount(discount), category, rate)")
+    @deprecated("add_allowance(Adjustment(discount), category, rate)")
     def invoice_level_discount(self, discount: _DecimalIn) -> "InvoiceBuilder":
         self._aggregate_set("discount", discount)
         return self
 
-    @deprecated("Adjustment.with_reason(reason) on each add_allowance/add_charge entry")
+    @deprecated("Adjustment(amount, reason=reason) on each add_allowance/add_charge entry")
     def allowance_reason(self, reason: str) -> "InvoiceBuilder":
         self._aggregate_set("reason", reason)
         return self
@@ -1554,7 +1934,7 @@ class InvoiceBuilder(_Owned):
             if not isinstance(value, str):
                 raise TypeError("reason must be a string")
         else:
-            value = Adjustment.amount(value)
+            value = Adjustment(_to_decimal(value, key))
         self._require_open()
         if self._legacy is None:
             self._legacy = {"charge": None, "discount": None, "reason": None}
@@ -1578,8 +1958,8 @@ class InvoiceBuilder(_Owned):
         if legacy is None:
             return
         charge, discount, reason = legacy["charge"], legacy["discount"], legacy["reason"]
-        charge = None if charge is None or charge.value == 0 else charge
-        discount = None if discount is None or discount.value == 0 else discount
+        charge = None if charge is None or charge.amount == 0 else charge
+        discount = None if discount is None or discount.amount == 0 else discount
         if charge is None and discount is None and reason is None:
             return
         if self._explicit_adjustments:
@@ -1594,8 +1974,8 @@ class InvoiceBuilder(_Owned):
         # can be corrected and build() retried.
         allowance = None
         if discount is not None or reason is not None:
-            allowance = (discount or Adjustment.amount(0)).with_reason(reason or "discount")
-        surcharge = charge.with_reason(reason or "charge") if charge is not None else None
+            allowance = (discount or Adjustment(Decimal(0))).with_reason(reason or "discount")._line_native()
+        surcharge = charge.with_reason(reason or "charge")._line_native() if charge is not None else None
         exemption = TaxExemption()._native_value()
         if allowance is not None:
             self._invoke("add_allowance", allowance, int(category), rate, exemption)
@@ -1848,6 +2228,12 @@ DEPRECATED_ALIASES: dict[str, tuple[str, Any]] = {
     "Signer": ("InvoiceSigner", lambda: InvoiceSigner),
     "CsidCompliance": ("ComplianceCsid", lambda: ComplianceCsid),
     "CsidProduction": ("ProductionCsid", lambda: ProductionCsid),
+    # Merged into one model in 0.6. ``AllowanceCharge(charge, amount, category,
+    # rate, ...)`` keeps its 0.5 argument order and returns an ``Adjustment``.
+    "AllowanceCharge": ("Adjustment", lambda: _AllowanceCharge),
+    "DocumentReference": ("OriginalInvoiceRef", lambda: OriginalInvoiceRef),
+    "VatId": ("Identifier", lambda: Identifier),
+    "OtherId": ("Identifier", lambda: Identifier),
 }
 
 __getattr__ = alias_getattr(__name__, DEPRECATED_ALIASES)

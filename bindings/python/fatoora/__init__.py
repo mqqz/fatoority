@@ -3,14 +3,13 @@ from ._compat import alias_getattr as _alias_getattr
 from .api import (
     Address,
     Adjustment,
-    AllowanceCharge,
     ComplianceCsid,
     Config,
     Csr,
     CsrProperties,
-    DocumentReference,
     Environment,
     FinalizedInvoice,
+    Identifier,
     InvoiceBuilder,
     InvoiceFlag,
     InvoiceLineItem,
@@ -22,7 +21,6 @@ from .api import (
     InvoiceTypeKind,
     LineItemBuilder,
     OriginalInvoiceRef,
-    OtherId,
     Party,
     PaymentMeans,
     ProductionCsid,
@@ -38,7 +36,6 @@ from .api import (
     ValidationResults,
     VatBreakdown,
     VatCategory,
-    VatId,
     ZatcaClient,
     ZatcaFinding,
     ZatcaReport,
@@ -79,14 +76,13 @@ from .errors import (
 __all__ = [
     "Address",
     "Adjustment",
-    "AllowanceCharge",
     "ComplianceCsid",
     "Config",
     "Csr",
     "CsrProperties",
-    "DocumentReference",
     "Environment",
     "FinalizedInvoice",
+    "Identifier",
     "InvoiceBuilder",
     "InvoiceFlag",
     "InvoiceLineItem",
@@ -98,7 +94,6 @@ __all__ = [
     "InvoiceTypeKind",
     "LineItemBuilder",
     "OriginalInvoiceRef",
-    "OtherId",
     "Party",
     "PaymentMeans",
     "ProductionCsid",
@@ -114,7 +109,6 @@ __all__ = [
     "ValidationResults",
     "VatBreakdown",
     "VatCategory",
-    "VatId",
     "ZatcaClient",
     "ZatcaFinding",
     "ZatcaReport",
@@ -147,6 +141,7 @@ __all__ = [
     "XmlError",
 ]
 
-# ``Signer``, ``CsidCompliance`` and ``CsidProduction`` still resolve, with a
+# ``Signer``, ``CsidCompliance``, ``CsidProduction``, ``AllowanceCharge``,
+# ``DocumentReference``, ``VatId`` and ``OtherId`` still resolve, with a
 # DeprecationWarning; they are not in ``__all__`` so ``import *`` stays quiet.
 __getattr__ = _alias_getattr(__name__, _api.DEPRECATED_ALIASES)

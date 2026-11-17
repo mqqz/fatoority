@@ -284,7 +284,8 @@ Credential `requestId()` returns null when the credentials have no request ID.
 Python renames its API to match (`InvoiceSigner`, `ComplianceCsid`,
 `request_compliance_csid`, ...) and keeps the renamed 0.5 names as deprecated
 aliases until 0.7; its getters become properties as a hard break (drop the
-parentheses). See the
+parentheses). Invoice data (`Party`, `Address`, `Adjustment`, `Identifier`, ...)
+becomes frozen dataclasses built with their constructors. See the
 [Python reference](../reference/bindings/python.md#migrate-from-05). Two
 behaviours of the deprecated names differ from 0.5: `set_payment_means_code`
 appends a payment means instead of changing the code of an existing one, and the

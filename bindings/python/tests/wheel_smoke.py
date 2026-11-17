@@ -19,10 +19,8 @@ for directory in (package, bundled_libraries):
 with Config(Environment.NON_PRODUCTION) as config:
     assert config.env == Environment.NON_PRODUCTION
 
-with Address.new(
-    "SA", "Riyadh", "King Fahd", "1234", "12222", district="Olaya"
-) as address:
-    assert address.district == "Olaya"
+address = Address("SA", "Riyadh", "King Fahd", "1234", "12222", district="Olaya")
+assert address.district == "Olaya" and address.country_code == "SAU"
 
 from fatoora import InvoiceBuilder, InvoiceTypeKind, InvoiceSubType, PaymentMeans, VatCategory
 from fatoora.errors import InvalidInputError
@@ -39,7 +37,7 @@ builder.set_issue_datetime("2024-01-01T12:30:00Z")
 builder.set_previous_invoice_hash("hash")
 builder.set_invoice_counter(1)
 builder.set_currency("SAR")
-builder.add_payment_means(PaymentMeans.new("10"))
+builder.add_payment_means(PaymentMeans("10"))
 builder.set_vat_category(VatCategory.STANDARD)
 builder.set_seller(name="Seller", vat_id="399999999900003", country_code="SA", city="Riyadh",
                    street="King Fahd", building_number="1234", postal_code="12222")
@@ -72,7 +70,7 @@ invoice = (
                    issue_datetime="2024-01-01T12:30:00Z", currency="SAR",
                    previous_invoice_hash=seed, invoice_counter=1,
                    vat_category=VatCategory.STANDARD)
-    .add_payment_means(PaymentMeans.new("10"))
+    .add_payment_means(PaymentMeans("10"))
     .set_seller("Acme Inc", vat_id="399999999900003", country_code="SAU", city="Riyadh",
                 street="King Fahd", building_number="1234", postal_code="12222", district="Olaya")
     .add_line_item(description="Item", quantity="1.0", unit_code="PCE", unit_price="100.0",

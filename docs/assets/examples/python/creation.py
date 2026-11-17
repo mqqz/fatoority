@@ -4,7 +4,7 @@ from uuid import UUID
 from fatoora import (Address, InvoiceBuilder, InvoiceSubType, InvoiceTypeKind,
                      PaymentMeans, VatCategory)
 
-seller_address = Address.new(
+seller_address = Address(
     "SA", "Riyadh", "King Fahd Road", "1234", "12222",
     additional_number="5678", district="Olaya",
 )
@@ -22,7 +22,7 @@ invoice = (
     )
     .set_seller("Example Store", address=seller_address, vat_id="399999999900003",
                 other_id="7003339333", other_id_scheme="CRN")
-    .add_payment_means(PaymentMeans.new("10"))
+    .add_payment_means(PaymentMeans("10"))
     .add_line_item(description="Notebook", quantity="2", unit_code="PCE", unit_price="50",
                    vat_rate="15", vat_category=VatCategory.STANDARD)
     .build()

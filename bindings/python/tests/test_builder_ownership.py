@@ -26,14 +26,13 @@ def test_full_billing_reference_and_language_less_note(kind):
     from fatoora import (FinalizedInvoice, InvoiceBuilder, InvoiceSubType, InvoiceTypeKind,
                          OriginalInvoiceRef, PaymentMeans, VatCategory)
 
-    reference = OriginalInvoiceRef.new("original", "uuid", date(2023, 11, 13), "10:20:30", "388")
+    reference = OriginalInvoiceRef("original", "uuid", date(2023, 11, 13), "10:20:30", "388")
     b = InvoiceBuilder(InvoiceTypeKind(kind), InvoiceSubType.SIMPLIFIED,
                        original_invoice=reference, original_invoice_reason="تصحيح &",
                        id="note", uuid="note-uuid", issue_datetime="2024-01-01T12:30:00Z",
                        currency="SAR", previous_invoice_hash="hash", invoice_counter=1,
                        vat_category=VatCategory.STANDARD)
-    reference.close()
-    (b.add_payment_means(PaymentMeans.new("10"))
+    (b.add_payment_means(PaymentMeans("10"))
       .set_seller("Acme", country_code="SA", city="Riyadh", street="King Fahd",
                   building_number="1234", postal_code="12222", vat_id="399999999900003")
       .add_line_item("item", 1, "PCE", 100, 15, VatCategory.STANDARD)
@@ -79,13 +78,13 @@ def test_aggregate_setters_build_document_adjustments():
     b.allowance_reason("reason only")
     assert b.build().totals.allowance_total == 0
 
-    with pytest.raises(FfiError):
+    with pytest.raises(ValueError):
         builder().invoice_level_discount("NaN")
 
     b = builder()
     b.add_line_item("item", 1, "PCE", 100, 15, VatCategory.STANDARD)
     b.invoice_level_discount(1)
-    b.add_document_adjustment(False, Adjustment.amount(1), VatCategory.STANDARD, 15)
+    b.add_document_adjustment(False, Adjustment(1), VatCategory.STANDARD, 15)
     with pytest.raises(ValueError):
         b.build()
 
@@ -93,7 +92,7 @@ def test_aggregate_setters_build_document_adjustments():
     b = builder()
     b.add_line_item("item", 1, "PCE", 100, 15, VatCategory.STANDARD)
     with pytest.raises(FfiError):
-        b.add_document_adjustment(False, Adjustment.amount(1), VatCategory.STANDARD, "NaN")
+        b.add_document_adjustment(False, Adjustment(1), VatCategory.STANDARD, "NaN")
     b.invoice_level_discount(1)
     assert b.build().totals.allowance_total == Decimal("1")
 
@@ -110,11 +109,11 @@ def test_aggregate_setters_build_document_adjustments():
 
     # Prepayment adjustment lines (document type 386) don't count towards the
     # inferred rate, matching core totals.
-    from fatoora import DocumentReference
+    from fatoora import OriginalInvoiceRef
     b = builder()
     b.add_line_item("item", 1, "PCE", 100, 15, VatCategory.STANDARD)
     b.add_line_item("prepayment", 0, "PCE", 0, 5, VatCategory.STANDARD,
-                    document_references=(DocumentReference("46531", issue_date="2024-01-01", issue_time="12:00:00", document_type_code="386"),))
+                    document_references=(OriginalInvoiceRef("46531", issue_date="2024-01-01", issue_time="12:00:00", document_type_code="386"),))
     b.set_allowance("Loyalty", "10")
     invoice = b.build()
     assert [(a.category, a.rate) for a in invoice.adjustments] == [(VatCategory.STANDARD, Decimal("15"))]
