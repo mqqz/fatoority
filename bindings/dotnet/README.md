@@ -14,7 +14,7 @@ using var key = SigningKey.Generate();
 var pem = key.ToPem();
 using var restored = SigningKey.FromPem(pem);
 
-using var address = Address.New(
+using var address = Address.Create(
     "SA", "الرياض", "King Fahd Rd", "1234", "12345", null, "", "حي العليا");
 Console.WriteLine(address.City); // Scalar getters are properties.
 ```

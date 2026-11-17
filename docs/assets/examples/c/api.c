@@ -22,8 +22,8 @@ int main(int argc, char **argv) {
 #define TRY(call) do { status = (call); if (status != FATOORA_OK) goto cleanup; } while (0)
     TRY(fatoora_signed_invoice_from_file(argv[1], &invoice, &error));
     TRY(fatoora_config_new(FATOORA_NON_PRODUCTION, &config, &error));
-    TRY(fatoora_zatca_client_create(config, &client, &error));
-    TRY(fatoora_production_csid_create(FATOORA_NON_PRODUCTION, NULL,
+    TRY(fatoora_zatca_client_new(config, &client, &error));
+    TRY(fatoora_production_csid_new(FATOORA_NON_PRODUCTION, NULL,
         token, secret, &credentials, &error));
     TRY(fatoora_zatca_client_report_simplified_invoice(client, invoice,
         credentials, FATOORA_CLEARANCE_DISABLED, "en", &response, &error));

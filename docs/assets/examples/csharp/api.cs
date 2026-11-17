@@ -5,7 +5,7 @@ string token = Environment.GetEnvironmentVariable("ZATCA_TOKEN")
     ?? throw new InvalidOperationException("Set ZATCA_TOKEN first");
 string secret = Environment.GetEnvironmentVariable("ZATCA_SECRET")
     ?? throw new InvalidOperationException("Set ZATCA_SECRET first");
-using var config = Config.New(environment);
+using var config = Config.Create(environment);
 using var client = ZatcaClient.Create(config);
 using var credentials = ProductionCsid.Create(environment, null, token, secret);
 using var invoice = SignedInvoice.FromXml(File.ReadAllText("signed.xml"));

@@ -348,7 +348,7 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
 === "C#"
     Use the `Fatoora` namespace. `ZatcaClient.Create(config: Config)` returns a client;
-    `ZatcaClient.CreateWithTimeout(config, timeoutMs: uint)` adds a per-request timeout
+    `ZatcaClient.WithTimeout(config, timeoutMs: uint)` adds a per-request timeout
     in milliseconds that raises `NetworkException` when exceeded.
     HTTP methods block; errors throw `FfiException` subclasses such as
     `NetworkException` or `UnauthorizedException`. Use `using` for owned objects,
@@ -421,7 +421,7 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
 === "Kotlin"
     Import types from `com.fatoora`. `ZatcaClient.create(config)` takes `Config` and
-    returns a client; `ZatcaClient.createWithTimeout(config, timeoutMs: Long)` adds a
+    returns a client; `ZatcaClient.withTimeout(config, timeoutMs: Long)` adds a
     per-request timeout in milliseconds that raises `NetworkException` when exceeded.
     HTTP methods block and errors raise exceptions. Use `.use { ... }` or `close()` for owned objects,
     including child responses.
@@ -493,7 +493,7 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
 === "Java"
     Import types from `com.fatoora`. `ZatcaClient.create(config)` takes `Config` and
-    returns a client; `ZatcaClient.createWithTimeout(config, timeoutMs)` adds a
+    returns a client; `ZatcaClient.withTimeout(config, timeoutMs)` adds a
     per-request timeout in milliseconds that raises `NetworkException` when exceeded.
     HTTP methods block and errors raise exceptions. Use try-with-resources or `close()` for owned objects,
     including child responses.
@@ -571,12 +571,12 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     **Client and credentials**
 
     ```c
-    FatooraStatus fatoora_zatca_client_create(const FatooraConfig *config,
+    FatooraStatus fatoora_zatca_client_new(const FatooraConfig *config,
         FatooraZatcaClient **out,
         FatooraError **error);
-    /* Like fatoora_zatca_client_create; each request fails with
+    /* Like fatoora_zatca_client_new; each request fails with
      * FATOORA_NETWORK after timeout_ms milliseconds. Zero is rejected. */
-    FatooraStatus fatoora_zatca_client_create_with_timeout(const FatooraConfig *config,
+    FatooraStatus fatoora_zatca_client_with_timeout(const FatooraConfig *config,
         uint32_t timeout_ms,
         FatooraZatcaClient **out,
         FatooraError **error);
@@ -615,13 +615,13 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
         const char *accept_language,
         FatooraValidationResponse **out,
         FatooraError **error);
-    FatooraStatus fatoora_compliance_csid_create(FatooraEnvironment environment,
+    FatooraStatus fatoora_compliance_csid_new(FatooraEnvironment environment,
         const char *request_id,
         const char *token,
         const char *secret,
         FatooraComplianceCsid **out,
         FatooraError **error);
-    FatooraStatus fatoora_production_csid_create(FatooraEnvironment environment,
+    FatooraStatus fatoora_production_csid_new(FatooraEnvironment environment,
         const char *request_id,
         const char *token,
         const char *secret,

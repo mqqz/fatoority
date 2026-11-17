@@ -207,7 +207,7 @@ Constructors that take individual fields use the order in the property table abo
 
     **Properties**
 
-    `CsrProperties.New(commonName, serialNumber, organizationIdentifier,
+    `CsrProperties.Create(commonName, serialNumber, organizationIdentifier,
     organizationUnitName, organizationName, countryName, invoiceType, locationAddress,
     industryBusinessCategory)` takes nine `string` values and returns `CsrProperties`.
 

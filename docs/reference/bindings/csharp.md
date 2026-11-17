@@ -40,7 +40,7 @@ Import `Fatoora` and dispose native objects when finished:
 ```csharp
 using Fatoora;
 
-using var config = Config.New(ZatcaEnvironment.NonProduction);
+using var config = Config.Create(ZatcaEnvironment.NonProduction);
 using var key = SigningKey.Generate();
 using var bytes = key.ToDer();
 using var view = bytes.AsSlice();

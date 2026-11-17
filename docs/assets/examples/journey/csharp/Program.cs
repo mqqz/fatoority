@@ -61,17 +61,17 @@ public static class Program
         Save(Path.Combine(output, "state.json"), state);
         try
         {
-            using var builder = InvoiceBuilder.New(InvoiceTypeKind.Tax, InvoiceSubType.Simplified, null, null, null, null);
+            using var builder = InvoiceBuilder.Create(InvoiceTypeKind.Tax, InvoiceSubType.Simplified, null, null, null, null);
             builder.SetId(Field(data, "invoice_id"));
             builder.SetUuid(uuid);
             builder.SetIssueDatetime(DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture));
             builder.SetCurrency("SAR");
             builder.SetInvoiceCounter(ulong.Parse(Field(data, "invoice_counter")));
             builder.SetPreviousInvoiceHash(Field(data, "previous_invoice_hash"));
-            using (var means = PaymentMeans.New("10", null))
+            using (var means = PaymentMeans.Create("10", null))
                 builder.AddPaymentMeans(means);
             builder.SetVatCategory(VatCategory.Standard);
-            using var address = Address.New("SA", Field(seller, "city"), Field(seller, "street"),
+            using var address = Address.Create("SA", Field(seller, "city"), Field(seller, "street"),
                 Field(seller, "building_number"), Field(seller, "postal_code"), null,
                 Field(seller, "additional_number"), Field(seller, "district"));
             builder.SetSeller(Field(seller, "name"), address, Field(seller, "vat_id"), Field(seller, "crn"), "CRN");
@@ -103,7 +103,7 @@ public static class Program
             state["submitted"] = true; // Attempted; a failed connection can leave the outcome unknown.
             Save(Path.Combine(output, "state.json"), state);
             using var credentials = ProductionCsid.Create(Sandbox, null, token, secret);
-            using var config = Config.New(Sandbox);
+            using var config = Config.Create(Sandbox);
             using var client = ZatcaClient.Create(config);
             using var response = client.ReportSimplifiedInvoice(signed, credentials, ClearanceMode.Disabled, "en");
             HandleResponse(response, output);

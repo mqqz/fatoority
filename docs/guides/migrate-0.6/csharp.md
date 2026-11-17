@@ -9,8 +9,11 @@ The `Fatoority` NuGet package is an idiomatic C# facade in 0.6. Integer codes
 and Booleans become enums, class and method names follow the Rust core, scalar
 getters become read-only properties, amounts are `decimal`, optional text is
 `string?`, and native failures throw one exception class per error code. C#
-cannot overload a method with a property or by return type, so every change is
-a hard break with no deprecated alias: work through the compiler errors.
+cannot overload a method with a property or by return type, so most changes
+are hard breaks with no deprecated alias: work through the compiler errors.
+The `New` factory methods, now `Create`, and a few
+[renamed adjustment members](#renamed-members-with-deprecated-aliases) keep
+`[Obsolete]` aliases until 0.7.
 
 ```sh
 dotnet add package Fatoority --version 0.6.0
@@ -38,6 +41,9 @@ The package bundles its native libraries. Native objects still implement
 4. Pass and read amounts as `decimal` (`2m`, `50m`) instead of strings.
 5. Replace `Text?` handling with `string?`, and `BindingErrorException` with
    `FfiException` or one of its subclasses.
+6. Replace `X.New(...)` with `X.Create(...)`, as `ZatcaClient.Create` and the
+   credential classes already use. `New` still compiles with an obsolete
+   warning.
 
 ## Build an invoice
 
@@ -71,22 +77,22 @@ The package bundles its native libraries. Native objects still implement
     ```csharp
     using Fatoora;
 
-    using var builder = InvoiceBuilder.New(InvoiceTypeKind.Tax, InvoiceSubType.Simplified, null, null, null, null);
+    using var builder = InvoiceBuilder.Create(InvoiceTypeKind.Tax, InvoiceSubType.Simplified, null, null, null, null);
     builder.SetId("INV-1001");
     builder.SetUuid(uuid);
     builder.SetIssueDatetime("2026-10-26T09:00:00Z");
     builder.SetCurrency("SAR");
     builder.SetInvoiceCounter(1);
     builder.SetPreviousInvoiceHash(previousHash);
-    using (var means = PaymentMeans.New("10", null))
+    using (var means = PaymentMeans.Create("10", null))
         builder.AddPaymentMeans(means);
     builder.SetVatCategory(VatCategory.Standard);
-    using var address = Address.New("SA", "Riyadh", "King Fahd Road", "1234", "12222", null, "5678", "Olaya");
+    using var address = Address.Create("SA", "Riyadh", "King Fahd Road", "1234", "12222", null, "5678", "Olaya");
     builder.SetSeller("Example Store", address, "399999999900003", "7003339333", "CRN");
     builder.AddLineItem("Notebook", 2m, "PCE", 50m, 15m, VatCategory.Standard);
     using (var amount = Adjustment.Amount(10m))
     using (var discount = amount.WithReason("Loyalty discount", null))
-    using (var exemption = TaxExemption.New(null, null))
+    using (var exemption = TaxExemption.Create(null, null))
         builder.AddAllowance(discount, VatCategory.Standard, 15m, exemption);
     using var invoice = builder.Build();
     File.WriteAllText("invoice.xml", invoice.Xml);
@@ -143,7 +149,7 @@ equal as `decimal`.
         if (!report.IsValid)
             throw new InvalidOperationException("Local validation failed: " + report.ToJson());
 
-        using var config = Config.New(ZatcaEnvironment.NonProduction);
+        using var config = Config.Create(ZatcaEnvironment.NonProduction);
         using var client = ZatcaClient.Create(config);
         using var credentials = ProductionCsid.Create(ZatcaEnvironment.NonProduction, null, token, secret);
         using var response = client.ReportSimplifiedInvoice(signed, credentials, ClearanceMode.Disabled, "en");
@@ -159,7 +165,7 @@ equal as `decimal`.
     ```
 
 To bound each request, create the client with
-`ZatcaClient.CreateWithTimeout(config, 30_000)` (milliseconds); a timeout
+`ZatcaClient.WithTimeout(config, 30_000)` (milliseconds); a timeout
 throws `NetworkException`. The native client methods still block; for
 cancellation, use a `Prepare*` method with your own `HttpClient`.
 
@@ -175,12 +181,28 @@ native resources, so there is nothing to dispose. If you also import
 `System.Xml` or `System.ComponentModel.DataAnnotations`, qualify
 `Fatoora.XmlException` or `Fatoora.ValidationException`.
 
+## Renamed members with deprecated aliases
+
+These members are renamed so that every constructor is `Create` and the
+adjustment members match the Rust core. The 0.5 names still compile with an
+`[Obsolete]` warning (CS0618) and are removed in 0.7.
+
+| 0.5 | 0.6 |
+| --- | --- |
+| `X.New(...)` on `Address`, `AllowanceCharge`, `Config`, `CsrProperties`, `InvoiceBuilder`, `InvoiceLineItem`, `LineItemBuilder`, `OriginalInvoiceRef`, `PaymentMeans`, `TaxExemption`, `VatBreakdown` | `X.Create(...)` |
+| `adjustment.WithSuppliedAmount(amount)` | `adjustment.SuppliedAmount(amount)` |
+| `adjustment.Percent()` | `adjustment.Percentage` (an obsolete `Percent` property remains) |
+| `allowanceCharge.WithoutVatRate()`, `vatBreakdown.WithoutVatRate()` | `OmitVatRate()` |
+
+`Adjustment.Percentage(base, percent)` becomes `Adjustment.PercentOf(base,
+percent)` with no alias: the `Percentage` property now reads the percentage.
+
 ## Renamed names
 
 | 0.5 | 0.6 |
 | --- | --- |
 | `byte` environment, invoice kind, subtype and VAT category arguments | `ZatcaEnvironment`, `InvoiceTypeKind`, `InvoiceSubType`, `VatCategory` enums |
-| `bool` charge argument of `AllowanceCharge.New` | `AdjustmentKind.Allowance`/`Charge` |
+| `bool` charge argument of `AllowanceCharge.New` (now `Create`) | `AdjustmentKind.Allowance`/`Charge` |
 | `bool clearanceStatus` in `ReportSimplifiedInvoice`, `ClearStandardInvoice` and `Prepare*` | `ClearanceMode.Disabled`/`Enabled` |
 | `string` quantities, prices, rates and amounts | `decimal` (`decimal?` when optional) |
 | `CsidCompliance`, `CsidProduction` | `ComplianceCsid`, `ProductionCsid` |
@@ -192,7 +214,7 @@ native resources, so there is nothing to dispose. If you also import
 | `builder.SetTaxExemption(category, rate, exemption)` | `builder.AddTaxExemption(category, rate, exemption)` |
 | `builder.AddDocumentAdjustment(charge, adjustment, category, rate, exemption)` | `builder.AddAllowance(adjustment, category, rate, exemption)` or `AddCharge(...)` |
 | `builder.SetNote(language, text)`, `SetNoteWithoutLanguage(text)` | `builder.AddNote(language, text)`, with `null` for no language |
-| `builder.SetPaymentMeansCode(code)` | `builder.AddPaymentMeans(PaymentMeans.New(code, null))` |
+| `builder.SetPaymentMeansCode(code)` | `builder.AddPaymentMeans(PaymentMeans.Create(code, null))` |
 | `builder.SetAllowance(reason, amount)`, `AllowanceReason`, `InvoiceLevelCharge`, `InvoiceLevelDiscount` | `AddAllowance`/`AddCharge` with `Adjustment.Amount(amount).WithReason(reason, null)` |
 | `charge.IsCharge()`, `item.AdjustmentIsCharge(i)` | `charge.Kind`, `item.AdjustmentKind(i)` returning `AdjustmentKind` |
 | `response.ReportingStatus()` and the other status getters returning `Text?` | `ReportingStatus?`, `ClearanceStatus?`, `ValidationStatus?`, `MessageType?`; `*Raw` properties return the text as `string?` |
