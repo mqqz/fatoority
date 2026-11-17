@@ -251,13 +251,12 @@ local validation separately before submission.
 
 Rust
 ```rust
-use fatoora_core::config::EnvironmentType;
+use fatoora_core::config::Environment;
 use fatoora_core::csr::{CsrProperties, SigningKey};
 
-let props_text = std::fs::read_to_string("csr.properties")?;
-let props = CsrProperties::from_properties_str(&props_text)?;
+let props = CsrProperties::from_file("csr.properties")?;
 let key = SigningKey::generate();
-let csr = props.build(&key, EnvironmentType::NonProduction)?;
+let csr = props.build(&key, Environment::NonProduction)?;
 let csr_pem = csr.to_pem()?;
 let key_pem = key.to_pem()?;
 ```
@@ -319,7 +318,7 @@ use fatoora_core::invoice::validation::{
     validate_zatca_invoice_from_str, ZatcaValidationOptions,
 };
 
-let config = Config::new(fatoora_core::config::EnvironmentType::NonProduction);
+let config = Config::new(fatoora_core::config::Environment::NonProduction);
 let xml = std::fs::read_to_string("invoice.xml")?;
 let options = ZatcaValidationOptions {
     previous_invoice_hash: Some(previous_hash_from_history),

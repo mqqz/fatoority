@@ -208,7 +208,7 @@ correspond to the fields above.
 
     **Read invoice data**
 
-    Both invoice types provide `data() -> &InvoiceData`, `totals() -> &InvoiceTotalsData`, and `hash_base64() -> Result<String, SigningError>`. Read fields through the returned data's accessor methods, including `id()`, `uuid()`, `seller()`, `buyer()`, `line_items()`, `flags()`, and `invoice_type()`. Decimal accessors return `Decimal`; optional fields return `Option`.
+    Both invoice types provide `data() -> &InvoiceData`, `totals() -> &InvoiceTotals`, and `hash_base64() -> Result<String, SigningError>`. Read fields through the returned data's accessor methods, including `id()`, `uuid()`, `seller()`, `buyer()`, `line_items()`, `flags()`, and `invoice_type()`. Decimal accessors return `Decimal`; optional fields return `Option`.
 
     `FinalizedInvoice::sign(self, signer: &InvoiceSigner) -> Result<SignedInvoice, SigningError>` consumes the finalized invoice even if signing fails. Signed metadata and XML access are described in [signing](invoice-signing.md) and [XML](xml.md).
 

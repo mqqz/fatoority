@@ -1,10 +1,10 @@
 use fatoora_core::api::{CsidCredentials, Production, ZatcaClient};
-use fatoora_core::config::{Config, EnvironmentType};
+use fatoora_core::config::{Config, Environment};
 use fatoora_core::invoice::xml::parse::parse_signed_invoice_xml;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let environment = EnvironmentType::NonProduction;
+    let environment = Environment::NonProduction;
     let token = std::env::var("ZATCA_TOKEN")?;
     let secret = std::env::var("ZATCA_SECRET")?;
     let client = ZatcaClient::new(Config::new(environment))?;
