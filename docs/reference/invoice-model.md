@@ -18,8 +18,9 @@ independent adjustments append in order. Rust `allowance(DocumentAdjustment)` an
 `charge(DocumentAdjustment)` append document adjustments, and the generated
 bindings mirror them as `add_allowance` and `add_charge`. In the generated
 bindings, `set_*` methods replace a value and `add_*` methods append one.
-Python's convenience `set_allowance(reason, amount)` and aggregate setters are
-applied as document adjustments when the invoice is built.
+Python's deprecated `set_allowance(reason, amount)` and aggregate setters are
+applied as document adjustments when the invoice is built; use `add_allowance`
+and `add_charge` instead.
 Use collection getters to read every repeated entry.
 
 ## Fields and expected values

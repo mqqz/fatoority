@@ -11,7 +11,7 @@ public class Guide {
     }
     public static void main(String[] args) throws Exception {
         try (SignedInvoice invoice = SignedInvoice.fromXml(read("signed.xml"))) {
-            String payload = invoice.qrCode();
+            String payload = invoice.getQrCode();
             write("qr.txt", payload);
             System.out.println(payload);
         }
