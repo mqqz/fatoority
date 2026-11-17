@@ -65,7 +65,7 @@ def run(input_path, submit):
     state = {"uuid": str(invoice_uuid), "invoice_id": data["invoice_id"], "stage": "create", "submitted": False}
     save_json(output / "state.json", state)
     try:
-        address = Address.new(
+        address = Address(
             "SA", seller["city"], seller["street"], seller["building_number"], seller["postal_code"],
             district=seller["district"], additional_number=seller["additional_number"],
         )
@@ -82,7 +82,7 @@ def run(input_path, submit):
             (builder
                 .set_seller(seller["name"], address=address, vat_id=seller["vat_id"],
                             other_id=seller["crn"], other_id_scheme="CRN")
-                .add_payment_means(PaymentMeans.new("10"))
+                .add_payment_means(PaymentMeans("10"))
                 .add_line_item("دفتر", "2", "PCE", "50", "15", VatCategory.STANDARD))
             with builder.build() as invoice, InvoiceSigner.from_pem(certificate, key) as signer:
                 (output / "invoice.xml").write_text(invoice.xml, encoding="utf-8")

@@ -504,6 +504,47 @@ working until 0.7 and emits a `DeprecationWarning` naming its replacement (see [
   `add_document_adjustment(charge, ...)` and the aggregate setters
   (`set_allowance`, `invoice_level_discount`, `invoice_level_charge`,
   `allowance_reason`) are deprecated.
+- Invoice data models are frozen dataclasses: `Party`, `Address`,
+  `InvoiceNote`, `OriginalInvoiceRef`, `PaymentMeans`, `Adjustment` and the new
+  `Identifier(value, scheme)`, alongside `InvoiceLineItem`, `InvoiceTotals`,
+  `VatBreakdown` and `TaxExemption`. Values read from an invoice compare with
+  `==` and can be passed back to the builder; they need no `close()`. Construct
+  them directly: `Address(...)`, `PaymentMeans(code, instruction_notes=(), ...)`
+  and `OriginalInvoiceRef(id, uuid=, issue_date=, issue_time=, document_type_code=)`
+  replace the deprecated `.new(...)` classmethods, and `close()`/`with` on these
+  values are deprecated no-ops.
+- `FinalizedInvoice`/`SignedInvoice` read their data once, on first access, and
+  cache it instead of crossing the FFI on every property read. Signing (or the
+  deprecated `into_xml()`) still consumes the invoice and drops the cache.
+- `Adjustment` is the one allowance/charge model: `Adjustment(amount, reason=,
+  reason_code=, ...)` or `Adjustment.percent_of(base, percent, ...)` for line
+  and document adjustments, and the type of `invoice.adjustments`, with
+  `charge`, `category`, `rate`, `exemption`, `tax_category_count` and
+  `omitted_rate` so `add_adjustment(entry)` round-trips them.
+  `add_allowance`/`add_charge` take the category, rate and exemption from the
+  value when omitted. Deprecated: `AllowanceCharge(charge, amount, category,
+  rate, ...)` (returns an `Adjustment`), `Adjustment.amount(value)` →
+  `Adjustment(value)`, `Adjustment.percentage(base, percent)` →
+  `Adjustment.percent_of(base, percent)`, `.value` → `.amount`, `.percent` →
+  `.percentage`, `with_supplied_amount(value)` → `percent_of(..., amount=value)`.
+- `DocumentReference` is merged into `OriginalInvoiceRef` (deprecated alias).
+  Breaking: line `document_references` entries have `issue_date` as a
+  `datetime.date`, like `OriginalInvoiceRef`.
+- `Identifier(value, scheme)` replaces the `VatId`/`OtherId` handles (deprecated
+  aliases) and the `(value, scheme)` tuples of `item_seller_identifier`,
+  `item_buyer_identifier` and `item_standard_identifier`; unpacking or indexing
+  an `Identifier`, or passing a tuple, warns. `party.vat_id.value` and
+  `party.identifiers[0].value` keep working. Breaking: `party.identifiers` and
+  `payment_means.instruction_notes` are tuples instead of lists.
+- `InvoiceLineItem` input no longer requires `total_amount` and `vat_amount`:
+  `add_item` lets the core calculate them when `None` and checks them when given.
+  Its constructor keeps the 0.5 positional order; pass `vat_rate` and
+  `vat_category` by keyword when leaving the amounts out.
+- `InvoiceBuilder(..., seller=Party(...), buyer=Party(...))`, and `set_seller`/
+  `set_buyer` accept a `Party`. Identifier setters accept an `Identifier`.
+- Invalid decimal text in `Adjustment` and `InvoiceLineItem` fields, and in the
+  deprecated aggregate setters, raises `ValueError` on construction instead of
+  `InvalidInputError` when the value reaches the native library.
 - `tests/public_api.json` records the public surface, including the deprecated
   names, and is regenerated with `python tests/test_public_api.py --update`.
 

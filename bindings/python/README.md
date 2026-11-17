@@ -67,8 +67,8 @@ invoice = (
         vat_category=VatCategory.STANDARD,
     )
     .set_seller("Acme Inc", vat_id="399999999900003",
-                address=Address.new("SAU", "Riyadh", "King Fahd", "1234", "12222"))
-    .add_payment_means(PaymentMeans.new("10"))
+                address=Address("SAU", "Riyadh", "King Fahd", "1234", "12222"))
+    .add_payment_means(PaymentMeans("10"))
     .add_line_item(description="Item", quantity="1.0", unit_code="PCE",
                    unit_price="100.0", vat_rate="15.0", vat_category=VatCategory.STANDARD)
     .build()
@@ -80,7 +80,9 @@ print(invoice.xml)
 Header fields can be passed to the constructor or set with the chaining setters.
 Timestamps accept a timezone-aware `datetime` or `YYYY-MM-DDTHH:MM:SSZ` text; UUIDs
 accept `uuid.UUID` or text. Invoice data is read through properties
-(`invoice.seller.address.city`).
+(`invoice.seller.address.city`) and returned as frozen dataclasses (`Party`,
+`Address`, `Adjustment`, `InvoiceLineItem`, ...) that can be passed back to a
+builder: `InvoiceBuilder(..., seller=parsed.seller)`.
 
 ### Local ZATCA validation
 
