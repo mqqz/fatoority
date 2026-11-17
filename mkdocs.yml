@@ -28,7 +28,14 @@ nav:
       - QR Codes: guides/qr.md
       - ZATCA API Client: guides/api.md
       - CLI: guides/cli.md
-      - Migrate from 0.5 to 0.6 (Rust): guides/migrate-0.6.md
+      - Migrate from 0.5 to 0.6:
+          - Overview: guides/migrate-0.6/index.md
+          - Rust: guides/migrate-0.6/rust.md
+          - Python: guides/migrate-0.6/python.md
+          - JavaScript / TypeScript: guides/migrate-0.6/javascript.md
+          - Kotlin / Java: guides/migrate-0.6/kotlin.md
+          - C# / .NET: guides/migrate-0.6/csharp.md
+          - C/C++: guides/migrate-0.6/c.md
   - Reference:
       - Configuration: reference/configuration.md
       - CSR: reference/csr.md

@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
     TRY(fatoora_production_csid_create(FATOORA_NON_PRODUCTION, NULL,
         token, secret, &credentials, &error));
     TRY(fatoora_zatca_client_report_simplified_invoice(client, invoice,
-        credentials, false, "en", &response, &error));
+        credentials, FATOORA_CLEARANCE_DISABLED, "en", &response, &error));
     /* Receiving a response does not establish acceptance. */
     TRY(fatoora_validation_response_ensure_accepted(response, &error));
     puts("Invoice reporting accepted.");

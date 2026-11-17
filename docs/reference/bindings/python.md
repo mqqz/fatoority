@@ -290,6 +290,9 @@ Run explicit validation for schema and business-rule checks; issuer trust and cl
 
 ## Migrate from 0.5
 
+The [Python migration guide](../../guides/migrate-0.6/python.md) walks through
+the common changes with before-and-after code; this table lists every name.
+
 Getters became read-only properties in 0.6. This is a hard break: drop the
 parentheses (`invoice.id()` becomes `invoice.id`); calling a property now fails
 like calling its value (`TypeError: 'str' object is not callable`). Rows marked

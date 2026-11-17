@@ -2,18 +2,34 @@
 
 ## Unreleased
 
-Breaking 0.6 phase for the `fatoora-core` Rust crate. Renamed items keep their
-old names as deprecated aliases until 0.7 (see "Deprecated"); items whose type,
-signature or fields changed in place have no deprecation period (see "Changed
-(breaking)"). The `fatoora-ffi` bridge and the generated bindings replace
-raw integer codes and Booleans with enums and mirror the core names (see
-"Bindings" under "Changed (breaking)"). The Python `fatoora` package adopts
-the same names with a Pythonic surface and keeps its 0.5 names as deprecated
-aliases until 0.7 (see "Python").
+## [0.6.0] - 2026-11-17
 
-Migration guide with a before-and-after table of every change: [Migrate from 0.5 to 0.6 (Rust)](https://docs.fatoority.com/guides/migrate-0.6/).
+The breaking 0.6 release. `fatoora-core` renames items for consistency and
+replaces strings and Booleans with typed values; the `fatoora-ffi` bridge and
+every language package now mirror the core names and take enums instead of
+integer codes, and validation no longer takes a `Config`. Upgrade language
+packages and native libraries together.
 
-### Added
+Migration guides with before-and-after code for each language:
+[overview](https://docs.fatoority.com/guides/migrate-0.6/),
+[Rust](https://docs.fatoority.com/guides/migrate-0.6/rust/),
+[Python](https://docs.fatoority.com/guides/migrate-0.6/python/),
+[JavaScript/TypeScript](https://docs.fatoority.com/guides/migrate-0.6/javascript/),
+[Kotlin/Java](https://docs.fatoority.com/guides/migrate-0.6/kotlin/),
+[C#/.NET](https://docs.fatoority.com/guides/migrate-0.6/csharp/) and
+[C/C++](https://docs.fatoority.com/guides/migrate-0.6/c/).
+
+In `fatoora-core`, renamed items keep their old names as deprecated aliases
+until 0.7 (see "Deprecated"); items whose type, signature or fields changed in
+place have no deprecation period (see "Changed (breaking)"). The Python package
+keeps its renamed 0.5 names as deprecated aliases until 0.7, and the Kotlin/Java
+facade keeps its 0.5 getter functions and `String` amount overloads, and the
+JavaScript package keeps `new_` as an alias of `create`. The other bindings
+change without aliases.
+
+### Rust (`fatoora-core`)
+
+#### Added
 
 - `api::{ComplianceCsid, ProductionCsid}` aliases for
   `CsidCredentials<Compliance>` and `CsidCredentials<Production>`.
@@ -85,38 +101,7 @@ Migration guide with a before-and-after table of every change: [Migrate from 0.5
   rejected. `ZatcaClient::new` is unchanged and applies no timeout. Ignored on
   `wasm32`, where the client does not send requests.
 
-- Bindings: FFI enums `Environment`, `InvoiceTypeKind`, `InvoiceSubType`,
-  `VatCategory`, `AdjustmentKind`, `ClearanceMode` and `InvoiceFlag` (named
-  bits of the flag mask, with `bit()` where the generator emits enum methods),
-  plus `ReportingStatus`, `ClearanceStatus`, `ValidationStatus` and
-  `MessageType`, each with an `Unknown` variant for values this binding
-  version does not recognise. New `ValidationResponse::{reporting_status_raw,
-  clearance_status_raw}`, `ValidationResults::status_raw` and
-  `ValidationMessage::{message_type_raw, status_raw}` return the exact wire
-  text. The C facade (`fatoora.h`) adds typed enums (`FatooraEnvironment`,
-  `FatooraVatCategory`, ...) and the constants `FATOORA_ADJUSTMENT_*`,
-  `FATOORA_CLEARANCE_{DISABLED,ENABLED}`, `FATOORA_REPORTING_STATUS_*`,
-  `FATOORA_CLEARANCE_STATUS_*`, `FATOORA_VALIDATION_STATUS_*` and
-  `FATOORA_MESSAGE_TYPE_*`.
-- Bindings: `ZatcaValidationReport` mirrors the core report, with
-  `schema_version`, `profile`, `evaluated_at`, `is_complete`, `has_errors`,
-  `is_valid`, `stages_len`, `stage(index)` and `to_json`. Its
-  `ZatcaStageReport` (`stage`, `status`, `provenance`, evaluated assertions and
-  findings), `ZatcaRuleSource` and `ZatcaFinding` (`assertion_site`, `layer`,
-  `code`, `severity`, `message`, `location_kind`, `location_path`,
-  `location_line`, `location_column`) come with the enums `ZatcaStage`,
-  `ZatcaStageStatus`, `ValidationLayer`, `Severity` and
-  `ValidationLocationKind`. The C facade adds the matching
-  `FATOORA_ZATCA_STAGE_*`, `FATOORA_ZATCA_STAGE_STATUS_*`,
-  `FATOORA_VALIDATION_LAYER_*`, `FATOORA_SEVERITY_*` and `FATOORA_LOCATION_*`
-  constants.
-
-- Bindings: `ZatcaClient.create_with_timeout(config, timeout_ms: u32)` in the
-  FFI (`createWithTimeout` in Kotlin/Java, `CreateWithTimeout` in C#,
-  `fatoora_zatca_client_create_with_timeout` in C). Not exposed to
-  JavaScript, whose client sends through the caller's `fetch`.
-
-### Changed
+#### Changed
 
 - `InvoiceBuilder::allowance(DocumentAdjustment)` and
   `charge(DocumentAdjustment)` are the one way to add document-level
@@ -126,7 +111,7 @@ Migration guide with a before-and-after table of every change: [Migrate from 0.5
   other adjustment checks in `InvoiceBuilder::build`, after missing or invalid
   fields, instead of before them.
 
-### Changed (breaking)
+#### Changed (breaking)
 
 These change a type, field, parameter or return type in place, so they have no
 deprecation period.
@@ -143,8 +128,8 @@ deprecation period.
   prepare_report_simplified_invoice, prepare_clear_standard_invoice}` take
   `clearance_mode: ClearanceMode` instead of `clearance_status: bool`. Pass
   `ClearanceMode::Enabled` for `true` and `ClearanceMode::Disabled` for
-  `false`, or `ClearanceMode::from(flag)`. The FFI and language bindings still
-  take a Boolean.
+  `false`, or `ClearanceMode::from(flag)`. The bindings take a `ClearanceMode`
+  too, except Python, which keeps a Boolean (see "Bindings").
 - Response status getters return the new enums instead of `Option<&str>`:
   `ValidationResponse::reporting_status()` returns `Option<&ReportingStatus>`,
   `ValidationResponse::clearance_status()` returns `Option<&ClearanceStatus>`,
@@ -152,8 +137,7 @@ deprecation period.
   `Option<&ValidationStatus>`, and `ValidationMessage::message_type()` returns
   `Option<&MessageType>`. Compare with the enum
   (`Some(&ReportingStatus::Reported)`) or call `.map(ReportingStatus::as_str)`
-  for the previous `Option<&str>`. The JSON wire format and the `fatoora-ffi`
-  getters, which still return text, are unchanged.
+  for the previous `Option<&str>`. The JSON wire format is unchanged.
 
 **Typed invoice inputs and getters**
 
@@ -250,7 +234,102 @@ or invalid). Every wrapper has `as_str()` and `Display`.
   `with_payee_financial_account(account)`; `payee_financial_account()` is now
   the getter.
 
-**Bindings (`fatoora-ffi`, JavaScript, Kotlin/Java, C#, C/C++)**
+#### Deprecated
+
+Each of these still compiles with a deprecation warning, forwards to its
+replacement, and will be removed in 0.7.
+
+- `config::EnvironmentType`: renamed `config::Environment`.
+- `ZatcaClient::post_csr_for_ccsid` and `post_ccsid_for_pcsid`: renamed
+  `request_compliance_csid` and `request_production_csid`.
+  `prepare_post_csr_for_ccsid` and `prepare_post_ccsid_for_pcsid`: renamed
+  `prepare_request_compliance_csid` and `prepare_request_production_csid`.
+- `CsrProperties::{from_properties_str, parse_csr_config}`: use
+  `text.parse::<CsrProperties>()`. `CsrProperties::parse_csr_config_file`: use
+  `CsrProperties::from_file`.
+- `invoice::InvoiceTotalsData`: renamed `invoice::InvoiceTotals`.
+- `invoice::validation::{validate_xml_invoice_from_str,
+  validate_xml_invoice_report_from_str, validate_zatca_invoice_from_str}`: use
+  `Validator::{validate_xml, validate_xml_report, validate_zatca}`. They
+  ignore their `Config` argument.
+- `invoice::sign::invoice_hash_base64_from_xml_str`: use `invoice::hash_xml`.
+  It still returns `String`.
+- `FinalizedInvoice::hash_base64()` and `SignedInvoice::hash_base64()`: use
+  `hash()`, which returns `InvoiceHash`. They still return `String`.
+- `InvoiceBuilder::adjustment(AllowanceCharge)`: forwards to `allowance` or
+  `charge` by the entry's `kind`. Use
+  `allowance(DocumentAdjustment::from(entry))` (or `charge`).
+- `InvoiceBuilder::{invoice_level_discount, invoice_level_charge,
+  allowance_reason}`: these keep their behaviour. Each call replaces one
+  aggregate allowance or charge in the document VAT category, with a rate
+  taken from the first line in that category, and the reason is shared by
+  both (on its own it emits a zero-amount allowance). Use
+  `allowance`/`charge` with `DocumentAdjustment::new(Adjustment::amount(amount),
+  category, rate).with_reason(reason)`; each call appends an entry with an
+  explicit VAT category and rate.
+- `InvoiceBuilder::payment_means_code(code)`: keeps its behaviour of changing
+  the code of the first payment means, creating one if there is none. Use
+  `payment_means(PaymentMeans::new(code))`, which appends.
+- `VatBreakdown::without_vat_rate()`: renamed `omit_vat_rate()`.
+- `Adjustment::{allowance_charge_reason, allowance_charge_reason_code,
+  calculation_base_amount, calculation_percentage}`: renamed `reason()`,
+  `reason_code()`, `base_amount()` and `percentage()`.
+- `PaymentMeans::instruction_note(text)`: renamed
+  `with_instruction_note(text)`.
+
+The `fatoora-ffi` `AllowanceCharge::without_vat_rate` and
+`VatBreakdown::without_vat_rate` keep their 0.5 names. The FFI builder setters
+`set_payment_means_code`, `invoice_level_charge`, `invoice_level_discount`,
+`allowance_reason` and `set_allowance` are replaced without aliases (see
+"Bindings").
+
+#### Removed
+
+- The `invoice::LineItems` alias (`Vec<LineItem>`). Use `Vec<LineItem>`.
+- `InvoiceData::note()`, which returned only the first note. Use
+  `notes().first()`.
+- `OriginalInvoiceRef::with_issue_date_str`. Use
+  `with_issue_date(InvoiceDate::parse(date)?)` or `with_issue_date(date.parse()?)`.
+
+### Bindings (`fatoora-ffi`, C and C++)
+
+Changes to the bridge that every generated binding inherits. The language
+sections below list what each package adds on top.
+
+#### Added
+
+- FFI enums `Environment`, `InvoiceTypeKind`, `InvoiceSubType`,
+  `VatCategory`, `AdjustmentKind`, `ClearanceMode` and `InvoiceFlag` (named
+  bits of the flag mask, with `bit()` where the generator emits enum methods),
+  plus `ReportingStatus`, `ClearanceStatus`, `ValidationStatus` and
+  `MessageType`, each with an `Unknown` variant for values this binding
+  version does not recognise. New `ValidationResponse::{reporting_status_raw,
+  clearance_status_raw}`, `ValidationResults::status_raw` and
+  `ValidationMessage::{message_type_raw, status_raw}` return the exact wire
+  text. The C facade (`fatoora.h`) adds typed enums (`FatooraEnvironment`,
+  `FatooraVatCategory`, ...) and the constants `FATOORA_ADJUSTMENT_*`,
+  `FATOORA_CLEARANCE_{DISABLED,ENABLED}`, `FATOORA_REPORTING_STATUS_*`,
+  `FATOORA_CLEARANCE_STATUS_*`, `FATOORA_VALIDATION_STATUS_*` and
+  `FATOORA_MESSAGE_TYPE_*`.
+- `ZatcaValidationReport` mirrors the core report, with
+  `schema_version`, `profile`, `evaluated_at`, `is_complete`, `has_errors`,
+  `is_valid`, `stages_len`, `stage(index)` and `to_json`. Its
+  `ZatcaStageReport` (`stage`, `status`, `provenance`, evaluated assertions and
+  findings), `ZatcaRuleSource` and `ZatcaFinding` (`assertion_site`, `layer`,
+  `code`, `severity`, `message`, `location_kind`, `location_path`,
+  `location_line`, `location_column`) come with the enums `ZatcaStage`,
+  `ZatcaStageStatus`, `ValidationLayer`, `Severity` and
+  `ValidationLocationKind`. The C facade adds the matching
+  `FATOORA_ZATCA_STAGE_*`, `FATOORA_ZATCA_STAGE_STATUS_*`,
+  `FATOORA_VALIDATION_LAYER_*`, `FATOORA_SEVERITY_*` and `FATOORA_LOCATION_*`
+  constants.
+
+- `ZatcaClient.create_with_timeout(config, timeout_ms: u32)` in the
+  FFI (`createWithTimeout` in Kotlin/Java, `CreateWithTimeout` in C#,
+  `fatoora_zatca_client_create_with_timeout` in C). Not exposed to
+  JavaScript, whose client sends through the caller's `fetch`.
+
+#### Changed (breaking)
 
 The Python `fatoora` package changes are listed under "Python". Enum discriminants for
 `Environment`, `InvoiceTypeKind`, `InvoiceSubType` and `VatCategory` equal the
@@ -315,155 +394,17 @@ old integer codes.
   `request_id()` getters return null when absent in every language.
 - JavaScript: the async `ZatcaClient` methods `postCsrForCcsid` and
   `postCcsidForPcsid` are renamed `requestComplianceCsid` and
-  `requestProductionCsid`, and `Xml.validateZatca(xml, optionsJson)` returns a
-  `ZatcaValidationReport`. Kotlin: the coroutine helpers are renamed
+  `requestProductionCsid`, and `fatoority/raw` `Xml.validateZatca(xml,
+  optionsJson)` returns a `ZatcaValidationReport` (the package root returns a
+  plain object; see "JavaScript / TypeScript"). Kotlin: the coroutine helpers are renamed
   `requestComplianceCsidAsync` and `requestProductionCsidAsync`. C facade:
   functions follow the renames (`fatoora_compliance_csid_*`,
   `fatoora_production_csid_*`, `fatoora_invoice_signer_*`,
   `fatoora_zatca_client_request_compliance_csid`, `fatoora_*_invoice_hash`,
   `fatoora_xml_validate(xml, ...)`, `fatoora_xml_validate_zatca(xml, options,
   FatooraZatcaValidationReport **out, ...)`).
-- Python keeps its 0.5 names (`Signer`, `CsidCompliance`, `post_csr_for_ccsid`,
-  `hash_base64`, `set_payment_means_code`, the aggregate adjustment setters and
-  the `validate_zatca_invoice_from_str` dictionary) on top of the renamed
-  bridge. `CsidCompliance.request_id()` and `CsidProduction.request_id()`
-  return `None` instead of `""` when absent. `set_payment_means_code` appends
-  a payment means instead of rewriting the code of an existing one, and the
-  aggregate setters (`set_allowance`, `invoice_level_discount`,
-  `invoice_level_charge`, `allowance_reason`) are applied by `build()` as one
-  allowance and one charge in the document VAT category; `build()` raises
-  `ValueError` when that category has more than one line VAT rate or when they
-  are combined with `add_document_adjustment`/`add_adjustment`.
 
-**.NET (`Fatoority` NuGet package)**
-
-The C# API is now an idiomatic facade generated over the Diplomat output by
-`scripts/generate_dotnet.py`. Native objects still implement `IDisposable`.
-These are hard breaks with no deprecation period, because C# cannot overload a
-method with a property or by return type:
-
-- Quantities, prices, rates and amounts are `decimal` instead of strings, as
-  arguments (`InvoiceBuilder.AddLineItem("Pen", 2m, "PCE", 50m, 15m, ...)`) and
-  as results (`totals.PayableAmount` is `decimal`; optional amounts are
-  `decimal?`). Values are converted exactly with the invariant culture. Returned
-  values are normalized (`1.50` comes back as `1.5m`).
-- Scalar getters are read-only properties: `address.City`, `config.Env`,
-  `signed.Hash`, `signed.Xml`, `response.Outcome`, `report.IsValid`,
-  `request.Method`, and so on. Getters that return a native-owned snapshot stay
-  methods (`invoice.Data()`, `invoice.Totals()`, `response.ValidationResults()`,
-  `request.Body()`), as do indexed accessors and `To*`/`Into*` conversions.
-- Optional text getters return `string?` instead of a disposable `Text?`
-  (`response.ReportingStatusRaw`, `credentials.RequestId`, `address.District`).
-- `BindingErrorException` is replaced by one exception class per error code,
-  matching the Python hierarchy: `FatooraException` > `FfiException` >
-  `InvalidInputException`, `ValidationException`, `ParseException`,
-  `XmlException`, `CryptoException`, `IoException`, `NetworkException`,
-  `UnauthorizedException`, `InternalException`, `ApiException`. The exception
-  exposes `Code`, `Kind` (`FfiErrorKind`) and `DetailsJson` directly and holds
-  no native resources; `BindingError` is no longer public.
-
-| 0.5 | 0.6 |
-| --- | --- |
-| `builder.AddLineItem("Pen", "2", "PCE", "50", "15", VatCategory.Standard)` | `builder.AddLineItem("Pen", 2m, "PCE", 50m, 15m, VatCategory.Standard)` |
-| `decimal.Parse(totals.PayableAmount(), CultureInfo.InvariantCulture)` | `totals.PayableAmount` |
-| `address.City()` | `address.City` |
-| `using var id = credentials.RequestId(); id?.Value()` | `credentials.RequestId` |
-| `catch (BindingErrorException e) { using var inner = e.Inner; inner.Code(); }` | `catch (FfiException e) { e.Code; e.Kind; e.DetailsJson; }` |
-
-**Kotlin/Java facade (`com.fatoora`)**
-
-- Quantities, prices, rates and amounts are `java.math.BigDecimal` instead of
-  `String`, for arguments (`InvoiceBuilder.addLineItem`, `setPrepaidAmount`,
-  `addAllowance`/`addCharge`/`addTaxExemption` rates, `LineItemBuilder` price
-  and amount setters, `Adjustment.amount`/`percentage`, and the
-  `InvoiceLineItem`, `VatBreakdown` and `AllowanceCharge` factories) and for
-  results (`InvoiceTotals`, `VatBreakdown`, `InvoiceLineItem`,
-  `AllowanceCharge`, `Adjustment` and `InvoiceData` amounts). Conversion is
-  exact: arguments are sent with `toPlainString()` and results parsed with
-  `BigDecimal(String)`. Results are normalized (`10.50` reads back as `10.5`).
-- Zero-argument getters that return copied values (text, amounts, numbers,
-  enums, booleans) are Kotlin `val` properties, which Java sees as `getX()`;
-  `isX` properties keep Java `isX()` and `hasX` properties keep Java `hasX()`.
-  `InvoiceFlag.bit` is a property too. Getters that return native owners, such
-  as `invoice.totals()` or `response.validationResults()`, and conversions
-  (`toPem()`, `toJson()`, `intoXml()`, `asSlice()`) stay methods.
-- Optional text results are `String?` instead of a closeable `Text`
-  (for example `address.district`, `credentials.requestId`,
-  `response.clearedInvoiceXml`). `PaymentMeans.instructionNoteAt(index)` and
-  `ZatcaStageReport.evaluatedAssertion(index)` return `String`.
-- Native failures throw a `BindingException` subclass per error code:
-  `InvalidInputException`, `ValidationException`, `ParseException`,
-  `XmlException`, `CryptoException`, `IoException`, `NetworkException`,
-  `UnauthorizedException`, `InternalException` and `ApiException` (codes 1-10,
-  matching the Python `FfiError` subclasses). `BindingException` is now `open`
-  and gains `kind: ErrorKind?`; unknown codes still throw `BindingException`.
-- `reportSimplifiedInvoiceAsync` and `clearStandardInvoiceAsync` take
-  `clearanceMode: ClearanceMode`, like the blocking methods.
-- Kotlin callers of `isValid()`, `isComplete()`, `hasErrors()`, `hasVatRate()`
-  and the other `is*`/`has*` getters must drop the parentheses; there is no
-  deprecated function because it would clash with the Java getter. Java
-  callers are unaffected.
-
-### Deprecated
-
-Each of these still compiles with a deprecation warning, forwards to its
-replacement, and will be removed in 0.7.
-
-- `config::EnvironmentType`: renamed `config::Environment`.
-- `ZatcaClient::post_csr_for_ccsid` and `post_ccsid_for_pcsid`: renamed
-  `request_compliance_csid` and `request_production_csid`.
-  `prepare_post_csr_for_ccsid` and `prepare_post_ccsid_for_pcsid`: renamed
-  `prepare_request_compliance_csid` and `prepare_request_production_csid`.
-- `CsrProperties::{from_properties_str, parse_csr_config}`: use
-  `text.parse::<CsrProperties>()`. `CsrProperties::parse_csr_config_file`: use
-  `CsrProperties::from_file`.
-- `invoice::InvoiceTotalsData`: renamed `invoice::InvoiceTotals`.
-- `invoice::validation::{validate_xml_invoice_from_str,
-  validate_xml_invoice_report_from_str, validate_zatca_invoice_from_str}`: use
-  `Validator::{validate_xml, validate_xml_report, validate_zatca}`. They
-  ignore their `Config` argument.
-- `invoice::sign::invoice_hash_base64_from_xml_str`: use `invoice::hash_xml`.
-  It still returns `String`.
-- `FinalizedInvoice::hash_base64()` and `SignedInvoice::hash_base64()`: use
-  `hash()`, which returns `InvoiceHash`. They still return `String`. The FFI
-  `hash_base64` methods are unchanged.
-- `InvoiceBuilder::adjustment(AllowanceCharge)`: forwards to `allowance` or
-  `charge` by the entry's `kind`. Use
-  `allowance(DocumentAdjustment::from(entry))` (or `charge`).
-- `InvoiceBuilder::{invoice_level_discount, invoice_level_charge,
-  allowance_reason}`: these keep their behaviour. Each call replaces one
-  aggregate allowance or charge in the document VAT category, with a rate
-  taken from the first line in that category, and the reason is shared by
-  both (on its own it emits a zero-amount allowance). Use
-  `allowance`/`charge` with `DocumentAdjustment::new(Adjustment::amount(amount),
-  category, rate).with_reason(reason)`; each call appends an entry with an
-  explicit VAT category and rate.
-- `InvoiceBuilder::payment_means_code(code)`: keeps its behaviour of changing
-  the code of the first payment means, creating one if there is none. Use
-  `payment_means(PaymentMeans::new(code))`, which appends.
-- `VatBreakdown::without_vat_rate()`: renamed `omit_vat_rate()`.
-- `Adjustment::{allowance_charge_reason, allowance_charge_reason_code,
-  calculation_base_amount, calculation_percentage}`: renamed `reason()`,
-  `reason_code()`, `base_amount()` and `percentage()`.
-- `PaymentMeans::instruction_note(text)`: renamed
-  `with_instruction_note(text)`.
-
-The `fatoora-ffi` exported methods (`set_payment_means_code`,
-`invoice_level_charge`, `invoice_level_discount`, `allowance_reason`,
-`set_allowance`, `AllowanceCharge::without_vat_rate`,
-`VatBreakdown::without_vat_rate`) are unchanged.
-
-Kotlin/Java facade, removed in 0.7:
-
-- The getter functions replaced by properties, such as `address.city()` or
-  `totals.taxAmount()`, keep their 0.5 return types (`String` amounts and
-  closeable `Text?`) and carry `ReplaceWith` hints.
-- The `String` overloads of the amount-taking methods listed above. They keep
-  the 0.5 native parsing; use the `BigDecimal` overloads.
-- The `Boolean` overloads of `reportSimplifiedInvoiceAsync` and
-  `clearStandardInvoiceAsync`.
-
-### Python
+### Python (`fatoority` on PyPI)
 
 The `fatoora` package gets a Pythonic surface that mirrors the core names.
 Getters becoming properties is a hard break; every renamed 0.5 name keeps
@@ -563,16 +504,19 @@ working until 0.7 and emits a `DeprecationWarning` naming its replacement (see [
   or a `datetime.timedelta` bounding each request; exceeding it raises
   `NetworkError`. There is no async client in 0.6.
 
+- The deprecated 0.5 names (`Signer`, `CsidCompliance`, `post_csr_for_ccsid`,
+  `hash_base64`, `set_payment_means_code`, the aggregate adjustment setters and
+  the `validate_zatca_invoice_from_str` dictionary) work on top of the renamed
+  bridge. `ComplianceCsid.request_id` and `ProductionCsid.request_id`
+  are `None` instead of `""` when absent. `set_payment_means_code` appends
+  a payment means instead of rewriting the code of an existing one, and the
+  aggregate setters (`set_allowance`, `invoice_level_discount`,
+  `invoice_level_charge`, `allowance_reason`) are applied by `build()` as one
+  allowance and one charge in the document VAT category; `build()` raises
+  `ValueError` when that category has more than one line VAT rate or when they
+  are combined with `add_document_adjustment`/`add_adjustment`.
 
-### Removed
-
-- The `invoice::LineItems` alias (`Vec<LineItem>`). Use `Vec<LineItem>`.
-- `InvoiceData::note()`, which returned only the first note. Use
-  `notes().first()`.
-- `OriginalInvoiceRef::with_issue_date_str`. Use
-  `with_issue_date(InvoiceDate::parse(date)?)` or `with_issue_date(date.parse()?)`.
-
-### JavaScript / TypeScript (`fatoority`)
+### JavaScript / TypeScript (`fatoority` on npm)
 
 Changed (breaking):
 
@@ -619,6 +563,87 @@ Deprecated:
 
 - `new_` on the classes above: use `create`. It is marked `@deprecated` in
   the TypeScript declarations and still works without a runtime warning.
+
+### Kotlin / Java (`com.fatoora`)
+
+Changed (breaking):
+
+- Quantities, prices, rates and amounts are `java.math.BigDecimal` instead of
+  `String`, for arguments (`InvoiceBuilder.addLineItem`, `setPrepaidAmount`,
+  `addAllowance`/`addCharge`/`addTaxExemption` rates, `LineItemBuilder` price
+  and amount setters, `Adjustment.amount`/`percentage`, and the
+  `InvoiceLineItem`, `VatBreakdown` and `AllowanceCharge` factories) and for
+  results (`InvoiceTotals`, `VatBreakdown`, `InvoiceLineItem`,
+  `AllowanceCharge`, `Adjustment` and `InvoiceData` amounts). Conversion is
+  exact: arguments are sent with `toPlainString()` and results parsed with
+  `BigDecimal(String)`. Results are normalized (`10.50` reads back as `10.5`).
+- Zero-argument getters that return copied values (text, amounts, numbers,
+  enums, booleans) are Kotlin `val` properties, which Java sees as `getX()`;
+  `isX` properties keep Java `isX()` and `hasX` properties keep Java `hasX()`.
+  `InvoiceFlag.bit` is a property too. Getters that return native owners, such
+  as `invoice.totals()` or `response.validationResults()`, and conversions
+  (`toPem()`, `toJson()`, `intoXml()`, `asSlice()`) stay methods.
+- Optional text results are `String?` instead of a closeable `Text`
+  (for example `address.district`, `credentials.requestId`,
+  `response.clearedInvoiceXml`). `PaymentMeans.instructionNoteAt(index)` and
+  `ZatcaStageReport.evaluatedAssertion(index)` return `String`.
+- Native failures throw a `BindingException` subclass per error code:
+  `InvalidInputException`, `ValidationException`, `ParseException`,
+  `XmlException`, `CryptoException`, `IoException`, `NetworkException`,
+  `UnauthorizedException`, `InternalException` and `ApiException` (codes 1-10,
+  matching the Python `FfiError` subclasses). `BindingException` is now `open`
+  and gains `kind: ErrorKind?`; unknown codes still throw `BindingException`.
+- `reportSimplifiedInvoiceAsync` and `clearStandardInvoiceAsync` take
+  `clearanceMode: ClearanceMode`, like the blocking methods.
+- Kotlin callers of `isValid()`, `isComplete()`, `hasErrors()`, `hasVatRate()`
+  and the other `is*`/`has*` getters must drop the parentheses; there is no
+  deprecated function because it would clash with the Java getter. Java
+  callers are unaffected.
+
+Deprecated, removed in 0.7:
+
+- The getter functions replaced by properties, such as `address.city()` or
+  `totals.taxAmount()`, keep their 0.5 return types (`String` amounts and
+  closeable `Text?`) and carry `ReplaceWith` hints.
+- The `String` overloads of the amount-taking methods listed above. They keep
+  the 0.5 native parsing; use the `BigDecimal` overloads.
+- The `Boolean` overloads of `reportSimplifiedInvoiceAsync` and
+  `clearStandardInvoiceAsync`.
+
+### .NET (`Fatoority` NuGet package)
+
+The C# API is now an idiomatic facade generated over the Diplomat output by
+`scripts/generate_dotnet.py`. Native objects still implement `IDisposable`.
+These are hard breaks with no deprecation period, because C# cannot overload a
+method with a property or by return type:
+
+- Quantities, prices, rates and amounts are `decimal` instead of strings, as
+  arguments (`InvoiceBuilder.AddLineItem("Pen", 2m, "PCE", 50m, 15m, ...)`) and
+  as results (`totals.PayableAmount` is `decimal`; optional amounts are
+  `decimal?`). Values are converted exactly with the invariant culture. Returned
+  values are normalized (`1.50` comes back as `1.5m`).
+- Scalar getters are read-only properties: `address.City`, `config.Env`,
+  `signed.Hash`, `signed.Xml`, `response.Outcome`, `report.IsValid`,
+  `request.Method`, and so on. Getters that return a native-owned snapshot stay
+  methods (`invoice.Data()`, `invoice.Totals()`, `response.ValidationResults()`,
+  `request.Body()`), as do indexed accessors and `To*`/`Into*` conversions.
+- Optional text getters return `string?` instead of a disposable `Text?`
+  (`response.ReportingStatusRaw`, `credentials.RequestId`, `address.District`).
+- `BindingErrorException` is replaced by one exception class per error code,
+  matching the Python hierarchy: `FatooraException` > `FfiException` >
+  `InvalidInputException`, `ValidationException`, `ParseException`,
+  `XmlException`, `CryptoException`, `IoException`, `NetworkException`,
+  `UnauthorizedException`, `InternalException`, `ApiException`. The exception
+  exposes `Code`, `Kind` (`FfiErrorKind`) and `DetailsJson` directly and holds
+  no native resources; `BindingError` is no longer public.
+
+| 0.5 | 0.6 |
+| --- | --- |
+| `builder.AddLineItem("Pen", "2", "PCE", "50", "15", VatCategory.Standard)` | `builder.AddLineItem("Pen", 2m, "PCE", 50m, 15m, VatCategory.Standard)` |
+| `decimal.Parse(totals.PayableAmount(), CultureInfo.InvariantCulture)` | `totals.PayableAmount` |
+| `address.City()` | `address.City` |
+| `using var id = credentials.RequestId(); id?.Value()` | `credentials.RequestId` |
+| `catch (BindingErrorException e) { using var inner = e.Inner; inner.Code(); }` | `catch (FfiException e) { e.Code; e.Kind; e.DetailsJson; }` |
 
 ## [0.5.1] - 2026-11-17
 
