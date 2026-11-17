@@ -146,15 +146,15 @@ The signed computed hash equals the XML hash operation on `xml()`. Signed import
     | --- | --- |
     | `InvoiceSigner.fromPem(certPem: String, keyPem: String)` | `InvoiceSigner` |
     | `InvoiceSigner.fromDer(certDer: ByteArray, keyDer: ByteArray)` | `InvoiceSigner` |
-    | `signer.certificatePem()` | `String` |
+    | `signer.certificatePem` | `String` |
     | `signer.certificateDer()` | `Bytes` |
     | `signer.signXml(xml: String)` | `String` |
     | `signer.sign(invoice: FinalizedInvoice)` | `SignedInvoice`; consumes invoice state |
     | `Xml.hash(xml: String)` | `String` |
 
-    `SignedInvoice` text getters: `xml()`, `toXmlBase64()`, `qrCode()`, `invoiceHash()`, `hash()`, `signature()`, `publicKey()`, `issuer()`, `serial()`, `certHash()`, `signedPropsHash()`, `signingTime()`. Each returns `String`. `zatcaKeySignature()` returns optional `Text`; read its `value()` to obtain text.
+    `SignedInvoice` text properties: `xml`, `qrCode`, `invoiceHash`, `hash`, `signature`, `publicKey`, `issuer`, `serial`, `certHash`, `signedPropsHash`, `signingTime`, each a `String`; `zatcaKeySignature` is `String?`. `toXmlBase64()` returns `String`.
 
-    Use `use` or `close()` for native owners, including optional `Text` and certificate `Bytes`. `Bytes.asSlice()` returns a copied `ByteArray`. Failures throw `BindingException`.
+    Use `use` or `close()` for native owners, including certificate `Bytes`. `Bytes.asSlice()` returns a copied `ByteArray`. Failures throw `BindingException`.
 
 === "Java"
 
@@ -162,15 +162,15 @@ The signed computed hash equals the XML hash operation on `xml()`. Signed import
     | --- | --- |
     | `InvoiceSigner.fromPem(certPem: String, keyPem: String)` | `InvoiceSigner` |
     | `InvoiceSigner.fromDer(certDer: byte[], keyDer: byte[])` | `InvoiceSigner` |
-    | `signer.certificatePem()` | `String` |
+    | `signer.getCertificatePem()` | `String` |
     | `signer.certificateDer()` | `Bytes` |
     | `signer.signXml(xml: String)` | `String` |
     | `signer.sign(invoice: FinalizedInvoice)` | `SignedInvoice`; consumes invoice state |
     | `Xml.hash(xml: String)` | `String` |
 
-    `SignedInvoice` text getters: `xml()`, `toXmlBase64()`, `qrCode()`, `invoiceHash()`, `hash()`, `signature()`, `publicKey()`, `issuer()`, `serial()`, `certHash()`, `signedPropsHash()`, `signingTime()`. Each returns `String`. `zatcaKeySignature()` returns optional `Text`; read its `value()` to obtain text.
+    `SignedInvoice` text getters: `getXml()`, `toXmlBase64()`, `getQrCode()`, `getInvoiceHash()`, `getHash()`, `getSignature()`, `getPublicKey()`, `getIssuer()`, `getSerial()`, `getCertHash()`, `getSignedPropsHash()`, `getSigningTime()`. Each returns `String`. `getZatcaKeySignature()` returns a nullable `String`.
 
-    Use try-with-resources for native owners, including optional `Text` and certificate `Bytes`. `Bytes.asSlice()` returns a copied `byte[]`. Failures throw `BindingException`.
+    Use try-with-resources for native owners, including certificate `Bytes`. `Bytes.asSlice()` returns a copied `byte[]`. Failures throw `BindingException`.
 
 === "C"
 

@@ -391,7 +391,7 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 === "Kotlin"
     Import types from `com.fatoora`. `ZatcaClient.create(config)` takes `Config` and
     returns a client. HTTP methods block and errors raise exceptions. Use `.use { ... }` or `close()` for owned objects,
-    including child responses and optional `Text` values.
+    including child responses.
 
     **HTTP operations**
 
@@ -411,33 +411,32 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     `ComplianceCsid.create(environment, requestId, token, secret)` returns
     compliance credentials; `ProductionCsid.create` returns production credentials.
     Pass an `Environment` (`NonProduction`, `Simulation`, or `Production`), a nullable
-    `String` request ID, and `String` token/secret. `env()` returns `Environment`;
-    `binarySecurityToken()` and `secret()` return `String`;
-    `requestId()` returns nullable `Text`.
-    Read text with `value()` and dispose the `Text` object when finished.
+    `String` request ID, and `String` token/secret. The `env` property is an
+    `Environment`; `binarySecurityToken`, `secret` and the nullable `requestId` are
+    `String` properties.
 
     **Responses**
 
-    | Method | Returns |
+    | Member | Returns |
     | --- | --- |
-    | `response.httpStatus()` | `Int?` |
-    | `response.outcome()` | `InvoiceOutcome` (`Accepted`, `Rejected`, `Unknown`) |
+    | `response.httpStatus` | `Int?` |
+    | `response.outcome` | `InvoiceOutcome` (`Accepted`, `Rejected`, `Unknown`) |
     | `response.ensureAccepted()` | No value; throws unless accepted. |
     | `response.validationResults()` | `ValidationResults` |
-    | `response.reportingStatus()` | Nullable `ReportingStatus` (`Reported`, `NotReported`, `Unknown`) |
-    | `response.clearanceStatus()` | Nullable `ClearanceStatus` (`Cleared`, `NotCleared`, `Unknown`) |
-    | `response.reportingStatusRaw()` / `clearanceStatusRaw()` / `qrSellerStatus()` / `qrBuyerStatus()` | Nullable `Text` |
-    | `response.clearedInvoiceBase64()` / `clearedInvoiceXml()` | Nullable `Text`; XML decoding can throw. |
-    | `results.status()` | Nullable `ValidationStatus` (`Pass`, `Warning`, `Error`, `Unknown`) |
-    | `results.statusRaw()` | Nullable `Text` |
-    | `results.infoLen()` / `warningLen()` / `errorLen()` | `java.math.BigInteger` message count |
+    | `response.reportingStatus` | Nullable `ReportingStatus` (`Reported`, `NotReported`, `Unknown`) |
+    | `response.clearanceStatus` | Nullable `ClearanceStatus` (`Cleared`, `NotCleared`, `Unknown`) |
+    | `response.reportingStatusRaw` / `clearanceStatusRaw` / `qrSellerStatus` / `qrBuyerStatus` | `String?` |
+    | `response.clearedInvoiceBase64` / `clearedInvoiceXml` | `String?`; XML decoding can throw. |
+    | `results.status` | Nullable `ValidationStatus` (`Pass`, `Warning`, `Error`, `Unknown`) |
+    | `results.statusRaw` | `String?` |
+    | `results.infoLen` / `warningLen` / `errorLen` | `java.math.BigInteger` message count |
     | `results.infoMessage(index)` / `warningMessage(index)` / `errorMessage(index)` | `ValidationMessage` |
-    | `message.messageType()` | Nullable `MessageType` (`Info`, `Warning`, `Error`, `Unknown`) |
-    | `message.status()` | Nullable `ValidationStatus` |
-    | `message.messageTypeRaw()` / `statusRaw()` / `code()` / `category()` / `message()` | Nullable `Text` |
+    | `message.messageType` | Nullable `MessageType` (`Info`, `Warning`, `Error`, `Unknown`) |
+    | `message.status` | Nullable `ValidationStatus` |
+    | `message.messageTypeRaw` / `statusRaw` / `code` / `category` / `message` | `String?` |
 
     Status enums are `null` when the field is absent and `Unknown` when it is present
-    but not recognized by this binding version; the matching `*Raw()` getter returns
+    but not recognized by this binding version; the matching `*Raw` property holds
     the exact wire string.
 
     Use zero-based `java.math.BigInteger` indexes below the corresponding message count. Child
@@ -453,8 +452,8 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     `ProductionRequest` for production credentials/renewal, and `InvoiceRequest` for
     invoice operations, without sending HTTP.
 
-    `request.method()`, `url()`, and `headersJson()`
-    return `String`; `body()` returns owned `Bytes`.
+    The `request.method`, `url`, and `headersJson` properties
+    are `String`; `body()` returns owned `Bytes`.
     `request.decode(status, body)` accepts `Int` HTTP status and
     `ByteArray` response body, and returns the matching credential or response type.
     Prepared requests own their input data and may outlive the original client and inputs.
@@ -462,7 +461,7 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 === "Java"
     Import types from `com.fatoora`. `ZatcaClient.create(config)` takes `Config` and
     returns a client. HTTP methods block and errors raise exceptions. Use try-with-resources or `close()` for owned objects,
-    including child responses and optional `Text` values.
+    including child responses.
 
     **HTTP operations**
 
@@ -482,33 +481,32 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     `ComplianceCsid.create(environment, requestId, token, secret)` returns
     compliance credentials; `ProductionCsid.create` returns production credentials.
     Pass an `Environment` (`NonProduction`, `Simulation`, or `Production`), a nullable
-    `String` request ID, and `String` token/secret. `env()` returns `Environment`;
-    `binarySecurityToken()` and `secret()` return `String`;
-    `requestId()` returns nullable `Text`.
-    Read text with `value()` and dispose the `Text` object when finished.
+    `String` request ID, and `String` token/secret. `getEnv()` returns `Environment`;
+    `getBinarySecurityToken()`, `getSecret()` and the nullable `getRequestId()`
+    return `String`.
 
     **Responses**
 
     | Method | Returns |
     | --- | --- |
-    | `response.httpStatus()` | `Integer (nullable)` |
-    | `response.outcome()` | `InvoiceOutcome` (`Accepted`, `Rejected`, `Unknown`) |
+    | `response.getHttpStatus()` | `Integer (nullable)` |
+    | `response.getOutcome()` | `InvoiceOutcome` (`Accepted`, `Rejected`, `Unknown`) |
     | `response.ensureAccepted()` | No value; throws unless accepted. |
     | `response.validationResults()` | `ValidationResults` |
-    | `response.reportingStatus()` | Nullable `ReportingStatus` (`Reported`, `NotReported`, `Unknown`) |
-    | `response.clearanceStatus()` | Nullable `ClearanceStatus` (`Cleared`, `NotCleared`, `Unknown`) |
-    | `response.reportingStatusRaw()` / `clearanceStatusRaw()` / `qrSellerStatus()` / `qrBuyerStatus()` | Nullable `Text` |
-    | `response.clearedInvoiceBase64()` / `clearedInvoiceXml()` | Nullable `Text`; XML decoding can throw. |
-    | `results.status()` | Nullable `ValidationStatus` (`Pass`, `Warning`, `Error`, `Unknown`) |
-    | `results.statusRaw()` | Nullable `Text` |
-    | `results.infoLen()` / `warningLen()` / `errorLen()` | `java.math.BigInteger` message count |
+    | `response.getReportingStatus()` | Nullable `ReportingStatus` (`Reported`, `NotReported`, `Unknown`) |
+    | `response.getClearanceStatus()` | Nullable `ClearanceStatus` (`Cleared`, `NotCleared`, `Unknown`) |
+    | `response.getReportingStatusRaw()` / `getClearanceStatusRaw()` / `getQrSellerStatus()` / `getQrBuyerStatus()` | Nullable `String` |
+    | `response.getClearedInvoiceBase64()` / `getClearedInvoiceXml()` | Nullable `String`; XML decoding can throw. |
+    | `results.getStatus()` | Nullable `ValidationStatus` (`Pass`, `Warning`, `Error`, `Unknown`) |
+    | `results.getStatusRaw()` | Nullable `String` |
+    | `results.getInfoLen()` / `getWarningLen()` / `getErrorLen()` | `java.math.BigInteger` message count |
     | `results.infoMessage(index)` / `warningMessage(index)` / `errorMessage(index)` | `ValidationMessage` |
-    | `message.messageType()` | Nullable `MessageType` (`Info`, `Warning`, `Error`, `Unknown`) |
-    | `message.status()` | Nullable `ValidationStatus` |
-    | `message.messageTypeRaw()` / `statusRaw()` / `code()` / `category()` / `message()` | Nullable `Text` |
+    | `message.getMessageType()` | Nullable `MessageType` (`Info`, `Warning`, `Error`, `Unknown`) |
+    | `message.getStatus()` | Nullable `ValidationStatus` |
+    | `message.getMessageTypeRaw()` / `getStatusRaw()` / `getCode()` / `getCategory()` / `getMessage()` | Nullable `String` |
 
     Status enums are `null` when the field is absent and `Unknown` when it is present
-    but not recognized by this binding version; the matching `*Raw()` getter returns
+    but not recognized by this binding version; the matching `get*Raw()` getter returns
     the exact wire string.
 
     Use zero-based `java.math.BigInteger` indexes below the corresponding message count. Child
@@ -524,7 +522,7 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     `ProductionRequest` for production credentials/renewal, and `InvoiceRequest` for
     invoice operations, without sending HTTP.
 
-    `request.method()`, `url()`, and `headersJson()`
+    `request.getMethod()`, `getUrl()`, and `getHeadersJson()`
     return `String`; `body()` returns owned `Bytes`.
     `request.decode(status, body)` accepts `int` HTTP status and
     `byte[]` response body, and returns the matching credential or response type.

@@ -130,13 +130,13 @@ Choose your language for imports, exact calls, returns, and ownership behavior.
     FinalizedInvoice.fromFile(value: String): FinalizedInvoice
     SignedInvoice.fromXml(value: String): SignedInvoice
     SignedInvoice.fromFile(value: String): SignedInvoice
-    FinalizedInvoice.xml(): String
-    SignedInvoice.xml(): String
+    FinalizedInvoice.xml: String
+    SignedInvoice.xml: String
     SignedInvoice.intoXml(): String
     SignedInvoice.toXmlBase64(): String
     ```
 
-    `fromFile` takes a local path. XML results are independent strings. `intoXml()` consumes invoice state; later access fails and `close()` remains safe. Reading `xml()` or `toXmlBase64()` leaves the invoice available. Finalized output uses default two-space indentation; signed output is exact stored text.
+    `fromFile` takes a local path. XML results are independent strings. `intoXml()` consumes invoice state; later access fails and `close()` remains safe. Reading `xml` or `toXmlBase64()` leaves the invoice available. Finalized output uses default two-space indentation; signed output is exact stored text.
 
 === "Java"
 
@@ -147,8 +147,8 @@ Choose your language for imports, exact calls, returns, and ownership behavior.
     FinalizedInvoice FinalizedInvoice.fromFile(String value)
     SignedInvoice SignedInvoice.fromXml(String value)
     SignedInvoice SignedInvoice.fromFile(String value)
-    String FinalizedInvoice.xml()
-    String SignedInvoice.xml()
+    String FinalizedInvoice.getXml()
+    String SignedInvoice.getXml()
     String SignedInvoice.intoXml()
     String SignedInvoice.toXmlBase64()
     ```

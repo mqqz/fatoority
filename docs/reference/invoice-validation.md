@@ -104,7 +104,7 @@ mirrors the Rust report. Python keeps returning the JSON dictionary.
 | `ZatcaRuleSource` | `stylesheet`, `sha256` |
 | `ZatcaFinding` | nullable `assertion_site`, `layer` (`ValidationLayer`), `code`, `severity` (`Severity`), `message`, nullable `location_kind` (`ValidationLocationKind`: `Field`, `XPath`, `Xml`), nullable `location_path` for field and XPath locations, nullable `location_line` and `location_column` for XML coordinates |
 
-Names follow each language's convention (`isValid()`, the C# `IsValid` property, `fatoora_zatca_validation_report_is_valid`).
+Names follow each language's convention (`isValid()`, the C# `IsValid` property, `fatoora_zatca_validation_report_is_valid`); Kotlin exposes the zero-argument value accessors as properties (`report.isValid`, `stage.status`), which Java reads as `isValid()` and `getStatus()`.
 Stage, status, and layer enums carry an `Unknown` variant for values added by a later core version.
 Child objects are independent snapshots and outlive the report.
 
@@ -208,7 +208,7 @@ Child objects are independent snapshots and outlive the report.
     Xml.validateZatca(xml: String, optionsJson: String? = null): ZatcaValidationReport
     ```
 
-    `validate` returns `true` on schema success; violations and execution failures throw `BindingException`. `validateZatca` returns an owned report for completed calls, including rejected or incomplete invoices. Close it with `use` and inspect `isValid()`; `toJson()` returns the JSON report.
+    `validate` returns `true` on schema success; violations and execution failures throw `BindingException`. `validateZatca` returns an owned report for completed calls, including rejected or incomplete invoices. Close it with `use` and inspect `isValid`; `toJson()` returns the JSON report.
 
     Omit `optionsJson` or pass null for defaults; otherwise provide a JSON object string containing the documented context keys, limited to 4096 UTF-8 bytes. `BindingException.detailsJson` contains structured failure details and an optional partial `report`. Invalid options can fail before that report exists.
 

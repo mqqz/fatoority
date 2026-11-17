@@ -139,13 +139,21 @@ Classification follows the cause: an XML failure during signing is `Xml`, while 
 
 === "Kotlin"
 
-    Native operations throw `BindingException` with `code`, `message` and `detailsJson`. These are copied managed values; the exception needs no cleanup. Parse `detailsJson` with your application's JSON library. Calls on a closed owner throw `IllegalStateException`.
+    Native operations throw a `BindingException` subclass for each code: `InvalidInputException` (1), `ValidationException` (2), `ParseException` (3), `XmlException` (4), `CryptoException` (5), `IoException` (6), `NetworkException` (7), `UnauthorizedException` (8), `InternalException` (9) and `ApiException` (10). An unknown code throws plain `BindingException`. Each carries `code`, `kind` (a nullable `ErrorKind`), `message` and `detailsJson`. These are copied managed values; the exception needs no cleanup. Parse `detailsJson` with your application's JSON library. Calls on a closed owner throw `IllegalStateException`.
+
+    ```kotlin
+    --8<-- "bindings/kotlin/examples/SdkExamples.kt:errors"
+    ```
 
     A returned local validation report still needs its `is_valid` field checked.
 
 === "Java"
 
-    Native operations throw `BindingException`. Read `getCode()`, `getMessage()` and `getDetailsJson()`. These are copied managed values; the exception needs no cleanup. Calls on a closed owner throw `IllegalStateException`.
+    Native operations throw a `BindingException` subclass for each code, such as `InvalidInputException`, `XmlException` or `NetworkException`; catch `BindingException` last for the rest. Read `getCode()`, `getKind()`, `getMessage()` and `getDetailsJson()`. These are copied managed values; the exception needs no cleanup. Calls on a closed owner throw `IllegalStateException`.
+
+    ```java
+    --8<-- "bindings/kotlin/examples/JavaExamples.java:errors"
+    ```
 
     A returned local validation report still needs its `is_valid` field checked.
 

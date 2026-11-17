@@ -47,11 +47,11 @@ The getter takes no arguments and leaves the signed invoice usable.
 
 === "Kotlin"
 
-    `SignedInvoice.qrCode(): String` returns a managed string.
+    The `SignedInvoice.qrCode` property is a managed `String`.
 
 === "Java"
 
-    `SignedInvoice.qrCode()` returns a `String`.
+    `SignedInvoice.getQrCode()` returns a `String`.
 
 === "C"
 

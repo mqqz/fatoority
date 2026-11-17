@@ -6,8 +6,9 @@ description: Install fatoority from Maven Central for Kotlin, Java, or Android. 
 # Kotlin and Java package reference
 
 Use `com.fatoora` classes to build, sign, and validate invoices and send ZATCA API
-requests on the JVM or Android. Methods return ordinary values or native objects;
-failures throw `BindingException`.
+requests on the JVM or Android. Value getters are Kotlin properties (Java
+`getX()`), amounts are exact `BigDecimal` values, and failures throw a
+`BindingException` subclass for each error kind.
 
 ## Install from Maven Central
 
@@ -64,7 +65,8 @@ Select your language for resource handling and examples.
     ```
 
     Use `use` for native owners, including objects returned from methods.
-    Optional text getters return `Text?`; read `value()` inside `use` when present.
+    Getters that return copied values are properties, such as `address.city`
+    (`String`) or `address.district` (`String?`).
 
 === "Java"
 
@@ -78,8 +80,9 @@ Select your language for resource handling and examples.
     ```
 
     Use try-with-resources for native owners, including returned objects.
-    Optional text getters return nullable `Text`; check for null, read `value()`,
-    and close the owner when finished.
+    Kotlin properties appear as getters, such as `address.getCity()`; boolean
+    properties keep their names, such as `report.isValid()` and `report.hasErrors()`.
+    Optional text getters return a nullable `String`.
 
 Use `Environment.NonProduction`, `Environment.Simulation`, or
 `Environment.Production`. Configuration, CSR and credentials must agree on the
@@ -91,16 +94,18 @@ environment. Factory names use `create`, such as
 | Value | Public JVM value |
 | --- | --- |
 | Native object | `AutoCloseable`; close after use |
+| Value getter (text, amount, number, enum, boolean) | Kotlin `val` property; Java `getX()`, `isX()` or `hasX()` |
+| Getter returning a native object | Method, such as `invoice.totals()`; close the result |
 | Optional text input | Nullable `String`; `null` differs from `""` |
-| Optional text output | Nullable `Text`; read `value()` and close it |
-| Decimal | Invariant decimal string |
+| Optional text output | Nullable `String` |
+| Quantity, price, rate or amount | `java.math.BigDecimal`, converted exactly in both directions |
 | Unsigned byte / short / int | Checked JVM integer / integer / long |
 | Enumerated code | `com.fatoora` enum with the native variant names: `Environment`, `InvoiceTypeKind`, `InvoiceSubType`, `VatCategory`, `AdjustmentKind`, `ClearanceMode`, `InvoiceOutcome` |
-| Response status | Nullable `ReportingStatus`, `ClearanceStatus`, `ValidationStatus`, or `MessageType`; `null` when absent, `Unknown` when present but not recognized by this version. The `*Raw()` getter returns the exact text as nullable `Text` |
-| Invoice flags | `Int` bitmask taken by `InvoiceBuilder.flags` and returned by `flags()`; combine `InvoiceFlag` bits from `bit()` (`ThirdParty`, `Nominal`, `Export`, `Summary`, `SelfBilled`) |
+| Response status | Nullable `ReportingStatus`, `ClearanceStatus`, `ValidationStatus`, or `MessageType`; `null` when absent, `Unknown` when present but not recognized by this version. The `*Raw` property holds the exact text as a nullable `String` |
+| Invoice flags | `Int` bitmask taken by `InvoiceBuilder.setFlags` and held by `InvoiceData.flags`; combine `InvoiceFlag` bits from its `bit` property (`ThirdParty`, `Nominal`, `Export`, `Summary`, `SelfBilled`) |
 | Unsigned 64-bit counter | `BigInteger`, range 0 through 2^64−1 |
 | Binary input / copied output | JVM byte array; copies survive closing their owner |
-| Native failure | `BindingException(code, message, detailsJson)` |
+| Native failure | `BindingException` subclass with `code`, `kind`, `message`, `detailsJson` |
 
 Close objects returned by methods as well as those you construct. Native errors
 are copied to managed data and freed immediately; exceptions need no cleanup.
@@ -114,22 +119,61 @@ run concurrently. Consumed builders/invoices remain closeable but reject further
 use with a native error. Automatic cleanup is nondeterministic; explicitly close owners. Freeing native
 memory does not guarantee secret erasure.
 
-Import public classes from `com.fatoora`.
+Import public classes from `com.fatoora`. The 0.5 getter functions (such as
+`address.city()`), `String` amount overloads and `Boolean` coroutine overloads
+remain as `@Deprecated` members with `ReplaceWith` hints until 0.7.
+
+## Amounts
+
+Quantities, prices, rates and amounts are `java.math.BigDecimal` in both directions.
+The binding sends `toPlainString()` and parses results with `BigDecimal(String)`, so
+no digits are lost and exponents never reach the native layer. Returned values are
+normalized, so `10.50` reads back as `10.5`; compare with `compareTo`.
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "bindings/kotlin/examples/SdkExamples.kt:amounts"
+    ```
+
+=== "Java"
+
+    ```java
+    --8<-- "bindings/kotlin/examples/JavaExamples.java:amounts"
+    ```
 
 ## Errors
 
-Native failures throw `BindingException`. Its code, message, and JSON details are
-managed values; exceptions need no cleanup. Invalid UTF-16 and embedded NUL are
-rejected. Use [structured error details](../errors.md) to distinguish validation,
-input, cryptography, and gateway failures.
+Native failures throw a subclass of `BindingException` chosen by error code:
+
+| Code | `ErrorKind` | Exception |
+| --- | --- | --- |
+| 1 | `InvalidInput` | `InvalidInputException` |
+| 2 | `Validation` | `ValidationException` |
+| 3 | `Parse` | `ParseException` |
+| 4 | `Xml` | `XmlException` |
+| 5 | `Crypto` | `CryptoException` |
+| 6 | `Io` | `IoException` |
+| 7 | `Network` | `NetworkException` |
+| 8 | `Unauthorized` | `UnauthorizedException` |
+| 9 | `Internal` | `InternalException` |
+| 10 | `Api` | `ApiException` |
+
+A code this version does not know throws plain `BindingException` with a `null`
+`kind`. The code, kind, message, and JSON details are managed values; exceptions
+need no cleanup. Invalid UTF-16 and embedded NUL are rejected. Use
+[structured error details](../errors.md) to distinguish validation, input,
+cryptography, and gateway failures.
 
 === "Kotlin"
 
     ```kotlin
     try {
         Address.create("XX", "Riyadh", "King Fahd Road", "1234", "12345").use { }
+    } catch (error: InvalidInputException) {
+        println("Rejected input: ${error.message}")
     } catch (error: BindingException) {
-        println("${error.code}: ${error.message}")
+        println("${error.kind} (${error.code}): ${error.message}")
         println(error.detailsJson)
     }
     ```
@@ -139,8 +183,10 @@ input, cryptography, and gateway failures.
     ```java
     try (Address address = Address.create("XX", "Riyadh", "King Fahd Road", "1234", "12345", null, null, null)) {
         // An unrecognized country code throws before this block.
+    } catch (InvalidInputException error) {
+        System.err.println("Rejected input: " + error.getMessage());
     } catch (BindingException error) {
-        System.err.println(error.getCode() + ": " + error.getMessage());
+        System.err.println(error.getKind() + " (" + error.getCode() + "): " + error.getMessage());
         System.err.println(error.getDetailsJson());
     }
     ```
@@ -156,7 +202,7 @@ input, cryptography, and gateway failures.
 Pass `null` for default options, or a JSON object string with
 `previous_invoice_hash` and/or `evaluated_at`. The timestamp uses RFC3339 format;
 omission uses one native UTC clock snapshot. Unknown option fields are rejected.
-Inspect `isValid()`, `isComplete()` and `stage(i)` on the returned report, or read `toJson()`. Missing predecessor
+Inspect the `isValid` and `isComplete` properties and `stage(i)` on the returned report (Java: `isValid()`, `isComplete()`), or read `toJson()`. Missing predecessor
 context makes coverage incomplete. Execution failures throw and may carry a
 partial report in their JSON details. See the [validation reference](../invoice-validation.md).
 
@@ -181,12 +227,12 @@ The final `acceptLanguage` argument can be omitted; its default is `null`.
 
 `clearanceMode` controls the request header; use `ClearanceMode.Disabled` for
 ordinary reporting and `ClearanceMode.Enabled` for clearance. The coroutine
-`*Async` helpers below still take a `Boolean` `clearanceStatus`. `acceptLanguage` controls the language header; pass
+`*Async` helpers take the same `ClearanceMode`. `acceptLanguage` controls the language header; pass
 `null` for no override. It does not describe the response outcome.
 
-A returned response is not necessarily accepted. Call `outcome()` or
-`ensureAccepted()`. `clearedInvoiceXml()` returns nullable `Text`; read `value()`,
-save the cleared XML, and close that owner. See the [API reference](../api-client.md).
+A returned response is not necessarily accepted. Check the `outcome` property or
+call `ensureAccepted()`. `clearedInvoiceXml` is a nullable `String`; save the
+cleared XML when present. See the [API reference](../api-client.md).
 
 === "Kotlin"
 
@@ -196,7 +242,7 @@ save the cleared XML, and close that owner. See the [API reference](../api-clien
 
     ```kotlin
     // Inside a suspend function, with live client, invoice, and credentials.
-    client.reportSimplifiedInvoiceAsync(invoice, credentials, false).use { response ->
+    client.reportSimplifiedInvoiceAsync(invoice, credentials, ClearanceMode.Disabled).use { response ->
         response.ensureAccepted()
     }
     ```
@@ -216,7 +262,7 @@ save the cleared XML, and close that owner. See the [API reference](../api-clien
 ### Prepared requests
 
 `prepareReportSimplifiedInvoice`, for example, returns an owned `InvoiceRequest`:
-read `url()`, `method()`, `headersJson()` and `body()`, send exactly those values,
+read its `url`, `method` and `headersJson` properties and `body()`, send exactly those values,
 then call `decode(status, responseBytes)` and `ensureAccepted()` on the returned
 response. HTTP status is a checked integer; the response body is a byte array.
 Pass non-2xx responses through decoding too, and disable redirects. Close the

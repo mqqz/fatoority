@@ -9,7 +9,7 @@ fun main(args: Array<String>) {
         val options = buildJsonObject { put("previous_invoice_hash", JsonPrimitive(hash)) }.toString()
         Xml.validateZatca(xml, options).use { report ->
             println(report.toJson())
-            if (!report.isValid()) kotlin.system.exitProcess(1)
+            if (!report.isValid) kotlin.system.exitProcess(1)
         }
     } else {
         Xml.validate(xml)
