@@ -28,6 +28,7 @@ nav:
       - QR Codes: guides/qr.md
       - ZATCA API Client: guides/api.md
       - CLI: guides/cli.md
+      - Migrate from 0.5 to 0.6 (Rust): guides/migrate-0.6.md
   - Reference:
       - Configuration: reference/configuration.md
       - CSR: reference/csr.md
