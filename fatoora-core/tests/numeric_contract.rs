@@ -459,11 +459,11 @@ fn nonstandard_vat_adjustments_preserve_category_and_amounts_on_import() {
             .line_item(LineItem::new("Service", d("2"), "PCE", d("50"), d("0"), category).unwrap())
             .allowance(
                 DocumentAdjustment::new(Adjustment::amount(d("10")), category, d("0"))
-                    .reason("Contract adjustment"),
+                    .with_reason("Contract adjustment"),
             )
             .charge(
                 DocumentAdjustment::new(Adjustment::amount(d("5")), category, d("0"))
-                    .reason("Contract adjustment"),
+                    .with_reason("Contract adjustment"),
             )
             .build()
             .unwrap();

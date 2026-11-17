@@ -844,26 +844,90 @@ pub fn hash_xml(xml: &str) -> std::result::Result<InvoiceHash, sign::SigningErro
 pub struct Address {
     /// Province or region, serialized as UBL `cbc:CountrySubentity`.
     #[serde(default)]
-    pub province: Option<String>,
+    province: Option<String>,
     /// Country; serialized as its ISO alpha-2 code in `cac:Country/cbc:IdentificationCode`.
-    pub country_code: CountryCode,
+    country_code: CountryCode,
     /// City name (`cbc:CityName`); omitted from XML when empty.
-    pub city: String,
+    city: String,
     /// Street name (`cbc:StreetName`); omitted from XML when empty.
-    pub street: String,
+    street: String,
     /// Additional street name (`cbc:AdditionalStreetName`).
-    pub additional_street: Option<String>,
+    additional_street: Option<String>,
     /// Building number (`cbc:BuildingNumber`); omitted from XML when empty.
-    pub building_number: String,
+    building_number: String,
     /// Additional (plot) number, serialized as `cbc:PlotIdentification`.
-    pub additional_number: Option<String>,
+    additional_number: Option<String>,
     /// Postal code (`cbc:PostalZone`); omitted from XML when empty.
-    pub postal_code: String, //fix 5 digits if country is KSA
+    postal_code: String, //fix 5 digits if country is KSA
     /// City district, serialized as UBL `cbc:CitySubdivisionName`.
-    pub district: Option<String>,
+    district: Option<String>,
 }
 
 impl Address {
+    /// Creates an address from its required parts: country, city, street,
+    /// building number and postal code.
+    ///
+    /// Set the optional parts with [`with_province`](Self::with_province),
+    /// [`with_additional_street`](Self::with_additional_street),
+    /// [`with_additional_number`](Self::with_additional_number) and
+    /// [`with_district`](Self::with_district). Content is checked when the
+    /// invoice is built, not here.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use fatoora_core::invoice::{Address, CountryCode};
+    ///
+    /// let address = Address::new(CountryCode::parse("SA")?, "Riyadh", "King Fahd", "1234", "12222")
+    ///     .with_additional_number("5678")
+    ///     .with_district("Al Olaya");
+    /// assert_eq!(address.city(), "Riyadh");
+    /// assert_eq!(address.district(), Some("Al Olaya"));
+    /// # Ok::<(), fatoora_core::invoice::InvoiceError>(())
+    /// ```
+    pub fn new(
+        country_code: CountryCode,
+        city: impl Into<String>,
+        street: impl Into<String>,
+        building_number: impl Into<String>,
+        postal_code: impl Into<String>,
+    ) -> Self {
+        Self {
+            province: None,
+            country_code,
+            city: city.into(),
+            street: street.into(),
+            additional_street: None,
+            building_number: building_number.into(),
+            additional_number: None,
+            postal_code: postal_code.into(),
+            district: None,
+        }
+    }
+
+    /// Sets the province or region (`cbc:CountrySubentity`).
+    pub fn with_province(mut self, value: impl Into<String>) -> Self {
+        self.province = Some(value.into());
+        self
+    }
+
+    /// Sets the additional street name (`cbc:AdditionalStreetName`).
+    pub fn with_additional_street(mut self, value: impl Into<String>) -> Self {
+        self.additional_street = Some(value.into());
+        self
+    }
+
+    /// Sets the additional (plot) number (`cbc:PlotIdentification`).
+    pub fn with_additional_number(mut self, value: impl Into<String>) -> Self {
+        self.additional_number = Some(value.into());
+        self
+    }
+
+    /// Sets the city district (`cbc:CitySubdivisionName`).
+    pub fn with_district(mut self, value: impl Into<String>) -> Self {
+        self.district = Some(value.into());
+        self
+    }
+
     /// Returns the province or region, if set.
     pub fn province(&self) -> Option<&str> {
         self.province.as_deref()
@@ -1112,17 +1176,8 @@ impl PartyRole for BuyerRole {}
 ///
 /// let seller = Party::<SellerRole>::new(
 ///     "Acme Inc",
-///     Address {
-///         province: None,
-///         country_code: CountryCode::parse("SAU")?,
-///         city: "Riyadh".into(),
-///         street: "King Fahd".into(),
-///         additional_street: None,
-///         building_number: "1234".into(),
-///         additional_number: Some("5678".into()),
-///         postal_code: "12222".into(),
-///         district: None,
-///     },
+///     Address::new(CountryCode::parse("SAU")?, "Riyadh", "King Fahd", "1234", "12222")
+///         .with_additional_number("5678"),
 ///     VatId::parse("399999999900003")?,
 ///     Some(OtherId::with_scheme("7003339333", "CRN")),
 /// );
@@ -1377,26 +1432,71 @@ pub enum VatCategory {
     OutOfScope,
 }
 /// Independent optional exemption code and description for a tax category.
+///
+/// # Examples
+/// ```rust
+/// use fatoora_core::invoice::TaxExemption;
+///
+/// let exemption = TaxExemption::default()
+///     .with_reason_code("VATEX-SA-29")
+///     .with_reason("Financial services");
+/// assert_eq!(exemption.reason_code(), Some("VATEX-SA-29"));
+/// assert_eq!(exemption.reason(), Some("Financial services"));
+/// ```
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TaxExemption {
     /// Exemption reason code (`cbc:TaxExemptionReasonCode`), for example `VATEX-SA-29`.
-    pub reason_code: Option<String>,
+    reason_code: Option<String>,
     /// Free-text exemption reason (`cbc:TaxExemptionReason`).
-    pub reason: Option<String>,
+    reason: Option<String>,
+}
+impl TaxExemption {
+    /// Sets the exemption reason code (`cbc:TaxExemptionReasonCode`), for example `VATEX-SA-29`.
+    pub fn with_reason_code(mut self, value: impl Into<String>) -> Self {
+        self.reason_code = Some(value.into());
+        self
+    }
+    /// Sets the free-text exemption reason (`cbc:TaxExemptionReason`).
+    pub fn with_reason(mut self, value: impl Into<String>) -> Self {
+        self.reason = Some(value.into());
+        self
+    }
+    /// Returns the exemption reason code, if set.
+    pub fn reason_code(&self) -> Option<&str> {
+        self.reason_code.as_deref()
+    }
+    /// Returns the free-text exemption reason, if set.
+    pub fn reason(&self) -> Option<&str> {
+        self.reason.as_deref()
+    }
 }
 
 /// A payment instruction. Absence of the collection is distinct from an invalid empty code.
+///
+/// # Examples
+/// ```rust
+/// use fatoora_core::invoice::{PaymentAccount, PaymentMeans};
+///
+/// let means = PaymentMeans::new("30")
+///     .with_instruction_note("Returned goods")
+///     .with_payee_financial_account(
+///         PaymentAccount::default().with_payment_account_identifier("SA0380000000608010167519"),
+///     );
+/// assert_eq!(means.code(), "30");
+/// assert_eq!(means.instruction_notes(), ["Returned goods"]);
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PaymentMeans {
     /// UNTDID 4461 payment means code (`cbc:PaymentMeansCode`), for example `10` for cash.
-    pub payment_means_type_code: String,
+    payment_means_type_code: String,
     /// Instruction notes (`cbc:InstructionNote`), such as the reason for a credit or debit note.
-    pub instruction_notes: Vec<String>,
+    instruction_notes: Vec<String>,
     /// Payee account details (`cac:PayeeFinancialAccount`).
-    pub payee_financial_account: Option<PaymentAccount>,
+    payee_financial_account: Option<PaymentAccount>,
 }
 impl PaymentMeans {
-    /// Creates payment means with the given code and no notes or account.
+    /// Creates payment means with the given UNTDID 4461 code (`cbc:PaymentMeansCode`)
+    /// and no notes or account.
     pub fn new(code: impl Into<String>) -> Self {
         Self {
             payment_means_type_code: code.into(),
@@ -1404,33 +1504,111 @@ impl PaymentMeans {
             payee_financial_account: None,
         }
     }
-    /// Appends an instruction note.
-    pub fn instruction_note(mut self, value: impl Into<String>) -> Self {
+    /// Appends an instruction note (`cbc:InstructionNote`).
+    pub fn with_instruction_note(mut self, value: impl Into<String>) -> Self {
         self.instruction_notes.push(value.into());
         self
     }
-    /// Sets the payee financial account.
-    pub fn payee_financial_account(mut self, value: PaymentAccount) -> Self {
+    /// Appends an instruction note.
+    #[deprecated(since = "0.6.0", note = "use `with_instruction_note` instead")]
+    pub fn instruction_note(self, value: impl Into<String>) -> Self {
+        self.with_instruction_note(value)
+    }
+    /// Sets the payee financial account (`cac:PayeeFinancialAccount`).
+    pub fn with_payee_financial_account(mut self, value: PaymentAccount) -> Self {
         self.payee_financial_account = Some(value);
         self
     }
+    /// Returns the UNTDID 4461 payment means code.
+    pub fn code(&self) -> &str {
+        &self.payment_means_type_code
+    }
+    /// Returns the instruction notes in insertion order.
+    pub fn instruction_notes(&self) -> &[String] {
+        &self.instruction_notes
+    }
+    /// Returns the payee financial account, if set.
+    pub fn payee_financial_account(&self) -> Option<&PaymentAccount> {
+        self.payee_financial_account.as_ref()
+    }
 }
 /// Payee financial account (`cac:PayeeFinancialAccount`) of a [`PaymentMeans`].
+///
+/// # Examples
+/// ```rust
+/// use fatoora_core::invoice::PaymentAccount;
+///
+/// let account = PaymentAccount::default()
+///     .with_payment_account_identifier("SA0380000000608010167519")
+///     .with_payment_terms("Net 30");
+/// assert_eq!(account.payment_terms(), Some("Net 30"));
+/// ```
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PaymentAccount {
     /// Account identifier such as an IBAN (`cbc:ID`).
-    pub payment_account_identifier: Option<String>,
+    payment_account_identifier: Option<String>,
     /// Payment terms, serialized as `cbc:PaymentNote`.
-    pub payment_terms: Option<String>,
+    payment_terms: Option<String>,
+}
+impl PaymentAccount {
+    /// Sets the account identifier, such as an IBAN (`cbc:ID`).
+    pub fn with_payment_account_identifier(mut self, value: impl Into<String>) -> Self {
+        self.payment_account_identifier = Some(value.into());
+        self
+    }
+    /// Sets the payment terms, serialized as `cbc:PaymentNote`.
+    pub fn with_payment_terms(mut self, value: impl Into<String>) -> Self {
+        self.payment_terms = Some(value.into());
+        self
+    }
+    /// Returns the account identifier, if set.
+    pub fn payment_account_identifier(&self) -> Option<&str> {
+        self.payment_account_identifier.as_deref()
+    }
+    /// Returns the payment terms, if set.
+    pub fn payment_terms(&self) -> Option<&str> {
+        self.payment_terms.as_deref()
+    }
 }
 
 /// Supply date or supply period. Business-rule validation checks date ordering.
+///
+/// # Examples
+/// ```rust
+/// use fatoora_core::invoice::Delivery;
+///
+/// let delivery = Delivery::default()
+///     .with_actual_date("2024-01-01".parse()?)
+///     .with_latest_date("2024-01-31".parse()?);
+/// assert_eq!(delivery.actual_date().map(|d| d.as_str()), Some("2024-01-01"));
+/// # Ok::<(), fatoora_core::invoice::InvoiceError>(())
+/// ```
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Delivery {
     /// Supply date, or start of the supply period (`cbc:ActualDeliveryDate`).
-    pub actual_date: Option<InvoiceDate>,
+    actual_date: Option<InvoiceDate>,
     /// End of the supply period (`cbc:LatestDeliveryDate`).
-    pub latest_date: Option<InvoiceDate>,
+    latest_date: Option<InvoiceDate>,
+}
+impl Delivery {
+    /// Sets the supply date, or start of the supply period (`cbc:ActualDeliveryDate`).
+    pub fn with_actual_date(mut self, value: InvoiceDate) -> Self {
+        self.actual_date = Some(value);
+        self
+    }
+    /// Sets the end of the supply period (`cbc:LatestDeliveryDate`).
+    pub fn with_latest_date(mut self, value: InvoiceDate) -> Self {
+        self.latest_date = Some(value);
+        self
+    }
+    /// Returns the supply date or start of the supply period, if set.
+    pub fn actual_date(&self) -> Option<&InvoiceDate> {
+        self.actual_date.as_ref()
+    }
+    /// Returns the end of the supply period, if set.
+    pub fn latest_date(&self) -> Option<&InvoiceDate> {
+        self.latest_date.as_ref()
+    }
 }
 
 fn one_tax_category() -> usize {
@@ -1487,41 +1665,129 @@ impl AdjustmentKind {
 }
 
 /// One document allowance or charge, retaining its own VAT category and reason.
+///
+/// Entries are read back from [`InvoiceData::adjustments`]. To add one to
+/// an invoice, pass a [`DocumentAdjustment`] to
+/// [`InvoiceBuilder::allowance`] or [`InvoiceBuilder::charge`]
+/// (`DocumentAdjustment::from(entry)` converts an existing entry).
+///
+/// # Examples
+/// ```rust
+/// use fatoora_core::Decimal;
+/// use fatoora_core::invoice::{AdjustmentKind, AllowanceCharge, VatCategory};
+///
+/// let entry = AllowanceCharge::new(
+///     AdjustmentKind::Charge,
+///     Decimal::parse("10.00")?,
+///     VatCategory::Standard,
+///     Decimal::parse("15")?,
+/// )
+/// .with_reason("Freight")
+/// .with_reason_code("FC");
+/// assert!(entry.kind().is_charge());
+/// assert_eq!(entry.reason(), Some("Freight"));
+/// # Ok::<(), fatoora_core::invoice::InvoiceError>(())
+/// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AllowanceCharge {
     /// Preserve an absent VAT rate for an out-of-scope adjustment.
     #[serde(default)]
-    pub omitted_rate: bool,
+    omitted_rate: bool,
     /// Base amount the percentage applies to (`cbc:BaseAmount`).
     #[serde(default)]
-    pub base_amount: Option<Decimal>,
+    base_amount: Option<Decimal>,
     /// Percentage applied to the base amount (`cbc:MultiplierFactorNumeric`).
     #[serde(default)]
-    pub percentage: Option<Decimal>,
+    percentage: Option<Decimal>,
     /// Identical repeated VAT classifications, as used by the bundled SDK fixtures.
     /// Must be in `1..=Self::MAX_TAX_CATEGORY_COUNT` (an implementation resource limit).
     #[serde(default = "one_tax_category")]
-    pub tax_category_count: usize,
+    tax_category_count: usize,
     /// Whether this is an allowance or a charge (`cbc:ChargeIndicator`).
-    pub kind: AdjustmentKind,
+    kind: AdjustmentKind,
     /// Allowance or charge amount, excluding VAT (`cbc:Amount`).
-    pub amount: Decimal,
+    amount: Decimal,
     /// Free-text reason (`cbc:AllowanceChargeReason`).
-    pub reason: Option<String>,
+    reason: Option<String>,
     /// Reason code (`cbc:AllowanceChargeReasonCode`).
-    pub reason_code: Option<String>,
+    reason_code: Option<String>,
     /// VAT category of the allowance or charge.
-    pub category: VatCategory,
+    category: VatCategory,
     /// VAT rate percentage for the category.
-    pub rate: Decimal,
+    rate: Decimal,
     /// Exemption code and reason for exempt, zero-rated or out-of-scope categories.
     #[serde(default)]
-    pub exemption: TaxExemption,
+    exemption: TaxExemption,
 }
 
 impl AllowanceCharge {
     /// Resource limit for repeated identical classifications, not a UBL or ZATCA rule.
     pub const MAX_TAX_CATEGORY_COUNT: usize = 1024;
+
+    /// Creates an allowance or charge with its amount (excluding VAT), VAT
+    /// category and rate, no reason, base amount, percentage or exemption, and
+    /// one tax category.
+    ///
+    /// Nothing is checked here; [`InvoiceBuilder::build`] validates the entry.
+    pub fn new(
+        kind: AdjustmentKind,
+        amount: Decimal,
+        category: VatCategory,
+        rate: Decimal,
+    ) -> Self {
+        Self {
+            omitted_rate: false,
+            base_amount: None,
+            percentage: None,
+            tax_category_count: 1,
+            kind,
+            amount,
+            reason: None,
+            reason_code: None,
+            category,
+            rate,
+            exemption: TaxExemption::default(),
+        }
+    }
+
+    /// Sets the base amount the percentage applies to (`cbc:BaseAmount`).
+    pub fn with_base_amount(mut self, value: Decimal) -> Self {
+        self.base_amount = Some(value);
+        self
+    }
+
+    /// Sets the percentage applied to the base amount (`cbc:MultiplierFactorNumeric`).
+    pub fn with_percentage(mut self, value: Decimal) -> Self {
+        self.percentage = Some(value);
+        self
+    }
+
+    /// Sets the free-text reason (`cbc:AllowanceChargeReason`).
+    pub fn with_reason(mut self, value: impl Into<String>) -> Self {
+        self.reason = Some(value.into());
+        self
+    }
+
+    /// Sets the reason code (`cbc:AllowanceChargeReasonCode`).
+    pub fn with_reason_code(mut self, value: impl Into<String>) -> Self {
+        self.reason_code = Some(value.into());
+        self
+    }
+
+    /// Sets the VAT exemption code and reason.
+    pub fn with_exemption(mut self, value: TaxExemption) -> Self {
+        self.exemption = value;
+        self
+    }
+
+    /// Sets how many identical `cac:TaxCategory` elements are emitted (default `1`).
+    ///
+    /// [`InvoiceBuilder::build`] rejects a count outside
+    /// `1..=`[`MAX_TAX_CATEGORY_COUNT`](Self::MAX_TAX_CATEGORY_COUNT).
+    pub fn with_tax_category_count(mut self, count: usize) -> Self {
+        self.tax_category_count = count;
+        self
+    }
 
     /// Omits the VAT rate (`cbc:Percent`) from XML.
     ///
@@ -1535,6 +1801,56 @@ impl AllowanceCharge {
     /// Returns `false` if the VAT rate (`cbc:Percent`) is omitted from XML.
     pub fn has_vat_rate(&self) -> bool {
         !self.omitted_rate
+    }
+
+    /// Returns whether this is an allowance or a charge.
+    pub fn kind(&self) -> AdjustmentKind {
+        self.kind
+    }
+
+    /// Returns the allowance or charge amount, excluding VAT.
+    pub fn amount(&self) -> Decimal {
+        self.amount
+    }
+
+    /// Returns the base amount the percentage applies to, if set.
+    pub fn base_amount(&self) -> Option<Decimal> {
+        self.base_amount
+    }
+
+    /// Returns the percentage applied to the base amount, if set.
+    pub fn percentage(&self) -> Option<Decimal> {
+        self.percentage
+    }
+
+    /// Returns the free-text reason, if set.
+    pub fn reason(&self) -> Option<&str> {
+        self.reason.as_deref()
+    }
+
+    /// Returns the reason code, if set.
+    pub fn reason_code(&self) -> Option<&str> {
+        self.reason_code.as_deref()
+    }
+
+    /// Returns the VAT category.
+    pub fn category(&self) -> VatCategory {
+        self.category
+    }
+
+    /// Returns the VAT rate percentage.
+    pub fn rate(&self) -> Decimal {
+        self.rate
+    }
+
+    /// Returns the VAT exemption code and reason.
+    pub fn exemption(&self) -> &TaxExemption {
+        &self.exemption
+    }
+
+    /// Returns how many identical `cac:TaxCategory` elements are emitted.
+    pub fn tax_category_count(&self) -> usize {
+        self.tax_category_count
     }
 }
 
@@ -1786,24 +2102,6 @@ impl LineItem {
     }
 }
 
-/// Collection of line items.
-///
-/// # Examples
-/// ```rust
-/// use fatoora_core::invoice::{LineItem, LineItems, VatCategory};
-///
-/// let items: LineItems = vec![LineItem::new(
-///     "Item",
-///     fatoora_core::Decimal::parse("1.0").unwrap(),
-///     "PCE",
-///     fatoora_core::Decimal::parse("100.0").unwrap(),
-///     fatoora_core::Decimal::parse("15.0").unwrap(),
-///     VatCategory::Standard,
-/// ).unwrap()];
-/// assert_eq!(items.len(), 1);
-/// ```
-pub type LineItems = Vec<LineItem>;
-
 /// Core invoice data model.
 ///
 /// Instances are produced by the builder and exposed via views.
@@ -1844,7 +2142,7 @@ pub struct InvoiceData {
     buyer: Option<Buyer>,
     #[serde(default)]
     delivery: Option<Delivery>,
-    line_items: LineItems,
+    line_items: Vec<LineItem>,
     payment_means: Vec<PaymentMeans>,
     vat_category: VatCategory,
 

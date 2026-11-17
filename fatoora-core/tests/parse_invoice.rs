@@ -513,7 +513,7 @@ fn credit_note_allowance_discount_round_trip() {
                 VatCategory::Standard,
                 fatoora_core::Decimal::parse("15.0").unwrap(),
             )
-            .reason("Discount"),
+            .with_reason("Discount"),
         )
         .line_item(line_item);
     let invoice = builder.build().expect("build credit note");
@@ -581,7 +581,7 @@ fn debit_note_charge_serializes_allowance_charge() {
                 VatCategory::Standard,
                 fatoora_core::Decimal::parse("15.0").unwrap(),
             )
-            .reason("Charge"),
+            .with_reason("Charge"),
         )
         .line_item(line_item);
     let invoice = builder.build().expect("build debit note");
@@ -635,7 +635,7 @@ fn debit_note_allowance_round_trip() {
                 VatCategory::Standard,
                 fatoora_core::Decimal::parse("15.0").unwrap(),
             )
-            .reason("Adjustment"),
+            .with_reason("Adjustment"),
         )
         .line_item(line_item);
     let invoice = builder.build().expect("build debit note");
@@ -718,17 +718,14 @@ fn credit_note_round_trip_preserves_original_ref_and_reason() {
 fn build_seller() -> Party<SellerRole> {
     Party::<SellerRole>::new(
         "Acme Inc",
-        Address {
-            province: None,
-            country_code: CountryCode::parse("SAU").expect("country code"),
-            city: "Riyadh".into(),
-            street: "King Fahd".into(),
-            additional_street: None,
-            building_number: "1234".into(),
-            additional_number: Some("5678".into()),
-            postal_code: "12222".into(),
-            district: None,
-        },
+        Address::new(
+            CountryCode::parse("SAU").expect("country code"),
+            "Riyadh",
+            "King Fahd",
+            "1234",
+            "12222",
+        )
+        .with_additional_number("5678"),
         "301121971500003".parse().unwrap(),
         None,
     )

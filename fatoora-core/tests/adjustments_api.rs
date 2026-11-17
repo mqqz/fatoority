@@ -73,22 +73,21 @@ fn validation_issue(error: InvoiceError) -> (InvoiceField, ValidationKind) {
 
 #[test]
 fn document_adjustment_carries_every_entry_field() {
-    let exemption = TaxExemption {
-        reason_code: Some("VATEX-SA-OOS".into()),
-        reason: Some("Outside scope".into()),
-    };
+    let exemption = TaxExemption::default()
+        .with_reason_code("VATEX-SA-OOS")
+        .with_reason("Outside scope");
     let adjustment = DocumentAdjustment::new(
-        Adjustment::percentage(d("100"), d("10")),
+        Adjustment::percent_of(d("100"), d("10")),
         VatCategory::OutOfScope,
         d("0"),
     )
-    .reason("Volume")
-    .reason_code("95")
-    .exemption(exemption.clone())
+    .with_reason("Volume")
+    .with_reason_code("95")
+    .with_exemption(exemption.clone())
     .omit_vat_rate()
-    .tax_category_count(2);
+    .with_tax_category_count(2);
     assert!(!adjustment.has_vat_rate());
-    assert_eq!(adjustment.tax_category_count, 2);
+    assert_eq!(adjustment.tax_category_count(), 2);
     assert!(
         DocumentAdjustment::new(Adjustment::amount(d("1")), VatCategory::Standard, d("15"))
             .has_vat_rate()
@@ -101,16 +100,16 @@ fn document_adjustment_carries_every_entry_field() {
         .build()
         .unwrap();
     let entry = &invoice.data().adjustments()[0];
-    assert_eq!(entry.kind, AdjustmentKind::Allowance);
-    assert_eq!(entry.amount, d("10.00"));
-    assert_eq!(entry.base_amount, Some(d("100")));
-    assert_eq!(entry.percentage, Some(d("10")));
-    assert_eq!(entry.reason.as_deref(), Some("Volume"));
-    assert_eq!(entry.reason_code.as_deref(), Some("95"));
-    assert_eq!(entry.category, VatCategory::OutOfScope);
-    assert_eq!(entry.exemption, exemption);
+    assert_eq!(entry.kind(), AdjustmentKind::Allowance);
+    assert_eq!(entry.amount(), d("10.00"));
+    assert_eq!(entry.base_amount(), Some(d("100")));
+    assert_eq!(entry.percentage(), Some(d("10")));
+    assert_eq!(entry.reason(), Some("Volume"));
+    assert_eq!(entry.reason_code(), Some("95"));
+    assert_eq!(entry.category(), VatCategory::OutOfScope);
+    assert_eq!(entry.exemption(), &exemption);
     assert!(!entry.has_vat_rate());
-    assert_eq!(entry.tax_category_count, 2);
+    assert_eq!(entry.tax_category_count(), 2);
 
     let xml = invoice.to_xml().unwrap();
     let start = xml.find("<cac:AllowanceCharge>").unwrap();
@@ -137,7 +136,7 @@ fn omitted_rate_and_tax_category_count_are_checked_in_build() {
     for count in [0, AllowanceCharge::MAX_TAX_CATEGORY_COUNT + 1] {
         assert!(
             standard()
-                .charge(entry("5").tax_category_count(count))
+                .charge(entry("5").with_tax_category_count(count))
                 .build()
                 .is_err()
         );
@@ -146,27 +145,22 @@ fn omitted_rate_and_tax_category_count_are_checked_in_build() {
 
 #[test]
 fn document_adjustment_from_entry_round_trips_through_the_builder() {
-    let original = AllowanceCharge {
-        omitted_rate: false,
-        base_amount: Some(d("100")),
-        percentage: Some(d("5")),
-        tax_category_count: 3,
-        kind: AdjustmentKind::Charge,
-        amount: d("5.00"),
-        reason: Some("Freight".into()),
-        reason_code: Some("FC".into()),
-        category: VatCategory::Standard,
-        rate: d("15"),
-        exemption: TaxExemption::default(),
-    };
+    let original = AllowanceCharge::new(
+        AdjustmentKind::Charge,
+        d("5.00"),
+        VatCategory::Standard,
+        d("15"),
+    )
+    .with_base_amount(d("100"))
+    .with_percentage(d("5"))
+    .with_reason("Freight")
+    .with_reason_code("FC")
+    .with_tax_category_count(3);
     let converted = DocumentAdjustment::from(original.clone());
-    assert_eq!(converted.tax_category_count, 3);
+    assert_eq!(converted.tax_category_count(), 3);
     assert!(converted.has_vat_rate());
-    assert_eq!(
-        converted.adjustment.calculation_base_amount(),
-        Some(d("100"))
-    );
-    assert_eq!(converted.adjustment.calculation_percentage(), Some(d("5")));
+    assert_eq!(converted.adjustment().base_amount(), Some(d("100")));
+    assert_eq!(converted.adjustment().percentage(), Some(d("5")));
     let invoice = standard().charge(converted).build().unwrap();
     assert_eq!(invoice.data().adjustments(), [original]);
 }
@@ -174,15 +168,15 @@ fn document_adjustment_from_entry_round_trips_through_the_builder() {
 #[test]
 fn allowances_and_charges_keep_call_order_and_totals() {
     let invoice = standard()
-        .charge(entry("5").reason("Freight"))
-        .allowance(entry("10").reason("Loyalty"))
+        .charge(entry("5").with_reason("Freight"))
+        .allowance(entry("10").with_reason("Loyalty"))
         .build()
         .unwrap();
     let kinds: Vec<_> = invoice
         .data()
         .adjustments()
         .iter()
-        .map(|a| a.kind)
+        .map(|a| a.kind())
         .collect();
     assert_eq!(kinds, [AdjustmentKind::Charge, AdjustmentKind::Allowance]);
     assert_eq!(invoice.data().invoice_level_charge(), d("5"));
@@ -195,7 +189,7 @@ fn invalid_entries_are_reported_after_field_checks() {
     // An entry whose calculation fails is reported by the adjustment checks...
     let error = standard()
         .allowance(DocumentAdjustment::new(
-            Adjustment::amount(d("1")).base_amount(d("100")),
+            Adjustment::amount(d("1")).with_base_amount(d("100")),
             VatCategory::Standard,
             d("15"),
         ))
@@ -219,24 +213,16 @@ fn allowance_charge_omit_vat_rate() {
     assert!(entry.has_vat_rate());
     let omitted = entry.omit_vat_rate();
     assert!(!omitted.has_vat_rate());
-    assert!(omitted.omitted_rate);
 }
 
 /// A plain out-of-scope allowance entry.
 fn out_of_scope_entry() -> AllowanceCharge {
-    AllowanceCharge {
-        omitted_rate: false,
-        base_amount: None,
-        percentage: None,
-        tax_category_count: 1,
-        kind: AdjustmentKind::Allowance,
-        amount: d("1"),
-        reason: None,
-        reason_code: None,
-        category: VatCategory::OutOfScope,
-        rate: d("0"),
-        exemption: TaxExemption::default(),
-    }
+    AllowanceCharge::new(
+        AdjustmentKind::Allowance,
+        d("1"),
+        VatCategory::OutOfScope,
+        d("0"),
+    )
 }
 
 #[test]
@@ -316,7 +302,7 @@ fn payment_means_appends() {
         .data()
         .payment_means()
         .iter()
-        .map(|p| p.payment_means_type_code.as_str())
+        .map(|p| p.code())
         .collect();
     assert_eq!(codes, ["10", "30"]);
 }
@@ -358,7 +344,7 @@ fn deprecated_payment_means_code_replaces_the_first_code() {
             .data()
             .payment_means()
             .iter()
-            .map(|p| p.payment_means_type_code.clone())
+            .map(|p| p.code().to_owned())
             .collect()
     };
     // Creates the first payment means when there is none.
@@ -370,7 +356,7 @@ fn deprecated_payment_means_code_replaces_the_first_code() {
     assert_eq!(
         codes(
             base(VatCategory::Standard)
-                .payment_means(PaymentMeans::new("10").instruction_note("kept"))
+                .payment_means(PaymentMeans::new("10").with_instruction_note("kept"))
                 .payment_means(PaymentMeans::new("42"))
                 .payment_means_code("30")
         ),
@@ -400,7 +386,7 @@ fn deprecated_allowance_and_reason_match_an_allowance_entry_in_xml() {
         .build()
         .unwrap();
     let new = standard()
-        .allowance(entry("10").reason("Loyalty"))
+        .allowance(entry("10").with_reason("Loyalty"))
         .build()
         .unwrap();
     assert_eq!(old.to_xml().unwrap(), new.to_xml().unwrap());
@@ -416,7 +402,7 @@ fn deprecated_charge_matches_a_charge_entry_in_xml() {
     let old = standard().invoice_level_charge(d("5")).build().unwrap();
     // Without a reason, the aggregate charge is emitted with the reason "charge".
     let new = standard()
-        .charge(entry("5").reason("charge"))
+        .charge(entry("5").with_reason("charge"))
         .build()
         .unwrap();
     assert_eq!(old.to_xml().unwrap(), new.to_xml().unwrap());
@@ -464,21 +450,23 @@ fn deprecated_aggregate_setters_replace_and_share_one_reason() {
 #[test]
 #[allow(deprecated)]
 fn deprecated_adjustment_forwards_to_allowance_and_charge() {
-    let allowance = AllowanceCharge {
-        reason: Some("Loyalty".into()),
-        category: VatCategory::Standard,
-        rate: d("15"),
-        amount: d("10"),
-        ..out_of_scope_entry()
-    };
-    let charge = AllowanceCharge {
-        kind: AdjustmentKind::Charge,
-        amount: d("5"),
-        base_amount: Some(d("100")),
-        percentage: Some(d("5")),
-        tax_category_count: 2,
-        ..allowance.clone()
-    };
+    let allowance = AllowanceCharge::new(
+        AdjustmentKind::Allowance,
+        d("10"),
+        VatCategory::Standard,
+        d("15"),
+    )
+    .with_reason("Loyalty");
+    let charge = AllowanceCharge::new(
+        AdjustmentKind::Charge,
+        d("5"),
+        VatCategory::Standard,
+        d("15"),
+    )
+    .with_reason("Loyalty")
+    .with_base_amount(d("100"))
+    .with_percentage(d("5"))
+    .with_tax_category_count(2);
     let old = standard()
         .adjustment(charge.clone())
         .adjustment(allowance.clone())
@@ -496,11 +484,11 @@ fn deprecated_adjustment_forwards_to_allowance_and_charge() {
 
 #[test]
 fn document_adjustment_deserializes_without_the_new_fields() {
-    let json = serde_json::to_value(entry("5").reason("Freight")).unwrap();
+    let json = serde_json::to_value(entry("5").with_reason("Freight")).unwrap();
     let mut object = json.as_object().unwrap().clone();
     assert_eq!(object.remove("omitted_rate"), Some(false.into()));
     assert_eq!(object.remove("tax_category_count"), Some(1.into()));
     let restored: DocumentAdjustment =
         serde_json::from_value(serde_json::Value::Object(object)).unwrap();
-    assert_eq!(restored, entry("5").reason("Freight"));
+    assert_eq!(restored, entry("5").with_reason("Freight"));
 }

@@ -1505,7 +1505,7 @@ fn parse_line_items(ctx: &Element<'_, '_>) -> Result<Vec<LineItem>, ParseError> 
                 reason_code: node.basic("AllowanceChargeReasonCode").content(),
             }
             .finalize()?;
-            adjustments.push(crate::invoice::LineAdjustment { kind, adjustment });
+            adjustments.push(crate::invoice::LineAdjustment::new(kind, adjustment));
         }
         let item_id = |name| -> Result<Option<OtherId>, ParseError> {
             let node = line.aggregate("Item").aggregate(name);

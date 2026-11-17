@@ -26,7 +26,7 @@ impl Adjustment {
         }
     }
     /// Creates an adjustment calculated as `base_amount * percentage / 100`, rounded to two decimals.
-    pub fn percentage(base_amount: Decimal, percentage: Decimal) -> Self {
+    pub fn percent_of(base_amount: Decimal, percentage: Decimal) -> Self {
         Self {
             amount: None,
             base_amount: Some(base_amount),
@@ -40,18 +40,18 @@ impl Adjustment {
         self.amount = Some(amount);
         self
     }
-    /// Sets the calculation base amount.
-    pub fn base_amount(mut self, amount: Decimal) -> Self {
+    /// Sets the calculation base amount (`cbc:BaseAmount`).
+    pub fn with_base_amount(mut self, amount: Decimal) -> Self {
         self.base_amount = Some(amount);
         self
     }
-    /// Sets the free-text allowance/charge reason.
-    pub fn reason(mut self, reason: impl Into<String>) -> Self {
+    /// Sets the free-text allowance/charge reason (`cbc:AllowanceChargeReason`).
+    pub fn with_reason(mut self, reason: impl Into<String>) -> Self {
         self.reason = Some(reason.into());
         self
     }
-    /// Sets the allowance/charge reason code.
-    pub fn reason_code(mut self, code: impl Into<String>) -> Self {
+    /// Sets the allowance/charge reason code (`cbc:AllowanceChargeReasonCode`).
+    pub fn with_reason_code(mut self, code: impl Into<String>) -> Self {
         self.reason_code = Some(code.into());
         self
     }
@@ -95,20 +95,40 @@ impl Adjustment {
         Ok(amount)
     }
     /// Returns the free-text reason, if set.
-    pub fn allowance_charge_reason(&self) -> Option<&str> {
+    pub fn reason(&self) -> Option<&str> {
         self.reason.as_deref()
     }
     /// Returns the reason code, if set.
-    pub fn allowance_charge_reason_code(&self) -> Option<&str> {
+    pub fn reason_code(&self) -> Option<&str> {
         self.reason_code.as_deref()
     }
     /// Returns the calculation base amount, if set.
-    pub fn calculation_base_amount(&self) -> Option<Decimal> {
+    pub fn base_amount(&self) -> Option<Decimal> {
         self.base_amount
     }
     /// Returns the calculation percentage, if set.
-    pub fn calculation_percentage(&self) -> Option<Decimal> {
+    pub fn percentage(&self) -> Option<Decimal> {
         self.percentage
+    }
+    /// Returns the free-text reason, if set.
+    #[deprecated(since = "0.6.0", note = "use `reason` instead")]
+    pub fn allowance_charge_reason(&self) -> Option<&str> {
+        self.reason()
+    }
+    /// Returns the reason code, if set.
+    #[deprecated(since = "0.6.0", note = "use `reason_code` instead")]
+    pub fn allowance_charge_reason_code(&self) -> Option<&str> {
+        self.reason_code()
+    }
+    /// Returns the calculation base amount, if set.
+    #[deprecated(since = "0.6.0", note = "use `base_amount` instead")]
+    pub fn calculation_base_amount(&self) -> Option<Decimal> {
+        self.base_amount()
+    }
+    /// Returns the calculation percentage, if set.
+    #[deprecated(since = "0.6.0", note = "use `percentage` instead")]
+    pub fn calculation_percentage(&self) -> Option<Decimal> {
+        self.percentage()
     }
     pub(crate) fn finalize(mut self) -> Result<Self> {
         self.amount = Some(self.value()?);
@@ -117,33 +137,66 @@ impl Adjustment {
 }
 
 /// One finalized line allowance or charge, in insertion order.
+///
+/// Read from [`LineItem::adjustments`]; add one with
+/// [`LineItemBuilder::allowance`] or [`LineItemBuilder::charge`].
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LineAdjustment {
     /// A charge increases the line amount; an allowance decreases it (`cbc:ChargeIndicator`).
-    pub kind: AdjustmentKind,
+    kind: AdjustmentKind,
     /// The amount calculation and reason.
-    pub adjustment: Adjustment,
+    adjustment: Adjustment,
+}
+impl LineAdjustment {
+    pub(crate) fn new(kind: AdjustmentKind, adjustment: Adjustment) -> Self {
+        Self { kind, adjustment }
+    }
+    /// Returns whether this is an allowance (reduces the line amount) or a charge (increases it).
+    pub fn kind(&self) -> AdjustmentKind {
+        self.kind
+    }
+    /// Returns the amount calculation and reason.
+    pub fn adjustment(&self) -> &Adjustment {
+        &self.adjustment
+    }
 }
 
 /// A document adjustment has its own VAT allocation.
+///
+/// # Examples
+/// ```rust
+/// use fatoora_core::Decimal;
+/// use fatoora_core::invoice::{Adjustment, DocumentAdjustment, VatCategory};
+///
+/// let discount = DocumentAdjustment::new(
+///     Adjustment::amount(Decimal::parse("5.00")?),
+///     VatCategory::Standard,
+///     Decimal::parse("15")?,
+/// )
+/// .with_reason("Loyalty discount")
+/// .with_reason_code("95");
+/// assert_eq!(discount.reason(), Some("Loyalty discount"));
+/// assert_eq!(discount.category(), VatCategory::Standard);
+/// # Ok::<(), fatoora_core::invoice::InvoiceError>(())
+/// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DocumentAdjustment {
     /// The amount calculation and reason.
-    pub adjustment: Adjustment,
+    adjustment: Adjustment,
     /// VAT category applied to the adjustment.
-    pub category: VatCategory,
+    category: VatCategory,
     /// VAT rate (percent) applied to the adjustment.
-    pub rate: Decimal,
+    rate: Decimal,
     /// Exemption reason, for non-standard VAT categories.
-    pub exemption: TaxExemption,
+    exemption: TaxExemption,
     /// Omit the VAT rate (`cbc:Percent`) from XML; only valid for an out-of-scope
-    /// adjustment with a zero rate. Set it with [`omit_vat_rate`](Self::omit_vat_rate).
+    /// adjustment with a zero rate.
     #[serde(default)]
-    pub omitted_rate: bool,
+    omitted_rate: bool,
     /// Number of identical `cac:TaxCategory` elements to emit, as used by the bundled SDK
     /// fixtures. Must be in `1..=AllowanceCharge::MAX_TAX_CATEGORY_COUNT`; checked in `build`.
     #[serde(default = "one_tax_category")]
-    pub tax_category_count: usize,
+    tax_category_count: usize,
 }
 fn one_tax_category() -> usize {
     1
@@ -191,24 +244,52 @@ impl DocumentAdjustment {
     ///
     /// [`InvoiceBuilder::build`](super::InvoiceBuilder::build) rejects a count outside
     /// `1..=`[`AllowanceCharge::MAX_TAX_CATEGORY_COUNT`].
-    pub fn tax_category_count(mut self, count: usize) -> Self {
+    pub fn with_tax_category_count(mut self, count: usize) -> Self {
         self.tax_category_count = count;
         self
     }
-    /// Sets the free-text allowance/charge reason.
-    pub fn reason(mut self, value: impl Into<String>) -> Self {
-        self.adjustment = self.adjustment.reason(value);
+    /// Sets the free-text allowance/charge reason (`cbc:AllowanceChargeReason`).
+    pub fn with_reason(mut self, value: impl Into<String>) -> Self {
+        self.adjustment = self.adjustment.with_reason(value);
         self
     }
-    /// Sets the allowance/charge reason code.
-    pub fn reason_code(mut self, value: impl Into<String>) -> Self {
-        self.adjustment = self.adjustment.reason_code(value);
+    /// Sets the allowance/charge reason code (`cbc:AllowanceChargeReasonCode`).
+    pub fn with_reason_code(mut self, value: impl Into<String>) -> Self {
+        self.adjustment = self.adjustment.with_reason_code(value);
         self
     }
-    /// Sets the VAT exemption reason.
-    pub fn exemption(mut self, value: TaxExemption) -> Self {
+    /// Sets the VAT exemption code and reason.
+    pub fn with_exemption(mut self, value: TaxExemption) -> Self {
         self.exemption = value;
         self
+    }
+    /// Returns the amount calculation and reason.
+    pub fn adjustment(&self) -> &Adjustment {
+        &self.adjustment
+    }
+    /// Returns the free-text reason, if set.
+    pub fn reason(&self) -> Option<&str> {
+        self.adjustment.reason()
+    }
+    /// Returns the reason code, if set.
+    pub fn reason_code(&self) -> Option<&str> {
+        self.adjustment.reason_code()
+    }
+    /// Returns the VAT category.
+    pub fn category(&self) -> VatCategory {
+        self.category
+    }
+    /// Returns the VAT rate (percent).
+    pub fn rate(&self) -> Decimal {
+        self.rate
+    }
+    /// Returns the VAT exemption code and reason.
+    pub fn exemption(&self) -> &TaxExemption {
+        &self.exemption
+    }
+    /// Returns how many identical `cac:TaxCategory` elements are emitted.
+    pub fn tax_category_count(&self) -> usize {
+        self.tax_category_count
     }
 }
 
@@ -217,7 +298,7 @@ impl DocumentAdjustment {
 /// The amount, base amount, percentage, reasons, VAT category and rate, exemption,
 /// omitted rate and tax category count are kept. The [`AdjustmentKind`] is not: pass the
 /// result to [`InvoiceBuilder::allowance`](super::InvoiceBuilder::allowance) or
-/// [`InvoiceBuilder::charge`](super::InvoiceBuilder::charge) according to `entry.kind`.
+/// [`InvoiceBuilder::charge`](super::InvoiceBuilder::charge) according to `entry.kind()`.
 impl From<AllowanceCharge> for DocumentAdjustment {
     fn from(entry: AllowanceCharge) -> Self {
         Self {
@@ -347,18 +428,14 @@ impl LineItemBuilder {
     }
     /// Appends a line-level allowance, which reduces the line net amount.
     pub fn allowance(mut self, adjustment: Adjustment) -> Self {
-        self.adjustments.push(LineAdjustment {
-            kind: AdjustmentKind::Allowance,
-            adjustment,
-        });
+        self.adjustments
+            .push(LineAdjustment::new(AdjustmentKind::Allowance, adjustment));
         self
     }
     /// Appends a line-level charge, which increases the line net amount.
     pub fn charge(mut self, adjustment: Adjustment) -> Self {
-        self.adjustments.push(LineAdjustment {
-            kind: AdjustmentKind::Charge,
-            adjustment,
-        });
+        self.adjustments
+            .push(LineAdjustment::new(AdjustmentKind::Charge, adjustment));
         self
     }
     /// Appends a document reference for this line.
@@ -477,12 +554,7 @@ impl LineItemBuilder {
         let adjustments = self
             .adjustments
             .into_iter()
-            .map(|a| {
-                Ok(LineAdjustment {
-                    kind: a.kind,
-                    adjustment: a.adjustment.finalize()?,
-                })
-            })
+            .map(|a| Ok(LineAdjustment::new(a.kind, a.adjustment.finalize()?)))
             .collect::<Result<Vec<_>>>()?;
         let mut line = LineItem {
             omitted_tax_amount: self.omit_tax_total,
