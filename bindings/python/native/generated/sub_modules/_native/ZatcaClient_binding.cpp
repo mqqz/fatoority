@@ -21,6 +21,7 @@ void add_ZatcaClient_binding(nb::module_ mod) {
         .def("check_invoice_compliance", std::move(maybe_op_unwrap(&_native::ZatcaClient::check_invoice_compliance)), "invoice"_a, "credentials"_a)
         .def("clear_standard_invoice", std::move(maybe_op_unwrap(&_native::ZatcaClient::clear_standard_invoice)), "invoice"_a, "credentials"_a, "clearance_mode"_a, "accept_language"_a= nb::none())
         .def_static("create", std::move(maybe_op_unwrap(&_native::ZatcaClient::create)), "config"_a)
+        .def_static("create_with_timeout", std::move(maybe_op_unwrap(&_native::ZatcaClient::create_with_timeout)), "config"_a, "timeout_ms"_a, "Like `create`, but each request fails with a network error after\nthe given number of milliseconds. Zero is rejected.")
         .def("prepare_check_invoice_compliance", std::move(maybe_op_unwrap(&_native::ZatcaClient::prepare_check_invoice_compliance)), "invoice"_a, "credentials"_a)
         .def("prepare_clear_standard_invoice", std::move(maybe_op_unwrap(&_native::ZatcaClient::prepare_clear_standard_invoice)), "invoice"_a, "credentials"_a, "clearance_mode"_a, "accept_language"_a= nb::none())
         .def("prepare_renew_csid", std::move(maybe_op_unwrap(&_native::ZatcaClient::prepare_renew_csid)), "credentials"_a, "csr"_a, "otp"_a, "accept_language"_a= nb::none())

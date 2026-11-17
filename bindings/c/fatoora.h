@@ -1319,6 +1319,10 @@ FatooraStatus fatoora_xml_hash(const char *xml,
 FatooraStatus fatoora_zatca_client_create(const FatooraConfig *config,
     FatooraZatcaClient **out,
     FatooraError **error);
+FatooraStatus fatoora_zatca_client_create_with_timeout(const FatooraConfig *config,
+    uint32_t timeout_ms,
+    FatooraZatcaClient **out,
+    FatooraError **error);
 FatooraStatus fatoora_zatca_client_request_compliance_csid(const FatooraZatcaClient *self,
     const FatooraCsr *csr,
     const char *otp,

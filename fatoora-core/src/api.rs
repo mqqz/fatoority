@@ -528,8 +528,53 @@ impl ZatcaClient {
     /// # Errors
     /// Returns [`ZatcaError::Http`] if the HTTP client cannot be built.
     pub fn new(config: Config) -> Result<Self, ZatcaError> {
+        Self::build(config, None)
+    }
+
+    /// Create a new API client whose requests fail after `timeout`.
+    ///
+    /// The timeout covers each whole request, from connecting until the
+    /// response body has been read. A request that times out before the
+    /// response arrives fails with [`ZatcaError::Http`]; one that times out
+    /// while reading the body of an invoice response fails with
+    /// [`ZatcaError::ResponseRead`]. Both classify as
+    /// [`ErrorKind::Network`](crate::ErrorKind::Network).
+    ///
+    /// [`ZatcaClient::new`] applies no client-side timeout. On `wasm32`
+    /// targets the client never sends requests, so the timeout is accepted
+    /// and ignored.
+    ///
+    /// # Errors
+    /// Returns [`ZatcaError::ClientState`] if `timeout` is zero, and
+    /// [`ZatcaError::Http`] if the HTTP client cannot be built.
+    ///
+    /// # Examples
+    /// ```rust,no_run
+    /// use std::time::Duration;
+    /// use fatoora_core::api::{ZatcaClient, ZatcaError};
+    /// use fatoora_core::config::Config;
+    ///
+    /// let client = ZatcaClient::with_timeout(Config::default(), Duration::from_secs(30))?;
+    /// # let _ = client;
+    /// # Ok::<(), ZatcaError>(())
+    /// ```
+    pub fn with_timeout(config: Config, timeout: std::time::Duration) -> Result<Self, ZatcaError> {
+        if timeout.is_zero() {
+            return Err(ZatcaError::ClientState(
+                "Request timeout must be greater than zero".into(),
+            ));
+        }
+        Self::build(config, Some(timeout))
+    }
+
+    #[cfg_attr(target_arch = "wasm32", allow(unused_variables))]
+    fn build(config: Config, timeout: Option<std::time::Duration>) -> Result<Self, ZatcaError> {
         #[cfg(not(target_arch = "wasm32"))]
-        let builder = Client::builder().redirect(reqwest::redirect::Policy::none());
+        let mut builder = Client::builder().redirect(reqwest::redirect::Policy::none());
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(timeout) = timeout {
+            builder = builder.timeout(timeout);
+        }
         #[cfg(target_os = "android")]
         let builder = {
             let roots = rustls::RootCertStore {
@@ -864,6 +909,11 @@ impl ZatcaClient {
         let status = response.status().as_u16();
         let body = match response.bytes().await {
             Ok(body) => body.to_vec(),
+            // A body that stalls past the client timeout is a network failure on
+            // every endpoint, not a malformed or empty response.
+            Err(error) if error.is_timeout() && !matches!(policy, BodyReadPolicy::Invoice) => {
+                return Err(ZatcaError::Http(error.to_string()));
+            }
             Err(error) => match policy {
                 // Preserve the existing native CSID endpoint error contracts.
                 BodyReadPolicy::Renewal => Vec::new(),
@@ -1479,6 +1529,118 @@ mod tests {
                     std::env::remove_var("FATOORA_ZATCA_BASE_URL");
                 },
             }
+        }
+    }
+
+    #[test]
+    fn with_timeout_rejects_zero() {
+        let err =
+            ZatcaClient::with_timeout(Config::default(), std::time::Duration::ZERO).unwrap_err();
+        assert!(matches!(err, ZatcaError::ClientState(_)), "{err:?}");
+        assert!(
+            ZatcaClient::with_timeout(Config::default(), std::time::Duration::from_secs(5)).is_ok()
+        );
+    }
+
+    #[test]
+    fn with_timeout_fails_stalled_requests_as_http_errors() {
+        use std::io::Read;
+        // Accepts the connection and reads the request but never answers.
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let address = listener.local_addr().unwrap();
+        let (done_tx, done_rx) = std::sync::mpsc::channel::<()>();
+        let server = std::thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            stream
+                .set_read_timeout(Some(std::time::Duration::from_millis(50)))
+                .unwrap();
+            let mut buffer = [0u8; 4096];
+            while done_rx.try_recv().is_err() {
+                let _ = stream.read(&mut buffer);
+            }
+        });
+        let _guard = BaseUrlGuard::new(&format!("http://{address}/"));
+
+        let rt = tokio::runtime::Runtime::new().expect("runtime");
+        let started = std::time::Instant::now();
+        let err = rt.block_on(async {
+            let client =
+                ZatcaClient::with_timeout(Config::default(), std::time::Duration::from_millis(200))
+                    .expect("client");
+            client
+                .request_compliance_csid(&build_csr(), "123456")
+                .await
+                .unwrap_err()
+        });
+        done_tx.send(()).unwrap();
+        server.join().unwrap();
+
+        assert!(matches!(err, ZatcaError::Http(_)), "{err:?}");
+        assert_eq!(err.kind(), crate::ErrorKind::Network);
+        assert!(
+            started.elapsed() < std::time::Duration::from_secs(10),
+            "timeout was not applied"
+        );
+    }
+
+    #[test]
+    fn with_timeout_classifies_stalled_csid_bodies_as_network_errors() {
+        use std::io::{Read, Write};
+        // Sends 2xx headers promising a body, then never sends it.
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let address = listener.local_addr().unwrap();
+        let (done_tx, done_rx) = std::sync::mpsc::channel::<()>();
+        let server = std::thread::spawn(move || {
+            let mut streams = Vec::new();
+            listener.set_nonblocking(true).unwrap();
+            while done_rx.try_recv().is_err() {
+                if let Ok((mut stream, _)) = listener.accept() {
+                    stream.set_nonblocking(false).unwrap();
+                    stream
+                        .set_read_timeout(Some(std::time::Duration::from_millis(50)))
+                        .unwrap();
+                    let mut buffer = [0u8; 8192];
+                    let _ = stream.read(&mut buffer);
+                    stream
+                        .write_all(
+                            b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 100\r\n\r\n{",
+                        )
+                        .unwrap();
+                    streams.push(stream);
+                }
+                std::thread::sleep(std::time::Duration::from_millis(10));
+            }
+        });
+        let _guard = BaseUrlGuard::new(&format!("http://{address}/"));
+
+        let rt = tokio::runtime::Runtime::new().expect("runtime");
+        let (issuance, renewal) = rt.block_on(async {
+            let client =
+                ZatcaClient::with_timeout(Config::default(), std::time::Duration::from_millis(200))
+                    .expect("client");
+            let csr = build_csr();
+            let issuance = client
+                .request_compliance_csid(&csr, "123456")
+                .await
+                .unwrap_err();
+            let pcsid = CsidCredentials::new(
+                Environment::NonProduction,
+                Some("11".into()),
+                "token",
+                "secret",
+            );
+            let renewal = client
+                .renew_csid(&pcsid, &csr, "123456", None)
+                .await
+                .unwrap_err();
+            (issuance, renewal)
+        });
+        done_tx.send(()).unwrap();
+        server.join().unwrap();
+
+        for err in [issuance, renewal] {
+            assert!(matches!(err, ZatcaError::Http(_)), "{err:?}");
+            assert_eq!(err.kind(), crate::ErrorKind::Network);
         }
     }
 

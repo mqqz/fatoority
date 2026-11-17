@@ -32,6 +32,9 @@ namespace capi {
     typedef struct fatoora_ZatcaClient_create_result {union {_native::capi::ZatcaClient* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ZatcaClient_create_result;
     fatoora_ZatcaClient_create_result fatoora_ZatcaClient_create(const _native::capi::Config* config);
 
+    typedef struct fatoora_ZatcaClient_create_with_timeout_result {union {_native::capi::ZatcaClient* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ZatcaClient_create_with_timeout_result;
+    fatoora_ZatcaClient_create_with_timeout_result fatoora_ZatcaClient_create_with_timeout(const _native::capi::Config* config, uint32_t timeout_ms);
+
     typedef struct fatoora_ZatcaClient_request_compliance_csid_result {union {_native::capi::ComplianceCsid* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ZatcaClient_request_compliance_csid_result;
     fatoora_ZatcaClient_request_compliance_csid_result fatoora_ZatcaClient_request_compliance_csid(const _native::capi::ZatcaClient* self, const _native::capi::Csr* csr, _native::diplomat::capi::DiplomatStringView otp);
 
@@ -76,6 +79,12 @@ namespace capi {
 
 inline _native::diplomat::result<std::unique_ptr<_native::ZatcaClient>, std::unique_ptr<_native::BindingError>> _native::ZatcaClient::create(const _native::Config& config) {
     auto result = _native::capi::fatoora_ZatcaClient_create(config.AsFFI());
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::ZatcaClient>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::ZatcaClient>>(std::unique_ptr<_native::ZatcaClient>(_native::ZatcaClient::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::ZatcaClient>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::unique_ptr<_native::ZatcaClient>, std::unique_ptr<_native::BindingError>> _native::ZatcaClient::create_with_timeout(const _native::Config& config, uint32_t timeout_ms) {
+    auto result = _native::capi::fatoora_ZatcaClient_create_with_timeout(config.AsFFI(),
+        timeout_ms);
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::ZatcaClient>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::ZatcaClient>>(std::unique_ptr<_native::ZatcaClient>(_native::ZatcaClient::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::ZatcaClient>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 

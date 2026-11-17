@@ -225,3 +225,36 @@ def test_default_evaluation_clock_parses_on_every_python():
     report = validate_zatca("<wrong/>")
     assert report.evaluated_at.utcoffset() == timedelta(0)
     assert abs(datetime.now(timezone.utc) - report.evaluated_at) < timedelta(minutes=5)
+
+
+@pytest.mark.parametrize("timeout,expected", [
+    (30, 30_000), (2.5, 2_500), (0.0001, 1), (timedelta(seconds=1, microseconds=500), 1_001),
+    (timedelta(days=49), 49 * 86_400_000),
+])
+def test_client_timeout_accepts_seconds_and_timedelta(monkeypatch, timeout, expected):
+    from fatoora import api, _native
+
+    seen = []
+    real = _native.ZatcaClient.create_with_timeout
+    monkeypatch.setattr(_native.ZatcaClient, "create_with_timeout",
+                        lambda config, ms: seen.append(ms) or real(config, ms))
+    with ZatcaClient(Config(Environment.NON_PRODUCTION), timeout=timeout) as client:
+        assert isinstance(client, api.ZatcaClient)
+    assert seen == [expected]
+
+
+@pytest.mark.parametrize("timeout,error", [
+    (0, ValueError), (-1.0, ValueError), (float("nan"), ValueError), (float("inf"), ValueError),
+    (timedelta(0), ValueError), (timedelta(days=50), ValueError),
+    (True, TypeError), ("30", TypeError), (Decimal("30"), TypeError),
+])
+def test_client_timeout_rejects_invalid_values(timeout, error):
+    with pytest.raises(error, match="timeout"):
+        ZatcaClient(Config(Environment.NON_PRODUCTION), timeout=timeout)
+
+
+def test_client_timeout_is_keyword_only():
+    with pytest.raises(TypeError):
+        ZatcaClient(Config(Environment.NON_PRODUCTION), 30)
+    with ZatcaClient(Config(Environment.NON_PRODUCTION), timeout=None):
+        pass

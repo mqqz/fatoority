@@ -50,6 +50,12 @@ public:
 
   inline static _native::diplomat::result<std::unique_ptr<_native::ZatcaClient>, std::unique_ptr<_native::BindingError>> create(const _native::Config& config);
 
+  /**
+   * Like `create`, but each request fails with a network error after
+   * the given number of milliseconds. Zero is rejected.
+   */
+  inline static _native::diplomat::result<std::unique_ptr<_native::ZatcaClient>, std::unique_ptr<_native::BindingError>> create_with_timeout(const _native::Config& config, uint32_t timeout_ms);
+
   inline _native::diplomat::result<std::unique_ptr<_native::ComplianceCsid>, std::unique_ptr<_native::BindingError>> request_compliance_csid(const _native::Csr& csr, std::string_view otp) const;
 
   inline _native::diplomat::result<std::unique_ptr<_native::ProductionCsid>, std::unique_ptr<_native::BindingError>> request_production_csid(const _native::ComplianceCsid& credentials) const;

@@ -32,6 +32,9 @@ namespace capi {
     typedef struct fatoora_ZatcaClient_create_result {union {fatoora::capi::ZatcaClient* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ZatcaClient_create_result;
     fatoora_ZatcaClient_create_result fatoora_ZatcaClient_create(const fatoora::capi::Config* config);
 
+    typedef struct fatoora_ZatcaClient_create_with_timeout_result {union {fatoora::capi::ZatcaClient* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ZatcaClient_create_with_timeout_result;
+    fatoora_ZatcaClient_create_with_timeout_result fatoora_ZatcaClient_create_with_timeout(const fatoora::capi::Config* config, uint32_t timeout_ms);
+
     typedef struct fatoora_ZatcaClient_request_compliance_csid_result {union {fatoora::capi::ComplianceCsid* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ZatcaClient_request_compliance_csid_result;
     fatoora_ZatcaClient_request_compliance_csid_result fatoora_ZatcaClient_request_compliance_csid(const fatoora::capi::ZatcaClient* self, const fatoora::capi::Csr* csr, diplomat::capi::DiplomatStringView otp);
 
@@ -76,6 +79,12 @@ namespace capi {
 
 inline diplomat::result<std::unique_ptr<fatoora::ZatcaClient>, std::unique_ptr<fatoora::BindingError>> fatoora::ZatcaClient::create(const fatoora::Config& config) {
     auto result = fatoora::capi::fatoora_ZatcaClient_create(config.AsFFI());
+    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::ZatcaClient>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::ZatcaClient>>(std::unique_ptr<fatoora::ZatcaClient>(fatoora::ZatcaClient::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::ZatcaClient>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline diplomat::result<std::unique_ptr<fatoora::ZatcaClient>, std::unique_ptr<fatoora::BindingError>> fatoora::ZatcaClient::create_with_timeout(const fatoora::Config& config, uint32_t timeout_ms) {
+    auto result = fatoora::capi::fatoora_ZatcaClient_create_with_timeout(config.AsFFI(),
+        timeout_ms);
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::ZatcaClient>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::ZatcaClient>>(std::unique_ptr<fatoora::ZatcaClient>(fatoora::ZatcaClient::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::ZatcaClient>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 

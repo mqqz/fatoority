@@ -899,7 +899,9 @@
   "XmlError": {},
   "ZatcaClient": {
     "__init__": [
-      "config"
+      "config",
+      "*",
+      "timeout"
     ],
     "check_invoice_compliance": [
       "invoice",

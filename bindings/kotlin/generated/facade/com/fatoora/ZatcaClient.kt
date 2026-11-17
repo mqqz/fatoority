@@ -14,6 +14,15 @@ class ZatcaClient internal constructor(internal val raw: com.fatoora.raw.ZatcaCl
         fun create(config: Config): ZatcaClient = nativeCall(listOfNotNull(config)) {
             ZatcaClient(unwrap(com.fatoora.raw.ZatcaClient.create(config.raw)))
         }
+
+        /**
+         * Like `create`, but each request fails with a network error after
+         * the given number of milliseconds. Zero is rejected.
+         */
+        @JvmStatic
+        fun createWithTimeout(config: Config, timeoutMs: Long): ZatcaClient = nativeCall(listOfNotNull(config)) {
+            ZatcaClient(unwrap(com.fatoora.raw.ZatcaClient.createWithTimeout(config.raw, checkedUnsigned(timeoutMs, 4294967295L).toUInt())))
+        }
     }
 
     fun requestComplianceCsid(csr: Csr, otp: String): ComplianceCsid = nativeCall(listOfNotNull(this, csr)) {

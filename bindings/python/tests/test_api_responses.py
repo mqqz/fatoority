@@ -1,22 +1,25 @@
 """Exercise the public Python API through the shared library and a loopback gateway."""
 import base64
+from datetime import timedelta
 from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
 from threading import Thread
+import time
 
 import pytest
 from fatoora import ProductionCsid, ZatcaClient, InvoiceOutcome, SignedInvoice
 from fatoora.config import Config, Environment
-from fatoora.errors import ApiError, ParseError, UnauthorizedError
+from fatoora.errors import ApiError, NetworkError, ParseError, UnauthorizedError
 
 
 @contextmanager
-def gateway(monkeypatch, status, body):
+def gateway(monkeypatch, status, body, delay=0.0):
     class Handler(BaseHTTPRequestHandler):
         def do_POST(self):
             self.rfile.read(int(self.headers["Content-Length"]))
+            time.sleep(delay)
             payload = body.encode()
             self.send_response(status)
             self.send_header("Content-Length", str(len(payload)))
@@ -36,11 +39,11 @@ def gateway(monkeypatch, status, body):
         thread.join()
 
 
-def report():
+def report(**client_options):
     fixture = Path(__file__).resolve().parents[3] / "fatoora-core/tests/fixtures/invoices/sample-simplified-invoice.xml"
     with SignedInvoice.from_xml(fixture.read_text()) as invoice, \
          ProductionCsid.new(Environment.NON_PRODUCTION, "test-token", "test-secret") as credentials, \
-         ZatcaClient(Config(Environment.NON_PRODUCTION)) as client:
+         ZatcaClient(Config(Environment.NON_PRODUCTION), **client_options) as client:
         return client.report_simplified_invoice(invoice, credentials, clearance_status=False, accept_language="en")
 
 
@@ -245,3 +248,18 @@ def test_http_releases_gil_and_retains_locked_arguments(invoice_action):
         capture_output=True, text=True, timeout=25,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_timeout_raises_network_error(monkeypatch):
+    body = json.dumps({"validationResults": {"status": "PASS"}, "reportingStatus": "REPORTED"})
+    with gateway(monkeypatch, 200, body, delay=1.0):
+        started = time.monotonic()
+        with pytest.raises(NetworkError):
+            report(timeout=0.1)
+        assert time.monotonic() - started < 0.9
+
+
+def test_generous_timeout_still_succeeds(monkeypatch):
+    body = json.dumps({"validationResults": {"status": "PASS"}, "reportingStatus": "REPORTED"})
+    with gateway(monkeypatch, 200, body), report(timeout=timedelta(seconds=30)) as response:
+        assert response.outcome == InvoiceOutcome.ACCEPTED

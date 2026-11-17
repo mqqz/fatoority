@@ -86,6 +86,33 @@ public partial class ZatcaClient: IDisposable
 
     /// <exception cref="FfiException"></exception>
     /// <returns>
+    /// A <c>ZatcaClient</c> allocated on Rust side.
+    /// </returns>
+    public static ZatcaClient CreateWithTimeout(Config config, uint timeoutMs)
+    {
+        unsafe
+        {
+            if (config == null) throw new ArgumentNullException(nameof(config));
+            BorrowLease<Raw.Config>? configLease = null;
+            try
+            {
+                configLease = config._diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.ZatcaClient.CreateWithTimeout(configLease!.Ptr, timeoutMs);
+                if (!result.IsOk)
+                {
+                    throw FfiException.FromNative(new BindingError(result.Err));
+                }
+                return new ZatcaClient(result.Ok);
+            }
+            finally
+            {
+                configLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="FfiException"></exception>
+    /// <returns>
     /// A <c>ComplianceCsid</c> allocated on Rust side.
     /// </returns>
     public ComplianceCsid RequestComplianceCsid(Csr csr, string otp)

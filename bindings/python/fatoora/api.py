@@ -3,10 +3,11 @@ from __future__ import annotations
 from contextlib import ExitStack
 import dataclasses
 from dataclasses import dataclass, field
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum, IntEnum, IntFlag
 import json
+import math
 import os
 import re
 from threading import RLock
@@ -1014,9 +1015,40 @@ class InvoiceLineItem:
         _set(self, **values)
 
 
+_MAX_TIMEOUT_MS = 2**32 - 1
+
+
+def _timeout_ms(value: Union[float, timedelta]) -> int:
+    """Seconds (``int``/``float``) or ``timedelta`` -> whole milliseconds, rounded up."""
+    if isinstance(value, timedelta):
+        seconds = value.total_seconds()
+    elif isinstance(value, (int, float)) and not isinstance(value, bool):
+        seconds = float(value)
+    else:
+        raise TypeError("timeout must be a number of seconds, a datetime.timedelta, or None")
+    if not math.isfinite(seconds) or seconds <= 0:
+        raise ValueError("timeout must be a positive, finite duration")
+    milliseconds = math.ceil(seconds * 1000)
+    if milliseconds > _MAX_TIMEOUT_MS:
+        raise ValueError(f"timeout must be at most {_MAX_TIMEOUT_MS / 1000:g} seconds")
+    return milliseconds
+
+
 class ZatcaClient(_Owned):
-    def __init__(self, config: Config):
-        super().__init__(_call(_native.ZatcaClient.create, config))
+    """Blocking ZATCA gateway client.
+
+    ``timeout`` bounds each request, from connecting until the response body is
+    read, in seconds (``int``/``float``) or as a ``datetime.timedelta``; it is
+    rounded up to whole milliseconds. A request that exceeds it raises
+    ``NetworkError``. The default ``None`` applies no client-side timeout.
+    """
+
+    def __init__(self, config: Config, *, timeout: Optional[Union[float, timedelta]] = None):
+        if timeout is None:
+            handle = _call(_native.ZatcaClient.create, config)
+        else:
+            handle = _call(_native.ZatcaClient.create_with_timeout, config, _timeout_ms(timeout))
+        super().__init__(handle)
 
     def request_compliance_csid(self, csr: Csr, otp: str) -> ComplianceCsid:
         """Exchange a CSR and OTP for compliance CSID credentials."""

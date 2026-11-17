@@ -78,6 +78,13 @@ Migration guide with a before-and-after table of every change: [Migrate from 0.5
   - `Adjustment::{reason(), reason_code(), base_amount(), percentage()}`
     getters.
 
+- `api::ZatcaClient::with_timeout(config, Duration)`: a client whose requests
+  fail after the given timeout, covering connect through reading the response
+  body. A timeout surfaces as `ZatcaError::Http` (`ZatcaError::ResponseRead`
+  if it expires mid-body), both `ErrorKind::Network`; a zero timeout is
+  rejected. `ZatcaClient::new` is unchanged and applies no timeout. Ignored on
+  `wasm32`, where the client does not send requests.
+
 - Bindings: FFI enums `Environment`, `InvoiceTypeKind`, `InvoiceSubType`,
   `VatCategory`, `AdjustmentKind`, `ClearanceMode` and `InvoiceFlag` (named
   bits of the flag mask, with `bit()` where the generator emits enum methods),
@@ -103,6 +110,11 @@ Migration guide with a before-and-after table of every change: [Migrate from 0.5
   `FATOORA_ZATCA_STAGE_*`, `FATOORA_ZATCA_STAGE_STATUS_*`,
   `FATOORA_VALIDATION_LAYER_*`, `FATOORA_SEVERITY_*` and `FATOORA_LOCATION_*`
   constants.
+
+- Bindings: `ZatcaClient.create_with_timeout(config, timeout_ms: u32)` in the
+  FFI (`createWithTimeout` in Kotlin/Java, `CreateWithTimeout` in C#,
+  `fatoora_zatca_client_create_with_timeout` in C). Not exposed to
+  JavaScript, whose client sends through the caller's `fetch`.
 
 ### Changed
 
@@ -547,6 +559,10 @@ working until 0.7 and emits a `DeprecationWarning` naming its replacement (see [
   `InvalidInputError` when the value reaches the native library.
 - `tests/public_api.json` records the public surface, including the deprecated
   names, and is regenerated with `python tests/test_public_api.py --update`.
+- `ZatcaClient(config, *, timeout=None)`: `timeout` is seconds (`int`/`float`)
+  or a `datetime.timedelta` bounding each request; exceeding it raises
+  `NetworkError`. There is no async client in 0.6.
+
 
 ### Removed
 

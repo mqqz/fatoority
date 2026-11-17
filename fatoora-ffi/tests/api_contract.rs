@@ -240,3 +240,12 @@ fn exercise_client() {
     );
     assert!(client.request_production_csid(&compliance).is_err());
 }
+
+#[test]
+fn timeout_constructor_rejects_zero() {
+    let config = ok(Config::new(Environment::NonProduction));
+    ok(ZatcaClient::create_with_timeout(&config, 30_000));
+    let err = ZatcaClient::create_with_timeout(&config, 0).err().unwrap();
+    assert_eq!(err.code(), fatoora_core::ErrorKind::Internal as i32);
+    assert!(written(|out| err.message(out)).contains("timeout"));
+}
