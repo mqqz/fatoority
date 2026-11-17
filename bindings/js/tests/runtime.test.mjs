@@ -6,6 +6,7 @@ import * as raw from '../raw.mjs';
 import * as generated from '../generated/index.mjs';
 import wasm from '../generated/diplomat-wasm.mjs';
 import { integerBooleanMethods } from '../patch.mjs';
+import { properties, textResults } from '../members.mjs';
 const loadFixture = (path) => readFileSync(new URL(`../../../fatoora-core/tests/fixtures/${path}`, import.meta.url), 'utf8');
 const config = sdk.Config.create(sdk.Environment.NonProduction);
 const ccsid = () => sdk.ComplianceCsid.create(sdk.Environment.NonProduction, '123', 'token', 'secret');
@@ -30,8 +31,8 @@ test('optional strings preserve absent, empty and Arabic across repeated calls',
   for (let i = 0; i < 100; i++) {
     for (const value of [null, '', 'شارع إضافي']) {
       const address = sdk.Address.create('SAU', 'الرياض', 'شارع الملك', '1234', '12222', value, null, null);
-      assert.equal(address.additionalStreet()?.value() ?? null, value);
-      assert.equal(address.city(), 'الرياض');
+      assert.equal(address.additionalStreet, value);
+      assert.equal(address.city, 'الرياض');
     }
   }
   assert.throws(() => sdk.Address.create('SAU', 'bad\0city', 'street', '1234', '12222', null, null, null), code(1));
@@ -45,8 +46,8 @@ test('decimal values remain exact and consumed builders fail safely', () => {
   b.setSeller('Acme Inc', a, '301121971500003', null, null);
   b.addLineItem('Item', '3', 'PCE', '0.3333', '15', sdk.VatCategory.Standard);
   const inv = b.build();
-  assert.equal(inv.totals().taxInclusive(), '1.15');
-  assert.match(inv.xml(), />0.3333<\/cbc:PriceAmount>/);
+  assert.equal(inv.totals().taxInclusive, '1.15');
+  assert.match(inv.xml, />0.3333<\/cbc:PriceAmount>/);
   assert.throws(() => b.build(), code(1));
 });
 
@@ -60,17 +61,17 @@ test('prepared request retains context after invoice consumption and WASM memory
   for (let i = 0; i < 20; i++) sdk.SigningKey.generate();
   assert.equal(JSON.parse(Buffer.from(request.body().asSlice()).toString()).invoiceHash, original.invoiceHash);
   const result = request.decode(200, [...Buffer.from(JSON.stringify(validationBody))]);
-  assert.equal(result.httpStatus(), 200);
-  assert.equal(result.outcome().value, 'Accepted');
-  assert.equal(result.reportingStatus(), sdk.ReportingStatus.Reported);
-  assert.equal(result.reportingStatusRaw().value(), 'REPORTED');
-  assert.equal(result.validationResults().status(), sdk.ValidationStatus.Pass);
-  assert.equal(result.clearanceStatus(), null);
-  assert.equal(result.clearanceStatusRaw(), null);
+  assert.equal(result.httpStatus, 200);
+  assert.equal(result.outcome.value, 'Accepted');
+  assert.equal(result.reportingStatus, sdk.ReportingStatus.Reported);
+  assert.equal(result.reportingStatusRaw, 'REPORTED');
+  assert.equal(result.validationResults().status, sdk.ValidationStatus.Pass);
+  assert.equal(result.clearanceStatus, null);
+  assert.equal(result.clearanceStatusRaw, null);
   const unknown = request.decode(200, [...Buffer.from(JSON.stringify({validationResults: {status: 'PARTIAL'}, reportingStatus: 'LATER'}))]);
-  assert.equal(unknown.reportingStatus(), sdk.ReportingStatus.Unknown);
-  assert.equal(unknown.reportingStatusRaw().value(), 'LATER');
-  assert.equal(unknown.validationResults().status(), sdk.ValidationStatus.Unknown);
+  assert.equal(unknown.reportingStatus, sdk.ReportingStatus.Unknown);
+  assert.equal(unknown.reportingStatusRaw, 'LATER');
+  assert.equal(unknown.validationResults().status, sdk.ValidationStatus.Unknown);
 });
 
 test('fetch sees Rust headers and body; concurrent requests decode independently', async () => {
@@ -86,9 +87,9 @@ test('fetch sees Rust headers and body; concurrent requests decode independently
   assert.equal(pending[0].init.redirect, 'error');
   assert.equal(JSON.parse(new TextDecoder().decode(pending[1].init.body)).compliance_request_id, '123');
   pending[1].resolve(json(credentialsBody));
-  assert.equal((await b).binarySecurityToken(), 'new-token');
+  assert.equal((await b).binarySecurityToken, 'new-token');
   pending[0].resolve(json(validationBody));
-  assert.equal((await a).httpStatus(), 200);
+  assert.equal((await a).httpStatus, 200);
 });
 
 test('all credential operations, including renewal 428, share Rust decoding', async () => {
@@ -98,8 +99,8 @@ test('all credential operations, including renewal 428, share Rust decoding', as
     calls.push({url, init});
     return init.method === 'PATCH' ? json({value: credentialsBody}, 428) : json(credentialsBody);
   }});
-  assert.equal((await client.requestComplianceCsid(csr, '123456')).env(), sdk.Environment.NonProduction);
-  assert.equal((await client.renewCsid(pcsid(), csr, '123456')).requestId().value(), '123');
+  assert.equal((await client.requestComplianceCsid(csr, '123456')).env, sdk.Environment.NonProduction);
+  assert.equal((await client.renewCsid(pcsid(), csr, '123456')).requestId, '123');
   assert.equal(new Headers(calls[0].init.headers).get('otp'), '123456');
   assert.equal(calls[1].init.method, 'PATCH');
 });
@@ -180,10 +181,10 @@ test('clearance and compliance use their own acceptance fields', async () => {
     ? json({validationResults: {status: 'PASS'}, clearanceStatus: 'CLEARED', reportingStatus: 'NOT_REPORTED'})
     : json({validationResults: {status: 'WARNING'}, reportingStatus: 'NOT_REPORTED'})});
   const standard = sdk.SignedInvoice.fromXml(loadFixture('sdk-parity/cases/standard-invoice/sdk-signed.xml'));
-  assert.equal((await client.clearStandardInvoice(standard, pcsid())).outcome().value, 'Accepted');
-  assert.equal((await client.checkInvoiceCompliance(invoice(), ccsid())).outcome().value, 'Accepted');
+  assert.equal((await client.clearStandardInvoice(standard, pcsid())).outcome.value, 'Accepted');
+  assert.equal((await client.checkInvoiceCompliance(invoice(), ccsid())).outcome.value, 'Accepted');
   await assert.rejects(client.clearStandardInvoice(invoice(), pcsid()));
-  assert.equal((await client.clearStandardInvoice(standard, pcsid(), sdk.ClearanceMode.Enabled)).clearanceStatus(), sdk.ClearanceStatus.Cleared);
+  assert.equal((await client.clearStandardInvoice(standard, pcsid(), sdk.ClearanceMode.Enabled)).clearanceStatus, sdk.ClearanceStatus.Cleared);
   await assert.rejects(client.clearStandardInvoice(standard, pcsid(), 1), TypeError);
 });
 
@@ -204,13 +205,13 @@ test('documented examples and signing work in the optimized artifact', async () 
   const xml = loadFixture('sdk-parity/cases/simplified-invoice/sdk-signed.xml');
   assert.equal(examples.validateInvoice(xml, undefined, '2025-01-01T00:00:00Z').stages.length, 6);
   const response = await examples.reportInvoice(xml, 'token', 'secret', {fetch: async () => json(validationBody)});
-  assert.equal(response.outcome().value, 'Accepted');
+  assert.equal(response.outcome.value, 'Accepted');
   const cert = readFileSync(new URL('../../../fatoora-core/tests/fixtures/sdk-parity/credentials/certificate.der', import.meta.url));
   const key = readFileSync(new URL('../../../fatoora-core/tests/fixtures/sdk-parity/credentials/private-key.der', import.meta.url));
   const signer = sdk.InvoiceSigner.fromDer([...cert], [...key]);
-  const signed = examples.signInvoice(xml, signer.certificatePem(), sdk.SigningKey.fromDer([...key]).toPem());
+  const signed = examples.signInvoice(xml, signer.certificatePem, sdk.SigningKey.fromDer([...key]).toPem());
   assert.equal(sdk.Xml.hash(signed), sdk.Xml.hash(xml));
-  assert.ok(sdk.SignedInvoice.fromXml(signed).signature());
+  assert.ok(sdk.SignedInvoice.fromXml(signed).signature);
 });
 
 test('validation options preserve Rust errors before host clock injection', () => {
@@ -230,7 +231,7 @@ test('validation options preserve Rust errors before host clock injection', () =
 test('imported signed invoice hashes its stored XML', () => {
   for (const kind of ['standard', 'simplified']) {
     const xml = loadFixture(`sdk-parity/cases/${kind}-invoice/sdk-signed.xml`);
-    assert.equal(sdk.SignedInvoice.fromXml(xml).hash(), sdk.Xml.hash(xml));
+    assert.equal(sdk.SignedInvoice.fromXml(xml).hash, sdk.Xml.hash(xml));
   }
 });
 
@@ -247,14 +248,14 @@ test('optional line fields and repeated identifiers survive WASM import', () => 
   b.addItem(line.build());
   b.addPaymentMeans(sdk.PaymentMeans.create('30', 'one').withInstructionNote('two').withAccount('bank', 'net 30'));
   const invoice = b.build();
-  const parsed = sdk.FinalizedInvoice.fromXml(invoice.xml());
-  assert.equal(parsed.data().lineItem(0).totalAmount(), '225');
-  assert.equal(parsed.data().lineItem(0).itemPriceBaseQuantity().value(), '12');
-  assert.equal(parsed.data().seller().identifiersLen(), 2);
-  assert.equal(parsed.data().seller().identifier(1).value(), 'second');
-  assert.equal(parsed.data().paymentMeans(0).instructionNotesLen(), 2);
-  assert.equal(parsed.data().paymentMeans(0).instructionNoteAt(1).value(), 'two');
-  assert.equal(parsed.xml(), invoice.xml());
+  const parsed = sdk.FinalizedInvoice.fromXml(invoice.xml);
+  assert.equal(parsed.data().lineItem(0).totalAmount, '225');
+  assert.equal(parsed.data().lineItem(0).itemPriceBaseQuantity, '12');
+  assert.equal(parsed.data().seller().identifiersLen, 2);
+  assert.equal(parsed.data().seller().identifier(1).value, 'second');
+  assert.equal(parsed.data().paymentMeans(0).instructionNotesLen, 2);
+  assert.equal(parsed.data().paymentMeans(0).instructionNoteAt(1), 'two');
+  assert.equal(parsed.xml, invoice.xml);
 });
 
 test('signed import rejects the SDK fixture with a shifted QR timestamp', () => {
@@ -271,8 +272,8 @@ test('signed import preserves XML with line-wrapped certificates', () => {
     assert.notEqual(wrapped, xml);
     const original = sdk.SignedInvoice.fromXml(xml);
     const parsed = sdk.SignedInvoice.fromXml(wrapped);
-    assert.equal(parsed.xml(), wrapped);
-    assert.equal(parsed.qrCode(), original.qrCode());
+    assert.equal(parsed.xml, wrapped);
+    assert.equal(parsed.qrCode, original.qrCode);
   }
 });
 
@@ -321,8 +322,8 @@ test('create replaces new_ and the package root exports a deliberate API', () =>
     if (name !== 'ZatcaClient') assert.equal(sdk[name], generated[name]);
   }
   assert.ok(sdk.Config.create(sdk.Environment.Simulation) instanceof sdk.Config);
-  assert.equal(sdk.Config.create('Production').env(), sdk.Environment.Production);
-  assert.equal(sdk.Config.new_(sdk.Environment.Simulation).env(), sdk.Environment.Simulation); // deprecated alias
+  assert.equal(sdk.Config.create('Production').env, sdk.Environment.Production);
+  assert.equal(sdk.Config.new_(sdk.Environment.Simulation).env, sdk.Environment.Simulation); // deprecated alias
   const replaced = ['Xml', 'ZatcaClient', 'ZatcaValidationReport', 'ZatcaStageReport', 'ZatcaFinding', 'ZatcaRuleSource'];
   for (const [name, value] of Object.entries(generated)) {
     if (replaced.includes(name)) assert.notEqual(sdk[name], value, name);
@@ -355,18 +356,61 @@ test('generated boolean getters return booleans', () => {
   }
   assert.deepEqual(integerBooleanMethods, declared);
   const report = raw.Xml.validateZatca(loadFixture('sdk-parity/cases/simplified-invoice/sdk-signed.xml'), '{"evaluated_at":"2025-01-01T00:00:00Z"}');
-  assert.equal(typeof report.isValid(), 'boolean');
-  assert.equal(sdk.PaymentMeans.create('10', null).hasAccount(), false);
+  assert.equal(typeof report.isValid, 'boolean');
+  assert.equal(sdk.PaymentMeans.create('10', null).hasAccount, false);
   assert.equal(sdk.Xml.validate(loadFixture('sdk-parity/cases/simplified-invoice/sdk-signed.xml')), true);
 });
 
 test('0.5 names of renamed members forward to the core names', () => {
   const rebate = sdk.Adjustment.percentage('250', '10'); // deprecated
-  assert.equal(rebate.value(), '25');
-  assert.equal(rebate.percent().value(), rebate.percentage().value());
-  assert.equal(rebate.withSuppliedAmount('25').value(), rebate.suppliedAmount('25').value());
-  assert.throws(() => rebate.withSuppliedAmount('24').value(), sdk.ValidationError);
+  assert.equal(rebate.value, '25');
+  assert.ok(rebate.percent() instanceof sdk.Text); // the 0.5 alias keeps its 0.5 result
+  assert.equal(rebate.percent().value(), rebate.percentage);
+  assert.equal(rebate.withSuppliedAmount('25').value, rebate.suppliedAmount('25').value);
+  assert.throws(() => rebate.withSuppliedAmount('24').value, sdk.ValidationError);
   const subtotal = sdk.VatBreakdown.create(sdk.VatCategory.OutOfScope, '0', '10', '0', sdk.TaxExemption.create('VATEX-SA-OOS', 'reason'));
-  assert.equal(subtotal.withoutVatRate().hasVatRate(), subtotal.omitVatRate().hasVatRate());
-  assert.equal(subtotal.omitVatRate().hasVatRate(), false);
+  assert.equal(subtotal.withoutVatRate().hasVatRate, subtotal.omitVatRate().hasVatRate);
+  assert.equal(subtotal.omitVatRate().hasVatRate, false);
+});
+
+test('value getters are read-only properties and optional text is a plain string', () => {
+  for (const [name, members] of Object.entries(properties)) {
+    for (const member of members) {
+      const descriptor = Object.getOwnPropertyDescriptor(generated[name].prototype, member);
+      assert.equal(typeof descriptor?.get, 'function', `${name}.${member}`);
+      assert.equal(descriptor.set, undefined, `${name}.${member}`);
+    }
+  }
+  const address = sdk.Address.create('SA', 'Riyadh', 'Street', '1234', '12222', null, '5678', 'Olaya');
+  assert.equal(address.city, 'Riyadh');
+  assert.equal(address.district, 'Olaya');
+  assert.equal(address.additionalStreet, null);
+  assert.equal(address.province, null);
+  assert.equal(address.withProvince('Riyadh Region').province, 'Riyadh Region');
+  // The 0.5 call form is a hard break: the property value is not callable.
+  assert.throws(() => address.city(), TypeError);
+  assert.throws(() => { 'use strict'; address.city = 'Jeddah'; }, TypeError);
+  for (const [name, members] of Object.entries(textResults)) {
+    for (const member of members) {
+      const descriptor = Object.getOwnPropertyDescriptor(generated[name].prototype, member);
+      assert.equal(typeof (descriptor.get ?? descriptor.value), 'function', `${name}.${member}`);
+    }
+  }
+  const rebate = sdk.Adjustment.percentOf('250', '10').withReason('rebate', null);
+  assert.deepEqual([rebate.value, rebate.baseAmount, rebate.percentage, rebate.reason, rebate.reasonCode],
+    ['25', '250', '10', 'rebate', null]);
+  const invoice = sdk.SignedInvoice.fromXml(loadFixture('sdk-parity/cases/simplified-invoice/sdk-signed.xml'));
+  assert.equal(typeof invoice.data().invoiceCounter, 'bigint');
+  assert.equal(invoice.data().vatCategory, sdk.VatCategory.Standard);
+  assert.equal(typeof invoice.totals().payableAmount, 'string');
+});
+
+test('property getters throw the typed errors at the caller', () => {
+  const invoice = sdk.SignedInvoice.fromXml(loadFixture('sdk-parity/cases/simplified-invoice/sdk-signed.xml'));
+  invoice.intoXml();
+  let error;
+  try { void invoice.qrCode; }
+  catch (caught) { error = caught; }
+  assert.ok(error instanceof sdk.FatooraError, String(error));
+  assert.doesNotMatch(error.stack.split('\n')[1], /patch\.mjs|errors\.mjs/);
 });

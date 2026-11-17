@@ -33,9 +33,9 @@ function clearanceMode(value) {
 /** Send an owned prepared request using the caller's fetch implementation. */
 export async function sendPrepared(request, { fetch: fetchImpl = globalThis.fetch, signal } = {}) {
   // Complete every read of WASM memory before invoking user code or awaiting IO.
-  const url = request.url();
+  const url = request.url;
   const init = {
-    method: request.method(), headers: JSON.parse(request.headersJson()),
+    method: request.method, headers: JSON.parse(request.headersJson),
     body: Uint8Array.from(request.body().asSlice()), redirect: 'error', signal,
   };
   let response;
@@ -77,46 +77,44 @@ export class ZatcaClient {
   #send(request, options) { return sendPrepared(request, { ...options, fetch: this.#fetch }); }
 }
 
-const text = (value) => value === null ? null : value.value();
-
 function location(finding) {
-  const kind = finding.locationKind();
+  const kind = finding.locationKind;
   if (kind === null) return null;
   switch (kind.value) {
-    case 'Field': case 'XPath': return { kind: kind.value, path: text(finding.locationPath()) };
-    case 'Xml': return { kind: 'Xml', line: finding.locationLine(), column: finding.locationColumn() };
+    case 'Field': case 'XPath': return { kind: kind.value, path: finding.locationPath };
+    case 'Xml': return { kind: 'Xml', line: finding.locationLine, column: finding.locationColumn };
     default: return { kind: kind.value };
   }
 }
 
 function finding(native) {
   return {
-    code: native.code(), severity: native.severity().value, layer: native.layer().value,
-    message: native.message(), assertionSite: text(native.assertionSite()), location: location(native),
+    code: native.code, severity: native.severity.value, layer: native.layer.value,
+    message: native.message, assertionSite: native.assertionSite, location: location(native),
   };
 }
 
 function stage(native) {
   const provenance = native.provenance();
   return {
-    stage: native.stage().value,
-    status: native.status().value,
-    provenance: provenance === null ? null : { stylesheet: provenance.stylesheet(), sha256: provenance.sha256() },
-    evaluatedAssertions: Array.from({ length: native.evaluatedAssertionsLen() }, (_, i) => native.evaluatedAssertion(i).value()),
-    findings: Array.from({ length: native.findingsLen() }, (_, i) => finding(native.finding(i))),
+    stage: native.stage.value,
+    status: native.status.value,
+    provenance: provenance === null ? null : { stylesheet: provenance.stylesheet, sha256: provenance.sha256 },
+    evaluatedAssertions: Array.from({ length: native.evaluatedAssertionsLen }, (_, i) => native.evaluatedAssertion(i)),
+    findings: Array.from({ length: native.findingsLen }, (_, i) => finding(native.finding(i))),
   };
 }
 
 /** Copy a native report into plain data once, so no WASM handle outlives the call. */
 function report(native) {
   return {
-    schemaVersion: native.schemaVersion(),
-    profile: native.profile(),
-    evaluatedAt: native.evaluatedAt(),
-    isComplete: native.isComplete(),
-    hasErrors: native.hasErrors(),
-    isValid: native.isValid(),
-    stages: Array.from({ length: native.stagesLen() }, (_, i) => stage(native.stage(i))),
+    schemaVersion: native.schemaVersion,
+    profile: native.profile,
+    evaluatedAt: native.evaluatedAt,
+    isComplete: native.isComplete,
+    hasErrors: native.hasErrors,
+    isValid: native.isValid,
+    stages: Array.from({ length: native.stagesLen }, (_, i) => stage(native.stage(i))),
   };
 }
 

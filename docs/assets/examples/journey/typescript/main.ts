@@ -27,18 +27,18 @@ function saveJson(path: string, value: unknown): void {
 function messages(count: number, get: (index: number) => ValidationMessage) {
   return Array.from({ length: count }, (_, index) => {
     const item = get(index);
-    return { code: item.code()?.value() ?? null, message: item.message()?.value() ?? null };
+    return { code: item.code, message: item.message };
   });
 }
 export function handleResponse(response: ValidationResponse, output: string): void {
   const results = response.validationResults();
   const summary = {
-    http_status: response.httpStatus(), outcome: response.outcome().value,
-    reporting_status: response.reportingStatusRaw()?.value() ?? null,
-    validation_status: results.statusRaw()?.value() ?? null,
-    info: messages(results.infoLen(), i => results.infoMessage(i)),
-    warnings: messages(results.warningLen(), i => results.warningMessage(i)),
-    errors: messages(results.errorLen(), i => results.errorMessage(i)),
+    http_status: response.httpStatus, outcome: response.outcome.value,
+    reporting_status: response.reportingStatusRaw,
+    validation_status: results.statusRaw,
+    info: messages(results.infoLen, i => results.infoMessage(i)),
+    warnings: messages(results.warningLen, i => results.warningMessage(i)),
+    errors: messages(results.errorLen, i => results.errorMessage(i)),
   };
   saveJson(`${output}/response.json`, summary);
   console.log(JSON.stringify(summary, null, 2));
@@ -85,13 +85,13 @@ export async function run(inputPath: string, submit: boolean, transport?: typeof
     builder.setSeller(seller.name, address, seller.vat_id, seller.crn, 'CRN');
     builder.addLineItem('دفتر', '2', 'PCE', '50', '15', VatCategory.Standard);
     const invoice = builder.build();
-    writeFileSync(`${output}/invoice.xml`, invoice.xml());
+    writeFileSync(`${output}/invoice.xml`, invoice.xml);
     console.log('Created: SAR 100 net + SAR 15 VAT = SAR 115 payable');
     state.stage = 'sign';
     const signed = InvoiceSigner.fromPem(certificate, key).sign(invoice);
-    const signedXml = signed.xml();
+    const signedXml = signed.xml;
     writeFileSync(`${output}/signed.xml`, signedXml);
-    state.invoice_hash = signed.invoiceHash();
+    state.invoice_hash = signed.invoiceHash;
     state.stage = 'validate';
     const report = Xml.validateZatca(signedXml, {
       previousInvoiceHash: data.previous_invoice_hash,
