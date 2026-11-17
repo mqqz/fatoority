@@ -193,7 +193,7 @@ Constructors that take individual fields use the order in the property table abo
     | `Csr.fromDer(der)` | `Csr`; pass an array of byte numbers. |
     | `csr.toPem()` / `csr.toDer()` | String / `Bytes` |
     | `csr.toBase64()` / `csr.toPemBase64()` | String |
-    | `csr.subjectString()` | String |
+    | `csr.subjectString` | String (property) |
     | `csr.extensionValuesDer()` | `BytesList` |
 
     These operations are synchronous and throw a `FatooraError` subclass on failure. Read files

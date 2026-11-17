@@ -296,32 +296,34 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     `ComplianceCsid.create(environment, requestId, token, secret)` returns compliance
     credentials; `ProductionCsid.create` returns production credentials. Pass an `Environment`
     (`Environment.NonProduction`, `.Simulation`, or `.Production`), a string or `null`
-    request ID, and string token/secret. `env()` returns the `Environment`; `binarySecurityToken()` and `secret()` return strings;
-    `requestId()` returns `Text` or `null`. Read optional text with `text?.value()`.
+    request ID, and string token/secret. The `env` property is the `Environment`;
+    `binarySecurityToken` and `secret` are strings and `requestId` is a string or `null`.
 
     **Responses**
 
-    | Method | Returns |
+    Value getters are read-only properties; members with parentheses are methods.
+
+    | Member | Value |
     | --- | --- |
-    | `response.httpStatus()` | Number or `null` |
-    | `response.outcome()` | `InvoiceOutcome.Accepted`, `.Rejected`, or `.Unknown` |
+    | `response.httpStatus` | Number or `null` |
+    | `response.outcome` | `InvoiceOutcome.Accepted`, `.Rejected`, or `.Unknown` |
     | `response.ensureAccepted()` | `undefined`; throws unless accepted. |
     | `response.validationResults()` | `ValidationResults` |
-    | `response.reportingStatus()` | `ReportingStatus` (`Reported`, `NotReported`, `Unknown`) or `null` |
-    | `response.clearanceStatus()` | `ClearanceStatus` (`Cleared`, `NotCleared`, `Unknown`) or `null` |
-    | `response.reportingStatusRaw()` / `clearanceStatusRaw()` / `qrSellerStatus()` / `qrBuyerStatus()` | `Text` or `null` |
-    | `response.clearedInvoiceBase64()` / `clearedInvoiceXml()` | `Text` or `null`; XML decoding can throw. |
-    | `results.status()` | `ValidationStatus` (`Pass`, `Warning`, `Error`, `Unknown`) or `null` |
-    | `results.statusRaw()` | `Text` or `null` |
-    | `results.infoLen()` / `warningLen()` / `errorLen()` | Number of messages |
+    | `response.reportingStatus` | `ReportingStatus` (`Reported`, `NotReported`, `Unknown`) or `null` |
+    | `response.clearanceStatus` | `ClearanceStatus` (`Cleared`, `NotCleared`, `Unknown`) or `null` |
+    | `response.reportingStatusRaw` / `clearanceStatusRaw` / `qrSellerStatus` / `qrBuyerStatus` | String or `null` |
+    | `response.clearedInvoiceBase64` / `clearedInvoiceXml` | String or `null`; reading the XML can throw. |
+    | `results.status` | `ValidationStatus` (`Pass`, `Warning`, `Error`, `Unknown`) or `null` |
+    | `results.statusRaw` | String or `null` |
+    | `results.infoLen` / `warningLen` / `errorLen` | Number of messages |
     | `results.infoMessage(index)` / `warningMessage(index)` / `errorMessage(index)` | `ValidationMessage` |
-    | `message.messageType()` | `MessageType` (`Info`, `Warning`, `Error`, `Unknown`) or `null` |
-    | `message.status()` | `ValidationStatus` or `null` |
-    | `message.messageTypeRaw()` / `statusRaw()` / `code()` / `category()` / `message()` | `Text` or `null` |
+    | `message.messageType` | `MessageType` (`Info`, `Warning`, `Error`, `Unknown`) or `null` |
+    | `message.status` | `ValidationStatus` or `null` |
+    | `message.messageTypeRaw` / `statusRaw` / `code` / `category` / `message` | String or `null` |
 
-    Status enums return `null` when the field is absent and `Unknown` when it is
-    present but not recognized by this binding version; the matching `*Raw()` getter
-    returns the exact wire string. Compare with `=== ReportingStatus.Reported`, or read
+    Status enums are `null` when the field is absent and `Unknown` when it is
+    present but not recognized by this binding version; the matching `*Raw`
+    property holds the exact wire string. Compare with `=== ReportingStatus.Reported`, or read
     the variant name from `.value`.
 
     Message indexes are zero-based and must be less than the corresponding length.
@@ -340,7 +342,7 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     They return `ComplianceRequest`, `ProductionRequest`, or `InvoiceRequest` according
     to the operation.
 
-    `request.method()`, `url()`, and `headersJson()` return strings; `body()` returns
+    `request.method`, `url`, and `headersJson` are strings; `body()` returns
     `Bytes`. `request.decode(status, body)` takes an HTTP status number and an array of
     byte numbers and returns the corresponding credentials or validation response.
     Alternatively, `await sendPrepared(request, { fetch, signal })` from `fatoority`

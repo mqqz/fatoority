@@ -41,15 +41,24 @@ package is needed.
 | --- | --- |
 | Text | `string`; embedded NUL is rejected |
 | Optional text input | `string` or `null`; `""` is a present empty value |
-| Optional text output | `Text` object or `null`; call `value()` when present |
-| Decimal amount or quantity | Exact decimal `string`, such as `"15.25"`; do not pass a floating-point number |
+| Optional text output | `string` or `null` |
+| Decimal amount or quantity | Exact decimal `string`, such as `"15.25"`, in arguments and results; do not pass a floating-point number. Use a decimal library such as `decimal.js` for arithmetic |
 | Invoice counter | `bigint`, within the unsigned 64-bit range |
 | Binary output | `Bytes.asSlice()` returns a copied `number[]`; use `Uint8Array.from(...)` for a typed byte array |
 | Native object | Object managed by `FinalizationRegistry` |
 | Invoice outcome | `InvoiceOutcome.Accepted`, `Rejected`, or `Unknown` |
 | Enumerated code | Enum class static, such as `Environment.NonProduction`, `InvoiceTypeKind.Tax`, `InvoiceSubType.Simplified`, `VatCategory.Standard`, `AdjustmentKind.Charge`, or `ClearanceMode.Disabled`; `.value` is the variant name string, such as `'Standard'`. Each enum has a matching string-literal union type named with a `Value` suffix, such as `VatCategoryValue` |
-| Response status | `ReportingStatus`, `ClearanceStatus`, `ValidationStatus`, or `MessageType` enum, or `null` when absent; `Unknown` means present but not recognized by this version, and the matching `*Raw()` getter returns the exact text |
-| Invoice flags | `number` bitmask; combine `InvoiceFlag.ThirdParty.bit()`, `Nominal`, `Export`, `Summary`, and `SelfBilled` bits with bitwise OR |
+| Response status | `ReportingStatus`, `ClearanceStatus`, `ValidationStatus`, or `MessageType` enum, or `null` when absent; `Unknown` means present but not recognized by this version, and the matching `*Raw` property returns the exact text |
+| Invoice flags | `number` bitmask; combine the `bit` property of `InvoiceFlag.ThirdParty`, `Nominal`, `Export`, `Summary`, and `SelfBilled` bits with bitwise OR |
+
+Value getters are read-only properties: `address.city`, `invoice.xml`,
+`totals.taxAmount`, `response.reportingStatus`. A getter is a property when it
+takes no arguments and returns a string, number, `bigint`, boolean, enum or
+optional text. Members that take arguments, return another native object
+(`invoice.data()`, `invoice.totals()`, `response.validationResults()`) or
+convert or consume (`toPem()`, `intoXml()`, `withReason(...)`, `build()`) stay
+methods, as do `len()` and `isEmpty()`. Assigning to a property throws a
+`TypeError`.
 
 Method names use camelCase. Constructors named `new` in the underlying API are
 `create`, such as `Config.create(Environment.NonProduction)`. The generated name
@@ -184,10 +193,10 @@ result of the operation. It accepts a boolean, a `ClearanceMode`
 on `fatoority/raw` require a `ClearanceMode`. `acceptLanguage` controls the language request header.
 Pass optional positional arguments explicitly when supplying a later argument.
 
-HTTP success alone does not establish invoice acceptance. Inspect `outcome()` or
+HTTP success alone does not establish invoice acceptance. Inspect `outcome` or
 call `ensureAccepted()` on a `ValidationResponse`. For clearance,
-`clearedInvoiceXml()` returns a nullable `Text` owner; call `value()` and save the
-returned document when present. See [API requests and responses](../api-client.md) for
+`clearedInvoiceXml` is the cleared document as a string, or `null`; save it
+when present. See [API requests and responses](../api-client.md) for
 credential requirements and response fields, and the [API guide](../../guides/api.md)
 for a complete workflow.
 
@@ -197,11 +206,11 @@ For your own HTTP integration, import `ZatcaClient` from `fatoority/raw`, constr
 it with `ZatcaClient.create(config)`, and call its `prepare*` methods. These return
 `ComplianceRequest`, `ProductionRequest`, or `InvoiceRequest` objects.
 
-| Request method | Return value |
+| Request member | Value |
 | --- | --- |
-| `method()` | HTTP method string |
-| `url()` | Complete request URL string |
-| `headersJson()` | JSON array of header-name/value pairs |
+| `method` | HTTP method string |
+| `url` | Complete request URL string |
+| `headersJson` | JSON array of header-name/value pairs |
 | `body()` | `Bytes`; use `asSlice()` for a copied request body |
 | `decode(status, bytes)` | Credentials or `ValidationResponse`, depending on request type; may throw |
 

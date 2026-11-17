@@ -14,7 +14,7 @@
       "default": "./index.mjs"
     },
     "./raw": {
-      "types": "./generated/index.d.mts",
+      "types": "./raw.d.mts",
       "import": "./raw.mjs",
       "default": "./raw.mjs"
     }
@@ -26,6 +26,8 @@
     "errors.d.mts",
     "patch.mjs",
     "raw.mjs",
+    "raw.d.mts",
+    "members.mjs",
     "generated",
     "licenses",
     "fatoora_ffi.wasm",

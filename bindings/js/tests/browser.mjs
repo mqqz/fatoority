@@ -44,7 +44,7 @@ try {
     try { await pending; } catch (e) { aborted = e instanceof sdk.TransportError && e.cause.name === 'AbortError'; }
     let typedError = false;
     try { sdk.Address.create('SAU', '\0', '', '', '', null, null, null); } catch (e) { typedError = e instanceof sdk.InvalidInputError && e.code === 1; }
-    return {pem: key.toPem(), token: response.binarySecurityToken(), redirectBlocked, aborted, typedError};
+    return {pem: key.toPem(), token: response.binarySecurityToken, redirectBlocked, aborted, typedError};
   });
   assert.match(result.pem, /BEGIN PRIVATE KEY/);
   assert.equal(result.token, 'new');

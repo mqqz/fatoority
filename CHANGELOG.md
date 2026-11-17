@@ -24,7 +24,8 @@ until 0.7 (see "Deprecated"); items whose type, signature or fields changed in
 place have no deprecation period (see "Changed (breaking)"). The Python package
 keeps its renamed 0.5 names as deprecated aliases until 0.7, and the Kotlin/Java
 facade keeps its 0.5 getter functions and `String` amount overloads, and the
-JavaScript package keeps `new_` as an alias of `create`. The JavaScript,
+JavaScript package keeps `new_` as an alias of `create` (its getters becoming
+properties is a hard break, as in Python). The JavaScript,
 Kotlin/Java and C# packages also keep deprecated aliases for the bridge members
 renamed to the core names (`percentage` → `percent_of`,
 `with_supplied_amount` → `supplied_amount`, `percent` → `percentage`,
@@ -555,6 +556,21 @@ working until 0.7 and emits a `DeprecationWarning` naming its replacement (see [
 
 Changed (breaking):
 
+- Value getters are read-only properties, as in the Kotlin and C# packages:
+  every zero-argument getter returning a string, number, `bigint`, boolean,
+  enum or optional text (`invoice.xml`, `data.id`, `address.city`,
+  `totals.taxAmount`, `response.reportingStatus`, `request.url`,
+  `InvoiceFlag.Export.bit`). Members that take arguments, return another
+  native object (`invoice.data()`, `response.validationResults()`), convert or
+  consume (`toPem()`, `intoXml()`, `withReason(...)`) stay methods, as do
+  `len()`, `isEmpty()` and `BindingError`'s methods. This applies to
+  `fatoority/raw` too, whose declarations are now `raw.d.mts`. There is no
+  deprecation period: a property cannot also be called, so `invoice.xml()`
+  throws `TypeError` and TypeScript reports each call.
+- Optional text results are `string | null` instead of a `Text` object, and
+  methods with arguments that returned `Text` (`instructionNoteAt(i)`,
+  `evaluatedAssertion(i)`) return `string`. Amounts remain exact decimal
+  strings.
 - Library failures throw one `FatooraError` subclass per error code
   (`InvalidInputError`, `ValidationError`, `ParseError`, `XmlError`,
   `CryptoError`, `IoError`, `NetworkError`, `UnauthorizedError`,
@@ -591,8 +607,8 @@ Added:
 
 Fixed:
 
-- Boolean getters such as `PaymentMeans.hasAccount()` and
-  `VatBreakdown.hasVatRate()` returned `0`/`1`; they return booleans.
+- Boolean getters such as `PaymentMeans.hasAccount` and
+  `VatBreakdown.hasVatRate` returned `0`/`1`; they are booleans.
 
 Deprecated:
 
@@ -604,7 +620,8 @@ Deprecated:
 - `Adjustment.percentage(base, percent)`, `adjustment.withSuppliedAmount`,
   `adjustment.percent()` and `withoutVatRate()` on `AllowanceCharge` and
   `VatBreakdown`, renamed in the bridge: use `Adjustment.percentOf`,
-  `suppliedAmount`, `percentage()` and `omitVatRate()`. Removed in 0.7.
+  `suppliedAmount`, the `percentage` property and `omitVatRate()`; `percent()`
+  still returns the 0.5 `Text`. Removed in 0.7.
 
 ### Kotlin / Java (`com.fatoora`)
 

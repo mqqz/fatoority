@@ -1,6 +1,6 @@
 import {
   Address, Adjustment, ClearanceMode, Config, Environment, FatooraError, InvalidInputError, InvoiceBuilder,
-  InvoiceSubType, InvoiceTypeKind, LineItemBuilder, PaymentMeans, Severity, TransportError, NetworkError,
+  InvoiceSubType, InvoiceTypeKind, LineItemBuilder, PaymentMeans, ReportingStatus, Severity, TransportError, NetworkError,
   ZatcaClient, ComplianceCsid, Xml, errorClassForCode, ErrorCode, sendPrepared,
   type EnvironmentValue, type ErrorKind, type ProductionCsid, type SeverityValue, type SignedInvoice,
   type ValidationResponse, type ZatcaFinding, type ZatcaStageReport, type ZatcaValidationReport,
@@ -24,7 +24,15 @@ builder.addPaymentMeans(PaymentMeans.create('10', null));
 builder.setSeller('Seller', Address.create('SA', 'Riyadh', 'Street', '1234', '12222', null, null, null), '301121971500003', null, null);
 const line = LineItemBuilder.create();
 const rebate: Adjustment = Adjustment.percentOf('250', '10').suppliedAmount('25');
-const percentage: string | undefined = rebate.percentage()?.value();
+const percentage: string | null = rebate.percentage; // value getters are properties
+const amount: string = rebate.value; // decimal amounts are strings
+// @ts-expect-error 0.5 getter calls are a compile error
+rebate.value();
+const city: string = Address.create('SA', 'Riyadh', 'Street', '1234', '12222', null, null, null).city;
+const district: string | null = Address.create('SA', 'Riyadh', 'Street', '1234', '12222', null, null, 'Olaya').district;
+const environmentProperty: Environment = rawConfig.env;
+// @ts-expect-error properties are read-only
+rawConfig.env = Environment.Production;
 /** 0.5 names still type-check until 0.7. */
 const legacyRebate: Adjustment = Adjustment.percentage('250', '10').withSuppliedAmount('25');
 const legacyPercent: string | undefined = legacyRebate.percent()?.value();
@@ -55,4 +63,14 @@ catch (error) {
 }
 const ErrorClass: typeof FatooraError = errorClassForCode(ErrorCode.Crypto);
 
-void [response, sent, reported, cleared, named, line, legacy, valid, bogus, severity, environment, ErrorClass];
+declare const validation: ValidationResponse;
+const status: ReportingStatus | null = validation.reportingStatus;
+const statusText: string | null = validation.reportingStatusRaw;
+const httpStatus: number | null = validation.httpStatus;
+const results = validation.validationResults(); // native owners stay methods
+const xml: string = invoice.xml;
+const counter: bigint = invoice.data().invoiceCounter;
+const url: string = prepared.url;
+
+void [response, sent, reported, cleared, named, line, legacy, valid, bogus, severity, environment, ErrorClass,
+  percentage, amount, city, district, environmentProperty, status, statusText, httpStatus, results, xml, counter, url, legacyPercent];

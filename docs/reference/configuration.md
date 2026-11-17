@@ -67,11 +67,11 @@ Clients reject credentials issued for a different environment before sending a r
     | Operation | Returns | Behavior |
     | --- | --- | --- |
     | `Config.create(env: Environment)` | `Config` | Stores the selected environment. |
-    | `config.env()` | `Environment` | Returns the stored environment. |
+    | `config.env` | `Environment` | Read-only property holding the stored environment. |
 
     Pass `Environment.NonProduction`, `Environment.Simulation`, or
     `Environment.Production`. There is no implicit default. `env.value` is the variant
-    name, such as `'NonProduction'`. `config.env()` throws only if the native library
+    name, such as `'NonProduction'`. Reading `config.env` throws only if the native library
     reports an environment this binding version does not know (code 9). See
     [JavaScript setup](bindings/javascript.md) for loading the package.
 

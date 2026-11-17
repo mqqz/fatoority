@@ -17,14 +17,14 @@ Pick your language:
 | --- | --- | --- | --- |
 | Rust | `fatoora-core = "0.6.0"` | Renamed items warn until 0.7; retyped items break | [Rust](rust.md) |
 | Python | `pip install "fatoority==0.6.0"` | Renamed names warn until 0.7; getters becoming properties breaks | [Python](python.md) |
-| JavaScript / TypeScript | `npm install fatoority@0.6.0` | `new_` (use `create`) and the renamed adjustment members; other renames break | [JavaScript/TypeScript](javascript.md) |
+| JavaScript / TypeScript | `npm install fatoority@0.6.0` | `new_` (use `create`) and the renamed adjustment members; getters becoming properties and other renames break | [JavaScript/TypeScript](javascript.md) |
 | Kotlin / Java | `com.fatoority:fatoority:0.6.0` | 0.5 getter functions, `String` amount overloads and the renamed adjustment members warn until 0.7; other renames break | [Kotlin/Java](kotlin.md) |
 | C# / .NET | `Fatoority` 0.6.0 | `New` (use `Create`) and the renamed adjustment members; other changes break | [C#/.NET](csharp.md) |
 | C / C++ | Release archives | None; every change breaks | [C/C++](c.md) |
 
 Where a language keeps deprecated names, they forward to the new ones and are
 removed in 0.7. A good order of work is to fix the compile errors (or, in
-Python, the property calls) first, then turn deprecation warnings into errors
+Python and plain JavaScript, the property calls) first, then turn deprecation warnings into errors
 and replace what remains.
 
 ## What changed everywhere
@@ -40,16 +40,16 @@ page shows them with its own before-and-after code.
 | Parse CSR properties | `text.parse()`, `CsrProperties::from_file` | `CsrProperties.from_str`, `from_file` | `CsrProperties.fromStr` | `CsrProperties.fromStr`, `fromFile` | `CsrProperties.FromStr`, `FromFile` | `fatoora_csr_properties_from_str`, `_from_file` |
 | Environment | `Environment::NonProduction` | `Environment.NON_PRODUCTION` | `Environment.NonProduction` | `Environment.NonProduction` | `ZatcaEnvironment.NonProduction` | `FATOORA_NON_PRODUCTION` |
 | Clearance header | `ClearanceMode::Disabled` | `ClearanceMode.DISABLED` | `ClearanceMode.Disabled` (or `false`) | `ClearanceMode.Disabled` | `ClearanceMode.Disabled` | `FATOORA_CLEARANCE_DISABLED` |
-| Response status | `Option<&ReportingStatus>` enum | `ReportingStatus` `str` enum or `None`; unknown text kept verbatim | `ReportingStatus` enum or `null`; `reportingStatusRaw()` text | `ReportingStatus?`; `reportingStatusRaw` | `ReportingStatus?`; `ReportingStatusRaw` | enum plus `has_value`; `_raw` text |
+| Response status | `Option<&ReportingStatus>` enum | `ReportingStatus` `str` enum or `None`; unknown text kept verbatim | `ReportingStatus` enum or `null`; `reportingStatusRaw` text | `ReportingStatus?`; `reportingStatusRaw` | `ReportingStatus?`; `ReportingStatusRaw` | enum plus `has_value`; `_raw` text |
 | XSD validation | `Validator::new().validate_xml(xml)` | `validate_xml(xml)` | `Xml.validate(xml)` | `Xml.validate(xml)` | `Xml.Validate(xml)` | `fatoora_xml_validate(xml, ...)` |
 | ZATCA validation | `Validator::new().validate_zatca(xml, &options)` | `validate_zatca(xml, previous_invoice_hash=...)` returning `ZatcaReport` | `Xml.validateZatca(xml, { previousInvoiceHash })` returning a plain object | `Xml.validateZatca(xml, optionsJson)` returning `ZatcaValidationReport` | `Xml.ValidateZatca(xml, optionsJson)` returning `ZatcaValidationReport` | `fatoora_xml_validate_zatca(xml, options, &report, ...)` |
-| Invoice hash | `hash()` returning `InvoiceHash` | `hash()` | `hash()` | `hash` | `Hash` | `fatoora_*_invoice_hash` |
+| Invoice hash | `hash()` returning `InvoiceHash` | `hash()` | `hash` | `hash` | `Hash` | `fatoora_*_invoice_hash` |
 | Payment means | `payment_means(PaymentMeans::new(code))` | `add_payment_means(PaymentMeans(code))` | `addPaymentMeans(PaymentMeans.create(code, null))` | `addPaymentMeans(PaymentMeans.create(code))` | `AddPaymentMeans(PaymentMeans.Create(code, null))` | `fatoora_invoice_builder_add_payment_means` |
 | Document allowance | `allowance(DocumentAdjustment::new(..))` | `add_allowance(Adjustment(..), category, rate)` | `addAllowance(adjustment, category, rate, exemption)` | same as JavaScript | `AddAllowance(...)` | `fatoora_invoice_builder_add_allowance` |
 | Constructors | `Type::new(..)` | `Type(..)` | `Type.create(..)` | `Type.create(..)` | `Type.Create(..)` (was `New`) | `fatoora_type_new` (client and credentials were `_create`) |
 | Percentage adjustment | `Adjustment::percent_of(base, pct)` | `Adjustment.percent_of(base, pct)` | `Adjustment.percentOf(base, pct)` | same as JavaScript | `Adjustment.PercentOf(base, pct)` | `fatoora_adjustment_percent_of` |
 | Supplied adjustment amount | `.supplied_amount(amount)` | `percent_of(base, pct, amount=...)` | `suppliedAmount(amount)` | same as JavaScript | `SuppliedAmount(amount)` | `fatoora_adjustment_supplied_amount` |
-| Adjustment percentage getter | `percentage()` | `percentage` | `percentage()` | `percentage` | `Percentage` | `fatoora_adjustment_percentage` |
+| Adjustment percentage getter | `percentage()` | `percentage` | `percentage` | `percentage` | `Percentage` | `fatoora_adjustment_percentage` |
 | Omit an out-of-scope VAT rate | `omit_vat_rate()` | `omitted_rate=True` | `omitVatRate()` | same as JavaScript | `OmitVatRate()` | `fatoora_*_omit_vat_rate` |
 | Request timeout (new) | `ZatcaClient::with_timeout(config, duration)` | `ZatcaClient(config, timeout=30)` | `AbortSignal` per request | `ZatcaClient.withTimeout(config, ms)` | `ZatcaClient.WithTimeout(config, ms)` | `fatoora_zatca_client_with_timeout` |
 
@@ -71,9 +71,10 @@ The 0.5 aggregate allowance setters (`invoice_level_discount`,
   dataclasses (`Address`, `Party`, `Adjustment`, `Identifier`, ...); dates
   become `datetime`/`date`; keyword-only arguments are enforced. See
   [Python](python.md).
-- **JavaScript/TypeScript**: library failures throw `FatooraError` subclasses;
-  `validateZatca` returns a plain object; `new_` becomes `create`. See
-  [JavaScript/TypeScript](javascript.md).
+- **JavaScript/TypeScript**: value getters become read-only properties;
+  optional text is `string | null`; amounts stay decimal strings; library
+  failures throw `FatooraError` subclasses; `validateZatca` returns a plain
+  object; `new_` becomes `create`. See [JavaScript/TypeScript](javascript.md).
 - **Kotlin/Java**: value getters become properties; amounts are `BigDecimal`;
   optional text is `String?`; failures throw `BindingException` subclasses.
   See [Kotlin/Java](kotlin.md).

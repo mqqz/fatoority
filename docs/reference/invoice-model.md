@@ -316,9 +316,9 @@ correspond to the fields above.
 
 === "JavaScript"
 
-    Import from `fatoority`. All decimal arguments and amounts are strings; counters use `bigint`, indexes and the flag mask use `number`, and codes are enum classes. Pass `null` for absent optional arguments. Operations are synchronous and throw a `FatooraError` subclass on failure. Returned `Text` objects expose `.value()`.
+    Import from `fatoority`. All decimal arguments and amounts are strings; counters use `bigint`, indexes and the flag mask use `number`, and codes are enum classes. Pass `null` for absent optional arguments. Operations are synchronous and throw a `FatooraError` subclass on failure. Value getters are read-only properties (`data.id`, `totals.taxAmount`) and optional text is `string | null`; getters returning native objects (`seller()`, `lineItem(index)`) stay methods.
 
-    Enums: `InvoiceTypeKind` (`Tax`, `Prepayment`, `CreditNote`, `DebitNote`), `InvoiceSubType` (`Standard`, `Simplified`), and `VatCategory` (`Exempt`, `Standard`, `Zero`, `OutOfScope`); pass them as `InvoiceTypeKind.Tax`, `VatCategory.Standard`, and so on. A returned enum's `.value` is the variant name, such as `'Standard'`. Flags remain a `number` bitmask; build it from `InvoiceFlag` bits, for example `InvoiceFlag.Export.bit() | InvoiceFlag.Summary.bit()` (`1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed). Use zero for no flags.
+    Enums: `InvoiceTypeKind` (`Tax`, `Prepayment`, `CreditNote`, `DebitNote`), `InvoiceSubType` (`Standard`, `Simplified`), and `VatCategory` (`Exempt`, `Standard`, `Zero`, `OutOfScope`); pass them as `InvoiceTypeKind.Tax`, `VatCategory.Standard`, and so on. A returned enum's `.value` is the variant name, such as `'Standard'`. Flags remain a `number` bitmask; build it from `InvoiceFlag` bits, for example `InvoiceFlag.Export.bit | InvoiceFlag.Summary.bit` (`1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed). Use zero for no flags.
 
     **Create and configure**
 
@@ -352,43 +352,43 @@ correspond to the fields above.
 
     `invoice.data()` returns an owned `InvoiceData` snapshot; `invoice.totals()` returns owned `InvoiceTotals`. Both are independent of invoice state.
 
-    | Call | Returns |
+    | Member | Value |
     | --- | --- |
-    | `id()` | `string` |
-    | `uuid()` | `string` |
-    | `previousInvoiceHash()` | `string` |
-    | `paymentMeansCode()` | `string` |
-    | `currency()` | `string` |
-    | `issueDatetime()` | `string` |
-    | `invoiceLevelCharge()` | `string` |
-    | `invoiceLevelDiscount()` | `string` |
-    | `allowanceReason()` | `Text \| null` |
-    | `invoiceCounter()` | `bigint` |
-    | `vatCategory()` | `VatCategory` |
-    | `flags()` | `number` |
-    | `invoiceTypeKind()` | `InvoiceTypeKind` |
-    | `invoiceSubType()` | `InvoiceSubType` |
+    | `id` | `string` |
+    | `uuid` | `string` |
+    | `previousInvoiceHash` | `string` |
+    | `paymentMeansCode` | `string` |
+    | `currency` | `string` |
+    | `issueDatetime` | `string` |
+    | `invoiceLevelCharge` | `string` |
+    | `invoiceLevelDiscount` | `string` |
+    | `allowanceReason` | `string \| null` |
+    | `invoiceCounter` | `bigint` |
+    | `vatCategory` | `VatCategory` |
+    | `flags` | `number` |
+    | `invoiceTypeKind` | `InvoiceTypeKind` |
+    | `invoiceSubType` | `InvoiceSubType` |
     | `seller()` | `Party` |
     | `buyer()` | `Party \| null` |
     | `note()` | `InvoiceNote \| null` |
-    | `lineItemsLen()` | `number` |
+    | `lineItemsLen` | `number` |
     | `lineItem(index)` | `InvoiceLineItem` |
     | `originalInvoiceRef()` | `OriginalInvoiceRef \| null` |
-    | `originalInvoiceReason()` | `Text \| null` |
+    | `originalInvoiceReason` | `string \| null` |
 
     **Totals**
 
-    | Call | Returns |
+    | Property | Value |
     | --- | --- |
-    | `taxInclusive()` | `string` |
-    | `taxAmount()` | `string` |
-    | `lineExtension()` | `string` |
-    | `allowanceTotal()` | `string` |
-    | `chargeTotal()` | `string` |
-    | `taxableAmount()` | `string` |
-    | `prepaidAmount()` | `string` |
-    | `payableRoundingAmount()` | `string` |
-    | `payableAmount()` | `string` |
+    | `taxInclusive` | `string` |
+    | `taxAmount` | `string` |
+    | `lineExtension` | `string` |
+    | `allowanceTotal` | `string` |
+    | `chargeTotal` | `string` |
+    | `taxableAmount` | `string` |
+    | `prepaidAmount` | `string` |
+    | `payableRoundingAmount` | `string` |
+    | `payableAmount` | `string` |
 
     Optional object accessors return null when absent. Line-item objects provide description, quantity, unit code, unit price, total amount, VAT rate, VAT amount, and category. See [XML](xml.md) and [signing](invoice-signing.md) for document and signature operations.
 
