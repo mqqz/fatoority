@@ -12,7 +12,10 @@ mod response;
 use response::InvoiceOperation;
 #[cfg(test)]
 use response::read_validation_response;
-pub use response::{HttpResponseError, InvoiceOutcome};
+pub use response::{
+    ClearanceStatus, HttpResponseError, InvoiceOutcome, MessageType, ReportingStatus,
+    ValidationStatus,
+};
 use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
 use thiserror::Error;
@@ -149,9 +152,9 @@ pub struct ValidationResponse {
     #[serde(rename = "validationResults")]
     validation_results: ValidationResults,
     #[serde(rename = "reportingStatus")]
-    reporting_status: Option<String>,
+    reporting_status: Option<ReportingStatus>,
     #[serde(rename = "clearanceStatus")]
-    clearance_status: Option<String>,
+    clearance_status: Option<ClearanceStatus>,
     #[serde(rename = "qrSellertStatus")]
     qr_seller_status: Option<String>,
     #[serde(rename = "qrBuyertStatus")]
@@ -164,14 +167,16 @@ impl ValidationResponse {
         &self.validation_results
     }
 
-    /// Returns the `reportingStatus` (e.g. `REPORTED`), present for reporting responses.
-    pub fn reporting_status(&self) -> Option<&str> {
-        self.reporting_status.as_deref()
+    /// Returns the `reportingStatus` (e.g. [`ReportingStatus::Reported`]),
+    /// present for reporting responses.
+    pub fn reporting_status(&self) -> Option<&ReportingStatus> {
+        self.reporting_status.as_ref()
     }
 
-    /// Returns the `clearanceStatus` (e.g. `CLEARED`), present for clearance responses.
-    pub fn clearance_status(&self) -> Option<&str> {
-        self.clearance_status.as_deref()
+    /// Returns the `clearanceStatus` (e.g. [`ClearanceStatus::Cleared`]),
+    /// present for clearance responses.
+    pub fn clearance_status(&self) -> Option<&ClearanceStatus> {
+        self.clearance_status.as_ref()
     }
 
     /// Returns the `qrSellertStatus` (sic) field from the response, if present.
@@ -195,7 +200,7 @@ pub struct ValidationResults {
     #[serde(rename = "errorMessages", default)]
     error_messages: Vec<ValidationMessage>,
     #[serde(default)]
-    status: Option<String>,
+    status: Option<ValidationStatus>,
 }
 
 impl ValidationResults {
@@ -215,9 +220,9 @@ impl ValidationResults {
         &self.error_messages
     }
 
-    /// Returns the overall validation status (e.g. `PASS`, `WARNING`, `ERROR`), if present.
-    pub fn status(&self) -> Option<&str> {
-        self.status.as_deref()
+    /// Returns the overall validation status (`PASS`, `WARNING`, `ERROR`), if present.
+    pub fn status(&self) -> Option<&ValidationStatus> {
+        self.status.as_ref()
     }
 }
 
@@ -225,18 +230,18 @@ impl ValidationResults {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct ValidationMessage {
     #[serde(rename = "type")]
-    message_type: Option<String>,
+    message_type: Option<MessageType>,
     code: Option<String>,
     category: Option<String>,
     message: Option<String>,
     #[serde(default)]
-    status: Option<String>,
+    status: Option<ValidationStatus>,
 }
 
 impl ValidationMessage {
-    /// Returns the message type (`type`, e.g. `INFO`, `WARNING`, `ERROR`), if present.
-    pub fn message_type(&self) -> Option<&str> {
-        self.message_type.as_deref()
+    /// Returns the message type (`type`: `INFO`, `WARNING`, `ERROR`), if present.
+    pub fn message_type(&self) -> Option<&MessageType> {
+        self.message_type.as_ref()
     }
 
     /// Returns the ZATCA rule or message code, if present.
@@ -254,9 +259,9 @@ impl ValidationMessage {
         self.message.as_deref()
     }
 
-    /// Returns the per-message status, if present.
-    pub fn status(&self) -> Option<&str> {
-        self.status.as_deref()
+    /// Returns the per-message status (`PASS`, `WARNING`, `ERROR`), if present.
+    pub fn status(&self) -> Option<&ValidationStatus> {
+        self.status.as_ref()
     }
 }
 
@@ -1280,23 +1285,29 @@ mod tests {
         }"#;
 
         let parsed: ValidationResponse = serde_json::from_str(payload).expect("deserialize");
-        assert_eq!(parsed.reporting_status(), Some("REPORTED"));
-        assert_eq!(parsed.clearance_status(), Some("CLEARED"));
+        assert_eq!(parsed.reporting_status(), Some(&ReportingStatus::Reported));
+        assert_eq!(parsed.clearance_status(), Some(&ClearanceStatus::Cleared));
         assert_eq!(parsed.qr_seller_status(), Some("OK"));
         assert_eq!(parsed.qr_buyer_status(), Some("OK"));
 
         let results = parsed.validation_results();
-        assert_eq!(results.status(), Some("PASS"));
+        assert_eq!(results.status(), Some(&ValidationStatus::Pass));
         assert_eq!(results.warning_messages().len(), 1);
+        let warning = &results.warning_messages()[0];
+        assert_eq!(
+            warning.message_type(),
+            Some(&MessageType::Other("WARN".into()))
+        );
+        assert_eq!(warning.status().map(ValidationStatus::as_str), Some("WARN"));
         assert_eq!(results.error_messages().len(), 0);
 
         match results.info_messages() {
             MessageList::One(message) => {
-                assert_eq!(message.message_type(), Some("INFO"));
+                assert_eq!(message.message_type(), Some(&MessageType::Info));
                 assert_eq!(message.code(), Some("INFO_CODE"));
                 assert_eq!(message.category(), Some("Info"));
                 assert_eq!(message.message(), Some("ok"));
-                assert_eq!(message.status(), Some("PASS"));
+                assert_eq!(message.status(), Some(&ValidationStatus::Pass));
             }
             _ => panic!("expected info message"),
         }

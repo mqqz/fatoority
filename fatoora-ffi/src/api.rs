@@ -512,10 +512,10 @@ pub mod ffi {
             boundary(|| optional(self.0.cleared_invoice_base64()))
         }
         pub fn reporting_status(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| optional(self.0.reporting_status()))
+            boundary(|| optional(self.0.reporting_status().map(|v| v.as_str())))
         }
         pub fn clearance_status(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| optional(self.0.clearance_status()))
+            boundary(|| optional(self.0.clearance_status().map(|v| v.as_str())))
         }
         pub fn qr_seller_status(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
             boundary(|| optional(self.0.qr_seller_status()))
@@ -526,7 +526,7 @@ pub mod ffi {
     }
     impl ValidationResults {
         pub fn status(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| optional(self.0.status()))
+            boundary(|| optional(self.0.status().map(|v| v.as_str())))
         }
         pub fn info_len(&self) -> usize {
             match self.0.info_messages() {
@@ -586,7 +586,7 @@ pub mod ffi {
     }
     impl ValidationMessage {
         pub fn message_type(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| optional(self.0.message_type()))
+            boundary(|| optional(self.0.message_type().map(|v| v.as_str())))
         }
         pub fn code(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
             boundary(|| optional(self.0.code()))
@@ -598,7 +598,7 @@ pub mod ffi {
             boundary(|| optional(self.0.message()))
         }
         pub fn status(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| optional(self.0.status()))
+            boundary(|| optional(self.0.status().map(|v| v.as_str())))
         }
     }
 }
@@ -780,5 +780,30 @@ mod tests {
         assert_eq!(response.qr_buyer_status().ok().unwrap().unwrap().0, "PASS");
         drop(response);
         assert_eq!(decoded.0, xml);
+    }
+
+    #[test]
+    fn unrecognized_statuses_round_trip_verbatim() {
+        let response = ValidationResponse(
+            serde_json::from_value(serde_json::json!({
+                "reportingStatus": "reported ",
+                "clearanceStatus": "",
+                "validationResults": {
+                    "status": "PARTIAL",
+                    "errorMessages": [{"type": "Notice", "status": "WARN"}]
+                }
+            }))
+            .unwrap(),
+        );
+        type Out =
+            Result<Option<Box<crate::common::ffi::Text>>, Box<crate::common::ffi::BindingError>>;
+        let text = |value: Out| value.ok().unwrap().unwrap().0;
+        assert_eq!(text(response.reporting_status()), "reported ");
+        assert_eq!(text(response.clearance_status()), "");
+        let results = response.validation_results().ok().unwrap();
+        assert_eq!(text(results.status()), "PARTIAL");
+        let message = results.error_message(0).ok().unwrap();
+        assert_eq!(text(message.message_type()), "Notice");
+        assert_eq!(text(message.status()), "WARN");
     }
 }

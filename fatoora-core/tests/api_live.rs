@@ -1,7 +1,7 @@
 mod common;
 
 use base64ct::{Base64, Encoding};
-use fatoora_core::api::ZatcaClient;
+use fatoora_core::api::{ClearanceStatus, ReportingStatus, ZatcaClient};
 use fatoora_core::config::{Config, Environment};
 use fatoora_core::csr::Csr;
 use fatoora_core::csr::{CsrProperties, SigningKey};
@@ -111,7 +111,7 @@ async fn check_compliance_with_live_ccsid() {
         .expect("report signed invoice");
     assert_eq!(
         compliance_response.reporting_status(),
-        Some("REPORTED"),
+        Some(&ReportingStatus::Reported),
         "invoice not reported successfully"
     );
 }
@@ -153,7 +153,7 @@ async fn report_invoice_with_live_pcsid() {
         .expect("report signed invoice");
     assert_eq!(
         compliance_response.reporting_status(),
-        Some("REPORTED"),
+        Some(&ReportingStatus::Reported),
         "Compliance check failed!"
     );
     let pcsid_response = client
@@ -175,7 +175,7 @@ async fn report_invoice_with_live_pcsid() {
     );
     assert_eq!(
         reporting_response.reporting_status(),
-        Some("REPORTED"),
+        Some(&ReportingStatus::Reported),
         "invoice not reported successfully"
     );
 }
@@ -315,7 +315,7 @@ async fn clear_invoice_with_live_pcsid() {
     );
     assert_eq!(
         clearance_response.clearance_status(),
-        Some("CLEARED"),
+        Some(&ClearanceStatus::Cleared),
         "invoice not cleared successfully"
     );
 }
