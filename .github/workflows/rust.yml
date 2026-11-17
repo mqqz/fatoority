@@ -138,15 +138,15 @@ jobs:
           cargo build --manifest-path "$consumer/Cargo.toml"
 
   semver-checks:
-    # Guards the 0.5.x line: PRs into main must stay compatible with v0.5.1.
-    # PRs into next (0.6.0 breaking work) still run the check and report the
+    # Guards the 0.6.x line: PRs into main must stay compatible with v0.6.0.
+    # PRs into next (0.7.0 breaking work) still run the check and report the
     # result, but a breaking change does not fail the job.
     needs: changes
     if: ${{ !cancelled() && github.event_name == 'pull_request' && needs.changes.outputs.rust != 'false' }}
     runs-on: ubuntu-latest
     env:
       CARGO_TERM_COLOR: always
-      SEMVER_BASELINE: v0.5.1
+      SEMVER_BASELINE: v0.6.0
     steps:
       - uses: actions/checkout@v5
         with:
@@ -171,7 +171,7 @@ jobs:
         if: steps.semver.outcome == 'failure'
         run: |
           echo "::warning title=semver-checks::Breaking changes against $SEMVER_BASELINE detected. Allowed because this PR targets next."
-          echo "cargo-semver-checks found breaking changes against \`$SEMVER_BASELINE\`. This is allowed for PRs into \`next\` (0.6.0); see the step log for details." >> "$GITHUB_STEP_SUMMARY"
+          echo "cargo-semver-checks found breaking changes against \`$SEMVER_BASELINE\`. This is allowed for PRs into \`next\` (0.7.0); see the step log for details." >> "$GITHUB_STEP_SUMMARY"
 
   coverage:
     needs: changes
