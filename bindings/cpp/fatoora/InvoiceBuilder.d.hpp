@@ -34,7 +34,6 @@ namespace capi { struct TaxExemption; }
 class TaxExemption;
 namespace capi { struct VatBreakdown; }
 class VatBreakdown;
-class AdjustmentKind;
 class InvoiceSubType;
 class InvoiceTypeKind;
 class VatCategory;
@@ -63,7 +62,15 @@ public:
 
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> add_note(std::optional<std::string_view> language, std::string_view value);
 
-  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> add_document_adjustment(fatoora::AdjustmentKind kind, const fatoora::Adjustment& value, fatoora::VatCategory category, std::string_view rate, const fatoora::TaxExemption& exemption);
+  /**
+   * Append a document-level allowance (discount), mirroring core `InvoiceBuilder::allowance`.
+   */
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> add_allowance(const fatoora::Adjustment& value, fatoora::VatCategory category, std::string_view rate, const fatoora::TaxExemption& exemption);
+
+  /**
+   * Append a document-level charge, mirroring core `InvoiceBuilder::charge`.
+   */
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> add_charge(const fatoora::Adjustment& value, fatoora::VatCategory category, std::string_view rate, const fatoora::TaxExemption& exemption);
 
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_buyer_without_address(std::string_view name, std::optional<std::string_view> vat_id, std::optional<std::string_view> other_id, std::optional<std::string_view> scheme);
 
@@ -71,8 +78,6 @@ public:
    * Construct a credit or debit note with a complete billing reference.
    */
   inline static diplomat::result<std::unique_ptr<fatoora::InvoiceBuilder>, std::unique_ptr<fatoora::BindingError>> new_with_reference(fatoora::InvoiceTypeKind kind, fatoora::InvoiceSubType subtype, const fatoora::OriginalInvoiceRef& reference, std::string_view reason);
-
-  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_note_without_language(std::string_view value);
 
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_payment_instruction(std::string_view instruction);
 
@@ -84,7 +89,7 @@ public:
 
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_tax_currency(std::string_view currency, std::string_view amount);
 
-  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_tax_exemption(fatoora::VatCategory category, std::string_view rate, const fatoora::TaxExemption& exemption);
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> add_tax_exemption(fatoora::VatCategory category, std::string_view rate, const fatoora::TaxExemption& exemption);
 
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> add_adjustment(const fatoora::AllowanceCharge& adjustment);
 
@@ -108,23 +113,11 @@ public:
 
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_previous_invoice_hash(std::string_view value);
 
-  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_payment_means_code(std::string_view value);
-
-  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> allowance_reason(std::string_view value);
-
-  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> invoice_level_charge(std::string_view value);
-
-  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> invoice_level_discount(std::string_view value);
-
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_invoice_counter(uint64_t value);
 
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_vat_category(fatoora::VatCategory value);
 
-  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> flags(uint8_t value);
-
-  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_note(std::string_view language, std::string_view value);
-
-  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_allowance(std::string_view reason, std::string_view amount);
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_flags(uint8_t value);
 
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_seller(std::string_view name, const fatoora::Address& address, std::string_view vat_id, std::optional<std::string_view> other_id, std::optional<std::string_view> scheme);
 

@@ -11,7 +11,7 @@ internal interface SignedInvoiceLib: Library {
     fun fatoora_SignedInvoice_from_file(value: Slice): ResultPointerPointer
     fun fatoora_SignedInvoice_data(handle: Pointer): ResultPointerPointer
     fun fatoora_SignedInvoice_totals(handle: Pointer): ResultPointerPointer
-    fun fatoora_SignedInvoice_hash_base64(handle: Pointer, write: Pointer): ResultUnitPointer
+    fun fatoora_SignedInvoice_hash(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_SignedInvoice_xml(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_SignedInvoice_qr_code(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_SignedInvoice_signature(handle: Pointer, write: Pointer): ResultUnitPointer
@@ -137,9 +137,9 @@ class SignedInvoice internal constructor (
         }
     }
 
-    fun hashBase64(): Result<String> {
+    fun hash(): Result<String> {
         val write = DW.lib.diplomat_buffer_write_create(0)
-        val returnVal = lib.fatoora_SignedInvoice_hash_base64(handle, write);
+        val returnVal = lib.fatoora_SignedInvoice_hash(handle, write);
         val nativeOkVal = returnVal.getNativeOk();
         if (nativeOkVal != null) {
 

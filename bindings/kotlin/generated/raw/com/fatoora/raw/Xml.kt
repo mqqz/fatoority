@@ -7,8 +7,8 @@ import com.sun.jna.Structure
 
 internal interface XmlLib: Library {
     fun fatoora_Xml_destroy(handle: Pointer)
-    fun fatoora_Xml_validate_zatca(config: Pointer, xml: Slice, optionsJson: OptionSlice, write: Pointer): ResultUnitPointer
-    fun fatoora_Xml_validate(config: Pointer, xml: Slice): ResultBytePointer
+    fun fatoora_Xml_validate_zatca(xml: Slice, optionsJson: OptionSlice): ResultPointerPointer
+    fun fatoora_Xml_validate(xml: Slice): ResultBytePointer
     fun fatoora_Xml_hash(xml: Slice, write: Pointer): ResultUnitPointer
 }
 
@@ -43,22 +43,25 @@ class Xml internal constructor (
         @JvmStatic
 
         /**
-         * Produce an owned local ZATCA report as JSON. Inspect is_valid before acceptance.
-         * Options default when absent; JSON inputs are limited to 4 KiB.
+         * Run the local ZATCA validation profile and return its owned report.
+         *
+         * Inspect `is_valid` before acceptance. Options default when absent;
+         * `options_json` is limited to 4 KiB. Validation needs no configuration:
+         * it mirrors the stateless core `Validator::validate_zatca`.
          */
-        fun validateZatca(config: Config, xml: String, optionsJson: String?): Result<String> {
+        fun validateZatca(xml: String, optionsJson: String?): Result<ZatcaValidationReport> {
             val xmlSliceMemory = PrimitiveArrayTools.borrowUtf8(xml)
             val optionsJsonSliceMemory = optionsJson?.let { PrimitiveArrayTools.borrowUtf8(it) }
-            val write = DW.lib.diplomat_buffer_write_create(0)
-            val returnVal = lib.fatoora_Xml_validate_zatca(config.handle, xmlSliceMemory.slice, optionsJsonSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none(), write);
+
+            val returnVal = lib.fatoora_Xml_validate_zatca(xmlSliceMemory.slice, optionsJsonSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none());
             try {
                 val nativeOkVal = returnVal.getNativeOk();
                 if (nativeOkVal != null) {
-
-                    val returnString = DW.writeToString(write)
-                    return returnString.ok()
+                    val selfEdges: List<Any> = listOf()
+                    val handle = nativeOkVal
+                    val returnOpaque = ZatcaValidationReport(handle, selfEdges, true)
+                    return returnOpaque.ok()
                 } else {
-                    DW.lib.diplomat_buffer_write_destroy(write)
                     val selfEdges: List<Any> = listOf()
                     val handle = returnVal.getNativeErr()!!
                     val returnOpaque = BindingError(handle, selfEdges, true)
@@ -71,10 +74,14 @@ class Xml internal constructor (
         }
         @JvmStatic
 
-        fun validate(config: Config, xml: String): Result<Boolean> {
+        /**
+         * Check the XML against the UBL schema and business rules, mirroring core
+         * `Validator::validate_xml`. Returns true or a validation error.
+         */
+        fun validate(xml: String): Result<Boolean> {
             val xmlSliceMemory = PrimitiveArrayTools.borrowUtf8(xml)
 
-            val returnVal = lib.fatoora_Xml_validate(config.handle, xmlSliceMemory.slice);
+            val returnVal = lib.fatoora_Xml_validate(xmlSliceMemory.slice);
             try {
                 val nativeOkVal = returnVal.getNativeOk();
                 if (nativeOkVal != null) {

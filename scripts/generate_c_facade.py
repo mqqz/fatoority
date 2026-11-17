@@ -32,6 +32,11 @@ ENUM_PREFIXES = {
     "ClearanceStatus": "FATOORA_CLEARANCE_STATUS_",
     "ValidationStatus": "FATOORA_VALIDATION_STATUS_",
     "MessageType": "FATOORA_MESSAGE_TYPE_",
+    "ZatcaStage": "FATOORA_ZATCA_STAGE_",
+    "ZatcaStageStatus": "FATOORA_ZATCA_STAGE_STATUS_",
+    "ValidationLayer": "FATOORA_VALIDATION_LAYER_",
+    "Severity": "FATOORA_SEVERITY_",
+    "ValidationLocationKind": "FATOORA_LOCATION_",
 }
 
 
@@ -85,7 +90,7 @@ enum {
 };
 """]
     # Enum inputs reject values outside the declared constants. FatooraInvoiceFlag
-    # values are bits of the uint8_t mask taken by fatoora_invoice_builder_flags.
+    # values are bits of the uint8_t mask taken by fatoora_invoice_builder_set_flags.
     # Status enums use UNKNOWN for wire values this version does not recognize.
     public.extend(
         f"typedef enum Fatoora{name} {{\n"
@@ -191,7 +196,7 @@ const char *fatoora_error_details_json(const FatooraError *error);
                 ok = re.search(r"(\w+\*?) ok;", fields or "")
                 value_type = ok.group(1) if ok else (ret if fields is None else None)
                 if value_type and value_type not in {
-                    "Text*", "bool", "uint8_t", "uint16_t", "uint64_t", "size_t",
+                    "Text*", "bool", "uint8_t", "uint16_t", "uint32_t", "uint64_t", "size_t",
                     "DiplomatU8View", *enums, *(handle + "*" for handle in handles)
                 }:
                     raise ValueError(f"Unsupported return type in {native}: {value_type}")

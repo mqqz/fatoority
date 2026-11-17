@@ -6,8 +6,9 @@ Breaking 0.6 phase for the `fatoora-core` Rust crate. Renamed items keep their
 old names as deprecated aliases until 0.7 (see "Deprecated"); items whose type,
 signature or fields changed in place have no deprecation period (see "Changed
 (breaking)"). The `fatoora-ffi` bridge and the generated bindings replace
-raw integer codes and Booleans with enums (see "Bindings" under "Changed
-(breaking)"); the Python `fatoora` package API is unchanged.
+raw integer codes and Booleans with enums and mirror the core names (see
+"Bindings" under "Changed (breaking)"); the Python `fatoora` package API is
+unchanged except that credential `request_id()` returns `None` when absent.
 
 Migration guide with a before-and-after table of every change: [Migrate from 0.5 to 0.6 (Rust)](https://docs.fatoority.com/guides/migrate-0.6/).
 
@@ -89,6 +90,18 @@ Migration guide with a before-and-after table of every change: [Migrate from 0.5
   `FATOORA_CLEARANCE_{DISABLED,ENABLED}`, `FATOORA_REPORTING_STATUS_*`,
   `FATOORA_CLEARANCE_STATUS_*`, `FATOORA_VALIDATION_STATUS_*` and
   `FATOORA_MESSAGE_TYPE_*`.
+- Bindings: `ZatcaValidationReport` mirrors the core report, with
+  `schema_version`, `profile`, `evaluated_at`, `is_complete`, `has_errors`,
+  `is_valid`, `stages_len`, `stage(index)` and `to_json`. Its
+  `ZatcaStageReport` (`stage`, `status`, `provenance`, evaluated assertions and
+  findings), `ZatcaRuleSource` and `ZatcaFinding` (`assertion_site`, `layer`,
+  `code`, `severity`, `message`, `location_kind`, `location_path`,
+  `location_line`, `location_column`) come with the enums `ZatcaStage`,
+  `ZatcaStageStatus`, `ValidationLayer`, `Severity` and
+  `ValidationLocationKind`. The C facade adds the matching
+  `FATOORA_ZATCA_STAGE_*`, `FATOORA_ZATCA_STAGE_STATUS_*`,
+  `FATOORA_VALIDATION_LAYER_*`, `FATOORA_SEVERITY_*` and `FATOORA_LOCATION_*`
+  constants.
 
 ### Changed
 
@@ -262,6 +275,51 @@ old integer codes.
   return `FATOORA_INVALID_INPUT`. Optional status getters write the enum plus
   `bool *has_value`, and the `_raw` variants write `char **` (`NULL` when
   absent). The raw Diplomat headers do not validate enum values.
+- The bridge mirrors the core names, with no aliases. Builders use `set_*` to
+  replace a value and `add_*` to append one; getters keep plain names:
+
+  | 0.5 | 0.6 |
+  | --- | --- |
+  | `CsidCompliance`, `CsidProduction` | `ComplianceCsid`, `ProductionCsid` |
+  | `ZatcaClient::post_csr_for_ccsid`, `post_ccsid_for_pcsid` | `request_compliance_csid`, `request_production_csid` |
+  | `ZatcaClient::prepare_post_csr_for_ccsid`, `prepare_post_ccsid_for_pcsid` | `prepare_request_compliance_csid`, `prepare_request_production_csid` |
+  | `Signer` | `InvoiceSigner` |
+  | `CsrProperties::from_properties_str`, `parse_csr_config_file` | `from_str`, `from_file` |
+  | `FinalizedInvoice::hash_base64`, `SignedInvoice::hash_base64` | `hash` (`SignedInvoice::invoice_hash` stays the stored digest) |
+  | `InvoiceBuilder::flags(mask)` | `set_flags(mask)` |
+  | `InvoiceData::flags_raw` | `flags` |
+  | `InvoiceBuilder::set_tax_exemption` | `add_tax_exemption` (it appends) |
+  | `InvoiceBuilder::add_document_adjustment(kind, ...)` | `add_allowance(...)` or `add_charge(...)` |
+  | `InvoiceBuilder::{set_note(language, text), set_note_without_language(text)}` | `add_note(language or null, text)` |
+  | `InvoiceBuilder::set_payment_means_code(code)` | `add_payment_means(PaymentMeans::new(code, null))` |
+  | `InvoiceBuilder::{set_allowance, allowance_reason, invoice_level_charge, invoice_level_discount}` | `add_allowance`/`add_charge` with an `Adjustment` carrying the reason |
+  | `Xml::validate(config, xml)` | `Xml::validate(xml)` |
+  | `Xml::validate_zatca(config, xml, options_json)` returning JSON text | `Xml::validate_zatca(xml, options_json)` returning `ZatcaValidationReport` (`to_json()` gives the old text) |
+
+  Validation drops the `Config` argument because the core `Validator` is
+  stateless. The bridge no longer calls deprecated core APIs. The credential
+  `request_id()` getters return null when absent in every language.
+- JavaScript: the async `ZatcaClient` methods `postCsrForCcsid` and
+  `postCcsidForPcsid` are renamed `requestComplianceCsid` and
+  `requestProductionCsid`, and `Xml.validateZatca(xml, optionsJson)` returns a
+  `ZatcaValidationReport`. Kotlin: the coroutine helpers are renamed
+  `requestComplianceCsidAsync` and `requestProductionCsidAsync`. C facade:
+  functions follow the renames (`fatoora_compliance_csid_*`,
+  `fatoora_production_csid_*`, `fatoora_invoice_signer_*`,
+  `fatoora_zatca_client_request_compliance_csid`, `fatoora_*_invoice_hash`,
+  `fatoora_xml_validate(xml, ...)`, `fatoora_xml_validate_zatca(xml, options,
+  FatooraZatcaValidationReport **out, ...)`).
+- Python keeps its names (`Signer`, `CsidCompliance`, `post_csr_for_ccsid`,
+  `hash_base64`, `set_payment_means_code`, the aggregate adjustment setters and
+  the `validate_zatca_invoice_from_str` dictionary) on top of the renamed
+  bridge. `CsidCompliance.request_id()` and `CsidProduction.request_id()`
+  return `None` instead of `""` when absent. `set_payment_means_code` appends
+  a payment means instead of rewriting the code of an existing one, and the
+  aggregate setters (`set_allowance`, `invoice_level_discount`,
+  `invoice_level_charge`, `allowance_reason`) are applied by `build()` as one
+  allowance and one charge in the document VAT category; `build()` raises
+  `ValueError` when that category has more than one line VAT rate or when they
+  are combined with `add_document_adjustment`/`add_adjustment`.
 
 ### Deprecated
 

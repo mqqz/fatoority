@@ -11,6 +11,7 @@
 #include "fatoora/InvoiceData.hpp"
 #include "fatoora/InvoiceLineItem.hpp"
 #include "fatoora/Party.hpp"
+#include "fatoora/PaymentMeans.hpp"
 #include "fatoora/SignedInvoice.hpp"
 #include "fatoora/SigningKey.hpp"
 #include <algorithm>
@@ -31,7 +32,8 @@ static auto builder() {
     assert(b->set_currency("SAR").is_ok());
     assert(b->set_previous_invoice_hash("hash").is_ok());
     assert(b->set_invoice_counter(1).is_ok());
-    assert(b->set_payment_means_code("10").is_ok());
+    auto means = fatoora::PaymentMeans::new_("10", std::nullopt).ok().value();
+    assert(b->add_payment_means(*means).is_ok());
     assert(b->set_vat_category(fatoora::VatCategory::Standard).is_ok());
     auto address = fatoora::Address::new_("SA", "Riyadh", "King Fahd", "1234", "12222",
         std::nullopt, std::nullopt, "Olaya").ok().value();
@@ -78,7 +80,7 @@ static void signed_contract(const char *path) {
     assert(input);
     std::string xml((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
     auto invoice = fatoora::SignedInvoice::from_xml(xml).ok().value();
-    assert(invoice->hash_base64().ok().value() == fatoora::Xml::hash(xml).ok().value());
+    assert(invoice->hash().ok().value() == fatoora::Xml::hash(xml).ok().value());
     auto copied = invoice->xml().ok().value();
     auto data = invoice->data().ok().value();
     auto owned = invoice->into_xml().ok().value();

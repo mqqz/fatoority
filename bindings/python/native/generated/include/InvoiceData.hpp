@@ -97,7 +97,7 @@ namespace capi {
 
     _native::capi::VatCategory fatoora_InvoiceData_vat_category(const _native::capi::InvoiceData* self);
 
-    uint8_t fatoora_InvoiceData_flags_raw(const _native::capi::InvoiceData* self);
+    uint8_t fatoora_InvoiceData_flags(const _native::capi::InvoiceData* self);
 
     _native::capi::InvoiceTypeKind fatoora_InvoiceData_invoice_type_kind(const _native::capi::InvoiceData* self);
 
@@ -361,8 +361,8 @@ inline _native::VatCategory _native::InvoiceData::vat_category() const {
     return _native::VatCategory::FromFFI(result);
 }
 
-inline uint8_t _native::InvoiceData::flags_raw() const {
-    auto result = _native::capi::fatoora_InvoiceData_flags_raw(this->AsFFI());
+inline uint8_t _native::InvoiceData::flags() const {
+    auto result = _native::capi::fatoora_InvoiceData_flags(this->AsFFI());
     return result;
 }
 

@@ -112,7 +112,7 @@ public:
 
   inline _native::VatCategory vat_category() const;
 
-  inline uint8_t flags_raw() const;
+  inline uint8_t flags() const;
 
   inline _native::InvoiceTypeKind invoice_type_kind() const;
 

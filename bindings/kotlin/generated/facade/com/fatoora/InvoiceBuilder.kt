@@ -43,17 +43,17 @@ class InvoiceBuilder internal constructor(internal val raw: com.fatoora.raw.Invo
         unwrap(raw.addNote(language?.let(::checkedText), checkedText(value)))
     }
 
-    fun addDocumentAdjustment(kind: AdjustmentKind, value: Adjustment, category: VatCategory, rate: String, exemption: TaxExemption): Unit = nativeCall(listOfNotNull(this, value, exemption)) {
-        unwrap(raw.addDocumentAdjustment(com.fatoora.raw.AdjustmentKind.valueOf(kind.name), value.raw, com.fatoora.raw.VatCategory.valueOf(category.name), checkedText(rate), exemption.raw))
+    fun addAllowance(value: Adjustment, category: VatCategory, rate: String, exemption: TaxExemption): Unit = nativeCall(listOfNotNull(this, value, exemption)) {
+        unwrap(raw.addAllowance(value.raw, com.fatoora.raw.VatCategory.valueOf(category.name), checkedText(rate), exemption.raw))
+    }
+
+    fun addCharge(value: Adjustment, category: VatCategory, rate: String, exemption: TaxExemption): Unit = nativeCall(listOfNotNull(this, value, exemption)) {
+        unwrap(raw.addCharge(value.raw, com.fatoora.raw.VatCategory.valueOf(category.name), checkedText(rate), exemption.raw))
     }
 
     @JvmOverloads
     fun setBuyerWithoutAddress(name: String, vatId: String? = null, otherId: String? = null, scheme: String? = null): Unit = nativeCall(listOfNotNull(this)) {
         unwrap(raw.setBuyerWithoutAddress(checkedText(name), vatId?.let(::checkedText), otherId?.let(::checkedText), scheme?.let(::checkedText)))
-    }
-
-    fun setNoteWithoutLanguage(value: String): Unit = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.setNoteWithoutLanguage(checkedText(value)))
     }
 
     fun setPaymentInstruction(instruction: String): Unit = nativeCall(listOfNotNull(this)) {
@@ -77,8 +77,8 @@ class InvoiceBuilder internal constructor(internal val raw: com.fatoora.raw.Invo
         unwrap(raw.setTaxCurrency(checkedText(currency), checkedText(amount)))
     }
 
-    fun setTaxExemption(category: VatCategory, rate: String, exemption: TaxExemption): Unit = nativeCall(listOfNotNull(this, exemption)) {
-        unwrap(raw.setTaxExemption(com.fatoora.raw.VatCategory.valueOf(category.name), checkedText(rate), exemption.raw))
+    fun addTaxExemption(category: VatCategory, rate: String, exemption: TaxExemption): Unit = nativeCall(listOfNotNull(this, exemption)) {
+        unwrap(raw.addTaxExemption(com.fatoora.raw.VatCategory.valueOf(category.name), checkedText(rate), exemption.raw))
     }
 
     fun addAdjustment(adjustment: AllowanceCharge): Unit = nativeCall(listOfNotNull(this, adjustment)) {
@@ -121,22 +121,6 @@ class InvoiceBuilder internal constructor(internal val raw: com.fatoora.raw.Invo
         unwrap(raw.setPreviousInvoiceHash(checkedText(value)))
     }
 
-    fun setPaymentMeansCode(value: String): Unit = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.setPaymentMeansCode(checkedText(value)))
-    }
-
-    fun allowanceReason(value: String): Unit = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.allowanceReason(checkedText(value)))
-    }
-
-    fun invoiceLevelCharge(value: String): Unit = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.invoiceLevelCharge(checkedText(value)))
-    }
-
-    fun invoiceLevelDiscount(value: String): Unit = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.invoiceLevelDiscount(checkedText(value)))
-    }
-
     fun setInvoiceCounter(value: java.math.BigInteger): Unit = nativeCall(listOfNotNull(this)) {
         unwrap(raw.setInvoiceCounter(checkedCounter(value)))
     }
@@ -145,16 +129,8 @@ class InvoiceBuilder internal constructor(internal val raw: com.fatoora.raw.Invo
         unwrap(raw.setVatCategory(com.fatoora.raw.VatCategory.valueOf(value.name)))
     }
 
-    fun flags(value: Int): Unit = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.flags(checkedUnsigned(value.toLong(), 255).toUByte()))
-    }
-
-    fun setNote(language: String, value: String): Unit = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.setNote(checkedText(language), checkedText(value)))
-    }
-
-    fun setAllowance(reason: String, amount: String): Unit = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.setAllowance(checkedText(reason), checkedText(amount)))
+    fun setFlags(value: Int): Unit = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.setFlags(checkedUnsigned(value.toLong(), 255).toUByte()))
     }
 
     @JvmOverloads

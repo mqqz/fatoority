@@ -13,7 +13,7 @@ public class JavaContractsTest {
         for (String kind : new String[]{"standard", "simplified"}) {
             String xml = new String(Files.readAllBytes(fixtures.resolve("cases/" + kind + "-invoice/sdk-signed.xml")), StandardCharsets.UTF_8);
             try (SignedInvoice invoice = SignedInvoice.fromXml(xml)) {
-                assertEquals(Xml.hash(xml), invoice.hashBase64());
+                assertEquals(Xml.hash(xml), invoice.hash());
             }
         }
     }
@@ -22,13 +22,13 @@ public class JavaContractsTest {
         assertEquals(Integer.class, ValidationResponse.class.getMethod("httpStatus").getReturnType());
         Path fixtures = Paths.get(System.getProperty("fatoora.fixtures"));
         String xml = new String(Files.readAllBytes(fixtures.resolve("cases/simplified-invoice/input.xml")), StandardCharsets.UTF_8);
-        try (Signer signer = Signer.fromDer(
+        try (InvoiceSigner signer = InvoiceSigner.fromDer(
                  Files.readAllBytes(fixtures.resolve("credentials/certificate.der")),
                  Files.readAllBytes(fixtures.resolve("credentials/private-key.der")));
              SignedInvoice invoice = SignedInvoice.fromXml(signer.signXml(xml));
              Config config = Config.create(Environment.NonProduction);
              ZatcaClient client = ZatcaClient.create(config);
-             CsidProduction credentials = CsidProduction.create(Environment.NonProduction, null, "token", "secret");
+             ProductionCsid credentials = ProductionCsid.create(Environment.NonProduction, null, "token", "secret");
              InvoiceRequest request = client.prepareReportSimplifiedInvoice(invoice, credentials, ClearanceMode.Disabled);
              ValidationResponse response = request.decode(200,
                  "{\"validationResults\":{\"status\":\"PASS\"},\"reportingStatus\":\"REPORTED\"}".getBytes(StandardCharsets.UTF_8))) {

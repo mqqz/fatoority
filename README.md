@@ -278,7 +278,7 @@ JavaScript
 import { CsrProperties, Environment, SigningKey } from 'fatoority';
 
 const key = SigningKey.generate();
-const csr = CsrProperties.fromPropertiesStr(propertiesText).build(key, Environment.NonProduction);
+const csr = CsrProperties.fromStr(propertiesText).build(key, Environment.NonProduction);
 const csrPem = csr.toPem();
 ```
 

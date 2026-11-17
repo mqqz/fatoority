@@ -6,7 +6,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 /**
  * Named bits of the `u8` invoice flag mask accepted by
- * `InvoiceBuilder::flags` and returned by `InvoiceData::flags_raw`.
+ * `InvoiceBuilder::set_flags` and returned by `InvoiceData::flags`.
  *
  * Each discriminant is the flag's bit value; `bit()` returns it as a `u8`
  * for languages whose enums do not expose their discriminant.

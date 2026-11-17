@@ -5,7 +5,7 @@ import com.fatoora.*
 object SdkExamples {
     // --8<-- [start:csr]
     fun generateCsr(propertiesText: String): Pair<String, String> =
-        CsrProperties.fromPropertiesStr(propertiesText).use { properties ->
+        CsrProperties.fromStr(propertiesText).use { properties ->
             SigningKey.generate().use { key ->
                 properties.build(key, Environment.NonProduction).use { csr -> csr.toPem() to key.toPem() }
             }
@@ -14,7 +14,7 @@ object SdkExamples {
 
     // --8<-- [start:signing]
     fun signInvoice(xml: String, certificatePem: String, keyPem: String): String =
-        Signer.fromPem(certificatePem, keyPem).use { signer ->
+        InvoiceSigner.fromPem(certificatePem, keyPem).use { signer ->
             FinalizedInvoice.fromXml(xml).use { invoice ->
                 signer.sign(invoice).use { signed -> signed.intoXml() }
             }
@@ -22,9 +22,9 @@ object SdkExamples {
     // --8<-- [end:signing]
 
     // --8<-- [start:validation]
-    fun validateInvoice(xml: String, optionsJson: String? = null): String =
-        Config.create(Environment.NonProduction).use { config -> Xml.validateZatca(config, xml, optionsJson) }
-    // Inspect the returned JSON's is_valid and stages fields.
+    fun validateInvoice(xml: String, optionsJson: String? = null): Boolean =
+        Xml.validateZatca(xml, optionsJson).use { report -> report.isValid() }
+    // The report also exposes isComplete(), stage(i) findings and toJson().
     // --8<-- [end:validation]
 
     // --8<-- [start:qr]
@@ -36,7 +36,7 @@ object SdkExamples {
     suspend fun reportInvoice(signedXml: String, token: String, secret: String) {
         Config.create(Environment.Production).use { config ->
             ZatcaClient.create(config).use { client ->
-                CsidProduction.create(Environment.Production, null, token, secret).use { credentials ->
+                ProductionCsid.create(Environment.Production, null, token, secret).use { credentials ->
                     SignedInvoice.fromXml(signedXml).use { invoice ->
                         client.reportSimplifiedInvoiceAsync(invoice, credentials, false, "en").use { response ->
                             response.ensureAccepted()

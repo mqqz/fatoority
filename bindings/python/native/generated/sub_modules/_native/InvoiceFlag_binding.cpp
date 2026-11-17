@@ -5,7 +5,7 @@
 
 namespace _native {
 void add_InvoiceFlag_binding(nb::module_ mod) {
-    nb::class_<_native::InvoiceFlag> e_class(mod, "InvoiceFlag", "Named bits of the `u8` invoice flag mask accepted by\n`InvoiceBuilder::flags` and returned by `InvoiceData::flags_raw`.\n\nEach discriminant is the flag's bit value; `bit()` returns it as a `u8`\nfor languages whose enums do not expose their discriminant.");
+    nb::class_<_native::InvoiceFlag> e_class(mod, "InvoiceFlag", "Named bits of the `u8` invoice flag mask accepted by\n`InvoiceBuilder::set_flags` and returned by `InvoiceData::flags`.\n\nEach discriminant is the flag's bit value; `bit()` returns it as a `u8`\nfor languages whose enums do not expose their discriminant.");
     
         nb::enum_<_native::InvoiceFlag::Value> enumerator(e_class, "InvoiceFlag");
         enumerator

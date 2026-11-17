@@ -292,11 +292,11 @@ class Signer(_Owned):
 
     @classmethod
     def from_pem(cls, cert_pem: str, key_pem: str) -> 'Signer':
-        return Signer(_call(_native.Signer.from_pem, cert_pem, key_pem))
+        return Signer(_call(_native.InvoiceSigner.from_pem, cert_pem, key_pem))
 
     @classmethod
     def from_der(cls, cert_der: bytes, key_der: bytes) -> 'Signer':
-        return Signer(_call(_native.Signer.from_der, cert_der, key_der))
+        return Signer(_call(_native.InvoiceSigner.from_der, cert_der, key_der))
 
     def certificate_der(self) -> bytes:
         return self._invoke("certificate_der")
@@ -331,15 +331,15 @@ class CsrProperties(_Owned):
 
     @classmethod
     def from_properties_str(cls, properties: str) -> 'CsrProperties':
-        return CsrProperties(_call(_native.CsrProperties.from_properties_str, properties))
+        return CsrProperties(_call(_native.CsrProperties.from_str, properties))
 
     @classmethod
     def parse_csr_config(cls, properties: str) -> 'CsrProperties':
-        return CsrProperties(_call(_native.CsrProperties.from_properties_str, properties))
+        return CsrProperties(_call(_native.CsrProperties.from_str, properties))
 
     @classmethod
     def parse_csr_config_file(cls, path: _StrPath) -> 'CsrProperties':
-        return CsrProperties(_call(_native.CsrProperties.parse_csr_config_file, os.fspath(path)))
+        return CsrProperties(_call(_native.CsrProperties.from_file, os.fspath(path)))
 
     def build(self, key: SigningKey, env: Environment) -> 'Csr':
         return Csr(self._invoke("build", key, int(env)))
@@ -375,10 +375,11 @@ class CsidCompliance(_Owned):
 
     @classmethod
     def new(cls, env: Environment, token: str, secret: str, request_id: Optional[str]=None) -> 'CsidCompliance':
-        return CsidCompliance(_call(_native.CsidCompliance.create, int(env), request_id, token, secret))
+        return CsidCompliance(_call(_native.ComplianceCsid.create, int(env), request_id, token, secret))
 
-    def request_id(self) -> str:
-        return self._invoke("request_id") or ""
+    def request_id(self) -> Optional[str]:
+        """The ZATCA request ID, or ``None`` when the credentials have none."""
+        return self._invoke("request_id")
 
     def env(self) -> Environment:
         return Environment(self._invoke("env"))
@@ -395,10 +396,11 @@ class CsidProduction(_Owned):
 
     @classmethod
     def new(cls, env: Environment, token: str, secret: str, request_id: Optional[str]=None) -> 'CsidProduction':
-        return CsidProduction(_call(_native.CsidProduction.create, int(env), request_id, token, secret))
+        return CsidProduction(_call(_native.ProductionCsid.create, int(env), request_id, token, secret))
 
-    def request_id(self) -> str:
-        return self._invoke("request_id") or ""
+    def request_id(self) -> Optional[str]:
+        """The ZATCA request ID, or ``None`` when the credentials have none."""
+        return self._invoke("request_id")
 
     def env(self) -> Environment:
         return Environment(self._invoke("env"))
@@ -584,10 +586,10 @@ class ZatcaClient(_Owned):
         super().__init__(_call(_native.ZatcaClient.create, config))
 
     def post_csr_for_ccsid(self, csr: Csr, otp: str) -> CsidCompliance:
-        return CsidCompliance(self._invoke("_blocking_post_csr_for_ccsid", csr, otp))
+        return CsidCompliance(self._invoke("_blocking_request_compliance_csid", csr, otp))
 
     def post_ccsid_for_pcsid(self, ccsid: CsidCompliance) -> CsidProduction:
-        return CsidProduction(self._invoke("_blocking_post_ccsid_for_pcsid", ccsid))
+        return CsidProduction(self._invoke("_blocking_request_production_csid", ccsid))
 
     def renew_csid(self, pcsid: CsidProduction, csr: Csr, otp: str, accept_language: Optional[str]=None) -> CsidProduction:
         return CsidProduction(self._invoke("_blocking_renew_csid", pcsid, csr, otp, accept_language))
@@ -759,7 +761,7 @@ class _Invoice(_Owned):
         return InvoiceTotals(**{name: Decimal(_call(getattr(totals, name))) for name in InvoiceTotals.__dataclass_fields__})
 
     def flags_raw(self) -> int:
-        return self._data("flags_raw")
+        return self._data("flags")
 
     def flags(self) -> set[InvoiceFlag]:
         bits = self.flags_raw()
@@ -791,7 +793,7 @@ class _Invoice(_Owned):
         return self.xml()
 
     def hash_base64(self) -> str:
-        return self._invoke("hash_base64")
+        return self._invoke("hash")
 
 
 class FinalizedInvoice(_Invoice):
@@ -983,6 +985,14 @@ class LineItemBuilder(_Owned):
         self._invoke("set_item_standard_identifier", value, scheme)
 
 class InvoiceBuilder(_Owned):
+    def __init__(self, handle):
+        super().__init__(handle)
+        # Inputs for the aggregate setters, which ``build`` applies as adjustments.
+        self._legacy: Optional[dict[str, Any]] = None
+        self._line_rates: list[tuple[VatCategory, Decimal]] = []
+        self._vat_category: Optional[VatCategory] = None
+        self._explicit_adjustments = False
+
     def add_seller_identifier(self, value: str, scheme: Optional[str] = None) -> None:
         self._invoke("add_seller_identifier", value, scheme)
 
@@ -1013,7 +1023,9 @@ class InvoiceBuilder(_Owned):
         self._invoke("set_buyer_without_address", name, vat_id, other_id, scheme)
 
     def add_document_adjustment(self, charge: bool, value: Adjustment, category: VatCategory, rate: Decimal | str | int, exemption: TaxExemption = TaxExemption()) -> None:
-        self._invoke("add_document_adjustment", _flag(charge, "charge"), value, int(category), _decimal(rate), exemption._native_value())
+        _flag(charge, "charge")
+        self._invoke("add_charge" if charge else "add_allowance", value, int(category), _decimal(rate), exemption._native_value())
+        self._explicit_adjustments = True
 
     def add_item(self, item: InvoiceLineItem) -> None:
         b = LineItemBuilder.new()
@@ -1051,6 +1063,7 @@ class InvoiceBuilder(_Owned):
         for tax in item.tax_subtotals:
             b.add_tax_subtotal(tax)
         self._invoke("add_item", b._invoke("build"))
+        self._record_line(item.vat_category, item.vat_rate, item.document_references)
 
 
     @classmethod
@@ -1063,7 +1076,7 @@ class InvoiceBuilder(_Owned):
 
     def set_note_without_language(self, text: str) -> None:
         warnings.warn("InvoiceBuilder.set_note_without_language() is deprecated and changes in 0.6; use add_note(text) instead", DeprecationWarning, stacklevel=2)
-        self._invoke("set_note_without_language", text)
+        self._invoke("add_note", None, text)
 
     def set_delivery(self, actual: Optional[str] = None, latest: Optional[str] = None) -> None:
         self._invoke("set_delivery", actual, latest)
@@ -1072,7 +1085,7 @@ class InvoiceBuilder(_Owned):
         self._invoke("set_tax_currency", currency, _decimal(amount))
 
     def set_tax_exemption(self, category: VatCategory, rate: Decimal | str | int, exemption: TaxExemption) -> None:
-        self._invoke("set_tax_exemption", int(category), _decimal(rate), exemption._native_value())
+        self._invoke("add_tax_exemption", int(category), _decimal(rate), exemption._native_value())
 
     def set_payment_instruction(self, instruction: str) -> None:
         self._invoke("set_payment_instruction", instruction)
@@ -1093,6 +1106,7 @@ class InvoiceBuilder(_Owned):
         if adjustment.omitted_rate:
             native = _call(native.without_vat_rate)
         self._invoke("add_adjustment", native)
+        self._explicit_adjustments = True
 
     def set_id(self, invoice_id: str) -> None:
         self._invoke("set_id", invoice_id)
@@ -1113,10 +1127,12 @@ class InvoiceBuilder(_Owned):
         self._invoke("set_invoice_counter", invoice_counter)
 
     def set_payment_means_code(self, payment_means_code: str) -> None:
-        self._invoke("set_payment_means_code", payment_means_code)
+        """Append a payment means with this code (``add_payment_means(PaymentMeans.new(code))``).
 
-    def set_vat_category(self, vat_category: VatCategory) -> None:
-        self._invoke("set_vat_category", int(vat_category))
+        On a builder without payment means this matches the earlier behavior of
+        setting the code; it no longer rewrites an existing payment means.
+        """
+        self.add_payment_means(PaymentMeans.new(payment_means_code))
 
     @_deprecate_positional(2, "InvoiceBuilder.set_seller(): pass every argument after name as a keyword argument; they become keyword-only in 0.6")
     def set_seller(self, name: str, country_code: str, city: str, street: str, building_number: str, postal_code: str, vat_id: str, additional_street: Optional[str]=None, additional_number: Optional[str]=None, district: Optional[str]=None, other_id: Optional[str]=None, other_id_scheme: Optional[str]=None, *, province: Optional[str]=None) -> None:
@@ -1135,6 +1151,7 @@ class InvoiceBuilder(_Owned):
             native = tax._native_value()
             item = _call(item.with_tax_subtotal, native)
         self._invoke("add_item", item)
+        self._record_line(vat_category, vat_rate, document_references)
 
     @_deprecate_positional(2, "InvoiceBuilder.set_buyer(): pass every argument after name as a keyword argument; they become keyword-only in 0.6")
     def set_buyer(self, name: str, country_code: str, city: str, street: str, building_number: str, postal_code: str, vat_id: Optional[str]=None, other_id: Optional[str]=None, other_id_scheme: Optional[str]=None, additional_street: Optional[str]=None, additional_number: Optional[str]=None, district: Optional[str]=None, *, province: Optional[str]=None) -> None:
@@ -1145,25 +1162,82 @@ class InvoiceBuilder(_Owned):
 
     def set_note(self, language: str, text: str) -> None:
         warnings.warn("InvoiceBuilder.set_note() is deprecated and changes in 0.6; use add_note(text, language=...) instead", DeprecationWarning, stacklevel=2)
-        self._invoke("set_note", language, text)
+        self._invoke("add_note", language, text)
 
     def set_allowance(self, reason: str, amount: Decimal | str | int) -> None:
-        self._invoke("set_allowance", reason, _decimal(amount))
+        self.invoice_level_discount(amount)
+        self.allowance_reason(reason)
 
+    # The aggregate setters below are applied by ``build`` as one document-level
+    # allowance and one charge in the document VAT category, at the single VAT rate
+    # of the lines in that category. They cannot be combined with
+    # ``add_document_adjustment`` or ``add_adjustment``.
     def invoice_level_charge(self, charge: Decimal | str | int) -> None:
-        self._invoke("invoice_level_charge", _decimal(charge))
+        self._aggregate()["charge"] = Adjustment.amount(charge)
 
     def invoice_level_discount(self, discount: Decimal | str | int) -> None:
-        self._invoke("invoice_level_discount", _decimal(discount))
+        self._aggregate()["discount"] = Adjustment.amount(discount)
 
     def allowance_reason(self, reason: str) -> None:
-        self._invoke("allowance_reason", reason)
+        if not isinstance(reason, str):
+            raise TypeError("reason must be a string")
+        self._aggregate()["reason"] = reason
 
     def flags(self, flags: int | InvoiceFlag) -> None:
-        self._invoke("flags", int(flags))
+        self._invoke("set_flags", int(flags))
+
+    def set_vat_category(self, vat_category: VatCategory) -> None:
+        self._invoke("set_vat_category", int(vat_category))
+        self._vat_category = VatCategory(vat_category)
 
     def build(self) -> FinalizedInvoice:
-        return FinalizedInvoice(self._invoke("build"))
+        with self._lock:
+            self._require_open()
+            self._apply_aggregate()
+            return FinalizedInvoice(self._invoke("build"))
+
+    def _aggregate(self) -> dict[str, Any]:
+        self._require_open()
+        if self._legacy is None:
+            self._legacy = {"charge": None, "discount": None, "reason": None}
+        return self._legacy
+
+    def _record_line(self, category, rate, document_references=()) -> None:
+        # Mirror core totals: prepayment adjustment lines (a reference to
+        # document type 386) are not part of the taxable groups.
+        if any((ref.document_type_code or "").strip() == "386" for ref in document_references):
+            return
+        self._line_rates.append((VatCategory(category), Decimal(_decimal(rate))))
+
+    def _apply_aggregate(self) -> None:
+        legacy = self._legacy
+        if legacy is None:
+            return
+        charge, discount, reason = legacy["charge"], legacy["discount"], legacy["reason"]
+        charge = None if charge is None or Decimal(charge.value()) == 0 else charge
+        discount = None if discount is None or Decimal(discount.value()) == 0 else discount
+        if charge is None and discount is None and reason is None:
+            return
+        if self._explicit_adjustments:
+            raise ValueError("invoice_level_charge/invoice_level_discount/allowance_reason cannot be combined with document adjustments")
+        category = self._vat_category
+        rates = {rate for cat, rate in self._line_rates if cat == category}
+        if category is None or len(rates) != 1:
+            raise ValueError("aggregate document adjustments need a document VAT category with exactly one line VAT rate; use add_document_adjustment")
+        rate = _decimal(rates.pop())
+        # Prepare (and validate) both entries before touching the native builder,
+        # and keep the pending values until they are added, so a rejected input
+        # can be corrected and build() retried.
+        allowance = None
+        if discount is not None or reason is not None:
+            allowance = (discount or Adjustment.amount(0)).with_reason(reason or "discount")
+        surcharge = charge.with_reason(reason or "charge") if charge is not None else None
+        exemption = TaxExemption()._native_value()
+        if allowance is not None:
+            self._invoke("add_allowance", allowance, int(category), rate, exemption)
+        if surcharge is not None:
+            self._invoke("add_charge", surcharge, int(category), rate, exemption)
+        self._legacy = None
 
 def parse_finalized_invoice_xml(xml: str) -> FinalizedInvoice:
     return FinalizedInvoice(_call(_native.FinalizedInvoice.from_xml, xml))
@@ -1182,7 +1256,9 @@ def parse_signed_invoice_xml_file(path: _StrPath) -> SignedInvoice:
 
 
 def validate_xml_invoice_from_str(config: Config, xml: str) -> bool:
-    return _call(_native.Xml.validate, config, xml)
+    # Validation is stateless; ``config`` is accepted for compatibility only.
+    _call(lambda _config: None, config)
+    return _call(_native.Xml.validate, xml)
 
 
 def invoice_hash_base64_from_xml_str(xml: str) -> str:
@@ -1214,4 +1290,7 @@ def validate_zatca_invoice_from_str(
             raise ValueError(f"{name} contains interior NUL")
     options = json.dumps({"previous_invoice_hash": previous_invoice_hash,
                           "evaluated_at": evaluated_at})
-    return json.loads(_call(_native.Xml.validate_zatca, config, xml, options))
+    # Validation is stateless; ``config`` is accepted for compatibility only.
+    _call(lambda _config: None, config)
+    report = _call(_native.Xml.validate_zatca, xml, options)
+    return json.loads(_call(report.to_json))

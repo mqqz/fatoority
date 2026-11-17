@@ -183,7 +183,7 @@ Constructors that take individual fields use the order in the property table abo
 
     | Call | Returns |
     | --- | --- |
-    | `CsrProperties.fromPropertiesStr(text)` | `CsrProperties`; `text` is a string. |
+    | `CsrProperties.fromStr(text)` | `CsrProperties`; `text` is a string. |
     | `properties.build(key, env)` | `Csr`; `key` is a `SigningKey`, `env` is an `Environment`. |
     | `SigningKey.generate()` | `SigningKey` |
     | `SigningKey.fromPem(pem)` / `SigningKey.fromDer(der)` | `SigningKey`; pass PEM string / array of byte numbers. |
@@ -195,7 +195,7 @@ Constructors that take individual fields use the order in the property table abo
     | `csr.extensionValuesDer()` | `BytesList` |
 
     These operations are synchronous and throw an `Error` with a `BindingError` cause on failure. Read files
-    with your application's file APIs, then call `fromPropertiesStr`; no file-path
+    with your application's file APIs, then call `fromStr`; no file-path
     constructor is exposed. Environment values are `Environment.NonProduction`,
     `Environment.Simulation`, and `Environment.Production`. Copy returned bytes with `Uint8Array.from(bytes.asSlice())` before
     retaining them across later calls. See [JavaScript resource handling](bindings/javascript.md).
@@ -211,8 +211,8 @@ Constructors that take individual fields use the order in the property table abo
 
     | Call | Input | Returns |
     | --- | --- | --- |
-    | `CsrProperties.FromPropertiesStr(text)` | `string` properties text | `CsrProperties` |
-    | `CsrProperties.ParseCsrConfigFile(path)` | `string` file path | `CsrProperties` |
+    | `CsrProperties.FromStr(text)` | `string` properties text | `CsrProperties` |
+    | `CsrProperties.FromFile(path)` | `string` file path | `CsrProperties` |
     | `properties.Build(key, env)` | `SigningKey`, `ZatcaEnvironment` | `Csr` |
     | `SigningKey.Generate()` | None | `SigningKey` |
     | `SigningKey.FromPem(pem)` | `string` PKCS#8 PEM | `SigningKey` |
@@ -238,8 +238,8 @@ Constructors that take individual fields use the order in the property table abo
 
     | Call | Input | Returns |
     | --- | --- | --- |
-    | `CsrProperties.fromPropertiesStr(text)` | `String` properties text | `CsrProperties` |
-    | `CsrProperties.parseCsrConfigFile(path)` | `String` file path | `CsrProperties` |
+    | `CsrProperties.fromStr(text)` | `String` properties text | `CsrProperties` |
+    | `CsrProperties.fromFile(path)` | `String` file path | `CsrProperties` |
     | `properties.build(key, env)` | `SigningKey`, `Environment` | `Csr` |
     | `SigningKey.generate()` | None | `SigningKey` |
     | `SigningKey.fromPem(pem)` | `String` PKCS#8 PEM | `SigningKey` |
@@ -265,8 +265,8 @@ Constructors that take individual fields use the order in the property table abo
 
     | Call | Input | Returns |
     | --- | --- | --- |
-    | `CsrProperties.fromPropertiesStr(text)` | `String` properties text | `CsrProperties` |
-    | `CsrProperties.parseCsrConfigFile(path)` | `String` file path | `CsrProperties` |
+    | `CsrProperties.fromStr(text)` | `String` properties text | `CsrProperties` |
+    | `CsrProperties.fromFile(path)` | `String` file path | `CsrProperties` |
     | `properties.build(key, env)` | `SigningKey`, `Environment` | `Csr` |
     | `SigningKey.generate()` | None | `SigningKey` |
     | `SigningKey.fromPem(pem)` | `String` PKCS#8 PEM | `SigningKey` |
@@ -304,10 +304,10 @@ Constructors that take individual fields use the order in the property table abo
     FatooraStatus fatoora_csr_properties_new(const FatooraCsrOptions *options,
         FatooraCsrProperties **out,
         FatooraError **error);
-    FatooraStatus fatoora_csr_properties_from_properties_str(const char *properties,
+    FatooraStatus fatoora_csr_properties_from_str(const char *properties,
         FatooraCsrProperties **out,
         FatooraError **error);
-    FatooraStatus fatoora_csr_properties_parse_csr_config_file(const char *path,
+    FatooraStatus fatoora_csr_properties_from_file(const char *path,
         FatooraCsrProperties **out,
         FatooraError **error);
     FatooraStatus fatoora_csr_properties_build(const FatooraCsrProperties *self,

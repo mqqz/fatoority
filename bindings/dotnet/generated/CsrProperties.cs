@@ -107,7 +107,7 @@ public partial class CsrProperties: IDisposable
     /// <returns>
     /// A <c>CsrProperties</c> allocated on Rust side.
     /// </returns>
-    public static CsrProperties FromPropertiesStr(string properties)
+    public static CsrProperties FromStr(string properties)
     {
         unsafe
         {
@@ -115,7 +115,7 @@ public partial class CsrProperties: IDisposable
             byte[] propertiesBytes = Diplomat.Utf8.Clone(properties);
             fixed (byte* propertiesPtr = propertiesBytes)
             {
-                var result = Raw.CsrProperties.FromPropertiesStr(new DiplomatSliceU8 { Ptr = propertiesPtr, Len = (nuint)propertiesBytes.Length });
+                var result = Raw.CsrProperties.FromStr(new DiplomatSliceU8 { Ptr = propertiesPtr, Len = (nuint)propertiesBytes.Length });
                 if (!result.IsOk)
                 {
                     throw new BindingErrorException(new BindingError(result.Err));
@@ -129,7 +129,7 @@ public partial class CsrProperties: IDisposable
     /// <returns>
     /// A <c>CsrProperties</c> allocated on Rust side.
     /// </returns>
-    public static CsrProperties ParseCsrConfigFile(string path)
+    public static CsrProperties FromFile(string path)
     {
         unsafe
         {
@@ -137,7 +137,7 @@ public partial class CsrProperties: IDisposable
             byte[] pathBytes = Diplomat.Utf8.Clone(path);
             fixed (byte* pathPtr = pathBytes)
             {
-                var result = Raw.CsrProperties.ParseCsrConfigFile(new DiplomatSliceU8 { Ptr = pathPtr, Len = (nuint)pathBytes.Length });
+                var result = Raw.CsrProperties.FromFile(new DiplomatSliceU8 { Ptr = pathPtr, Len = (nuint)pathBytes.Length });
                 if (!result.IsOk)
                 {
                     throw new BindingErrorException(new BindingError(result.Err));

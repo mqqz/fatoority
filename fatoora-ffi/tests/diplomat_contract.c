@@ -3,6 +3,7 @@
 #include "Config.h"
 #include "FinalizedInvoice.h"
 #include "InvoiceBuilder.h"
+#include "PaymentMeans.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,7 +38,10 @@ static InvoiceBuilder *builder(void) {
     assert(fatoora_InvoiceBuilder_set_currency(b, s("SAR")).is_ok);
     assert(fatoora_InvoiceBuilder_set_previous_invoice_hash(b, s("hash")).is_ok);
     assert(fatoora_InvoiceBuilder_set_invoice_counter(b, 1).is_ok);
-    assert(fatoora_InvoiceBuilder_set_payment_means_code(b, s("10")).is_ok);
+    fatoora_PaymentMeans_new_result means = fatoora_PaymentMeans_new(s("10"), none());
+    assert(means.is_ok);
+    assert(fatoora_InvoiceBuilder_add_payment_means(b, means.ok).is_ok);
+    fatoora_PaymentMeans_destroy(means.ok);
     assert(fatoora_InvoiceBuilder_set_vat_category(b, VatCategory_Standard).is_ok);
     fatoora_Address_new_result address = fatoora_Address_new(
         s("SA"), s("Riyadh"), s("King Fahd"), s("1234"), s("12222"),

@@ -72,14 +72,17 @@ export class CsrProperties {
         }
     }
 
-    static fromPropertiesStr(properties) {
+    /**
+     * Parse `csr.*` properties text, mirroring core `CsrProperties::from_str`.
+     */
+    static fromStr(properties) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
         const propertiesSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, properties)));
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
 
-        const result = wasm.fatoora_CsrProperties_from_properties_str(diplomatReceive.buffer, propertiesSlice.ptr);
+        const result = wasm.fatoora_CsrProperties_from_str(diplomatReceive.buffer, propertiesSlice.ptr);
 
         try {
             if (!diplomatReceive.resultFlag) {

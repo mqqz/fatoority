@@ -202,7 +202,7 @@ public partial class InvoiceBuilder: IDisposable
     }
 
     /// <exception cref="BindingErrorException"></exception>
-    public void AddDocumentAdjustment(AdjustmentKind kind, Adjustment value, VatCategory category, string rate, TaxExemption exemption)
+    public void AddAllowance(Adjustment value, VatCategory category, string rate, TaxExemption exemption)
     {
         unsafe
         {
@@ -220,7 +220,43 @@ public partial class InvoiceBuilder: IDisposable
                 exemptionLease = exemption._diplomatHandle.Lease(BorrowKind.Shared);
                 fixed (byte* ratePtr = rateBytes)
                 {
-                    var result = Raw.InvoiceBuilder.AddDocumentAdjustment(selfLease!.Ptr, kind, valueLease!.Ptr, category, new DiplomatSliceU8 { Ptr = ratePtr, Len = (nuint)rateBytes.Length }, exemptionLease!.Ptr);
+                    var result = Raw.InvoiceBuilder.AddAllowance(selfLease!.Ptr, valueLease!.Ptr, category, new DiplomatSliceU8 { Ptr = ratePtr, Len = (nuint)rateBytes.Length }, exemptionLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw new BindingErrorException(new BindingError(result.Err));
+                    }
+                    return;
+                }
+            }
+            finally
+            {
+                selfLease?.Release();
+                valueLease?.Release();
+                exemptionLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    public void AddCharge(Adjustment value, VatCategory category, string rate, TaxExemption exemption)
+    {
+        unsafe
+        {
+            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (rate == null) throw new ArgumentNullException(nameof(rate));
+            if (exemption == null) throw new ArgumentNullException(nameof(exemption));
+            byte[] rateBytes = Diplomat.Utf8.Clone(rate);
+            BorrowLease<Raw.InvoiceBuilder>? selfLease = null;
+            BorrowLease<Raw.Adjustment>? valueLease = null;
+            BorrowLease<Raw.TaxExemption>? exemptionLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
+                valueLease = value._diplomatHandle.Lease(BorrowKind.Shared);
+                exemptionLease = exemption._diplomatHandle.Lease(BorrowKind.Shared);
+                fixed (byte* ratePtr = rateBytes)
+                {
+                    var result = Raw.InvoiceBuilder.AddCharge(selfLease!.Ptr, valueLease!.Ptr, category, new DiplomatSliceU8 { Ptr = ratePtr, Len = (nuint)rateBytes.Length }, exemptionLease!.Ptr);
                     if (!result.IsOk)
                     {
                         throw new BindingErrorException(new BindingError(result.Err));
@@ -299,34 +335,6 @@ public partial class InvoiceBuilder: IDisposable
             finally
             {
                 referenceLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
-    public void SetNoteWithoutLanguage(string value)
-    {
-        unsafe
-        {
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            byte[] valueBytes = Diplomat.Utf8.Clone(value);
-            BorrowLease<Raw.InvoiceBuilder>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
-                fixed (byte* valuePtr = valueBytes)
-                {
-                    var result = Raw.InvoiceBuilder.SetNoteWithoutLanguage(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
-                    if (!result.IsOk)
-                    {
-                        throw new BindingErrorException(new BindingError(result.Err));
-                    }
-                    return;
-                }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
@@ -476,7 +484,7 @@ public partial class InvoiceBuilder: IDisposable
     }
 
     /// <exception cref="BindingErrorException"></exception>
-    public void SetTaxExemption(VatCategory category, string rate, TaxExemption exemption)
+    public void AddTaxExemption(VatCategory category, string rate, TaxExemption exemption)
     {
         unsafe
         {
@@ -491,7 +499,7 @@ public partial class InvoiceBuilder: IDisposable
                 exemptionLease = exemption._diplomatHandle.Lease(BorrowKind.Shared);
                 fixed (byte* ratePtr = rateBytes)
                 {
-                    var result = Raw.InvoiceBuilder.SetTaxExemption(selfLease!.Ptr, category, new DiplomatSliceU8 { Ptr = ratePtr, Len = (nuint)rateBytes.Length }, exemptionLease!.Ptr);
+                    var result = Raw.InvoiceBuilder.AddTaxExemption(selfLease!.Ptr, category, new DiplomatSliceU8 { Ptr = ratePtr, Len = (nuint)rateBytes.Length }, exemptionLease!.Ptr);
                     if (!result.IsOk)
                     {
                         throw new BindingErrorException(new BindingError(result.Err));
@@ -812,118 +820,6 @@ public partial class InvoiceBuilder: IDisposable
     }
 
     /// <exception cref="BindingErrorException"></exception>
-    public void SetPaymentMeansCode(string value)
-    {
-        unsafe
-        {
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            byte[] valueBytes = Diplomat.Utf8.Clone(value);
-            BorrowLease<Raw.InvoiceBuilder>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
-                fixed (byte* valuePtr = valueBytes)
-                {
-                    var result = Raw.InvoiceBuilder.SetPaymentMeansCode(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
-                    if (!result.IsOk)
-                    {
-                        throw new BindingErrorException(new BindingError(result.Err));
-                    }
-                    return;
-                }
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
-    public void AllowanceReason(string value)
-    {
-        unsafe
-        {
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            byte[] valueBytes = Diplomat.Utf8.Clone(value);
-            BorrowLease<Raw.InvoiceBuilder>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
-                fixed (byte* valuePtr = valueBytes)
-                {
-                    var result = Raw.InvoiceBuilder.AllowanceReason(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
-                    if (!result.IsOk)
-                    {
-                        throw new BindingErrorException(new BindingError(result.Err));
-                    }
-                    return;
-                }
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
-    public void InvoiceLevelCharge(string value)
-    {
-        unsafe
-        {
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            byte[] valueBytes = Diplomat.Utf8.Clone(value);
-            BorrowLease<Raw.InvoiceBuilder>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
-                fixed (byte* valuePtr = valueBytes)
-                {
-                    var result = Raw.InvoiceBuilder.InvoiceLevelCharge(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
-                    if (!result.IsOk)
-                    {
-                        throw new BindingErrorException(new BindingError(result.Err));
-                    }
-                    return;
-                }
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
-    public void InvoiceLevelDiscount(string value)
-    {
-        unsafe
-        {
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            byte[] valueBytes = Diplomat.Utf8.Clone(value);
-            BorrowLease<Raw.InvoiceBuilder>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
-                fixed (byte* valuePtr = valueBytes)
-                {
-                    var result = Raw.InvoiceBuilder.InvoiceLevelDiscount(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
-                    if (!result.IsOk)
-                    {
-                        throw new BindingErrorException(new BindingError(result.Err));
-                    }
-                    return;
-                }
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
     public void SetInvoiceCounter(ulong value)
     {
         unsafe
@@ -970,7 +866,7 @@ public partial class InvoiceBuilder: IDisposable
     }
 
     /// <exception cref="BindingErrorException"></exception>
-    public void Flags(byte value)
+    public void SetFlags(byte value)
     {
         unsafe
         {
@@ -978,74 +874,12 @@ public partial class InvoiceBuilder: IDisposable
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
-                var result = Raw.InvoiceBuilder.Flags(selfLease!.Ptr, value);
+                var result = Raw.InvoiceBuilder.SetFlags(selfLease!.Ptr, value);
                 if (!result.IsOk)
                 {
                     throw new BindingErrorException(new BindingError(result.Err));
                 }
                 return;
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
-    public void SetNote(string language, string value)
-    {
-        unsafe
-        {
-            if (language == null) throw new ArgumentNullException(nameof(language));
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            byte[] languageBytes = Diplomat.Utf8.Clone(language);
-            byte[] valueBytes = Diplomat.Utf8.Clone(value);
-            BorrowLease<Raw.InvoiceBuilder>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
-                fixed (byte* languagePtr = languageBytes)
-                fixed (byte* valuePtr = valueBytes)
-                {
-                    var result = Raw.InvoiceBuilder.SetNote(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = languagePtr, Len = (nuint)languageBytes.Length }, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
-                    if (!result.IsOk)
-                    {
-                        throw new BindingErrorException(new BindingError(result.Err));
-                    }
-                    return;
-                }
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
-    public void SetAllowance(string reason, string amount)
-    {
-        unsafe
-        {
-            if (reason == null) throw new ArgumentNullException(nameof(reason));
-            if (amount == null) throw new ArgumentNullException(nameof(amount));
-            byte[] reasonBytes = Diplomat.Utf8.Clone(reason);
-            byte[] amountBytes = Diplomat.Utf8.Clone(amount);
-            BorrowLease<Raw.InvoiceBuilder>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
-                fixed (byte* reasonPtr = reasonBytes)
-                fixed (byte* amountPtr = amountBytes)
-                {
-                    var result = Raw.InvoiceBuilder.SetAllowance(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = reasonPtr, Len = (nuint)reasonBytes.Length }, new DiplomatSliceU8 { Ptr = amountPtr, Len = (nuint)amountBytes.Length });
-                    if (!result.IsOk)
-                    {
-                        throw new BindingErrorException(new BindingError(result.Err));
-                    }
-                    return;
-                }
             }
             finally
             {

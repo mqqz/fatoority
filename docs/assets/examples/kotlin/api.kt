@@ -7,7 +7,7 @@ fun main(args: Array<String>) {
     val secret = requireNotNull(System.getenv("ZATCA_SECRET")) { "Set ZATCA_SECRET first" }
     Config.create(environment).use { config ->
         ZatcaClient.create(config).use { client ->
-            CsidProduction.create(environment, null, token, secret).use { credentials ->
+            ProductionCsid.create(environment, null, token, secret).use { credentials ->
                 SignedInvoice.fromXml(File("signed.xml").readText()).use { invoice ->
                     client.reportSimplifiedInvoice(invoice, credentials, ClearanceMode.Disabled, "en").use { response ->
                         response.ensureAccepted()

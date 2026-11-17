@@ -19,7 +19,7 @@ export class FinalizedInvoice {
 
     totals(): InvoiceTotals;
 
-    hashBase64(): string;
+    hash(): string;
 
     xml(): string;
 }

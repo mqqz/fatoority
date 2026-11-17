@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -99,8 +100,23 @@ def test_invalid_inputs_cannot_silently_truncate_or_succeed():
 def test_generated_report_rejects_unknown_and_oversized_options():
     from fatoora import _native
 
-    config = _native.Config.new(0)
     for options in ('{"unknown":true}', ' ' * 4097):
         with pytest.raises(Exception) as caught:
-            _native.Xml.validate_zatca(config, "<x/>", options)
+            _native.Xml.validate_zatca("<x/>", options)
         assert caught.value.args[0].code() == 1
+
+
+def test_generated_report_exposes_typed_stages():
+    from fatoora import _native
+
+    report = _native.Xml.validate_zatca("<wrong/>", '{"evaluated_at":"2026-09-23T12:00:00+03:00"}')
+    assert not report.is_valid() and report.has_errors() and not report.is_complete()
+    assert report.evaluated_at() == "2026-09-23T12:00:00+03:00"
+    assert report.stages_len() == 6
+    stage = report.stage(0)
+    assert stage.stage() == _native.ZatcaStage.Xsd
+    assert stage.status() == _native.ZatcaStageStatus.Completed
+    finding = stage.finding(0)
+    assert finding.code() == "XSD_INVALID"
+    assert finding.severity() == _native.Severity.Error
+    assert json.loads(report.to_json())["stages"][0]["findings"][0]["code"] == "XSD_INVALID"

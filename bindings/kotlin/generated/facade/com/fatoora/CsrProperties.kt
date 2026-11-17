@@ -16,13 +16,13 @@ class CsrProperties internal constructor(internal val raw: com.fatoora.raw.CsrPr
         }
 
         @JvmStatic
-        fun fromPropertiesStr(properties: String): CsrProperties = nativeCall(listOfNotNull()) {
-            CsrProperties(unwrap(com.fatoora.raw.CsrProperties.fromPropertiesStr(checkedText(properties))))
+        fun fromStr(properties: String): CsrProperties = nativeCall(listOfNotNull()) {
+            CsrProperties(unwrap(com.fatoora.raw.CsrProperties.fromStr(checkedText(properties))))
         }
 
         @JvmStatic
-        fun parseCsrConfigFile(path: String): CsrProperties = nativeCall(listOfNotNull()) {
-            CsrProperties(unwrap(com.fatoora.raw.CsrProperties.parseCsrConfigFile(checkedText(path))))
+        fun fromFile(path: String): CsrProperties = nativeCall(listOfNotNull()) {
+            CsrProperties(unwrap(com.fatoora.raw.CsrProperties.fromFile(checkedText(path))))
         }
     }
     fun build(key: SigningKey, env: Environment): Csr = nativeCall(listOfNotNull(this, key)) {

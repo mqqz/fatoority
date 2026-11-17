@@ -43,9 +43,9 @@ public:
 
   inline diplomat::result<std::unique_ptr<fatoora::InvoiceTotals>, std::unique_ptr<fatoora::BindingError>> totals() const;
 
-  inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> hash_base64() const;
+  inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> hash() const;
   template<typename W>
-  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> hash_base64_write(W& writeable_output) const;
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> hash_write(W& writeable_output) const;
 
   inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> xml() const;
   template<typename W>

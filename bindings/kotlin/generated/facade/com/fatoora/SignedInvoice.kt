@@ -28,8 +28,8 @@ class SignedInvoice internal constructor(internal val raw: com.fatoora.raw.Signe
         InvoiceTotals(unwrap(raw.totals()))
     }
 
-    fun hashBase64(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.hashBase64())
+    fun hash(): String = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.hash())
     }
 
     fun xml(): String = nativeCall(listOfNotNull(this)) {

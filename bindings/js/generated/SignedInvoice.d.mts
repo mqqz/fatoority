@@ -20,7 +20,7 @@ export class SignedInvoice {
 
     totals(): InvoiceTotals;
 
-    hashBase64(): string;
+    hash(): string;
 
     xml(): string;
 

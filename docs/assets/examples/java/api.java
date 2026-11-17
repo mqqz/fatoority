@@ -15,7 +15,7 @@ public class Guide {
         String secret = java.util.Objects.requireNonNull(System.getenv("ZATCA_SECRET"), "Set ZATCA_SECRET first");
         try (Config config = Config.create(environment);
              ZatcaClient client = ZatcaClient.create(config);
-             CsidProduction credentials = CsidProduction.create(environment, null, token, secret);
+             ProductionCsid credentials = ProductionCsid.create(environment, null, token, secret);
              SignedInvoice invoice = SignedInvoice.fromXml(read("signed.xml"));
              ValidationResponse response = client.reportSimplifiedInvoice(invoice, credentials, ClearanceMode.Disabled, "en")) {
             response.ensureAccepted();

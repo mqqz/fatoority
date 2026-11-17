@@ -3,31 +3,6 @@ use crate::common::ffi::BindingError;
 use crate::common::{local_error, text};
 use fatoora_core::invoice as inv_core;
 
-/// Legacy builder setters whose exported semantics have no equivalent in the
-/// current core API. The exported Diplomat API keeps them until the next
-/// binding redesign, so they call the deprecated core methods here.
-#[allow(deprecated)]
-mod legacy {
-    use fatoora_core::Decimal;
-    use fatoora_core::invoice::InvoiceBuilder;
-
-    /// Replaces the first payment means' code, creating one if none exists.
-    pub(super) fn payment_means_code(b: InvoiceBuilder, value: &str) -> InvoiceBuilder {
-        b.payment_means_code(value)
-    }
-    /// Sets the aggregate reason shared by the aggregate allowance and charge.
-    pub(super) fn allowance_reason(b: InvoiceBuilder, value: &str) -> InvoiceBuilder {
-        b.allowance_reason(value)
-    }
-    /// Replaces the aggregate document-level charge.
-    pub(super) fn invoice_level_charge(b: InvoiceBuilder, value: Decimal) -> InvoiceBuilder {
-        b.invoice_level_charge(value)
-    }
-    /// Replaces the aggregate document-level discount.
-    pub(super) fn invoice_level_discount(b: InvoiceBuilder, value: Decimal) -> InvoiceBuilder {
-        b.invoice_level_discount(value)
-    }
-}
 fn decimal(value: &[u8], label: &str) -> Result<fatoora_core::Decimal, Box<BindingError>> {
     fatoora_core::Decimal::parse(text(value)?).map_err(|e| crate::common::context_error(e, label))
 }
@@ -53,7 +28,7 @@ pub mod ffi {
     use super::{PartyData, decimal, inv_core, party};
     use crate::common::ffi::{BindingError, Text};
     use crate::common::{boundary, core_error, local_error, optional_text, text, write};
-    use crate::crypto::ffi::Config;
+    use crate::validation::ffi::ZatcaValidationReport;
     use diplomat_runtime::{DiplomatStr, DiplomatWrite};
 
     /// VAT category of a line, breakdown, or document-level adjustment.
@@ -106,7 +81,7 @@ pub mod ffi {
     }
 
     /// Named bits of the `u8` invoice flag mask accepted by
-    /// `InvoiceBuilder::flags` and returned by `InvoiceData::flags_raw`.
+    /// `InvoiceBuilder::set_flags` and returned by `InvoiceData::flags`.
     ///
     /// Each discriminant is the flag's bit value; `bit()` returns it as a `u8`
     /// for languages whose enums do not expose their discriminant.
@@ -920,27 +895,30 @@ pub mod ffi {
                 self.update(|b| b.note(note))
             })
         }
-        pub fn add_document_adjustment(
+        /// Append a document-level allowance (discount), mirroring core `InvoiceBuilder::allowance`.
+        pub fn add_allowance(
             &mut self,
-            kind: AdjustmentKind,
             value: &Adjustment,
             category: VatCategory,
             rate: &DiplomatStr,
             exemption: &TaxExemption,
         ) -> Result<(), Box<BindingError>> {
             boundary(|| {
-                // Report an invalid calculation when the adjustment is added.
-                value.0.value().map_err(core_error)?;
-                let value = inv_core::DocumentAdjustment::new(
-                    value.0.clone(),
-                    category.into(),
-                    decimal(rate, "rate")?,
-                )
-                .with_exemption(exemption.0.clone());
-                self.update(|b| match kind {
-                    AdjustmentKind::Allowance => b.allowance(value),
-                    AdjustmentKind::Charge => b.charge(value),
-                })
+                let value = Self::document_adjustment(value, category, rate, exemption)?;
+                self.update(|b| b.allowance(value))
+            })
+        }
+        /// Append a document-level charge, mirroring core `InvoiceBuilder::charge`.
+        pub fn add_charge(
+            &mut self,
+            value: &Adjustment,
+            category: VatCategory,
+            rate: &DiplomatStr,
+            exemption: &TaxExemption,
+        ) -> Result<(), Box<BindingError>> {
+            boundary(|| {
+                let value = Self::document_adjustment(value, category, rate, exemption)?;
+                self.update(|b| b.charge(value))
             })
         }
         pub fn set_buyer_without_address(
@@ -988,16 +966,6 @@ pub mod ffi {
                         .billing_reference(reference.0.clone())
                         .payment_instruction(reason),
                 ))))
-            })
-        }
-
-        pub fn set_note_without_language(
-            &mut self,
-            value: &DiplomatStr,
-        ) -> Result<(), Box<BindingError>> {
-            boundary(|| {
-                let note = inv_core::InvoiceNote::without_language(text(value)?);
-                self.update(|b| b.note(note))
             })
         }
 
@@ -1067,7 +1035,7 @@ pub mod ffi {
                 self.update(|b| b.tax_currency(currency, amount))
             })
         }
-        pub fn set_tax_exemption(
+        pub fn add_tax_exemption(
             &mut self,
             category: VatCategory,
             rate: &DiplomatStr,
@@ -1203,76 +1171,17 @@ pub mod ffi {
                 self.update(|b| b.previous_invoice_hash(value))
             })
         }
-        pub fn set_payment_means_code(
-            &mut self,
-            value: &DiplomatStr,
-        ) -> Result<(), Box<BindingError>> {
-            boundary(|| {
-                let value = text(value)?;
-                self.update(|b| super::legacy::payment_means_code(b, value))
-            })
-        }
-        pub fn allowance_reason(&mut self, value: &DiplomatStr) -> Result<(), Box<BindingError>> {
-            boundary(|| {
-                let value = text(value)?;
-                self.update(|b| super::legacy::allowance_reason(b, value))
-            })
-        }
-        pub fn invoice_level_charge(
-            &mut self,
-            value: &DiplomatStr,
-        ) -> Result<(), Box<BindingError>> {
-            boundary(|| {
-                let value = decimal(value, "invoice_level_charge")?;
-                self.update(|b| super::legacy::invoice_level_charge(b, value))
-            })
-        }
-        pub fn invoice_level_discount(
-            &mut self,
-            value: &DiplomatStr,
-        ) -> Result<(), Box<BindingError>> {
-            boundary(|| {
-                let value = decimal(value, "invoice_level_discount")?;
-                self.update(|b| super::legacy::invoice_level_discount(b, value))
-            })
-        }
         pub fn set_invoice_counter(&mut self, value: u64) -> Result<(), Box<BindingError>> {
             boundary(|| self.update(|b| b.invoice_counter(value)))
         }
         pub fn set_vat_category(&mut self, value: VatCategory) -> Result<(), Box<BindingError>> {
             boundary(|| self.update(|b| b.vat_category(value.into())))
         }
-        pub fn flags(&mut self, value: u8) -> Result<(), Box<BindingError>> {
+        pub fn set_flags(&mut self, value: u8) -> Result<(), Box<BindingError>> {
             boundary(|| {
                 let v = inv_core::InvoiceFlags::from_bits(value)
                     .ok_or_else(|| local_error(1, "invalid invoice flags"))?;
                 self.update(|b| b.flags(v))
-            })
-        }
-        pub fn set_note(
-            &mut self,
-            language: &DiplomatStr,
-            value: &DiplomatStr,
-        ) -> Result<(), Box<BindingError>> {
-            boundary(|| {
-                let note = inv_core::InvoiceNote::new(text(language)?, text(value)?);
-                self.update(|b| b.note(note))
-            })
-        }
-        pub fn set_allowance(
-            &mut self,
-            reason: &DiplomatStr,
-            amount: &DiplomatStr,
-        ) -> Result<(), Box<BindingError>> {
-            boundary(|| {
-                let reason = text(reason)?;
-                let amount = decimal(amount, "allowance")?;
-                self.update(|b| {
-                    super::legacy::allowance_reason(
-                        super::legacy::invoice_level_discount(b, amount),
-                        reason,
-                    )
-                })
             })
         }
         pub fn set_seller(
@@ -1381,7 +1290,7 @@ pub mod ffi {
         pub fn totals(&self) -> Result<Box<InvoiceTotals>, Box<BindingError>> {
             boundary(|| Ok(Box::new(InvoiceTotals(self.get()?.totals().clone()))))
         }
-        pub fn hash_base64(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
+        pub fn hash(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
             boundary(|| write(self.get()?.hash().map_err(core_error)?, out))
         }
         pub fn xml(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
@@ -1415,7 +1324,7 @@ pub mod ffi {
         pub fn totals(&self) -> Result<Box<InvoiceTotals>, Box<BindingError>> {
             boundary(|| Ok(Box::new(InvoiceTotals(self.get()?.totals().clone()))))
         }
-        pub fn hash_base64(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
+        pub fn hash(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
             boundary(|| write(self.get()?.hash().map_err(core_error)?, out))
         }
         pub fn xml(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
@@ -1602,7 +1511,7 @@ pub mod ffi {
         pub fn vat_category(&self) -> VatCategory {
             self.0.vat_category().into()
         }
-        pub fn flags_raw(&self) -> u8 {
+        pub fn flags(&self) -> u8 {
             self.0.flags().bits()
         }
         pub fn invoice_type_kind(&self) -> InvoiceTypeKind {
@@ -1965,14 +1874,15 @@ pub mod ffi {
     #[diplomat::attr(dotnet, manually_disposable)]
     pub struct Xml;
     impl Xml {
-        /// Produce an owned local ZATCA report as JSON. Inspect is_valid before acceptance.
-        /// Options default when absent; JSON inputs are limited to 4 KiB.
+        /// Run the local ZATCA validation profile and return its owned report.
+        ///
+        /// Inspect `is_valid` before acceptance. Options default when absent;
+        /// `options_json` is limited to 4 KiB. Validation needs no configuration:
+        /// it mirrors the stateless core `Validator::validate_zatca`.
         pub fn validate_zatca(
-            config: &Config,
             xml: &DiplomatStr,
             options_json: Option<&DiplomatStr>,
-            out: &mut DiplomatWrite,
-        ) -> Result<(), Box<BindingError>> {
+        ) -> Result<Box<ZatcaValidationReport>, Box<BindingError>> {
             boundary(|| {
                 let options = match options_json {
                     None => inv_core::validation::ZatcaValidationOptions::default(),
@@ -1985,25 +1895,17 @@ pub mod ffi {
                         })?
                     }
                 };
-                // Validation is environment-independent; the exported API keeps
-                // `config` for compatibility.
-                let _ = config;
-                let report = inv_core::validation::Validator::new()
+                inv_core::validation::Validator::new()
                     .validate_zatca(text(xml)?, &options)
-                    .map_err(core_error)?;
-                let json = serde_json::to_string(&report).map_err(|error| {
-                    local_error(
-                        9,
-                        &format!("Could not serialize validation report: {error}"),
-                    )
-                })?;
-                write(json, out)
+                    .map(|report| Box::new(ZatcaValidationReport(report)))
+                    .map_err(core_error)
             })
         }
 
-        pub fn validate(config: &Config, xml: &DiplomatStr) -> Result<bool, Box<BindingError>> {
+        /// Check the XML against the UBL schema and business rules, mirroring core
+        /// `Validator::validate_xml`. Returns true or a validation error.
+        pub fn validate(xml: &DiplomatStr) -> Result<bool, Box<BindingError>> {
             boundary(|| {
-                let _ = config;
                 inv_core::validation::Validator::new()
                     .validate_xml(text(xml)?)
                     .map(|()| true)
@@ -2021,6 +1923,21 @@ pub mod ffi {
     }
 }
 impl ffi::InvoiceBuilder {
+    fn document_adjustment(
+        value: &ffi::Adjustment,
+        category: ffi::VatCategory,
+        rate: &[u8],
+        exemption: &ffi::TaxExemption,
+    ) -> Result<inv_core::DocumentAdjustment, Box<BindingError>> {
+        // Report an invalid calculation when the adjustment is added.
+        value.0.value().map_err(crate::common::core_error)?;
+        Ok(inv_core::DocumentAdjustment::new(
+            value.0.clone(),
+            category.into(),
+            decimal(rate, "rate")?,
+        )
+        .with_exemption(exemption.0.clone()))
+    }
     fn update(
         &mut self,
         f: impl FnOnce(inv_core::InvoiceBuilder) -> inv_core::InvoiceBuilder,

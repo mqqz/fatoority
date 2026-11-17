@@ -104,13 +104,13 @@ export class SignedInvoice {
         }
     }
 
-    hashBase64() {
+    hash() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
 
-        const result = wasm.fatoora_SignedInvoice_hash_base64(diplomatReceive.buffer, this.ffiValue, write.buffer);
+        const result = wasm.fatoora_SignedInvoice_hash(diplomatReceive.buffer, this.ffiValue, write.buffer);
 
         try {
             if (!diplomatReceive.resultFlag) {

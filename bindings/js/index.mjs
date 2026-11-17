@@ -43,11 +43,11 @@ export class ZatcaClient {
     this.#native = NativeClient.create(config);
     this.#fetch = fetchImpl;
   }
-  async postCsrForCcsid(csr, otp, options = {}) {
-    return this.#send(this.#native.preparePostCsrForCcsid(csr, otp), options);
+  async requestComplianceCsid(csr, otp, options = {}) {
+    return this.#send(this.#native.prepareRequestComplianceCsid(csr, otp), options);
   }
-  async postCcsidForPcsid(credentials, options = {}) {
-    return this.#send(this.#native.preparePostCcsidForPcsid(credentials), options);
+  async requestProductionCsid(credentials, options = {}) {
+    return this.#send(this.#native.prepareRequestProductionCsid(credentials), options);
   }
   async renewCsid(credentials, csr, otp, acceptLanguage = null, options = {}) {
     return this.#send(this.#native.prepareRenewCsid(credentials, csr, otp, acceptLanguage), options);
@@ -66,19 +66,19 @@ export class ZatcaClient {
 
 export class Xml extends NativeXml {
   /** Supply the host clock once; explicit evaluated_at remains reproducible. */
-  static validateZatca(config, xml, optionsJson = null) {
+  static validateZatca(xml, optionsJson = null) {
     // Let Rust produce BindingError for malformed, non-object or oversized input.
     // Check the original bytes before normalization so whitespace cannot evade the limit.
     if (optionsJson !== null && new TextEncoder().encode(optionsJson).length > 4096) {
-      return NativeXml.validateZatca(config, xml, optionsJson);
+      return NativeXml.validateZatca(xml, optionsJson);
     }
     let options;
     try { options = optionsJson === null ? {} : JSON.parse(optionsJson); }
-    catch { return NativeXml.validateZatca(config, xml, optionsJson); }
+    catch { return NativeXml.validateZatca(xml, optionsJson); }
     if (options === null || typeof options !== 'object' || Array.isArray(options)) {
-      return NativeXml.validateZatca(config, xml, optionsJson);
+      return NativeXml.validateZatca(xml, optionsJson);
     }
     options.evaluated_at ??= new Date().toISOString();
-    return NativeXml.validateZatca(config, xml, JSON.stringify(options));
+    return NativeXml.validateZatca(xml, JSON.stringify(options));
   }
 }

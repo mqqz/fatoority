@@ -1,21 +1,21 @@
 export * from './generated/index.mjs';
-import type { ClearanceMode, Config, Csr, CsidCompliance, CsidProduction, SignedInvoice, ValidationResponse, InvoiceRequest, ComplianceRequest, ProductionRequest } from './generated/index.mjs';
+import type { ClearanceMode, Config, Csr, ComplianceCsid, ProductionCsid, SignedInvoice, ValidationResponse, InvoiceRequest, ComplianceRequest, ProductionRequest, ZatcaValidationReport } from './generated/index.mjs';
 import { Xml as NativeXml } from './generated/index.mjs';
 export interface RequestOptions { signal?: AbortSignal; }
 export interface TransportOptions extends RequestOptions { fetch?: typeof fetch; }
 export class TransportError extends Error { readonly httpStatus?: number; }
 export function sendPrepared(request: InvoiceRequest, options?: TransportOptions): Promise<ValidationResponse>;
-export function sendPrepared(request: ComplianceRequest, options?: TransportOptions): Promise<CsidCompliance>;
-export function sendPrepared(request: ProductionRequest, options?: TransportOptions): Promise<CsidProduction>;
+export function sendPrepared(request: ComplianceRequest, options?: TransportOptions): Promise<ComplianceCsid>;
+export function sendPrepared(request: ProductionRequest, options?: TransportOptions): Promise<ProductionCsid>;
 export class ZatcaClient {
   constructor(config: Config, options?: Pick<TransportOptions, 'fetch'>);
-  postCsrForCcsid(csr: Csr, otp: string, options?: RequestOptions): Promise<CsidCompliance>;
-  postCcsidForPcsid(credentials: CsidCompliance, options?: RequestOptions): Promise<CsidProduction>;
-  renewCsid(credentials: CsidProduction, csr: Csr, otp: string, acceptLanguage?: string | null, options?: RequestOptions): Promise<CsidProduction>;
-  checkInvoiceCompliance(invoice: SignedInvoice, credentials: CsidCompliance, options?: RequestOptions): Promise<ValidationResponse>;
-  reportSimplifiedInvoice(invoice: SignedInvoice, credentials: CsidProduction, clearanceStatus?: boolean | ClearanceMode, acceptLanguage?: string | null, options?: RequestOptions): Promise<ValidationResponse>;
-  clearStandardInvoice(invoice: SignedInvoice, credentials: CsidProduction, clearanceStatus?: boolean | ClearanceMode, acceptLanguage?: string | null, options?: RequestOptions): Promise<ValidationResponse>;
+  requestComplianceCsid(csr: Csr, otp: string, options?: RequestOptions): Promise<ComplianceCsid>;
+  requestProductionCsid(credentials: ComplianceCsid, options?: RequestOptions): Promise<ProductionCsid>;
+  renewCsid(credentials: ProductionCsid, csr: Csr, otp: string, acceptLanguage?: string | null, options?: RequestOptions): Promise<ProductionCsid>;
+  checkInvoiceCompliance(invoice: SignedInvoice, credentials: ComplianceCsid, options?: RequestOptions): Promise<ValidationResponse>;
+  reportSimplifiedInvoice(invoice: SignedInvoice, credentials: ProductionCsid, clearanceStatus?: boolean | ClearanceMode, acceptLanguage?: string | null, options?: RequestOptions): Promise<ValidationResponse>;
+  clearStandardInvoice(invoice: SignedInvoice, credentials: ProductionCsid, clearanceStatus?: boolean | ClearanceMode, acceptLanguage?: string | null, options?: RequestOptions): Promise<ValidationResponse>;
 }
 export class Xml extends NativeXml {
-  static validateZatca(config: Config, xml: string, optionsJson?: string | null): string;
+  static validateZatca(xml: string, optionsJson?: string | null): ZatcaValidationReport;
 }

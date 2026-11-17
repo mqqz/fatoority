@@ -178,9 +178,9 @@ public partial class ProductionRequest: IDisposable
 
     /// <exception cref="BindingErrorException"></exception>
     /// <returns>
-    /// A <c>CsidProduction</c> allocated on Rust side.
+    /// A <c>ProductionCsid</c> allocated on Rust side.
     /// </returns>
-    public CsidProduction Decode(ushort status, byte[] body)
+    public ProductionCsid Decode(ushort status, byte[] body)
     {
         unsafe
         {
@@ -196,7 +196,7 @@ public partial class ProductionRequest: IDisposable
                     {
                         throw new BindingErrorException(new BindingError(result.Err));
                     }
-                    return new CsidProduction(result.Ok);
+                    return new ProductionCsid(result.Ok);
                 }
             }
             finally

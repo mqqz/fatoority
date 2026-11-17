@@ -27,18 +27,18 @@ try {
     const raw = await import('/generated/index.mjs');
     const key = sdk.SigningKey.generate();
     const config = sdk.Config.new_(sdk.Environment.NonProduction);
-    const credentials = sdk.CsidCompliance.create(sdk.Environment.NonProduction, '123', 'token', 'secret');
-    const prepared = raw.ZatcaClient.create(config).preparePostCcsidForPcsid(credentials);
+    const credentials = sdk.ComplianceCsid.create(sdk.Environment.NonProduction, '123', 'token', 'secret');
+    const prepared = raw.ZatcaClient.create(config).prepareRequestProductionCsid(credentials);
     const response = await sdk.sendPrepared(prepared, {fetch: async (_url, init) => {
       if (new Headers(init.headers).get('authorization') !== 'Basic dG9rZW46c2VjcmV0') throw new Error('bad auth');
       return new Response(JSON.stringify({requestID: 2, binarySecurityToken: 'new', secret: 'secret'}));
     }});
     const client = new sdk.ZatcaClient(config, {fetch: (_url, init) => fetch('/redirect', init)});
     let redirectBlocked = false;
-    try { await client.postCcsidForPcsid(credentials); } catch (e) { redirectBlocked = e instanceof sdk.TransportError; }
+    try { await client.requestProductionCsid(credentials); } catch (e) { redirectBlocked = e instanceof sdk.TransportError; }
     const controller = new AbortController();
     const slow = new sdk.ZatcaClient(config, {fetch: (_url, init) => fetch('/slow', init)});
-    const pending = slow.postCcsidForPcsid(credentials, {signal: controller.signal});
+    const pending = slow.requestProductionCsid(credentials, {signal: controller.signal});
     controller.abort();
     let aborted = false;
     try { await pending; } catch (e) { aborted = e instanceof sdk.TransportError && e.cause.name === 'AbortError'; }

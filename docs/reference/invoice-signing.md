@@ -32,7 +32,7 @@ All getters below leave the signed invoice usable. Signed imports verify local s
 | XML Base64 | Base64 of that stored XML text |
 | QR code | Base64 TLV payload for rendering; see [QR reference](qr.md) |
 | Invoice hash | Embedded invoice digest from signature metadata |
-| Computed hash | `hash()` (Rust) or `hash_base64()` (bindings) recomputes the digest of the stored signed XML using ZATCA exclusions |
+| Computed hash | `hash()` (Rust and generated bindings; `hash_base64()` in Python) recomputes the digest of the stored signed XML using ZATCA exclusions |
 | Signature | Encoded invoice signature |
 | Public key | Encoded public-key material |
 | ZATCA key signature | Optional encoded certificate-signature material |
@@ -112,15 +112,15 @@ The signed computed hash equals the XML hash operation on `xml()`. Signed import
 
     | Call | Return |
     | --- | --- |
-    | `Signer.fromPem(certPem: string, keyPem: string)` | `Signer` |
-    | `Signer.fromDer(certDer: Array<number>, keyDer: Array<number>)` | `Signer` |
+    | `InvoiceSigner.fromPem(certPem: string, keyPem: string)` | `InvoiceSigner` |
+    | `InvoiceSigner.fromDer(certDer: Array<number>, keyDer: Array<number>)` | `InvoiceSigner` |
     | `signer.certificatePem()` | `string` |
     | `signer.certificateDer()` | `Bytes` |
     | `signer.signXml(xml: string)` | `string` |
     | `signer.sign(invoice: FinalizedInvoice)` | `SignedInvoice`; consumes invoice state |
     | `Xml.hash(xml: string)` | `string` |
 
-    `SignedInvoice` text getters: `xml()`, `toXmlBase64()`, `qrCode()`, `invoiceHash()`, `hashBase64()`, `signature()`, `publicKey()`, `issuer()`, `serial()`, `certHash()`, `signedPropsHash()`, `signingTime()`. Each returns `string`. `zatcaKeySignature()` returns optional `Text`; read its `value()` to obtain text.
+    `SignedInvoice` text getters: `xml()`, `toXmlBase64()`, `qrCode()`, `invoiceHash()`, `hash()`, `signature()`, `publicKey()`, `issuer()`, `serial()`, `certHash()`, `signedPropsHash()`, `signingTime()`. Each returns `string`. `zatcaKeySignature()` returns optional `Text`; read its `value()` to obtain text.
 
     Objects use garbage-collected cleanup. `Bytes.asSlice()` returns a copied number array. Native failures throw an `Error` with a `BindingError` in `error.cause`; see [error handling](errors.md).
 
@@ -128,15 +128,15 @@ The signed computed hash equals the XML hash operation on `xml()`. Signed import
 
     | Call | Return |
     | --- | --- |
-    | `Signer.FromPem(certPem: string, keyPem: string)` | `Signer` |
-    | `Signer.FromDer(certDer: byte[], keyDer: byte[])` | `Signer` |
+    | `InvoiceSigner.FromPem(certPem: string, keyPem: string)` | `InvoiceSigner` |
+    | `InvoiceSigner.FromDer(certDer: byte[], keyDer: byte[])` | `InvoiceSigner` |
     | `signer.CertificatePem()` | `string` |
     | `signer.CertificateDer()` | `Bytes` |
     | `signer.SignXml(xml: string)` | `string` |
     | `signer.Sign(invoice: FinalizedInvoice)` | `SignedInvoice`; consumes invoice state |
     | `Xml.Hash(xml: string)` | `string` |
 
-    `SignedInvoice` text getters: `Xml()`, `ToXmlBase64()`, `QrCode()`, `InvoiceHash()`, `HashBase64()`, `Signature()`, `PublicKey()`, `Issuer()`, `Serial()`, `CertHash()`, `SignedPropsHash()`, `SigningTime()`. Each returns `string`. `ZatcaKeySignature()` returns optional `Text`; read its `Value()` to obtain text.
+    `SignedInvoice` text getters: `Xml()`, `ToXmlBase64()`, `QrCode()`, `InvoiceHash()`, `Hash()`, `Signature()`, `PublicKey()`, `Issuer()`, `Serial()`, `CertHash()`, `SignedPropsHash()`, `SigningTime()`. Each returns `string`. `ZatcaKeySignature()` returns optional `Text`; read its `Value()` to obtain text.
 
     Dispose native owners, including optional `Text` and certificate `Bytes`. A `Bytes.AsSlice()` view must also be disposed; copy it with `Clone()` before releasing its owner. Native failures throw `BindingErrorException`; dispose its `Inner` after reading details.
 
@@ -144,15 +144,15 @@ The signed computed hash equals the XML hash operation on `xml()`. Signed import
 
     | Call | Return |
     | --- | --- |
-    | `Signer.fromPem(certPem: String, keyPem: String)` | `Signer` |
-    | `Signer.fromDer(certDer: ByteArray, keyDer: ByteArray)` | `Signer` |
+    | `InvoiceSigner.fromPem(certPem: String, keyPem: String)` | `InvoiceSigner` |
+    | `InvoiceSigner.fromDer(certDer: ByteArray, keyDer: ByteArray)` | `InvoiceSigner` |
     | `signer.certificatePem()` | `String` |
     | `signer.certificateDer()` | `Bytes` |
     | `signer.signXml(xml: String)` | `String` |
     | `signer.sign(invoice: FinalizedInvoice)` | `SignedInvoice`; consumes invoice state |
     | `Xml.hash(xml: String)` | `String` |
 
-    `SignedInvoice` text getters: `xml()`, `toXmlBase64()`, `qrCode()`, `invoiceHash()`, `hashBase64()`, `signature()`, `publicKey()`, `issuer()`, `serial()`, `certHash()`, `signedPropsHash()`, `signingTime()`. Each returns `String`. `zatcaKeySignature()` returns optional `Text`; read its `value()` to obtain text.
+    `SignedInvoice` text getters: `xml()`, `toXmlBase64()`, `qrCode()`, `invoiceHash()`, `hash()`, `signature()`, `publicKey()`, `issuer()`, `serial()`, `certHash()`, `signedPropsHash()`, `signingTime()`. Each returns `String`. `zatcaKeySignature()` returns optional `Text`; read its `value()` to obtain text.
 
     Use `use` or `close()` for native owners, including optional `Text` and certificate `Bytes`. `Bytes.asSlice()` returns a copied `ByteArray`. Failures throw `BindingException`.
 
@@ -160,15 +160,15 @@ The signed computed hash equals the XML hash operation on `xml()`. Signed import
 
     | Call | Return |
     | --- | --- |
-    | `Signer.fromPem(certPem: String, keyPem: String)` | `Signer` |
-    | `Signer.fromDer(certDer: byte[], keyDer: byte[])` | `Signer` |
+    | `InvoiceSigner.fromPem(certPem: String, keyPem: String)` | `InvoiceSigner` |
+    | `InvoiceSigner.fromDer(certDer: byte[], keyDer: byte[])` | `InvoiceSigner` |
     | `signer.certificatePem()` | `String` |
     | `signer.certificateDer()` | `Bytes` |
     | `signer.signXml(xml: String)` | `String` |
     | `signer.sign(invoice: FinalizedInvoice)` | `SignedInvoice`; consumes invoice state |
     | `Xml.hash(xml: String)` | `String` |
 
-    `SignedInvoice` text getters: `xml()`, `toXmlBase64()`, `qrCode()`, `invoiceHash()`, `hashBase64()`, `signature()`, `publicKey()`, `issuer()`, `serial()`, `certHash()`, `signedPropsHash()`, `signingTime()`. Each returns `String`. `zatcaKeySignature()` returns optional `Text`; read its `value()` to obtain text.
+    `SignedInvoice` text getters: `xml()`, `toXmlBase64()`, `qrCode()`, `invoiceHash()`, `hash()`, `signature()`, `publicKey()`, `issuer()`, `serial()`, `certHash()`, `signedPropsHash()`, `signingTime()`. Each returns `String`. `zatcaKeySignature()` returns optional `Text`; read its `value()` to obtain text.
 
     Use try-with-resources for native owners, including optional `Text` and certificate `Bytes`. `Bytes.asSlice()` returns a copied `byte[]`. Failures throw `BindingException`.
 
@@ -179,32 +179,32 @@ The signed computed hash equals the XML hash operation on `xml()`. Signed import
     ```c
     #include "fatoora.h"
 
-    FatooraStatus fatoora_signer_from_pem(const char *cert_pem,
+    FatooraStatus fatoora_invoice_signer_from_pem(const char *cert_pem,
         const char *key_pem,
-        FatooraSigner **out,
+        FatooraInvoiceSigner **out,
         FatooraError **error);
 
-    FatooraStatus fatoora_signer_from_der(const uint8_t *cert_der,
+    FatooraStatus fatoora_invoice_signer_from_der(const uint8_t *cert_der,
         size_t cert_der_len,
         const uint8_t *key_der,
         size_t key_der_len,
-        FatooraSigner **out,
+        FatooraInvoiceSigner **out,
         FatooraError **error);
 
-    FatooraStatus fatoora_signer_certificate_pem(const FatooraSigner *self,
+    FatooraStatus fatoora_invoice_signer_certificate_pem(const FatooraInvoiceSigner *self,
         char **out,
         FatooraError **error);
 
-    FatooraStatus fatoora_signer_certificate_der(const FatooraSigner *self,
+    FatooraStatus fatoora_invoice_signer_certificate_der(const FatooraInvoiceSigner *self,
         FatooraBytes **out,
         FatooraError **error);
 
-    FatooraStatus fatoora_signer_sign(const FatooraSigner *self,
+    FatooraStatus fatoora_invoice_signer_sign(const FatooraInvoiceSigner *self,
         FatooraFinalizedInvoice *invoice,
         FatooraSignedInvoice **out,
         FatooraError **error);
 
-    FatooraStatus fatoora_signer_sign_xml(const FatooraSigner *self,
+    FatooraStatus fatoora_invoice_signer_sign_xml(const FatooraInvoiceSigner *self,
         const char *xml,
         char **out,
         FatooraError **error);
@@ -229,7 +229,7 @@ The signed computed hash equals the XML hash operation on `xml()`. Signed import
         char **out,
         FatooraError **error);
 
-    FatooraStatus fatoora_signed_invoice_hash_base64(const FatooraSignedInvoice *self,
+    FatooraStatus fatoora_signed_invoice_hash(const FatooraSignedInvoice *self,
         char **out,
         FatooraError **error);
 

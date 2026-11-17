@@ -31,7 +31,7 @@ internal interface InvoiceDataLib: Library {
     fun fatoora_InvoiceData_allowance_reason(handle: Pointer): ResultPointerPointer
     fun fatoora_InvoiceData_invoice_counter(handle: Pointer): FFIUint64
     fun fatoora_InvoiceData_vat_category(handle: Pointer): Int
-    fun fatoora_InvoiceData_flags_raw(handle: Pointer): FFIUint8
+    fun fatoora_InvoiceData_flags(handle: Pointer): FFIUint8
     fun fatoora_InvoiceData_invoice_type_kind(handle: Pointer): Int
     fun fatoora_InvoiceData_invoice_sub_type(handle: Pointer): Int
     fun fatoora_InvoiceData_seller(handle: Pointer): ResultPointerPointer
@@ -441,9 +441,9 @@ class InvoiceData internal constructor (
         return (VatCategory.fromNative(returnVal))
     }
 
-    fun flagsRaw(): UByte {
+    fun flags(): UByte {
 
-        val returnVal = lib.fatoora_InvoiceData_flags_raw(handle);
+        val returnVal = lib.fatoora_InvoiceData_flags(handle);
         return (returnVal.toUByte())
     }
 

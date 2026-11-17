@@ -23,7 +23,7 @@ fn ok<T>(result: Result<T, Box<BindingError>>) -> T {
     result.unwrap_or_else(|e| panic!("{}: {}", e.code(), written(|out| e.message(out))))
 }
 fn csr() -> Box<Csr> {
-    let props = ok(CsrProperties::from_properties_str(include_bytes!(
+    let props = ok(CsrProperties::from_str(include_bytes!(
         "../../fatoora-core/tests/fixtures/csr-configs/csr-config-example-EN.properties"
     )));
     let key = ok(SigningKey::from_der(include_bytes!(
@@ -48,13 +48,13 @@ fn header(values: &[(String, String)], name: &str, expected: &str) {
 fn prepared_invoices_own_wire_data_and_decode_operation_specific_outcomes() {
     let config = ok(Config::new(Environment::NonProduction));
     let client = ok(ZatcaClient::create(&config));
-    let production = ok(CsidProduction::create(
+    let production = ok(ProductionCsid::create(
         Environment::NonProduction,
         None,
         b"token",
         b"secret",
     ));
-    let compliance = ok(CsidCompliance::create(
+    let compliance = ok(ComplianceCsid::create(
         Environment::NonProduction,
         None,
         b"token",
@@ -173,20 +173,20 @@ fn prepared_credentials_retain_environment_payload_and_renewal_semantics() {
         let client = ok(ZatcaClient::create(&config));
         let csr = csr();
         let expected_csr = Base64::encode_string(written(|out| ok(csr.to_pem(out))).as_bytes());
-        let compliance = ok(CsidCompliance::create(
+        let compliance = ok(ComplianceCsid::create(
             environment,
             Some(b"456"),
             b"token",
             b"secret",
         ));
-        let production = ok(CsidProduction::create(
+        let production = ok(ProductionCsid::create(
             environment,
             None,
             b"token",
             b"secret",
         ));
-        let issuance = ok(client.prepare_post_csr_for_ccsid(&csr, b"123456"));
-        let promotion = ok(client.prepare_post_ccsid_for_pcsid(&compliance));
+        let issuance = ok(client.prepare_request_compliance_csid(&csr, b"123456"));
+        let promotion = ok(client.prepare_request_production_csid(&compliance));
         let renewal = ok(client.prepare_renew_csid(&production, &csr, b"654321", Some(b"ar")));
         drop((client, csr, compliance, production));
         assert_eq!(written(|out| ok(issuance.method(out))), "POST");
@@ -277,21 +277,25 @@ fn prepare_rejects_bad_inputs_and_consumed_owners_without_transport() {
     let csr = csr();
     let mut simple = ok(SignedInvoice::from_xml(SIMPLE));
     let standard = ok(SignedInvoice::from_xml(STANDARD));
-    let compliance = ok(CsidCompliance::create(
+    let compliance = ok(ComplianceCsid::create(
         Environment::NonProduction,
         None,
         b"token",
         b"secret",
     ));
-    let production = ok(CsidProduction::create(
+    let production = ok(ProductionCsid::create(
         Environment::NonProduction,
         None,
         b"token",
         b"secret",
     ));
-    assert!(client.prepare_post_ccsid_for_pcsid(&compliance).is_err());
+    assert!(client.prepare_request_production_csid(&compliance).is_err());
     for invalid in [b"\xff".as_slice(), b"a\0b", b"a\r\nb"] {
-        assert!(client.prepare_post_csr_for_ccsid(&csr, invalid).is_err());
+        assert!(
+            client
+                .prepare_request_compliance_csid(&csr, invalid)
+                .is_err()
+        );
         assert!(
             client
                 .prepare_renew_csid(&production, &csr, invalid, None)
@@ -340,13 +344,13 @@ fn prepare_rejects_bad_inputs_and_consumed_owners_without_transport() {
             .prepare_clear_standard_invoice(&simple, &production, ClearanceMode::Disabled, None)
             .is_err()
     );
-    let foreign = ok(CsidProduction::create(
+    let foreign = ok(ProductionCsid::create(
         Environment::Simulation,
         None,
         b"token",
         b"secret",
     ));
-    let foreign_compliance = ok(CsidCompliance::create(
+    let foreign_compliance = ok(ComplianceCsid::create(
         Environment::Simulation,
         Some(b"id"),
         b"token",
@@ -374,7 +378,7 @@ fn prepare_rejects_bad_inputs_and_consumed_owners_without_transport() {
     );
     assert!(
         client
-            .prepare_post_ccsid_for_pcsid(&foreign_compliance)
+            .prepare_request_production_csid(&foreign_compliance)
             .is_err()
     );
     let prepared = ok(client.prepare_report_simplified_invoice(

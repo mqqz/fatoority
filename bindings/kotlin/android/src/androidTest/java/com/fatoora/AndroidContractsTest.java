@@ -25,7 +25,7 @@ public class AndroidContractsTest {
     @Test public void clientInitializesTlsAndPreparesRequests() {
         try (Config config = Config.create(Environment.NonProduction);
              ZatcaClient client = ZatcaClient.create(config);
-             CsidProduction credentials = CsidProduction.create(Environment.NonProduction, null, "token", "secret")) {
+             ProductionCsid credentials = ProductionCsid.create(Environment.NonProduction, null, "token", "secret")) {
             assertNotNull(client);
             assertNotNull(credentials);
         }

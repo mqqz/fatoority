@@ -58,69 +58,44 @@ public partial class Xml: IDisposable
     }
 
     /// <exception cref="BindingErrorException"></exception>
-    public static string ValidateZatca(Config config, string xml, string? optionsJson)
+    /// <returns>
+    /// A <c>ZatcaValidationReport</c> allocated on Rust side.
+    /// </returns>
+    public static ZatcaValidationReport ValidateZatca(string xml, string? optionsJson)
     {
         unsafe
         {
-            if (config == null) throw new ArgumentNullException(nameof(config));
             if (xml == null) throw new ArgumentNullException(nameof(xml));
             byte[] xmlBytes = Diplomat.Utf8.Clone(xml);
             byte[]? optionsJsonBytes = optionsJson == null ? null : Diplomat.Utf8.Clone(optionsJson);
-            BorrowLease<Raw.Config>? configLease = null;
-            try
+            fixed (byte* xmlPtr = xmlBytes)
+            fixed (byte* optionsJsonPtr = optionsJsonBytes)
             {
-                configLease = config._diplomatHandle.Lease(BorrowKind.Shared);
-                fixed (byte* xmlPtr = xmlBytes)
-                fixed (byte* optionsJsonPtr = optionsJsonBytes)
+                var result = Raw.Xml.ValidateZatca(new DiplomatSliceU8 { Ptr = xmlPtr, Len = (nuint)xmlBytes.Length }, optionsJson == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = optionsJsonPtr, Len = (nuint)optionsJsonBytes!.Length }));
+                if (!result.IsOk)
                 {
-                    DiplomatWrite writeable = new DiplomatWrite();
-                    try
-                    {
-                        var result = Raw.Xml.ValidateZatca(configLease!.Ptr, new DiplomatSliceU8 { Ptr = xmlPtr, Len = (nuint)xmlBytes.Length }, optionsJson == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = optionsJsonPtr, Len = (nuint)optionsJsonBytes!.Length }), &writeable);
-                        if (!result.IsOk)
-                        {
-                            throw new BindingErrorException(new BindingError(result.Err));
-                        }
-                        return writeable.ToUnicode();
-                    }
-                    finally
-                    {
-                        writeable.Dispose();
-                    }
+                    throw new BindingErrorException(new BindingError(result.Err));
                 }
-            }
-            finally
-            {
-                configLease?.Release();
+                return new ZatcaValidationReport(result.Ok);
             }
         }
     }
 
     /// <exception cref="BindingErrorException"></exception>
-    public static bool Validate(Config config, string xml)
+    public static bool Validate(string xml)
     {
         unsafe
         {
-            if (config == null) throw new ArgumentNullException(nameof(config));
             if (xml == null) throw new ArgumentNullException(nameof(xml));
             byte[] xmlBytes = Diplomat.Utf8.Clone(xml);
-            BorrowLease<Raw.Config>? configLease = null;
-            try
+            fixed (byte* xmlPtr = xmlBytes)
             {
-                configLease = config._diplomatHandle.Lease(BorrowKind.Shared);
-                fixed (byte* xmlPtr = xmlBytes)
+                var result = Raw.Xml.Validate(new DiplomatSliceU8 { Ptr = xmlPtr, Len = (nuint)xmlBytes.Length });
+                if (!result.IsOk)
                 {
-                    var result = Raw.Xml.Validate(configLease!.Ptr, new DiplomatSliceU8 { Ptr = xmlPtr, Len = (nuint)xmlBytes.Length });
-                    if (!result.IsOk)
-                    {
-                        throw new BindingErrorException(new BindingError(result.Err));
-                    }
-                    return result.Ok;
+                    throw new BindingErrorException(new BindingError(result.Err));
                 }
-            }
-            finally
-            {
-                configLease?.Release();
+                return result.Ok;
             }
         }
     }

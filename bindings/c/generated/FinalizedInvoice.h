@@ -30,8 +30,8 @@ fatoora_FinalizedInvoice_data_result fatoora_FinalizedInvoice_data(const Finaliz
 typedef struct fatoora_FinalizedInvoice_totals_result {union {InvoiceTotals* ok; BindingError* err;}; bool is_ok;} fatoora_FinalizedInvoice_totals_result;
 fatoora_FinalizedInvoice_totals_result fatoora_FinalizedInvoice_totals(const FinalizedInvoice* self);
 
-typedef struct fatoora_FinalizedInvoice_hash_base64_result {union { BindingError* err;}; bool is_ok;} fatoora_FinalizedInvoice_hash_base64_result;
-fatoora_FinalizedInvoice_hash_base64_result fatoora_FinalizedInvoice_hash_base64(const FinalizedInvoice* self, DiplomatWrite* write);
+typedef struct fatoora_FinalizedInvoice_hash_result {union { BindingError* err;}; bool is_ok;} fatoora_FinalizedInvoice_hash_result;
+fatoora_FinalizedInvoice_hash_result fatoora_FinalizedInvoice_hash(const FinalizedInvoice* self, DiplomatWrite* write);
 
 typedef struct fatoora_FinalizedInvoice_xml_result {union { BindingError* err;}; bool is_ok;} fatoora_FinalizedInvoice_xml_result;
 fatoora_FinalizedInvoice_xml_result fatoora_FinalizedInvoice_xml(const FinalizedInvoice* self, DiplomatWrite* write);

@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
     }
     FatooraConfig *config = NULL;
     FatooraSignedInvoice *invoice = NULL;
-    FatooraCsidProduction *credentials = NULL;
+    FatooraProductionCsid *credentials = NULL;
     FatooraZatcaClient *client = NULL;
     FatooraValidationResponse *response = NULL;
     FatooraError *error = NULL;
@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
     TRY(fatoora_signed_invoice_from_file(argv[1], &invoice, &error));
     TRY(fatoora_config_new(FATOORA_NON_PRODUCTION, &config, &error));
     TRY(fatoora_zatca_client_create(config, &client, &error));
-    TRY(fatoora_csid_production_create(FATOORA_NON_PRODUCTION, NULL,
+    TRY(fatoora_production_csid_create(FATOORA_NON_PRODUCTION, NULL,
         argv[2], argv[3], &credentials, &error));
     TRY(fatoora_zatca_client_report_simplified_invoice(client, invoice,
         credentials, false, "en", &response, &error));
@@ -34,7 +34,7 @@ cleanup:
         fatoora_error_message(error), fatoora_error_details_json(error));
     fatoora_validation_response_free(response);
     fatoora_zatca_client_free(client);
-    fatoora_csid_production_free(credentials);
+    fatoora_production_csid_free(credentials);
     fatoora_signed_invoice_free(invoice);
     fatoora_config_free(config);
     fatoora_error_free(error);

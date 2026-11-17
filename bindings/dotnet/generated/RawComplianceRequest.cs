@@ -22,7 +22,7 @@ internal partial struct ComplianceRequest
     internal static unsafe extern DiplomatResultBytesBindingError Body(ComplianceRequest* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ComplianceRequest_decode", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultCsidComplianceBindingError Decode(ComplianceRequest* handle, ushort status, DiplomatSliceU8 body);
+    internal static unsafe extern DiplomatResultComplianceCsidBindingError Decode(ComplianceRequest* handle, ushort status, DiplomatSliceU8 body);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ComplianceRequest_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(ComplianceRequest* handle);

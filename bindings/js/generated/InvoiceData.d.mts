@@ -69,7 +69,7 @@ export class InvoiceData {
 
     vatCategory(): VatCategory;
 
-    flagsRaw(): number;
+    flags(): number;
 
     invoiceTypeKind(): InvoiceTypeKind;
 

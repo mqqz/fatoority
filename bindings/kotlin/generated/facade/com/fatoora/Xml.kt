@@ -12,13 +12,13 @@ class Xml internal constructor(internal val raw: com.fatoora.raw.Xml) : NativeRe
     companion object {
         @JvmStatic
         @JvmOverloads
-        fun validateZatca(config: Config, xml: String, optionsJson: String? = null): String = nativeCall(listOfNotNull(config)) {
-            unwrap(com.fatoora.raw.Xml.validateZatca(config.raw, checkedText(xml), optionsJson?.let(::checkedText)))
+        fun validateZatca(xml: String, optionsJson: String? = null): ZatcaValidationReport = nativeCall(listOfNotNull()) {
+            ZatcaValidationReport(unwrap(com.fatoora.raw.Xml.validateZatca(checkedText(xml), optionsJson?.let(::checkedText))))
         }
 
         @JvmStatic
-        fun validate(config: Config, xml: String): Boolean = nativeCall(listOfNotNull(config)) {
-            unwrap(com.fatoora.raw.Xml.validate(config.raw, checkedText(xml)))
+        fun validate(xml: String): Boolean = nativeCall(listOfNotNull()) {
+            unwrap(com.fatoora.raw.Xml.validate(checkedText(xml)))
         }
 
         @JvmStatic

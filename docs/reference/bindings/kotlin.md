@@ -97,7 +97,7 @@ environment. Factory names use `create`, such as
 | Unsigned byte / short / int | Checked JVM integer / integer / long |
 | Enumerated code | `com.fatoora` enum with the native variant names: `Environment`, `InvoiceTypeKind`, `InvoiceSubType`, `VatCategory`, `AdjustmentKind`, `ClearanceMode`, `InvoiceOutcome` |
 | Response status | Nullable `ReportingStatus`, `ClearanceStatus`, `ValidationStatus`, or `MessageType`; `null` when absent, `Unknown` when present but not recognized by this version. The `*Raw()` getter returns the exact text as nullable `Text` |
-| Invoice flags | `Int` bitmask taken by `InvoiceBuilder.flags` and returned by `flagsRaw()`; combine `InvoiceFlag` bits from `bit()` (`ThirdParty`, `Nominal`, `Export`, `Summary`, `SelfBilled`) |
+| Invoice flags | `Int` bitmask taken by `InvoiceBuilder.flags` and returned by `flags()`; combine `InvoiceFlag` bits from `bit()` (`ThirdParty`, `Nominal`, `Export`, `Summary`, `SelfBilled`) |
 | Unsigned 64-bit counter | `BigInteger`, range 0 through 2^64−1 |
 | Binary input / copied output | JVM byte array; copies survive closing their owner |
 | Native failure | `BindingException(code, message, detailsJson)` |
@@ -149,14 +149,14 @@ input, cryptography, and gateway failures.
 
 | Method | Inputs | Returns |
 | --- | --- | --- |
-| `Xml.validate(config, xml)` | `Config`, XML string | `true` on schema success; throws for malformed XML or schema rejection |
-| `Xml.validateZatca(config, xml, optionsJson)` | `Config`, XML string, nullable options JSON | JSON report string, including rejection or incomplete coverage |
+| `Xml.validate(xml)` | XML string | `true` on schema success; throws for malformed XML or schema rejection |
+| `Xml.validateZatca(xml, optionsJson)` | XML string, nullable options JSON | Owned `ZatcaValidationReport`, including rejection or incomplete coverage |
 | `Xml.hash(xml)` | XML string | Base64 invoice hash string |
 
 Pass `null` for default options, or a JSON object string with
 `previous_invoice_hash` and/or `evaluated_at`. The timestamp uses RFC3339 format;
 omission uses one native UTC clock snapshot. Unknown option fields are rejected.
-Parse the returned JSON and inspect `is_valid` and `stages`. Missing predecessor
+Inspect `isValid()`, `isComplete()` and `stage(i)` on the returned report, or read `toJson()`. Missing predecessor
 context makes coverage incomplete. Execution failures throw and may carry a
 partial report in their JSON details. See the [validation reference](../invoice-validation.md).
 
@@ -170,12 +170,12 @@ calling thread and return objects that must be closed:
 
 | Method | Inputs | Returns |
 | --- | --- | --- |
-| `postCsrForCcsid(csr, otp)` | `Csr`, OTP string | `CsidCompliance` |
-| `postCcsidForPcsid(credentials)` | `CsidCompliance` | `CsidProduction` |
-| `renewCsid(credentials, csr, otp, acceptLanguage)` | `CsidProduction`, `Csr`, OTP, nullable language | `CsidProduction` |
-| `checkInvoiceCompliance(invoice, credentials)` | `SignedInvoice`, `CsidCompliance` | `ValidationResponse` |
-| `reportSimplifiedInvoice(invoice, credentials, clearanceMode, acceptLanguage)` | `SignedInvoice`, `CsidProduction`, `ClearanceMode`, nullable language | `ValidationResponse` |
-| `clearStandardInvoice(invoice, credentials, clearanceMode, acceptLanguage)` | `SignedInvoice`, `CsidProduction`, `ClearanceMode`, nullable language | `ValidationResponse` |
+| `requestComplianceCsid(csr, otp)` | `Csr`, OTP string | `ComplianceCsid` |
+| `requestProductionCsid(credentials)` | `ComplianceCsid` | `ProductionCsid` |
+| `renewCsid(credentials, csr, otp, acceptLanguage)` | `ProductionCsid`, `Csr`, OTP, nullable language | `ProductionCsid` |
+| `checkInvoiceCompliance(invoice, credentials)` | `SignedInvoice`, `ComplianceCsid` | `ValidationResponse` |
+| `reportSimplifiedInvoice(invoice, credentials, clearanceMode, acceptLanguage)` | `SignedInvoice`, `ProductionCsid`, `ClearanceMode`, nullable language | `ValidationResponse` |
+| `clearStandardInvoice(invoice, credentials, clearanceMode, acceptLanguage)` | `SignedInvoice`, `ProductionCsid`, `ClearanceMode`, nullable language | `ValidationResponse` |
 
 The final `acceptLanguage` argument can be omitted; its default is `null`.
 
@@ -190,7 +190,7 @@ save the cleared XML, and close that owner. See the [API reference](../api-clien
 
 === "Kotlin"
 
-    Coroutine extensions `postCsrForCcsidAsync`, `postCcsidForPcsidAsync`,
+    Coroutine extensions `requestComplianceCsidAsync`, `requestProductionCsidAsync`,
     `renewCsidAsync`, `checkInvoiceComplianceAsync`, `reportSimplifiedInvoiceAsync`,
     and `clearStandardInvoiceAsync` dispatch blocking calls to `Dispatchers.IO`.
 

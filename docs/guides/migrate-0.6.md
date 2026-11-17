@@ -9,7 +9,7 @@ This page covers the `fatoora-core` Rust crate. The generated language
 bindings (JavaScript/TypeScript, Kotlin/Java, C#/.NET and C/C++) have a shorter
 list of breaking changes, summarised in
 [Language bindings](#language-bindings); the Python `fatoora` package API is
-unchanged.
+unchanged except that credential `request_id()` returns `None` when absent.
 
 0.6 renames items for consistency, replaces strings and Booleans with typed
 values, and makes the fields of invoice value types private. Each change below
@@ -236,6 +236,44 @@ is renamed `fatoora_invoice_line_item_adjustment_kind`; both write a
 `fatoora_zatca_client_clear_standard_invoice` take `FatooraClearanceMode`. The raw
 Diplomat headers under `generated/` do not validate enum values: passing a value
 that is not a declared enumerator is undefined behaviour.
+
+### Names that mirror the core
+
+The bridge now uses the core names, without aliases. Builders use `set*` to
+replace a value and `add*` to append one; getters keep plain names. The table
+uses JavaScript/Kotlin/Java names; C# uses PascalCase and C/C++ snake_case
+(`fatoora_compliance_csid_create`, `fatoora_invoice_signer_sign`, ...).
+
+| 0.5 | 0.6 | Status |
+| --- | --- | --- |
+| `CsidCompliance`, `CsidProduction` | `ComplianceCsid`, `ProductionCsid` | Breaking |
+| `client.postCsrForCcsid`, `postCcsidForPcsid` (and `preparePost*`) | `requestComplianceCsid`, `requestProductionCsid` (and `prepareRequest*`); Kotlin `*Async` helpers follow | Breaking |
+| `Signer` | `InvoiceSigner` | Breaking |
+| `CsrProperties.fromPropertiesStr`, `parseCsrConfigFile` | `fromStr`, `fromFile` | Breaking |
+| `invoice.hashBase64()` | `invoice.hash()`; `SignedInvoice.invoiceHash()` still reads the stored digest | Breaking |
+| `builder.flags(mask)`, `data.flagsRaw()` | `builder.setFlags(mask)`, `data.flags()` | Breaking |
+| `builder.setTaxExemption(...)` | `builder.addTaxExemption(...)` | Breaking |
+| `builder.addDocumentAdjustment(kind, adjustment, category, rate, exemption)` | `builder.addAllowance(adjustment, category, rate, exemption)` or `addCharge(...)` | Breaking |
+| `builder.setNote(language, text)`, `setNoteWithoutLanguage(text)` | `builder.addNote(language, text)` with `null` for no language | Breaking |
+| `builder.setPaymentMeansCode(code)` | `builder.addPaymentMeans(PaymentMeans.new_(code, null))` (`create` in Kotlin/Java, `New` in C#) | Breaking |
+| `builder.setAllowance(reason, amount)`, `allowanceReason`, `invoiceLevelCharge`, `invoiceLevelDiscount` | `addAllowance`/`addCharge` with `Adjustment.amount(amount).withReason(reason, null)` | Breaking |
+| `Xml.validate(config, xml)` | `Xml.validate(xml)` | Breaking |
+| `Xml.validateZatca(config, xml, optionsJson)` returning JSON text | `Xml.validateZatca(xml, optionsJson)` returning `ZatcaValidationReport`; `report.toJson()` returns the old text | Breaking |
+
+Validation no longer takes a `Config` because the core `Validator` needs none.
+The report object exposes `isValid()`, `isComplete()`, `hasErrors()` and
+`stage(i)` with typed findings; see
+[invoice validation](../reference/invoice-validation.md#report-object-in-the-generated-bindings).
+Credential `requestId()` returns null when the credentials have no request ID.
+
+Python keeps its 0.5 names on top of the renamed bridge. Two behaviours differ:
+`set_payment_means_code` appends a payment means instead of changing the code of
+an existing one, and the aggregate setters (`set_allowance`,
+`invoice_level_discount`, `invoice_level_charge`, `allowance_reason`) are applied
+by `build()` as one allowance and one charge in the document VAT category.
+`build()` raises `ValueError` when lines in that category have more than one VAT
+rate or when the aggregate setters are combined with `add_document_adjustment` or
+`add_adjustment`.
 
 ## Behaviour and data format changes
 

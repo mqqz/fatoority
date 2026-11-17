@@ -15,7 +15,7 @@ void add_FinalizedInvoice_binding(nb::module_ mod) {
         .def("data", std::move(maybe_op_unwrap(&_native::FinalizedInvoice::data)))
         .def_static("from_file", std::move(maybe_op_unwrap(&_native::FinalizedInvoice::from_file)), "value"_a)
         .def_static("from_xml", std::move(maybe_op_unwrap(&_native::FinalizedInvoice::from_xml)), "value"_a)
-        .def("hash_base64", std::move(maybe_op_unwrap(&_native::FinalizedInvoice::hash_base64)))
+        .def("hash", std::move(maybe_op_unwrap(&_native::FinalizedInvoice::hash)))
         .def("totals", std::move(maybe_op_unwrap(&_native::FinalizedInvoice::totals)))
         .def("xml", std::move(maybe_op_unwrap(&_native::FinalizedInvoice::xml)));
 }

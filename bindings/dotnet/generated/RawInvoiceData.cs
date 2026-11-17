@@ -81,8 +81,8 @@ internal partial struct InvoiceData
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_vat_category", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern VatCategory VatCategory(InvoiceData* handle);
 
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_flags_raw", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern byte FlagsRaw(InvoiceData* handle);
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_flags", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern byte Flags(InvoiceData* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_invoice_type_kind", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern InvoiceTypeKind InvoiceTypeKind(InvoiceData* handle);

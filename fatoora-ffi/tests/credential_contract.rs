@@ -23,7 +23,7 @@ fn ok<T>(result: Result<T, Box<BindingError>>) -> T {
     result.unwrap_or_else(|e| panic!("{}: {}", e.code(), written(|out| e.message(out))))
 }
 fn csr() -> Box<Csr> {
-    let props = ok(CsrProperties::from_properties_str(PROPERTIES));
+    let props = ok(CsrProperties::from_str(PROPERTIES));
     let key = ok(SigningKey::from_der(KEY));
     ok(props.build(&key, Environment::Simulation))
 }
@@ -106,7 +106,7 @@ fn exercise_client() {
     let config = ok(Config::new(Environment::Simulation));
     let client = ok(ZatcaClient::create(&config));
     let csr = csr();
-    let compliance = ok(client.post_csr_for_ccsid(&csr, b"123456"));
+    let compliance = ok(client.request_compliance_csid(&csr, b"123456"));
     assert_eq!(compliance.env().ok(), Some(Environment::Simulation));
     assert_eq!(
         written(|out| ok(ok(compliance.request_id()).unwrap().value(out))),
@@ -117,7 +117,7 @@ fn exercise_client() {
         "ctoken"
     );
     assert_eq!(written(|out| ok(compliance.secret(out))), "csecret");
-    let production = ok(client.post_ccsid_for_pcsid(&compliance));
+    let production = ok(client.request_production_csid(&compliance));
     drop(compliance);
     assert_eq!(production.env().ok(), Some(Environment::Simulation));
     assert_eq!(
@@ -174,7 +174,11 @@ fn exercise_client() {
     assert_eq!(written(|out| ok(production.secret(out))), "psecret");
     for bad in [b"bad\0".as_slice(), &[255]] {
         assert_eq!(
-            client.post_csr_for_ccsid(&csr, bad).err().unwrap().code(),
+            client
+                .request_compliance_csid(&csr, bad)
+                .err()
+                .unwrap()
+                .code(),
             1
         );
         assert_eq!(
@@ -194,7 +198,7 @@ fn exercise_client() {
             1
         );
     }
-    let wrong_env = ok(CsidProduction::create(
+    let wrong_env = ok(ProductionCsid::create(
         Environment::Production,
         None,
         b"ptoken",
