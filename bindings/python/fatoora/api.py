@@ -1221,14 +1221,19 @@ class InvoiceBuilder(_Owned):
         if category is None or len(rates) != 1:
             raise ValueError("aggregate document adjustments need a document VAT category with exactly one line VAT rate; use add_document_adjustment")
         rate = _decimal(rates.pop())
-        self._legacy = None
-        exemption = TaxExemption()._native_value()
+        # Prepare (and validate) both entries before touching the native builder,
+        # and keep the pending values until they are added, so a rejected input
+        # can be corrected and build() retried.
+        allowance = None
         if discount is not None or reason is not None:
-            value = (discount or Adjustment.amount(0)).with_reason(reason or "discount")
-            self._invoke("add_allowance", value, int(category), rate, exemption)
-        if charge is not None:
-            value = charge.with_reason(reason or "charge")
-            self._invoke("add_charge", value, int(category), rate, exemption)
+            allowance = (discount or Adjustment.amount(0)).with_reason(reason or "discount")
+        surcharge = charge.with_reason(reason or "charge") if charge is not None else None
+        exemption = TaxExemption()._native_value()
+        if allowance is not None:
+            self._invoke("add_allowance", allowance, int(category), rate, exemption)
+        if surcharge is not None:
+            self._invoke("add_charge", surcharge, int(category), rate, exemption)
+        self._legacy = None
 
 def parse_finalized_invoice_xml(xml: str) -> FinalizedInvoice:
     return FinalizedInvoice(_call(_native.FinalizedInvoice.from_xml, xml))

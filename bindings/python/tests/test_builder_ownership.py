@@ -100,6 +100,17 @@ def test_aggregate_setters_build_document_adjustments():
     b.invoice_level_discount(1)
     assert b.build().totals().allowance_total == Decimal("1")
 
+    # A rejected aggregate reason keeps the pending discount for a corrected retry.
+    b = builder()
+    b.add_line_item("item", 1, "PCE", 100, 15, VatCategory.STANDARD)
+    b.set_allowance("bad\0reason", 10)
+    with pytest.raises((FfiError, ValueError)):
+        b.build()
+    b.allowance_reason("corrected")
+    invoice = b.build()
+    assert invoice.totals().allowance_total == Decimal("10")
+    assert invoice.allowance_reason() == "corrected"
+
     b = builder()
     b.add_line_item("a", 1, "PCE", 100, 15, VatCategory.STANDARD)
     b.add_line_item("b", 1, "PCE", 100, 5, VatCategory.STANDARD)
