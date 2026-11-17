@@ -80,12 +80,12 @@ NativeError(() => builder.Build(), 2);
 NativeError(() => builder.SetId("again"), 1, "consumed");
 
 var corpus = Path.Combine(root, "fatoora-core/tests/fixtures/sdk-parity");
-using var signer = Signer.FromDer(File.ReadAllBytes(Path.Combine(corpus, "credentials/certificate.der")), File.ReadAllBytes(Path.Combine(corpus, "credentials/private-key.der")));
+using var signer = InvoiceSigner.FromDer(File.ReadAllBytes(Path.Combine(corpus, "credentials/certificate.der")), File.ReadAllBytes(Path.Combine(corpus, "credentials/private-key.der")));
 Check(Copy(signer.CertificateDer()).SequenceEqual(File.ReadAllBytes(Path.Combine(corpus, "credentials/certificate.der"))), "Certificate fixture");
 using var config = Config.New(ZatcaEnvironment.NonProduction);
 Check(config.Env() == ZatcaEnvironment.NonProduction, "Environment round trip");
 using var client = ZatcaClient.Create(config);
-using var credentials = CsidProduction.Create(ZatcaEnvironment.NonProduction, null, "token", "secret");
+using var credentials = ProductionCsid.Create(ZatcaEnvironment.NonProduction, null, "token", "secret");
 foreach (var kind in new[] { "simplified", "standard" })
 {
     var fixture = Path.Combine(corpus, $"cases/{kind}-invoice");
@@ -93,7 +93,7 @@ foreach (var kind in new[] { "simplified", "standard" })
     using var expected = JsonDocument.Parse(File.ReadAllText(Path.Combine(fixture, "expected.json")));
     Check(Xml.Hash(xml) == expected.RootElement.GetProperty("hash").GetString(), "Frozen SDK hash parity");
     using var imported = SignedInvoice.FromXml(File.ReadAllText(Path.Combine(fixture, "sdk-signed.xml")));
-    Check(imported.HashBase64() == Xml.Hash(imported.Xml()), "Imported signed XML hash parity");
+    Check(imported.Hash() == Xml.Hash(imported.Xml()), "Imported signed XML hash parity");
     using var invoice = FinalizedInvoice.FromXml(xml);
     using var signed = signer.Sign(invoice);
     NativeError(() => invoice.Xml(), 1, "consumed");
@@ -107,7 +107,7 @@ foreach (var kind in new[] { "simplified", "standard" })
     Check(request.Method() == "POST", "Prepared method");
     using var headers = JsonDocument.Parse(request.HeadersJson());
     using var body = JsonDocument.Parse(Copy(request.Body()));
-    Check(body.RootElement.GetProperty("invoiceHash").GetString() == signed.HashBase64(), "Prepared hash");
+    Check(body.RootElement.GetProperty("invoiceHash").GetString() == signed.Hash(), "Prepared hash");
     Check(Encoding.UTF8.GetString(Convert.FromBase64String(body.RootElement.GetProperty("invoice").GetString()!)) == signed.Xml(), "Prepared invoice");
     var signedXml = signed.IntoXml();
     NativeError(() => signed.Xml(), 1, "consumed");
@@ -139,10 +139,25 @@ foreach (var kind in new[] { "simplified", "standard" })
     NativeError(() => request.Decode(401, Encoding.UTF8.GetBytes("{}")), 8);
     NativeError(() => request.Decode(200, Encoding.UTF8.GetBytes("invalid json")), 3);
 }
-using var compliance = CsidCompliance.Create(ZatcaEnvironment.NonProduction, "request-id", "token", "secret");
-using var productionRequest = client.PreparePostCcsidForPcsid(compliance);
+using var compliance = ComplianceCsid.Create(ZatcaEnvironment.NonProduction, "request-id", "token", "secret");
+using var productionRequest = client.PrepareRequestProductionCsid(compliance);
 compliance.Dispose(); client.Dispose();
 Check(productionRequest.Method() == "POST", "Request owns dependencies");
 using var production = productionRequest.Decode(200, Encoding.UTF8.GetBytes("{\"requestID\":123,\"binarySecurityToken\":\"new-token\",\"secret\":\"new-secret\"}"));
 Check(production.Secret() == "new-secret", "Credential decode");
-Console.WriteLine("C# contracts passed: strings, errors, disposal, crypto, signing, SDK hash parity, requests, responses");
+Check(production.RequestId()?.Value() == "123", "Decoded request id");
+using (var anonymous = ComplianceCsid.Create(ZatcaEnvironment.Simulation, null, "token", "secret"))
+    Check(anonymous.RequestId() == null, "Absent request id is null");
+using (var report = Xml.ValidateZatca("<wrong/>", "{\"evaluated_at\":\"2026-09-23T12:00:00+03:00\"}"))
+{
+    Check(!report.IsValid() && report.HasErrors(), "Typed ZATCA report outcome");
+    Check(report.EvaluatedAt() == "2026-09-23T12:00:00+03:00", "Typed ZATCA report clock");
+    Check(report.StagesLen() == 6, "Typed ZATCA report stages");
+    using var stage = report.Stage(0);
+    Check(stage.Stage() == ZatcaStage.Xsd && stage.Status() == ZatcaStageStatus.Completed, "Typed ZATCA stage");
+    using var finding = stage.Finding(0);
+    Check(finding.Code() == "XSD_INVALID" && finding.Severity() == Severity.Error, "Typed ZATCA finding");
+    using var json = JsonDocument.Parse(report.ToJson());
+    Check(!json.RootElement.GetProperty("is_valid").GetBoolean(), "ZATCA report JSON");
+}
+Console.WriteLine("C# contracts passed: strings, errors, disposal, crypto, signing, SDK hash parity, requests, responses, validation reports");

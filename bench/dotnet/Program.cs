@@ -28,17 +28,16 @@ class Program
                 Console.WriteLine(Xml.Hash(xml));
             else if (op == "sign")
             {
-                using var s = Signer.FromDer(cert, key);
+                using var s = InvoiceSigner.FromDer(cert, key);
                 Console.WriteLine(s.SignXml(xml).Length);
             }
             else
             {
-                using var c = Config.New(ZatcaEnvironment.NonProduction);
-                using var r = JsonDocument.Parse(Xml.ValidateZatca(c, xml, JsonSerializer.Serialize(new
+                using var r = Xml.ValidateZatca(xml, JsonSerializer.Serialize(new
                 {
                     previous_invoice_hash = pih
-                })));
-                if (!r.RootElement.GetProperty("is_valid").GetBoolean())
+                }));
+                if (!r.IsValid())
                     throw new Exception("invalid");
                 Console.WriteLine("valid");
             }
@@ -90,8 +89,7 @@ class Program
         var key = Convert.ToBase64String(ec.ExportECPrivateKey());
         using var expectedDocument = JsonDocument.Parse(File.ReadAllText($"{root}/cases/{kind}-invoice/expected.json"));
         var expected = expectedDocument.RootElement.GetProperty("hash").GetString();
-        using var cfg = Config.New(ZatcaEnvironment.NonProduction);
-        using var signer = Signer.FromDer(certDer, keyDer);
+        using var signer = InvoiceSigner.FromDer(certDer, keyDer);
         var oursSigned = signer.SignXml(xml);
         var signed = File.ReadAllText($"{root}/cases/{kind}-invoice/sdk-signed.xml");
         var pih = Doc(xml).SelectSingleNode("//*[local-name()='AdditionalDocumentReference'][*[local-name()='ID']='PIH']//*[local-name()='EmbeddedDocumentBinaryObject']")!.InnerText;
@@ -120,10 +118,9 @@ class Program
                         throw new Exception("short signature output");
                     return "signed";
                 }
-                var r = Xml.ValidateZatca(cfg, signed, options);
-                using var j = JsonDocument.Parse(r);
-                if (!j.RootElement.GetProperty("is_valid").GetBoolean())
-                    throw new Exception("our validation failed: " + r);
+                using var r = Xml.ValidateZatca(signed, options);
+                if (!r.IsValid())
+                    throw new Exception("our validation failed: " + r.ToJson());
                 return "valid";
             }
             if (op == "hash")
