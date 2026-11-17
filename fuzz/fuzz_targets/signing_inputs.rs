@@ -14,10 +14,7 @@ const XML: &str = include_str!("../seeds/xml_parse/signed.xml");
 fn check_signature(signer: &InvoiceSigner, xml: &str) {
     if let Ok(signed) = signer.sign_xml(xml) {
         // Adding signature/QR nodes must not change the signed invoice digest.
-        assert_eq!(
-            hash_xml(xml).unwrap(),
-            hash_xml(&signed).unwrap()
-        );
+        assert_eq!(hash_xml(xml).unwrap(), hash_xml(&signed).unwrap());
     }
 }
 
