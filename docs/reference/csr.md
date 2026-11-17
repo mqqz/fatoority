@@ -139,19 +139,18 @@ Constructors that take individual fields use the order in the property table abo
 
     ```python
     CsrProperties.new(
-        common_name: str, serial_number: str, organization_identifier: str,
+        *, common_name: str, serial_number: str, organization_identifier: str,
         organization_unit_name: str, organization_name: str, country_name: str,
         invoice_type: str, location_address: str, industry_business_category: str,
     ) -> CsrProperties
     ```
 
-    Pass every field as a keyword argument. Positional calls raise a `DeprecationWarning` and stop working in 0.6.
+    Every field is keyword-only.
 
     | Call | Returns |
     | --- | --- |
-    | `CsrProperties.from_properties_str(text: str)` | `CsrProperties` |
-    | `CsrProperties.parse_csr_config(text: str)` | Alias of `from_properties_str`. |
-    | `CsrProperties.parse_csr_config_file(path: str \| os.PathLike)` | `CsrProperties` |
+    | `CsrProperties.from_str(text: str)` | `CsrProperties` |
+    | `CsrProperties.from_file(path: str \| os.PathLike)` | `CsrProperties` |
     | `properties.build(key: SigningKey, env: Environment)` | `Csr` |
     | `SigningKey.generate()` | `SigningKey` |
     | `SigningKey.from_pem(pem: str)` / `SigningKey.from_der(der: bytes)` | `SigningKey` |
@@ -159,12 +158,14 @@ Constructors that take individual fields use the order in the property table abo
     | `Csr.from_der(der: bytes)` | `Csr` |
     | `csr.to_pem()` / `csr.to_der()` | `str` / `bytes` |
     | `csr.to_base64()` / `csr.to_pem_base64()` | `str` |
-    | `csr.subject_string()` | `str` |
-    | `csr.extension_values_der()` | `list[bytes]` |
+    | `csr.subject_string` | `str` (property) |
+    | `csr.extension_values_der` | `list[bytes]` (property) |
 
     Use `Environment.NON_PRODUCTION`, `SIMULATION`, or `PRODUCTION`. Failures raise
     classified exceptions; see [Python errors](bindings/python.md). Properties, keys,
     and CSRs support `with` and `close()`. Building and serializing do not consume them.
+    The 0.5 names `from_properties_str`, `parse_csr_config` and `parse_csr_config_file`
+    still work until 0.7, with a `DeprecationWarning`.
 
 === "JavaScript"
     Import `CsrProperties`, `SigningKey`, and `Csr` from `fatoority`.

@@ -196,7 +196,7 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     The request owns its data and can outlive the client, invoice, and credentials.
 
 === "Python"
-    Import `ZatcaClient`, `CsidCompliance`, `CsidProduction`, and `InvoiceOutcome`
+    Import `ZatcaClient`, `ComplianceCsid`, `ProductionCsid`, and `InvoiceOutcome`
     from `fatoora`. Construct `ZatcaClient(config: Config)`. HTTP calls block until they
     finish and raise classified exceptions on failure; see [errors](errors.md).
 
@@ -204,34 +204,39 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
     | Method on `client` | Returns |
     | --- | --- |
-    | `post_csr_for_ccsid(csr: Csr, otp: str)` | `CsidCompliance` |
-    | `post_ccsid_for_pcsid(ccsid: CsidCompliance)` | `CsidProduction` |
-    | `renew_csid(pcsid: CsidProduction, csr: Csr, otp: str, accept_language: Optional[str] = None)` | `CsidProduction` |
-    | `check_invoice_compliance(invoice: SignedInvoice, ccsid: CsidCompliance)` | `ValidationResponse` |
-    | `report_simplified_invoice(invoice: SignedInvoice, pcsid: CsidProduction, clearance_status: bool, accept_language: Optional[str] = None)` | `ValidationResponse` |
-    | `clear_standard_invoice(invoice: SignedInvoice, pcsid: CsidProduction, clearance_status: bool, accept_language: Optional[str] = None)` | `ValidationResponse` |
+    | `request_compliance_csid(csr: Csr, otp: str)` | `ComplianceCsid` |
+    | `request_production_csid(ccsid: ComplianceCsid)` | `ProductionCsid` |
+    | `renew_csid(pcsid: ProductionCsid, csr: Csr, otp: str, accept_language: Optional[str] = None)` | `ProductionCsid` |
+    | `check_invoice_compliance(invoice: SignedInvoice, ccsid: ComplianceCsid)` | `ValidationResponse` |
+    | `report_simplified_invoice(invoice: SignedInvoice, pcsid: ProductionCsid, *, clearance_status: bool, accept_language: Optional[str] = None)` | `ValidationResponse` |
+    | `clear_standard_invoice(invoice: SignedInvoice, pcsid: ProductionCsid, *, clearance_status: bool, accept_language: Optional[str] = None)` | `ValidationResponse` |
+
+    `clearance_status` and `accept_language` are keyword-only. The 0.5 names
+    `post_csr_for_ccsid` and `post_ccsid_for_pcsid` still work until 0.7, with a
+    `DeprecationWarning`.
 
     **Credentials**
 
-    `CsidCompliance.new(env: Environment, token: str, secret: str, request_id: Optional[str] = None)`
-    returns `CsidCompliance`. `CsidProduction.new` accepts the same arguments and returns
-    `CsidProduction`. `env()` returns `Environment`; `binary_security_token()` and
-    `secret()` return `str`. `request_id()` returns `Optional[str]`, `None` when absent.
+    `ComplianceCsid.new(env: Environment, token: str, secret: str, request_id: Optional[str] = None)`
+    returns `ComplianceCsid`. `ProductionCsid.new` accepts the same arguments and returns
+    `ProductionCsid`. The `env` property is an `Environment`; `binary_security_token` and
+    `secret` are `str`; `request_id` is `Optional[str]`, `None` when absent. The 0.5 class
+    names `CsidCompliance` and `CsidProduction` are deprecated aliases until 0.7.
 
     **Responses**
 
-    | Method | Returns |
+    | Property or method | Value |
     | --- | --- |
-    | `response.http_status()` | `Optional[int]` |
-    | `response.outcome()` | `InvoiceOutcome.ACCEPTED`, `.REJECTED`, or `.UNKNOWN` |
+    | `response.http_status` | `Optional[int]` |
+    | `response.outcome` | `InvoiceOutcome.ACCEPTED`, `.REJECTED`, or `.UNKNOWN` |
     | `response.ensure_accepted()` | `None`; raises `ApiError` if not accepted. |
-    | `response.validation_results()` | `ValidationResults` |
-    | `response.reporting_status()` / `clearance_status()` / `qr_seller_status()` / `qr_buyer_status()` | `Optional[str]` |
-    | `response.cleared_invoice_base64()` | `Optional[str]` |
-    | `response.cleared_invoice_xml()` | `Optional[str]`; raises `ParseError` for invalid content. |
-    | `results.status()` | `Optional[str]` |
-    | `results.info_messages()` / `warning_messages()` / `error_messages()` | `list[ValidationMessage]` |
-    | `message.message_type()` / `code()` / `category()` / `message()` / `status()` | `Optional[str]` |
+    | `response.validation_results` | `ValidationResults` |
+    | `response.reporting_status` / `clearance_status` / `qr_seller_status` / `qr_buyer_status` | `Optional[str]` |
+    | `response.cleared_invoice_base64` | `Optional[str]` |
+    | `response.cleared_invoice_xml` | `Optional[str]`; raises `ParseError` for invalid content. |
+    | `results.status` | `Optional[str]` |
+    | `results.info_messages` / `warning_messages` / `error_messages` | `list[ValidationMessage]` |
+    | `message.message_type` / `code` / `category` / `message` / `status` | `Optional[str]` |
 
     Client, credential, response, result, and message objects support `with` and
     `close()`. Child results are independently owned. Calls do not consume their

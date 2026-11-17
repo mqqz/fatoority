@@ -2,7 +2,7 @@
 from pathlib import Path
 import base64
 
-from fatoora import Csr, Signer, SigningKey
+from fatoora import Csr, InvoiceSigner, SigningKey
 
 FIXTURES = Path(__file__).resolve().parents[3] / "fatoora-core/tests/fixtures/sdk-parity"
 
@@ -23,7 +23,7 @@ def test_csr_der_and_extension_copies():
     csr = Csr.from_der(der)
     assert csr.to_der() == der
     assert base64.b64decode(csr.to_base64()) == der
-    extensions = csr.extension_values_der()
+    extensions = csr.extension_values_der
     csr.close()
     assert extensions and all(isinstance(value, bytes) and value for value in extensions)
 
@@ -31,7 +31,7 @@ def test_csr_der_and_extension_copies():
 def test_certificate_der_matches_independent_fixture():
     der = (FIXTURES / "credentials/certificate.der").read_bytes()
     key = (FIXTURES / "credentials/private-key.der").read_bytes()
-    signer = Signer.from_der(der, key)
-    actual = signer.certificate_der()
+    signer = InvoiceSigner.from_der(der, key)
+    actual = signer.certificate_der
     signer.close()
     assert isinstance(actual, bytes) and actual == der

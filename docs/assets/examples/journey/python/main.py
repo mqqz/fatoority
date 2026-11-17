@@ -7,12 +7,10 @@ from pathlib import Path
 import sys
 from uuid import uuid4
 
-from fatoora import InvoiceBuilder, InvoiceSubType, InvoiceTypeKind, VatCategory
-from fatoora.api import CsidProduction, ZatcaClient
-from fatoora.config import Config, Environment
-from fatoora.sign import Signer
+from fatoora import (Address, Config, Environment, InvoiceBuilder, InvoiceSigner, InvoiceSubType,
+                     InvoiceTypeKind, PaymentMeans, ProductionCsid, VatCategory, ZatcaClient,
+                     validate_zatca)
 from fatoora.errors import FfiError
-from fatoora.validation import validate_zatca_invoice_from_str
 
 ENVIRONMENT = Environment.NON_PRODUCTION  # Integration Sandbox only.
 
@@ -32,20 +30,20 @@ def messages(items):
     result = []
     for item in items:
         with item:
-            result.append({"code": item.code(), "message": item.message()})
+            result.append({"code": item.code, "message": item.message})
     return result
 
 
 def handle_response(response, output):
-    with response.validation_results() as results:
+    with response.validation_results as results:
         summary = {
-            "http_status": response.http_status(),
-            "outcome": response.outcome().name,
-            "reporting_status": response.reporting_status(),
-            "validation_status": results.status(),
-            "info": messages(results.info_messages()),
-            "warnings": messages(results.warning_messages()),
-            "errors": messages(results.error_messages()),
+            "http_status": response.http_status,
+            "outcome": response.outcome.name,
+            "reporting_status": response.reporting_status,
+            "validation_status": results.status,
+            "info": messages(results.info_messages),
+            "warnings": messages(results.warning_messages),
+            "errors": messages(results.error_messages),
         }
     save_json(output / "response.json", summary)
     print(json.dumps(summary, indent=2, ensure_ascii=False))
@@ -60,44 +58,46 @@ def run(input_path, submit):
     token, secret = (required("ZATCA_TOKEN"), required("ZATCA_SECRET")) if submit else (None, None)
     data = json.loads(Path(input_path).read_text(encoding="utf-8"))
     seller = data["seller"]
-    invoice_uuid = str(uuid4())
-    output = Path("runs") / invoice_uuid
+    invoice_uuid = uuid4()
+    output = Path("runs") / str(invoice_uuid)
     output.mkdir(parents=True, exist_ok=False)
     print(f"Artifacts: {output}")
-    state = {"uuid": invoice_uuid, "invoice_id": data["invoice_id"], "stage": "create", "submitted": False}
+    state = {"uuid": str(invoice_uuid), "invoice_id": data["invoice_id"], "stage": "create", "submitted": False}
     save_json(output / "state.json", state)
     try:
-        with InvoiceBuilder.new(InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED) as builder:
-            builder.set_id(data["invoice_id"])
-            builder.set_uuid(invoice_uuid)
-            builder.set_issue_datetime(datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
-            builder.set_currency("SAR")
-            builder.set_invoice_counter(int(data["invoice_counter"]))
-            builder.set_previous_invoice_hash(data["previous_invoice_hash"])
-            builder.set_payment_means_code("10")
-            builder.set_vat_category(VatCategory.STANDARD)
-            builder.set_seller(
-                name=seller["name"], country_code="SA", city=seller["city"],
-                street=seller["street"], building_number=seller["building_number"],
-                postal_code=seller["postal_code"], district=seller["district"],
-                additional_number=seller["additional_number"], vat_id=seller["vat_id"],
-                other_id=seller["crn"], other_id_scheme="CRN",
-            )
-            builder.add_line_item("دفتر", "2", "PCE", "50", "15", VatCategory.STANDARD)
-            with builder.build() as invoice, Signer.from_pem(certificate, key) as signer:
-                (output / "invoice.xml").write_text(invoice.to_xml(), encoding="utf-8")
+        address = Address.new(
+            "SA", seller["city"], seller["street"], seller["building_number"], seller["postal_code"],
+            district=seller["district"], additional_number=seller["additional_number"],
+        )
+        with InvoiceBuilder(
+            InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED,
+            id=data["invoice_id"],
+            uuid=invoice_uuid,
+            issue_datetime=datetime.now(timezone.utc),
+            currency="SAR",
+            invoice_counter=int(data["invoice_counter"]),
+            previous_invoice_hash=data["previous_invoice_hash"],
+            vat_category=VatCategory.STANDARD,
+        ) as builder:
+            (builder
+                .set_seller(seller["name"], address=address, vat_id=seller["vat_id"],
+                            other_id=seller["crn"], other_id_scheme="CRN")
+                .add_payment_means(PaymentMeans.new("10"))
+                .add_line_item("دفتر", "2", "PCE", "50", "15", VatCategory.STANDARD))
+            with builder.build() as invoice, InvoiceSigner.from_pem(certificate, key) as signer:
+                (output / "invoice.xml").write_text(invoice.xml, encoding="utf-8")
                 print("Created: SAR 100 net + SAR 15 VAT = SAR 115 payable")
                 state["stage"] = "sign"
-                with invoice.sign(signer) as signed, Config(ENVIRONMENT) as config:
-                    signed_xml = signed.xml()
+                with invoice.sign(signer) as signed:
+                    signed_xml = signed.xml
                     (output / "signed.xml").write_text(signed_xml, encoding="utf-8")
-                    state["invoice_hash"] = signed.invoice_hash()
+                    state["invoice_hash"] = signed.invoice_hash
                     state["stage"] = "validate"
-                    report = validate_zatca_invoice_from_str(
-                        config, signed_xml, previous_invoice_hash=data["previous_invoice_hash"],
+                    report = validate_zatca(
+                        signed_xml, previous_invoice_hash=data["previous_invoice_hash"],
                     )
-                    save_json(output / "validation.json", report)
-                    if not report["is_valid"]:
+                    save_json(output / "validation.json", report.to_dict())
+                    if not report.is_valid:
                         raise ValueError("Local validation failed; inspect validation.json. Nothing was submitted.")
                     print("Local validation passed; inspect validation.json for warnings")
                     if not submit:
@@ -107,10 +107,10 @@ def run(input_path, submit):
                     state["stage"] = "report"
                     state["submitted"] = True  # Attempted; outcome may be unknown if the connection fails.
                     save_json(output / "state.json", state)
-                    with CsidProduction.new(ENVIRONMENT, token, secret, None) as credentials:
-                        with ZatcaClient(config) as client:
-                            with client.report_simplified_invoice(signed, credentials, clearance_status=False, accept_language="en") as response:
-                                handle_response(response, output)
+                    with ProductionCsid.new(ENVIRONMENT, token, secret) as credentials, \
+                            Config(ENVIRONMENT) as config, ZatcaClient(config) as client:
+                        with client.report_simplified_invoice(signed, credentials, clearance_status=False, accept_language="en") as response:
+                            handle_response(response, output)
                     state["stage"] = "accepted"
     except Exception as error:
         state["error_type"] = type(error).__name__

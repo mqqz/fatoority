@@ -10,13 +10,11 @@ invoice_xml_path = (
 )
 
 # --8<-- [start:example]
-from fatoora.config import Config
-from fatoora.validation import validate_xml_invoice_from_str
+from fatoora import validate_xml
 
 # invoice_xml_path = "path/to/invoice.xml"
-config = Config()
 xml = invoice_xml_path.read_text(encoding="utf-8")
 
-result = validate_xml_invoice_from_str(config, xml)
+result = validate_xml(xml)
 assert result is True
 # --8<-- [end:example]

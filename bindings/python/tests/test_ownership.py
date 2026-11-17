@@ -2,20 +2,21 @@ from pathlib import Path
 
 import pytest
 
-from fatoora import parse_signed_invoice_xml
+from fatoora import SignedInvoice
 from fatoora.errors import FfiError
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")  # into_xml() is deprecated
 def test_signed_xml_copy_and_consuming_access():
     path = Path(__file__).resolve().parents[3] / "fatoora-core/tests/fixtures/invoices/sample-simplified-invoice.xml"
     xml = path.read_text()
-    signed = parse_signed_invoice_xml(xml)
-    copied = signed.xml()
+    signed = SignedInvoice.from_xml(xml)
+    copied = signed.xml
     assert copied == xml
     assert signed.into_xml() == xml
     assert copied == xml
     with pytest.raises(FfiError):
-        signed.xml()
+        signed.xml
     with pytest.raises(FfiError):
         signed.into_xml()
     signed.close()
@@ -45,11 +46,11 @@ def test_generated_signed_invoice_consumption_keeps_copy_and_owned_data():
 
 def test_closed_facade_is_idempotent_and_rejects_use():
     path = Path(__file__).resolve().parents[3] / "fatoora-core/tests/fixtures/invoices/sample-simplified-invoice.xml"
-    signed = parse_signed_invoice_xml(path.read_text())
+    signed = SignedInvoice.from_xml(path.read_text())
     signed.close()
     signed.close()
     with pytest.raises(FfiError) as caught:
-        signed.into_xml()
+        signed.xml
     assert caught.value.code == 1
 
 
@@ -59,8 +60,8 @@ def test_signed_import_rejects_tampered_qr():
 
     path = Path(__file__).resolve().parents[3] / "fatoora-core/tests/fixtures/invoices/sample-simplified-invoice.xml"
     xml = path.read_text()
-    signed = parse_signed_invoice_xml(xml)
-    qr = signed.qr_code()
+    signed = SignedInvoice.from_xml(xml)
+    qr = signed.qr_code
     ns = {"a": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
           "c": "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"}
     embedded = next(n.findtext("a:Attachment/c:EmbeddedDocumentBinaryObject", namespaces=ns)
@@ -70,4 +71,4 @@ def test_signed_import_rejects_tampered_qr():
     raw = bytearray(base64.b64decode(qr))
     raw[2] ^= 1
     with pytest.raises(FfiError):
-        parse_signed_invoice_xml(xml.replace(qr, base64.b64encode(raw).decode()))
+        SignedInvoice.from_xml(xml.replace(qr, base64.b64encode(raw).decode()))

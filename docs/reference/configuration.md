@@ -53,7 +53,7 @@ Clients reject credentials issued for a different environment before sending a r
     | Operation | Returns | Behavior |
     | --- | --- | --- |
     | `Config(env=Environment.NON_PRODUCTION)` | `Config` | Creates configuration; defaults to non-production. |
-    | `config.env()` | `Environment` | Returns the stored value. |
+    | `config.env` | `Environment` | Property; the stored value. |
     | `Environment(value)` | `Environment` | Converts integer `0`, `1`, or `2`; invalid values raise `ValueError`. |
     | `env.value` | `int` | Returns the numeric value. |
 

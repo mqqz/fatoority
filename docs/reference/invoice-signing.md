@@ -32,7 +32,7 @@ All getters below leave the signed invoice usable. Signed imports verify local s
 | XML Base64 | Base64 of that stored XML text |
 | QR code | Base64 TLV payload for rendering; see [QR reference](qr.md) |
 | Invoice hash | Embedded invoice digest from signature metadata |
-| Computed hash | `hash()` (Rust and generated bindings; `hash_base64()` in Python) recomputes the digest of the stored signed XML using ZATCA exclusions |
+| Computed hash | `hash()` recomputes the digest of the stored signed XML using ZATCA exclusions |
 | Signature | Encoded invoice signature |
 | Public key | Encoded public-key material |
 | ZATCA key signature | Optional encoded certificate-signature material |
@@ -99,14 +99,15 @@ The signed computed hash equals the XML hash operation on `xml()`. Signed import
 
     | Call | Return |
     | --- | --- |
-    | `Signer.from_pem(cert_pem: str, key_pem: str)` | `Signer` |
-    | `Signer.from_der(cert_der: bytes, key_der: bytes)` | `Signer` |
-    | `signer.certificate_pem()` / `certificate_der()` | `str` / `bytes` |
+    | `InvoiceSigner.from_pem(cert_pem: str, key_pem: str)` | `InvoiceSigner` |
+    | `InvoiceSigner.from_der(cert_der: bytes, key_der: bytes)` | `InvoiceSigner` |
+    | `signer.certificate_pem` / `certificate_der` | `str` / `bytes` (properties) |
     | `signer.sign_xml(xml: str)` | `str` |
-    | `finalized.sign(signer: Signer)` | `SignedInvoice`; consumes finalized state |
-    | `invoice_hash_base64_from_xml_str(xml: str)` | `str` |
+    | `finalized.sign(signer: InvoiceSigner)` | `SignedInvoice`; consumes finalized state |
+    | `invoice.hash()` | `str`; recomputes the base64 invoice hash |
+    | `hash_xml(xml: str)` | `str`; the same hash from XML text |
 
-    `SignedInvoice` string getters are `xml()`, `to_xml_base64()`, `qr_code()`, `invoice_hash()`, `hash_base64()`, `signature()`, `public_key()`, `issuer()`, `serial()`, `cert_hash()`, `signed_props_hash()` and `signing_time()`. `zatca_key_signature()` returns `str | None`. Strings and bytes are independent copies. Use context managers or `close()` for owners; errors raise the typed exceptions in [errors](errors.md).
+    `SignedInvoice` string properties are `xml`, `qr_code`, `invoice_hash` (the hash stored in the signature), `signature`, `public_key`, `issuer`, `serial`, `cert_hash` and `signed_props_hash`; `zatca_key_signature` is `str | None` and `signing_time` is a timezone-aware (UTC) `datetime`. `to_xml_base64()` and `hash()` are methods. Strings and bytes are independent copies. Use context managers or `close()` for owners; errors raise the typed exceptions in [errors](errors.md). `Signer`, `hash_base64()` and `invoice_hash_base64_from_xml_str` are deprecated aliases until 0.7.
 
 === "JavaScript"
 

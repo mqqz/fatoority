@@ -10,13 +10,13 @@ signed_xml_path = (
 )
 
 # --8<-- [start:example]
-from fatoora.invoice import parse_signed_invoice_xml
+from fatoora import SignedInvoice
 
 # signed_xml_path = "path/to/signed_invoice.xml"
 signed_xml = signed_xml_path.read_text(encoding="utf-8")
-signed = parse_signed_invoice_xml(signed_xml)
+signed = SignedInvoice.from_xml(signed_xml)
 
-qr = signed.qr_code()
-hash_b64 = signed.hash_base64()
-signature = signed.signature()
+qr = signed.qr_code
+invoice_hash = signed.hash()
+signature = signed.signature
 # --8<-- [end:example]

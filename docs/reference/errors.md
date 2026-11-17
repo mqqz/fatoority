@@ -84,7 +84,7 @@ Classification follows the cause: an XML failure during signing is `Xml`, while 
     from fatoora import InvoiceBuilder, InvoiceSubType, InvoiceTypeKind
     from fatoora.errors import ValidationError
 
-    builder = InvoiceBuilder.new(InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED)
+    builder = InvoiceBuilder(InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED)
     try:
         builder.build()
     except ValidationError as error:

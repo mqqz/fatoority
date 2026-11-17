@@ -1,4 +1,4 @@
-"""0.5.x ergonomics: typing marker, path-likes, repr, flags, and deprecation warnings."""
+"""Ergonomics: typing marker, path-likes, repr, flags, and keyword-only arguments."""
 from __future__ import annotations
 
 import inspect
@@ -8,10 +8,9 @@ import warnings
 
 import pytest
 
-from fatoora import (Address, Config, CsidCompliance, CsidProduction, CsrProperties, Environment,
+from fatoora import (Address, Config, ComplianceCsid, ProductionCsid, CsrProperties, Environment,
                      InvoiceBuilder, InvoiceFlag, SigningKey, InvoiceSubType, InvoiceTypeKind, VatCategory,
-                     ZatcaClient, parse_finalized_invoice_xml_file, parse_signed_invoice_xml,
-                     parse_signed_invoice_xml_file)
+                     ZatcaClient, FinalizedInvoice, SignedInvoice)
 from test_numeric_contract import builder
 
 FIXTURES = Path(__file__).resolve().parents[3] / "fatoora-core/tests/fixtures"
@@ -38,22 +37,22 @@ def test_distribution_ships_py_typed_marker():
 
 
 @pytest.mark.parametrize("path", [CSR_CONFIG, str(CSR_CONFIG)])
-def test_parse_csr_config_file_accepts_path_like(path):
-    props = CsrProperties.parse_csr_config_file(path)
+def test_from_file_accepts_path_like(path):
+    props = CsrProperties.from_file(path)
     csr = props.build(SigningKey.generate(), Environment.NON_PRODUCTION)
-    assert "TST-886431145-399999999900003" in csr.subject_string()
+    assert "TST-886431145-399999999900003" in csr.subject_string
 
 
 @pytest.mark.parametrize("as_path", [True, False])
 def test_invoice_file_parsers_accept_path_like(tmp_path, as_path):
-    signed = parse_signed_invoice_xml_file(SIGNED_XML if as_path else str(SIGNED_XML))
-    assert signed.id()
+    signed = SignedInvoice.from_file(SIGNED_XML if as_path else str(SIGNED_XML))
+    assert signed.id
     unsigned = tmp_path / "finalized.xml"
     b = builder()
     b.add_line_item("item", 1, "PCE", 100, 15, VatCategory.STANDARD)
-    unsigned.write_text(b.build().xml(), encoding="utf-8")
-    finalized = parse_finalized_invoice_xml_file(unsigned if as_path else str(unsigned))
-    assert finalized.id() == "numeric"
+    unsigned.write_text(b.build().xml, encoding="utf-8")
+    finalized = FinalizedInvoice.from_file(unsigned if as_path else str(unsigned))
+    assert finalized.id == "numeric"
 
 
 def test_handle_reprs_show_identifying_fields():
@@ -61,9 +60,9 @@ def test_handle_reprs_show_identifying_fields():
     address = Address.new("SA", "Riyadh", "King Fahd", "1234", "12222")
     assert repr(address) == ("Address(country_code='SAU', city='Riyadh', street='King Fahd', "
                              "building_number='1234', postal_code='12222')")
-    signed = parse_signed_invoice_xml(SIGNED_XML.read_text())
-    assert repr(signed) == f"SignedInvoice(id={signed.id()!r}, uuid={signed.uuid()!r})"
-    assert repr(InvoiceBuilder.new(InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED)) == "InvoiceBuilder()"
+    signed = SignedInvoice.from_xml(SIGNED_XML.read_text())
+    assert repr(signed) == f"SignedInvoice(id={signed.id!r}, uuid={signed.uuid!r})"
+    assert repr(InvoiceBuilder(InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED)) == "InvoiceBuilder()"
 
 
 def test_closed_handles_repr_safely():
@@ -83,7 +82,7 @@ def test_repr_never_raises_when_a_getter_fails():
     assert repr(address).startswith("<Address object at 0x")
 
 
-@pytest.mark.parametrize("cls", [CsidCompliance, CsidProduction])
+@pytest.mark.parametrize("cls", [ComplianceCsid, ProductionCsid])
 def test_credential_repr_redacts_secrets(cls):
     creds = cls.new(Environment.SIMULATION, TOKEN, SECRET, "req-42")
     text = repr(creds)
@@ -100,20 +99,20 @@ def test_invoice_flag_is_int_flag_and_flags_returns_members():
     assert [int(f) for f in (InvoiceFlag.THIRD_PARTY, InvoiceFlag.NOMINAL, InvoiceFlag.EXPORT,
                              InvoiceFlag.SUMMARY, InvoiceFlag.SELF_BILLED)] == [1, 2, 4, 8, 16]
     b = builder()
-    b.flags(InvoiceFlag.EXPORT | InvoiceFlag.SUMMARY)
+    b.set_flags(InvoiceFlag.EXPORT | InvoiceFlag.SUMMARY)
     b.add_line_item("item", 1, "PCE", 100, 15, VatCategory.STANDARD)
     invoice = b.build()
-    assert invoice.flags_raw() == 12
-    assert invoice.flags() == {InvoiceFlag.EXPORT, InvoiceFlag.SUMMARY}
-    assert all(type(f) is InvoiceFlag for f in invoice.flags())
+    assert invoice.flags_raw == 12
+    assert invoice.flags == {InvoiceFlag.EXPORT, InvoiceFlag.SUMMARY}
+    assert all(type(f) is InvoiceFlag for f in invoice.flags)
     assert invoice.is_export() and invoice.is_summary() and not invoice.is_nominal()
 
 
-def test_builder_flags_still_accepts_plain_int():
+def test_builder_set_flags_accepts_plain_int():
     b = builder()
-    b.flags(1 | 16)
+    b.set_flags(1 | 16)
     b.add_line_item("item", 1, "PCE", 100, 15, VatCategory.STANDARD)
-    assert b.build().flags() == {InvoiceFlag.THIRD_PARTY, InvoiceFlag.SELF_BILLED}
+    assert b.build().flags == {InvoiceFlag.THIRD_PARTY, InvoiceFlag.SELF_BILLED}
 
 
 SELLER = dict(country_code="SA", city="Riyadh", street="King Fahd", building_number="1234",
@@ -126,43 +125,36 @@ def _fake_client(monkeypatch):
     return client
 
 
-@pytest.mark.parametrize("call,match", [
-    (lambda b: b.set_seller("Acme", *SELLER.values()), "set_seller"),
-    (lambda b: b.set_buyer("Buyer", "SA", "Riyadh", "Street", "", ""), "set_buyer"),
-    (lambda b: b.add_note("hello", "en"), "add_note"),
-    (lambda b: b.set_note("en", "hello"), "add_note\\(text, language=...\\)"),
-    (lambda b: b.set_note_without_language("hello"), "add_note\\(text\\)"),
+@pytest.mark.parametrize("call", [
+    lambda b: b.set_seller("Acme", *SELLER.values()),
+    lambda b: b.set_buyer("Buyer", "SA", "Riyadh", "Street", "", ""),
+    lambda b: b.add_note("hello", "en"),
 ])
-def test_builder_deprecations_warn(call, match):
-    b = InvoiceBuilder.new(InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED)
-    with pytest.warns(DeprecationWarning, match=match) as record:
+def test_builder_keyword_only_arguments_are_enforced(call):
+    # 0.5.1 warned on these positional calls; 0.6 makes them keyword-only.
+    b = InvoiceBuilder(InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED)
+    with pytest.raises(TypeError, match="positional argument"):
         call(b)
-    assert "0.6" in str(record[0].message)
-    # stacklevel=2 attributes the warning to the caller, not fatoora/api.py.
-    assert record[0].filename == __file__
 
 
 @pytest.mark.parametrize("method", ["report_simplified_invoice", "clear_standard_invoice"])
-def test_client_positional_flags_warn(monkeypatch, method):
+def test_client_flags_are_keyword_only(monkeypatch, method):
     client = _fake_client(monkeypatch)
-    with pytest.warns(DeprecationWarning, match="clearance_status") as record:
+    with pytest.raises(TypeError, match="positional argument"):
         getattr(client, method)(None, None, False)
-    assert record[0].filename == __file__
-    with pytest.warns(DeprecationWarning):
-        getattr(client, method)(None, None, False, "en")
+    with pytest.raises(TypeError, match="clearance_status"):
+        getattr(client, method)(None, None)
 
 
-def test_csr_properties_new_positional_warns():
-    with pytest.warns(DeprecationWarning, match="keyword") as record:
-        props = CsrProperties.new(*CSR_FIELDS.values())
-    assert record[0].filename == __file__
-    assert props is not None
+def test_csr_properties_new_is_keyword_only():
+    with pytest.raises(TypeError, match="positional argument"):
+        CsrProperties.new(*CSR_FIELDS.values())
 
 
 def test_keyword_calls_do_not_warn(monkeypatch):
     with warnings.catch_warnings():
         warnings.simplefilter("error", DeprecationWarning)
-        b = InvoiceBuilder.new(InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED)
+        b = InvoiceBuilder(InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED)
         b.set_seller("Acme", **SELLER)
         b.set_buyer("Buyer", country_code="SA", city="Riyadh", street="Street",
                     building_number="", postal_code="")
@@ -177,10 +169,13 @@ def test_keyword_calls_do_not_warn(monkeypatch):
             getattr(client, method)(invoice=None, pcsid=None, clearance_status=False)
 
 
-def test_deprecated_methods_keep_original_signatures():
-    params = inspect.signature(InvoiceBuilder.set_seller).parameters
-    assert list(params)[:3] == ["self", "name", "country_code"]
-    assert list(inspect.signature(CsrProperties.new).parameters) == list(CSR_FIELDS)
-    assert list(inspect.signature(ZatcaClient.report_simplified_invoice).parameters) == [
-        "self", "invoice", "pcsid", "clearance_status", "accept_language"]
+def test_keyword_only_signatures():
+    kinds = {name: p.kind for name, p in inspect.signature(InvoiceBuilder.set_seller).parameters.items()}
+    assert list(kinds)[:2] == ["self", "name"]
+    assert all(kind is inspect.Parameter.KEYWORD_ONLY for kind in list(kinds.values())[2:])
+    params = inspect.signature(CsrProperties.new).parameters
+    assert list(params) == list(CSR_FIELDS)
+    assert all(p.kind is inspect.Parameter.KEYWORD_ONLY for p in params.values())
+    params = inspect.signature(ZatcaClient.report_simplified_invoice).parameters
+    assert [p.kind for p in params.values()][-2:] == [inspect.Parameter.KEYWORD_ONLY] * 2
     assert InvoiceBuilder.add_note.__name__ == "add_note"

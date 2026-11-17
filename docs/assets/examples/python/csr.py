@@ -1,8 +1,7 @@
 from pathlib import Path
-from fatoora.config import Environment
-from fatoora.csr import CsrProperties, SigningKey
+from fatoora import CsrProperties, Environment, SigningKey
 
-with CsrProperties.parse_csr_config_file("csr.properties") as properties:
+with CsrProperties.from_file("csr.properties") as properties:
     with SigningKey.generate() as key:
         with properties.build(key, Environment.NON_PRODUCTION) as csr:
             Path("csr.pem").write_text(csr.to_pem(), encoding="utf-8")

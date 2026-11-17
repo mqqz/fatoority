@@ -57,3 +57,7 @@ before-build = "cargo build -p fatoora-ffi --release --locked --manifest-path _c
 [tool.ruff.lint.per-file-ignores]
 # Ignore E402 (module level import not at top of file) in examples
 "examples/*" = ["E402"]
+
+[tool.pytest.ini_options]
+# The supported API must not emit DeprecationWarning; deprecation tests assert it with pytest.warns.
+filterwarnings = ["error::DeprecationWarning"]

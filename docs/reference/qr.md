@@ -35,7 +35,7 @@ The getter takes no arguments and leaves the signed invoice usable.
 
 === "Python"
 
-    `SignedInvoice.qr_code() -> str` returns an independent string.
+    The `SignedInvoice.qr_code` property is an independent `str`.
 
 === "JavaScript"
 
