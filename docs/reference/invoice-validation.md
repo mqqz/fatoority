@@ -153,19 +153,18 @@ Child objects are independent snapshots and outlive the report.
     Import from `fatoora`.
 
     ```python
-    validate_xml_invoice_from_str(config: Config, xml: str) -> bool
-    validate_zatca_invoice_from_str(
-        config: Config,
+    validate_xml(xml: str) -> bool
+    validate_zatca(
         xml: str,
         *,
         previous_invoice_hash: str | None = None,
-        evaluated_at: str | None = None,
-    ) -> dict
+        evaluated_at: datetime | str | None = None,
+    ) -> ZatcaReport
     ```
 
-    The schema function returns `True` on success; violations raise an exception rather than returning `False`. Local validation returns a dictionary even when the document is rejected or coverage is incomplete. Inspect `report["is_valid"]` and then `report["stages"]` for explanations.
+    The schema function returns `True` on success; violations raise an exception rather than returning `False`. `validate_zatca` returns a frozen `ZatcaReport` dataclass even when the document is rejected or coverage is incomplete. Inspect `report.is_valid`, then `report.stages` (each a `ZatcaStageReport` with `stage`, `status`, `findings`, `evaluated_assertions` and `provenance`) or `report.findings` for explanations. Each `ZatcaFinding` has `severity`, `layer`, `code`, `message`, `location` and `assertion_site`. The enums (`ZatcaStage`, `ZatcaStageStatus`, `Severity`, `ValidationLayer`, `ValidationLocationKind`) are string enums whose values are the JSON names. `report.to_json()` returns the JSON report and `report.to_dict()` the decoded dictionary.
 
-    The wrapper encodes context as JSON, subject to the 4096-byte options limit. XML and context must be strings (or `None` for absent options); interior NUL characters are rejected. Execution failures raise `FatooraError`; after validation starts, `error.details["report"]` contains partial results. Check whether the key exists because invalid input can fail before a report exists. `config` is accepted for compatibility; validation does not depend on it.
+    `evaluated_at` takes a timezone-aware `datetime` or RFC 3339 text. Context is encoded as JSON, subject to the 4096-byte options limit; interior NUL characters are rejected. Execution failures raise `FatooraError`; after validation starts, `error.details["report"]` contains the partial report as a dictionary. Check whether the key exists because invalid input can fail before a report exists. Validation does not depend on a `Config`. The 0.5 functions `validate_xml_invoice_from_str(config, xml)` and `validate_zatca_invoice_from_str(config, xml, ...)` (which returns the dictionary) still work until 0.7, with a `DeprecationWarning`.
 
 === "JavaScript"
 

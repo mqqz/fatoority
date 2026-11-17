@@ -7,8 +7,9 @@ old names as deprecated aliases until 0.7 (see "Deprecated"); items whose type,
 signature or fields changed in place have no deprecation period (see "Changed
 (breaking)"). The `fatoora-ffi` bridge and the generated bindings replace
 raw integer codes and Booleans with enums and mirror the core names (see
-"Bindings" under "Changed (breaking)"); the Python `fatoora` package API is
-unchanged except that credential `request_id()` returns `None` when absent.
+"Bindings" under "Changed (breaking)"). The Python `fatoora` package adopts
+the same names with a Pythonic surface and keeps its 0.5 names as deprecated
+aliases until 0.7 (see "Python").
 
 Migration guide with a before-and-after table of every change: [Migrate from 0.5 to 0.6 (Rust)](https://docs.fatoority.com/guides/migrate-0.6/).
 
@@ -239,7 +240,7 @@ or invalid). Every wrapper has `as_str()` and `Display`.
 
 **Bindings (`fatoora-ffi`, JavaScript, Kotlin/Java, C#, C/C++)**
 
-The Python `fatoora` package API is unchanged. Enum discriminants for
+The Python `fatoora` package changes are listed under "Python". Enum discriminants for
 `Environment`, `InvoiceTypeKind`, `InvoiceSubType` and `VatCategory` equal the
 old integer codes.
 
@@ -310,7 +311,7 @@ old integer codes.
   `fatoora_zatca_client_request_compliance_csid`, `fatoora_*_invoice_hash`,
   `fatoora_xml_validate(xml, ...)`, `fatoora_xml_validate_zatca(xml, options,
   FatooraZatcaValidationReport **out, ...)`).
-- Python keeps its names (`Signer`, `CsidCompliance`, `post_csr_for_ccsid`,
+- Python keeps its 0.5 names (`Signer`, `CsidCompliance`, `post_csr_for_ccsid`,
   `hash_base64`, `set_payment_means_code`, the aggregate adjustment setters and
   the `validate_zatca_invoice_from_str` dictionary) on top of the renamed
   bridge. `CsidCompliance.request_id()` and `CsidProduction.request_id()`
@@ -449,6 +450,63 @@ Kotlin/Java facade, removed in 0.7:
   the 0.5 native parsing; use the `BigDecimal` overloads.
 - The `Boolean` overloads of `reportSimplifiedInvoiceAsync` and
   `clearStandardInvoiceAsync`.
+
+### Python
+
+The `fatoora` package gets a Pythonic surface that mirrors the core names. Every
+0.5 name keeps working until 0.7 and emits a `DeprecationWarning` naming its
+replacement (see [the Python reference](https://docs.fatoority.com/reference/bindings/python/#migrate-from-05)).
+
+- Getters are read-only properties: `invoice.id`, `address.city`,
+  `response.reporting_status`, `config.env`, `signed.qr_code`, ... Calling one
+  the 0.5 way (`invoice.id()`) still returns the 0.5 value with a warning,
+  including inside pytest-rewritten `assert` statements; a getter stored and
+  called later is not supported.
+- `InvoiceBuilder(invoice_type, invoice_subtype, *, id=, uuid=, issue_datetime=,
+  currency=, previous_invoice_hash=, invoice_counter=, vat_category=, flags=,
+  original_invoice=, original_invoice_reason=)` constructor; `InvoiceBuilder.new`
+  and `new_with_reference` are deprecated. Builder and `LineItemBuilder` setters
+  return the builder so calls chain; `LineItemBuilder()` replaces
+  `LineItemBuilder.new()`.
+- Timestamps accept a timezone-aware `datetime` (naive ones raise `ValueError`),
+  dates accept `datetime.date`, and UUIDs accept `uuid.UUID`; strings are still
+  accepted. `issue_datetime`, `signing_time` and `ZatcaReport.evaluated_at` return
+  aware UTC `datetime`s, and `issue_date`, the delivery dates and
+  `OriginalInvoiceRef.issue_date` return `date`s. `uuid` stays `str` because core
+  does not check UUID syntax.
+- Keyword-only arguments, warned about in 0.5.1, are now enforced (positional
+  use raises `TypeError`): everything after `name` in `set_seller`/`set_buyer`,
+  every `CsrProperties.new` field, `language` in `add_note(text, *, language=None)`,
+  and `clearance_status`/`accept_language` in `report_simplified_invoice` and
+  `clear_standard_invoice`. `set_seller`/`set_buyer` also accept
+  `address=Address.new(...)`.
+- `validate_zatca(xml, *, previous_invoice_hash=None, evaluated_at=None)` returns
+  a frozen `ZatcaReport` dataclass (stages, statuses, findings with severity,
+  layer, code, message and location; `to_json()`/`to_dict()`), with string enums
+  `ZatcaStage`, `ZatcaStageStatus`, `Severity`, `ValidationLayer` and
+  `ValidationLocationKind`. `validate_xml(xml)` and `hash_xml(xml)` replace
+  `validate_xml_invoice_from_str(config, xml)` and
+  `invoice_hash_base64_from_xml_str(xml)`; `validate_zatca_invoice_from_str`
+  (returning the dictionary) is deprecated.
+- `FinalizedInvoice.from_xml`/`from_file` and `SignedInvoice.from_xml`/`from_file`
+  replace the deprecated `parse_*_invoice_xml[_file]` functions.
+- Renamed with deprecated aliases: `Signer` → `InvoiceSigner`,
+  `CsidCompliance`/`CsidProduction` → `ComplianceCsid`/`ProductionCsid`,
+  `ZatcaClient.post_csr_for_ccsid`/`post_ccsid_for_pcsid` →
+  `request_compliance_csid`/`request_production_csid`,
+  `CsrProperties.from_properties_str`/`parse_csr_config`/`parse_csr_config_file`
+  → `from_str`/`from_file`, `hash_base64()` → `hash()` (`invoice_hash` is the
+  stored hash), `to_xml()`/`into_xml()` → the `xml` property, `builder.flags()` →
+  `set_flags()`, `set_tax_exemption` → `add_tax_exemption`,
+  `set_note`/`set_note_without_language` → `add_note`,
+  `set_payment_means_code(code)` → `add_payment_means(PaymentMeans.new(code))`.
+- `InvoiceBuilder.add_allowance(value, category, rate, exemption=...)` and
+  `add_charge(...)` are the document-level adjustment setters;
+  `add_document_adjustment(charge, ...)` and the aggregate setters
+  (`set_allowance`, `invoice_level_discount`, `invoice_level_charge`,
+  `allowance_reason`) are deprecated.
+- `tests/public_api.json` records the public surface, including the deprecated
+  names, and is regenerated with `python tests/test_public_api.py --update`.
 
 ### Removed
 

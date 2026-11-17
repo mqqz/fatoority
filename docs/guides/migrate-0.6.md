@@ -8,8 +8,9 @@ description: Every renamed, retyped, removed and deprecated fatoora-core item be
 This page covers the `fatoora-core` Rust crate. The generated language
 bindings (JavaScript/TypeScript, Kotlin/Java, C#/.NET and C/C++) have a shorter
 list of breaking changes, summarised in
-[Language bindings](#language-bindings); the Python `fatoora` package API is
-unchanged except that credential `request_id()` returns `None` when absent.
+[Language bindings](#language-bindings). The Python `fatoora` package has its
+own [0.5 to 0.6 table](../reference/bindings/python.md#migrate-from-05); its
+0.5 names keep working, with a `DeprecationWarning`, until 0.7.
 
 0.6 renames items for consistency, replaces strings and Booleans with typed
 values, and makes the fields of invoice value types private. Each change below
@@ -192,8 +193,9 @@ example from JSON) go through the same parsing.
 ## Language bindings
 
 The FFI bridge replaces raw integer codes and Booleans with enums. The Python
-`fatoora` package keeps its own `IntEnum`s and string statuses, so Python code
-needs no change. For the other bindings:
+`fatoora` package keeps its own `IntEnum`s and string statuses; its 0.6 changes
+are listed in the [Python reference](../reference/bindings/python.md#migrate-from-05).
+For the other bindings:
 
 | 0.5 | 0.6 | Status |
 | --- | --- | --- |
@@ -278,13 +280,17 @@ The report object exposes `isValid()`, `isComplete()`, `hasErrors()` and
 [invoice validation](../reference/invoice-validation.md#report-object-in-the-generated-bindings).
 Credential `requestId()` returns null when the credentials have no request ID.
 
-Python keeps its 0.5 names on top of the renamed bridge. Two behaviours differ:
-`set_payment_means_code` appends a payment means instead of changing the code of
-an existing one, and the aggregate setters (`set_allowance`,
-`invoice_level_discount`, `invoice_level_charge`, `allowance_reason`) are applied
-by `build()` as one allowance and one charge in the document VAT category.
-`build()` raises `ValueError` when lines in that category have more than one VAT
-rate or when the aggregate setters are combined with `add_document_adjustment` or
+Python renames its API to match (`InvoiceSigner`, `ComplianceCsid`,
+`request_compliance_csid`, getters as properties, ...) and keeps the 0.5 names as
+deprecated aliases until 0.7; see the
+[Python reference](../reference/bindings/python.md#migrate-from-05). Two
+behaviours of the deprecated names differ from 0.5: `set_payment_means_code`
+appends a payment means instead of changing the code of an existing one, and the
+aggregate setters (`set_allowance`, `invoice_level_discount`,
+`invoice_level_charge`, `allowance_reason`) are applied by `build()` as one
+allowance and one charge in the document VAT category. `build()` raises
+`ValueError` when lines in that category have more than one VAT rate or when the
+aggregate setters are combined with `add_allowance`, `add_charge` or
 `add_adjustment`.
 
 ## Behaviour and data format changes

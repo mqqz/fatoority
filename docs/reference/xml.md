@@ -70,24 +70,20 @@ Choose your language for imports, exact calls, returns, and ownership behavior.
     **Parse XML**
 
     ```python
-    parse_finalized_invoice_xml(xml: str) -> FinalizedInvoice
-    parse_finalized_invoice_xml_file(path: str) -> FinalizedInvoice
-    parse_signed_invoice_xml(xml: str) -> SignedInvoice
-    parse_signed_invoice_xml_file(path: str) -> SignedInvoice
+    FinalizedInvoice.from_xml(xml: str) -> FinalizedInvoice
+    FinalizedInvoice.from_file(path: str | os.PathLike) -> FinalizedInvoice
+    SignedInvoice.from_xml(xml: str) -> SignedInvoice
+    SignedInvoice.from_file(path: str | os.PathLike) -> SignedInvoice
     ```
 
     **Read XML**
 
     ```python
-    FinalizedInvoice.xml() -> str
-    FinalizedInvoice.to_xml() -> str
-    SignedInvoice.xml() -> str
-    SignedInvoice.to_xml() -> str
-    SignedInvoice.into_xml() -> str
-    SignedInvoice.to_xml_base64() -> str
+    invoice.xml                       # property: str
+    signed.to_xml_base64() -> str
     ```
 
-    `to_xml()` is an alias for `xml()`. Finalized output uses the default formatting; signed output preserves stored text. String results are independent Python strings. `into_xml()` consumes signed invoice state; later reads fail, but `close()` remains safe. Other methods leave state available. Use context managers or `close()` for owned objects. Errors raise exceptions; see [errors](errors.md).
+    Finalized output uses the default formatting; signed output preserves stored text. String results are independent Python strings and reading them leaves state available. Use context managers or `close()` for owned objects. Errors raise exceptions; see [errors](errors.md). The 0.5 functions `parse_finalized_invoice_xml`, `parse_finalized_invoice_xml_file`, `parse_signed_invoice_xml` and `parse_signed_invoice_xml_file`, and the methods `to_xml()` and `into_xml()` (which consumes the signed invoice), still work until 0.7, with a `DeprecationWarning`.
 
 === "JavaScript"
 

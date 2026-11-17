@@ -98,8 +98,9 @@ Choose your language, then follow its setup and run instructions.
     python validation.py --zatca
     ```
 
-    The example prints the JSON report and exits nonzero when `is_valid` is false.
-    Inspect `stages` for the findings rather than treating all failures as execution errors.
+    The example prints each finding and the JSON report, and exits nonzero when
+    `report.is_valid` is false.
+    Inspect `report.stages` for the findings rather than treating all failures as execution errors.
 
 
 === "JavaScript"

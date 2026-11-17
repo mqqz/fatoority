@@ -1,16 +1,15 @@
-from pathlib import Path
 import os
-from fatoora.api import CsidProduction, ZatcaClient
-from fatoora.config import Config, Environment
-from fatoora.invoice import parse_signed_invoice_xml
+from fatoora import Config, Environment, ProductionCsid, SignedInvoice, ZatcaClient
 
 # Use credentials issued for this same environment.
 environment = Environment.NON_PRODUCTION
 token = os.environ["ZATCA_TOKEN"]
 secret = os.environ["ZATCA_SECRET"]
 with Config(environment) as config, ZatcaClient(config) as client:
-    with CsidProduction.new(environment, token, secret, None) as credentials:
-        with parse_signed_invoice_xml(Path("signed.xml").read_text(encoding="utf-8")) as invoice:
-            with client.report_simplified_invoice(invoice, credentials, clearance_status=False, accept_language="en") as response:
+    with ProductionCsid.new(environment, token, secret) as credentials:
+        with SignedInvoice.from_file("signed.xml") as invoice:
+            with client.report_simplified_invoice(
+                invoice, credentials, clearance_status=False, accept_language="en"
+            ) as response:
                 response.ensure_accepted()
-                print("Invoice reporting accepted")
+                print("Invoice reporting accepted:", response.reporting_status)
