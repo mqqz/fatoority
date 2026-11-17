@@ -7,7 +7,7 @@ from pathlib import Path
 from threading import Thread
 
 import pytest
-from fatoora import CsidProduction, ZatcaClient, InvoiceOutcome, parse_signed_invoice_xml
+from fatoora import ProductionCsid, ZatcaClient, InvoiceOutcome, SignedInvoice
 from fatoora.config import Config, Environment
 from fatoora.errors import ApiError, ParseError, UnauthorizedError
 
@@ -38,8 +38,8 @@ def gateway(monkeypatch, status, body):
 
 def report():
     fixture = Path(__file__).resolve().parents[3] / "fatoora-core/tests/fixtures/invoices/sample-simplified-invoice.xml"
-    with parse_signed_invoice_xml(fixture.read_text()) as invoice, \
-         CsidProduction.new(Environment.NON_PRODUCTION, "test-token", "test-secret") as credentials, \
+    with SignedInvoice.from_xml(fixture.read_text()) as invoice, \
+         ProductionCsid.new(Environment.NON_PRODUCTION, "test-token", "test-secret") as credentials, \
          ZatcaClient(Config(Environment.NON_PRODUCTION)) as client:
         return client.report_simplified_invoice(invoice, credentials, clearance_status=False, accept_language="en")
 
@@ -62,10 +62,10 @@ def test_receipt_outcome_and_copied_invoice(monkeypatch, wire_status, outcome):
     encoded = base64.b64encode(xml.encode()).decode()
     body = json.dumps({"validationResults": {"status": "WARNING", "warningMessages": [{"code": "warning"}]}, "reportingStatus": wire_status, "clearedInvoice": encoded})
     with gateway(monkeypatch, 202, body), report() as response:
-        assert response.http_status() == 202
-        assert response.outcome() == outcome
-        copied = response.cleared_invoice_xml()
-        assert response.cleared_invoice_base64() == encoded
+        assert response.http_status == 202
+        assert response.outcome == outcome
+        copied = response.cleared_invoice_xml
+        assert response.cleared_invoice_base64 == encoded
         if outcome == InvoiceOutcome.ACCEPTED:
             response.ensure_accepted()
         else:
@@ -81,12 +81,12 @@ def test_cleared_invoice_missing_and_invalid(monkeypatch, value):
     body = json.dumps({"validationResults": {}, "reportingStatus": "REPORTED", "clearedInvoice": value})
     with gateway(monkeypatch, 200, body), report() as response:
         if value is None:
-            assert response.cleared_invoice_base64() is None
-            assert response.cleared_invoice_xml() is None
+            assert response.cleared_invoice_base64 is None
+            assert response.cleared_invoice_xml is None
         else:
-            assert response.cleared_invoice_base64() == value
+            assert response.cleared_invoice_base64 == value
             with pytest.raises(ParseError) as caught:
-                response.cleared_invoice_xml()
+                response.cleared_invoice_xml
             assert caught.value.details["http_status"] == 200
             assert caught.value.details["type"] == "api_cleared_invoice"
 
@@ -101,15 +101,15 @@ def test_response_children_remain_owned_after_parents_close(monkeypatch):
     }, "reportingStatus": "REPORTED"})
     with gateway(monkeypatch, 200, body):
         response = report()
-    results = response.validation_results()
+    results = response.validation_results
     response.close()
     with pytest.raises(InvalidInputError):
-        response.http_status()
-    assert results.status() == "PASS"
-    messages = results.info_messages()
+        response.http_status
+    assert results.status == "PASS"
+    messages = results.info_messages
     assert len(messages) == 1
-    assert results.warning_messages()[0].code() == "WARN"
-    assert results.error_messages() == []
+    assert results.warning_messages[0].code == "WARN"
+    assert results.error_messages == []
     for method, index in [("info_message", 1), ("warning_message", 1), ("error_message", 0)]:
         with pytest.raises(Exception) as caught:
             getattr(results._handle, method)(index)
@@ -117,8 +117,8 @@ def test_response_children_remain_owned_after_parents_close(monkeypatch):
         assert isinstance(error, _native.BindingError)
         assert error.code() == 1
     results.close()
-    assert messages[0].code() == "INFO"
-    assert messages[0].message() == "retained"
+    assert messages[0].code == "INFO"
+    assert messages[0].message == "retained"
     messages[0].close()
 
 
@@ -146,11 +146,13 @@ def test_http_releases_gil_and_retains_locked_arguments(invoice_action):
         import base64
         import json
         import os
+        import warnings
+        warnings.simplefilter("ignore", DeprecationWarning)  # into_xml() is deprecated
         from pathlib import Path
         import sys
         from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
         from threading import Event, Thread
-        from fatoora import CsidProduction, ZatcaClient, parse_signed_invoice_xml
+        from fatoora import ProductionCsid, ZatcaClient, SignedInvoice
         from fatoora.config import Config, Environment
         from fatoora.errors import InvalidInputError
 
@@ -177,8 +179,8 @@ def test_http_releases_gil_and_retains_locked_arguments(invoice_action):
         server_thread.start()
         os.environ["FATOORA_ZATCA_BASE_URL"] = f"http://127.0.0.1:{server.server_port}"
         xml = Path(sys.argv[1]).read_text()
-        invoice = parse_signed_invoice_xml(xml)
-        credentials = CsidProduction.new(Environment.NON_PRODUCTION, "test-token", "test-secret")
+        invoice = SignedInvoice.from_xml(xml)
+        credentials = ProductionCsid.new(Environment.NON_PRODUCTION, "test-token", "test-secret")
         client = ZatcaClient(Config(Environment.NON_PRODUCTION))
         def request():
             try:
@@ -216,15 +218,15 @@ def test_http_releases_gil_and_retains_locked_arguments(invoice_action):
             assert not failures, failures
             assert len(responses) == 1
             responses[0].ensure_accepted()
-            assert responses[0].http_status() == 200
+            assert responses[0].http_status == 200
             responses[0].close()
             assert base64.b64decode(captured["body"]["invoice"]).decode() == xml
             assert captured["authorization"] == "Basic " + base64.b64encode(b"test-token:test-secret").decode()
             if sys.argv[2] == "into_xml":
                 assert consumed == [xml]
-            for method in (invoice.xml, credentials.secret):
+            for owner, name in ((invoice, "xml"), (credentials, "secret")):
                 try:
-                    method()
+                    getattr(owner, name)
                 except InvalidInputError:
                     pass
                 else:

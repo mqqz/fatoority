@@ -2,11 +2,10 @@ from pathlib import Path
 csr_props_path = Path(__file__).resolve().parents[3] / "fatoora-core" / "tests" / "fixtures" / "csr-configs" / "csr-config-example-EN.properties"
 csr_props_path = csr_props_path.resolve()
 # --8<-- [start:example]
-from fatoora.config import Environment
-from fatoora.csr import CsrProperties, SigningKey
+from fatoora import CsrProperties, Environment, SigningKey
 
 # csr_props_path = "path/to/csr.properties"
-props = CsrProperties.parse_csr_config_file(str(csr_props_path))
+props = CsrProperties.from_file(csr_props_path)
 key = SigningKey.generate()
 csr = props.build(key, Environment.NON_PRODUCTION)
 
