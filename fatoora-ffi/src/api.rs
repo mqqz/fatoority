@@ -375,6 +375,22 @@ pub mod ffi {
                     .map_err(core_error)
             })
         }
+        /// Like `create`, but each request fails with a network error after
+        /// the given number of milliseconds. Zero is rejected.
+        #[diplomat::attr(js, disable)]
+        pub fn create_with_timeout(
+            config: &Config,
+            timeout_ms: u32,
+        ) -> Result<Box<Self>, Box<BindingError>> {
+            boundary(|| {
+                fatoora_core::api::ZatcaClient::with_timeout(
+                    config.0.clone(),
+                    std::time::Duration::from_millis(u64::from(timeout_ms)),
+                )
+                .map(|value| Box::new(Self(value)))
+                .map_err(core_error)
+            })
+        }
         #[cfg(not(target_arch = "wasm32"))]
         #[diplomat::attr(js, disable)]
         pub fn request_compliance_csid(

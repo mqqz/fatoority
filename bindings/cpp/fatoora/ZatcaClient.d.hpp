@@ -52,6 +52,12 @@ public:
 
   inline static diplomat::result<std::unique_ptr<fatoora::ZatcaClient>, std::unique_ptr<fatoora::BindingError>> create(const fatoora::Config& config);
 
+  /**
+   * Like `create`, but each request fails with a network error after
+   * the given number of milliseconds. Zero is rejected.
+   */
+  inline static diplomat::result<std::unique_ptr<fatoora::ZatcaClient>, std::unique_ptr<fatoora::BindingError>> create_with_timeout(const fatoora::Config& config, uint32_t timeout_ms);
+
   inline diplomat::result<std::unique_ptr<fatoora::ComplianceCsid>, std::unique_ptr<fatoora::BindingError>> request_compliance_csid(const fatoora::Csr& csr, std::string_view otp) const;
 
   inline diplomat::result<std::unique_ptr<fatoora::ProductionCsid>, std::unique_ptr<fatoora::BindingError>> request_production_csid(const fatoora::ComplianceCsid& credentials) const;

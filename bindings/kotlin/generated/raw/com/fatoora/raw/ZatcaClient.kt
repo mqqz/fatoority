@@ -8,6 +8,7 @@ import com.sun.jna.Structure
 internal interface ZatcaClientLib: Library {
     fun fatoora_ZatcaClient_destroy(handle: Pointer)
     fun fatoora_ZatcaClient_create(config: Pointer): ResultPointerPointer
+    fun fatoora_ZatcaClient_create_with_timeout(config: Pointer, timeoutMs: FFIUint32): ResultPointerPointer
     fun fatoora_ZatcaClient_request_compliance_csid(handle: Pointer, csr: Pointer, otp: Slice): ResultPointerPointer
     fun fatoora_ZatcaClient_request_production_csid(handle: Pointer, credentials: Pointer): ResultPointerPointer
     fun fatoora_ZatcaClient_renew_csid(handle: Pointer, credentials: Pointer, csr: Pointer, otp: Slice, acceptLanguage: OptionSlice): ResultPointerPointer
@@ -55,6 +56,28 @@ class ZatcaClient internal constructor (
         fun create(config: Config): Result<ZatcaClient> {
 
             val returnVal = lib.fatoora_ZatcaClient_create(config.handle);
+            val nativeOkVal = returnVal.getNativeOk();
+            if (nativeOkVal != null) {
+                val selfEdges: List<Any> = listOf()
+                val handle = nativeOkVal
+                val returnOpaque = ZatcaClient(handle, selfEdges, true)
+                return returnOpaque.ok()
+            } else {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal.getNativeErr()!!
+                val returnOpaque = BindingError(handle, selfEdges, true)
+                return returnOpaque.err()
+            }
+        }
+        @JvmStatic
+
+        /**
+         * Like `create`, but each request fails with a network error after
+         * the given number of milliseconds. Zero is rejected.
+         */
+        fun createWithTimeout(config: Config, timeoutMs: UInt): Result<ZatcaClient> {
+
+            val returnVal = lib.fatoora_ZatcaClient_create_with_timeout(config.handle, FFIUint32(timeoutMs));
             val nativeOkVal = returnVal.getNativeOk();
             if (nativeOkVal != null) {
                 val selfEdges: List<Any> = listOf()

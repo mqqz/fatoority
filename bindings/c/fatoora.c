@@ -4561,6 +4561,19 @@ FatooraStatus fatoora_zatca_client_create(const FatooraConfig *config, FatooraZa
     return FATOORA_OK;
 }
 
+FatooraStatus fatoora_zatca_client_create_with_timeout(const FatooraConfig *config, uint32_t timeout_ms, FatooraZatcaClient **out, FatooraError **error) {
+    if (error) *error = NULL;
+    if (out) *out = 0;
+    if (!config || !out)
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
+    fatoora_ZatcaClient_create_with_timeout_result result = fatoora_ZatcaClient_create_with_timeout(config, timeout_ms);
+    if (!result.is_ok) {
+        return fatoora_private_error(result.err, error);
+    }
+    *out = result.ok;
+    return FATOORA_OK;
+}
+
 FatooraStatus fatoora_zatca_client_request_compliance_csid(const FatooraZatcaClient *self, const FatooraCsr *csr, const char *otp, FatooraComplianceCsid **out, FatooraError **error) {
     if (error) *error = NULL;
     if (out) *out = 0;

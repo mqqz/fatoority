@@ -159,7 +159,7 @@ const char *fatoora_error_details_json(const FatooraError *error);
                     checks.append("(" + " && ".join(f"{arg} != {constant(typ, variant)}" for variant, _ in enums[typ]) + ")")
                     call.append(f"({typ}){arg}")
                 else:
-                    if typ not in {"uint8_t", "uint16_t", "uint64_t", "size_t", "bool"} and typ not in {
+                    if typ not in {"uint8_t", "uint16_t", "uint32_t", "uint64_t", "size_t", "bool"} and typ not in {
                         pointer for handle in handles for pointer in (handle + "*", "const " + handle + "*")
                     }:
                         raise ValueError(f"Unsupported parameter type in {native}: {typ}")
