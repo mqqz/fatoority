@@ -172,7 +172,7 @@ Constructors that take individual fields use the order in the property table abo
     **Properties**
 
     ```javascript
-    const properties = CsrProperties.new_(
+    const properties = CsrProperties.create(
       commonName, serialNumber, organizationIdentifier, organizationUnitName,
       organizationName, countryName, invoiceType, locationAddress,
       industryBusinessCategory,
@@ -194,7 +194,7 @@ Constructors that take individual fields use the order in the property table abo
     | `csr.subjectString()` | String |
     | `csr.extensionValuesDer()` | `BytesList` |
 
-    These operations are synchronous and throw an `Error` with a `BindingError` cause on failure. Read files
+    These operations are synchronous and throw a `FatooraError` subclass on failure. Read files
     with your application's file APIs, then call `fromStr`; no file-path
     constructor is exposed. Environment values are `Environment.NonProduction`,
     `Environment.Simulation`, and `Environment.Production`. Copy returned bytes with `Uint8Array.from(bytes.asSlice())` before

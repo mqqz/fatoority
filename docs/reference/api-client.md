@@ -255,11 +255,11 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     | `clearStandardInvoice(invoice, credentials, clearanceStatus = true, acceptLanguage = null, options = {})` | `ValidationResponse` |
 
     Pass `Csr` for `csr`, `SignedInvoice` for `invoice`, strings for OTP/language, and
-    a boolean or `ClearanceMode` (`ClearanceMode.Disabled`/`.Enabled`) for `clearanceStatus`. Compliance issuance uses no credential; compliance checks
+    a boolean, a `ClearanceMode` (`ClearanceMode.Disabled`/`.Enabled`) or its name (`'Disabled'`/`'Enabled'`) for `clearanceStatus`. Compliance issuance uses no credential; compliance checks
     and production issuance take `ComplianceCsid`; reporting, clearance, and renewal
     take `ProductionCsid`. Each `options` accepts `{ signal: AbortSignal }` for cancellation.
-    Transport failures reject with `TransportError`; response/acceptance failures reject with an `Error` whose cause is
-    `BindingError`. See [JavaScript HTTP setup](bindings/javascript.md#api-requests)
+    Transport failures reject with `TransportError` (a `NetworkError`); response/acceptance failures reject with the
+    `FatooraError` subclass for their code, such as `ApiError` or `UnauthorizedError`. See [JavaScript HTTP setup](bindings/javascript.md#api-requests)
     for browser CORS and custom fetch behavior.
 
     **Credentials**

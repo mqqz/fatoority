@@ -99,25 +99,27 @@ Classification follows the cause: an XML failure during signing is `Xml`, while 
 
 === "JavaScript"
 
-    Native operations throw an `Error` whose `cause` is a `BindingError`.
-    Inspect the cause for `code()`, `message()` and `detailsJson()`; parse the
-    latter with `JSON.parse`. Transport and application errors can have other causes.
+    Library failures throw a `FatooraError` subclass chosen by code. The error
+    exposes `code` (number), `kind` (such as `"InvalidInput"`), `message` and
+    `details` (parsed JSON object); `cause` is the underlying `BindingError`.
+    Fetch, cancellation and response-body read failures throw `TransportError`,
+    a `NetworkError` subclass with the host error in `cause` and an optional `httpStatus`.
 
     ```javascript
-    import { BindingError } from "fatoority";
+    import { FatooraError, ValidationError } from "fatoority";
 
     function inspectError(error) {
-      if (error?.cause instanceof BindingError) {
-        const details = error.cause;
-        console.error(details.code(), details.message());
-        console.error(JSON.parse(details.detailsJson()));
+      if (error instanceof ValidationError) {
+        console.error("Rejected:", error.details);
+      } else if (error instanceof FatooraError) {
+        console.error(error.code, error.kind, error.message, error.details);
       } else {
         console.error(error);
       }
     }
     ```
 
-    The error object uses garbage-collected cleanup. A local validation call returning JSON means a report was produced; inspect `is_valid` to decide whether the invoice passed.
+    Mapped error classes are `InvalidInputError`, `ValidationError`, `ParseError`, `XmlError`, `CryptoError`, `IoError`, `NetworkError`, `UnauthorizedError`, `InternalError` and `ApiError`, in numeric code order; `ErrorCode` maps names to codes. An unrecognized code throws the base `FatooraError` with `kind` set to `null`. Argument conversion can also throw `TypeError`. A local validation call returning JSON means a report was produced; inspect `is_valid` to decide whether the invoice passed.
 
 === "C#"
 

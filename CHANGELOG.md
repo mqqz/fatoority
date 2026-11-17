@@ -413,6 +413,54 @@ The `fatoora-ffi` exported methods (`set_payment_means_code`,
 - `OriginalInvoiceRef::with_issue_date_str`. Use
   `with_issue_date(InvoiceDate::parse(date)?)` or `with_issue_date(date.parse()?)`.
 
+### JavaScript / TypeScript (`fatoority`)
+
+Changed (breaking):
+
+- Library failures throw one `FatooraError` subclass per error code
+  (`InvalidInputError`, `ValidationError`, `ParseError`, `XmlError`,
+  `CryptoError`, `IoError`, `NetworkError`, `UnauthorizedError`,
+  `InternalError`, `ApiError`) instead of a plain `Error`. Each has `code`,
+  `kind`, `details` (parsed JSON) and `message` (the library message instead
+  of `"BindingError: [object Object]"`). `cause` is still the `BindingError`,
+  so `error.cause.code()` keeps working. `fatoority/raw` throws the same
+  classes. `TransportError` now extends `NetworkError`.
+- `Xml.validateZatca` from the package root returns the report as a plain
+  object (`isValid`, `isComplete`, `hasErrors`, `evaluatedAt`,
+  `stages[].findings[]` with `severity`, `layer`, `code`, `message`,
+  `assertionSite`, `location`) instead of the native `ZatcaValidationReport`.
+  Enumerated fields are variant-name strings typed as unions. It also accepts
+  `{ previousInvoiceHash, evaluatedAt }` as well as the options JSON string.
+  The native report classes (`ZatcaValidationReport`, `ZatcaStageReport`,
+  `ZatcaFinding`, `ZatcaRuleSource`) are no longer exported from the package
+  root; `fatoority/raw` still returns the native report with `toJson()`.
+- The root `Xml` class no longer extends the generated `Xml`. The root
+  declarations make the internal constructors of `Xml` and the classes with
+  `create` (below) `private`; they never produced a usable object.
+
+Added:
+
+- `create` for every generated `new_` constructor (`Config.create`,
+  `Address.create`, `InvoiceBuilder.create`, `LineItemBuilder.create`,
+  `PaymentMeans.create`, `TaxExemption.create`, `CsrProperties.create`,
+  `OriginalInvoiceRef.create`, `AllowanceCharge.create`,
+  `InvoiceLineItem.create`, `VatBreakdown.create`).
+- String-literal union types for every enum, named with a `Value` suffix
+  (`EnvironmentValue`, `SeverityValue`, `ZatcaStageValue`, ...), matching each
+  enum's `.value`. `ZatcaClient` also accepts `'Enabled'`/`'Disabled'` for
+  `clearanceStatus`.
+- `ErrorCode`, `ErrorKind` and `errorClassForCode(code)`.
+
+Fixed:
+
+- Boolean getters such as `PaymentMeans.hasAccount()` and
+  `VatBreakdown.hasVatRate()` returned `0`/`1`; they return booleans.
+
+Deprecated:
+
+- `new_` on the classes above: use `create`. It is marked `@deprecated` in
+  the TypeScript declarations and still works without a runtime warning.
+
 ## [0.5.1] - 2026-11-17
 
 A compatible patch release: no public signature changed, and

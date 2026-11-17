@@ -173,18 +173,22 @@ Child objects are independent snapshots and outlive the report.
 
     ```javascript
     const schemaValid = Xml.validate(xml);
-    const report = Xml.validateZatca(xml, JSON.stringify({
-      previous_invoice_hash: previousHash,
-      evaluated_at: "2026-10-15T09:30:00Z"
-    }));
-    if (!report.isValid()) console.log(report.toJson());
+    const report = Xml.validateZatca(xml, {
+      previousInvoiceHash: previousHash,
+      evaluatedAt: "2026-10-15T09:30:00Z",
+    });
+    if (!report.isValid) {
+      for (const stage of report.stages) {
+        for (const finding of stage.findings) console.log(stage.stage, finding.severity, finding.code, finding.message);
+      }
+    }
     ```
 
-    `Xml.validate(xml)` returns `true` on schema success and throws an `Error` with a `BindingError` cause on violations or execution failures; it does not return `false` for invalid XML.
+    `Xml.validate(xml)` returns `true` on schema success and throws a `FatooraError` subclass on violations or execution failures; it does not return `false` for invalid XML.
 
-    `Xml.validateZatca(xml, optionsJson = null)` returns a `ZatcaValidationReport`, not a Promise. Pass `null` to omit options. The public wrapper supplies one host clock snapshot when `evaluated_at` is omitted. Options are restricted to 4096 UTF-8 bytes. Inspect `report.isValid()`; successful invocation alone is not validation success. `report.toJson()` returns the JSON report.
+    `Xml.validateZatca(xml, options = null)` returns a `ZatcaValidationReport`, not a Promise. It is plain data with camelCase fields (`isValid`, `isComplete`, `hasErrors`, `evaluatedAt`, `stages[].findings[]`); enumerated fields are variant-name strings such as `"Error"` or `"BusinessRules"`, typed as string-literal unions. `options` is `{ previousInvoiceHash, evaluatedAt }` (`evaluatedAt` may be a `Date`), or the options JSON string. The package root supplies one host clock snapshot when no instant is given. Options are restricted to 4096 UTF-8 bytes. Inspect `report.isValid`; successful invocation alone is not validation success. Use `JSON.stringify(report)` to save it; the snake_case JSON report is available from `ZatcaValidationReport.toJson()` in `fatoority/raw`.
 
-    On execution failure, parse `error.cause.detailsJson()` for structured details and an optional `report`. Invalid options can fail before a report exists. Validation does not consume its inputs.
+    On execution failure, read `error.details` for structured details and an optional `report`. Invalid options can fail before a report exists. Validation does not consume its inputs.
 
 === "C#"
 

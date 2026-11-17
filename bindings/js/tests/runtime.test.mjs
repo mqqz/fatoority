@@ -2,17 +2,20 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import * as sdk from '../index.mjs';
-import * as raw from '../generated/index.mjs';
+import * as raw from '../raw.mjs';
+import * as generated from '../generated/index.mjs';
 import wasm from '../generated/diplomat-wasm.mjs';
+import { integerBooleanMethods } from '../patch.mjs';
 const loadFixture = (path) => readFileSync(new URL(`../../../fatoora-core/tests/fixtures/${path}`, import.meta.url), 'utf8');
-const config = sdk.Config.new_(sdk.Environment.NonProduction);
+const config = sdk.Config.create(sdk.Environment.NonProduction);
 const ccsid = () => sdk.ComplianceCsid.create(sdk.Environment.NonProduction, '123', 'token', 'secret');
 const pcsid = () => sdk.ProductionCsid.create(sdk.Environment.NonProduction, null, 'token', 'secret');
 const invoice = () => sdk.SignedInvoice.fromXml(loadFixture('sdk-parity/cases/simplified-invoice/sdk-signed.xml'));
 const credentialsBody = { requestID: 123, binarySecurityToken: 'new-token', secret: 'new-secret' };
 const validationBody = { validationResults: { status: 'PASS' }, reportingStatus: 'REPORTED' };
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status });
-const code = (n) => (error) => error.cause instanceof sdk.BindingError && error.cause.code() === n;
+const code = (n) => (error) => error instanceof sdk.errorClassForCode(n) && error.code === n
+  && error.cause instanceof sdk.BindingError && error.cause.code() === n;
 
 test('artifact imports only supported host functions and generates real keys', () => {
   const module = new WebAssembly.Module(readFileSync(new URL('../fatoora_ffi.wasm', import.meta.url)));
@@ -26,19 +29,19 @@ test('artifact imports only supported host functions and generates real keys', (
 test('optional strings preserve absent, empty and Arabic across repeated calls', () => {
   for (let i = 0; i < 100; i++) {
     for (const value of [null, '', 'شارع إضافي']) {
-      const address = sdk.Address.new_('SAU', 'الرياض', 'شارع الملك', '1234', '12222', value, null, null);
+      const address = sdk.Address.create('SAU', 'الرياض', 'شارع الملك', '1234', '12222', value, null, null);
       assert.equal(address.additionalStreet()?.value() ?? null, value);
       assert.equal(address.city(), 'الرياض');
     }
   }
-  assert.throws(() => sdk.Address.new_('SAU', 'bad\0city', 'street', '1234', '12222', null, null, null), code(1));
+  assert.throws(() => sdk.Address.create('SAU', 'bad\0city', 'street', '1234', '12222', null, null, null), code(1));
 });
 
 test('decimal values remain exact and consumed builders fail safely', () => {
-  const b = sdk.InvoiceBuilder.new_(sdk.InvoiceTypeKind.Tax, sdk.InvoiceSubType.Simplified, null, null, null, null);
+  const b = sdk.InvoiceBuilder.create(sdk.InvoiceTypeKind.Tax, sdk.InvoiceSubType.Simplified, null, null, null, null);
   b.setId('JS-1'); b.setUuid('js-uuid'); b.setIssueDatetime('2024-01-01T12:30:00Z');
-  b.setCurrency('SAR'); b.setPreviousInvoiceHash('hash'); b.setInvoiceCounter(0n); b.addPaymentMeans(sdk.PaymentMeans.new_('10', null)); b.setVatCategory(sdk.VatCategory.Standard);
-  const a = sdk.Address.new_('SAU', 'Riyadh', 'King Fahd', '1234', '12222', null, null, null);
+  b.setCurrency('SAR'); b.setPreviousInvoiceHash('hash'); b.setInvoiceCounter(0n); b.addPaymentMeans(sdk.PaymentMeans.create('10', null)); b.setVatCategory(sdk.VatCategory.Standard);
+  const a = sdk.Address.create('SAU', 'Riyadh', 'King Fahd', '1234', '12222', null, null, null);
   b.setSeller('Acme Inc', a, '301121971500003', null, null);
   b.addLineItem('Item', '3', 'PCE', '0.3333', '15', sdk.VatCategory.Standard);
   const inv = b.build();
@@ -105,13 +108,15 @@ test('HTTP failures decode in Rust; network, body-read and cancellation failures
   for (const status of [400, 401, 409, 500]) {
     const client = new sdk.ZatcaClient(config, { fetch: async () => json(validationBody, status) });
     await assert.rejects(client.reportSimplifiedInvoice(invoice(), pcsid()), (e) => {
+      assert.ok(e instanceof sdk.FatooraError);
+      assert.equal(e.details.http_status, status);
       assert.equal(JSON.parse(e.cause.detailsJson()).http_status, status); return true;
     });
   }
   const malformed = new sdk.ZatcaClient(config, { fetch: async () => new Response('bad') });
   await assert.rejects(malformed.reportSimplifiedInvoice(invoice(), pcsid()), code(3));
   const broken = new sdk.ZatcaClient(config, { fetch: async () => ({ status: 200, arrayBuffer: async () => { throw new Error('read'); } }) });
-  await assert.rejects(broken.requestProductionCsid(ccsid()), e => e instanceof sdk.TransportError && e.httpStatus === 200);
+  await assert.rejects(broken.requestProductionCsid(ccsid()), e => e instanceof sdk.TransportError && e instanceof sdk.NetworkError && e.code === 7 && e.httpStatus === 200);
   const abort = new AbortController(); abort.abort();
   const cancelled = new sdk.ZatcaClient(config, { fetch: async (_url, {signal}) => { signal.throwIfAborted(); } });
   await assert.rejects(cancelled.requestProductionCsid(ccsid(), {signal: abort.signal}), e => e instanceof sdk.TransportError && e.cause.name === 'AbortError');
@@ -119,17 +124,55 @@ test('HTTP failures decode in Rust; network, body-read and cancellation failures
 
 test('validation uses supplied time and the public facade supplies a default', () => {
   const xml = loadFixture('sdk-parity/cases/simplified-invoice/sdk-signed.xml');
-  assert.throws(() => raw.Xml.validateZatca(xml, null), e => e.cause.message().includes('evaluated_at'));
+  assert.throws(() => raw.Xml.validateZatca(xml, null), e => e instanceof sdk.FatooraError && e.message.includes('evaluated_at'));
   const a = sdk.Xml.validateZatca(xml, JSON.stringify({evaluated_at: '2025-01-01T00:00:00Z'}));
-  assert.ok(a instanceof sdk.ZatcaValidationReport);
-  assert.equal(a.evaluatedAt(), '2025-01-01T00:00:00Z');
-  assert.equal(JSON.parse(a.toJson()).evaluated_at, '2025-01-01T00:00:00Z');
-  assert.equal(a.stagesLen(), 6);
-  const stage = a.stage(0);
-  assert.equal(stage.stage(), sdk.ZatcaStage.Xsd);
-  assert.equal(stage.status(), sdk.ZatcaStageStatus.Completed);
-  assert.equal(a.isValid(), a.isComplete() && !a.hasErrors());
-  assert.ok(sdk.Xml.validateZatca(xml).evaluatedAt());
+  assert.equal(Object.getPrototypeOf(a), Object.prototype);
+  assert.equal(a.evaluatedAt, '2025-01-01T00:00:00Z');
+  assert.equal(a.stages.length, 6);
+  assert.equal(a.stages[0].stage, 'Xsd');
+  assert.equal(a.stages[0].status, sdk.ZatcaStageStatus.Completed.value);
+  assert.equal(a.isValid, a.isComplete && !a.hasErrors);
+  assert.equal(typeof a.isValid, 'boolean');
+  assert.ok(sdk.Xml.validateZatca(xml).evaluatedAt);
+  for (const options of [{evaluatedAt: '2025-01-01T00:00:00Z'}, {evaluatedAt: new Date('2025-01-01T00:00:00Z')}]) {
+    assert.match(sdk.Xml.validateZatca(xml, options).evaluatedAt, /^2025-01-01T00:00:00(\.000)?Z$/);
+  }
+  const unchained = sdk.Xml.validateZatca(xml, {evaluatedAt: '2025-01-01T00:00:00Z'});
+  const chained = sdk.Xml.validateZatca(xml, {previousInvoiceHash: 'NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ==', evaluatedAt: '2025-01-01T00:00:00Z'});
+  assert.equal(unchained.stages.at(-1).status, 'ContextRequired');
+  assert.notEqual(chained.stages.at(-1).status, 'ContextRequired');
+  assert.throws(() => sdk.Xml.validateZatca(xml, 42), TypeError);
+});
+
+test('validation report is plain data matching the native report', () => {
+  const xml = loadFixture('sdk-parity/cases/simplified-invoice/sdk-signed.xml')
+    .replace('<cbc:InvoiceTypeCode name="0200000">388', '<cbc:InvoiceTypeCode name="0200000">389');
+  const options = {evaluated_at: '2025-01-01T00:00:00Z'};
+  const report = sdk.Xml.validateZatca(xml, {evaluatedAt: options.evaluated_at});
+  const native = JSON.parse(raw.Xml.validateZatca(xml, JSON.stringify(options)).toJson());
+  assert.deepEqual(structuredClone(report), report);
+  assert.deepEqual(JSON.parse(JSON.stringify(report)), report);
+  assert.equal(report.schemaVersion, native.schema_version);
+  assert.equal(report.profile, native.profile);
+  assert.deepEqual([report.isComplete, report.hasErrors, report.isValid], [native.is_complete, native.has_errors, native.is_valid]);
+  assert.equal(report.isValid, false);
+  const snake = (value) => value.replace(/[a-z](?=[A-Z])/g, '$&_').toLowerCase();
+  report.stages.forEach((stage, i) => {
+    const expected = native.stages[i];
+    assert.equal(snake(stage.stage), expected.stage);
+    assert.equal(snake(stage.status), expected.status);
+    assert.deepEqual(stage.provenance, expected.provenance ?? null);
+    assert.deepEqual(stage.evaluatedAssertions, expected.evaluated_assertions);
+    assert.deepEqual(stage.findings.map(f => [f.code, snake(f.severity), snake(f.layer), f.message, f.assertionSite]),
+      expected.findings.map(f => [f.code, f.severity, f.layer, f.message, f.assertion_site ?? null]));
+  });
+  const findings = report.stages.flatMap(stage => stage.findings);
+  const typeCode = findings.find(f => f.code === 'BR-KSA-05');
+  assert.equal(typeCode.severity, 'Error');
+  assert.equal(typeCode.layer, 'BusinessRules');
+  assert.equal(typeCode.location.kind, 'XPath');
+  assert.match(typeCode.location.path, /InvoiceTypeCode/);
+  assert.equal(findings.find(f => f.code === 'SIGNATURE_DIGEST').location, null);
 });
 
 test('clearance and compliance use their own acceptance fields', async () => {
@@ -149,7 +192,7 @@ test('compressed schemas preserve valid Arabic input and reject schema-invalid X
   assert.equal(sdk.Xml.validate(xml), true);
   const invalid = xml.replaceAll('cbc:ProfileID', 'cbc:InvalidProfileID');
   assert.notEqual(invalid, xml);
-  assert.throws(() => sdk.Xml.validate(invalid), e => e.cause instanceof sdk.BindingError);
+  assert.throws(() => sdk.Xml.validate(invalid), e => e instanceof sdk.FatooraError && e.cause instanceof sdk.BindingError);
   // Failed runs must not corrupt the cached compiled schema.
   assert.equal(sdk.Xml.validate(xml), true);
 });
@@ -159,7 +202,7 @@ test('documented examples and signing work in the optimized artifact', async () 
   const csr = examples.generateCsr(loadFixture('csr-configs/csr-config-example-EN.properties'));
   assert.match(csr.csrPem, /BEGIN CERTIFICATE REQUEST/);
   const xml = loadFixture('sdk-parity/cases/simplified-invoice/sdk-signed.xml');
-  assert.equal(examples.validateInvoice(xml, undefined, '2025-01-01T00:00:00Z').stagesLen(), 6);
+  assert.equal(examples.validateInvoice(xml, undefined, '2025-01-01T00:00:00Z').stages.length, 6);
   const response = await examples.reportInvoice(xml, 'token', 'secret', {fetch: async () => json(validationBody)});
   assert.equal(response.outcome().value, 'Accepted');
   const cert = readFileSync(new URL('../../../fatoora-core/tests/fixtures/sdk-parity/credentials/certificate.der', import.meta.url));
@@ -174,13 +217,13 @@ test('validation options preserve Rust errors before host clock injection', () =
   const xml = loadFixture('sdk-parity/cases/simplified-invoice/sdk-signed.xml');
   for (const options of ['{', '', 'null', 'true', '42', '"text"', '[]', '[1]', '{"evaluated_at":42}', ' '.repeat(4096) + '{}', JSON.stringify({unknown: 'ع'.repeat(2048)})]) {
     let expected;
-    try { raw.Xml.validateZatca(xml, options); }
+    try { generated.Xml.validateZatca(xml, options); }
     catch (error) { expected = error; }
     assert.ok(expected?.cause instanceof sdk.BindingError, options.slice(0, 40));
     assert.throws(() => sdk.Xml.validateZatca(xml, options), code(expected.cause.code()));
   }
   for (const options of [null, '{}', '{"evaluated_at":null}', '{"evaluated_at":"2025-01-01T00:00:00Z"}']) {
-    assert.equal(sdk.Xml.validateZatca(xml, options).stagesLen(), 6);
+    assert.equal(sdk.Xml.validateZatca(xml, options).stages.length, 6);
   }
 });
 
@@ -192,17 +235,17 @@ test('imported signed invoice hashes its stored XML', () => {
 });
 
 test('optional line fields and repeated identifiers survive WASM import', () => {
-  const b = sdk.InvoiceBuilder.new_(sdk.InvoiceTypeKind.Tax, sdk.InvoiceSubType.Simplified, null, null, null, null);
+  const b = sdk.InvoiceBuilder.create(sdk.InvoiceTypeKind.Tax, sdk.InvoiceSubType.Simplified, null, null, null, null);
   b.setId('JS-fields'); b.setUuid('uuid'); b.setIssueDatetime('2024-01-01T12:30:00Z');
   b.setCurrency('SAR'); b.setPreviousInvoiceHash('hash'); b.setInvoiceCounter(1n); b.setVatCategory(sdk.VatCategory.Standard);
-  b.setSeller('Seller', sdk.Address.new_('SA', 'Riyadh', 'Street', '1234', '12222', null, null, null), '301121971500003', 'first', 'CRN');
+  b.setSeller('Seller', sdk.Address.create('SA', 'Riyadh', 'Street', '1234', '12222', null, null, null), '301121971500003', 'first', 'CRN');
   b.addSellerIdentifier('second', 'OTH');
-  const line = sdk.LineItemBuilder.new_();
+  const line = sdk.LineItemBuilder.create();
   line.setItemName('case'); line.setInvoicedQuantity('30'); line.setItemNetPrice('100');
   line.setItemPriceBaseQuantity('12'); line.setVatRate('15'); line.setVatCategory(sdk.VatCategory.Standard);
   line.addAllowance(sdk.Adjustment.percentage('250', '10').withReason('rebate', '95'));
   b.addItem(line.build());
-  b.addPaymentMeans(sdk.PaymentMeans.new_('30', 'one').withInstructionNote('two').withAccount('bank', 'net 30'));
+  b.addPaymentMeans(sdk.PaymentMeans.create('30', 'one').withInstructionNote('two').withAccount('bank', 'net 30'));
   const invoice = b.build();
   const parsed = sdk.FinalizedInvoice.fromXml(invoice.xml());
   assert.equal(parsed.data().lineItem(0).totalAmount(), '225');
@@ -217,7 +260,7 @@ test('optional line fields and repeated identifiers survive WASM import', () => 
 test('signed import rejects the SDK fixture with a shifted QR timestamp', () => {
   assert.throws(() => sdk.SignedInvoice.fromXml(
     loadFixture('sdk-parity-typed/cases/standard-invoice/sdk-signed.xml')),
-    e => e.cause instanceof sdk.BindingError && e.cause.message().includes('QR_TIMESTAMP'));
+    e => e instanceof sdk.FatooraError && e.cause instanceof sdk.BindingError && e.message.includes('QR_TIMESTAMP'));
 });
 
 test('signed import preserves XML with line-wrapped certificates', () => {
@@ -231,4 +274,88 @@ test('signed import preserves XML with line-wrapped certificates', () => {
     assert.equal(parsed.xml(), wrapped);
     assert.equal(parsed.qrCode(), original.qrCode());
   }
+});
+
+test('library failures throw one error class per code', () => {
+  assert.equal(sdk.errorClassForCode(null), sdk.FatooraError);
+  assert.equal(sdk.errorClassForCode(99), sdk.FatooraError);
+  const names = ['InvalidInputError', 'ValidationError', 'ParseError', 'XmlError', 'CryptoError', 'IoError',
+    'NetworkError', 'UnauthorizedError', 'InternalError', 'ApiError'];
+  assert.deepEqual(Object.keys(sdk.ErrorCode), names.map(n => n.replace(/Error$/, '')));
+  for (const [kind, n] of Object.entries(sdk.ErrorCode)) {
+    const ErrorClass = sdk.errorClassForCode(n);
+    assert.equal(ErrorClass, sdk[`${kind}Error`]);
+    const error = new ErrorClass('m', {code: n});
+    assert.ok(error instanceof sdk.FatooraError && error instanceof Error);
+    assert.equal(error.name, `${kind}Error`);
+    assert.equal(error.kind, kind);
+    // Constructed directly, a subclass carries its own code and kind.
+    const direct = new ErrorClass('m');
+    assert.equal(direct.code, n);
+    assert.equal(direct.kind, kind);
+  }
+  const base = new sdk.FatooraError('m');
+  assert.equal(base.code, null);
+  assert.equal(base.kind, null);
+  const transport = new sdk.TransportError('m', new Error('x'));
+  assert.equal(transport.code, sdk.ErrorCode.Network);
+  assert.equal(transport.kind, 'Network');
+  let error;
+  try { sdk.Address.create('SAU', 'bad\0city', 'street', '1234', '12222', null, null, null); }
+  catch (caught) { error = caught; }
+  assert.ok(error instanceof sdk.InvalidInputError);
+  assert.equal(error.message, 'text must not contain NUL');
+  assert.deepEqual(error.details, {type: 'binding_error'});
+  assert.equal(error.kind, 'InvalidInput');
+  assert.doesNotMatch(error.stack.split('\n')[1], /patch\.mjs|errors\.mjs/);
+  assert.throws(() => sdk.SigningKey.fromPem('not a key'), e => e instanceof sdk.FatooraError && e.code === e.cause.code());
+  // fatoority/raw shares the generated classes, so it throws the same types.
+  assert.throws(() => raw.Address.new_('SAU', '\0', '', '', '', null, null, null), sdk.InvalidInputError);
+});
+
+test('create replaces new_ and the package root exports a deliberate API', () => {
+  const withNew = Object.entries(generated).filter(([, value]) => typeof value?.new_ === 'function').map(([name]) => name);
+  assert.equal(withNew.length, 11);
+  for (const name of withNew) {
+    assert.equal(sdk[name], generated[name]);
+    assert.equal(typeof sdk[name].create, 'function', name);
+  }
+  assert.ok(sdk.Config.create(sdk.Environment.Simulation) instanceof sdk.Config);
+  assert.equal(sdk.Config.create('Production').env(), sdk.Environment.Production);
+  assert.equal(sdk.Config.new_(sdk.Environment.Simulation).env(), sdk.Environment.Simulation); // deprecated alias
+  const replaced = ['Xml', 'ZatcaClient', 'ZatcaValidationReport', 'ZatcaStageReport', 'ZatcaFinding', 'ZatcaRuleSource'];
+  for (const [name, value] of Object.entries(generated)) {
+    if (replaced.includes(name)) assert.notEqual(sdk[name], value, name);
+    else assert.equal(sdk[name], value, name);
+  }
+  assert.deepEqual(Object.keys(raw).sort(), Object.keys(generated).sort());
+});
+
+test('enum value unions in index.d.mts match the runtime enum classes', () => {
+  const declarations = readFileSync(new URL('../index.d.mts', import.meta.url), 'utf8');
+  const unions = new Map([...declarations.matchAll(/^export type (\w+)Value = (.+);$/gm)]
+    .map(([, name, body]) => [name, [...body.matchAll(/'(\w+)'/g)].map(m => m[1])]));
+  const enums = Object.entries(generated).filter(([, value]) => typeof value?.getAllEntries === 'function');
+  assert.deepEqual([...unions.keys()].sort(), enums.map(([name]) => name).sort());
+  for (const [name, Enum] of enums) {
+    const values = [...Enum.getAllEntries()].map(([value]) => value);
+    assert.deepEqual(unions.get(name), values, name);
+    for (const value of values) assert.equal(new Enum(value).value, value);
+  }
+});
+
+test('generated boolean getters return booleans', () => {
+  const declared = {};
+  for (const name of Object.keys(generated)) {
+    let source;
+    try { source = readFileSync(new URL(`../generated/${name}.d.mts`, import.meta.url), 'utf8'); }
+    catch { continue; }
+    const methods = [...source.matchAll(/^    (\w+)\(\): boolean;$/gm)].map(m => m[1]);
+    if (methods.length) declared[name] = methods;
+  }
+  assert.deepEqual(integerBooleanMethods, declared);
+  const report = raw.Xml.validateZatca(loadFixture('sdk-parity/cases/simplified-invoice/sdk-signed.xml'), '{"evaluated_at":"2025-01-01T00:00:00Z"}');
+  assert.equal(typeof report.isValid(), 'boolean');
+  assert.equal(sdk.PaymentMeans.create('10', null).hasAccount(), false);
+  assert.equal(sdk.Xml.validate(loadFixture('sdk-parity/cases/simplified-invoice/sdk-signed.xml')), true);
 });
