@@ -15,14 +15,18 @@
 #include "BindingError.hpp"
 #include "Text.hpp"
 #include "ValidationMessage.hpp"
+#include "ValidationStatus.hpp"
 
 
 namespace fatoora {
 namespace capi {
     extern "C" {
 
-    typedef struct fatoora_ValidationResults_status_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationResults_status_result;
+    typedef struct fatoora_ValidationResults_status_result {union {fatoora::capi::ValidationStatus ok; }; bool is_ok;} fatoora_ValidationResults_status_result;
     fatoora_ValidationResults_status_result fatoora_ValidationResults_status(const fatoora::capi::ValidationResults* self);
+
+    typedef struct fatoora_ValidationResults_status_raw_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationResults_status_raw_result;
+    fatoora_ValidationResults_status_raw_result fatoora_ValidationResults_status_raw(const fatoora::capi::ValidationResults* self);
 
     size_t fatoora_ValidationResults_info_len(const fatoora::capi::ValidationResults* self);
 
@@ -45,8 +49,13 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::ValidationResults::status() const {
+inline std::optional<fatoora::ValidationStatus> fatoora::ValidationResults::status() const {
     auto result = fatoora::capi::fatoora_ValidationResults_status(this->AsFFI());
+    return result.is_ok ? std::optional<fatoora::ValidationStatus>(fatoora::ValidationStatus::FromFFI(result.ok)) : std::nullopt;
+}
+
+inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::ValidationResults::status_raw() const {
+    auto result = fatoora::capi::fatoora_ValidationResults_status_raw(this->AsFFI());
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 

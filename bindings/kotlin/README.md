@@ -82,7 +82,12 @@ Native failures throw `BindingException` with `code`, `message`, and `detailsJso
 (Java getters). Error data is copied and its native owner freed before throwing.
 `null` and empty strings stay distinct; invalid UTF-16 and embedded NUL are
 rejected. Decimal values use invariant decimal strings. Unsigned counters use
-`BigInteger`; byte data uses `byte[]` / `ByteArray`. `Bytes.asSlice()` copies the
+`BigInteger`; byte data uses `byte[]` / `ByteArray`. Enumerated codes are
+`com.fatoora` enums such as `Environment.NonProduction`, `VatCategory.Standard`
+and `ClearanceMode.Disabled`; response statuses return a nullable enum (with
+`Unknown` for unrecognized values), and `*Raw()` getters return the exact text.
+The coroutine `reportSimplifiedInvoiceAsync`/`clearStandardInvoiceAsync` helpers
+still take a `Boolean` clearance status. `Bytes.asSlice()` copies the
 native data while holding its owner's lock.
 
 The `com.fatoora.raw` package is an implementation detail. Its direct use bypasses

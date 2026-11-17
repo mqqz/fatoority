@@ -10,7 +10,7 @@ public class Guide {
         Files.write(Paths.get(path), text.getBytes(StandardCharsets.UTF_8));
     }
     public static void main(String[] args) throws Exception {
-        try (Config config = Config.create(0)) {
+        try (Config config = Config.create(Environment.NonProduction)) {
             String xml = read("invoice.xml");
             if (java.util.Arrays.asList(args).contains("--zatca")) {
                 com.google.gson.JsonObject options = new com.google.gson.JsonObject();

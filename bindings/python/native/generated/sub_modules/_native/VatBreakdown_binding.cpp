@@ -3,6 +3,7 @@
 
 #include "TaxExemption.hpp"
 #include "VatBreakdown.hpp"
+#include "VatCategory.hpp"
 
 namespace _native {
 void add_VatBreakdown_binding(nb::module_ mod) {

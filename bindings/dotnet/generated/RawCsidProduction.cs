@@ -10,10 +10,10 @@ internal partial struct CsidProduction
 {
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_CsidProduction_create", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultCsidProductionBindingError Create(byte environment, DiplomatOptionSliceU8 requestId, DiplomatSliceU8 token, DiplomatSliceU8 secret);
+    internal static unsafe extern DiplomatResultCsidProductionBindingError Create(ZatcaEnvironment environment, DiplomatOptionSliceU8 requestId, DiplomatSliceU8 token, DiplomatSliceU8 secret);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_CsidProduction_env", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern byte Env(CsidProduction* handle);
+    internal static unsafe extern DiplomatResultZatcaEnvironmentBindingError Env(CsidProduction* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_CsidProduction_request_id", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultTextBindingError RequestId(CsidProduction* handle);

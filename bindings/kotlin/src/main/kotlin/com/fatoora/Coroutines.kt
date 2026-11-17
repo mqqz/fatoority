@@ -17,6 +17,9 @@ internal suspend fun <T : NativeResource> nativeIO(block: () -> T): T {
     }
 }
 
+private fun clearanceMode(enabled: Boolean): ClearanceMode =
+    if (enabled) ClearanceMode.Enabled else ClearanceMode.Disabled
+
 suspend fun ZatcaClient.postCsrForCcsidAsync(csr: Csr, otp: String): CsidCompliance =
     nativeIO { postCsrForCcsid(csr, otp) }
 suspend fun ZatcaClient.postCcsidForPcsidAsync(credentials: CsidCompliance): CsidProduction =
@@ -28,7 +31,7 @@ suspend fun ZatcaClient.checkInvoiceComplianceAsync(invoice: SignedInvoice, cred
     nativeIO { checkInvoiceCompliance(invoice, credentials) }
 suspend fun ZatcaClient.reportSimplifiedInvoiceAsync(invoice: SignedInvoice, credentials: CsidProduction,
                                                     clearanceStatus: Boolean, acceptLanguage: String? = null): ValidationResponse =
-    nativeIO { reportSimplifiedInvoice(invoice, credentials, clearanceStatus, acceptLanguage) }
+    nativeIO { reportSimplifiedInvoice(invoice, credentials, clearanceMode(clearanceStatus), acceptLanguage) }
 suspend fun ZatcaClient.clearStandardInvoiceAsync(invoice: SignedInvoice, credentials: CsidProduction,
                                                 clearanceStatus: Boolean, acceptLanguage: String? = null): ValidationResponse =
-    nativeIO { clearStandardInvoice(invoice, credentials, clearanceStatus, acceptLanguage) }
+    nativeIO { clearStandardInvoice(invoice, credentials, clearanceMode(clearanceStatus), acceptLanguage) }

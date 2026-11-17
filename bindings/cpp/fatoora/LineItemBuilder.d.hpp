@@ -26,6 +26,7 @@ namespace capi { struct TaxExemption; }
 class TaxExemption;
 namespace capi { struct VatBreakdown; }
 class VatBreakdown;
+class VatCategory;
 } // namespace fatoora
 
 
@@ -75,7 +76,7 @@ public:
 
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_vat_rate(std::string_view value);
 
-  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_vat_category(uint8_t value);
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_vat_category(fatoora::VatCategory value);
 
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> set_exemption(const fatoora::TaxExemption& value);
 

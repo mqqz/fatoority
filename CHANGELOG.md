@@ -5,8 +5,9 @@
 Breaking 0.6 phase for the `fatoora-core` Rust crate. Renamed items keep their
 old names as deprecated aliases until 0.7 (see "Deprecated"); items whose type,
 signature or fields changed in place have no deprecation period (see "Changed
-(breaking)"). The `fatoora-ffi` exported API and the generated bindings do not
-change yet.
+(breaking)"). The `fatoora-ffi` bridge and the generated bindings replace
+raw integer codes and Booleans with enums (see "Bindings" under "Changed
+(breaking)"); the Python `fatoora` package API is unchanged.
 
 Migration guide with a before-and-after table of every change: [Migrate from 0.5 to 0.6 (Rust)](https://docs.fatoority.com/guides/migrate-0.6/).
 
@@ -74,6 +75,20 @@ Migration guide with a before-and-after table of every change: [Migrate from 0.5
   - `LineAdjustment::{kind(), adjustment()}`.
   - `Adjustment::{reason(), reason_code(), base_amount(), percentage()}`
     getters.
+
+- Bindings: FFI enums `Environment`, `InvoiceTypeKind`, `InvoiceSubType`,
+  `VatCategory`, `AdjustmentKind`, `ClearanceMode` and `InvoiceFlag` (named
+  bits of the flag mask, with `bit()` where the generator emits enum methods),
+  plus `ReportingStatus`, `ClearanceStatus`, `ValidationStatus` and
+  `MessageType`, each with an `Unknown` variant for values this binding
+  version does not recognise. New `ValidationResponse::{reporting_status_raw,
+  clearance_status_raw}`, `ValidationResults::status_raw` and
+  `ValidationMessage::{message_type_raw, status_raw}` return the exact wire
+  text. The C facade (`fatoora.h`) adds typed enums (`FatooraEnvironment`,
+  `FatooraVatCategory`, ...) and the constants `FATOORA_ADJUSTMENT_*`,
+  `FATOORA_CLEARANCE_{DISABLED,ENABLED}`, `FATOORA_REPORTING_STATUS_*`,
+  `FATOORA_CLEARANCE_STATUS_*`, `FATOORA_VALIDATION_STATUS_*` and
+  `FATOORA_MESSAGE_TYPE_*`.
 
 ### Changed
 
@@ -208,6 +223,45 @@ or invalid). Every wrapper has `as_str()` and `Display`.
 - `PaymentMeans::payee_financial_account(account)` is renamed
   `with_payee_financial_account(account)`; `payee_financial_account()` is now
   the getter.
+
+**Bindings (`fatoora-ffi`, JavaScript, Kotlin/Java, C#, C/C++)**
+
+The Python `fatoora` package API is unchanged. Enum discriminants for
+`Environment`, `InvoiceTypeKind`, `InvoiceSubType` and `VatCategory` equal the
+old integer codes.
+
+- Environment, invoice kind/subtype, VAT category and adjustment kind
+  arguments take enums instead of integer codes or Booleans: `Config::new`,
+  `CsidCompliance::create`, `CsidProduction::create`, `CsrProperties::build`,
+  `InvoiceBuilder::{new, new_with_reference, set_vat_category, add_line_item,
+  set_tax_exemption, add_document_adjustment}`,
+  `LineItemBuilder::set_vat_category`, `InvoiceLineItem::new`,
+  `VatBreakdown::new` and `AllowanceCharge::new`. Out-of-range-code errors are
+  gone. The matching getters (`Config::env`, the credential `env()`,
+  `InvoiceData::{vat_category, invoice_type_kind, invoice_sub_type}`, and the
+  `category()`/`vat_category()` getters) return enums; `env()` is now fallible
+  (code 9 only if the core gains an environment the bindings do not know).
+- `AllowanceCharge::is_charge()` is replaced by `kind() -> AdjustmentKind`,
+  and `InvoiceLineItem::adjustment_is_charge(index)` by
+  `adjustment_kind(index)`. In C: `fatoora_allowance_charge_kind` and
+  `fatoora_invoice_line_item_adjustment_kind`.
+- `ZatcaClient::{report_simplified_invoice, clear_standard_invoice}` and their
+  `prepare_*` forms take `clearance_mode: ClearanceMode` instead of
+  `clearance_status: bool`. The JavaScript async `ZatcaClient` still accepts a
+  Boolean (or a `ClearanceMode`), and the Kotlin `*Async` helpers still take a
+  Boolean.
+- `ValidationResponse::{reporting_status, clearance_status}`,
+  `ValidationResults::status` and `ValidationMessage::{message_type, status}`
+  return an optional enum instead of optional text; use the new `*_raw`
+  getters for the previous text.
+- .NET names the environment enum `ZatcaEnvironment` to avoid clashing with
+  `System.Environment`, and the flag mask is built by casting
+  (`(byte)InvoiceFlag.Export`).
+- C facade: enum parameters and outputs use the typed enums (for example
+  `FatooraVatCategory *out` instead of `uint8_t *out`); undeclared values
+  return `FATOORA_INVALID_INPUT`. Optional status getters write the enum plus
+  `bool *has_value`, and the `_raw` variants write `char **` (`NULL` when
+  absent). The raw Diplomat headers do not validate enum values.
 
 ### Deprecated
 

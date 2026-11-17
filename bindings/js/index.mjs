@@ -1,5 +1,12 @@
 export * from './generated/index.mjs';
-import { ZatcaClient as NativeClient, Xml as NativeXml } from './generated/index.mjs';
+import { ClearanceMode, ZatcaClient as NativeClient, Xml as NativeXml } from './generated/index.mjs';
+
+/** Accept the documented boolean or a ClearanceMode for the Clearance-Status header. */
+function clearanceMode(value) {
+  if (value instanceof ClearanceMode) return value;
+  if (typeof value !== 'boolean') throw new TypeError('clearanceStatus must be a boolean or ClearanceMode');
+  return value ? ClearanceMode.Enabled : ClearanceMode.Disabled;
+}
 
 /** Fetch failures have no Rust response; decoding failures retain Diplomat BindingError. */
 export class TransportError extends Error {
@@ -49,10 +56,10 @@ export class ZatcaClient {
     return this.#send(this.#native.prepareCheckInvoiceCompliance(invoice, credentials), options);
   }
   async reportSimplifiedInvoice(invoice, credentials, clearanceStatus = false, acceptLanguage = null, options = {}) {
-    return this.#send(this.#native.prepareReportSimplifiedInvoice(invoice, credentials, clearanceStatus, acceptLanguage), options);
+    return this.#send(this.#native.prepareReportSimplifiedInvoice(invoice, credentials, clearanceMode(clearanceStatus), acceptLanguage), options);
   }
   async clearStandardInvoice(invoice, credentials, clearanceStatus = true, acceptLanguage = null, options = {}) {
-    return this.#send(this.#native.prepareClearStandardInvoice(invoice, credentials, clearanceStatus, acceptLanguage), options);
+    return this.#send(this.#native.prepareClearStandardInvoice(invoice, credentials, clearanceMode(clearanceStatus), acceptLanguage), options);
   }
   #send(request, options) { return sendPrepared(request, { ...options, fetch: this.#fetch }); }
 }

@@ -506,7 +506,7 @@ public partial class LineItemBuilder: IDisposable
     }
 
     /// <exception cref="BindingErrorException"></exception>
-    public void SetVatCategory(byte value)
+    public void SetVatCategory(VatCategory value)
     {
         unsafe
         {

@@ -25,6 +25,7 @@ namespace capi { struct TaxExemption; }
 class TaxExemption;
 namespace capi { struct VatBreakdown; }
 class VatBreakdown;
+class VatCategory;
 } // namespace _native
 
 
@@ -73,7 +74,7 @@ public:
 
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> set_vat_rate(std::string_view value);
 
-  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> set_vat_category(uint8_t value);
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> set_vat_category(_native::VatCategory value);
 
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> set_exemption(const _native::TaxExemption& value);
 

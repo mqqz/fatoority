@@ -24,7 +24,7 @@ internal interface LineItemBuilderLib: Library {
     fun fatoora_LineItemBuilder_set_line_vat_amount(handle: Pointer, value: Slice): ResultUnitPointer
     fun fatoora_LineItemBuilder_set_line_amount_with_vat(handle: Pointer, value: Slice): ResultUnitPointer
     fun fatoora_LineItemBuilder_set_vat_rate(handle: Pointer, value: Slice): ResultUnitPointer
-    fun fatoora_LineItemBuilder_set_vat_category(handle: Pointer, value: FFIUint8): ResultUnitPointer
+    fun fatoora_LineItemBuilder_set_vat_category(handle: Pointer, value: Int): ResultUnitPointer
     fun fatoora_LineItemBuilder_set_exemption(handle: Pointer, value: Pointer): ResultUnitPointer
     fun fatoora_LineItemBuilder_add_allowance(handle: Pointer, value: Pointer): ResultUnitPointer
     fun fatoora_LineItemBuilder_add_charge(handle: Pointer, value: Pointer): ResultUnitPointer
@@ -367,9 +367,9 @@ class LineItemBuilder internal constructor (
         }
     }
 
-    fun setVatCategory(value: UByte): Result<Unit> {
+    fun setVatCategory(value: VatCategory): Result<Unit> {
 
-        val returnVal = lib.fatoora_LineItemBuilder_set_vat_category(handle, FFIUint8(value));
+        val returnVal = lib.fatoora_LineItemBuilder_set_vat_category(handle, value.toNative());
         val nativeOkVal = returnVal.getNativeOk();
         if (nativeOkVal != null) {
             return Unit.ok()

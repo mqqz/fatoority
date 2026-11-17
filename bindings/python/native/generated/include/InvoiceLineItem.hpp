@@ -12,12 +12,14 @@
 #include <optional>
 #include <cstdlib>
 #include "Adjustment.hpp"
+#include "AdjustmentKind.hpp"
 #include "BindingError.hpp"
 #include "OriginalInvoiceRef.hpp"
 #include "OtherId.hpp"
 #include "TaxExemption.hpp"
 #include "Text.hpp"
 #include "VatBreakdown.hpp"
+#include "VatCategory.hpp"
 #include "diplomat_runtime.hpp"
 
 
@@ -42,8 +44,8 @@ namespace capi {
     typedef struct fatoora_InvoiceLineItem_adjustment_result {union {_native::capi::Adjustment* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_adjustment_result;
     fatoora_InvoiceLineItem_adjustment_result fatoora_InvoiceLineItem_adjustment(const _native::capi::InvoiceLineItem* self, size_t index);
 
-    typedef struct fatoora_InvoiceLineItem_adjustment_is_charge_result {union {bool ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_adjustment_is_charge_result;
-    fatoora_InvoiceLineItem_adjustment_is_charge_result fatoora_InvoiceLineItem_adjustment_is_charge(const _native::capi::InvoiceLineItem* self, size_t index);
+    typedef struct fatoora_InvoiceLineItem_adjustment_kind_result {union {_native::capi::AdjustmentKind ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_adjustment_kind_result;
+    fatoora_InvoiceLineItem_adjustment_kind_result fatoora_InvoiceLineItem_adjustment_kind(const _native::capi::InvoiceLineItem* self, size_t index);
 
     typedef struct fatoora_InvoiceLineItem_item_seller_identifier_result {union {_native::capi::OtherId* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_item_seller_identifier_result;
     fatoora_InvoiceLineItem_item_seller_identifier_result fatoora_InvoiceLineItem_item_seller_identifier(const _native::capi::InvoiceLineItem* self);
@@ -71,7 +73,7 @@ namespace capi {
     fatoora_InvoiceLineItem_tax_subtotal_result fatoora_InvoiceLineItem_tax_subtotal(const _native::capi::InvoiceLineItem* self, size_t index);
 
     typedef struct fatoora_InvoiceLineItem_new_result {union {_native::capi::InvoiceLineItem* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_new_result;
-    fatoora_InvoiceLineItem_new_result fatoora_InvoiceLineItem_new(_native::diplomat::capi::DiplomatStringView description, _native::diplomat::capi::DiplomatStringView quantity, _native::diplomat::capi::DiplomatStringView unit_code, _native::diplomat::capi::DiplomatStringView unit_price, _native::diplomat::capi::DiplomatStringView rate, uint8_t category);
+    fatoora_InvoiceLineItem_new_result fatoora_InvoiceLineItem_new(_native::diplomat::capi::DiplomatStringView description, _native::diplomat::capi::DiplomatStringView quantity, _native::diplomat::capi::DiplomatStringView unit_code, _native::diplomat::capi::DiplomatStringView unit_price, _native::diplomat::capi::DiplomatStringView rate, _native::capi::VatCategory category);
 
     typedef struct fatoora_InvoiceLineItem_with_metadata_result {union {_native::capi::InvoiceLineItem* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_with_metadata_result;
     fatoora_InvoiceLineItem_with_metadata_result fatoora_InvoiceLineItem_with_metadata(const _native::capi::InvoiceLineItem* self, _native::diplomat::capi::OptionStringView id, const _native::capi::TaxExemption* exemption);
@@ -109,7 +111,7 @@ namespace capi {
 
     bool fatoora_InvoiceLineItem_has_gross_amount(const _native::capi::InvoiceLineItem* self);
 
-    uint8_t fatoora_InvoiceLineItem_vat_category(const _native::capi::InvoiceLineItem* self);
+    _native::capi::VatCategory fatoora_InvoiceLineItem_vat_category(const _native::capi::InvoiceLineItem* self);
 
     void fatoora_InvoiceLineItem_destroy(InvoiceLineItem* self);
 
@@ -148,10 +150,10 @@ inline _native::diplomat::result<std::unique_ptr<_native::Adjustment>, std::uniq
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Adjustment>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Adjustment>>(std::unique_ptr<_native::Adjustment>(_native::Adjustment::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Adjustment>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<bool, std::unique_ptr<_native::BindingError>> _native::InvoiceLineItem::adjustment_is_charge(size_t index) const {
-    auto result = _native::capi::fatoora_InvoiceLineItem_adjustment_is_charge(this->AsFFI(),
+inline _native::diplomat::result<_native::AdjustmentKind, std::unique_ptr<_native::BindingError>> _native::InvoiceLineItem::adjustment_kind(size_t index) const {
+    auto result = _native::capi::fatoora_InvoiceLineItem_adjustment_kind(this->AsFFI(),
         index);
-    return result.is_ok ? _native::diplomat::result<bool, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<bool>(result.ok)) : _native::diplomat::result<bool, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+    return result.is_ok ? _native::diplomat::result<_native::AdjustmentKind, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::AdjustmentKind>(_native::AdjustmentKind::FromFFI(result.ok))) : _native::diplomat::result<_native::AdjustmentKind, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
 inline _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>> _native::InvoiceLineItem::item_seller_identifier() const {
@@ -203,13 +205,13 @@ inline _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::un
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::VatBreakdown>>(std::unique_ptr<_native::VatBreakdown>(_native::VatBreakdown::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std::unique_ptr<_native::BindingError>> _native::InvoiceLineItem::new_(std::string_view description, std::string_view quantity, std::string_view unit_code, std::string_view unit_price, std::string_view rate, uint8_t category) {
+inline _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std::unique_ptr<_native::BindingError>> _native::InvoiceLineItem::new_(std::string_view description, std::string_view quantity, std::string_view unit_code, std::string_view unit_price, std::string_view rate, _native::VatCategory category) {
     auto result = _native::capi::fatoora_InvoiceLineItem_new({description.data(), description.size()},
         {quantity.data(), quantity.size()},
         {unit_code.data(), unit_code.size()},
         {unit_price.data(), unit_price.size()},
         {rate.data(), rate.size()},
-        category);
+        category.AsFFI());
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::InvoiceLineItem>>(std::unique_ptr<_native::InvoiceLineItem>(_native::InvoiceLineItem::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
@@ -350,9 +352,9 @@ inline bool _native::InvoiceLineItem::has_gross_amount() const {
     return result;
 }
 
-inline uint8_t _native::InvoiceLineItem::vat_category() const {
+inline _native::VatCategory _native::InvoiceLineItem::vat_category() const {
     auto result = _native::capi::fatoora_InvoiceLineItem_vat_category(this->AsFFI());
-    return result;
+    return _native::VatCategory::FromFFI(result);
 }
 
 inline const _native::capi::InvoiceLineItem* _native::InvoiceLineItem::AsFFI() const {

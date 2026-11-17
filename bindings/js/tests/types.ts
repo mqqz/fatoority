@@ -1,10 +1,13 @@
-import { Config, ZatcaClient, CsidCompliance, Xml, type CsidProduction, sendPrepared } from 'fatoority';
+import { ClearanceMode, Config, Environment, ZatcaClient, CsidCompliance, Xml, type CsidProduction, type SignedInvoice, type ValidationResponse, sendPrepared } from 'fatoority';
 import { ZatcaClient as RawClient } from 'fatoority/raw';
-const config = Config.new_(0);
-const credentials = CsidCompliance.create(0, '1', 'token', 'secret');
+const config = Config.new_(Environment.NonProduction);
+const credentials = CsidCompliance.create(Environment.NonProduction, '1', 'token', 'secret');
 const client = new ZatcaClient(config, {fetch});
 const response: Promise<CsidProduction> = client.postCcsidForPcsid(credentials, {signal: new AbortController().signal});
 const prepared = RawClient.create(config).preparePostCcsidForPcsid(credentials);
 const sent: Promise<CsidProduction> = sendPrepared(prepared);
 const report: string = Xml.validateZatca(config, '<Invoice/>');
-void [response, sent, report];
+declare const invoice: SignedInvoice, production: CsidProduction;
+const reported: Promise<ValidationResponse> = client.reportSimplifiedInvoice(invoice, production, ClearanceMode.Disabled);
+const cleared: Promise<ValidationResponse> = client.clearStandardInvoice(invoice, production, true);
+void [response, sent, report, reported, cleared];

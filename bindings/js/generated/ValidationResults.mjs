@@ -2,6 +2,7 @@
 import { BindingError } from "./BindingError.mjs"
 import { Text } from "./Text.mjs"
 import { ValidationMessage } from "./ValidationMessage.mjs"
+import { ValidationStatus } from "./ValidationStatus.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
@@ -38,11 +39,36 @@ export class ValidationResults {
     }
 
 
+    /**
+     * The parsed overall status, or null when the response has none.
+     */
     status() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
 
         const result = wasm.fatoora_ValidationResults_status(diplomatReceive.buffer, this.ffiValue);
+
+        try {
+            if (!diplomatReceive.resultFlag) {
+                return null;
+            }
+            return new ValidationStatus(diplomatRuntime.internalConstructor, diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer));
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+            diplomatReceive.free();
+        }
+    }
+
+    /**
+     * The overall status exactly as ZATCA sent it, or null when absent.
+     */
+    statusRaw() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
+
+        const result = wasm.fatoora_ValidationResults_status_raw(diplomatReceive.buffer, this.ffiValue);
 
         try {
             if (!diplomatReceive.resultFlag) {

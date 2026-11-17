@@ -11,14 +11,14 @@ class InvoiceBuilder internal constructor(internal val raw: com.fatoora.raw.Invo
     }
     companion object {
         @JvmStatic
-        fun newWithReference(kind: Int, subtype: Int, reference: OriginalInvoiceRef, reason: String): InvoiceBuilder = nativeCall(listOfNotNull(reference)) {
-            InvoiceBuilder(unwrap(com.fatoora.raw.InvoiceBuilder.newWithReference(checkedUnsigned(kind.toLong(), 255).toUByte(), checkedUnsigned(subtype.toLong(), 255).toUByte(), reference.raw, checkedText(reason))))
+        fun newWithReference(kind: InvoiceTypeKind, subtype: InvoiceSubType, reference: OriginalInvoiceRef, reason: String): InvoiceBuilder = nativeCall(listOfNotNull(reference)) {
+            InvoiceBuilder(unwrap(com.fatoora.raw.InvoiceBuilder.newWithReference(com.fatoora.raw.InvoiceTypeKind.valueOf(kind.name), com.fatoora.raw.InvoiceSubType.valueOf(subtype.name), reference.raw, checkedText(reason))))
         }
 
         @JvmStatic
         @JvmOverloads
-        fun create(kind: Int, subtype: Int, originalId: String? = null, originalUuid: String? = null, originalDate: String? = null, reason: String? = null): InvoiceBuilder = nativeCall(listOfNotNull()) {
-            InvoiceBuilder(unwrap(com.fatoora.raw.InvoiceBuilder.new_(checkedUnsigned(kind.toLong(), 255).toUByte(), checkedUnsigned(subtype.toLong(), 255).toUByte(), originalId?.let(::checkedText), originalUuid?.let(::checkedText), originalDate?.let(::checkedText), reason?.let(::checkedText))))
+        fun create(kind: InvoiceTypeKind, subtype: InvoiceSubType, originalId: String? = null, originalUuid: String? = null, originalDate: String? = null, reason: String? = null): InvoiceBuilder = nativeCall(listOfNotNull()) {
+            InvoiceBuilder(unwrap(com.fatoora.raw.InvoiceBuilder.new_(com.fatoora.raw.InvoiceTypeKind.valueOf(kind.name), com.fatoora.raw.InvoiceSubType.valueOf(subtype.name), originalId?.let(::checkedText), originalUuid?.let(::checkedText), originalDate?.let(::checkedText), reason?.let(::checkedText))))
         }
     }
     @JvmOverloads
@@ -43,8 +43,8 @@ class InvoiceBuilder internal constructor(internal val raw: com.fatoora.raw.Invo
         unwrap(raw.addNote(language?.let(::checkedText), checkedText(value)))
     }
 
-    fun addDocumentAdjustment(charge: Boolean, value: Adjustment, category: Int, rate: String, exemption: TaxExemption): Unit = nativeCall(listOfNotNull(this, value, exemption)) {
-        unwrap(raw.addDocumentAdjustment(charge, value.raw, checkedUnsigned(category.toLong(), 255).toUByte(), checkedText(rate), exemption.raw))
+    fun addDocumentAdjustment(kind: AdjustmentKind, value: Adjustment, category: VatCategory, rate: String, exemption: TaxExemption): Unit = nativeCall(listOfNotNull(this, value, exemption)) {
+        unwrap(raw.addDocumentAdjustment(com.fatoora.raw.AdjustmentKind.valueOf(kind.name), value.raw, com.fatoora.raw.VatCategory.valueOf(category.name), checkedText(rate), exemption.raw))
     }
 
     @JvmOverloads
@@ -77,8 +77,8 @@ class InvoiceBuilder internal constructor(internal val raw: com.fatoora.raw.Invo
         unwrap(raw.setTaxCurrency(checkedText(currency), checkedText(amount)))
     }
 
-    fun setTaxExemption(category: Int, rate: String, exemption: TaxExemption): Unit = nativeCall(listOfNotNull(this, exemption)) {
-        unwrap(raw.setTaxExemption(checkedUnsigned(category.toLong(), 255).toUByte(), checkedText(rate), exemption.raw))
+    fun setTaxExemption(category: VatCategory, rate: String, exemption: TaxExemption): Unit = nativeCall(listOfNotNull(this, exemption)) {
+        unwrap(raw.setTaxExemption(com.fatoora.raw.VatCategory.valueOf(category.name), checkedText(rate), exemption.raw))
     }
 
     fun addAdjustment(adjustment: AllowanceCharge): Unit = nativeCall(listOfNotNull(this, adjustment)) {
@@ -141,8 +141,8 @@ class InvoiceBuilder internal constructor(internal val raw: com.fatoora.raw.Invo
         unwrap(raw.setInvoiceCounter(checkedCounter(value)))
     }
 
-    fun setVatCategory(value: Int): Unit = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.setVatCategory(checkedUnsigned(value.toLong(), 255).toUByte()))
+    fun setVatCategory(value: VatCategory): Unit = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.setVatCategory(com.fatoora.raw.VatCategory.valueOf(value.name)))
     }
 
     fun flags(value: Int): Unit = nativeCall(listOfNotNull(this)) {
@@ -167,8 +167,8 @@ class InvoiceBuilder internal constructor(internal val raw: com.fatoora.raw.Invo
         unwrap(raw.setBuyer(checkedText(name), address.raw, vatId?.let(::checkedText), otherId?.let(::checkedText), scheme?.let(::checkedText)))
     }
 
-    fun addLineItem(description: String, quantity: String, unitCode: String, unitPrice: String, vatRate: String, category: Int): Unit = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.addLineItem(checkedText(description), checkedText(quantity), checkedText(unitCode), checkedText(unitPrice), checkedText(vatRate), checkedUnsigned(category.toLong(), 255).toUByte()))
+    fun addLineItem(description: String, quantity: String, unitCode: String, unitPrice: String, vatRate: String, category: VatCategory): Unit = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.addLineItem(checkedText(description), checkedText(quantity), checkedText(unitCode), checkedText(unitPrice), checkedText(vatRate), com.fatoora.raw.VatCategory.valueOf(category.name)))
     }
 
     fun build(): FinalizedInvoice = nativeCall(listOfNotNull(this)) {

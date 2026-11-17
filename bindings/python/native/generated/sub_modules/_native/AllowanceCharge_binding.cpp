@@ -1,8 +1,10 @@
 #include "diplomat_nanobind_common.hpp"
 
 
+#include "AdjustmentKind.hpp"
 #include "AllowanceCharge.hpp"
 #include "TaxExemption.hpp"
+#include "VatCategory.hpp"
 
 namespace _native {
 void add_AllowanceCharge_binding(nb::module_ mod) {
@@ -18,8 +20,8 @@ void add_AllowanceCharge_binding(nb::module_ mod) {
         .def("category", &_native::AllowanceCharge::category)
         .def("exemption", std::move(maybe_op_unwrap(&_native::AllowanceCharge::exemption)))
         .def("has_vat_rate", &_native::AllowanceCharge::has_vat_rate)
-        .def("is_charge", &_native::AllowanceCharge::is_charge)
-        .def_static("new", std::move(maybe_op_unwrap(&_native::AllowanceCharge::new_)), "charge"_a, "amount"_a, "reason"_a= nb::none(), "reason_code"_a= nb::none(), "category"_a, "rate"_a, "exemption"_a)
+        .def("kind", &_native::AllowanceCharge::kind)
+        .def_static("new", std::move(maybe_op_unwrap(&_native::AllowanceCharge::new_)), "kind"_a, "amount"_a, "reason"_a= nb::none(), "reason_code"_a= nb::none(), "category"_a, "rate"_a, "exemption"_a)
         .def("percentage", std::move(maybe_op_unwrap(&_native::AllowanceCharge::percentage)))
         .def("rate", std::move(maybe_op_unwrap(&_native::AllowanceCharge::rate)))
         .def("reason", std::move(maybe_op_unwrap(&_native::AllowanceCharge::reason)))

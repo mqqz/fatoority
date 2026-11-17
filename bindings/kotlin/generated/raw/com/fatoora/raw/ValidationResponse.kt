@@ -13,8 +13,10 @@ internal interface ValidationResponseLib: Library {
     fun fatoora_ValidationResponse_cleared_invoice_xml(handle: Pointer): ResultPointerPointer
     fun fatoora_ValidationResponse_validation_results(handle: Pointer): ResultPointerPointer
     fun fatoora_ValidationResponse_cleared_invoice_base64(handle: Pointer): ResultPointerPointer
-    fun fatoora_ValidationResponse_reporting_status(handle: Pointer): ResultPointerPointer
-    fun fatoora_ValidationResponse_clearance_status(handle: Pointer): ResultPointerPointer
+    fun fatoora_ValidationResponse_reporting_status(handle: Pointer): OptionInt
+    fun fatoora_ValidationResponse_reporting_status_raw(handle: Pointer): ResultPointerPointer
+    fun fatoora_ValidationResponse_clearance_status(handle: Pointer): OptionInt
+    fun fatoora_ValidationResponse_clearance_status_raw(handle: Pointer): ResultPointerPointer
     fun fatoora_ValidationResponse_qr_seller_status(handle: Pointer): ResultPointerPointer
     fun fatoora_ValidationResponse_qr_buyer_status(handle: Pointer): ResultPointerPointer
 }
@@ -126,9 +128,23 @@ class ValidationResponse internal constructor (
         }
     }
 
-    fun reportingStatus(): Result<Text?> {
+    /**
+     * The parsed `reportingStatus`, or null when the response has none.
+     */
+    fun reportingStatus(): ReportingStatus? {
 
         val returnVal = lib.fatoora_ValidationResponse_reporting_status(handle);
+
+        val intermediateOption = returnVal.option() ?: return null
+        return ReportingStatus.fromNative(intermediateOption)
+    }
+
+    /**
+     * The `reportingStatus` exactly as ZATCA sent it, or null when absent.
+     */
+    fun reportingStatusRaw(): Result<Text?> {
+
+        val returnVal = lib.fatoora_ValidationResponse_reporting_status_raw(handle);
         val nativeOkVal = returnVal.getNativeOk();
         if (returnVal.isOk == 1.toByte()) {
             val selfEdges: List<Any> = listOf()
@@ -143,9 +159,23 @@ class ValidationResponse internal constructor (
         }
     }
 
-    fun clearanceStatus(): Result<Text?> {
+    /**
+     * The parsed `clearanceStatus`, or null when the response has none.
+     */
+    fun clearanceStatus(): ClearanceStatus? {
 
         val returnVal = lib.fatoora_ValidationResponse_clearance_status(handle);
+
+        val intermediateOption = returnVal.option() ?: return null
+        return ClearanceStatus.fromNative(intermediateOption)
+    }
+
+    /**
+     * The `clearanceStatus` exactly as ZATCA sent it, or null when absent.
+     */
+    fun clearanceStatusRaw(): Result<Text?> {
+
+        val returnVal = lib.fatoora_ValidationResponse_clearance_status_raw(handle);
         val nativeOkVal = returnVal.getNativeOk();
         if (returnVal.isOk == 1.toByte()) {
             val selfEdges: List<Any> = listOf()

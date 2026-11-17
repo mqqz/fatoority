@@ -19,7 +19,7 @@ internal partial struct CsrProperties
     internal static unsafe extern DiplomatResultCsrPropertiesBindingError ParseCsrConfigFile(DiplomatSliceU8 path);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_CsrProperties_build", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultCsrBindingError Build(CsrProperties* handle, SigningKey* key, byte env);
+    internal static unsafe extern DiplomatResultCsrBindingError Build(CsrProperties* handle, SigningKey* key, ZatcaEnvironment env);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_CsrProperties_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(CsrProperties* handle);

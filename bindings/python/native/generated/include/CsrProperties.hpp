@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include "BindingError.hpp"
 #include "Csr.hpp"
+#include "Environment.hpp"
 #include "SigningKey.hpp"
 #include "diplomat_runtime.hpp"
 
@@ -31,7 +32,7 @@ namespace capi {
     fatoora_CsrProperties_parse_csr_config_file_result fatoora_CsrProperties_parse_csr_config_file(_native::diplomat::capi::DiplomatStringView path);
 
     typedef struct fatoora_CsrProperties_build_result {union {_native::capi::Csr* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_CsrProperties_build_result;
-    fatoora_CsrProperties_build_result fatoora_CsrProperties_build(const _native::capi::CsrProperties* self, const _native::capi::SigningKey* key, uint8_t env);
+    fatoora_CsrProperties_build_result fatoora_CsrProperties_build(const _native::capi::CsrProperties* self, const _native::capi::SigningKey* key, _native::capi::Environment env);
 
     void fatoora_CsrProperties_destroy(CsrProperties* self);
 
@@ -62,10 +63,10 @@ inline _native::diplomat::result<std::unique_ptr<_native::CsrProperties>, std::u
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::CsrProperties>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::CsrProperties>>(std::unique_ptr<_native::CsrProperties>(_native::CsrProperties::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::CsrProperties>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Csr>, std::unique_ptr<_native::BindingError>> _native::CsrProperties::build(const _native::SigningKey& key, uint8_t env) const {
+inline _native::diplomat::result<std::unique_ptr<_native::Csr>, std::unique_ptr<_native::BindingError>> _native::CsrProperties::build(const _native::SigningKey& key, _native::Environment env) const {
     auto result = _native::capi::fatoora_CsrProperties_build(this->AsFFI(),
         key.AsFFI(),
-        env);
+        env.AsFFI());
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Csr>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Csr>>(std::unique_ptr<_native::Csr>(_native::Csr::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Csr>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 

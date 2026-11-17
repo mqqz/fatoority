@@ -10,7 +10,10 @@ internal partial struct ValidationResults
 {
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ValidationResults_status", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError Status(ValidationResults* handle);
+    internal static unsafe extern DiplomatOptionValidationStatus Status(ValidationResults* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ValidationResults_status_raw", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultTextBindingError StatusRaw(ValidationResults* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ValidationResults_info_len", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern nuint InfoLen(ValidationResults* handle);

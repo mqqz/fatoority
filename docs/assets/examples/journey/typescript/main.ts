@@ -3,11 +3,12 @@ import { randomUUID } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 import {
-  Address, BindingError, Config, CsidProduction, InvoiceBuilder, Signer, Xml, ZatcaClient,
+  Address, BindingError, Config, CsidProduction, Environment, InvoiceBuilder, InvoiceSubType,
+  InvoiceTypeKind, Signer, VatCategory, Xml, ZatcaClient,
   type ValidationResponse, type ValidationMessage,
 } from 'fatoority';
 
-const ENVIRONMENT = 0; // Integration Sandbox only.
+const ENVIRONMENT = Environment.NonProduction; // Integration Sandbox only.
 interface Input {
   invoice_id: string;
   invoice_counter: string;
@@ -33,8 +34,8 @@ export function handleResponse(response: ValidationResponse, output: string): vo
   const results = response.validationResults();
   const summary = {
     http_status: response.httpStatus(), outcome: response.outcome().value,
-    reporting_status: response.reportingStatus()?.value() ?? null,
-    validation_status: results.status()?.value() ?? null,
+    reporting_status: response.reportingStatusRaw()?.value() ?? null,
+    validation_status: results.statusRaw()?.value() ?? null,
     info: messages(results.infoLen(), i => results.infoMessage(i)),
     warnings: messages(results.warningLen(), i => results.warningMessage(i)),
     errors: messages(results.errorLen(), i => results.errorMessage(i)),
@@ -62,7 +63,7 @@ export async function run(inputPath: string, submit: boolean, transport?: typeof
   };
   saveJson(`${output}/state.json`, state);
   try {
-    const builder = InvoiceBuilder.new_(0, 1, null, null, null, null); // Tax, simplified.
+    const builder = InvoiceBuilder.new_(InvoiceTypeKind.Tax, InvoiceSubType.Simplified, null, null, null, null);
     builder.setId(data.invoice_id);
     builder.setUuid(uuid);
     builder.setIssueDatetime(new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'));
@@ -70,11 +71,11 @@ export async function run(inputPath: string, submit: boolean, transport?: typeof
     builder.setInvoiceCounter(BigInt(data.invoice_counter));
     builder.setPreviousInvoiceHash(data.previous_invoice_hash);
     builder.setPaymentMeansCode('10');
-    builder.setVatCategory(1); // Standard VAT category.
+    builder.setVatCategory(VatCategory.Standard);
     const address = Address.new_('SA', seller.city, seller.street, seller.building_number,
       seller.postal_code, null, seller.additional_number, seller.district);
     builder.setSeller(seller.name, address, seller.vat_id, seller.crn, 'CRN');
-    builder.addLineItem('دفتر', '2', 'PCE', '50', '15', 1);
+    builder.addLineItem('دفتر', '2', 'PCE', '50', '15', VatCategory.Standard);
     const invoice = builder.build();
     writeFileSync(`${output}/invoice.xml`, invoice.xml());
     console.log('Created: SAR 100 net + SAR 15 VAT = SAR 115 payable');

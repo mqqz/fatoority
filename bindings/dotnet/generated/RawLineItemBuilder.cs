@@ -61,7 +61,7 @@ internal partial struct LineItemBuilder
     internal static unsafe extern DiplomatResultVoidBindingError SetVatRate(LineItemBuilder* handle, DiplomatSliceU8 value);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_LineItemBuilder_set_vat_category", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultVoidBindingError SetVatCategory(LineItemBuilder* handle, byte value);
+    internal static unsafe extern DiplomatResultVoidBindingError SetVatCategory(LineItemBuilder* handle, VatCategory value);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_LineItemBuilder_set_exemption", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError SetExemption(LineItemBuilder* handle, TaxExemption* value);

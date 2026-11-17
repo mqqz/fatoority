@@ -41,7 +41,18 @@ void add_TaxExemption_binding(nb::module_);
 void add_VatBreakdown_binding(nb::module_);
 void add_VatId_binding(nb::module_);
 void add_Xml_binding(nb::module_);
+void add_ClearanceMode_binding(nb::module_);
+void add_ClearanceStatus_binding(nb::module_);
 void add_InvoiceOutcome_binding(nb::module_);
+void add_MessageType_binding(nb::module_);
+void add_ReportingStatus_binding(nb::module_);
+void add_ValidationStatus_binding(nb::module_);
+void add_Environment_binding(nb::module_);
+void add_AdjustmentKind_binding(nb::module_);
+void add_InvoiceFlag_binding(nb::module_);
+void add_InvoiceSubType_binding(nb::module_);
+void add_InvoiceTypeKind_binding(nb::module_);
+void add_VatCategory_binding(nb::module_);
 }
 
 // Nanobind does not usually support custom deleters, so we're shimming some of the machinery to add that ability.
@@ -134,7 +145,18 @@ NB_MODULE(_native, mod)
     add_VatBreakdown_binding(mod);
     add_VatId_binding(mod);
     add_Xml_binding(mod);
+    add_ClearanceMode_binding(mod);
+    add_ClearanceStatus_binding(mod);
     add_InvoiceOutcome_binding(mod);
+    add_MessageType_binding(mod);
+    add_ReportingStatus_binding(mod);
+    add_ValidationStatus_binding(mod);
+    add_Environment_binding(mod);
+    add_AdjustmentKind_binding(mod);
+    add_InvoiceFlag_binding(mod);
+    add_InvoiceSubType_binding(mod);
+    add_InvoiceTypeKind_binding(mod);
+    add_VatCategory_binding(mod);
     
     
 }

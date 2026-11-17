@@ -5,6 +5,7 @@ import type { InvoiceLineItem } from "./InvoiceLineItem.mjs"
 import type { OriginalInvoiceRef } from "./OriginalInvoiceRef.mjs"
 import type { TaxExemption } from "./TaxExemption.mjs"
 import type { VatBreakdown } from "./VatBreakdown.mjs"
+import type { VatCategory } from "./VatCategory.mjs"
 import type { pointer, codepoint } from "./diplomat-runtime.mjs";
 
 
@@ -50,7 +51,7 @@ export class LineItemBuilder {
 
     setVatRate(value: string): void;
 
-    setVatCategory(value: number): void;
+    setVatCategory(value: VatCategory): void;
 
     setExemption(value: TaxExemption): void;
 

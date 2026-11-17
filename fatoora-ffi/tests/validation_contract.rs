@@ -1,4 +1,5 @@
 mod support;
+use fatoora_ffi::common::ffi::Environment;
 use fatoora_ffi::{common::ffi::BindingError, crypto::ffi::Config, invoice::ffi::Xml};
 use support::written;
 fn ok<T>(value: Result<T, Box<BindingError>>) -> T {
@@ -7,7 +8,7 @@ fn ok<T>(value: Result<T, Box<BindingError>>) -> T {
 
 #[test]
 fn options_limit_is_in_bytes_and_invalid_options_do_not_run_validation() {
-    let config = ok(Config::new(0));
+    let config = ok(Config::new(Environment::NonProduction));
     let mut options = br#"{"evaluated_at":"2026-09-23T12:00:00+03:00"}"#.to_vec();
     options.resize(4096, b' ');
     let report: serde_json::Value = serde_json::from_str(&written(|out| {
@@ -47,7 +48,7 @@ fn options_limit_is_in_bytes_and_invalid_options_do_not_run_validation() {
 
 #[test]
 fn malformed_xml_error_keeps_partial_report_and_does_not_poison_next_call() {
-    let config = ok(Config::new(0));
+    let config = ok(Config::new(Environment::NonProduction));
     written(|out| {
         let error = Xml::validate_zatca(&config, b"<Invoice", None, out)
             .err()

@@ -28,7 +28,7 @@ static void invalid_input(BindingError *error) {
 
 static InvoiceBuilder *builder(void) {
     fatoora_InvoiceBuilder_new_result result = fatoora_InvoiceBuilder_new(
-        0, 1, none(), none(), none(), none());
+        InvoiceTypeKind_Tax, InvoiceSubType_Simplified, none(), none(), none(), none());
     assert(result.is_ok);
     InvoiceBuilder *b = result.ok;
     assert(fatoora_InvoiceBuilder_set_id(b, s("INV-1")).is_ok);
@@ -38,7 +38,7 @@ static InvoiceBuilder *builder(void) {
     assert(fatoora_InvoiceBuilder_set_previous_invoice_hash(b, s("hash")).is_ok);
     assert(fatoora_InvoiceBuilder_set_invoice_counter(b, 1).is_ok);
     assert(fatoora_InvoiceBuilder_set_payment_means_code(b, s("10")).is_ok);
-    assert(fatoora_InvoiceBuilder_set_vat_category(b, 1).is_ok);
+    assert(fatoora_InvoiceBuilder_set_vat_category(b, VatCategory_Standard).is_ok);
     fatoora_Address_new_result address = fatoora_Address_new(
         s("SA"), s("Riyadh"), s("King Fahd"), s("1234"), s("12222"),
         none(), none(), some("Olaya"));
@@ -51,28 +51,20 @@ static InvoiceBuilder *builder(void) {
 }
 
 int main(void) {
-    INVALID(fatoora_Config_new_result, fatoora_Config_new(255));
-    INVALID(fatoora_InvoiceBuilder_new_result,
-        fatoora_InvoiceBuilder_new(255, 1, none(), none(), none(), none()));
-    INVALID(fatoora_InvoiceBuilder_new_result,
-        fatoora_InvoiceBuilder_new(0, 255, none(), none(), none(), none()));
+    /* Enum arguments must hold a declared enumerator; the C facade validates them. */
     InvoiceBuilder *b = builder();
-    INVALID(fatoora_InvoiceBuilder_set_vat_category_result,
-        fatoora_InvoiceBuilder_set_vat_category(b, 255));
     const char bad_utf8[] = {(char)0xff};
     const char nul_text[] = {'a', 0, 'b'};
     INVALID(fatoora_InvoiceBuilder_add_line_item_result,
         fatoora_InvoiceBuilder_add_line_item(b,
             ((DiplomatStringView){bad_utf8, sizeof(bad_utf8)}),
-            s("3"), s("PCE"), s("1"), s("15"), 1));
+            s("3"), s("PCE"), s("1"), s("15"), VatCategory_Standard));
     INVALID(fatoora_InvoiceBuilder_add_line_item_result,
         fatoora_InvoiceBuilder_add_line_item(b,
             ((DiplomatStringView){nul_text, sizeof(nul_text)}),
-            s("3"), s("PCE"), s("1"), s("15"), 1));
-    INVALID(fatoora_InvoiceBuilder_add_line_item_result,
-        fatoora_InvoiceBuilder_add_line_item(b, s("Item"), s("3"), s("PCE"), s("1"), s("15"), 255));
+            s("3"), s("PCE"), s("1"), s("15"), VatCategory_Standard));
     fatoora_InvoiceBuilder_add_line_item_result bad = fatoora_InvoiceBuilder_add_line_item(
-        b, s("Item"), s("3"), s("PCE"), s("invalid"), s("15"), 1);
+        b, s("Item"), s("3"), s("PCE"), s("invalid"), s("15"), VatCategory_Standard);
     assert(!bad.is_ok && fatoora_BindingError_code(bad.err) == 1);
     char details[4096] = {0};
     DiplomatWrite detail_out = diplomat_simple_write(details, sizeof(details));
@@ -80,7 +72,7 @@ int main(void) {
     fatoora_BindingError_destroy(bad.err);
     assert(strstr(details, "invalid_decimal"));
     assert(fatoora_InvoiceBuilder_add_line_item(
-        b, s("Item"), s("3"), s("PCE"), s("0.3333"), s("15"), 1).is_ok);
+        b, s("Item"), s("3"), s("PCE"), s("0.3333"), s("15"), VatCategory_Standard).is_ok);
     fatoora_InvoiceBuilder_build_result built = fatoora_InvoiceBuilder_build(b);
     assert(built.is_ok);
     DiplomatWrite *out = diplomat_buffer_write_create(0);

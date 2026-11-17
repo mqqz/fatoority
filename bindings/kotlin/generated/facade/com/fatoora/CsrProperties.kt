@@ -25,7 +25,7 @@ class CsrProperties internal constructor(internal val raw: com.fatoora.raw.CsrPr
             CsrProperties(unwrap(com.fatoora.raw.CsrProperties.parseCsrConfigFile(checkedText(path))))
         }
     }
-    fun build(key: SigningKey, env: Int): Csr = nativeCall(listOfNotNull(this, key)) {
-        Csr(unwrap(raw.build(key.raw, checkedUnsigned(env.toLong(), 255).toUByte())))
+    fun build(key: SigningKey, env: Environment): Csr = nativeCall(listOfNotNull(this, key)) {
+        Csr(unwrap(raw.build(key.raw, com.fatoora.raw.Environment.valueOf(env.name))))
     }
 }

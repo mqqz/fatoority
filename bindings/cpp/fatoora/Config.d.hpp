@@ -16,6 +16,7 @@ namespace capi { struct BindingError; }
 class BindingError;
 namespace capi { struct Config; }
 class Config;
+class Environment;
 } // namespace fatoora
 
 
@@ -31,9 +32,9 @@ namespace fatoora {
 class Config {
 public:
 
-  inline static diplomat::result<std::unique_ptr<fatoora::Config>, std::unique_ptr<fatoora::BindingError>> new_(uint8_t env);
+  inline static diplomat::result<std::unique_ptr<fatoora::Config>, std::unique_ptr<fatoora::BindingError>> new_(fatoora::Environment env);
 
-  inline uint8_t env() const;
+  inline diplomat::result<fatoora::Environment, std::unique_ptr<fatoora::BindingError>> env() const;
 
     inline const fatoora::capi::Config* AsFFI() const;
     inline fatoora::capi::Config* AsFFI();

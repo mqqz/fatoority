@@ -17,7 +17,7 @@ public final class JavaExamples {
 
     // --8<-- [start:validation]
     public static String validateInvoice(String xml) {
-        try (Config config = Config.create(0)) {
+        try (Config config = Config.create(Environment.NonProduction)) {
             return Xml.validateZatca(config, xml);
         }
     }

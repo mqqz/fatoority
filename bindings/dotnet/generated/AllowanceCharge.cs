@@ -190,7 +190,7 @@ public partial class AllowanceCharge: IDisposable
     /// <returns>
     /// A <c>AllowanceCharge</c> allocated on Rust side.
     /// </returns>
-    public static AllowanceCharge New(bool charge, string amount, string? reason, string? reasonCode, byte category, string rate, TaxExemption exemption)
+    public static AllowanceCharge New(AdjustmentKind kind, string amount, string? reason, string? reasonCode, VatCategory category, string rate, TaxExemption exemption)
     {
         unsafe
         {
@@ -210,7 +210,7 @@ public partial class AllowanceCharge: IDisposable
                 fixed (byte* reasonCodePtr = reasonCodeBytes)
                 fixed (byte* ratePtr = rateBytes)
                 {
-                    var result = Raw.AllowanceCharge.New(charge, new DiplomatSliceU8 { Ptr = amountPtr, Len = (nuint)amountBytes.Length }, reason == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = reasonPtr, Len = (nuint)reasonBytes!.Length }), reasonCode == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = reasonCodePtr, Len = (nuint)reasonCodeBytes!.Length }), category, new DiplomatSliceU8 { Ptr = ratePtr, Len = (nuint)rateBytes.Length }, exemptionLease!.Ptr);
+                    var result = Raw.AllowanceCharge.New(kind, new DiplomatSliceU8 { Ptr = amountPtr, Len = (nuint)amountBytes.Length }, reason == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = reasonPtr, Len = (nuint)reasonBytes!.Length }), reasonCode == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = reasonCodePtr, Len = (nuint)reasonCodeBytes!.Length }), category, new DiplomatSliceU8 { Ptr = ratePtr, Len = (nuint)rateBytes.Length }, exemptionLease!.Ptr);
                     if (!result.IsOk)
                     {
                         throw new BindingErrorException(new BindingError(result.Err));
@@ -225,7 +225,7 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    public bool IsCharge()
+    public AdjustmentKind Kind()
     {
         unsafe
         {
@@ -233,7 +233,7 @@ public partial class AllowanceCharge: IDisposable
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.AllowanceCharge.IsCharge(selfLease!.Ptr);
+                return Raw.AllowanceCharge.Kind(selfLease!.Ptr);
             }
             finally
             {
@@ -304,7 +304,7 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    public byte Category()
+    public VatCategory Category()
     {
         unsafe
         {

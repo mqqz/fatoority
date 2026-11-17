@@ -678,7 +678,7 @@ public partial class InvoiceData: IDisposable
         }
     }
 
-    public byte VatCategory()
+    public VatCategory VatCategory()
     {
         unsafe
         {
@@ -712,7 +712,7 @@ public partial class InvoiceData: IDisposable
         }
     }
 
-    public byte InvoiceTypeKind()
+    public InvoiceTypeKind InvoiceTypeKind()
     {
         unsafe
         {
@@ -729,7 +729,7 @@ public partial class InvoiceData: IDisposable
         }
     }
 
-    public byte InvoiceSubType()
+    public InvoiceSubType InvoiceSubType()
     {
         unsafe
         {

@@ -8,6 +8,7 @@
 #include "diplomat_runtime.h"
 
 #include "BindingError.d.h"
+#include "Environment.d.h"
 #include "Text.d.h"
 
 #include "CsidCompliance.d.h"
@@ -18,9 +19,10 @@
 
 
 typedef struct fatoora_CsidCompliance_create_result {union {CsidCompliance* ok; BindingError* err;}; bool is_ok;} fatoora_CsidCompliance_create_result;
-fatoora_CsidCompliance_create_result fatoora_CsidCompliance_create(uint8_t environment, OptionStringView request_id, DiplomatStringView token, DiplomatStringView secret);
+fatoora_CsidCompliance_create_result fatoora_CsidCompliance_create(Environment environment, OptionStringView request_id, DiplomatStringView token, DiplomatStringView secret);
 
-uint8_t fatoora_CsidCompliance_env(const CsidCompliance* self);
+typedef struct fatoora_CsidCompliance_env_result {union {Environment ok; BindingError* err;}; bool is_ok;} fatoora_CsidCompliance_env_result;
+fatoora_CsidCompliance_env_result fatoora_CsidCompliance_env(const CsidCompliance* self);
 
 typedef struct fatoora_CsidCompliance_request_id_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_CsidCompliance_request_id_result;
 fatoora_CsidCompliance_request_id_result fatoora_CsidCompliance_request_id(const CsidCompliance* self);

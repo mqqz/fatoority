@@ -37,7 +37,7 @@ certificate. Preserve the request ID returned during compliance onboarding.
 | Secret | Credential secret returned by ZATCA | Keep credentials out of logs. |
 | Request ID | Optional text from credential issuance | Required to request production credentials from compliance credentials. |
 | Invoice | Signed invoice object | The client sends its hash, UUID, and Base64 XML. |
-| Clearance flag | Boolean | Sends `Clearance-Status: 1` when true, `0` when false. It does not change the selected operation. |
+| Clearance flag | `ClearanceMode` (`Enabled`/`Disabled`); a Boolean in Python, the JavaScript async client, and the Kotlin `*Async` helpers | Sends `Clearance-Status: 1` when enabled, `0` when disabled. It does not change the selected operation. |
 | Response language | `ar`, `en`, or omitted | Only the exact value `ar` selects Arabic; every other value sends English. |
 
 ## Interpret an invoice response
@@ -62,7 +62,7 @@ actually invoked determines its outcome.
 | HTTP status | Optional integer | Actual response status, when attached by the client. |
 | Outcome | Accepted, rejected, or unknown | Classification for the invoked operation. |
 | Validation results | Result object | Contains message collections and optional overall status. |
-| Reporting / clearance status | Optional text | Raw gateway status for each operation. |
+| Reporting / clearance status | Optional status enum (Python: optional text) | Gateway status for each operation; unrecognized values map to `Other`/`Unknown`, and the bindings' `*_raw` getters return the exact text. |
 | Seller / buyer QR status | Optional text | Raw QR status returned by the gateway. |
 | Cleared invoice Base64 | Optional text | Exact encoded invoice returned by clearance. |
 | Cleared invoice XML | Optional decoded text | Preserves returned text; does not parse XML or verify its signature. |
@@ -255,7 +255,7 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     | `clearStandardInvoice(invoice, credentials, clearanceStatus = true, acceptLanguage = null, options = {})` | `ValidationResponse` |
 
     Pass `Csr` for `csr`, `SignedInvoice` for `invoice`, strings for OTP/language, and
-    boolean clearance flags. Compliance issuance uses no credential; compliance checks
+    a boolean or `ClearanceMode` (`ClearanceMode.Disabled`/`.Enabled`) for `clearanceStatus`. Compliance issuance uses no credential; compliance checks
     and production issuance take `CsidCompliance`; reporting, clearance, and renewal
     take `CsidProduction`. Each `options` accepts `{ signal: AbortSignal }` for cancellation.
     Transport failures reject with `TransportError`; response/acceptance failures reject with an `Error` whose cause is
@@ -265,9 +265,9 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     **Credentials**
 
     `CsidCompliance.create(environment, requestId, token, secret)` returns compliance
-    credentials; `CsidProduction.create` returns production credentials. Pass environment
-    number `0`, `1`, or `2`, a string or `null` request ID, and string token/secret.
-    `env()` returns the number; `binarySecurityToken()` and `secret()` return strings;
+    credentials; `CsidProduction.create` returns production credentials. Pass an `Environment`
+    (`Environment.NonProduction`, `.Simulation`, or `.Production`), a string or `null`
+    request ID, and string token/secret. `env()` returns the `Environment`; `binarySecurityToken()` and `secret()` return strings;
     `requestId()` returns `Text` or `null`. Read optional text with `text?.value()`.
 
     **Responses**
@@ -278,12 +278,22 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     | `response.outcome()` | `InvoiceOutcome.Accepted`, `.Rejected`, or `.Unknown` |
     | `response.ensureAccepted()` | `undefined`; throws unless accepted. |
     | `response.validationResults()` | `ValidationResults` |
-    | `response.reportingStatus()` / `clearanceStatus()` / `qrSellerStatus()` / `qrBuyerStatus()` | `Text` or `null` |
+    | `response.reportingStatus()` | `ReportingStatus` (`Reported`, `NotReported`, `Unknown`) or `null` |
+    | `response.clearanceStatus()` | `ClearanceStatus` (`Cleared`, `NotCleared`, `Unknown`) or `null` |
+    | `response.reportingStatusRaw()` / `clearanceStatusRaw()` / `qrSellerStatus()` / `qrBuyerStatus()` | `Text` or `null` |
     | `response.clearedInvoiceBase64()` / `clearedInvoiceXml()` | `Text` or `null`; XML decoding can throw. |
-    | `results.status()` | `Text` or `null` |
+    | `results.status()` | `ValidationStatus` (`Pass`, `Warning`, `Error`, `Unknown`) or `null` |
+    | `results.statusRaw()` | `Text` or `null` |
     | `results.infoLen()` / `warningLen()` / `errorLen()` | Number of messages |
     | `results.infoMessage(index)` / `warningMessage(index)` / `errorMessage(index)` | `ValidationMessage` |
-    | `message.messageType()` / `code()` / `category()` / `message()` / `status()` | `Text` or `null` |
+    | `message.messageType()` | `MessageType` (`Info`, `Warning`, `Error`, `Unknown`) or `null` |
+    | `message.status()` | `ValidationStatus` or `null` |
+    | `message.messageTypeRaw()` / `statusRaw()` / `code()` / `category()` / `message()` | `Text` or `null` |
+
+    Status enums return `null` when the field is absent and `Unknown` when it is
+    present but not recognized by this binding version; the matching `*Raw()` getter
+    returns the exact wire string. Compare with `=== ReportingStatus.Reported`, or read
+    the variant name from `.value`.
 
     Message indexes are zero-based and must be less than the corresponding length.
     Child handles are independently owned. Calls do not consume inputs. See
@@ -296,7 +306,8 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     `preparePostCsrForCcsid`, `preparePostCcsidForPcsid`, `prepareRenewCsid`,
     `prepareCheckInvoiceCompliance`, `prepareReportSimplifiedInvoice`, and
     `prepareClearStandardInvoice`. They take the same operation arguments as above,
-    without `options`; supply the clearance boolean and nullable language explicitly.
+    without `options`; supply a `ClearanceMode` (not a boolean) and nullable language
+    explicitly.
     They return `ComplianceRequest`, `ProductionRequest`, or `InvoiceRequest` according
     to the operation.
 
@@ -319,8 +330,8 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     | `PostCcsidForPcsid` | `CsidCompliance credentials` | `CsidProduction` |
     | `RenewCsid` | `CsidProduction credentials`, `Csr csr`, `string otp`, `string? acceptLanguage` | `CsidProduction` |
     | `CheckInvoiceCompliance` | `SignedInvoice invoice`, `CsidCompliance credentials` | `ValidationResponse` |
-    | `ReportSimplifiedInvoice` | `SignedInvoice invoice`, `CsidProduction credentials`, `bool clearanceStatus`, `string? acceptLanguage` | `ValidationResponse` |
-    | `ClearStandardInvoice` | `SignedInvoice invoice`, `CsidProduction credentials`, `bool clearanceStatus`, `string? acceptLanguage` | `ValidationResponse` |
+    | `ReportSimplifiedInvoice` | `SignedInvoice invoice`, `CsidProduction credentials`, `ClearanceMode clearanceMode`, `string? acceptLanguage` | `ValidationResponse` |
+    | `ClearStandardInvoice` | `SignedInvoice invoice`, `CsidProduction credentials`, `ClearanceMode clearanceMode`, `string? acceptLanguage` | `ValidationResponse` |
 
     Pass `null` explicitly when omitting response language.
 
@@ -328,8 +339,9 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
     `CsidCompliance.Create(environment, requestId, token, secret)` returns
     compliance credentials; `CsidProduction.Create` returns production credentials.
-    Pass `byte` environment `0`, `1`, or `2`, a nullable `string` request ID,
-    and `string` token/secret. `Env()` returns `byte`;
+    Pass a `ZatcaEnvironment` (`NonProduction`, `Simulation`, or `Production`), a
+    nullable `string` request ID, and `string` token/secret. `Env()` returns
+    `ZatcaEnvironment`;
     `BinarySecurityToken()` and `Secret()` return `string`;
     `RequestId()` returns nullable `Text`.
     Read text with `Value()` and dispose the `Text` object when finished.
@@ -342,12 +354,21 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     | `response.Outcome()` | `InvoiceOutcome` (`Accepted`, `Rejected`, `Unknown`) |
     | `response.EnsureAccepted()` | No value; throws unless accepted. |
     | `response.ValidationResults()` | `ValidationResults` |
-    | `response.ReportingStatus()` / `ClearanceStatus()` / `QrSellerStatus()` / `QrBuyerStatus()` | Nullable `Text` |
+    | `response.ReportingStatus()` | `ReportingStatus?` (`Reported`, `NotReported`, `Unknown`) |
+    | `response.ClearanceStatus()` | `ClearanceStatus?` (`Cleared`, `NotCleared`, `Unknown`) |
+    | `response.ReportingStatusRaw()` / `ClearanceStatusRaw()` / `QrSellerStatus()` / `QrBuyerStatus()` | Nullable `Text` |
     | `response.ClearedInvoiceBase64()` / `ClearedInvoiceXml()` | Nullable `Text`; XML decoding can throw. |
-    | `results.Status()` | Nullable `Text` |
+    | `results.Status()` | `ValidationStatus?` (`Pass`, `Warning`, `Error`, `Unknown`) |
+    | `results.StatusRaw()` | Nullable `Text` |
     | `results.InfoLen()` / `WarningLen()` / `ErrorLen()` | `nuint` message count |
     | `results.InfoMessage(index)` / `WarningMessage(index)` / `ErrorMessage(index)` | `ValidationMessage` |
-    | `message.MessageType()` / `Code()` / `Category()` / `Message()` / `Status()` | Nullable `Text` |
+    | `message.MessageType()` | `MessageType?` (`Info`, `Warning`, `Error`, `Unknown`) |
+    | `message.Status()` | `ValidationStatus?` |
+    | `message.MessageTypeRaw()` / `StatusRaw()` / `Code()` / `Category()` / `Message()` | Nullable `Text` |
+
+    Status enums are `null` when the field is absent and `Unknown` when it is present
+    but not recognized by this binding version; the matching `*Raw()` getter returns
+    the exact wire string.
 
     Use zero-based `nuint` indexes below the corresponding message count. Child
     objects are independently owned. Methods do not consume their inputs.
@@ -381,8 +402,8 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     | `postCcsidForPcsid` | `CsidCompliance credentials` | `CsidProduction` |
     | `renewCsid` | `CsidProduction credentials`, `Csr csr`, `String otp`, `String? acceptLanguage` | `CsidProduction` |
     | `checkInvoiceCompliance` | `SignedInvoice invoice`, `CsidCompliance credentials` | `ValidationResponse` |
-    | `reportSimplifiedInvoice` | `SignedInvoice invoice`, `CsidProduction credentials`, `Boolean clearanceStatus`, `String? acceptLanguage` | `ValidationResponse` |
-    | `clearStandardInvoice` | `SignedInvoice invoice`, `CsidProduction credentials`, `Boolean clearanceStatus`, `String? acceptLanguage` | `ValidationResponse` |
+    | `reportSimplifiedInvoice` | `SignedInvoice invoice`, `CsidProduction credentials`, `ClearanceMode clearanceMode`, `String? acceptLanguage` | `ValidationResponse` |
+    | `clearStandardInvoice` | `SignedInvoice invoice`, `CsidProduction credentials`, `ClearanceMode clearanceMode`, `String? acceptLanguage` | `ValidationResponse` |
 
     Response language defaults to `null`; an overload allows it to be omitted.
 
@@ -390,8 +411,8 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
     `CsidCompliance.create(environment, requestId, token, secret)` returns
     compliance credentials; `CsidProduction.create` returns production credentials.
-    Pass `Int` environment `0`, `1`, or `2`, a nullable `String` request ID,
-    and `String` token/secret. `env()` returns `Int`;
+    Pass an `Environment` (`NonProduction`, `Simulation`, or `Production`), a nullable
+    `String` request ID, and `String` token/secret. `env()` returns `Environment`;
     `binarySecurityToken()` and `secret()` return `String`;
     `requestId()` returns nullable `Text`.
     Read text with `value()` and dispose the `Text` object when finished.
@@ -404,12 +425,21 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     | `response.outcome()` | `InvoiceOutcome` (`Accepted`, `Rejected`, `Unknown`) |
     | `response.ensureAccepted()` | No value; throws unless accepted. |
     | `response.validationResults()` | `ValidationResults` |
-    | `response.reportingStatus()` / `clearanceStatus()` / `qrSellerStatus()` / `qrBuyerStatus()` | Nullable `Text` |
+    | `response.reportingStatus()` | Nullable `ReportingStatus` (`Reported`, `NotReported`, `Unknown`) |
+    | `response.clearanceStatus()` | Nullable `ClearanceStatus` (`Cleared`, `NotCleared`, `Unknown`) |
+    | `response.reportingStatusRaw()` / `clearanceStatusRaw()` / `qrSellerStatus()` / `qrBuyerStatus()` | Nullable `Text` |
     | `response.clearedInvoiceBase64()` / `clearedInvoiceXml()` | Nullable `Text`; XML decoding can throw. |
-    | `results.status()` | Nullable `Text` |
+    | `results.status()` | Nullable `ValidationStatus` (`Pass`, `Warning`, `Error`, `Unknown`) |
+    | `results.statusRaw()` | Nullable `Text` |
     | `results.infoLen()` / `warningLen()` / `errorLen()` | `java.math.BigInteger` message count |
     | `results.infoMessage(index)` / `warningMessage(index)` / `errorMessage(index)` | `ValidationMessage` |
-    | `message.messageType()` / `code()` / `category()` / `message()` / `status()` | Nullable `Text` |
+    | `message.messageType()` | Nullable `MessageType` (`Info`, `Warning`, `Error`, `Unknown`) |
+    | `message.status()` | Nullable `ValidationStatus` |
+    | `message.messageTypeRaw()` / `statusRaw()` / `code()` / `category()` / `message()` | Nullable `Text` |
+
+    Status enums are `null` when the field is absent and `Unknown` when it is present
+    but not recognized by this binding version; the matching `*Raw()` getter returns
+    the exact wire string.
 
     Use zero-based `java.math.BigInteger` indexes below the corresponding message count. Child
     objects are independently owned. Methods do not consume their inputs.
@@ -443,8 +473,8 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     | `postCcsidForPcsid` | `CsidCompliance credentials` | `CsidProduction` |
     | `renewCsid` | `CsidProduction credentials`, `Csr csr`, `String otp`, `String (nullable) acceptLanguage` | `CsidProduction` |
     | `checkInvoiceCompliance` | `SignedInvoice invoice`, `CsidCompliance credentials` | `ValidationResponse` |
-    | `reportSimplifiedInvoice` | `SignedInvoice invoice`, `CsidProduction credentials`, `boolean clearanceStatus`, `String (nullable) acceptLanguage` | `ValidationResponse` |
-    | `clearStandardInvoice` | `SignedInvoice invoice`, `CsidProduction credentials`, `boolean clearanceStatus`, `String (nullable) acceptLanguage` | `ValidationResponse` |
+    | `reportSimplifiedInvoice` | `SignedInvoice invoice`, `CsidProduction credentials`, `ClearanceMode clearanceMode`, `String (nullable) acceptLanguage` | `ValidationResponse` |
+    | `clearStandardInvoice` | `SignedInvoice invoice`, `CsidProduction credentials`, `ClearanceMode clearanceMode`, `String (nullable) acceptLanguage` | `ValidationResponse` |
 
     Response language defaults to `null`; an overload allows it to be omitted.
 
@@ -452,8 +482,8 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
     `CsidCompliance.create(environment, requestId, token, secret)` returns
     compliance credentials; `CsidProduction.create` returns production credentials.
-    Pass `int` environment `0`, `1`, or `2`, a nullable `String` request ID,
-    and `String` token/secret. `env()` returns `int`;
+    Pass an `Environment` (`NonProduction`, `Simulation`, or `Production`), a nullable
+    `String` request ID, and `String` token/secret. `env()` returns `Environment`;
     `binarySecurityToken()` and `secret()` return `String`;
     `requestId()` returns nullable `Text`.
     Read text with `value()` and dispose the `Text` object when finished.
@@ -466,12 +496,21 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     | `response.outcome()` | `InvoiceOutcome` (`Accepted`, `Rejected`, `Unknown`) |
     | `response.ensureAccepted()` | No value; throws unless accepted. |
     | `response.validationResults()` | `ValidationResults` |
-    | `response.reportingStatus()` / `clearanceStatus()` / `qrSellerStatus()` / `qrBuyerStatus()` | Nullable `Text` |
+    | `response.reportingStatus()` | Nullable `ReportingStatus` (`Reported`, `NotReported`, `Unknown`) |
+    | `response.clearanceStatus()` | Nullable `ClearanceStatus` (`Cleared`, `NotCleared`, `Unknown`) |
+    | `response.reportingStatusRaw()` / `clearanceStatusRaw()` / `qrSellerStatus()` / `qrBuyerStatus()` | Nullable `Text` |
     | `response.clearedInvoiceBase64()` / `clearedInvoiceXml()` | Nullable `Text`; XML decoding can throw. |
-    | `results.status()` | Nullable `Text` |
+    | `results.status()` | Nullable `ValidationStatus` (`Pass`, `Warning`, `Error`, `Unknown`) |
+    | `results.statusRaw()` | Nullable `Text` |
     | `results.infoLen()` / `warningLen()` / `errorLen()` | `java.math.BigInteger` message count |
     | `results.infoMessage(index)` / `warningMessage(index)` / `errorMessage(index)` | `ValidationMessage` |
-    | `message.messageType()` / `code()` / `category()` / `message()` / `status()` | Nullable `Text` |
+    | `message.messageType()` | Nullable `MessageType` (`Info`, `Warning`, `Error`, `Unknown`) |
+    | `message.status()` | Nullable `ValidationStatus` |
+    | `message.messageTypeRaw()` / `statusRaw()` / `code()` / `category()` / `message()` | Nullable `Text` |
+
+    Status enums are `null` when the field is absent and `Unknown` when it is present
+    but not recognized by this binding version; the matching `*Raw()` getter returns
+    the exact wire string.
 
     Use zero-based `java.math.BigInteger` indexes below the corresponding message count. Child
     objects are independently owned. Methods do not consume their inputs.
@@ -527,24 +566,24 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     FatooraStatus fatoora_zatca_client_report_simplified_invoice(const FatooraZatcaClient *self,
         const FatooraSignedInvoice *invoice,
         const FatooraCsidProduction *credentials,
-        bool clearance_status,
+        FatooraClearanceMode clearance_mode,
         const char *accept_language,
         FatooraValidationResponse **out,
         FatooraError **error);
     FatooraStatus fatoora_zatca_client_clear_standard_invoice(const FatooraZatcaClient *self,
         const FatooraSignedInvoice *invoice,
         const FatooraCsidProduction *credentials,
-        bool clearance_status,
+        FatooraClearanceMode clearance_mode,
         const char *accept_language,
         FatooraValidationResponse **out,
         FatooraError **error);
-    FatooraStatus fatoora_csid_compliance_create(int32_t environment,
+    FatooraStatus fatoora_csid_compliance_create(FatooraEnvironment environment,
         const char *request_id,
         const char *token,
         const char *secret,
         FatooraCsidCompliance **out,
         FatooraError **error);
-    FatooraStatus fatoora_csid_production_create(int32_t environment,
+    FatooraStatus fatoora_csid_production_create(FatooraEnvironment environment,
         const char *request_id,
         const char *token,
         const char *secret,
@@ -552,11 +591,14 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
         FatooraError **error);
     ```
 
-    Environment values are `0` non-production, `1` simulation, and `2` production.
+    Environment values are `FATOORA_NON_PRODUCTION`, `FATOORA_SIMULATION`, and
+    `FATOORA_PRODUCTION`. `clearance_mode` is `FATOORA_CLEARANCE_DISABLED` or
+    `FATOORA_CLEARANCE_ENABLED` (the Clearance-Status header). Any other enum value
+    returns `FATOORA_INVALID_INPUT`.
     Use `NULL` for absent request ID or language. Text inputs are UTF-8 strings.
     Credential getters start with `fatoora_csid_compliance_` or
     `fatoora_csid_production_`, take `const` credential pointer, output pointer, and
-    `FatooraError **error`. `env` writes `uint8_t`; `request_id`, `binary_security_token`,
+    `FatooraError **error`. `env` writes `FatooraEnvironment`; `request_id`, `binary_security_token`,
     and `secret` write owned `char *`, with `NULL` for absent request ID.
 
     **Responses**
@@ -570,24 +612,33 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     | `fatoora_validation_response_outcome` | `FatooraInvoiceOutcome *out` |
     | `fatoora_validation_response_ensure_accepted` | No output; `FATOORA_OK` only if accepted. |
     | `fatoora_validation_response_validation_results` | `FatooraValidationResults **out` |
-    | `fatoora_validation_response_reporting_status` | `char **out` |
-    | `fatoora_validation_response_clearance_status` | `char **out` |
+    | `fatoora_validation_response_reporting_status` | `FatooraReportingStatus *out`, `bool *has_value` |
+    | `fatoora_validation_response_reporting_status_raw` | `char **out` |
+    | `fatoora_validation_response_clearance_status` | `FatooraClearanceStatus *out`, `bool *has_value` |
+    | `fatoora_validation_response_clearance_status_raw` | `char **out` |
     | `fatoora_validation_response_qr_seller_status` | `char **out` |
     | `fatoora_validation_response_qr_buyer_status` | `char **out` |
     | `fatoora_validation_response_cleared_invoice_base64` | `char **out` |
     | `fatoora_validation_response_cleared_invoice_xml` | `char **out`; decoding can fail. |
 
     Optional text returns `NULL` for absence, distinct from a present empty string.
+    Status enum getters set `*has_value` to `false` when the field is absent; a present
+    value this binding version does not recognize is written as the `*_UNKNOWN`
+    enumerator (such as `FATOORA_REPORTING_STATUS_UNKNOWN`), and the `_raw` getter
+    returns the exact wire string.
     Result getters use the `fatoora_validation_results_` prefix:
-    `status(self, char **out, error)` returns optional text;
+    `status(self, FatooraValidationStatus *out, bool *has_value, error)` returns the
+    optional status and `status_raw(self, char **out, error)` its text;
     `info_len`, `warning_len`, and `error_len` use `size_t *out`;
     `info_message`, `warning_message`, and `error_message` take `self`, zero-based
     `size_t index`, `FatooraValidationMessage **out`, and `error`. Indexes must be below
     the corresponding length.
 
-    Message getters use `fatoora_validation_message_` with suffixes `message_type`,
-    `code`, `category`, `message`, and `status`. Each takes `self`, `char **out`, and
-    `error`, returning optional owned text.
+    Message getters use `fatoora_validation_message_` with suffixes `message_type_raw`,
+    `code`, `category`, `message`, and `status_raw`. Each takes `self`, `char **out`, and
+    `error`, returning optional owned text. `message_type` writes
+    `FatooraMessageType *out` and `status` writes `FatooraValidationStatus *out`, each
+    with `bool *has_value`.
 
     **Prepared requests**
 

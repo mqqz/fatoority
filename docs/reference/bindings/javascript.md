@@ -19,15 +19,16 @@ Import from the package root for asynchronous API requests and validation with a
 automatically supplied clock:
 
 ```js
-import { Config, SigningKey, Xml, ZatcaClient } from 'fatoority';
+import { Config, Environment, SigningKey, Xml, ZatcaClient } from 'fatoority';
 
-const config = Config.new_(0);
+const config = Config.new_(Environment.NonProduction);
 const key = SigningKey.generate();
 const privateKeyPem = key.toPem();
 ```
 
-The private key is secret material; store it securely. Environment values are `0` (nonproduction), `1` (simulation), and
-`2` (production). Configuration, CSR generation, and credentials must agree.
+The private key is secret material; store it securely. Environment values are
+`Environment.NonProduction`, `Environment.Simulation`, and `Environment.Production`.
+Configuration, CSR generation, and credentials must agree.
 
 Node.js 22+ and modern browsers are supported. Browser execution requires
 WebAssembly, Web Crypto, `FinalizationRegistry`, and top-level await. TypeScript
@@ -46,9 +47,12 @@ package is needed.
 | Binary output | `Bytes.asSlice()` returns a copied `number[]`; use `Uint8Array.from(...)` for a typed byte array |
 | Native object | Object managed by `FinalizationRegistry` |
 | Invoice outcome | `InvoiceOutcome.Accepted`, `Rejected`, or `Unknown` |
+| Enumerated code | Enum class static, such as `Environment.NonProduction`, `InvoiceTypeKind.Tax`, `InvoiceSubType.Simplified`, `VatCategory.Standard`, `AdjustmentKind.Charge`, or `ClearanceMode.Disabled`; `.value` is the variant name string, such as `'Standard'` |
+| Response status | `ReportingStatus`, `ClearanceStatus`, `ValidationStatus`, or `MessageType` enum, or `null` when absent; `Unknown` means present but not recognized by this version, and the matching `*Raw()` getter returns the exact text |
+| Invoice flags | `number` bitmask; combine `InvoiceFlag.ThirdParty.bit()`, `Nominal`, `Export`, `Summary`, and `SelfBilled` bits with bitwise OR |
 
 Method names use camelCase. Constructors named `new` in the underlying API use
-`new_`, such as `Config.new_(0)`. Read the [number reference](../numbers.md) for
+`new_`, such as `Config.new_(Environment.NonProduction)`. Read the [number reference](../numbers.md) for
 accepted decimal syntax and rounding rules.
 
 `InvoiceBuilder.build()`, `Signer.sign()`, and `SignedInvoice.intoXml()` consume
@@ -68,7 +72,7 @@ See [error codes and details](../errors.md).
 
 ```js
 try {
-  Config.new_(99);
+  Address.new_('XX', 'Riyadh', 'King Fahd Road', '1234', '12345', null, null, null);
 } catch (error) {
   const details = JSON.parse(error.cause.detailsJson());
   console.error(error.cause.code(), error.cause.message(), details);
@@ -92,10 +96,10 @@ For Node.js, save your invoice as `invoice.xml` and read it as UTF-8:
 
 ```js
 import { readFile } from 'node:fs/promises';
-import { Config, Xml } from 'fatoority';
+import { Config, Environment, Xml } from 'fatoority';
 
 const invoiceXml = await readFile('invoice.xml', 'utf8');
-const config = Config.new_(0);
+const config = Config.new_(Environment.NonProduction);
 const report = JSON.parse(Xml.validateZatca(config, invoiceXml));
 console.log(report.is_valid, report.is_complete);
 ```
@@ -130,7 +134,9 @@ All methods below return promises. Optional `options` accepts `{ signal }`, wher
 | `clearStandardInvoice(invoice, credentials, clearanceStatus?, acceptLanguage?, options?)` | `SignedInvoice`, `CsidProduction`; status defaults to `true`, language to `null` | `ValidationResponse` |
 
 `clearanceStatus` controls the clearance-status request header; it is not the
-result of the operation. `acceptLanguage` controls the language request header.
+result of the operation. It accepts a boolean or a `ClearanceMode`
+(`ClearanceMode.Enabled`/`ClearanceMode.Disabled`); the prepared-request methods
+on `fatoority/raw` require a `ClearanceMode`. `acceptLanguage` controls the language request header.
 Pass optional positional arguments explicitly when supplying a later argument.
 
 HTTP success alone does not establish invoice acceptance. Inspect `outcome()` or

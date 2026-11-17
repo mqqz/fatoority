@@ -2,6 +2,7 @@
 
 
 #include "Config.hpp"
+#include "Environment.hpp"
 
 namespace _native {
 void add_Config_binding(nb::module_ mod) {
@@ -12,7 +13,7 @@ void add_Config_binding(nb::module_ mod) {
     
     nb::class_<_native::Config> opaque(mod, "Config", nb::type_slots(_native_Config_slots));
     opaque
-        .def("env", &_native::Config::env)
+        .def("env", std::move(maybe_op_unwrap(&_native::Config::env)))
         .def_static("new", std::move(maybe_op_unwrap(&_native::Config::new_)), "env"_a);
 }
 

@@ -275,10 +275,10 @@ key_pem = key.to_pem()
 
 JavaScript
 ```js
-import { CsrProperties, SigningKey } from 'fatoority';
+import { CsrProperties, Environment, SigningKey } from 'fatoority';
 
 const key = SigningKey.generate();
-const csr = CsrProperties.fromPropertiesStr(propertiesText).build(key, 0);
+const csr = CsrProperties.fromPropertiesStr(propertiesText).build(key, Environment.NonProduction);
 const csrPem = csr.toPem();
 ```
 

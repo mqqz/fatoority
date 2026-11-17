@@ -56,27 +56,31 @@ pub(crate) fn write(
     out.write_str(value)
         .map_err(|_| local_error(9, "output write failed"))
 }
-pub(crate) fn environment(
-    value: u8,
-) -> Result<fatoora_core::config::Environment, Box<ffi::BindingError>> {
-    use fatoora_core::config::Environment::*;
+/// Maps a core [`Environment`](fatoora_core::config::Environment) to its FFI
+/// enum. The core enum is `#[non_exhaustive]`; an environment these bindings do
+/// not know yet is reported as an internal error rather than silently mapped
+/// to a different environment.
+pub(crate) fn environment_to_ffi(
+    value: fatoora_core::config::Environment,
+) -> Result<ffi::Environment, Box<ffi::BindingError>> {
+    use fatoora_core::config::Environment as Core;
     match value {
-        0 => Ok(NonProduction),
-        1 => Ok(Simulation),
-        2 => Ok(Production),
-        _ => Err(local_error(1, "invalid environment")),
+        Core::NonProduction => Ok(ffi::Environment::NonProduction),
+        Core::Simulation => Ok(ffi::Environment::Simulation),
+        Core::Production => Ok(ffi::Environment::Production),
+        _ => Err(local_error(
+            9,
+            "environment is not supported by this binding version",
+        )),
     }
 }
-/// Maps an [`Environment`](fatoora_core::config::Environment) to its FFI code,
-/// the inverse of [`environment`]. `Environment` is non-exhaustive; an
-/// environment without an FFI code yet maps to `u8::MAX`.
-pub(crate) fn environment_code(value: fatoora_core::config::Environment) -> u8 {
-    use fatoora_core::config::Environment::*;
-    match value {
-        NonProduction => 0,
-        Simulation => 1,
-        Production => 2,
-        _ => u8::MAX,
+impl From<ffi::Environment> for fatoora_core::config::Environment {
+    fn from(value: ffi::Environment) -> Self {
+        match value {
+            ffi::Environment::NonProduction => Self::NonProduction,
+            ffi::Environment::Simulation => Self::Simulation,
+            ffi::Environment::Production => Self::Production,
+        }
     }
 }
 pub(crate) fn boundary<T>(
@@ -97,14 +101,20 @@ pub(crate) fn boundary<T>(
 
 #[cfg(test)]
 mod tests {
-    use super::{boundary, environment, environment_code};
+    use super::{boundary, environment_to_ffi, ffi::Environment};
+    use fatoora_core::config::Environment as Core;
 
     #[test]
-    fn environment_codes_round_trip() {
-        for code in 0..=2 {
-            let env = environment(code).ok().unwrap();
-            assert_eq!(environment_code(env), code);
+    fn environments_round_trip() {
+        for env in [
+            Environment::NonProduction,
+            Environment::Simulation,
+            Environment::Production,
+        ] {
+            let core = Core::from(env);
+            assert_eq!(environment_to_ffi(core).ok(), Some(env));
         }
+        assert_eq!(Core::from(Environment::Simulation), Core::Simulation);
     }
 
     #[test]
@@ -155,6 +165,17 @@ pub mod ffi {
         pub fn details_json(&self, out: &mut diplomat_runtime::DiplomatWrite) {
             let _ = out.write_str(&self.0.details);
         }
+    }
+    /// ZATCA environment selecting the API base URL and certificate profile.
+    ///
+    /// Discriminants match the `u8` codes used before 0.6. .NET names it
+    /// `ZatcaEnvironment` so it cannot be confused with `System.Environment`.
+    #[derive(Debug, PartialEq, Eq)]
+    #[diplomat::attr(dotnet, rename = "ZatcaEnvironment")]
+    pub enum Environment {
+        NonProduction = 0,
+        Simulation = 1,
+        Production = 2,
     }
     #[diplomat::opaque]
     #[diplomat::attr(dotnet, manually_disposable)]

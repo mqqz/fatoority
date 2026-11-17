@@ -9,8 +9,12 @@ class ValidationResults internal constructor(internal val raw: com.fatoora.raw.V
         val handle = raw.handle
         attach { com.fatoora.raw.ValidationResults.lib.fatoora_ValidationResults_destroy(handle) }
     }
-    fun status(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.status())?.let(::Text)
+    fun status(): ValidationStatus? = nativeCall(listOfNotNull(this)) {
+        raw.status()?.let { ValidationStatus.valueOf(it.name) }
+    }
+
+    fun statusRaw(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.statusRaw())?.let(::Text)
     }
 
     fun infoLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {

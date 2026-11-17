@@ -17,6 +17,7 @@ namespace capi { struct TaxExemption; }
 class TaxExemption;
 namespace capi { struct VatBreakdown; }
 class VatBreakdown;
+class VatCategory;
 } // namespace _native
 
 
@@ -35,9 +36,9 @@ public:
 
   inline _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>> without_vat_rate() const;
 
-  inline static _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>> new_(uint8_t category, std::string_view rate, std::string_view taxable_amount, std::string_view tax_amount, const _native::TaxExemption& exemption);
+  inline static _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>> new_(_native::VatCategory category, std::string_view rate, std::string_view taxable_amount, std::string_view tax_amount, const _native::TaxExemption& exemption);
 
-  inline uint8_t category() const;
+  inline _native::VatCategory category() const;
 
   inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> rate() const;
   template<typename W>

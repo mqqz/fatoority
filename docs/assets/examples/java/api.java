@@ -10,14 +10,14 @@ public class Guide {
         Files.write(Paths.get(path), text.getBytes(StandardCharsets.UTF_8));
     }
     public static void main(String[] args) throws Exception {
-        int environment = 0; // Non-production; credentials must match.
+        Environment environment = Environment.NonProduction; // Credentials must match.
         String token = java.util.Objects.requireNonNull(System.getenv("ZATCA_TOKEN"), "Set ZATCA_TOKEN first");
         String secret = java.util.Objects.requireNonNull(System.getenv("ZATCA_SECRET"), "Set ZATCA_SECRET first");
         try (Config config = Config.create(environment);
              ZatcaClient client = ZatcaClient.create(config);
              CsidProduction credentials = CsidProduction.create(environment, null, token, secret);
              SignedInvoice invoice = SignedInvoice.fromXml(read("signed.xml"));
-             ValidationResponse response = client.reportSimplifiedInvoice(invoice, credentials, false, "en")) {
+             ValidationResponse response = client.reportSimplifiedInvoice(invoice, credentials, ClearanceMode.Disabled, "en")) {
             response.ensureAccepted();
             System.out.println("Invoice reporting accepted");
         }

@@ -61,7 +61,7 @@ public partial class CsidCompliance: IDisposable
     /// <returns>
     /// A <c>CsidCompliance</c> allocated on Rust side.
     /// </returns>
-    public static CsidCompliance Create(byte environment, string? requestId, string token, string secret)
+    public static CsidCompliance Create(ZatcaEnvironment environment, string? requestId, string token, string secret)
     {
         unsafe
         {
@@ -84,7 +84,8 @@ public partial class CsidCompliance: IDisposable
         }
     }
 
-    public byte Env()
+    /// <exception cref="BindingErrorException"></exception>
+    public ZatcaEnvironment Env()
     {
         unsafe
         {
@@ -92,7 +93,12 @@ public partial class CsidCompliance: IDisposable
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.CsidCompliance.Env(selfLease!.Ptr);
+                var result = Raw.CsidCompliance.Env(selfLease!.Ptr);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return result.Ok;
             }
             finally
             {

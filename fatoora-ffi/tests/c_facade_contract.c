@@ -193,9 +193,62 @@ static void line_builder(void) {
     fatoora_line_item_builder_free(NULL);
 }
 
+static void statuses(const char *fixture) {
+    FatooraError *error = NULL;
+    FatooraConfig *config = NULL;
+    FatooraZatcaClient *client = NULL;
+    FatooraCsidProduction *credentials = NULL;
+    FatooraSignedInvoice *invoice = NULL;
+    FatooraInvoiceRequest *request = NULL;
+    assert(fatoora_config_new(FATOORA_NON_PRODUCTION, &config, &error) == FATOORA_OK);
+    FatooraEnvironment env = FATOORA_PRODUCTION;
+    assert(fatoora_config_env(config, &env, &error) == FATOORA_OK && env == FATOORA_NON_PRODUCTION);
+    assert(fatoora_zatca_client_create(config, &client, &error) == FATOORA_OK);
+    assert(fatoora_csid_production_create(FATOORA_NON_PRODUCTION, NULL, "token", "secret", &credentials, &error) == FATOORA_OK);
+    assert(fatoora_signed_invoice_from_file(fixture, &invoice, &error) == FATOORA_OK);
+    failure(fatoora_zatca_client_prepare_clear_standard_invoice(client, invoice, credentials,
+        (FatooraClearanceMode)7, NULL, &request, &error), &error);
+    assert(fatoora_zatca_client_prepare_clear_standard_invoice(client, invoice, credentials,
+        FATOORA_CLEARANCE_ENABLED, NULL, &request, &error) == FATOORA_OK);
+    const char *body = "{\"validationResults\":{\"status\":\"PARTIAL\",\"errorMessages\":[{\"type\":\"ERROR\"}]},"
+        "\"clearanceStatus\":\"CLEARED\"}";
+    FatooraValidationResponse *response = NULL;
+    assert(fatoora_invoice_request_decode(request, 200, (const uint8_t *)body, strlen(body), &response, &error) == FATOORA_OK);
+    bool has_value = true;
+    FatooraReportingStatus reporting = FATOORA_REPORTING_STATUS_REPORTED;
+    assert(fatoora_validation_response_reporting_status(response, &reporting, &has_value, &error) == FATOORA_OK);
+    assert(!has_value);
+    FatooraClearanceStatus clearance = FATOORA_CLEARANCE_STATUS_UNKNOWN;
+    assert(fatoora_validation_response_clearance_status(response, &clearance, &has_value, &error) == FATOORA_OK);
+    assert(has_value && clearance == FATOORA_CLEARANCE_STATUS_CLEARED);
+    FatooraValidationResults *results = NULL;
+    assert(fatoora_validation_response_validation_results(response, &results, &error) == FATOORA_OK);
+    FatooraValidationStatus validation = FATOORA_VALIDATION_STATUS_PASS;
+    assert(fatoora_validation_results_status(results, &validation, &has_value, &error) == FATOORA_OK);
+    assert(has_value && validation == FATOORA_VALIDATION_STATUS_UNKNOWN);
+    char *raw = NULL;
+    assert(fatoora_validation_results_status_raw(results, &raw, &error) == FATOORA_OK);
+    assert(raw && strcmp(raw, "PARTIAL") == 0);
+    fatoora_string_free(raw);
+    FatooraValidationMessage *message = NULL;
+    assert(fatoora_validation_results_error_message(results, 0, &message, &error) == FATOORA_OK);
+    FatooraMessageType type = FATOORA_MESSAGE_TYPE_UNKNOWN;
+    assert(fatoora_validation_message_message_type(message, &type, &has_value, &error) == FATOORA_OK);
+    assert(has_value && type == FATOORA_MESSAGE_TYPE_ERROR);
+    fatoora_validation_message_free(message);
+    fatoora_validation_results_free(results);
+    fatoora_validation_response_free(response);
+    fatoora_invoice_request_free(request);
+    fatoora_signed_invoice_free(invoice);
+    fatoora_csid_production_free(credentials);
+    fatoora_zatca_client_free(client);
+    fatoora_config_free(config);
+}
+
 int main(int argc, char **argv) {
     assert(argc == 2);
     invoices(argv[1]);
+    statuses(argv[1]);
     crypto();
     optionals_and_arguments();
     line_builder();

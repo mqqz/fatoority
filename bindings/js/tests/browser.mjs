@@ -26,8 +26,8 @@ try {
     const sdk = await import('/index.mjs');
     const raw = await import('/generated/index.mjs');
     const key = sdk.SigningKey.generate();
-    const config = sdk.Config.new_(0);
-    const credentials = sdk.CsidCompliance.create(0, '123', 'token', 'secret');
+    const config = sdk.Config.new_(sdk.Environment.NonProduction);
+    const credentials = sdk.CsidCompliance.create(sdk.Environment.NonProduction, '123', 'token', 'secret');
     const prepared = raw.ZatcaClient.create(config).preparePostCcsidForPcsid(credentials);
     const response = await sdk.sendPrepared(prepared, {fetch: async (_url, init) => {
       if (new Headers(init.headers).get('authorization') !== 'Basic dG9rZW46c2VjcmV0') throw new Error('bad auth');

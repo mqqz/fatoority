@@ -18,7 +18,9 @@ namespace capi { struct Text; }
 class Text;
 namespace capi { struct ValidationResults; }
 class ValidationResults;
+class ClearanceStatus;
 class InvoiceOutcome;
+class ReportingStatus;
 } // namespace fatoora
 
 
@@ -46,9 +48,25 @@ public:
 
   inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> cleared_invoice_base64() const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> reporting_status() const;
+  /**
+   * The parsed `reportingStatus`, or null when the response has none.
+   */
+  inline std::optional<fatoora::ReportingStatus> reporting_status() const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> clearance_status() const;
+  /**
+   * The `reportingStatus` exactly as ZATCA sent it, or null when absent.
+   */
+  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> reporting_status_raw() const;
+
+  /**
+   * The parsed `clearanceStatus`, or null when the response has none.
+   */
+  inline std::optional<fatoora::ClearanceStatus> clearance_status() const;
+
+  /**
+   * The `clearanceStatus` exactly as ZATCA sent it, or null when absent.
+   */
+  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> clearance_status_raw() const;
 
   inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> qr_seller_status() const;
 

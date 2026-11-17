@@ -10,7 +10,7 @@ internal interface CsrPropertiesLib: Library {
     fun fatoora_CsrProperties_new(commonName: Slice, serialNumber: Slice, organizationIdentifier: Slice, organizationUnitName: Slice, organizationName: Slice, countryName: Slice, invoiceType: Slice, locationAddress: Slice, industryBusinessCategory: Slice): ResultPointerPointer
     fun fatoora_CsrProperties_from_properties_str(properties: Slice): ResultPointerPointer
     fun fatoora_CsrProperties_parse_csr_config_file(path: Slice): ResultPointerPointer
-    fun fatoora_CsrProperties_build(handle: Pointer, key: Pointer, env: FFIUint8): ResultPointerPointer
+    fun fatoora_CsrProperties_build(handle: Pointer, key: Pointer, env: Int): ResultPointerPointer
 }
 
 class CsrProperties internal constructor (
@@ -128,9 +128,9 @@ class CsrProperties internal constructor (
         }
     }
 
-    fun build(key: SigningKey, env: UByte): Result<Csr> {
+    fun build(key: SigningKey, env: Environment): Result<Csr> {
 
-        val returnVal = lib.fatoora_CsrProperties_build(handle, key.handle, FFIUint8(env));
+        val returnVal = lib.fatoora_CsrProperties_build(handle, key.handle, env.toNative());
         val nativeOkVal = returnVal.getNativeOk();
         if (nativeOkVal != null) {
             val selfEdges: List<Any> = listOf()

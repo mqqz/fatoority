@@ -33,7 +33,7 @@ class Program
             }
             else
             {
-                using var c = Config.New(0);
+                using var c = Config.New(ZatcaEnvironment.NonProduction);
                 using var r = JsonDocument.Parse(Xml.ValidateZatca(c, xml, JsonSerializer.Serialize(new
                 {
                     previous_invoice_hash = pih
@@ -90,7 +90,7 @@ class Program
         var key = Convert.ToBase64String(ec.ExportECPrivateKey());
         using var expectedDocument = JsonDocument.Parse(File.ReadAllText($"{root}/cases/{kind}-invoice/expected.json"));
         var expected = expectedDocument.RootElement.GetProperty("hash").GetString();
-        using var cfg = Config.New(0);
+        using var cfg = Config.New(ZatcaEnvironment.NonProduction);
         using var signer = Signer.FromDer(certDer, keyDer);
         var oursSigned = signer.SignXml(xml);
         var signed = File.ReadAllText($"{root}/cases/{kind}-invoice/sdk-signed.xml");

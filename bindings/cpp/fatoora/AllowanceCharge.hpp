@@ -12,9 +12,11 @@
 #include <optional>
 #include <cstdlib>
 #include "../diplomat_runtime.hpp"
+#include "AdjustmentKind.hpp"
 #include "BindingError.hpp"
 #include "TaxExemption.hpp"
 #include "Text.hpp"
+#include "VatCategory.hpp"
 
 
 namespace fatoora {
@@ -36,9 +38,9 @@ namespace capi {
     fatoora_AllowanceCharge_percentage_result fatoora_AllowanceCharge_percentage(const fatoora::capi::AllowanceCharge* self);
 
     typedef struct fatoora_AllowanceCharge_new_result {union {fatoora::capi::AllowanceCharge* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_new_result;
-    fatoora_AllowanceCharge_new_result fatoora_AllowanceCharge_new(bool charge, diplomat::capi::DiplomatStringView amount, diplomat::capi::OptionStringView reason, diplomat::capi::OptionStringView reason_code, uint8_t category, diplomat::capi::DiplomatStringView rate, const fatoora::capi::TaxExemption* exemption);
+    fatoora_AllowanceCharge_new_result fatoora_AllowanceCharge_new(fatoora::capi::AdjustmentKind kind, diplomat::capi::DiplomatStringView amount, diplomat::capi::OptionStringView reason, diplomat::capi::OptionStringView reason_code, fatoora::capi::VatCategory category, diplomat::capi::DiplomatStringView rate, const fatoora::capi::TaxExemption* exemption);
 
-    bool fatoora_AllowanceCharge_is_charge(const fatoora::capi::AllowanceCharge* self);
+    fatoora::capi::AdjustmentKind fatoora_AllowanceCharge_kind(const fatoora::capi::AllowanceCharge* self);
 
     typedef struct fatoora_AllowanceCharge_amount_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_amount_result;
     fatoora_AllowanceCharge_amount_result fatoora_AllowanceCharge_amount(const fatoora::capi::AllowanceCharge* self, diplomat::capi::DiplomatWrite* write);
@@ -46,7 +48,7 @@ namespace capi {
     typedef struct fatoora_AllowanceCharge_rate_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_rate_result;
     fatoora_AllowanceCharge_rate_result fatoora_AllowanceCharge_rate(const fatoora::capi::AllowanceCharge* self, diplomat::capi::DiplomatWrite* write);
 
-    uint8_t fatoora_AllowanceCharge_category(const fatoora::capi::AllowanceCharge* self);
+    fatoora::capi::VatCategory fatoora_AllowanceCharge_category(const fatoora::capi::AllowanceCharge* self);
 
     typedef struct fatoora_AllowanceCharge_with_tax_category_count_result {union {fatoora::capi::AllowanceCharge* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_with_tax_category_count_result;
     fatoora_AllowanceCharge_with_tax_category_count_result fatoora_AllowanceCharge_with_tax_category_count(const fatoora::capi::AllowanceCharge* self, size_t count);
@@ -95,20 +97,20 @@ inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora:
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::AllowanceCharge>, std::unique_ptr<fatoora::BindingError>> fatoora::AllowanceCharge::new_(bool charge, std::string_view amount, std::optional<std::string_view> reason, std::optional<std::string_view> reason_code, uint8_t category, std::string_view rate, const fatoora::TaxExemption& exemption) {
-    auto result = fatoora::capi::fatoora_AllowanceCharge_new(charge,
+inline diplomat::result<std::unique_ptr<fatoora::AllowanceCharge>, std::unique_ptr<fatoora::BindingError>> fatoora::AllowanceCharge::new_(fatoora::AdjustmentKind kind, std::string_view amount, std::optional<std::string_view> reason, std::optional<std::string_view> reason_code, fatoora::VatCategory category, std::string_view rate, const fatoora::TaxExemption& exemption) {
+    auto result = fatoora::capi::fatoora_AllowanceCharge_new(kind.AsFFI(),
         {amount.data(), amount.size()},
         reason.has_value() ? (diplomat::capi::OptionStringView{ { {reason.value().data(), reason.value().size()} }, true }) : (diplomat::capi::OptionStringView{ {}, false }),
         reason_code.has_value() ? (diplomat::capi::OptionStringView{ { {reason_code.value().data(), reason_code.value().size()} }, true }) : (diplomat::capi::OptionStringView{ {}, false }),
-        category,
+        category.AsFFI(),
         {rate.data(), rate.size()},
         exemption.AsFFI());
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::AllowanceCharge>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::AllowanceCharge>>(std::unique_ptr<fatoora::AllowanceCharge>(fatoora::AllowanceCharge::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::AllowanceCharge>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline bool fatoora::AllowanceCharge::is_charge() const {
-    auto result = fatoora::capi::fatoora_AllowanceCharge_is_charge(this->AsFFI());
-    return result;
+inline fatoora::AdjustmentKind fatoora::AllowanceCharge::kind() const {
+    auto result = fatoora::capi::fatoora_AllowanceCharge_kind(this->AsFFI());
+    return fatoora::AdjustmentKind::FromFFI(result);
 }
 
 inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> fatoora::AllowanceCharge::amount() const {
@@ -141,9 +143,9 @@ inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> 
     return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline uint8_t fatoora::AllowanceCharge::category() const {
+inline fatoora::VatCategory fatoora::AllowanceCharge::category() const {
     auto result = fatoora::capi::fatoora_AllowanceCharge_category(this->AsFFI());
-    return result;
+    return fatoora::VatCategory::FromFFI(result);
 }
 
 inline diplomat::result<std::unique_ptr<fatoora::AllowanceCharge>, std::unique_ptr<fatoora::BindingError>> fatoora::AllowanceCharge::with_tax_category_count(size_t count) const {

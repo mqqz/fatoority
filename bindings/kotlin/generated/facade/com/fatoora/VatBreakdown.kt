@@ -11,8 +11,8 @@ class VatBreakdown internal constructor(internal val raw: com.fatoora.raw.VatBre
     }
     companion object {
         @JvmStatic
-        fun create(category: Int, rate: String, taxableAmount: String, taxAmount: String, exemption: TaxExemption): VatBreakdown = nativeCall(listOfNotNull(exemption)) {
-            VatBreakdown(unwrap(com.fatoora.raw.VatBreakdown.new_(checkedUnsigned(category.toLong(), 255).toUByte(), checkedText(rate), checkedText(taxableAmount), checkedText(taxAmount), exemption.raw)))
+        fun create(category: VatCategory, rate: String, taxableAmount: String, taxAmount: String, exemption: TaxExemption): VatBreakdown = nativeCall(listOfNotNull(exemption)) {
+            VatBreakdown(unwrap(com.fatoora.raw.VatBreakdown.new_(com.fatoora.raw.VatCategory.valueOf(category.name), checkedText(rate), checkedText(taxableAmount), checkedText(taxAmount), exemption.raw)))
         }
     }
     fun hasVatRate(): Boolean = nativeCall(listOfNotNull(this)) {
@@ -23,8 +23,8 @@ class VatBreakdown internal constructor(internal val raw: com.fatoora.raw.VatBre
         VatBreakdown(unwrap(raw.withoutVatRate()))
     }
 
-    fun category(): Int = nativeCall(listOfNotNull(this)) {
-        raw.category().toInt()
+    fun category(): VatCategory = nativeCall(listOfNotNull(this)) {
+        VatCategory.valueOf(raw.category().name)
     }
 
     fun rate(): String = nativeCall(listOfNotNull(this)) {

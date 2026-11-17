@@ -228,7 +228,7 @@ public partial class ZatcaClient: IDisposable
     /// <returns>
     /// A <c>ValidationResponse</c> allocated on Rust side.
     /// </returns>
-    public ValidationResponse ReportSimplifiedInvoice(SignedInvoice invoice, CsidProduction credentials, bool clearanceStatus, string? acceptLanguage)
+    public ValidationResponse ReportSimplifiedInvoice(SignedInvoice invoice, CsidProduction credentials, ClearanceMode clearanceMode, string? acceptLanguage)
     {
         unsafe
         {
@@ -245,7 +245,7 @@ public partial class ZatcaClient: IDisposable
                 credentialsLease = credentials._diplomatHandle.Lease(BorrowKind.Shared);
                 fixed (byte* acceptLanguagePtr = acceptLanguageBytes)
                 {
-                    var result = Raw.ZatcaClient.ReportSimplifiedInvoice(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr, clearanceStatus, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
+                    var result = Raw.ZatcaClient.ReportSimplifiedInvoice(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr, clearanceMode, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
                     if (!result.IsOk)
                     {
                         throw new BindingErrorException(new BindingError(result.Err));
@@ -266,7 +266,7 @@ public partial class ZatcaClient: IDisposable
     /// <returns>
     /// A <c>ValidationResponse</c> allocated on Rust side.
     /// </returns>
-    public ValidationResponse ClearStandardInvoice(SignedInvoice invoice, CsidProduction credentials, bool clearanceStatus, string? acceptLanguage)
+    public ValidationResponse ClearStandardInvoice(SignedInvoice invoice, CsidProduction credentials, ClearanceMode clearanceMode, string? acceptLanguage)
     {
         unsafe
         {
@@ -283,7 +283,7 @@ public partial class ZatcaClient: IDisposable
                 credentialsLease = credentials._diplomatHandle.Lease(BorrowKind.Shared);
                 fixed (byte* acceptLanguagePtr = acceptLanguageBytes)
                 {
-                    var result = Raw.ZatcaClient.ClearStandardInvoice(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr, clearanceStatus, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
+                    var result = Raw.ZatcaClient.ClearStandardInvoice(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr, clearanceMode, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
                     if (!result.IsOk)
                     {
                         throw new BindingErrorException(new BindingError(result.Err));
@@ -444,7 +444,7 @@ public partial class ZatcaClient: IDisposable
     /// <returns>
     /// A <c>InvoiceRequest</c> allocated on Rust side.
     /// </returns>
-    public InvoiceRequest PrepareReportSimplifiedInvoice(SignedInvoice invoice, CsidProduction credentials, bool clearanceStatus, string? acceptLanguage)
+    public InvoiceRequest PrepareReportSimplifiedInvoice(SignedInvoice invoice, CsidProduction credentials, ClearanceMode clearanceMode, string? acceptLanguage)
     {
         unsafe
         {
@@ -461,7 +461,7 @@ public partial class ZatcaClient: IDisposable
                 credentialsLease = credentials._diplomatHandle.Lease(BorrowKind.Shared);
                 fixed (byte* acceptLanguagePtr = acceptLanguageBytes)
                 {
-                    var result = Raw.ZatcaClient.PrepareReportSimplifiedInvoice(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr, clearanceStatus, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
+                    var result = Raw.ZatcaClient.PrepareReportSimplifiedInvoice(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr, clearanceMode, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
                     if (!result.IsOk)
                     {
                         throw new BindingErrorException(new BindingError(result.Err));
@@ -482,7 +482,7 @@ public partial class ZatcaClient: IDisposable
     /// <returns>
     /// A <c>InvoiceRequest</c> allocated on Rust side.
     /// </returns>
-    public InvoiceRequest PrepareClearStandardInvoice(SignedInvoice invoice, CsidProduction credentials, bool clearanceStatus, string? acceptLanguage)
+    public InvoiceRequest PrepareClearStandardInvoice(SignedInvoice invoice, CsidProduction credentials, ClearanceMode clearanceMode, string? acceptLanguage)
     {
         unsafe
         {
@@ -499,7 +499,7 @@ public partial class ZatcaClient: IDisposable
                 credentialsLease = credentials._diplomatHandle.Lease(BorrowKind.Shared);
                 fixed (byte* acceptLanguagePtr = acceptLanguageBytes)
                 {
-                    var result = Raw.ZatcaClient.PrepareClearStandardInvoice(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr, clearanceStatus, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
+                    var result = Raw.ZatcaClient.PrepareClearStandardInvoice(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr, clearanceMode, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
                     if (!result.IsOk)
                     {
                         throw new BindingErrorException(new BindingError(result.Err));

@@ -205,7 +205,7 @@ public partial class InvoiceLineItem: IDisposable
     }
 
     /// <exception cref="BindingErrorException"></exception>
-    public bool AdjustmentIsCharge(nuint index)
+    public AdjustmentKind AdjustmentKind(nuint index)
     {
         unsafe
         {
@@ -213,7 +213,7 @@ public partial class InvoiceLineItem: IDisposable
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.InvoiceLineItem.AdjustmentIsCharge(selfLease!.Ptr, index);
+                var result = Raw.InvoiceLineItem.AdjustmentKind(selfLease!.Ptr, index);
                 if (!result.IsOk)
                 {
                     throw new BindingErrorException(new BindingError(result.Err));
@@ -455,7 +455,7 @@ public partial class InvoiceLineItem: IDisposable
     /// <returns>
     /// A <c>InvoiceLineItem</c> allocated on Rust side.
     /// </returns>
-    public static InvoiceLineItem New(string description, string quantity, string unitCode, string unitPrice, string rate, byte category)
+    public static InvoiceLineItem New(string description, string quantity, string unitCode, string unitPrice, string rate, VatCategory category)
     {
         unsafe
         {
@@ -839,7 +839,7 @@ public partial class InvoiceLineItem: IDisposable
         }
     }
 
-    public byte VatCategory()
+    public VatCategory VatCategory()
     {
         unsafe
         {

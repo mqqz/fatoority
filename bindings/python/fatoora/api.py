@@ -220,7 +220,19 @@ def _call(function, *args):
         return _convert(value)
 
 
+def _native_enum_value(value) -> int:
+    # nanobind wraps each generated enum in a class holding a nested Python
+    # enum of the same name; compare against it to recover the discriminant.
+    for member in getattr(type(value), type(value).__name__):
+        if value == member:
+            return member.value
+    raise ValueError(f"unexpected native enum value: {value!r}")
+
+
 def _convert(value):
+    public = _NATIVE_ENUMS.get(type(value))
+    if public is not None:
+        return public(_native_enum_value(value))
     if isinstance(value, _native.Text):
         return _call(value.value)
     if isinstance(value, _native.Bytes):
@@ -228,6 +240,27 @@ def _convert(value):
     if isinstance(value, _native.BytesList):
         return [_call(value.get, i) for i in range(value.len())]
     return value
+
+
+# Generated enums share discriminants with the public IntEnums; the others
+# surface as plain ints for internal mapping.
+_NATIVE_ENUMS = {
+    _native.Environment: Environment,
+    _native.InvoiceOutcome: InvoiceOutcome,
+    _native.InvoiceTypeKind: InvoiceTypeKind,
+    _native.InvoiceSubType: InvoiceSubType,
+    _native.VatCategory: VatCategory,
+    _native.AdjustmentKind: int,
+}
+_CHARGE = 1  # _native.AdjustmentKind.Charge
+
+
+def _flag(value: bool, name: str) -> int:
+    # Booleans map onto two-variant native enums (AdjustmentKind, ClearanceMode)
+    # whose discriminant 1 is the "true" case.
+    if not isinstance(value, bool):
+        raise TypeError(f"{name} must be a bool")
+    return int(value)
 
 
 def _decimal(value: Decimal | str | int) -> str:
@@ -380,7 +413,7 @@ class ValidationMessage(_Owned):
     _repr_fields = ('message_type', 'code', 'status')
 
     def message_type(self) -> Optional[str]:
-        return self._invoke("message_type")
+        return self._invoke("message_type_raw")
 
     def code(self) -> Optional[str]:
         return self._invoke("code")
@@ -392,13 +425,13 @@ class ValidationMessage(_Owned):
         return self._invoke("message")
 
     def status(self) -> Optional[str]:
-        return self._invoke("status")
+        return self._invoke("status_raw")
 
 class ValidationResults(_Owned):
     _repr_fields = ('status',)
 
     def status(self) -> Optional[str]:
-        return self._invoke("status")
+        return self._invoke("status_raw")
 
     def info_messages(self) -> list[ValidationMessage]:
         return [ValidationMessage(self._invoke("info_message", i)) for i in range(self._invoke("info_len"))]
@@ -416,12 +449,7 @@ class ValidationResponse(_Owned):
         return self._invoke("http_status")
 
     def outcome(self) -> InvoiceOutcome:
-        value = self._invoke("outcome")
-        if value == _native.InvoiceOutcome.Accepted:
-            return InvoiceOutcome.ACCEPTED
-        if value == _native.InvoiceOutcome.Rejected:
-            return InvoiceOutcome.REJECTED
-        return InvoiceOutcome.UNKNOWN
+        return self._invoke("outcome")
 
     def ensure_accepted(self) -> None:
         return self._invoke("ensure_accepted")
@@ -433,10 +461,10 @@ class ValidationResponse(_Owned):
         return self._invoke("cleared_invoice_xml")
 
     def reporting_status(self) -> Optional[str]:
-        return self._invoke("reporting_status")
+        return self._invoke("reporting_status_raw")
 
     def clearance_status(self) -> Optional[str]:
-        return self._invoke("clearance_status")
+        return self._invoke("clearance_status_raw")
 
     def qr_seller_status(self) -> Optional[str]:
         return self._invoke("qr_seller_status")
@@ -569,11 +597,11 @@ class ZatcaClient(_Owned):
 
     @_deprecate_positional(3, "ZatcaClient.report_simplified_invoice(): pass clearance_status and accept_language as keyword arguments; they become keyword-only in 0.6")
     def report_simplified_invoice(self, invoice: 'SignedInvoice', pcsid: CsidProduction, clearance_status: bool, accept_language: Optional[str]=None) -> 'ValidationResponse':
-        return ValidationResponse(self._invoke("_blocking_report_simplified_invoice", invoice, pcsid, clearance_status, accept_language))
+        return ValidationResponse(self._invoke("_blocking_report_simplified_invoice", invoice, pcsid, _flag(clearance_status, "clearance_status"), accept_language))
 
     @_deprecate_positional(3, "ZatcaClient.clear_standard_invoice(): pass clearance_status and accept_language as keyword arguments; they become keyword-only in 0.6")
     def clear_standard_invoice(self, invoice: 'SignedInvoice', pcsid: CsidProduction, clearance_status: bool, accept_language: Optional[str]=None) -> 'ValidationResponse':
-        return ValidationResponse(self._invoke("_blocking_clear_standard_invoice", invoice, pcsid, clearance_status, accept_language))
+        return ValidationResponse(self._invoke("_blocking_clear_standard_invoice", invoice, pcsid, _flag(clearance_status, "clearance_status"), accept_language))
 
 class _Invoice(_Owned):
     _repr_fields = ('id', 'uuid')
@@ -681,7 +709,7 @@ class _Invoice(_Owned):
         result = []
         for i in range(_call(data.adjustments_len)):
             a = _call(data.adjustment, i)
-            result.append(AllowanceCharge(_call(a.is_charge), Decimal(_call(a.amount)), VatCategory(_call(a.category)), Decimal(_call(a.rate)), _call(a.reason), _call(a.reason_code), TaxExemption._from_native(_call(a.exemption)), _call(a.tax_category_count), _optional_decimal(_call(a.base_amount)), _optional_decimal(_call(a.percentage)), not _call(a.has_vat_rate)))
+            result.append(AllowanceCharge(_call(a.kind) == _CHARGE, Decimal(_call(a.amount)), VatCategory(_call(a.category)), Decimal(_call(a.rate)), _call(a.reason), _call(a.reason_code), TaxExemption._from_native(_call(a.exemption)), _call(a.tax_category_count), _optional_decimal(_call(a.base_amount)), _optional_decimal(_call(a.percentage)), not _call(a.has_vat_rate)))
         return result
 
     def vat_breakdown(self) -> list[VatBreakdown]:
@@ -713,7 +741,7 @@ class _Invoice(_Owned):
             item_price_base_quantity_unit_code=_call(item.item_price_base_quantity_unit_code),
             item_gross_price=_optional_decimal(_call(item.item_gross_price)),
             item_price_discount=_optional_decimal(_call(item.item_price_discount)),
-            adjustments=tuple(AllowanceCharge(_call(item.adjustment_is_charge, i), Decimal(_call(a.value)), VatCategory(_call(item.vat_category)), Decimal(_call(item.vat_rate)), _call(a.reason), _call(a.reason_code), base_amount=_optional_decimal(_call(a.base_amount)), percentage=_optional_decimal(_call(a.percent))) for i in range(_call(item.adjustments_len)) for a in [_call(item.adjustment, i)]),
+            adjustments=tuple(AllowanceCharge(_call(item.adjustment_kind, i) == _CHARGE, Decimal(_call(a.value)), VatCategory(_call(item.vat_category)), Decimal(_call(item.vat_rate)), _call(a.reason), _call(a.reason_code), base_amount=_optional_decimal(_call(a.base_amount)), percentage=_optional_decimal(_call(a.percent))) for i in range(_call(item.adjustments_len)) for a in [_call(item.adjustment, i)]),
             item_seller_identifier=_identifier(_call(item.item_seller_identifier)),
             item_buyer_identifier=_identifier(_call(item.item_buyer_identifier)),
             item_standard_identifier=_identifier(_call(item.item_standard_identifier)),
@@ -985,7 +1013,7 @@ class InvoiceBuilder(_Owned):
         self._invoke("set_buyer_without_address", name, vat_id, other_id, scheme)
 
     def add_document_adjustment(self, charge: bool, value: Adjustment, category: VatCategory, rate: Decimal | str | int, exemption: TaxExemption = TaxExemption()) -> None:
-        self._invoke("add_document_adjustment", charge, value, int(category), _decimal(rate), exemption._native_value())
+        self._invoke("add_document_adjustment", _flag(charge, "charge"), value, int(category), _decimal(rate), exemption._native_value())
 
     def add_item(self, item: InvoiceLineItem) -> None:
         b = LineItemBuilder.new()
@@ -1058,7 +1086,7 @@ class InvoiceBuilder(_Owned):
     def add_adjustment(self, adjustment: AllowanceCharge) -> None:
         if (adjustment.base_amount is None) != (adjustment.percentage is None):
             raise ValueError("adjustment base_amount and percentage must be supplied together")
-        native = _call(_native.AllowanceCharge.new, adjustment.charge, _decimal(adjustment.amount), adjustment.reason, adjustment.reason_code, int(adjustment.category), _decimal(adjustment.rate), adjustment.exemption._native_value())
+        native = _call(_native.AllowanceCharge.new, _flag(adjustment.charge, "charge"), _decimal(adjustment.amount), adjustment.reason, adjustment.reason_code, int(adjustment.category), _decimal(adjustment.rate), adjustment.exemption._native_value())
         native = _call(native.with_tax_category_count, adjustment.tax_category_count)
         if adjustment.percentage is not None:
             native = _call(native.with_percentage, _decimal(adjustment.base_amount), _decimal(adjustment.percentage))

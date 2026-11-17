@@ -7,7 +7,7 @@ object SdkExamples {
     fun generateCsr(propertiesText: String): Pair<String, String> =
         CsrProperties.fromPropertiesStr(propertiesText).use { properties ->
             SigningKey.generate().use { key ->
-                properties.build(key, 0).use { csr -> csr.toPem() to key.toPem() }
+                properties.build(key, Environment.NonProduction).use { csr -> csr.toPem() to key.toPem() }
             }
         }
     // --8<-- [end:csr]
@@ -23,7 +23,7 @@ object SdkExamples {
 
     // --8<-- [start:validation]
     fun validateInvoice(xml: String, optionsJson: String? = null): String =
-        Config.create(0).use { config -> Xml.validateZatca(config, xml, optionsJson) }
+        Config.create(Environment.NonProduction).use { config -> Xml.validateZatca(config, xml, optionsJson) }
     // Inspect the returned JSON's is_valid and stages fields.
     // --8<-- [end:validation]
 
@@ -34,9 +34,9 @@ object SdkExamples {
 
     // --8<-- [start:api]
     suspend fun reportInvoice(signedXml: String, token: String, secret: String) {
-        Config.create(2).use { config ->
+        Config.create(Environment.Production).use { config ->
             ZatcaClient.create(config).use { client ->
-                CsidProduction.create(2, null, token, secret).use { credentials ->
+                CsidProduction.create(Environment.Production, null, token, secret).use { credentials ->
                     SignedInvoice.fromXml(signedXml).use { invoice ->
                         client.reportSimplifiedInvoiceAsync(invoice, credentials, false, "en").use { response ->
                             response.ensureAccepted()

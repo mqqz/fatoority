@@ -12,6 +12,7 @@
 #include <optional>
 #include <cstdlib>
 #include "BindingError.hpp"
+#include "Environment.hpp"
 #include "diplomat_runtime.hpp"
 
 
@@ -20,9 +21,10 @@ namespace capi {
     extern "C" {
 
     typedef struct fatoora_Config_new_result {union {_native::capi::Config* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_Config_new_result;
-    fatoora_Config_new_result fatoora_Config_new(uint8_t env);
+    fatoora_Config_new_result fatoora_Config_new(_native::capi::Environment env);
 
-    uint8_t fatoora_Config_env(const _native::capi::Config* self);
+    typedef struct fatoora_Config_env_result {union {_native::capi::Environment ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_Config_env_result;
+    fatoora_Config_env_result fatoora_Config_env(const _native::capi::Config* self);
 
     void fatoora_Config_destroy(Config* self);
 
@@ -30,14 +32,14 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline _native::diplomat::result<std::unique_ptr<_native::Config>, std::unique_ptr<_native::BindingError>> _native::Config::new_(uint8_t env) {
-    auto result = _native::capi::fatoora_Config_new(env);
+inline _native::diplomat::result<std::unique_ptr<_native::Config>, std::unique_ptr<_native::BindingError>> _native::Config::new_(_native::Environment env) {
+    auto result = _native::capi::fatoora_Config_new(env.AsFFI());
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Config>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Config>>(std::unique_ptr<_native::Config>(_native::Config::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Config>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline uint8_t _native::Config::env() const {
+inline _native::diplomat::result<_native::Environment, std::unique_ptr<_native::BindingError>> _native::Config::env() const {
     auto result = _native::capi::fatoora_Config_env(this->AsFFI());
-    return result;
+    return result.is_ok ? _native::diplomat::result<_native::Environment, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::Environment>(_native::Environment::FromFFI(result.ok))) : _native::diplomat::result<_native::Environment, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
 inline const _native::capi::Config* _native::Config::AsFFI() const {

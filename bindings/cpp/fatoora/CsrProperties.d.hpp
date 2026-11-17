@@ -20,6 +20,7 @@ namespace capi { struct CsrProperties; }
 class CsrProperties;
 namespace capi { struct SigningKey; }
 class SigningKey;
+class Environment;
 } // namespace fatoora
 
 
@@ -41,7 +42,7 @@ public:
 
   inline static diplomat::result<std::unique_ptr<fatoora::CsrProperties>, std::unique_ptr<fatoora::BindingError>> parse_csr_config_file(std::string_view path);
 
-  inline diplomat::result<std::unique_ptr<fatoora::Csr>, std::unique_ptr<fatoora::BindingError>> build(const fatoora::SigningKey& key, uint8_t env) const;
+  inline diplomat::result<std::unique_ptr<fatoora::Csr>, std::unique_ptr<fatoora::BindingError>> build(const fatoora::SigningKey& key, fatoora::Environment env) const;
 
     inline const fatoora::capi::CsrProperties* AsFFI() const;
     inline fatoora::capi::CsrProperties* AsFFI();

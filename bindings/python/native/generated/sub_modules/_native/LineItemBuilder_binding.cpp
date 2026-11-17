@@ -6,6 +6,7 @@
 #include "OriginalInvoiceRef.hpp"
 #include "TaxExemption.hpp"
 #include "VatBreakdown.hpp"
+#include "VatCategory.hpp"
 
 namespace _native {
 void add_LineItemBuilder_binding(nb::module_ mod) {

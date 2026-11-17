@@ -57,11 +57,7 @@ public partial class ValidationResults: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? Status()
+    public ValidationStatus? Status()
     {
         unsafe
         {
@@ -70,6 +66,28 @@ public partial class ValidationResults: IDisposable
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 var result = Raw.ValidationResults.Status(selfLease!.Ptr);
+                return result.IsSome ? result.Value : (ValidationStatus?)null;
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>Text</c> allocated on Rust side.
+    /// </returns>
+    public Text? StatusRaw()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.ValidationResults>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.ValidationResults.StatusRaw(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
                     throw new BindingErrorException(new BindingError(result.Err));

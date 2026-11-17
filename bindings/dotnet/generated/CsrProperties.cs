@@ -151,7 +151,7 @@ public partial class CsrProperties: IDisposable
     /// <returns>
     /// A <c>Csr</c> allocated on Rust side.
     /// </returns>
-    public Csr Build(SigningKey key, byte env)
+    public Csr Build(SigningKey key, ZatcaEnvironment env)
     {
         unsafe
         {

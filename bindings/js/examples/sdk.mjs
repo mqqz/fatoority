@@ -1,9 +1,9 @@
 // --8<-- [start:csr]
-import { CsrProperties, SigningKey } from 'fatoority';
+import { CsrProperties, Environment, SigningKey } from 'fatoority';
 
 export function generateCsr(propertiesText) {
   const key = SigningKey.generate();
-  const csr = CsrProperties.fromPropertiesStr(propertiesText).build(key, 0);
+  const csr = CsrProperties.fromPropertiesStr(propertiesText).build(key, Environment.NonProduction);
   return { csrPem: csr.toPem(), keyPem: key.toPem() };
 }
 // --8<-- [end:csr]
@@ -17,10 +17,10 @@ export function signInvoice(xml, certificatePem, keyPem) {
 // --8<-- [end:signing]
 
 // --8<-- [start:validation]
-import { Config, Xml } from 'fatoority';
+import { Config, Environment as ValidationEnvironment, Xml } from 'fatoority';
 
 export function validateInvoice(xml, previousHash, evaluatedAt) {
-  return JSON.parse(Xml.validateZatca(Config.new_(0), xml, JSON.stringify({
+  return JSON.parse(Xml.validateZatca(Config.new_(ValidationEnvironment.NonProduction), xml, JSON.stringify({
     previous_invoice_hash: previousHash,
     evaluated_at: evaluatedAt, // Omit to use the JavaScript host clock.
   })));
@@ -29,11 +29,11 @@ export function validateInvoice(xml, previousHash, evaluatedAt) {
 // --8<-- [end:validation]
 
 // --8<-- [start:api]
-import { Config as ApiConfig, CsidProduction, SignedInvoice, ZatcaClient } from 'fatoority';
+import { Config as ApiConfig, CsidProduction, Environment as ApiEnvironment, SignedInvoice, ZatcaClient } from 'fatoority';
 
 export async function reportInvoice(signedXml, token, secret, { signal, fetch: transport = globalThis.fetch } = {}) {
-  const client = new ZatcaClient(ApiConfig.new_(2), { fetch: transport });
-  const credentials = CsidProduction.create(2, null, token, secret);
+  const client = new ZatcaClient(ApiConfig.new_(ApiEnvironment.Production), { fetch: transport });
+  const credentials = CsidProduction.create(ApiEnvironment.Production, null, token, secret);
   const invoice = SignedInvoice.fromXml(signedXml);
   const response = await client.reportSimplifiedInvoice(invoice, credentials, false, 'en', { signal });
   response.ensureAccepted();

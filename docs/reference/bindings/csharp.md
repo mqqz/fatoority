@@ -40,7 +40,7 @@ Import `Fatoora` and dispose native objects when finished:
 ```csharp
 using Fatoora;
 
-using var config = Config.New(0);
+using var config = Config.New(ZatcaEnvironment.NonProduction);
 using var key = SigningKey.Generate();
 using var bytes = key.ToDer();
 using var view = bytes.AsSlice();
@@ -51,8 +51,9 @@ byte[] privateKey = view.Clone();
 objects does not erase that array. Follow the [CSR guide](../../guides/csr.md)
 for a complete credential-generation workflow.
 
-Use environment `0` for nonproduction, `1` for simulation, and `2` for production.
-Configuration, CSR generation, and credentials must agree on the environment.
+Use `ZatcaEnvironment.NonProduction`, `ZatcaEnvironment.Simulation`, or
+`ZatcaEnvironment.Production`. The enum is named `ZatcaEnvironment` so it does not
+clash with `System.Environment` under implicit usings. Configuration, CSR generation, and credentials must agree on the environment.
 See the [CSR](../../guides/csr.md), [signing](../../guides/invoice-signing.md),
 [validation](../../guides/validation.md), and [QR](../../guides/qr.md) guides for
 complete C# examples.
@@ -69,6 +70,9 @@ complete C# examples.
 | Owned native object | An `IDisposable` class; use `using` or call `Dispose()` |
 | Owned binary output | `Bytes`; call `AsSlice()` and copy with `Clone()` when needed |
 | Invoice acceptance | `InvoiceOutcome.Accepted`, `Rejected`, or `Unknown` |
+| Enumerated code | C# enum: `ZatcaEnvironment`, `InvoiceTypeKind`, `InvoiceSubType`, `VatCategory`, `AdjustmentKind`, `ClearanceMode` |
+| Response status | `ReportingStatus?`, `ClearanceStatus?`, `ValidationStatus?`, or `MessageType?`; `null` when absent, `Unknown` when present but not recognized by this version. The `*Raw()` getter returns the exact text as `Text?` |
+| Invoice flags | `byte` bitmask taken by `InvoiceBuilder.Flags` and returned by `FlagsRaw()`; cast `InvoiceFlag` members, such as `(byte)InvoiceFlag.Export`, and combine bits with bitwise OR |
 
 Native object classes implement `IDisposable`, including returned snapshots and
 `BindingError`. Disposal is idempotent; later calls on that wrapper throw
@@ -123,12 +127,13 @@ and responses with `using`. The following methods return owned objects:
 | `PostCcsidForPcsid(credentials)` | `CsidCompliance` | `CsidProduction` |
 | `RenewCsid(credentials, csr, otp, acceptLanguage)` | `CsidProduction`, `Csr`, OTP, nullable language string | `CsidProduction` |
 | `CheckInvoiceCompliance(invoice, credentials)` | `SignedInvoice`, `CsidCompliance` | `ValidationResponse` |
-| `ReportSimplifiedInvoice(invoice, credentials, clearanceStatus, acceptLanguage)` | `SignedInvoice`, `CsidProduction`, Boolean, nullable language string | `ValidationResponse` |
-| `ClearStandardInvoice(invoice, credentials, clearanceStatus, acceptLanguage)` | `SignedInvoice`, `CsidProduction`, Boolean, nullable language string | `ValidationResponse` |
+| `ReportSimplifiedInvoice(invoice, credentials, clearanceMode, acceptLanguage)` | `SignedInvoice`, `CsidProduction`, `ClearanceMode`, nullable language string | `ValidationResponse` |
+| `ClearStandardInvoice(invoice, credentials, clearanceMode, acceptLanguage)` | `SignedInvoice`, `CsidProduction`, `ClearanceMode`, nullable language string | `ValidationResponse` |
 
 All listed arguments are required, including nullable arguments: pass `null` when
-no language override is needed. `clearanceStatus` sets the clearance-status
-request header; use `false` for ordinary reporting and `true` for clearance.
+no language override is needed. `clearanceMode` sets the clearance-status
+request header; use `ClearanceMode.Disabled` for ordinary reporting and
+`ClearanceMode.Enabled` for clearance.
 It does not describe the result of the operation.
 
 The native client methods block the calling thread. HTTP success alone does not
@@ -185,7 +190,7 @@ using System.Text.Json;
 using System.IO;
 
 string invoiceXml = File.ReadAllText("invoice.xml");
-using var config = Config.New(0);
+using var config = Config.New(ZatcaEnvironment.NonProduction);
 using var report = JsonDocument.Parse(Xml.ValidateZatca(config, invoiceXml, null));
 bool valid = report.RootElement.GetProperty("is_valid").GetBoolean();
 ```

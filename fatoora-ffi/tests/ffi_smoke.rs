@@ -1,5 +1,6 @@
 use diplomat_runtime::DiplomatWrite;
 use fatoora_ffi::common::ffi::BindingError;
+use fatoora_ffi::common::ffi::Environment;
 use fatoora_ffi::crypto::ffi::{Config, Csr, CsrProperties, Signer, SigningKey};
 use fatoora_ffi::invoice::ffi::{FinalizedInvoice, SignedInvoice, Xml};
 
@@ -107,7 +108,7 @@ fn file_parsing_and_validation_errors_remain_structured() {
     assert!(SignedInvoice::from_xml(b"<nope/>").is_err());
     assert!(FinalizedInvoice::from_xml(&[0xff]).is_err());
     assert!(FinalizedInvoice::from_xml(b"<Invoice/>\0").is_err());
-    let config = ok(Config::new(0));
+    let config = ok(Config::new(Environment::NonProduction));
     let error = Xml::validate(&config, b"<Invoice/>").err().unwrap();
     let details: serde_json::Value =
         serde_json::from_str(&written(|out| error.details_json(out))).unwrap();
@@ -122,8 +123,7 @@ fn csr_build_preserves_subject_key_and_owned_extensions() {
         "../../fatoora-core/tests/fixtures/csr-configs/csr-config-example-EN.properties"
     )));
     let key = ok(SigningKey::from_der(KEY));
-    let csr = ok(props.build(&key, 0));
-    assert!(props.build(&key, 255).is_err());
+    let csr = ok(props.build(&key, Environment::NonProduction));
     let der = ok(csr.to_der());
     let parsed = ok(Csr::from_der(der.as_slice()));
     assert_eq!(ok(parsed.to_der()).as_slice(), der.as_slice());
@@ -245,9 +245,9 @@ fn csr_binding_encodings_preserve_proof_of_possession_and_environment() {
     ));
     let key = ok(SigningKey::from_der(KEY));
     for (env, template) in [
-        (0, "TSTZATCA-Code-Signing"),
-        (1, "PREZATCA-Code-Signing"),
-        (2, "ZATCA-Code-Signing"),
+        (Environment::NonProduction, "TSTZATCA-Code-Signing"),
+        (Environment::Simulation, "PREZATCA-Code-Signing"),
+        (Environment::Production, "ZATCA-Code-Signing"),
     ] {
         let csr = ok(props.build(&key, env));
         let der = ok(csr.to_der());
@@ -314,7 +314,7 @@ fn csr_binding_encodings_preserve_proof_of_possession_and_environment() {
     let from_file = ok(CsrProperties::parse_csr_config_file(
         path.to_str().unwrap().as_bytes(),
     ));
-    let csr = ok(from_file.build(&key, 0));
+    let csr = ok(from_file.build(&key, Environment::NonProduction));
     let parsed = CertReq::from_der(ok(csr.to_der()).as_slice()).unwrap();
     assert_eq!(
         std::str::from_utf8(

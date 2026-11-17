@@ -5,6 +5,7 @@ import { InvoiceLineItem } from "./InvoiceLineItem.mjs"
 import { OriginalInvoiceRef } from "./OriginalInvoiceRef.mjs"
 import { TaxExemption } from "./TaxExemption.mjs"
 import { VatBreakdown } from "./VatBreakdown.mjs"
+import { VatCategory } from "./VatCategory.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
@@ -428,7 +429,7 @@ export class LineItemBuilder {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
 
-        const result = wasm.fatoora_LineItemBuilder_set_vat_category(diplomatReceive.buffer, this.ffiValue, value);
+        const result = wasm.fatoora_LineItemBuilder_set_vat_category(diplomatReceive.buffer, this.ffiValue, new VatCategory(value).ffiValue);
 
         try {
             if (!diplomatReceive.resultFlag) {

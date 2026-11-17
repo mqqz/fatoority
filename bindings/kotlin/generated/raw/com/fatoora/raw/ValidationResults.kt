@@ -7,7 +7,8 @@ import com.sun.jna.Structure
 
 internal interface ValidationResultsLib: Library {
     fun fatoora_ValidationResults_destroy(handle: Pointer)
-    fun fatoora_ValidationResults_status(handle: Pointer): ResultPointerPointer
+    fun fatoora_ValidationResults_status(handle: Pointer): OptionInt
+    fun fatoora_ValidationResults_status_raw(handle: Pointer): ResultPointerPointer
     fun fatoora_ValidationResults_info_len(handle: Pointer): FFISizet
     fun fatoora_ValidationResults_info_message(handle: Pointer, index: FFISizet): ResultPointerPointer
     fun fatoora_ValidationResults_warning_len(handle: Pointer): FFISizet
@@ -46,9 +47,23 @@ class ValidationResults internal constructor (
         internal val lib: ValidationResultsLib = Native.load("fatoora_ffi", libClass)
     }
 
-    fun status(): Result<Text?> {
+    /**
+     * The parsed overall status, or null when the response has none.
+     */
+    fun status(): ValidationStatus? {
 
         val returnVal = lib.fatoora_ValidationResults_status(handle);
+
+        val intermediateOption = returnVal.option() ?: return null
+        return ValidationStatus.fromNative(intermediateOption)
+    }
+
+    /**
+     * The overall status exactly as ZATCA sent it, or null when absent.
+     */
+    fun statusRaw(): Result<Text?> {
+
+        val returnVal = lib.fatoora_ValidationResults_status_raw(handle);
         val nativeOkVal = returnVal.getNativeOk();
         if (returnVal.isOk == 1.toByte()) {
             val selfEdges: List<Any> = listOf()
