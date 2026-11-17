@@ -173,10 +173,20 @@ same totals only if you pass that category and rate. Likewise,
 | `invoice::validation::validate_xml_invoice_report_from_str(xml, &config)` | `Validator::new().validate_xml_report(xml)` | Deprecated |
 | `invoice::validation::validate_zatca_invoice_from_str(xml, &config, &options)` | `Validator::new().validate_zatca(xml, &options)` | Deprecated |
 | `invoice::sign::invoice_hash_base64_from_xml_str(xml) -> Result<String, _>` | `invoice::hash_xml(xml) -> Result<InvoiceHash, _>` | Deprecated |
+| `FinalizedInvoice::hash_base64() -> Result<String, SigningError>` | `FinalizedInvoice::hash() -> Result<InvoiceHash, SigningError>` | Deprecated |
+| `SignedInvoice::hash_base64() -> Result<String, SigningError>` | `SignedInvoice::hash() -> Result<InvoiceHash, SigningError>` | Deprecated |
+| `ZatcaValidationOptions { previous_invoice_hash: Option<String>, .. }` | `previous_invoice_hash: Option<InvoiceHash>` | Breaking |
 
 Validation never depended on the environment, so `Validator` takes no
 `Config`. The deprecated functions ignore their `Config` argument, and
-`invoice_hash_base64_from_xml_str` still returns a `String`.
+`invoice_hash_base64_from_xml_str` and the deprecated `hash_base64` methods
+still return a `String`.
+
+Set `previous_invoice_hash` from an `InvoiceHash`: the value returned by
+`hash()` or `hash_xml`, `data.previous_invoice_hash().clone()`, or
+`text.parse()?`. Parsing trims surrounding whitespace and rejects blank text;
+`validate_zatca` still checks the digest format. Deserialized options (for
+example from JSON) go through the same parsing.
 
 ## Behaviour and data format changes
 
@@ -191,9 +201,12 @@ These compile unchanged but can change what your program sees:
   instead of before them.
 - Serialized `AllowanceCharge` and `LineAdjustment` values, and therefore
   serialized `InvoiceData` and `LineItem` values, use a `"kind"` field with the
-  values `"allowance"`/`"charge"` instead of the Boolean `"charge"` field. JSON
-  written by 0.5 with `"charge"` does not deserialize in 0.6. The other serde
-  field names are unchanged.
+  values `"allowance"`/`"charge"` instead of the Boolean `"charge"` field.
+  JSON written by 0.5 is still accepted on read: a legacy `"charge": true`
+  reads as a charge and `"charge": false` as an allowance. Serialization writes
+  only `"kind"`, so data saved again is in the 0.6 format. Input with both
+  fields is accepted when they agree and rejected when they conflict. The other
+  serde field names are unchanged.
 - The JSON of ZATCA responses and the `InvoiceOutcome` returned by
   `ValidationResponse::outcome()` are unchanged.
 
@@ -479,7 +492,7 @@ These compile unchanged but can change what your program sees:
         validator.validate_xml(xml)?;
 
         let options = ZatcaValidationOptions {
-            previous_invoice_hash: Some(previous_hash.to_string()),
+            previous_invoice_hash: Some(previous_hash.clone()),
             ..Default::default()
         };
         let report = validator.validate_zatca(xml, &options)?;

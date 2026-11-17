@@ -65,7 +65,7 @@ remain separate checks.
 | Invoice data | Identity, type/subtype, parties, notes, original invoice reference, flags, line items, and invoice adjustments. |
 | Line item | Description, quantity, unit code, unit price, line total, VAT rate, VAT amount, and category. Indexed access is zero-based and rejects out-of-range indexes. |
 | Totals | Line extension, allowance total, charge total, taxable amount, tax amount, tax inclusive total, prepaid amount, payable rounding amount, and payable amount. |
-| Computed hash | `hash_base64()` hashes emitted XML for a finalized model and stored XML for a signed invoice. Signed import rejects digest mismatches and retains the original XML. |
+| Computed hash | `hash()` (Rust) or `hash_base64()` (bindings) hashes emitted XML for a finalized model and stored XML for a signed invoice. Signed import rejects digest mismatches and retains the original XML. |
 
 ## Advanced building in the bindings
 
@@ -210,7 +210,7 @@ correspond to the fields above.
 
     **Read invoice data**
 
-    Both invoice types provide `data() -> &InvoiceData`, `totals() -> &InvoiceTotals`, and `hash_base64() -> Result<String, SigningError>`. Read fields through the returned data's accessor methods, including `id()`, `uuid() -> &InvoiceUuid`, `issue_date() -> InvoiceDate`, `issue_time() -> InvoiceTime`, `previous_invoice_hash() -> &InvoiceHash`, `seller()`, `buyer()`, `line_items()`, `flags()`, and `invoice_type()`. Decimal accessors return `Decimal`; optional fields return `Option`.
+    Both invoice types provide `data() -> &InvoiceData`, `totals() -> &InvoiceTotals`, and `hash() -> Result<InvoiceHash, SigningError>` (the deprecated `hash_base64()` returns the same value as `String`). Read fields through the returned data's accessor methods, including `id()`, `uuid() -> &InvoiceUuid`, `issue_date() -> InvoiceDate`, `issue_time() -> InvoiceTime`, `previous_invoice_hash() -> &InvoiceHash`, `seller()`, `buyer()`, `line_items()`, `flags()`, and `invoice_type()`. Decimal accessors return `Decimal`; optional fields return `Option`.
 
     `FinalizedInvoice::sign(self, signer: &InvoiceSigner) -> Result<SignedInvoice, SigningError>` consumes the finalized invoice even if signing fails. Signed metadata and XML access are described in [signing](invoice-signing.md) and [XML](xml.md).
 
