@@ -36,10 +36,10 @@ with tempfile.TemporaryDirectory(prefix='fatoora-js-package-') as temporary:
     subprocess.run(['npm', 'install', '--offline', '--ignore-scripts', '--no-audit', '--no-fund', str(tarball)], cwd=directory, check=True, env=env)
     subprocess.run(['node', '--input-type=module', '-e', '''
 import assert from 'node:assert/strict';
-import { SigningKey, Config, CsidCompliance, Environment, ZatcaClient } from 'fatoority';
+import { SigningKey, Config, ComplianceCsid, Environment, ZatcaClient } from 'fatoority';
 assert.match(SigningKey.generate().toPem(), /BEGIN PRIVATE KEY/);
 const client = new ZatcaClient(Config.new_(Environment.NonProduction), {fetch: async () => new Response(JSON.stringify({requestID: 2, binarySecurityToken: 'new', secret: 'secret'}))});
-const response = await client.postCcsidForPcsid(CsidCompliance.create(Environment.NonProduction, '1', 'token', 'secret'));
+const response = await client.requestProductionCsid(ComplianceCsid.create(Environment.NonProduction, '1', 'token', 'secret'));
 assert.equal(response.binarySecurityToken(), 'new');
 console.log('Installed npm package: WASM loading, key generation and API response decoding passed');
 '''], cwd=directory, check=True, env=env)

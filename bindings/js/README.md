@@ -26,13 +26,13 @@ Build a local tarball with `npm pack` in `bindings/js`. Version tags publish the
 See the [JS/TS reference](https://docs.fatoority.com/reference/bindings/javascript/) for complete installation, browser deployment and API examples.
 
 ```js
-import { Config, Environment, SigningKey, CsidCompliance, ZatcaClient } from 'fatoority';
+import { Config, Environment, SigningKey, ComplianceCsid, ZatcaClient } from 'fatoority';
 
 const key = SigningKey.generate();
 const config = Config.new_(Environment.NonProduction); // or Simulation, Production
 const client = new ZatcaClient(config);
-const compliance = CsidCompliance.create(Environment.NonProduction, 'request-id', 'token', 'secret');
-const production = await client.postCcsidForPcsid(compliance, {
+const compliance = ComplianceCsid.create(Environment.NonProduction, 'request-id', 'token', 'secret');
+const production = await client.requestProductionCsid(compliance, {
   signal: AbortSignal.timeout(30_000),
 });
 ```
@@ -45,7 +45,7 @@ The generated API preserves Rust names in camelCase; a Rust `new` constructor is
 
 Generated Rust errors are JavaScript `Error` objects whose `cause` is a `BindingError`. Inspect `error.cause.code()`, `.message()` and `.detailsJson()`. Network, cancellation and response-body read failures throw `TransportError`, retaining the original cause and, when available, `httpStatus`.
 
-`Xml.validateZatca(config, xml, optionsJson)` supplies the host clock when `evaluated_at` is absent. An explicit timestamp makes validation reproducible. The raw API requires `evaluated_at` on WASM. Filesystem helpers are excluded from JS; read files in the host and pass their contents.
+`Xml.validateZatca(xml, optionsJson)` returns a `ZatcaValidationReport` and supplies the host clock when `evaluated_at` is absent. An explicit timestamp makes validation reproducible. The raw API requires `evaluated_at` on WASM. Filesystem helpers are excluded from JS; read files in the host and pass their contents.
 
 The browser loader resolves `fatoora_ffi.wasm` relative to the package modules. Deploy the generated modules and WASM together, or configure the bundler to copy the WASM at that URL. Direct gateway requests depend on the gateway's CORS policy. Keep signing keys and credentials in the host environment appropriate to your application.
 

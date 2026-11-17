@@ -6,8 +6,8 @@ import * as raw from '../generated/index.mjs';
 import wasm from '../generated/diplomat-wasm.mjs';
 const loadFixture = (path) => readFileSync(new URL(`../../../fatoora-core/tests/fixtures/${path}`, import.meta.url), 'utf8');
 const config = sdk.Config.new_(sdk.Environment.NonProduction);
-const ccsid = () => sdk.CsidCompliance.create(sdk.Environment.NonProduction, '123', 'token', 'secret');
-const pcsid = () => sdk.CsidProduction.create(sdk.Environment.NonProduction, null, 'token', 'secret');
+const ccsid = () => sdk.ComplianceCsid.create(sdk.Environment.NonProduction, '123', 'token', 'secret');
+const pcsid = () => sdk.ProductionCsid.create(sdk.Environment.NonProduction, null, 'token', 'secret');
 const invoice = () => sdk.SignedInvoice.fromXml(loadFixture('sdk-parity/cases/simplified-invoice/sdk-signed.xml'));
 const credentialsBody = { requestID: 123, binarySecurityToken: 'new-token', secret: 'new-secret' };
 const validationBody = { validationResults: { status: 'PASS' }, reportingStatus: 'REPORTED' };
@@ -37,7 +37,7 @@ test('optional strings preserve absent, empty and Arabic across repeated calls',
 test('decimal values remain exact and consumed builders fail safely', () => {
   const b = sdk.InvoiceBuilder.new_(sdk.InvoiceTypeKind.Tax, sdk.InvoiceSubType.Simplified, null, null, null, null);
   b.setId('JS-1'); b.setUuid('js-uuid'); b.setIssueDatetime('2024-01-01T12:30:00Z');
-  b.setCurrency('SAR'); b.setPreviousInvoiceHash('hash'); b.setInvoiceCounter(0n); b.setPaymentMeansCode('10'); b.setVatCategory(sdk.VatCategory.Standard);
+  b.setCurrency('SAR'); b.setPreviousInvoiceHash('hash'); b.setInvoiceCounter(0n); b.addPaymentMeans(sdk.PaymentMeans.new_('10', null)); b.setVatCategory(sdk.VatCategory.Standard);
   const a = sdk.Address.new_('SAU', 'Riyadh', 'King Fahd', '1234', '12222', null, null, null);
   b.setSeller('Acme Inc', a, '301121971500003', null, null);
   b.addLineItem('Item', '3', 'PCE', '0.3333', '15', sdk.VatCategory.Standard);
@@ -74,7 +74,7 @@ test('fetch sees Rust headers and body; concurrent requests decode independently
   const pending = [];
   const client = new sdk.ZatcaClient(config, { fetch: (url, init) => new Promise(resolve => pending.push({url, init, resolve})) });
   const a = client.reportSimplifiedInvoice(invoice(), pcsid(), false, 'ar');
-  const b = client.postCcsidForPcsid(ccsid());
+  const b = client.requestProductionCsid(ccsid());
   assert.equal(pending.length, 2);
   const headers = new Headers(pending[0].init.headers);
   assert.equal(headers.get('accept-version'), 'V2');
@@ -89,13 +89,13 @@ test('fetch sees Rust headers and body; concurrent requests decode independently
 });
 
 test('all credential operations, including renewal 428, share Rust decoding', async () => {
-  const csr = sdk.CsrProperties.fromPropertiesStr(loadFixture('csr-configs/csr-config-example-EN.properties')).build(sdk.SigningKey.generate(), sdk.Environment.NonProduction);
+  const csr = sdk.CsrProperties.fromStr(loadFixture('csr-configs/csr-config-example-EN.properties')).build(sdk.SigningKey.generate(), sdk.Environment.NonProduction);
   const calls = [];
   const client = new sdk.ZatcaClient(config, { fetch: async (url, init) => {
     calls.push({url, init});
     return init.method === 'PATCH' ? json({value: credentialsBody}, 428) : json(credentialsBody);
   }});
-  assert.equal((await client.postCsrForCcsid(csr, '123456')).env(), sdk.Environment.NonProduction);
+  assert.equal((await client.requestComplianceCsid(csr, '123456')).env(), sdk.Environment.NonProduction);
   assert.equal((await client.renewCsid(pcsid(), csr, '123456')).requestId().value(), '123');
   assert.equal(new Headers(calls[0].init.headers).get('otp'), '123456');
   assert.equal(calls[1].init.method, 'PATCH');
@@ -111,18 +111,25 @@ test('HTTP failures decode in Rust; network, body-read and cancellation failures
   const malformed = new sdk.ZatcaClient(config, { fetch: async () => new Response('bad') });
   await assert.rejects(malformed.reportSimplifiedInvoice(invoice(), pcsid()), code(3));
   const broken = new sdk.ZatcaClient(config, { fetch: async () => ({ status: 200, arrayBuffer: async () => { throw new Error('read'); } }) });
-  await assert.rejects(broken.postCcsidForPcsid(ccsid()), e => e instanceof sdk.TransportError && e.httpStatus === 200);
+  await assert.rejects(broken.requestProductionCsid(ccsid()), e => e instanceof sdk.TransportError && e.httpStatus === 200);
   const abort = new AbortController(); abort.abort();
   const cancelled = new sdk.ZatcaClient(config, { fetch: async (_url, {signal}) => { signal.throwIfAborted(); } });
-  await assert.rejects(cancelled.postCcsidForPcsid(ccsid(), {signal: abort.signal}), e => e instanceof sdk.TransportError && e.cause.name === 'AbortError');
+  await assert.rejects(cancelled.requestProductionCsid(ccsid(), {signal: abort.signal}), e => e instanceof sdk.TransportError && e.cause.name === 'AbortError');
 });
 
 test('validation uses supplied time and the public facade supplies a default', () => {
   const xml = loadFixture('sdk-parity/cases/simplified-invoice/sdk-signed.xml');
-  assert.throws(() => raw.Xml.validateZatca(config, xml, null), e => e.cause.message().includes('evaluated_at'));
-  const a = sdk.Xml.validateZatca(config, xml, JSON.stringify({evaluated_at: '2025-01-01T00:00:00Z'}));
-  assert.equal(JSON.parse(a).evaluated_at, '2025-01-01T00:00:00Z');
-  assert.ok(JSON.parse(sdk.Xml.validateZatca(config, xml)).evaluated_at);
+  assert.throws(() => raw.Xml.validateZatca(xml, null), e => e.cause.message().includes('evaluated_at'));
+  const a = sdk.Xml.validateZatca(xml, JSON.stringify({evaluated_at: '2025-01-01T00:00:00Z'}));
+  assert.ok(a instanceof sdk.ZatcaValidationReport);
+  assert.equal(a.evaluatedAt(), '2025-01-01T00:00:00Z');
+  assert.equal(JSON.parse(a.toJson()).evaluated_at, '2025-01-01T00:00:00Z');
+  assert.equal(a.stagesLen(), 6);
+  const stage = a.stage(0);
+  assert.equal(stage.stage(), sdk.ZatcaStage.Xsd);
+  assert.equal(stage.status(), sdk.ZatcaStageStatus.Completed);
+  assert.equal(a.isValid(), a.isComplete() && !a.hasErrors());
+  assert.ok(sdk.Xml.validateZatca(xml).evaluatedAt());
 });
 
 test('clearance and compliance use their own acceptance fields', async () => {
@@ -139,12 +146,12 @@ test('clearance and compliance use their own acceptance fields', async () => {
 
 test('compressed schemas preserve valid Arabic input and reject schema-invalid XML', () => {
   const xml = loadFixture('sdk-parity/cases/simplified-invoice/sdk-signed.xml');
-  assert.equal(sdk.Xml.validate(config, xml), true);
+  assert.equal(sdk.Xml.validate(xml), true);
   const invalid = xml.replaceAll('cbc:ProfileID', 'cbc:InvalidProfileID');
   assert.notEqual(invalid, xml);
-  assert.throws(() => sdk.Xml.validate(config, invalid), e => e.cause instanceof sdk.BindingError);
+  assert.throws(() => sdk.Xml.validate(invalid), e => e.cause instanceof sdk.BindingError);
   // Failed runs must not corrupt the cached compiled schema.
-  assert.equal(sdk.Xml.validate(config, xml), true);
+  assert.equal(sdk.Xml.validate(xml), true);
 });
 
 test('documented examples and signing work in the optimized artifact', async () => {
@@ -152,12 +159,12 @@ test('documented examples and signing work in the optimized artifact', async () 
   const csr = examples.generateCsr(loadFixture('csr-configs/csr-config-example-EN.properties'));
   assert.match(csr.csrPem, /BEGIN CERTIFICATE REQUEST/);
   const xml = loadFixture('sdk-parity/cases/simplified-invoice/sdk-signed.xml');
-  assert.ok(examples.validateInvoice(xml, undefined, '2025-01-01T00:00:00Z').stages);
+  assert.equal(examples.validateInvoice(xml, undefined, '2025-01-01T00:00:00Z').stagesLen(), 6);
   const response = await examples.reportInvoice(xml, 'token', 'secret', {fetch: async () => json(validationBody)});
   assert.equal(response.outcome().value, 'Accepted');
   const cert = readFileSync(new URL('../../../fatoora-core/tests/fixtures/sdk-parity/credentials/certificate.der', import.meta.url));
   const key = readFileSync(new URL('../../../fatoora-core/tests/fixtures/sdk-parity/credentials/private-key.der', import.meta.url));
-  const signer = sdk.Signer.fromDer([...cert], [...key]);
+  const signer = sdk.InvoiceSigner.fromDer([...cert], [...key]);
   const signed = examples.signInvoice(xml, signer.certificatePem(), sdk.SigningKey.fromDer([...key]).toPem());
   assert.equal(sdk.Xml.hash(signed), sdk.Xml.hash(xml));
   assert.ok(sdk.SignedInvoice.fromXml(signed).signature());
@@ -167,20 +174,20 @@ test('validation options preserve Rust errors before host clock injection', () =
   const xml = loadFixture('sdk-parity/cases/simplified-invoice/sdk-signed.xml');
   for (const options of ['{', '', 'null', 'true', '42', '"text"', '[]', '[1]', '{"evaluated_at":42}', ' '.repeat(4096) + '{}', JSON.stringify({unknown: 'ع'.repeat(2048)})]) {
     let expected;
-    try { raw.Xml.validateZatca(config, xml, options); }
+    try { raw.Xml.validateZatca(xml, options); }
     catch (error) { expected = error; }
     assert.ok(expected?.cause instanceof sdk.BindingError, options.slice(0, 40));
-    assert.throws(() => sdk.Xml.validateZatca(config, xml, options), code(expected.cause.code()));
+    assert.throws(() => sdk.Xml.validateZatca(xml, options), code(expected.cause.code()));
   }
   for (const options of [null, '{}', '{"evaluated_at":null}', '{"evaluated_at":"2025-01-01T00:00:00Z"}']) {
-    assert.ok(JSON.parse(sdk.Xml.validateZatca(config, xml, options)).stages);
+    assert.equal(sdk.Xml.validateZatca(xml, options).stagesLen(), 6);
   }
 });
 
 test('imported signed invoice hashes its stored XML', () => {
   for (const kind of ['standard', 'simplified']) {
     const xml = loadFixture(`sdk-parity/cases/${kind}-invoice/sdk-signed.xml`);
-    assert.equal(sdk.SignedInvoice.fromXml(xml).hashBase64(), sdk.Xml.hash(xml));
+    assert.equal(sdk.SignedInvoice.fromXml(xml).hash(), sdk.Xml.hash(xml));
   }
 });
 

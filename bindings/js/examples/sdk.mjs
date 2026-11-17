@@ -3,37 +3,38 @@ import { CsrProperties, Environment, SigningKey } from 'fatoority';
 
 export function generateCsr(propertiesText) {
   const key = SigningKey.generate();
-  const csr = CsrProperties.fromPropertiesStr(propertiesText).build(key, Environment.NonProduction);
+  const csr = CsrProperties.fromStr(propertiesText).build(key, Environment.NonProduction);
   return { csrPem: csr.toPem(), keyPem: key.toPem() };
 }
 // --8<-- [end:csr]
 
 // --8<-- [start:signing]
-import { Signer } from 'fatoority';
+import { InvoiceSigner } from 'fatoority';
 
 export function signInvoice(xml, certificatePem, keyPem) {
-  return Signer.fromPem(certificatePem, keyPem).signXml(xml);
+  return InvoiceSigner.fromPem(certificatePem, keyPem).signXml(xml);
 }
 // --8<-- [end:signing]
 
 // --8<-- [start:validation]
-import { Config, Environment as ValidationEnvironment, Xml } from 'fatoority';
+import { Xml } from 'fatoority';
 
 export function validateInvoice(xml, previousHash, evaluatedAt) {
-  return JSON.parse(Xml.validateZatca(Config.new_(ValidationEnvironment.NonProduction), xml, JSON.stringify({
+  return Xml.validateZatca(xml, JSON.stringify({
     previous_invoice_hash: previousHash,
     evaluated_at: evaluatedAt, // Omit to use the JavaScript host clock.
-  })));
+  }));
 }
-// Inspect report.is_valid and report.stages before accepting an invoice.
+// Inspect report.isValid() and report.stage(i) before accepting an invoice;
+// report.toJson() returns the same report as JSON.
 // --8<-- [end:validation]
 
 // --8<-- [start:api]
-import { Config as ApiConfig, CsidProduction, Environment as ApiEnvironment, SignedInvoice, ZatcaClient } from 'fatoority';
+import { Config as ApiConfig, ProductionCsid, Environment as ApiEnvironment, SignedInvoice, ZatcaClient } from 'fatoority';
 
 export async function reportInvoice(signedXml, token, secret, { signal, fetch: transport = globalThis.fetch } = {}) {
   const client = new ZatcaClient(ApiConfig.new_(ApiEnvironment.Production), { fetch: transport });
-  const credentials = CsidProduction.create(ApiEnvironment.Production, null, token, secret);
+  const credentials = ProductionCsid.create(ApiEnvironment.Production, null, token, secret);
   const invoice = SignedInvoice.fromXml(signedXml);
   const response = await client.reportSimplifiedInvoice(invoice, credentials, false, 'en', { signal });
   response.ensureAccepted();
