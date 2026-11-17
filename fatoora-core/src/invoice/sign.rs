@@ -311,18 +311,12 @@ pub(crate) fn invoice_hash_base64_from_xml(xml: &str) -> Result<String, SigningE
 
 /// Compute the base64 invoice hash from an XML string.
 ///
-/// # Examples
-/// ```rust,no_run
-/// use fatoora_core::invoice::sign::invoice_hash_base64_from_xml_str;
-///
-/// let xml = std::fs::read_to_string("invoice.xml")?;
-/// let hash = invoice_hash_base64_from_xml_str(&xml)?;
-/// # let _ = hash;
-/// # Ok::<(), Box<dyn std::error::Error>>(())
-/// ```
-///
 /// # Errors
 /// Returns [`SigningError`] if parsing, canonicalization, or hashing fails.
+#[deprecated(
+    since = "0.6.0",
+    note = "use `fatoora_core::invoice::hash_xml` instead"
+)]
 pub fn invoice_hash_base64_from_xml_str(xml: &str) -> Result<String, SigningError> {
     invoice_hash_base64_from_xml(xml)
 }

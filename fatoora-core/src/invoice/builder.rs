@@ -7,7 +7,6 @@ use super::{
 use crate::Decimal;
 use crate::invoice::sign::{
     InvoiceSigner, SignedProperties, SigningError, invoice_hash_base64_from_xml,
-    invoice_hash_base64_from_xml_str,
 };
 
 /// An invoice with computed totals and the implemented builder field checks.
@@ -1083,7 +1082,7 @@ impl SignedInvoice {
     /// # Errors
     /// Returns [`SigningError`] if XML parsing or hashing fails.
     pub fn hash_base64(&self) -> Result<String, SigningError> {
-        invoice_hash_base64_from_xml_str(self.xml())
+        invoice_hash_base64_from_xml(self.xml())
     }
 
     /// Base64 DER ECDSA signature over the invoice hash.

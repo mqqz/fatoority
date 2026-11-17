@@ -298,13 +298,10 @@ fn signing_qr_overflow_preserves_error_details_and_signer_reusability() {
 
 #[test]
 fn hashing_rejects_relative_namespace_uris() {
-    use fatoora_core::invoice::sign::invoice_hash_base64_from_xml_str;
+    use fatoora_core::invoice::hash_xml;
     // Well-formed XML can still be impossible to canonicalize. Returning a hash
     // of an empty or partial canonicalization would sign different content.
-    let error = invoice_hash_base64_from_xml_str(
-        "<Invoice xmlns=\"relative\"><Amount>100</Amount></Invoice>",
-    )
-    .unwrap_err();
+    let error = hash_xml("<Invoice xmlns=\"relative\"><Amount>100</Amount></Invoice>").unwrap_err();
     assert!(matches!(error, SigningError::Xml(_)));
     assert_eq!(error.kind(), fatoora_core::ErrorKind::Xml);
 }
@@ -314,7 +311,7 @@ fn malformed_closing_tag_is_rejected_without_poisoning_the_signer() {
     let input = include_str!("fixtures/malformed/closing-tag.xml");
     let (signer, _) = build_test_signer();
     assert!(signer.sign_xml(input).is_err());
-    assert!(fatoora_core::invoice::sign::invoice_hash_base64_from_xml_str(input).is_err());
+    assert!(fatoora_core::invoice::hash_xml(input).is_err());
     assert!(
         signer
             .sign_xml(&common::dummy_finalized_invoice().to_xml().unwrap())
@@ -343,8 +340,8 @@ fn repeated_signing_preserves_bytes_and_unrelated_extension_trivia() {
     assert_ne!(hash_target, signed);
     assert_eq!(signer.sign_xml(&hash_target).unwrap(), signed);
     assert_eq!(
-        fatoora_core::invoice::sign::invoice_hash_base64_from_xml_str(&signed).unwrap(),
-        fatoora_core::invoice::sign::invoice_hash_base64_from_xml_str(&input).unwrap()
+        fatoora_core::invoice::hash_xml(&signed).unwrap(),
+        fatoora_core::invoice::hash_xml(&input).unwrap()
     );
 }
 
@@ -821,7 +818,7 @@ fn signing_preserves_whitespace_padded_qr_references() {
 #[test]
 fn signed_hash_uses_retained_xml_and_does_not_trust_embedded_digest() {
     use fatoora_core::invoice::{
-        sign::invoice_hash_base64_from_xml_str,
+        hash_xml,
         xml::parse::{parse_finalized_invoice_xml, parse_signed_invoice_xml},
     };
     let (signer, _) = build_test_signer();
@@ -829,12 +826,12 @@ fn signed_hash_uses_retained_xml_and_does_not_trust_embedded_digest() {
     let emitted = finalized.to_xml().unwrap();
     assert_eq!(
         finalized.hash_base64().unwrap(),
-        invoice_hash_base64_from_xml_str(&emitted).unwrap()
+        hash_xml(&emitted).unwrap().as_str()
     );
     let signed = finalized.sign(&signer).unwrap();
     assert_eq!(
         signed.hash_base64().unwrap(),
-        invoice_hash_base64_from_xml_str(signed.xml()).unwrap()
+        hash_xml(signed.xml()).unwrap().as_str()
     );
     assert_eq!(signed.hash_base64().unwrap(), signed.invoice_hash());
 
@@ -843,9 +840,9 @@ fn signed_hash_uses_retained_xml_and_does_not_trust_embedded_digest() {
     assert_ne!(changed, signed.xml());
     assert!(parse_signed_invoice_xml(&changed).is_err());
     let model = parse_finalized_invoice_xml(&changed).unwrap();
-    let raw_hash = invoice_hash_base64_from_xml_str(&changed).unwrap();
-    assert_ne!(model.hash_base64().unwrap(), raw_hash);
-    assert_ne!(raw_hash, signed.invoice_hash());
+    let raw_hash = hash_xml(&changed).unwrap();
+    assert_ne!(model.hash_base64().unwrap(), raw_hash.as_str());
+    assert_ne!(raw_hash.as_str(), signed.invoice_hash());
 }
 
 #[test]

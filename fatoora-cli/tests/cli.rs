@@ -1088,7 +1088,7 @@ fn malformed_xml_has_command_context_and_no_success_output() {
 
 #[test]
 fn generate_hash_preserves_input_representation() {
-    use fatoora_core::invoice::sign::invoice_hash_base64_from_xml_str;
+    use fatoora_core::invoice::hash_xml;
     let unsigned = unique_temp_path("unsigned-hash-input");
     let source = std::fs::read_to_string(signed_invoice_fixture()).unwrap();
     let finalized =
@@ -1112,7 +1112,7 @@ fn generate_hash_preserves_input_representation() {
         );
         assert_eq!(
             String::from_utf8(output.stdout).unwrap().trim(),
-            invoice_hash_base64_from_xml_str(&changed).unwrap()
+            hash_xml(&changed).unwrap().as_str()
         );
         std::fs::remove_file(path).unwrap();
     }

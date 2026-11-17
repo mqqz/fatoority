@@ -1,11 +1,7 @@
 mod common;
 use fatoora_core::{
     Decimal,
-    config::Config,
-    invoice::{
-        validation::validate_xml_invoice_from_str,
-        xml::parse::parse_finalized_invoice_xml as parse, *,
-    },
+    invoice::{validation::Validator, xml::parse::parse_finalized_invoice_xml as parse, *},
 };
 fn d(s: &str) -> Decimal {
     s.parse().unwrap()
@@ -41,7 +37,7 @@ fn line(category: VatCategory) -> LineItem {
 fn roundtrip(xml: &str) -> FinalizedInvoice {
     let first = parse(xml).unwrap();
     let regenerated = first.to_xml().unwrap();
-    validate_xml_invoice_from_str(&regenerated, &Config::default()).unwrap();
+    Validator::new().validate_xml(&regenerated).unwrap();
     let second = parse(&regenerated).unwrap();
     assert_eq!(first, second);
     second
@@ -223,8 +219,7 @@ fn duplicate_supported_singletons_are_rejected() {
 #[test]
 fn regenerated_compliant_standard_fixture_passes_business_rules() {
     use fatoora_core::invoice::validation::{
-        Severity, ZatcaStage, ZatcaStageStatus, ZatcaValidationOptions,
-        validate_zatca_invoice_from_str,
+        Severity, Validator, ZatcaStage, ZatcaStageStatus, ZatcaValidationOptions,
     };
     for name in [
         "Standard_Invoice.xml",
@@ -243,7 +238,7 @@ fn regenerated_compliant_standard_fixture_passes_business_rules() {
             evaluated_at: Some("2026-10-18T12:00:00Z".parse().unwrap()),
             previous_invoice_hash: Some(invoice.data().previous_invoice_hash().into()),
         };
-        let report = validate_zatca_invoice_from_str(&xml, &Config::default(), &options).unwrap();
+        let report = Validator::new().validate_zatca(&xml, &options).unwrap();
         for stage in report
             .stages
             .iter()
@@ -311,9 +306,7 @@ fn previous_serde_models_default_new_optional_fields() {
 
 #[test]
 fn delivery_order_is_reported_by_business_validation_without_import_repair() {
-    use fatoora_core::invoice::validation::{
-        ZatcaValidationOptions, validate_zatca_invoice_from_str,
-    };
+    use fatoora_core::invoice::validation::{Validator, ZatcaValidationOptions};
     let invoice = builder()
         .delivery(Delivery {
             actual_date: Some(InvoiceDate::parse("2024-02-02").unwrap()),
@@ -324,12 +317,12 @@ fn delivery_order_is_reported_by_business_validation_without_import_repair() {
         .unwrap();
     let parsed = roundtrip(&invoice.to_xml().unwrap());
     assert_eq!(parsed.data().delivery(), invoice.data().delivery());
-    let report = validate_zatca_invoice_from_str(
-        &parsed.to_xml().unwrap(),
-        &Config::default(),
-        &ZatcaValidationOptions::default(),
-    )
-    .unwrap();
+    let report = Validator::new()
+        .validate_zatca(
+            &parsed.to_xml().unwrap(),
+            &ZatcaValidationOptions::default(),
+        )
+        .unwrap();
     assert!(
         report
             .stages
@@ -892,7 +885,7 @@ fn reference_issue_times_accept_surrounding_whitespace_but_reject_invalid_values
             "<cbc:IssueTime> \t10:20:30\r\n </cbc:IssueTime>",
         );
         assert_ne!(padded, xml);
-        validate_xml_invoice_from_str(&padded, &Config::default()).unwrap();
+        Validator::new().validate_xml(&padded).unwrap();
         assert_eq!(roundtrip(&padded), expected);
         for invalid in ["", " \t\r\n ", "25:00:00", "not-a-time"] {
             let modified = xml.replace(
@@ -942,7 +935,7 @@ fn repeated_adjustment_classifications_compare_normalized_scalars() {
         assert_ne!(replacement, original);
         let mut modified = xml.clone();
         modified.replace_range(category.range(), &replacement);
-        validate_xml_invoice_from_str(&modified, &Config::default()).unwrap();
+        Validator::new().validate_xml(&modified).unwrap();
         assert_eq!(roundtrip(&modified), invoice);
     }
     for (field, value) in [
@@ -1117,7 +1110,7 @@ fn numeric_xml_content_accepts_surrounding_whitespace_without_skipping_validatio
         let replacement = format!(" \t{value}\n ");
         let mut modified = xml.clone();
         modified.replace_range(text.range(), &replacement);
-        validate_xml_invoice_from_str(&modified, &Config::default()).unwrap();
+        Validator::new().validate_xml(&modified).unwrap();
         assert_eq!(roundtrip(&modified), invoice, "{}", node.tag_name().name());
         padded.replace_range(text.range(), &replacement);
         for invalid in ["", " \t\n ", "invalid", "1 0"] {

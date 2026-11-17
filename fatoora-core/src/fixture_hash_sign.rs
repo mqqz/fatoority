@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use crate::invoice::sign::invoice_hash_base64_from_xml_str;
+use crate::invoice::hash_xml;
 
 const DS_NS: &str = "http://www.w3.org/2000/09/xmldsig#";
 
@@ -30,12 +30,18 @@ fn fixture_invoices_match_hash_digest() {
             .and_then(|node| node.text())
             .expect("invoice digest")
             .trim();
-        let actual_invoice_digest = invoice_hash_base64_from_xml_str(&xml).expect("invoice hash");
+        let actual_invoice_digest = hash_xml(&xml).expect("invoice hash");
         assert_eq!(
             expected_invoice_digest,
-            actual_invoice_digest,
+            actual_invoice_digest.as_str(),
             "invoice hash mismatch for {}",
             file.display()
+        );
+        #[allow(deprecated)]
+        let legacy = crate::invoice::sign::invoice_hash_base64_from_xml_str(&xml);
+        assert_eq!(
+            legacy.expect("legacy invoice hash"),
+            actual_invoice_digest.as_str()
         );
     }
 }
