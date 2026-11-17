@@ -5,9 +5,9 @@ import * as sdk from '../index.mjs';
 import * as raw from '../generated/index.mjs';
 import wasm from '../generated/diplomat-wasm.mjs';
 const loadFixture = (path) => readFileSync(new URL(`../../../fatoora-core/tests/fixtures/${path}`, import.meta.url), 'utf8');
-const config = sdk.Config.new_(0);
-const ccsid = () => sdk.CsidCompliance.create(0, '123', 'token', 'secret');
-const pcsid = () => sdk.CsidProduction.create(0, null, 'token', 'secret');
+const config = sdk.Config.new_(sdk.Environment.NonProduction);
+const ccsid = () => sdk.CsidCompliance.create(sdk.Environment.NonProduction, '123', 'token', 'secret');
+const pcsid = () => sdk.CsidProduction.create(sdk.Environment.NonProduction, null, 'token', 'secret');
 const invoice = () => sdk.SignedInvoice.fromXml(loadFixture('sdk-parity/cases/simplified-invoice/sdk-signed.xml'));
 const credentialsBody = { requestID: 123, binarySecurityToken: 'new-token', secret: 'new-secret' };
 const validationBody = { validationResults: { status: 'PASS' }, reportingStatus: 'REPORTED' };
@@ -35,12 +35,12 @@ test('optional strings preserve absent, empty and Arabic across repeated calls',
 });
 
 test('decimal values remain exact and consumed builders fail safely', () => {
-  const b = sdk.InvoiceBuilder.new_(0, 1, null, null, null, null);
+  const b = sdk.InvoiceBuilder.new_(sdk.InvoiceTypeKind.Tax, sdk.InvoiceSubType.Simplified, null, null, null, null);
   b.setId('JS-1'); b.setUuid('js-uuid'); b.setIssueDatetime('2024-01-01T12:30:00Z');
-  b.setCurrency('SAR'); b.setPreviousInvoiceHash('hash'); b.setInvoiceCounter(0n); b.setPaymentMeansCode('10'); b.setVatCategory(1);
+  b.setCurrency('SAR'); b.setPreviousInvoiceHash('hash'); b.setInvoiceCounter(0n); b.setPaymentMeansCode('10'); b.setVatCategory(sdk.VatCategory.Standard);
   const a = sdk.Address.new_('SAU', 'Riyadh', 'King Fahd', '1234', '12222', null, null, null);
   b.setSeller('Acme Inc', a, '301121971500003', null, null);
-  b.addLineItem('Item', '3', 'PCE', '0.3333', '15', 1);
+  b.addLineItem('Item', '3', 'PCE', '0.3333', '15', sdk.VatCategory.Standard);
   const inv = b.build();
   assert.equal(inv.totals().taxInclusive(), '1.15');
   assert.match(inv.xml(), />0.3333<\/cbc:PriceAmount>/);
@@ -49,7 +49,7 @@ test('decimal values remain exact and consumed builders fail safely', () => {
 
 test('prepared request retains context after invoice consumption and WASM memory growth', () => {
   const inv = invoice();
-  const request = raw.ZatcaClient.create(config).prepareReportSimplifiedInvoice(inv, pcsid(), false, 'ar');
+  const request = raw.ZatcaClient.create(config).prepareReportSimplifiedInvoice(inv, pcsid(), sdk.ClearanceMode.Disabled, 'ar');
   const bytes = request.body().asSlice();
   const original = JSON.parse(Buffer.from(bytes).toString());
   inv.intoXml();
@@ -59,6 +59,15 @@ test('prepared request retains context after invoice consumption and WASM memory
   const result = request.decode(200, [...Buffer.from(JSON.stringify(validationBody))]);
   assert.equal(result.httpStatus(), 200);
   assert.equal(result.outcome().value, 'Accepted');
+  assert.equal(result.reportingStatus(), sdk.ReportingStatus.Reported);
+  assert.equal(result.reportingStatusRaw().value(), 'REPORTED');
+  assert.equal(result.validationResults().status(), sdk.ValidationStatus.Pass);
+  assert.equal(result.clearanceStatus(), null);
+  assert.equal(result.clearanceStatusRaw(), null);
+  const unknown = request.decode(200, [...Buffer.from(JSON.stringify({validationResults: {status: 'PARTIAL'}, reportingStatus: 'LATER'}))]);
+  assert.equal(unknown.reportingStatus(), sdk.ReportingStatus.Unknown);
+  assert.equal(unknown.reportingStatusRaw().value(), 'LATER');
+  assert.equal(unknown.validationResults().status(), sdk.ValidationStatus.Unknown);
 });
 
 test('fetch sees Rust headers and body; concurrent requests decode independently', async () => {
@@ -80,13 +89,13 @@ test('fetch sees Rust headers and body; concurrent requests decode independently
 });
 
 test('all credential operations, including renewal 428, share Rust decoding', async () => {
-  const csr = sdk.CsrProperties.fromPropertiesStr(loadFixture('csr-configs/csr-config-example-EN.properties')).build(sdk.SigningKey.generate(), 0);
+  const csr = sdk.CsrProperties.fromPropertiesStr(loadFixture('csr-configs/csr-config-example-EN.properties')).build(sdk.SigningKey.generate(), sdk.Environment.NonProduction);
   const calls = [];
   const client = new sdk.ZatcaClient(config, { fetch: async (url, init) => {
     calls.push({url, init});
     return init.method === 'PATCH' ? json({value: credentialsBody}, 428) : json(credentialsBody);
   }});
-  assert.equal((await client.postCsrForCcsid(csr, '123456')).env(), 0);
+  assert.equal((await client.postCsrForCcsid(csr, '123456')).env(), sdk.Environment.NonProduction);
   assert.equal((await client.renewCsid(pcsid(), csr, '123456')).requestId().value(), '123');
   assert.equal(new Headers(calls[0].init.headers).get('otp'), '123456');
   assert.equal(calls[1].init.method, 'PATCH');
@@ -124,6 +133,8 @@ test('clearance and compliance use their own acceptance fields', async () => {
   assert.equal((await client.clearStandardInvoice(standard, pcsid())).outcome().value, 'Accepted');
   assert.equal((await client.checkInvoiceCompliance(invoice(), ccsid())).outcome().value, 'Accepted');
   await assert.rejects(client.clearStandardInvoice(invoice(), pcsid()));
+  assert.equal((await client.clearStandardInvoice(standard, pcsid(), sdk.ClearanceMode.Enabled)).clearanceStatus(), sdk.ClearanceStatus.Cleared);
+  await assert.rejects(client.clearStandardInvoice(standard, pcsid(), 1), TypeError);
 });
 
 test('compressed schemas preserve valid Arabic input and reject schema-invalid XML', () => {
@@ -174,14 +185,14 @@ test('imported signed invoice hashes its stored XML', () => {
 });
 
 test('optional line fields and repeated identifiers survive WASM import', () => {
-  const b = sdk.InvoiceBuilder.new_(0, 1, null, null, null, null);
+  const b = sdk.InvoiceBuilder.new_(sdk.InvoiceTypeKind.Tax, sdk.InvoiceSubType.Simplified, null, null, null, null);
   b.setId('JS-fields'); b.setUuid('uuid'); b.setIssueDatetime('2024-01-01T12:30:00Z');
-  b.setCurrency('SAR'); b.setPreviousInvoiceHash('hash'); b.setInvoiceCounter(1n); b.setVatCategory(1);
+  b.setCurrency('SAR'); b.setPreviousInvoiceHash('hash'); b.setInvoiceCounter(1n); b.setVatCategory(sdk.VatCategory.Standard);
   b.setSeller('Seller', sdk.Address.new_('SA', 'Riyadh', 'Street', '1234', '12222', null, null, null), '301121971500003', 'first', 'CRN');
   b.addSellerIdentifier('second', 'OTH');
   const line = sdk.LineItemBuilder.new_();
   line.setItemName('case'); line.setInvoicedQuantity('30'); line.setItemNetPrice('100');
-  line.setItemPriceBaseQuantity('12'); line.setVatRate('15'); line.setVatCategory(1);
+  line.setItemPriceBaseQuantity('12'); line.setVatRate('15'); line.setVatCategory(sdk.VatCategory.Standard);
   line.addAllowance(sdk.Adjustment.percentage('250', '10').withReason('rebate', '95'));
   b.addItem(line.build());
   b.addPaymentMeans(sdk.PaymentMeans.new_('30', 'one').withInstructionNote('two').withAccount('bank', 'net 30'));

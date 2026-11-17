@@ -15,6 +15,8 @@ namespace capi { struct BindingError; }
 class BindingError;
 namespace capi { struct Text; }
 class Text;
+class MessageType;
+class ValidationStatus;
 } // namespace _native
 
 
@@ -29,7 +31,15 @@ namespace _native {
 class ValidationMessage {
 public:
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> message_type() const;
+  /**
+   * The parsed message `type`, or null when the message has none.
+   */
+  inline std::optional<_native::MessageType> message_type() const;
+
+  /**
+   * The message `type` exactly as ZATCA sent it, or null when absent.
+   */
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> message_type_raw() const;
 
   inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> code() const;
 
@@ -37,7 +47,15 @@ public:
 
   inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> message() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> status() const;
+  /**
+   * The parsed message `status`, or null when the message has none.
+   */
+  inline std::optional<_native::ValidationStatus> status() const;
+
+  /**
+   * The message `status` exactly as ZATCA sent it, or null when absent.
+   */
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> status_raw() const;
 
     inline const _native::capi::ValidationMessage* AsFFI() const;
     inline _native::capi::ValidationMessage* AsFFI();

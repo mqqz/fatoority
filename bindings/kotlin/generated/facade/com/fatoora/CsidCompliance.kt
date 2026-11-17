@@ -11,12 +11,12 @@ class CsidCompliance internal constructor(internal val raw: com.fatoora.raw.Csid
     }
     companion object {
         @JvmStatic
-        fun create(environment: Int, requestId: String?, token: String, secret: String): CsidCompliance = nativeCall(listOfNotNull()) {
-            CsidCompliance(unwrap(com.fatoora.raw.CsidCompliance.create(checkedUnsigned(environment.toLong(), 255).toUByte(), requestId?.let(::checkedText), checkedText(token), checkedText(secret))))
+        fun create(environment: Environment, requestId: String?, token: String, secret: String): CsidCompliance = nativeCall(listOfNotNull()) {
+            CsidCompliance(unwrap(com.fatoora.raw.CsidCompliance.create(com.fatoora.raw.Environment.valueOf(environment.name), requestId?.let(::checkedText), checkedText(token), checkedText(secret))))
         }
     }
-    fun env(): Int = nativeCall(listOfNotNull(this)) {
-        raw.env().toInt()
+    fun env(): Environment = nativeCall(listOfNotNull(this)) {
+        Environment.valueOf(unwrap(raw.env()).name)
     }
 
     fun requestId(): Text? = nativeCall(listOfNotNull(this)) {

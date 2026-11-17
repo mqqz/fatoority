@@ -26,9 +26,10 @@ class ContractsTest {
     }
 
     @Test fun unsignedBoundariesRemainJavaCallable() {
-        assertFailsWith<IllegalArgumentException> { Config.create(-1) }
-        assertFailsWith<IllegalArgumentException> { Config.create(256) }
-        InvoiceBuilder.create(0, 0).use { builder ->
+        InvoiceBuilder.create(InvoiceTypeKind.Tax, InvoiceSubType.Standard).use { builder ->
+            assertFailsWith<IllegalArgumentException> { builder.flags(-1) }
+            assertFailsWith<IllegalArgumentException> { builder.flags(256) }
+            builder.flags(InvoiceFlag.ThirdParty.bit() or InvoiceFlag.Export.bit())
             val maximum = java.math.BigInteger("18446744073709551615")
             builder.setInvoiceCounter(maximum)
             assertFailsWith<IllegalArgumentException> { builder.setInvoiceCounter(maximum.add(java.math.BigInteger.ONE)) }
@@ -50,7 +51,7 @@ class ContractsTest {
     }
 
     @Test fun consumptionDoesNotBecomeUseAfterFree() {
-        InvoiceBuilder.create(0, 0).use { b ->
+        InvoiceBuilder.create(InvoiceTypeKind.Tax, InvoiceSubType.Standard).use { b ->
             assertFailsWith<BindingException> { b.build() }
             assertFailsWith<BindingException> { b.setId("again") }
         }
@@ -107,17 +108,22 @@ class ContractsTest {
         assertEquals("aqY8frWKpauDQqXCsdne5hYwMQCo1DUUNKLfSAtT2mg=", Xml.hash(xml))
         Signer.fromDer(File(root,"credentials/certificate.der").readBytes(), File(root,"credentials/private-key.der").readBytes()).use { signer ->
             val signed = signer.signXml(xml)
-            Config.create(0).use { config -> ZatcaClient.create(config).use { client ->
-                val credentials = CsidProduction.create(0, null, "token", "secret")
+            Config.create(Environment.NonProduction).use { config -> ZatcaClient.create(config).use { client ->
+                assertEquals(Environment.NonProduction, config.env())
+                val credentials = CsidProduction.create(Environment.NonProduction, null, "token", "secret")
                 val invoice = SignedInvoice.fromXml(signed)
                 assertEquals(Xml.hash(signed), invoice.hashBase64())
-                val request = client.prepareReportSimplifiedInvoice(invoice, credentials, false)
+                val request = client.prepareReportSimplifiedInvoice(invoice, credentials, ClearanceMode.Disabled)
                 credentials.close(); invoice.close()
                 request.use {
                     assertEquals("POST", it.method())
                     it.body().use { body -> assertTrue(String(body.asSlice()).contains("invoiceHash")) }
                     it.decode(200, """{"validationResults":{"status":"PASS"},"reportingStatus":"REPORTED"}""".toByteArray()).use { response ->
                         assertEquals(InvoiceOutcome.Accepted, response.outcome())
+                        assertEquals(ReportingStatus.Reported, response.reportingStatus())
+                        response.reportingStatusRaw()!!.use { raw -> assertEquals("REPORTED", raw.value()) }
+                        assertNull(response.clearanceStatus())
+                        response.validationResults().use { results -> assertEquals(ValidationStatus.Pass, results.status()) }
                         response.ensureAccepted()
                     }
                     assertFailsWith<BindingException> { it.decode(400, "bad response".toByteArray()) }

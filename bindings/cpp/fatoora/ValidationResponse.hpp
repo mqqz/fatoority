@@ -13,7 +13,9 @@
 #include <cstdlib>
 #include "../diplomat_runtime.hpp"
 #include "BindingError.hpp"
+#include "ClearanceStatus.hpp"
 #include "InvoiceOutcome.hpp"
+#include "ReportingStatus.hpp"
 #include "Text.hpp"
 #include "ValidationResults.hpp"
 
@@ -39,11 +41,17 @@ namespace capi {
     typedef struct fatoora_ValidationResponse_cleared_invoice_base64_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_cleared_invoice_base64_result;
     fatoora_ValidationResponse_cleared_invoice_base64_result fatoora_ValidationResponse_cleared_invoice_base64(const fatoora::capi::ValidationResponse* self);
 
-    typedef struct fatoora_ValidationResponse_reporting_status_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_reporting_status_result;
+    typedef struct fatoora_ValidationResponse_reporting_status_result {union {fatoora::capi::ReportingStatus ok; }; bool is_ok;} fatoora_ValidationResponse_reporting_status_result;
     fatoora_ValidationResponse_reporting_status_result fatoora_ValidationResponse_reporting_status(const fatoora::capi::ValidationResponse* self);
 
-    typedef struct fatoora_ValidationResponse_clearance_status_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_clearance_status_result;
+    typedef struct fatoora_ValidationResponse_reporting_status_raw_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_reporting_status_raw_result;
+    fatoora_ValidationResponse_reporting_status_raw_result fatoora_ValidationResponse_reporting_status_raw(const fatoora::capi::ValidationResponse* self);
+
+    typedef struct fatoora_ValidationResponse_clearance_status_result {union {fatoora::capi::ClearanceStatus ok; }; bool is_ok;} fatoora_ValidationResponse_clearance_status_result;
     fatoora_ValidationResponse_clearance_status_result fatoora_ValidationResponse_clearance_status(const fatoora::capi::ValidationResponse* self);
+
+    typedef struct fatoora_ValidationResponse_clearance_status_raw_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_clearance_status_raw_result;
+    fatoora_ValidationResponse_clearance_status_raw_result fatoora_ValidationResponse_clearance_status_raw(const fatoora::capi::ValidationResponse* self);
 
     typedef struct fatoora_ValidationResponse_qr_seller_status_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_qr_seller_status_result;
     fatoora_ValidationResponse_qr_seller_status_result fatoora_ValidationResponse_qr_seller_status(const fatoora::capi::ValidationResponse* self);
@@ -87,13 +95,23 @@ inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora:
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::ValidationResponse::reporting_status() const {
+inline std::optional<fatoora::ReportingStatus> fatoora::ValidationResponse::reporting_status() const {
     auto result = fatoora::capi::fatoora_ValidationResponse_reporting_status(this->AsFFI());
+    return result.is_ok ? std::optional<fatoora::ReportingStatus>(fatoora::ReportingStatus::FromFFI(result.ok)) : std::nullopt;
+}
+
+inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::ValidationResponse::reporting_status_raw() const {
+    auto result = fatoora::capi::fatoora_ValidationResponse_reporting_status_raw(this->AsFFI());
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::ValidationResponse::clearance_status() const {
+inline std::optional<fatoora::ClearanceStatus> fatoora::ValidationResponse::clearance_status() const {
     auto result = fatoora::capi::fatoora_ValidationResponse_clearance_status(this->AsFFI());
+    return result.is_ok ? std::optional<fatoora::ClearanceStatus>(fatoora::ClearanceStatus::FromFFI(result.ok)) : std::nullopt;
+}
+
+inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::ValidationResponse::clearance_status_raw() const {
+    auto result = fatoora::capi::fatoora_ValidationResponse_clearance_status_raw(this->AsFFI());
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 

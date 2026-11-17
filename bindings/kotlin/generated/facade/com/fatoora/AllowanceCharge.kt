@@ -11,8 +11,8 @@ class AllowanceCharge internal constructor(internal val raw: com.fatoora.raw.All
     }
     companion object {
         @JvmStatic
-        fun create(charge: Boolean, amount: String, reason: String?, reasonCode: String?, category: Int, rate: String, exemption: TaxExemption): AllowanceCharge = nativeCall(listOfNotNull(exemption)) {
-            AllowanceCharge(unwrap(com.fatoora.raw.AllowanceCharge.new_(charge, checkedText(amount), reason?.let(::checkedText), reasonCode?.let(::checkedText), checkedUnsigned(category.toLong(), 255).toUByte(), checkedText(rate), exemption.raw)))
+        fun create(kind: AdjustmentKind, amount: String, reason: String?, reasonCode: String?, category: VatCategory, rate: String, exemption: TaxExemption): AllowanceCharge = nativeCall(listOfNotNull(exemption)) {
+            AllowanceCharge(unwrap(com.fatoora.raw.AllowanceCharge.new_(com.fatoora.raw.AdjustmentKind.valueOf(kind.name), checkedText(amount), reason?.let(::checkedText), reasonCode?.let(::checkedText), com.fatoora.raw.VatCategory.valueOf(category.name), checkedText(rate), exemption.raw)))
         }
     }
     fun hasVatRate(): Boolean = nativeCall(listOfNotNull(this)) {
@@ -35,8 +35,8 @@ class AllowanceCharge internal constructor(internal val raw: com.fatoora.raw.All
         unwrap(raw.percentage())?.let(::Text)
     }
 
-    fun isCharge(): Boolean = nativeCall(listOfNotNull(this)) {
-        raw.isCharge()
+    fun kind(): AdjustmentKind = nativeCall(listOfNotNull(this)) {
+        AdjustmentKind.valueOf(raw.kind().name)
     }
 
     fun amount(): String = nativeCall(listOfNotNull(this)) {
@@ -47,8 +47,8 @@ class AllowanceCharge internal constructor(internal val raw: com.fatoora.raw.All
         unwrap(raw.rate())
     }
 
-    fun category(): Int = nativeCall(listOfNotNull(this)) {
-        raw.category().toInt()
+    fun category(): VatCategory = nativeCall(listOfNotNull(this)) {
+        VatCategory.valueOf(raw.category().name)
     }
 
     fun withTaxCategoryCount(count: java.math.BigInteger): AllowanceCharge = nativeCall(listOfNotNull(this)) {

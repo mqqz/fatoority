@@ -17,6 +17,7 @@ namespace capi { struct CsidCompliance; }
 class CsidCompliance;
 namespace capi { struct Text; }
 class Text;
+class Environment;
 } // namespace _native
 
 
@@ -31,9 +32,9 @@ namespace _native {
 class CsidCompliance {
 public:
 
-  inline static _native::diplomat::result<std::unique_ptr<_native::CsidCompliance>, std::unique_ptr<_native::BindingError>> create(uint8_t environment, std::optional<std::string_view> request_id, std::string_view token, std::string_view secret);
+  inline static _native::diplomat::result<std::unique_ptr<_native::CsidCompliance>, std::unique_ptr<_native::BindingError>> create(_native::Environment environment, std::optional<std::string_view> request_id, std::string_view token, std::string_view secret);
 
-  inline uint8_t env() const;
+  inline _native::diplomat::result<_native::Environment, std::unique_ptr<_native::BindingError>> env() const;
 
   inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> request_id() const;
 

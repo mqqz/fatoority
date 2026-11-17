@@ -1,7 +1,7 @@
 using Fatoora;
 using System.Text.Json;
 
-using var config = Config.New(0); // Non-production.
+using var config = Config.New(ZatcaEnvironment.NonProduction);
 string xml = File.ReadAllText("invoice.xml");
 if (args.Contains("--zatca"))
 {

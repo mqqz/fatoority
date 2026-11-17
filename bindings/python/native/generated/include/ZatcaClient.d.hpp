@@ -33,6 +33,7 @@ namespace capi { struct ValidationResponse; }
 class ValidationResponse;
 namespace capi { struct ZatcaClient; }
 class ZatcaClient;
+class ClearanceMode;
 } // namespace _native
 
 
@@ -57,9 +58,9 @@ public:
 
   inline _native::diplomat::result<std::unique_ptr<_native::ValidationResponse>, std::unique_ptr<_native::BindingError>> check_invoice_compliance(const _native::SignedInvoice& invoice, const _native::CsidCompliance& credentials) const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::ValidationResponse>, std::unique_ptr<_native::BindingError>> report_simplified_invoice(const _native::SignedInvoice& invoice, const _native::CsidProduction& credentials, bool clearance_status, std::optional<std::string_view> accept_language) const;
+  inline _native::diplomat::result<std::unique_ptr<_native::ValidationResponse>, std::unique_ptr<_native::BindingError>> report_simplified_invoice(const _native::SignedInvoice& invoice, const _native::CsidProduction& credentials, _native::ClearanceMode clearance_mode, std::optional<std::string_view> accept_language) const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::ValidationResponse>, std::unique_ptr<_native::BindingError>> clear_standard_invoice(const _native::SignedInvoice& invoice, const _native::CsidProduction& credentials, bool clearance_status, std::optional<std::string_view> accept_language) const;
+  inline _native::diplomat::result<std::unique_ptr<_native::ValidationResponse>, std::unique_ptr<_native::BindingError>> clear_standard_invoice(const _native::SignedInvoice& invoice, const _native::CsidProduction& credentials, _native::ClearanceMode clearance_mode, std::optional<std::string_view> accept_language) const;
 
   inline _native::diplomat::result<std::unique_ptr<_native::ComplianceRequest>, std::unique_ptr<_native::BindingError>> prepare_post_csr_for_ccsid(const _native::Csr& csr, std::string_view otp) const;
 
@@ -69,9 +70,9 @@ public:
 
   inline _native::diplomat::result<std::unique_ptr<_native::InvoiceRequest>, std::unique_ptr<_native::BindingError>> prepare_check_invoice_compliance(const _native::SignedInvoice& invoice, const _native::CsidCompliance& credentials) const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::InvoiceRequest>, std::unique_ptr<_native::BindingError>> prepare_report_simplified_invoice(const _native::SignedInvoice& invoice, const _native::CsidProduction& credentials, bool clearance_status, std::optional<std::string_view> accept_language) const;
+  inline _native::diplomat::result<std::unique_ptr<_native::InvoiceRequest>, std::unique_ptr<_native::BindingError>> prepare_report_simplified_invoice(const _native::SignedInvoice& invoice, const _native::CsidProduction& credentials, _native::ClearanceMode clearance_mode, std::optional<std::string_view> accept_language) const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::InvoiceRequest>, std::unique_ptr<_native::BindingError>> prepare_clear_standard_invoice(const _native::SignedInvoice& invoice, const _native::CsidProduction& credentials, bool clearance_status, std::optional<std::string_view> accept_language) const;
+  inline _native::diplomat::result<std::unique_ptr<_native::InvoiceRequest>, std::unique_ptr<_native::BindingError>> prepare_clear_standard_invoice(const _native::SignedInvoice& invoice, const _native::CsidProduction& credentials, _native::ClearanceMode clearance_mode, std::optional<std::string_view> accept_language) const;
 
     inline const _native::capi::ZatcaClient* AsFFI() const;
     inline _native::capi::ZatcaClient* AsFFI();

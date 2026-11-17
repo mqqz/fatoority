@@ -33,13 +33,13 @@ class ZatcaClient internal constructor(internal val raw: com.fatoora.raw.ZatcaCl
     }
 
     @JvmOverloads
-    fun reportSimplifiedInvoice(invoice: SignedInvoice, credentials: CsidProduction, clearanceStatus: Boolean, acceptLanguage: String? = null): ValidationResponse = nativeCall(listOfNotNull(this, invoice, credentials)) {
-        ValidationResponse(unwrap(raw.reportSimplifiedInvoice(invoice.raw, credentials.raw, clearanceStatus, acceptLanguage?.let(::checkedText))))
+    fun reportSimplifiedInvoice(invoice: SignedInvoice, credentials: CsidProduction, clearanceMode: ClearanceMode, acceptLanguage: String? = null): ValidationResponse = nativeCall(listOfNotNull(this, invoice, credentials)) {
+        ValidationResponse(unwrap(raw.reportSimplifiedInvoice(invoice.raw, credentials.raw, com.fatoora.raw.ClearanceMode.valueOf(clearanceMode.name), acceptLanguage?.let(::checkedText))))
     }
 
     @JvmOverloads
-    fun clearStandardInvoice(invoice: SignedInvoice, credentials: CsidProduction, clearanceStatus: Boolean, acceptLanguage: String? = null): ValidationResponse = nativeCall(listOfNotNull(this, invoice, credentials)) {
-        ValidationResponse(unwrap(raw.clearStandardInvoice(invoice.raw, credentials.raw, clearanceStatus, acceptLanguage?.let(::checkedText))))
+    fun clearStandardInvoice(invoice: SignedInvoice, credentials: CsidProduction, clearanceMode: ClearanceMode, acceptLanguage: String? = null): ValidationResponse = nativeCall(listOfNotNull(this, invoice, credentials)) {
+        ValidationResponse(unwrap(raw.clearStandardInvoice(invoice.raw, credentials.raw, com.fatoora.raw.ClearanceMode.valueOf(clearanceMode.name), acceptLanguage?.let(::checkedText))))
     }
 
     fun preparePostCsrForCcsid(csr: Csr, otp: String): ComplianceRequest = nativeCall(listOfNotNull(this, csr)) {
@@ -60,12 +60,12 @@ class ZatcaClient internal constructor(internal val raw: com.fatoora.raw.ZatcaCl
     }
 
     @JvmOverloads
-    fun prepareReportSimplifiedInvoice(invoice: SignedInvoice, credentials: CsidProduction, clearanceStatus: Boolean, acceptLanguage: String? = null): InvoiceRequest = nativeCall(listOfNotNull(this, invoice, credentials)) {
-        InvoiceRequest(unwrap(raw.prepareReportSimplifiedInvoice(invoice.raw, credentials.raw, clearanceStatus, acceptLanguage?.let(::checkedText))))
+    fun prepareReportSimplifiedInvoice(invoice: SignedInvoice, credentials: CsidProduction, clearanceMode: ClearanceMode, acceptLanguage: String? = null): InvoiceRequest = nativeCall(listOfNotNull(this, invoice, credentials)) {
+        InvoiceRequest(unwrap(raw.prepareReportSimplifiedInvoice(invoice.raw, credentials.raw, com.fatoora.raw.ClearanceMode.valueOf(clearanceMode.name), acceptLanguage?.let(::checkedText))))
     }
 
     @JvmOverloads
-    fun prepareClearStandardInvoice(invoice: SignedInvoice, credentials: CsidProduction, clearanceStatus: Boolean, acceptLanguage: String? = null): InvoiceRequest = nativeCall(listOfNotNull(this, invoice, credentials)) {
-        InvoiceRequest(unwrap(raw.prepareClearStandardInvoice(invoice.raw, credentials.raw, clearanceStatus, acceptLanguage?.let(::checkedText))))
+    fun prepareClearStandardInvoice(invoice: SignedInvoice, credentials: CsidProduction, clearanceMode: ClearanceMode, acceptLanguage: String? = null): InvoiceRequest = nativeCall(listOfNotNull(this, invoice, credentials)) {
+        InvoiceRequest(unwrap(raw.prepareClearStandardInvoice(invoice.raw, credentials.raw, com.fatoora.raw.ClearanceMode.valueOf(clearanceMode.name), acceptLanguage?.let(::checkedText))))
     }
 }

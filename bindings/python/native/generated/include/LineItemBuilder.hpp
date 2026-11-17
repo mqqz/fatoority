@@ -17,6 +17,7 @@
 #include "OriginalInvoiceRef.hpp"
 #include "TaxExemption.hpp"
 #include "VatBreakdown.hpp"
+#include "VatCategory.hpp"
 #include "diplomat_runtime.hpp"
 
 
@@ -75,7 +76,7 @@ namespace capi {
     fatoora_LineItemBuilder_set_vat_rate_result fatoora_LineItemBuilder_set_vat_rate(_native::capi::LineItemBuilder* self, _native::diplomat::capi::DiplomatStringView value);
 
     typedef struct fatoora_LineItemBuilder_set_vat_category_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_LineItemBuilder_set_vat_category_result;
-    fatoora_LineItemBuilder_set_vat_category_result fatoora_LineItemBuilder_set_vat_category(_native::capi::LineItemBuilder* self, uint8_t value);
+    fatoora_LineItemBuilder_set_vat_category_result fatoora_LineItemBuilder_set_vat_category(_native::capi::LineItemBuilder* self, _native::capi::VatCategory value);
 
     typedef struct fatoora_LineItemBuilder_set_exemption_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_LineItemBuilder_set_exemption_result;
     fatoora_LineItemBuilder_set_exemption_result fatoora_LineItemBuilder_set_exemption(_native::capi::LineItemBuilder* self, const _native::capi::TaxExemption* value);
@@ -207,9 +208,9 @@ inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::Bindin
     return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::LineItemBuilder::set_vat_category(uint8_t value) {
+inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::LineItemBuilder::set_vat_category(_native::VatCategory value) {
     auto result = _native::capi::fatoora_LineItemBuilder_set_vat_category(this->AsFFI(),
-        value);
+        value.AsFFI());
     return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 

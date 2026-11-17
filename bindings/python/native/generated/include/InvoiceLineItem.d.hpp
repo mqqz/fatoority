@@ -27,6 +27,8 @@ namespace capi { struct Text; }
 class Text;
 namespace capi { struct VatBreakdown; }
 class VatBreakdown;
+class AdjustmentKind;
+class VatCategory;
 } // namespace _native
 
 
@@ -53,7 +55,7 @@ public:
 
   inline _native::diplomat::result<std::unique_ptr<_native::Adjustment>, std::unique_ptr<_native::BindingError>> adjustment(size_t index) const;
 
-  inline _native::diplomat::result<bool, std::unique_ptr<_native::BindingError>> adjustment_is_charge(size_t index) const;
+  inline _native::diplomat::result<_native::AdjustmentKind, std::unique_ptr<_native::BindingError>> adjustment_kind(size_t index) const;
 
   inline _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>> item_seller_identifier() const;
 
@@ -73,7 +75,7 @@ public:
 
   inline _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>> tax_subtotal(size_t index) const;
 
-  inline static _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std::unique_ptr<_native::BindingError>> new_(std::string_view description, std::string_view quantity, std::string_view unit_code, std::string_view unit_price, std::string_view rate, uint8_t category);
+  inline static _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std::unique_ptr<_native::BindingError>> new_(std::string_view description, std::string_view quantity, std::string_view unit_code, std::string_view unit_price, std::string_view rate, _native::VatCategory category);
 
   inline _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std::unique_ptr<_native::BindingError>> with_metadata(std::optional<std::string_view> id, const _native::TaxExemption& exemption) const;
 
@@ -115,7 +117,7 @@ public:
 
   inline bool has_gross_amount() const;
 
-  inline uint8_t vat_category() const;
+  inline _native::VatCategory vat_category() const;
 
     inline const _native::capi::InvoiceLineItem* AsFFI() const;
     inline _native::capi::InvoiceLineItem* AsFFI();

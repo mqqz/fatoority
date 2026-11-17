@@ -4,8 +4,8 @@
 #[diplomat::abi_rename = "fatoora_{0}"]
 #[diplomat::attr(cpp, namespace = "fatoora")]
 pub mod ffi {
-    use crate::common::ffi::BindingError;
-    use crate::common::{boundary, core_error, local_error, text, write};
+    use crate::common::ffi::{BindingError, Environment};
+    use crate::common::{boundary, core_error, environment_to_ffi, local_error, text, write};
     use crate::invoice::ffi::{FinalizedInvoice, SignedInvoice};
     use diplomat_runtime::{DiplomatStr, DiplomatWrite};
 
@@ -52,15 +52,15 @@ pub mod ffi {
     pub struct Config(pub(crate) fatoora_core::config::Config);
 
     impl Config {
-        pub fn new(env: u8) -> Result<Box<Config>, Box<BindingError>> {
+        pub fn new(env: Environment) -> Result<Box<Config>, Box<BindingError>> {
             boundary(|| {
                 Ok(Box::new(Self(fatoora_core::config::Config::new(
-                    crate::common::environment(env)?,
+                    env.into(),
                 ))))
             })
         }
-        pub fn env(&self) -> u8 {
-            crate::common::environment_code(self.0.env())
+        pub fn env(&self) -> Result<Environment, Box<BindingError>> {
+            boundary(|| environment_to_ffi(self.0.env()))
         }
     }
 
@@ -149,11 +149,15 @@ pub mod ffi {
                 )))
             })
         }
-        pub fn build(&self, key: &SigningKey, env: u8) -> Result<Box<Csr>, Box<BindingError>> {
+        pub fn build(
+            &self,
+            key: &SigningKey,
+            env: Environment,
+        ) -> Result<Box<Csr>, Box<BindingError>> {
             boundary(|| {
                 Ok(Box::new(Csr(self
                     .0
-                    .build(&key.0, crate::common::environment(env)?)
+                    .build(&key.0, env.into())
                     .map_err(core_error)?)))
             })
         }
@@ -256,19 +260,18 @@ pub mod ffi {
 #[cfg(test)]
 mod tests {
     use super::ffi::{BytesList, Config, Csr, CsrProperties, Signer, SigningKey};
+    use crate::common::ffi::Environment;
 
     #[test]
-    fn configuration_rejects_unknown_environment() {
-        for env in 0..=2 {
-            assert_eq!(
-                Config::new(env)
-                    .unwrap_or_else(|_| panic!("operation should succeed"))
-                    .env(),
-                env
-            );
+    fn configuration_round_trips_environment() {
+        for env in [
+            Environment::NonProduction,
+            Environment::Simulation,
+            Environment::Production,
+        ] {
+            let config = Config::new(env).unwrap_or_else(|_| panic!("operation should succeed"));
+            assert_eq!(config.env().ok(), Some(env));
         }
-        assert!(Config::new(3).is_err());
-        assert!(Config::new(u8::MAX).is_err());
     }
 
     #[test]

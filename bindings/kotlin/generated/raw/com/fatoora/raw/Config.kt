@@ -7,8 +7,8 @@ import com.sun.jna.Structure
 
 internal interface ConfigLib: Library {
     fun fatoora_Config_destroy(handle: Pointer)
-    fun fatoora_Config_new(env: FFIUint8): ResultPointerPointer
-    fun fatoora_Config_env(handle: Pointer): FFIUint8
+    fun fatoora_Config_new(env: Int): ResultPointerPointer
+    fun fatoora_Config_env(handle: Pointer): ResultIntPointer
 }
 
 class Config internal constructor (
@@ -41,9 +41,9 @@ class Config internal constructor (
         internal val lib: ConfigLib = Native.load("fatoora_ffi", libClass)
         @JvmStatic
 
-        fun new_(env: UByte): Result<Config> {
+        fun new_(env: Environment): Result<Config> {
 
-            val returnVal = lib.fatoora_Config_new(FFIUint8(env));
+            val returnVal = lib.fatoora_Config_new(env.toNative());
             val nativeOkVal = returnVal.getNativeOk();
             if (nativeOkVal != null) {
                 val selfEdges: List<Any> = listOf()
@@ -59,10 +59,18 @@ class Config internal constructor (
         }
     }
 
-    fun env(): UByte {
+    fun env(): Result<Environment> {
 
         val returnVal = lib.fatoora_Config_env(handle);
-        return (returnVal.toUByte())
+        val nativeOkVal = returnVal.getNativeOk();
+        if (nativeOkVal != null) {
+            return (Environment.fromNative(nativeOkVal)).ok()
+        } else {
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal.getNativeErr()!!
+            val returnOpaque = BindingError(handle, selfEdges, true)
+            return returnOpaque.err()
+        }
     }
 
 }

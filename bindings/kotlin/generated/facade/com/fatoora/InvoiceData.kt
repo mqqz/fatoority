@@ -101,20 +101,20 @@ class InvoiceData internal constructor(internal val raw: com.fatoora.raw.Invoice
         java.math.BigInteger(raw.invoiceCounter().toString())
     }
 
-    fun vatCategory(): Int = nativeCall(listOfNotNull(this)) {
-        raw.vatCategory().toInt()
+    fun vatCategory(): VatCategory = nativeCall(listOfNotNull(this)) {
+        VatCategory.valueOf(raw.vatCategory().name)
     }
 
     fun flagsRaw(): Int = nativeCall(listOfNotNull(this)) {
         raw.flagsRaw().toInt()
     }
 
-    fun invoiceTypeKind(): Int = nativeCall(listOfNotNull(this)) {
-        raw.invoiceTypeKind().toInt()
+    fun invoiceTypeKind(): InvoiceTypeKind = nativeCall(listOfNotNull(this)) {
+        InvoiceTypeKind.valueOf(raw.invoiceTypeKind().name)
     }
 
-    fun invoiceSubType(): Int = nativeCall(listOfNotNull(this)) {
-        raw.invoiceSubType().toInt()
+    fun invoiceSubType(): InvoiceSubType = nativeCall(listOfNotNull(this)) {
+        InvoiceSubType.valueOf(raw.invoiceSubType().name)
     }
 
     fun seller(): Party = nativeCall(listOfNotNull(this)) {

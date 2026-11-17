@@ -4,7 +4,7 @@ using Fatoora;
 
 public static class Program
 {
-    private const byte Sandbox = 0; // Integration Sandbox only.
+    private const ZatcaEnvironment Sandbox = ZatcaEnvironment.NonProduction; // Integration Sandbox only.
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
     private static string Required(string name) =>
         !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(name))
@@ -31,8 +31,8 @@ public static class Program
         using var results = response.ValidationResults();
         var summary = new {
             http_status = response.HttpStatus(), outcome = response.Outcome().ToString(),
-            reporting_status = ReadText(response.ReportingStatus()),
-            validation_status = ReadText(results.Status()),
+            reporting_status = ReadText(response.ReportingStatusRaw()),
+            validation_status = ReadText(results.StatusRaw()),
             info = Messages(results.InfoLen(), results.InfoMessage),
             warnings = Messages(results.WarningLen(), results.WarningMessage),
             errors = Messages(results.ErrorLen(), results.ErrorMessage),
@@ -65,7 +65,7 @@ public static class Program
         Save(Path.Combine(output, "state.json"), state);
         try
         {
-            using var builder = InvoiceBuilder.New(0, 1, null, null, null, null);
+            using var builder = InvoiceBuilder.New(InvoiceTypeKind.Tax, InvoiceSubType.Simplified, null, null, null, null);
             builder.SetId(Field(data, "invoice_id"));
             builder.SetUuid(uuid);
             builder.SetIssueDatetime(DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture));
@@ -73,12 +73,12 @@ public static class Program
             builder.SetInvoiceCounter(ulong.Parse(Field(data, "invoice_counter")));
             builder.SetPreviousInvoiceHash(Field(data, "previous_invoice_hash"));
             builder.SetPaymentMeansCode("10");
-            builder.SetVatCategory(1);
+            builder.SetVatCategory(VatCategory.Standard);
             using var address = Address.New("SA", Field(seller, "city"), Field(seller, "street"),
                 Field(seller, "building_number"), Field(seller, "postal_code"), null,
                 Field(seller, "additional_number"), Field(seller, "district"));
             builder.SetSeller(Field(seller, "name"), address, Field(seller, "vat_id"), Field(seller, "crn"), "CRN");
-            builder.AddLineItem("دفتر", "2", "PCE", "50", "15", 1);
+            builder.AddLineItem("دفتر", "2", "PCE", "50", "15", VatCategory.Standard);
             using var invoice = builder.Build();
             File.WriteAllText(Path.Combine(output, "invoice.xml"), invoice.Xml());
             Console.WriteLine("Created: SAR 100 net + SAR 15 VAT = SAR 115 payable");
@@ -109,7 +109,7 @@ public static class Program
             Save(Path.Combine(output, "state.json"), state);
             using var credentials = CsidProduction.Create(Sandbox, null, token, secret);
             using var client = ZatcaClient.Create(config);
-            using var response = client.ReportSimplifiedInvoice(signed, credentials, false, "en");
+            using var response = client.ReportSimplifiedInvoice(signed, credentials, ClearanceMode.Disabled, "en");
             HandleResponse(response, output);
             state["stage"] = "accepted";
         }

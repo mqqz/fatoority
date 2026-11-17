@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
-import { Config, CsidProduction, SignedInvoice, ZatcaClient } from 'fatoority';
+import { Config, CsidProduction, Environment, SignedInvoice, ZatcaClient } from 'fatoority';
 
-const environment = 0; // Non-production; credentials must match.
+const environment = Environment.NonProduction; // Credentials must match.
 const token = process.env.ZATCA_TOKEN;
 const secret = process.env.ZATCA_SECRET;
 if (!token || !secret) throw new Error('Set ZATCA_TOKEN and ZATCA_SECRET first');

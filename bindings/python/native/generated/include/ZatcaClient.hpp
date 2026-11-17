@@ -12,6 +12,7 @@
 #include <optional>
 #include <cstdlib>
 #include "BindingError.hpp"
+#include "ClearanceMode.hpp"
 #include "ComplianceRequest.hpp"
 #include "Config.hpp"
 #include "CsidCompliance.hpp"
@@ -44,10 +45,10 @@ namespace capi {
     fatoora_ZatcaClient_check_invoice_compliance_result fatoora_ZatcaClient_check_invoice_compliance(const _native::capi::ZatcaClient* self, const _native::capi::SignedInvoice* invoice, const _native::capi::CsidCompliance* credentials);
 
     typedef struct fatoora_ZatcaClient_report_simplified_invoice_result {union {_native::capi::ValidationResponse* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ZatcaClient_report_simplified_invoice_result;
-    fatoora_ZatcaClient_report_simplified_invoice_result fatoora_ZatcaClient_report_simplified_invoice(const _native::capi::ZatcaClient* self, const _native::capi::SignedInvoice* invoice, const _native::capi::CsidProduction* credentials, bool clearance_status, _native::diplomat::capi::OptionStringView accept_language);
+    fatoora_ZatcaClient_report_simplified_invoice_result fatoora_ZatcaClient_report_simplified_invoice(const _native::capi::ZatcaClient* self, const _native::capi::SignedInvoice* invoice, const _native::capi::CsidProduction* credentials, _native::capi::ClearanceMode clearance_mode, _native::diplomat::capi::OptionStringView accept_language);
 
     typedef struct fatoora_ZatcaClient_clear_standard_invoice_result {union {_native::capi::ValidationResponse* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ZatcaClient_clear_standard_invoice_result;
-    fatoora_ZatcaClient_clear_standard_invoice_result fatoora_ZatcaClient_clear_standard_invoice(const _native::capi::ZatcaClient* self, const _native::capi::SignedInvoice* invoice, const _native::capi::CsidProduction* credentials, bool clearance_status, _native::diplomat::capi::OptionStringView accept_language);
+    fatoora_ZatcaClient_clear_standard_invoice_result fatoora_ZatcaClient_clear_standard_invoice(const _native::capi::ZatcaClient* self, const _native::capi::SignedInvoice* invoice, const _native::capi::CsidProduction* credentials, _native::capi::ClearanceMode clearance_mode, _native::diplomat::capi::OptionStringView accept_language);
 
     typedef struct fatoora_ZatcaClient_prepare_post_csr_for_ccsid_result {union {_native::capi::ComplianceRequest* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ZatcaClient_prepare_post_csr_for_ccsid_result;
     fatoora_ZatcaClient_prepare_post_csr_for_ccsid_result fatoora_ZatcaClient_prepare_post_csr_for_ccsid(const _native::capi::ZatcaClient* self, const _native::capi::Csr* csr, _native::diplomat::capi::DiplomatStringView otp);
@@ -62,10 +63,10 @@ namespace capi {
     fatoora_ZatcaClient_prepare_check_invoice_compliance_result fatoora_ZatcaClient_prepare_check_invoice_compliance(const _native::capi::ZatcaClient* self, const _native::capi::SignedInvoice* invoice, const _native::capi::CsidCompliance* credentials);
 
     typedef struct fatoora_ZatcaClient_prepare_report_simplified_invoice_result {union {_native::capi::InvoiceRequest* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ZatcaClient_prepare_report_simplified_invoice_result;
-    fatoora_ZatcaClient_prepare_report_simplified_invoice_result fatoora_ZatcaClient_prepare_report_simplified_invoice(const _native::capi::ZatcaClient* self, const _native::capi::SignedInvoice* invoice, const _native::capi::CsidProduction* credentials, bool clearance_status, _native::diplomat::capi::OptionStringView accept_language);
+    fatoora_ZatcaClient_prepare_report_simplified_invoice_result fatoora_ZatcaClient_prepare_report_simplified_invoice(const _native::capi::ZatcaClient* self, const _native::capi::SignedInvoice* invoice, const _native::capi::CsidProduction* credentials, _native::capi::ClearanceMode clearance_mode, _native::diplomat::capi::OptionStringView accept_language);
 
     typedef struct fatoora_ZatcaClient_prepare_clear_standard_invoice_result {union {_native::capi::InvoiceRequest* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ZatcaClient_prepare_clear_standard_invoice_result;
-    fatoora_ZatcaClient_prepare_clear_standard_invoice_result fatoora_ZatcaClient_prepare_clear_standard_invoice(const _native::capi::ZatcaClient* self, const _native::capi::SignedInvoice* invoice, const _native::capi::CsidProduction* credentials, bool clearance_status, _native::diplomat::capi::OptionStringView accept_language);
+    fatoora_ZatcaClient_prepare_clear_standard_invoice_result fatoora_ZatcaClient_prepare_clear_standard_invoice(const _native::capi::ZatcaClient* self, const _native::capi::SignedInvoice* invoice, const _native::capi::CsidProduction* credentials, _native::capi::ClearanceMode clearance_mode, _native::diplomat::capi::OptionStringView accept_language);
 
     void fatoora_ZatcaClient_destroy(ZatcaClient* self);
 
@@ -107,20 +108,20 @@ inline _native::diplomat::result<std::unique_ptr<_native::ValidationResponse>, s
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::ValidationResponse>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::ValidationResponse>>(std::unique_ptr<_native::ValidationResponse>(_native::ValidationResponse::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::ValidationResponse>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::ValidationResponse>, std::unique_ptr<_native::BindingError>> _native::ZatcaClient::report_simplified_invoice(const _native::SignedInvoice& invoice, const _native::CsidProduction& credentials, bool clearance_status, std::optional<std::string_view> accept_language) const {
+inline _native::diplomat::result<std::unique_ptr<_native::ValidationResponse>, std::unique_ptr<_native::BindingError>> _native::ZatcaClient::report_simplified_invoice(const _native::SignedInvoice& invoice, const _native::CsidProduction& credentials, _native::ClearanceMode clearance_mode, std::optional<std::string_view> accept_language) const {
     auto result = _native::capi::fatoora_ZatcaClient_report_simplified_invoice(this->AsFFI(),
         invoice.AsFFI(),
         credentials.AsFFI(),
-        clearance_status,
+        clearance_mode.AsFFI(),
         accept_language.has_value() ? (_native::diplomat::capi::OptionStringView{ { {accept_language.value().data(), accept_language.value().size()} }, true }) : (_native::diplomat::capi::OptionStringView{ {}, false }));
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::ValidationResponse>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::ValidationResponse>>(std::unique_ptr<_native::ValidationResponse>(_native::ValidationResponse::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::ValidationResponse>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::ValidationResponse>, std::unique_ptr<_native::BindingError>> _native::ZatcaClient::clear_standard_invoice(const _native::SignedInvoice& invoice, const _native::CsidProduction& credentials, bool clearance_status, std::optional<std::string_view> accept_language) const {
+inline _native::diplomat::result<std::unique_ptr<_native::ValidationResponse>, std::unique_ptr<_native::BindingError>> _native::ZatcaClient::clear_standard_invoice(const _native::SignedInvoice& invoice, const _native::CsidProduction& credentials, _native::ClearanceMode clearance_mode, std::optional<std::string_view> accept_language) const {
     auto result = _native::capi::fatoora_ZatcaClient_clear_standard_invoice(this->AsFFI(),
         invoice.AsFFI(),
         credentials.AsFFI(),
-        clearance_status,
+        clearance_mode.AsFFI(),
         accept_language.has_value() ? (_native::diplomat::capi::OptionStringView{ { {accept_language.value().data(), accept_language.value().size()} }, true }) : (_native::diplomat::capi::OptionStringView{ {}, false }));
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::ValidationResponse>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::ValidationResponse>>(std::unique_ptr<_native::ValidationResponse>(_native::ValidationResponse::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::ValidationResponse>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
@@ -154,20 +155,20 @@ inline _native::diplomat::result<std::unique_ptr<_native::InvoiceRequest>, std::
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::InvoiceRequest>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::InvoiceRequest>>(std::unique_ptr<_native::InvoiceRequest>(_native::InvoiceRequest::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::InvoiceRequest>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::InvoiceRequest>, std::unique_ptr<_native::BindingError>> _native::ZatcaClient::prepare_report_simplified_invoice(const _native::SignedInvoice& invoice, const _native::CsidProduction& credentials, bool clearance_status, std::optional<std::string_view> accept_language) const {
+inline _native::diplomat::result<std::unique_ptr<_native::InvoiceRequest>, std::unique_ptr<_native::BindingError>> _native::ZatcaClient::prepare_report_simplified_invoice(const _native::SignedInvoice& invoice, const _native::CsidProduction& credentials, _native::ClearanceMode clearance_mode, std::optional<std::string_view> accept_language) const {
     auto result = _native::capi::fatoora_ZatcaClient_prepare_report_simplified_invoice(this->AsFFI(),
         invoice.AsFFI(),
         credentials.AsFFI(),
-        clearance_status,
+        clearance_mode.AsFFI(),
         accept_language.has_value() ? (_native::diplomat::capi::OptionStringView{ { {accept_language.value().data(), accept_language.value().size()} }, true }) : (_native::diplomat::capi::OptionStringView{ {}, false }));
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::InvoiceRequest>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::InvoiceRequest>>(std::unique_ptr<_native::InvoiceRequest>(_native::InvoiceRequest::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::InvoiceRequest>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::InvoiceRequest>, std::unique_ptr<_native::BindingError>> _native::ZatcaClient::prepare_clear_standard_invoice(const _native::SignedInvoice& invoice, const _native::CsidProduction& credentials, bool clearance_status, std::optional<std::string_view> accept_language) const {
+inline _native::diplomat::result<std::unique_ptr<_native::InvoiceRequest>, std::unique_ptr<_native::BindingError>> _native::ZatcaClient::prepare_clear_standard_invoice(const _native::SignedInvoice& invoice, const _native::CsidProduction& credentials, _native::ClearanceMode clearance_mode, std::optional<std::string_view> accept_language) const {
     auto result = _native::capi::fatoora_ZatcaClient_prepare_clear_standard_invoice(this->AsFFI(),
         invoice.AsFFI(),
         credentials.AsFFI(),
-        clearance_status,
+        clearance_mode.AsFFI(),
         accept_language.has_value() ? (_native::diplomat::capi::OptionStringView{ { {accept_language.value().data(), accept_language.value().size()} }, true }) : (_native::diplomat::capi::OptionStringView{ {}, false }));
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::InvoiceRequest>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::InvoiceRequest>>(std::unique_ptr<_native::InvoiceRequest>(_native::InvoiceRequest::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::InvoiceRequest>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }

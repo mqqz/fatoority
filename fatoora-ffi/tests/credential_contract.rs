@@ -1,6 +1,7 @@
 //! Credential issuance and renewal through generated bindings and a local gateway.
 mod support;
 use base64ct::{Base64, Encoding};
+use fatoora_ffi::common::ffi::Environment;
 use fatoora_ffi::{
     api::ffi::*,
     common::ffi::BindingError,
@@ -24,7 +25,7 @@ fn ok<T>(result: Result<T, Box<BindingError>>) -> T {
 fn csr() -> Box<Csr> {
     let props = ok(CsrProperties::from_properties_str(PROPERTIES));
     let key = ok(SigningKey::from_der(KEY));
-    ok(props.build(&key, 1))
+    ok(props.build(&key, Environment::Simulation))
 }
 
 #[test]
@@ -102,11 +103,11 @@ fn credentials_issue_renew_and_recover_from_gateway_errors() {
 }
 
 fn exercise_client() {
-    let config = ok(Config::new(1));
+    let config = ok(Config::new(Environment::Simulation));
     let client = ok(ZatcaClient::create(&config));
     let csr = csr();
     let compliance = ok(client.post_csr_for_ccsid(&csr, b"123456"));
-    assert_eq!(compliance.env(), 1);
+    assert_eq!(compliance.env().ok(), Some(Environment::Simulation));
     assert_eq!(
         written(|out| ok(ok(compliance.request_id()).unwrap().value(out))),
         "42"
@@ -118,7 +119,7 @@ fn exercise_client() {
     assert_eq!(written(|out| ok(compliance.secret(out))), "csecret");
     let production = ok(client.post_ccsid_for_pcsid(&compliance));
     drop(compliance);
-    assert_eq!(production.env(), 1);
+    assert_eq!(production.env().ok(), Some(Environment::Simulation));
     assert_eq!(
         written(|out| ok(ok(production.request_id()).unwrap().value(out))),
         "0077"
@@ -154,7 +155,7 @@ fn exercise_client() {
     }
     for otp in [b"direct".as_slice(), b"wrapped"] {
         let renewed = ok(client.renew_csid(&production, &csr, otp, Some(b"ar")));
-        assert_eq!(renewed.env(), 1);
+        assert_eq!(renewed.env().ok(), Some(Environment::Simulation));
         assert_eq!(
             written(|out| ok(ok(renewed.request_id()).unwrap().value(out))),
             "88"
@@ -193,7 +194,12 @@ fn exercise_client() {
             1
         );
     }
-    let wrong_env = ok(CsidProduction::create(2, None, b"ptoken", b"psecret"));
+    let wrong_env = ok(CsidProduction::create(
+        Environment::Production,
+        None,
+        b"ptoken",
+        b"psecret",
+    ));
     assert_eq!(
         client
             .renew_csid(&wrong_env, &csr, b"direct", Some(b"ar"))

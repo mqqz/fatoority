@@ -28,10 +28,16 @@ internal partial struct ValidationResponse
     internal static unsafe extern DiplomatResultTextBindingError ClearedInvoiceBase64(ValidationResponse* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ValidationResponse_reporting_status", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError ReportingStatus(ValidationResponse* handle);
+    internal static unsafe extern DiplomatOptionReportingStatus ReportingStatus(ValidationResponse* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ValidationResponse_reporting_status_raw", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultTextBindingError ReportingStatusRaw(ValidationResponse* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ValidationResponse_clearance_status", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError ClearanceStatus(ValidationResponse* handle);
+    internal static unsafe extern DiplomatOptionClearanceStatus ClearanceStatus(ValidationResponse* handle);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ValidationResponse_clearance_status_raw", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultTextBindingError ClearanceStatusRaw(ValidationResponse* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ValidationResponse_qr_seller_status", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultTextBindingError QrSellerStatus(ValidationResponse* handle);

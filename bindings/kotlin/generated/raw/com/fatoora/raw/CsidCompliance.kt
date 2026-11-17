@@ -7,8 +7,8 @@ import com.sun.jna.Structure
 
 internal interface CsidComplianceLib: Library {
     fun fatoora_CsidCompliance_destroy(handle: Pointer)
-    fun fatoora_CsidCompliance_create(environment: FFIUint8, requestId: OptionSlice, token: Slice, secret: Slice): ResultPointerPointer
-    fun fatoora_CsidCompliance_env(handle: Pointer): FFIUint8
+    fun fatoora_CsidCompliance_create(environment: Int, requestId: OptionSlice, token: Slice, secret: Slice): ResultPointerPointer
+    fun fatoora_CsidCompliance_env(handle: Pointer): ResultIntPointer
     fun fatoora_CsidCompliance_request_id(handle: Pointer): ResultPointerPointer
     fun fatoora_CsidCompliance_binary_security_token(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_CsidCompliance_secret(handle: Pointer, write: Pointer): ResultUnitPointer
@@ -44,12 +44,12 @@ class CsidCompliance internal constructor (
         internal val lib: CsidComplianceLib = Native.load("fatoora_ffi", libClass)
         @JvmStatic
 
-        fun create(environment: UByte, requestId: String?, token: String, secret: String): Result<CsidCompliance> {
+        fun create(environment: Environment, requestId: String?, token: String, secret: String): Result<CsidCompliance> {
             val requestIdSliceMemory = requestId?.let { PrimitiveArrayTools.borrowUtf8(it) }
             val tokenSliceMemory = PrimitiveArrayTools.borrowUtf8(token)
             val secretSliceMemory = PrimitiveArrayTools.borrowUtf8(secret)
 
-            val returnVal = lib.fatoora_CsidCompliance_create(FFIUint8(environment), requestIdSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none(), tokenSliceMemory.slice, secretSliceMemory.slice);
+            val returnVal = lib.fatoora_CsidCompliance_create(environment.toNative(), requestIdSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none(), tokenSliceMemory.slice, secretSliceMemory.slice);
             try {
                 val nativeOkVal = returnVal.getNativeOk();
                 if (nativeOkVal != null) {
@@ -71,10 +71,18 @@ class CsidCompliance internal constructor (
         }
     }
 
-    fun env(): UByte {
+    fun env(): Result<Environment> {
 
         val returnVal = lib.fatoora_CsidCompliance_env(handle);
-        return (returnVal.toUByte())
+        val nativeOkVal = returnVal.getNativeOk();
+        if (nativeOkVal != null) {
+            return (Environment.fromNative(nativeOkVal)).ok()
+        } else {
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal.getNativeErr()!!
+            val returnOpaque = BindingError(handle, selfEdges, true)
+            return returnOpaque.err()
+        }
     }
 
     fun requestId(): Result<Text?> {

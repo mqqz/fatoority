@@ -33,12 +33,20 @@ class ValidationResponse internal constructor(internal val raw: com.fatoora.raw.
         unwrap(raw.clearedInvoiceBase64())?.let(::Text)
     }
 
-    fun reportingStatus(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.reportingStatus())?.let(::Text)
+    fun reportingStatus(): ReportingStatus? = nativeCall(listOfNotNull(this)) {
+        raw.reportingStatus()?.let { ReportingStatus.valueOf(it.name) }
     }
 
-    fun clearanceStatus(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.clearanceStatus())?.let(::Text)
+    fun reportingStatusRaw(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.reportingStatusRaw())?.let(::Text)
+    }
+
+    fun clearanceStatus(): ClearanceStatus? = nativeCall(listOfNotNull(this)) {
+        raw.clearanceStatus()?.let { ClearanceStatus.valueOf(it.name) }
+    }
+
+    fun clearanceStatusRaw(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.clearanceStatusRaw())?.let(::Text)
     }
 
     fun qrSellerStatus(): Text? = nativeCall(listOfNotNull(this)) {

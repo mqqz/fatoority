@@ -7,11 +7,13 @@ import com.sun.jna.Structure
 
 internal interface ValidationMessageLib: Library {
     fun fatoora_ValidationMessage_destroy(handle: Pointer)
-    fun fatoora_ValidationMessage_message_type(handle: Pointer): ResultPointerPointer
+    fun fatoora_ValidationMessage_message_type(handle: Pointer): OptionInt
+    fun fatoora_ValidationMessage_message_type_raw(handle: Pointer): ResultPointerPointer
     fun fatoora_ValidationMessage_code(handle: Pointer): ResultPointerPointer
     fun fatoora_ValidationMessage_category(handle: Pointer): ResultPointerPointer
     fun fatoora_ValidationMessage_message(handle: Pointer): ResultPointerPointer
-    fun fatoora_ValidationMessage_status(handle: Pointer): ResultPointerPointer
+    fun fatoora_ValidationMessage_status(handle: Pointer): OptionInt
+    fun fatoora_ValidationMessage_status_raw(handle: Pointer): ResultPointerPointer
 }
 
 class ValidationMessage internal constructor (
@@ -44,9 +46,23 @@ class ValidationMessage internal constructor (
         internal val lib: ValidationMessageLib = Native.load("fatoora_ffi", libClass)
     }
 
-    fun messageType(): Result<Text?> {
+    /**
+     * The parsed message `type`, or null when the message has none.
+     */
+    fun messageType(): MessageType? {
 
         val returnVal = lib.fatoora_ValidationMessage_message_type(handle);
+
+        val intermediateOption = returnVal.option() ?: return null
+        return MessageType.fromNative(intermediateOption)
+    }
+
+    /**
+     * The message `type` exactly as ZATCA sent it, or null when absent.
+     */
+    fun messageTypeRaw(): Result<Text?> {
+
+        val returnVal = lib.fatoora_ValidationMessage_message_type_raw(handle);
         val nativeOkVal = returnVal.getNativeOk();
         if (returnVal.isOk == 1.toByte()) {
             val selfEdges: List<Any> = listOf()
@@ -112,9 +128,23 @@ class ValidationMessage internal constructor (
         }
     }
 
-    fun status(): Result<Text?> {
+    /**
+     * The parsed message `status`, or null when the message has none.
+     */
+    fun status(): ValidationStatus? {
 
         val returnVal = lib.fatoora_ValidationMessage_status(handle);
+
+        val intermediateOption = returnVal.option() ?: return null
+        return ValidationStatus.fromNative(intermediateOption)
+    }
+
+    /**
+     * The message `status` exactly as ZATCA sent it, or null when absent.
+     */
+    fun statusRaw(): Result<Text?> {
+
+        val returnVal = lib.fatoora_ValidationMessage_status_raw(handle);
         val nativeOkVal = returnVal.getNativeOk();
         if (returnVal.isOk == 1.toByte()) {
             val selfEdges: List<Any> = listOf()

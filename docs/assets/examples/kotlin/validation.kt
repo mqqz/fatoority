@@ -3,7 +3,7 @@ import java.io.File
 import kotlinx.serialization.json.*
 
 fun main(args: Array<String>) {
-    Config.create(0).use { config ->
+    Config.create(Environment.NonProduction).use { config ->
         val xml = File("invoice.xml").readText()
         if (args.contains("--zatca")) {
             val hash = File("previous-hash.txt").readText().trim()

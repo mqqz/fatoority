@@ -3,23 +3,6 @@ use crate::common::ffi::BindingError;
 use crate::common::{local_error, text};
 use fatoora_core::invoice as inv_core;
 
-fn vat(value: u8) -> Result<inv_core::VatCategory, Box<BindingError>> {
-    match value {
-        0 => Ok(inv_core::VatCategory::Exempt),
-        1 => Ok(inv_core::VatCategory::Standard),
-        2 => Ok(inv_core::VatCategory::Zero),
-        3 => Ok(inv_core::VatCategory::OutOfScope),
-        _ => Err(local_error(1, "invalid VAT category")),
-    }
-}
-fn vat_code(value: inv_core::VatCategory) -> u8 {
-    match value {
-        inv_core::VatCategory::Exempt => 0,
-        inv_core::VatCategory::Standard => 1,
-        inv_core::VatCategory::Zero => 2,
-        inv_core::VatCategory::OutOfScope => 3,
-    }
-}
 /// Legacy builder setters whose exported semantics have no equivalent in the
 /// current core API. The exported Diplomat API keeps them until the next
 /// binding redesign, so they call the deprecated core methods here.
@@ -67,11 +50,81 @@ fn party<R: inv_core::PartyRole>(p: &inv_core::Party<R>) -> ffi::Party {
 #[diplomat::abi_rename = "fatoora_{0}"]
 #[diplomat::attr(cpp, namespace = "fatoora")]
 pub mod ffi {
-    use super::{PartyData, decimal, inv_core, party, vat, vat_code};
+    use super::{PartyData, decimal, inv_core, party};
     use crate::common::ffi::{BindingError, Text};
     use crate::common::{boundary, core_error, local_error, optional_text, text, write};
     use crate::crypto::ffi::Config;
     use diplomat_runtime::{DiplomatStr, DiplomatWrite};
+
+    /// VAT category of a line, breakdown, or document-level adjustment.
+    ///
+    /// Discriminants match the `u8` codes used before 0.6.
+    #[diplomat::enum_convert(inv_core::VatCategory)]
+    #[derive(Debug, PartialEq, Eq)]
+    pub enum VatCategory {
+        /// UNCL5305 `E`.
+        Exempt = 0,
+        /// UNCL5305 `S`.
+        Standard = 1,
+        /// UNCL5305 `Z`.
+        Zero = 2,
+        /// UNCL5305 `O`.
+        OutOfScope = 3,
+    }
+
+    /// Kind of invoice document (UNCL1001 type code).
+    ///
+    /// Discriminants match the `u8` codes used before 0.6.
+    #[derive(Debug, PartialEq, Eq)]
+    pub enum InvoiceTypeKind {
+        /// Tax invoice (`388`).
+        Tax = 0,
+        /// Prepayment invoice (`386`).
+        Prepayment = 1,
+        /// Credit note (`381`).
+        CreditNote = 2,
+        /// Debit note (`383`).
+        DebitNote = 3,
+    }
+
+    /// Standard (B2B, cleared) or simplified (B2C, reported) invoice.
+    ///
+    /// Discriminants match the `u8` codes used before 0.6.
+    #[diplomat::enum_convert(inv_core::InvoiceSubType)]
+    #[derive(Debug, PartialEq, Eq)]
+    pub enum InvoiceSubType {
+        Standard = 0,
+        Simplified = 1,
+    }
+
+    /// Whether a document-level adjustment is an allowance (discount) or a charge.
+    #[diplomat::enum_convert(inv_core::AdjustmentKind)]
+    #[derive(Debug, PartialEq, Eq)]
+    pub enum AdjustmentKind {
+        Allowance = 0,
+        Charge = 1,
+    }
+
+    /// Named bits of the `u8` invoice flag mask accepted by
+    /// `InvoiceBuilder::flags` and returned by `InvoiceData::flags_raw`.
+    ///
+    /// Each discriminant is the flag's bit value; `bit()` returns it as a `u8`
+    /// for languages whose enums do not expose their discriminant.
+    #[derive(Debug, PartialEq, Eq)]
+    pub enum InvoiceFlag {
+        ThirdParty = 1,
+        Nominal = 2,
+        Export = 4,
+        Summary = 8,
+        SelfBilled = 16,
+    }
+
+    impl InvoiceFlag {
+        /// The flag's bit within the invoice flag mask.
+        pub fn bit(self) -> u8 {
+            self as u8
+        }
+    }
 
     #[diplomat::opaque]
     #[diplomat::attr(dotnet, manually_disposable)]
@@ -358,11 +411,11 @@ pub mod ffi {
 
         #[allow(clippy::too_many_arguments)]
         pub fn new(
-            charge: bool,
+            kind: AdjustmentKind,
             amount: &DiplomatStr,
             reason: Option<&DiplomatStr>,
             reason_code: Option<&DiplomatStr>,
-            category: u8,
+            category: VatCategory,
             rate: &DiplomatStr,
             exemption: &TaxExemption,
         ) -> Result<Box<AllowanceCharge>, Box<BindingError>> {
@@ -372,9 +425,9 @@ pub mod ffi {
                 let reason = optional_text(reason)?;
                 let reason_code = optional_text(reason_code)?;
                 let mut entry = inv_core::AllowanceCharge::new(
-                    inv_core::AdjustmentKind::from_charge_indicator(charge),
+                    kind.into(),
                     amount,
-                    vat(category)?,
+                    category.into(),
                     decimal(rate, "rate")?,
                 )
                 .with_exemption(exemption.0.clone());
@@ -387,8 +440,8 @@ pub mod ffi {
                 Ok(Box::new(Self(entry)))
             })
         }
-        pub fn is_charge(&self) -> bool {
-            self.0.kind().is_charge()
+        pub fn kind(&self) -> AdjustmentKind {
+            self.0.kind().into()
         }
         pub fn amount(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
             boundary(|| write(self.0.amount().to_string(), out))
@@ -396,8 +449,8 @@ pub mod ffi {
         pub fn rate(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
             boundary(|| write(self.0.rate().to_string(), out))
         }
-        pub fn category(&self) -> u8 {
-            vat_code(self.0.category())
+        pub fn category(&self) -> VatCategory {
+            self.0.category().into()
         }
         /// Return an independent adjustment with the given number of identical tax classifications.
         pub fn with_tax_category_count(
@@ -445,7 +498,7 @@ pub mod ffi {
             })
         }
         pub fn new(
-            category: u8,
+            category: VatCategory,
             rate: &DiplomatStr,
             taxable_amount: &DiplomatStr,
             tax_amount: &DiplomatStr,
@@ -454,7 +507,7 @@ pub mod ffi {
             boundary(|| {
                 Ok(Box::new(Self(
                     inv_core::VatBreakdown::new(
-                        vat(category)?,
+                        category.into(),
                         decimal(rate, "rate")?,
                         decimal(taxable_amount, "taxable_amount")?,
                         decimal(tax_amount, "tax_amount")?,
@@ -465,8 +518,8 @@ pub mod ffi {
             })
         }
 
-        pub fn category(&self) -> u8 {
-            vat_code(self.0.category())
+        pub fn category(&self) -> VatCategory {
+            self.0.category().into()
         }
         pub fn rate(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
             boundary(|| write(self.0.rate().to_string(), out))
@@ -672,11 +725,8 @@ pub mod ffi {
                 self.update(|b| b.vat_rate(value))
             })
         }
-        pub fn set_vat_category(&mut self, value: u8) -> Result<(), Box<BindingError>> {
-            boundary(|| {
-                let value = vat(value)?;
-                self.update(|b| b.vat_category(value))
-            })
+        pub fn set_vat_category(&mut self, value: VatCategory) -> Result<(), Box<BindingError>> {
+            boundary(|| self.update(|b| b.vat_category(value.into())))
         }
         pub fn set_exemption(&mut self, value: &TaxExemption) -> Result<(), Box<BindingError>> {
             boundary(|| self.update(|b| b.exemption(value.0.clone())))
@@ -872,9 +922,9 @@ pub mod ffi {
         }
         pub fn add_document_adjustment(
             &mut self,
-            charge: bool,
+            kind: AdjustmentKind,
             value: &Adjustment,
-            category: u8,
+            category: VatCategory,
             rate: &DiplomatStr,
             exemption: &TaxExemption,
         ) -> Result<(), Box<BindingError>> {
@@ -883,16 +933,13 @@ pub mod ffi {
                 value.0.value().map_err(core_error)?;
                 let value = inv_core::DocumentAdjustment::new(
                     value.0.clone(),
-                    vat(category)?,
+                    category.into(),
                     decimal(rate, "rate")?,
                 )
                 .with_exemption(exemption.0.clone());
-                self.update(|b| {
-                    if charge {
-                        b.charge(value)
-                    } else {
-                        b.allowance(value)
-                    }
+                self.update(|b| match kind {
+                    AdjustmentKind::Allowance => b.allowance(value),
+                    AdjustmentKind::Charge => b.charge(value),
                 })
             })
         }
@@ -918,22 +965,18 @@ pub mod ffi {
 
         /// Construct a credit or debit note with a complete billing reference.
         pub fn new_with_reference(
-            kind: u8,
-            subtype: u8,
+            kind: InvoiceTypeKind,
+            subtype: InvoiceSubType,
             reference: &OriginalInvoiceRef,
             reason: &DiplomatStr,
         ) -> Result<Box<InvoiceBuilder>, Box<BindingError>> {
             boundary(|| {
-                let sub = match subtype {
-                    0 => inv_core::InvoiceSubType::Standard,
-                    1 => inv_core::InvoiceSubType::Simplified,
-                    _ => return Err(local_error(1, "invalid invoice subtype")),
-                };
+                let sub = subtype.into();
                 let reason = text(reason)?.to_owned();
                 let invoice_type = match kind {
-                    2 => inv_core::InvoiceType::CreditNote(sub),
-                    3 => inv_core::InvoiceType::DebitNote(sub),
-                    _ => {
+                    InvoiceTypeKind::CreditNote => inv_core::InvoiceType::CreditNote(sub),
+                    InvoiceTypeKind::DebitNote => inv_core::InvoiceType::DebitNote(sub),
+                    InvoiceTypeKind::Tax | InvoiceTypeKind::Prepayment => {
                         return Err(local_error(
                             1,
                             "billing references require a credit or debit note",
@@ -1026,12 +1069,12 @@ pub mod ffi {
         }
         pub fn set_tax_exemption(
             &mut self,
-            category: u8,
+            category: VatCategory,
             rate: &DiplomatStr,
             exemption: &TaxExemption,
         ) -> Result<(), Box<BindingError>> {
             boundary(|| {
-                let category = vat(category)?;
+                let category = category.into();
                 let rate = decimal(rate, "rate")?;
                 self.update(|b| b.tax_exemption(category, rate, exemption.0.clone()))
             })
@@ -1054,25 +1097,21 @@ pub mod ffi {
         }
 
         pub fn new(
-            kind: u8,
-            subtype: u8,
+            kind: InvoiceTypeKind,
+            subtype: InvoiceSubType,
             original_id: Option<&DiplomatStr>,
             original_uuid: Option<&DiplomatStr>,
             original_date: Option<&DiplomatStr>,
             reason: Option<&DiplomatStr>,
         ) -> Result<Box<InvoiceBuilder>, Box<BindingError>> {
             boundary(|| {
-                let sub = match subtype {
-                    0 => inv_core::InvoiceSubType::Standard,
-                    1 => inv_core::InvoiceSubType::Simplified,
-                    _ => return Err(local_error(1, "invalid invoice subtype")),
-                };
+                let sub = subtype.into();
                 let mut billing = None;
                 let mut instruction = None;
                 let kind = match kind {
-                    0 => inv_core::InvoiceType::Tax(sub),
-                    1 => inv_core::InvoiceType::Prepayment(sub),
-                    2 | 3 => {
+                    InvoiceTypeKind::Tax => inv_core::InvoiceType::Tax(sub),
+                    InvoiceTypeKind::Prepayment => inv_core::InvoiceType::Prepayment(sub),
+                    InvoiceTypeKind::CreditNote | InvoiceTypeKind::DebitNote => {
                         if let Some(id) = original_id {
                             let mut original = inv_core::OriginalInvoiceRef::new(text(id)?);
                             if let Some(v) = original_uuid {
@@ -1093,13 +1132,12 @@ pub mod ffi {
                             ));
                         }
                         instruction = optional_text(reason)?;
-                        if kind == 2 {
+                        if kind == InvoiceTypeKind::CreditNote {
                             inv_core::InvoiceType::CreditNote(sub)
                         } else {
                             inv_core::InvoiceType::DebitNote(sub)
                         }
                     }
-                    _ => return Err(local_error(1, "invalid invoice type")),
                 };
                 let mut builder = inv_core::InvoiceBuilder::new(kind);
                 if let Some(reference) = billing {
@@ -1201,11 +1239,8 @@ pub mod ffi {
         pub fn set_invoice_counter(&mut self, value: u64) -> Result<(), Box<BindingError>> {
             boundary(|| self.update(|b| b.invoice_counter(value)))
         }
-        pub fn set_vat_category(&mut self, value: u8) -> Result<(), Box<BindingError>> {
-            boundary(|| {
-                let v = vat(value)?;
-                self.update(|b| b.vat_category(v))
-            })
+        pub fn set_vat_category(&mut self, value: VatCategory) -> Result<(), Box<BindingError>> {
+            boundary(|| self.update(|b| b.vat_category(value.into())))
         }
         pub fn flags(&mut self, value: u8) -> Result<(), Box<BindingError>> {
             boundary(|| {
@@ -1292,7 +1327,7 @@ pub mod ffi {
             unit_code: &DiplomatStr,
             unit_price: &DiplomatStr,
             vat_rate: &DiplomatStr,
-            category: u8,
+            category: VatCategory,
         ) -> Result<(), Box<BindingError>> {
             boundary(|| {
                 let line = inv_core::LineItem::new(
@@ -1301,7 +1336,7 @@ pub mod ffi {
                     text(unit_code)?,
                     decimal(unit_price, "unit_price")?,
                     decimal(vat_rate, "vat_rate")?,
-                    vat(category)?,
+                    category.into(),
                 )
                 .map_err(core_error)?;
                 self.update(|b| b.line_item(line))
@@ -1564,25 +1599,25 @@ pub mod ffi {
         pub fn invoice_counter(&self) -> u64 {
             self.0.invoice_counter()
         }
-        pub fn vat_category(&self) -> u8 {
-            vat_code(self.0.vat_category())
+        pub fn vat_category(&self) -> VatCategory {
+            self.0.vat_category().into()
         }
         pub fn flags_raw(&self) -> u8 {
             self.0.flags().bits()
         }
-        pub fn invoice_type_kind(&self) -> u8 {
+        pub fn invoice_type_kind(&self) -> InvoiceTypeKind {
             match self.0.invoice_type() {
-                inv_core::InvoiceType::Tax(_) => 0,
-                inv_core::InvoiceType::Prepayment(_) => 1,
-                inv_core::InvoiceType::CreditNote(..) => 2,
-                inv_core::InvoiceType::DebitNote(..) => 3,
+                inv_core::InvoiceType::Tax(_) => InvoiceTypeKind::Tax,
+                inv_core::InvoiceType::Prepayment(_) => InvoiceTypeKind::Prepayment,
+                inv_core::InvoiceType::CreditNote(..) => InvoiceTypeKind::CreditNote,
+                inv_core::InvoiceType::DebitNote(..) => InvoiceTypeKind::DebitNote,
             }
         }
-        pub fn invoice_sub_type(&self) -> u8 {
+        pub fn invoice_sub_type(&self) -> InvoiceSubType {
             if self.0.invoice_type().is_simplified() {
-                1
+                InvoiceSubType::Simplified
             } else {
-                0
+                InvoiceSubType::Standard
             }
         }
         pub fn seller(&self) -> Result<Box<Party>, Box<BindingError>> {
@@ -1714,12 +1749,12 @@ pub mod ffi {
                     .ok_or_else(|| local_error(1, "adjustment index out of range"))
             })
         }
-        pub fn adjustment_is_charge(&self, index: usize) -> Result<bool, Box<BindingError>> {
+        pub fn adjustment_kind(&self, index: usize) -> Result<AdjustmentKind, Box<BindingError>> {
             boundary(|| {
                 self.0
                     .adjustments()
                     .get(index)
-                    .map(|v| v.kind().is_charge())
+                    .map(|v| v.kind().into())
                     .ok_or_else(|| local_error(1, "adjustment index out of range"))
             })
         }
@@ -1807,7 +1842,7 @@ pub mod ffi {
             unit_code: &DiplomatStr,
             unit_price: &DiplomatStr,
             rate: &DiplomatStr,
-            category: u8,
+            category: VatCategory,
         ) -> Result<Box<InvoiceLineItem>, Box<BindingError>> {
             boundary(|| {
                 Ok(Box::new(Self(
@@ -1817,7 +1852,7 @@ pub mod ffi {
                         text(unit_code)?,
                         decimal(unit_price, "unit_price")?,
                         decimal(rate, "rate")?,
-                        vat(category)?,
+                        category.into(),
                     )
                     .map_err(core_error)?,
                 )))
@@ -1873,8 +1908,8 @@ pub mod ffi {
         pub fn has_gross_amount(&self) -> bool {
             self.0.has_gross_amount()
         }
-        pub fn vat_category(&self) -> u8 {
-            vat_code(self.0.vat_category())
+        pub fn vat_category(&self) -> VatCategory {
+            self.0.vat_category().into()
         }
     }
     #[diplomat::opaque]

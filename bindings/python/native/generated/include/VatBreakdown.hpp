@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include "BindingError.hpp"
 #include "TaxExemption.hpp"
+#include "VatCategory.hpp"
 #include "diplomat_runtime.hpp"
 
 
@@ -26,9 +27,9 @@ namespace capi {
     fatoora_VatBreakdown_without_vat_rate_result fatoora_VatBreakdown_without_vat_rate(const _native::capi::VatBreakdown* self);
 
     typedef struct fatoora_VatBreakdown_new_result {union {_native::capi::VatBreakdown* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_VatBreakdown_new_result;
-    fatoora_VatBreakdown_new_result fatoora_VatBreakdown_new(uint8_t category, _native::diplomat::capi::DiplomatStringView rate, _native::diplomat::capi::DiplomatStringView taxable_amount, _native::diplomat::capi::DiplomatStringView tax_amount, const _native::capi::TaxExemption* exemption);
+    fatoora_VatBreakdown_new_result fatoora_VatBreakdown_new(_native::capi::VatCategory category, _native::diplomat::capi::DiplomatStringView rate, _native::diplomat::capi::DiplomatStringView taxable_amount, _native::diplomat::capi::DiplomatStringView tax_amount, const _native::capi::TaxExemption* exemption);
 
-    uint8_t fatoora_VatBreakdown_category(const _native::capi::VatBreakdown* self);
+    _native::capi::VatCategory fatoora_VatBreakdown_category(const _native::capi::VatBreakdown* self);
 
     typedef struct fatoora_VatBreakdown_rate_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_VatBreakdown_rate_result;
     fatoora_VatBreakdown_rate_result fatoora_VatBreakdown_rate(const _native::capi::VatBreakdown* self, _native::diplomat::capi::DiplomatWrite* write);
@@ -58,8 +59,8 @@ inline _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::un
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::VatBreakdown>>(std::unique_ptr<_native::VatBreakdown>(_native::VatBreakdown::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>> _native::VatBreakdown::new_(uint8_t category, std::string_view rate, std::string_view taxable_amount, std::string_view tax_amount, const _native::TaxExemption& exemption) {
-    auto result = _native::capi::fatoora_VatBreakdown_new(category,
+inline _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>> _native::VatBreakdown::new_(_native::VatCategory category, std::string_view rate, std::string_view taxable_amount, std::string_view tax_amount, const _native::TaxExemption& exemption) {
+    auto result = _native::capi::fatoora_VatBreakdown_new(category.AsFFI(),
         {rate.data(), rate.size()},
         {taxable_amount.data(), taxable_amount.size()},
         {tax_amount.data(), tax_amount.size()},
@@ -67,9 +68,9 @@ inline _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::un
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::VatBreakdown>>(std::unique_ptr<_native::VatBreakdown>(_native::VatBreakdown::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline uint8_t _native::VatBreakdown::category() const {
+inline _native::VatCategory _native::VatBreakdown::category() const {
     auto result = _native::capi::fatoora_VatBreakdown_category(this->AsFFI());
-    return result;
+    return _native::VatCategory::FromFFI(result);
 }
 
 inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> _native::VatBreakdown::rate() const {

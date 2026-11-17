@@ -33,6 +33,10 @@ namespace capi { struct TaxExemption; }
 class TaxExemption;
 namespace capi { struct VatBreakdown; }
 class VatBreakdown;
+class AdjustmentKind;
+class InvoiceSubType;
+class InvoiceTypeKind;
+class VatCategory;
 } // namespace _native
 
 
@@ -57,14 +61,14 @@ public:
 
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> add_note(std::optional<std::string_view> language, std::string_view value);
 
-  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> add_document_adjustment(bool charge, const _native::Adjustment& value, uint8_t category, std::string_view rate, const _native::TaxExemption& exemption);
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> add_document_adjustment(_native::AdjustmentKind kind, const _native::Adjustment& value, _native::VatCategory category, std::string_view rate, const _native::TaxExemption& exemption);
 
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> set_buyer_without_address(std::string_view name, std::optional<std::string_view> vat_id, std::optional<std::string_view> other_id, std::optional<std::string_view> scheme);
 
   /**
    * Construct a credit or debit note with a complete billing reference.
    */
-  inline static _native::diplomat::result<std::unique_ptr<_native::InvoiceBuilder>, std::unique_ptr<_native::BindingError>> new_with_reference(uint8_t kind, uint8_t subtype, const _native::OriginalInvoiceRef& reference, std::string_view reason);
+  inline static _native::diplomat::result<std::unique_ptr<_native::InvoiceBuilder>, std::unique_ptr<_native::BindingError>> new_with_reference(_native::InvoiceTypeKind kind, _native::InvoiceSubType subtype, const _native::OriginalInvoiceRef& reference, std::string_view reason);
 
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> set_note_without_language(std::string_view value);
 
@@ -78,13 +82,13 @@ public:
 
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> set_tax_currency(std::string_view currency, std::string_view amount);
 
-  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> set_tax_exemption(uint8_t category, std::string_view rate, const _native::TaxExemption& exemption);
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> set_tax_exemption(_native::VatCategory category, std::string_view rate, const _native::TaxExemption& exemption);
 
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> add_adjustment(const _native::AllowanceCharge& adjustment);
 
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> add_item(const _native::InvoiceLineItem& item);
 
-  inline static _native::diplomat::result<std::unique_ptr<_native::InvoiceBuilder>, std::unique_ptr<_native::BindingError>> new_(uint8_t kind, uint8_t subtype, std::optional<std::string_view> original_id, std::optional<std::string_view> original_uuid, std::optional<std::string_view> original_date, std::optional<std::string_view> reason);
+  inline static _native::diplomat::result<std::unique_ptr<_native::InvoiceBuilder>, std::unique_ptr<_native::BindingError>> new_(_native::InvoiceTypeKind kind, _native::InvoiceSubType subtype, std::optional<std::string_view> original_id, std::optional<std::string_view> original_uuid, std::optional<std::string_view> original_date, std::optional<std::string_view> reason);
 
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> add_billing_reference(const _native::OriginalInvoiceRef& value);
 
@@ -112,7 +116,7 @@ public:
 
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> set_invoice_counter(uint64_t value);
 
-  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> set_vat_category(uint8_t value);
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> set_vat_category(_native::VatCategory value);
 
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> flags(uint8_t value);
 
@@ -124,7 +128,7 @@ public:
 
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> set_buyer(std::string_view name, const _native::Address& address, std::optional<std::string_view> vat_id, std::optional<std::string_view> other_id, std::optional<std::string_view> scheme);
 
-  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> add_line_item(std::string_view description, std::string_view quantity, std::string_view unit_code, std::string_view unit_price, std::string_view vat_rate, uint8_t category);
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> add_line_item(std::string_view description, std::string_view quantity, std::string_view unit_code, std::string_view unit_price, std::string_view vat_rate, _native::VatCategory category);
 
   inline _native::diplomat::result<std::unique_ptr<_native::FinalizedInvoice>, std::unique_ptr<_native::BindingError>> build();
 

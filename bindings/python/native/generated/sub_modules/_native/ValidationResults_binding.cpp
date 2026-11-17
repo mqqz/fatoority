@@ -16,7 +16,8 @@ void add_ValidationResults_binding(nb::module_ mod) {
         .def("error_message", std::move(maybe_op_unwrap(&_native::ValidationResults::error_message)), "index"_a)
         .def("info_len", &_native::ValidationResults::info_len)
         .def("info_message", std::move(maybe_op_unwrap(&_native::ValidationResults::info_message)), "index"_a)
-        .def("status", std::move(maybe_op_unwrap(&_native::ValidationResults::status)))
+        .def("status", &_native::ValidationResults::status, "The parsed overall status, or null when the response has none.")
+        .def("status_raw", std::move(maybe_op_unwrap(&_native::ValidationResults::status_raw)), "The overall status exactly as ZATCA sent it, or null when absent.")
         .def("warning_len", &_native::ValidationResults::warning_len)
         .def("warning_message", std::move(maybe_op_unwrap(&_native::ValidationResults::warning_message)), "index"_a);
 }

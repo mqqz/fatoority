@@ -12,6 +12,7 @@
 #include <optional>
 #include <cstdlib>
 #include "BindingError.hpp"
+#include "Environment.hpp"
 #include "Text.hpp"
 #include "diplomat_runtime.hpp"
 
@@ -21,9 +22,10 @@ namespace capi {
     extern "C" {
 
     typedef struct fatoora_CsidCompliance_create_result {union {_native::capi::CsidCompliance* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_CsidCompliance_create_result;
-    fatoora_CsidCompliance_create_result fatoora_CsidCompliance_create(uint8_t environment, _native::diplomat::capi::OptionStringView request_id, _native::diplomat::capi::DiplomatStringView token, _native::diplomat::capi::DiplomatStringView secret);
+    fatoora_CsidCompliance_create_result fatoora_CsidCompliance_create(_native::capi::Environment environment, _native::diplomat::capi::OptionStringView request_id, _native::diplomat::capi::DiplomatStringView token, _native::diplomat::capi::DiplomatStringView secret);
 
-    uint8_t fatoora_CsidCompliance_env(const _native::capi::CsidCompliance* self);
+    typedef struct fatoora_CsidCompliance_env_result {union {_native::capi::Environment ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_CsidCompliance_env_result;
+    fatoora_CsidCompliance_env_result fatoora_CsidCompliance_env(const _native::capi::CsidCompliance* self);
 
     typedef struct fatoora_CsidCompliance_request_id_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_CsidCompliance_request_id_result;
     fatoora_CsidCompliance_request_id_result fatoora_CsidCompliance_request_id(const _native::capi::CsidCompliance* self);
@@ -40,17 +42,17 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline _native::diplomat::result<std::unique_ptr<_native::CsidCompliance>, std::unique_ptr<_native::BindingError>> _native::CsidCompliance::create(uint8_t environment, std::optional<std::string_view> request_id, std::string_view token, std::string_view secret) {
-    auto result = _native::capi::fatoora_CsidCompliance_create(environment,
+inline _native::diplomat::result<std::unique_ptr<_native::CsidCompliance>, std::unique_ptr<_native::BindingError>> _native::CsidCompliance::create(_native::Environment environment, std::optional<std::string_view> request_id, std::string_view token, std::string_view secret) {
+    auto result = _native::capi::fatoora_CsidCompliance_create(environment.AsFFI(),
         request_id.has_value() ? (_native::diplomat::capi::OptionStringView{ { {request_id.value().data(), request_id.value().size()} }, true }) : (_native::diplomat::capi::OptionStringView{ {}, false }),
         {token.data(), token.size()},
         {secret.data(), secret.size()});
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::CsidCompliance>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::CsidCompliance>>(std::unique_ptr<_native::CsidCompliance>(_native::CsidCompliance::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::CsidCompliance>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline uint8_t _native::CsidCompliance::env() const {
+inline _native::diplomat::result<_native::Environment, std::unique_ptr<_native::BindingError>> _native::CsidCompliance::env() const {
     auto result = _native::capi::fatoora_CsidCompliance_env(this->AsFFI());
-    return result;
+    return result.is_ok ? _native::diplomat::result<_native::Environment, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::Environment>(_native::Environment::FromFFI(result.ok))) : _native::diplomat::result<_native::Environment, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
 inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::CsidCompliance::request_id() const {

@@ -9,8 +9,12 @@ class ValidationMessage internal constructor(internal val raw: com.fatoora.raw.V
         val handle = raw.handle
         attach { com.fatoora.raw.ValidationMessage.lib.fatoora_ValidationMessage_destroy(handle) }
     }
-    fun messageType(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.messageType())?.let(::Text)
+    fun messageType(): MessageType? = nativeCall(listOfNotNull(this)) {
+        raw.messageType()?.let { MessageType.valueOf(it.name) }
+    }
+
+    fun messageTypeRaw(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.messageTypeRaw())?.let(::Text)
     }
 
     fun code(): Text? = nativeCall(listOfNotNull(this)) {
@@ -25,7 +29,11 @@ class ValidationMessage internal constructor(internal val raw: com.fatoora.raw.V
         unwrap(raw.message())?.let(::Text)
     }
 
-    fun status(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.status())?.let(::Text)
+    fun status(): ValidationStatus? = nativeCall(listOfNotNull(this)) {
+        raw.status()?.let { ValidationStatus.valueOf(it.name) }
+    }
+
+    fun statusRaw(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.statusRaw())?.let(::Text)
     }
 }

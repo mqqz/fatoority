@@ -28,6 +28,8 @@ namespace capi { struct Text; }
 class Text;
 namespace capi { struct VatBreakdown; }
 class VatBreakdown;
+class AdjustmentKind;
+class VatCategory;
 } // namespace fatoora
 
 
@@ -55,7 +57,7 @@ public:
 
   inline diplomat::result<std::unique_ptr<fatoora::Adjustment>, std::unique_ptr<fatoora::BindingError>> adjustment(size_t index) const;
 
-  inline diplomat::result<bool, std::unique_ptr<fatoora::BindingError>> adjustment_is_charge(size_t index) const;
+  inline diplomat::result<fatoora::AdjustmentKind, std::unique_ptr<fatoora::BindingError>> adjustment_kind(size_t index) const;
 
   inline diplomat::result<std::unique_ptr<fatoora::OtherId>, std::unique_ptr<fatoora::BindingError>> item_seller_identifier() const;
 
@@ -75,7 +77,7 @@ public:
 
   inline diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>> tax_subtotal(size_t index) const;
 
-  inline static diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>> new_(std::string_view description, std::string_view quantity, std::string_view unit_code, std::string_view unit_price, std::string_view rate, uint8_t category);
+  inline static diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>> new_(std::string_view description, std::string_view quantity, std::string_view unit_code, std::string_view unit_price, std::string_view rate, fatoora::VatCategory category);
 
   inline diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>> with_metadata(std::optional<std::string_view> id, const fatoora::TaxExemption& exemption) const;
 
@@ -117,7 +119,7 @@ public:
 
   inline bool has_gross_amount() const;
 
-  inline uint8_t vat_category() const;
+  inline fatoora::VatCategory vat_category() const;
 
     inline const fatoora::capi::InvoiceLineItem* AsFFI() const;
     inline fatoora::capi::InvoiceLineItem* AsFFI();

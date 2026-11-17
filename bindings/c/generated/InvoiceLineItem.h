@@ -8,12 +8,14 @@
 #include "diplomat_runtime.h"
 
 #include "Adjustment.d.h"
+#include "AdjustmentKind.d.h"
 #include "BindingError.d.h"
 #include "OriginalInvoiceRef.d.h"
 #include "OtherId.d.h"
 #include "TaxExemption.d.h"
 #include "Text.d.h"
 #include "VatBreakdown.d.h"
+#include "VatCategory.d.h"
 
 #include "InvoiceLineItem.d.h"
 
@@ -39,8 +41,8 @@ size_t fatoora_InvoiceLineItem_adjustments_len(const InvoiceLineItem* self);
 typedef struct fatoora_InvoiceLineItem_adjustment_result {union {Adjustment* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_adjustment_result;
 fatoora_InvoiceLineItem_adjustment_result fatoora_InvoiceLineItem_adjustment(const InvoiceLineItem* self, size_t index);
 
-typedef struct fatoora_InvoiceLineItem_adjustment_is_charge_result {union {bool ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_adjustment_is_charge_result;
-fatoora_InvoiceLineItem_adjustment_is_charge_result fatoora_InvoiceLineItem_adjustment_is_charge(const InvoiceLineItem* self, size_t index);
+typedef struct fatoora_InvoiceLineItem_adjustment_kind_result {union {AdjustmentKind ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_adjustment_kind_result;
+fatoora_InvoiceLineItem_adjustment_kind_result fatoora_InvoiceLineItem_adjustment_kind(const InvoiceLineItem* self, size_t index);
 
 typedef struct fatoora_InvoiceLineItem_item_seller_identifier_result {union {OtherId* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_item_seller_identifier_result;
 fatoora_InvoiceLineItem_item_seller_identifier_result fatoora_InvoiceLineItem_item_seller_identifier(const InvoiceLineItem* self);
@@ -68,7 +70,7 @@ typedef struct fatoora_InvoiceLineItem_tax_subtotal_result {union {VatBreakdown*
 fatoora_InvoiceLineItem_tax_subtotal_result fatoora_InvoiceLineItem_tax_subtotal(const InvoiceLineItem* self, size_t index);
 
 typedef struct fatoora_InvoiceLineItem_new_result {union {InvoiceLineItem* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_new_result;
-fatoora_InvoiceLineItem_new_result fatoora_InvoiceLineItem_new(DiplomatStringView description, DiplomatStringView quantity, DiplomatStringView unit_code, DiplomatStringView unit_price, DiplomatStringView rate, uint8_t category);
+fatoora_InvoiceLineItem_new_result fatoora_InvoiceLineItem_new(DiplomatStringView description, DiplomatStringView quantity, DiplomatStringView unit_code, DiplomatStringView unit_price, DiplomatStringView rate, VatCategory category);
 
 typedef struct fatoora_InvoiceLineItem_with_metadata_result {union {InvoiceLineItem* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_with_metadata_result;
 fatoora_InvoiceLineItem_with_metadata_result fatoora_InvoiceLineItem_with_metadata(const InvoiceLineItem* self, OptionStringView id, const TaxExemption* exemption);
@@ -106,7 +108,7 @@ bool fatoora_InvoiceLineItem_has_tax_total(const InvoiceLineItem* self);
 
 bool fatoora_InvoiceLineItem_has_gross_amount(const InvoiceLineItem* self);
 
-uint8_t fatoora_InvoiceLineItem_vat_category(const InvoiceLineItem* self);
+VatCategory fatoora_InvoiceLineItem_vat_category(const InvoiceLineItem* self);
 
 void fatoora_InvoiceLineItem_destroy(InvoiceLineItem* self);
 

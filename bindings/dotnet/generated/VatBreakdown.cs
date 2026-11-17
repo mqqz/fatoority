@@ -104,7 +104,7 @@ public partial class VatBreakdown: IDisposable
     /// <returns>
     /// A <c>VatBreakdown</c> allocated on Rust side.
     /// </returns>
-    public static VatBreakdown New(byte category, string rate, string taxableAmount, string taxAmount, TaxExemption exemption)
+    public static VatBreakdown New(VatCategory category, string rate, string taxableAmount, string taxAmount, TaxExemption exemption)
     {
         unsafe
         {
@@ -138,7 +138,7 @@ public partial class VatBreakdown: IDisposable
         }
     }
 
-    public byte Category()
+    public VatCategory Category()
     {
         unsafe
         {

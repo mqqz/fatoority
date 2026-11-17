@@ -17,10 +17,10 @@ internal partial struct VatBreakdown
     internal static unsafe extern DiplomatResultVatBreakdownBindingError WithoutVatRate(VatBreakdown* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_VatBreakdown_new", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultVatBreakdownBindingError New(byte category, DiplomatSliceU8 rate, DiplomatSliceU8 taxableAmount, DiplomatSliceU8 taxAmount, TaxExemption* exemption);
+    internal static unsafe extern DiplomatResultVatBreakdownBindingError New(VatCategory category, DiplomatSliceU8 rate, DiplomatSliceU8 taxableAmount, DiplomatSliceU8 taxAmount, TaxExemption* exemption);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_VatBreakdown_category", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern byte Category(VatBreakdown* handle);
+    internal static unsafe extern VatCategory Category(VatBreakdown* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_VatBreakdown_rate", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError Rate(VatBreakdown* handle, DiplomatWrite* writeable);

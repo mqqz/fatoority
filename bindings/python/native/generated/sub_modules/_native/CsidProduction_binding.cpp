@@ -2,6 +2,7 @@
 
 
 #include "CsidProduction.hpp"
+#include "Environment.hpp"
 
 namespace _native {
 void add_CsidProduction_binding(nb::module_ mod) {
@@ -14,7 +15,7 @@ void add_CsidProduction_binding(nb::module_ mod) {
     opaque
         .def("binary_security_token", std::move(maybe_op_unwrap(&_native::CsidProduction::binary_security_token)))
         .def_static("create", std::move(maybe_op_unwrap(&_native::CsidProduction::create)), "environment"_a, "request_id"_a= nb::none(), "token"_a, "secret"_a)
-        .def("env", &_native::CsidProduction::env)
+        .def("env", std::move(maybe_op_unwrap(&_native::CsidProduction::env)))
         .def("request_id", std::move(maybe_op_unwrap(&_native::CsidProduction::request_id)))
         .def("secret", std::move(maybe_op_unwrap(&_native::CsidProduction::secret)));
 }

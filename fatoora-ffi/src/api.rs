@@ -2,6 +2,7 @@
 use crate::common::ffi::{BindingError, Text};
 use crate::common::{boundary, core_error, local_error, text, write};
 use diplomat_runtime::DiplomatStr;
+use fatoora_core::api as core_api;
 #[cfg(not(target_arch = "wasm32"))]
 use fatoora_core::api as core;
 #[cfg(not(target_arch = "wasm32"))]
@@ -62,6 +63,48 @@ fn optional_input(value: Option<&DiplomatStr>) -> Result<Option<&str>, Box<Bindi
     value.map(text).transpose()
 }
 
+impl From<&core_api::ReportingStatus> for ffi::ReportingStatus {
+    fn from(value: &core_api::ReportingStatus) -> Self {
+        match value {
+            core_api::ReportingStatus::Reported => Self::Reported,
+            core_api::ReportingStatus::NotReported => Self::NotReported,
+            _ => Self::Unknown,
+        }
+    }
+}
+
+impl From<&core_api::ClearanceStatus> for ffi::ClearanceStatus {
+    fn from(value: &core_api::ClearanceStatus) -> Self {
+        match value {
+            core_api::ClearanceStatus::Cleared => Self::Cleared,
+            core_api::ClearanceStatus::NotCleared => Self::NotCleared,
+            _ => Self::Unknown,
+        }
+    }
+}
+
+impl From<&core_api::ValidationStatus> for ffi::ValidationStatus {
+    fn from(value: &core_api::ValidationStatus) -> Self {
+        match value {
+            core_api::ValidationStatus::Pass => Self::Pass,
+            core_api::ValidationStatus::Warning => Self::Warning,
+            core_api::ValidationStatus::Error => Self::Error,
+            _ => Self::Unknown,
+        }
+    }
+}
+
+impl From<&core_api::MessageType> for ffi::MessageType {
+    fn from(value: &core_api::MessageType) -> Self {
+        match value {
+            core_api::MessageType::Info => Self::Info,
+            core_api::MessageType::Warning => Self::Warning,
+            core_api::MessageType::Error => Self::Error,
+            _ => Self::Unknown,
+        }
+    }
+}
+
 #[diplomat::bridge]
 #[diplomat::abi_rename = "fatoora_{0}"]
 #[diplomat::attr(cpp, namespace = "fatoora")]
@@ -69,7 +112,8 @@ pub mod ffi {
     #[cfg(not(target_arch = "wasm32"))]
     use super::run;
     use super::{boundary, core_error, local_error, optional, optional_input, text, write};
-    use crate::common::ffi::{BindingError, Text};
+    use crate::common::environment_to_ffi;
+    use crate::common::ffi::{BindingError, Environment, Text};
     use crate::crypto::ffi::{Bytes, Config, Csr};
     use crate::invoice::ffi::SignedInvoice;
     use diplomat_runtime::{DiplomatStr, DiplomatWrite};
@@ -105,6 +149,72 @@ pub mod ffi {
         Unknown = 0,
         Accepted = 1,
         Rejected = 2,
+    }
+
+    /// Value of the `Clearance-Status` header sent with reporting and clearance requests.
+    #[diplomat::enum_convert(fatoora_core::api::ClearanceMode)]
+    #[derive(Debug, PartialEq, Eq)]
+    pub enum ClearanceMode {
+        /// Header value `0` (clearance is switched off for the taxpayer).
+        Disabled = 0,
+        /// Header value `1` (clearance is switched on for the taxpayer).
+        Enabled = 1,
+    }
+
+    /// `reportingStatus` of a reporting response.
+    ///
+    /// `Unknown` marks a value this binding version does not recognize; read the
+    /// verbatim wire value with the sibling `*_raw` getter.
+    #[derive(Debug, PartialEq, Eq)]
+    pub enum ReportingStatus {
+        Unknown = 0,
+        /// Wire value `REPORTED`.
+        Reported = 1,
+        /// Wire value `NOT_REPORTED`.
+        NotReported = 2,
+    }
+
+    /// `clearanceStatus` of a clearance response.
+    ///
+    /// `Unknown` marks a value this binding version does not recognize; read the
+    /// verbatim wire value with the sibling `*_raw` getter.
+    #[derive(Debug, PartialEq, Eq)]
+    pub enum ClearanceStatus {
+        Unknown = 0,
+        /// Wire value `CLEARED`.
+        Cleared = 1,
+        /// Wire value `NOT_CLEARED`.
+        NotCleared = 2,
+    }
+
+    /// Overall `validationResults.status`, or the `status` of one validation message.
+    ///
+    /// `Unknown` marks a value this binding version does not recognize; read the
+    /// verbatim wire value with the sibling `*_raw` getter.
+    #[derive(Debug, PartialEq, Eq)]
+    pub enum ValidationStatus {
+        Unknown = 0,
+        /// Wire value `PASS`.
+        Pass = 1,
+        /// Wire value `WARNING`.
+        Warning = 2,
+        /// Wire value `ERROR`.
+        Error = 3,
+    }
+
+    /// The `type` of a validation message.
+    ///
+    /// `Unknown` marks a value this binding version does not recognize; read the
+    /// verbatim wire value with the sibling `*_raw` getter.
+    #[derive(Debug, PartialEq, Eq)]
+    pub enum MessageType {
+        Unknown = 0,
+        /// Wire value `INFO`.
+        Info = 1,
+        /// Wire value `WARNING`.
+        Warning = 2,
+        /// Wire value `ERROR`.
+        Error = 3,
     }
 
     // Diplomat expands this macro for Rust and every generated language.
@@ -189,7 +299,7 @@ pub mod ffi {
     }
     impl CsidCompliance {
         pub fn create(
-            environment: u8,
+            environment: Environment,
             request_id: Option<&DiplomatStr>,
             token: &DiplomatStr,
             secret: &DiplomatStr,
@@ -198,15 +308,15 @@ pub mod ffi {
                 Ok(Box::new(Self(fatoora_core::api::CsidCredentials::<
                     fatoora_core::api::Compliance,
                 >::new(
-                    crate::common::environment(environment)?,
+                    environment.into(),
                     optional_input(request_id)?.map(str::to_owned),
                     text(token)?,
                     text(secret)?,
                 ))))
             })
         }
-        pub fn env(&self) -> u8 {
-            crate::common::environment_code(self.0.env())
+        pub fn env(&self) -> Result<Environment, Box<BindingError>> {
+            boundary(|| environment_to_ffi(self.0.env()))
         }
         pub fn request_id(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
             boundary(|| optional(self.0.request_id()))
@@ -224,7 +334,7 @@ pub mod ffi {
 
     impl CsidProduction {
         pub fn create(
-            environment: u8,
+            environment: Environment,
             request_id: Option<&DiplomatStr>,
             token: &DiplomatStr,
             secret: &DiplomatStr,
@@ -233,15 +343,15 @@ pub mod ffi {
                 Ok(Box::new(Self(fatoora_core::api::CsidCredentials::<
                     fatoora_core::api::Production,
                 >::new(
-                    crate::common::environment(environment)?,
+                    environment.into(),
                     optional_input(request_id)?.map(str::to_owned),
                     text(token)?,
                     text(secret)?,
                 ))))
             })
         }
-        pub fn env(&self) -> u8 {
-            crate::common::environment_code(self.0.env())
+        pub fn env(&self) -> Result<Environment, Box<BindingError>> {
+            boundary(|| environment_to_ffi(self.0.env()))
         }
         pub fn request_id(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
             boundary(|| optional(self.0.request_id()))
@@ -329,7 +439,7 @@ pub mod ffi {
             &self,
             invoice: &SignedInvoice,
             credentials: &CsidProduction,
-            clearance_status: bool,
+            clearance_mode: ClearanceMode,
             accept_language: Option<&DiplomatStr>,
         ) -> Result<Box<ValidationResponse>, Box<BindingError>> {
             boundary(|| {
@@ -340,7 +450,7 @@ pub mod ffi {
                 run(self.0.report_simplified_invoice(
                     invoice,
                     &credentials.0,
-                    fatoora_core::api::ClearanceMode::from(clearance_status),
+                    clearance_mode.into(),
                     optional_input(accept_language)?,
                 ))
                 .map(|value| Box::new(ValidationResponse(value)))
@@ -352,7 +462,7 @@ pub mod ffi {
             &self,
             invoice: &SignedInvoice,
             credentials: &CsidProduction,
-            clearance_status: bool,
+            clearance_mode: ClearanceMode,
             accept_language: Option<&DiplomatStr>,
         ) -> Result<Box<ValidationResponse>, Box<BindingError>> {
             boundary(|| {
@@ -363,7 +473,7 @@ pub mod ffi {
                 run(self.0.clear_standard_invoice(
                     invoice,
                     &credentials.0,
-                    fatoora_core::api::ClearanceMode::from(clearance_status),
+                    clearance_mode.into(),
                     optional_input(accept_language)?,
                 ))
                 .map(|value| Box::new(ValidationResponse(value)))
@@ -433,7 +543,7 @@ pub mod ffi {
             &self,
             invoice: &SignedInvoice,
             credentials: &CsidProduction,
-            clearance_status: bool,
+            clearance_mode: ClearanceMode,
             accept_language: Option<&DiplomatStr>,
         ) -> Result<Box<InvoiceRequest>, Box<BindingError>> {
             boundary(|| {
@@ -445,7 +555,7 @@ pub mod ffi {
                     .prepare_report_simplified_invoice(
                         invoice,
                         &credentials.0,
-                        fatoora_core::api::ClearanceMode::from(clearance_status),
+                        clearance_mode.into(),
                         optional_input(accept_language)?,
                     )
                     .map(|value| Box::new(InvoiceRequest(value)))
@@ -456,7 +566,7 @@ pub mod ffi {
             &self,
             invoice: &SignedInvoice,
             credentials: &CsidProduction,
-            clearance_status: bool,
+            clearance_mode: ClearanceMode,
             accept_language: Option<&DiplomatStr>,
         ) -> Result<Box<InvoiceRequest>, Box<BindingError>> {
             boundary(|| {
@@ -468,7 +578,7 @@ pub mod ffi {
                     .prepare_clear_standard_invoice(
                         invoice,
                         &credentials.0,
-                        fatoora_core::api::ClearanceMode::from(clearance_status),
+                        clearance_mode.into(),
                         optional_input(accept_language)?,
                     )
                     .map(|value| Box::new(InvoiceRequest(value)))
@@ -503,10 +613,20 @@ pub mod ffi {
         pub fn cleared_invoice_base64(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
             boundary(|| optional(self.0.cleared_invoice_base64()))
         }
-        pub fn reporting_status(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
+        /// The parsed `reportingStatus`, or null when the response has none.
+        pub fn reporting_status(&self) -> Option<ReportingStatus> {
+            self.0.reporting_status().map(Into::into)
+        }
+        /// The `reportingStatus` exactly as ZATCA sent it, or null when absent.
+        pub fn reporting_status_raw(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
             boundary(|| optional(self.0.reporting_status().map(|v| v.as_str())))
         }
-        pub fn clearance_status(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
+        /// The parsed `clearanceStatus`, or null when the response has none.
+        pub fn clearance_status(&self) -> Option<ClearanceStatus> {
+            self.0.clearance_status().map(Into::into)
+        }
+        /// The `clearanceStatus` exactly as ZATCA sent it, or null when absent.
+        pub fn clearance_status_raw(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
             boundary(|| optional(self.0.clearance_status().map(|v| v.as_str())))
         }
         pub fn qr_seller_status(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
@@ -517,7 +637,12 @@ pub mod ffi {
         }
     }
     impl ValidationResults {
-        pub fn status(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
+        /// The parsed overall status, or null when the response has none.
+        pub fn status(&self) -> Option<ValidationStatus> {
+            self.0.status().map(Into::into)
+        }
+        /// The overall status exactly as ZATCA sent it, or null when absent.
+        pub fn status_raw(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
             boundary(|| optional(self.0.status().map(|v| v.as_str())))
         }
         pub fn info_len(&self) -> usize {
@@ -577,7 +702,12 @@ pub mod ffi {
         }
     }
     impl ValidationMessage {
-        pub fn message_type(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
+        /// The parsed message `type`, or null when the message has none.
+        pub fn message_type(&self) -> Option<MessageType> {
+            self.0.message_type().map(Into::into)
+        }
+        /// The message `type` exactly as ZATCA sent it, or null when absent.
+        pub fn message_type_raw(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
             boundary(|| optional(self.0.message_type().map(|v| v.as_str())))
         }
         pub fn code(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
@@ -589,7 +719,12 @@ pub mod ffi {
         pub fn message(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
             boundary(|| optional(self.0.message()))
         }
-        pub fn status(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
+        /// The parsed message `status`, or null when the message has none.
+        pub fn status(&self) -> Option<ValidationStatus> {
+            self.0.status().map(Into::into)
+        }
+        /// The message `status` exactly as ZATCA sent it, or null when absent.
+        pub fn status_raw(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
             boundary(|| optional(self.0.status().map(|v| v.as_str())))
         }
     }
@@ -598,6 +733,7 @@ pub mod ffi {
 #[cfg(test)]
 mod tests {
     use super::{ffi::*, run};
+    use crate::common::ffi::Environment;
 
     #[test]
     fn blocking_adapter_supports_nested_runtime_and_contains_panics() {
@@ -614,18 +750,27 @@ mod tests {
 
     #[test]
     fn credentials_validate_environment_utf8_nul_and_optional_id() {
-        assert!(CsidCompliance::create(3, None, b"token", b"secret").is_err());
-        assert!(CsidProduction::create(0, None, b"\xff", b"secret").is_err());
-        assert!(CsidCompliance::create(0, Some(b"id\0bad"), b"token", b"secret").is_err());
-        let absent = CsidCompliance::create(1, None, b"token", b"secret")
+        assert!(
+            CsidProduction::create(Environment::NonProduction, None, b"\xff", b"secret").is_err()
+        );
+        assert!(
+            CsidCompliance::create(
+                Environment::NonProduction,
+                Some(b"id\0bad"),
+                b"token",
+                b"secret"
+            )
+            .is_err()
+        );
+        let absent = CsidCompliance::create(Environment::Simulation, None, b"token", b"secret")
             .ok()
             .unwrap();
-        let empty = CsidProduction::create(2, Some(b""), b"token", b"secret")
+        let empty = CsidProduction::create(Environment::Production, Some(b""), b"token", b"secret")
             .ok()
             .unwrap();
-        assert_eq!(absent.env(), 1);
+        assert_eq!(absent.env().ok(), Some(Environment::Simulation));
         assert!(absent.request_id().ok().unwrap().is_none());
-        assert_eq!(empty.env(), 2);
+        assert_eq!(empty.env().ok(), Some(Environment::Production));
         assert_eq!(empty.request_id().ok().unwrap().unwrap().0, "");
     }
 
@@ -677,7 +822,8 @@ mod tests {
             }))
             .unwrap(),
         );
-        assert_eq!(response.reporting_status().err().unwrap().code(), 1);
+        assert_eq!(response.reporting_status_raw().err().unwrap().code(), 1);
+        assert_eq!(response.reporting_status(), Some(ReportingStatus::Unknown));
         assert!(response.cleared_invoice_xml().ok().unwrap().is_none());
     }
 
@@ -703,7 +849,8 @@ mod tests {
             })).unwrap());
             let results = response.validation_results().ok().unwrap();
             drop(response);
-            assert_eq!(results.status().ok().unwrap().unwrap().0, "ERROR");
+            assert_eq!(results.status(), Some(ValidationStatus::Error));
+            assert_eq!(results.status_raw().ok().unwrap().unwrap().0, "ERROR");
             assert_eq!(results.info_len(), expected_len);
             assert_eq!(results.error_len(), 1);
             assert_eq!(results.info_message(expected_len).err().unwrap().code(), 1);
@@ -738,11 +885,13 @@ mod tests {
             }
             let error = results.error_message(0).ok().unwrap();
             drop(results);
-            assert_eq!(error.message_type().ok().unwrap().unwrap().0, "WARNING");
+            assert_eq!(error.message_type(), Some(MessageType::Warning));
+            assert_eq!(error.message_type_raw().ok().unwrap().unwrap().0, "WARNING");
             assert_eq!(error.code().ok().unwrap().unwrap().0, "BR-KSA-07");
             assert_eq!(error.category().ok().unwrap().unwrap().0, "KSA");
             assert_eq!(error.message().ok().unwrap().unwrap().0, "ملاحظة");
-            assert_eq!(error.status().ok().unwrap().unwrap().0, "WARNING");
+            assert_eq!(error.status(), Some(ValidationStatus::Warning));
+            assert_eq!(error.status_raw().ok().unwrap().unwrap().0, "WARNING");
         }
     }
 
@@ -763,11 +912,13 @@ mod tests {
             response.cleared_invoice_base64().ok().unwrap().unwrap().0,
             encoded
         );
+        assert_eq!(response.clearance_status(), Some(ClearanceStatus::Cleared));
         assert_eq!(
-            response.clearance_status().ok().unwrap().unwrap().0,
+            response.clearance_status_raw().ok().unwrap().unwrap().0,
             "CLEARED"
         );
-        assert!(response.reporting_status().ok().unwrap().is_none());
+        assert!(response.reporting_status().is_none());
+        assert!(response.reporting_status_raw().ok().unwrap().is_none());
         assert_eq!(response.qr_seller_status().ok().unwrap().unwrap().0, "");
         assert_eq!(response.qr_buyer_status().ok().unwrap().unwrap().0, "PASS");
         drop(response);
@@ -790,12 +941,64 @@ mod tests {
         type Out =
             Result<Option<Box<crate::common::ffi::Text>>, Box<crate::common::ffi::BindingError>>;
         let text = |value: Out| value.ok().unwrap().unwrap().0;
-        assert_eq!(text(response.reporting_status()), "reported ");
-        assert_eq!(text(response.clearance_status()), "");
+        assert_eq!(text(response.reporting_status_raw()), "reported ");
+        assert_eq!(response.reporting_status(), Some(ReportingStatus::Unknown));
+        assert_eq!(text(response.clearance_status_raw()), "");
+        assert_eq!(response.clearance_status(), Some(ClearanceStatus::Unknown));
         let results = response.validation_results().ok().unwrap();
-        assert_eq!(text(results.status()), "PARTIAL");
+        assert_eq!(text(results.status_raw()), "PARTIAL");
+        assert_eq!(results.status(), Some(ValidationStatus::Unknown));
         let message = results.error_message(0).ok().unwrap();
-        assert_eq!(text(message.message_type()), "Notice");
-        assert_eq!(text(message.status()), "WARN");
+        assert_eq!(text(message.message_type_raw()), "Notice");
+        assert_eq!(message.message_type(), Some(MessageType::Unknown));
+        assert_eq!(text(message.status_raw()), "WARN");
+        assert_eq!(message.status(), Some(ValidationStatus::Unknown));
+    }
+
+    #[test]
+    fn known_statuses_map_to_named_variants() {
+        let response = ValidationResponse(
+            serde_json::from_value(serde_json::json!({
+                "reportingStatus": "NOT_REPORTED",
+                "clearanceStatus": "NOT_CLEARED",
+                "validationResults": {
+                    "status": "PASS",
+                    "errorMessages": [
+                        {"type": "INFO", "status": "PASS"},
+                        {"type": "ERROR", "status": "ERROR"},
+                        {}
+                    ]
+                }
+            }))
+            .unwrap(),
+        );
+        assert_eq!(
+            response.reporting_status(),
+            Some(ReportingStatus::NotReported)
+        );
+        assert_eq!(
+            response.clearance_status(),
+            Some(ClearanceStatus::NotCleared)
+        );
+        let results = response.validation_results().ok().unwrap();
+        assert_eq!(results.status(), Some(ValidationStatus::Pass));
+        let info = results.error_message(0).ok().unwrap();
+        assert_eq!(info.message_type(), Some(MessageType::Info));
+        assert_eq!(info.status(), Some(ValidationStatus::Pass));
+        let error = results.error_message(1).ok().unwrap();
+        assert_eq!(error.message_type(), Some(MessageType::Error));
+        assert_eq!(error.status(), Some(ValidationStatus::Error));
+        let empty = results.error_message(2).ok().unwrap();
+        assert!(empty.message_type().is_none());
+        assert!(empty.status().is_none());
+        assert!(empty.message_type_raw().ok().unwrap().is_none());
+    }
+
+    #[test]
+    fn clearance_mode_maps_to_core() {
+        use fatoora_core::api::ClearanceMode as Core;
+        assert_eq!(Core::from(ClearanceMode::Enabled), Core::Enabled);
+        assert_eq!(Core::from(ClearanceMode::Disabled), Core::Disabled);
+        assert_eq!(ClearanceMode::from(Core::Enabled), ClearanceMode::Enabled);
     }
 }

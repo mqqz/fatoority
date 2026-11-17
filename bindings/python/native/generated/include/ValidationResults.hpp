@@ -14,6 +14,7 @@
 #include "BindingError.hpp"
 #include "Text.hpp"
 #include "ValidationMessage.hpp"
+#include "ValidationStatus.hpp"
 #include "diplomat_runtime.hpp"
 
 
@@ -21,8 +22,11 @@ namespace _native {
 namespace capi {
     extern "C" {
 
-    typedef struct fatoora_ValidationResults_status_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationResults_status_result;
+    typedef struct fatoora_ValidationResults_status_result {union {_native::capi::ValidationStatus ok; }; bool is_ok;} fatoora_ValidationResults_status_result;
     fatoora_ValidationResults_status_result fatoora_ValidationResults_status(const _native::capi::ValidationResults* self);
+
+    typedef struct fatoora_ValidationResults_status_raw_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationResults_status_raw_result;
+    fatoora_ValidationResults_status_raw_result fatoora_ValidationResults_status_raw(const _native::capi::ValidationResults* self);
 
     size_t fatoora_ValidationResults_info_len(const _native::capi::ValidationResults* self);
 
@@ -45,8 +49,13 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::ValidationResults::status() const {
+inline std::optional<_native::ValidationStatus> _native::ValidationResults::status() const {
     auto result = _native::capi::fatoora_ValidationResults_status(this->AsFFI());
+    return result.is_ok ? std::optional<_native::ValidationStatus>(_native::ValidationStatus::FromFFI(result.ok)) : std::nullopt;
+}
+
+inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::ValidationResults::status_raw() const {
+    auto result = _native::capi::fatoora_ValidationResults_status_raw(this->AsFFI());
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 

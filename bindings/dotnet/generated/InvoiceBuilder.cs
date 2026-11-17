@@ -202,7 +202,7 @@ public partial class InvoiceBuilder: IDisposable
     }
 
     /// <exception cref="BindingErrorException"></exception>
-    public void AddDocumentAdjustment(bool charge, Adjustment value, byte category, string rate, TaxExemption exemption)
+    public void AddDocumentAdjustment(AdjustmentKind kind, Adjustment value, VatCategory category, string rate, TaxExemption exemption)
     {
         unsafe
         {
@@ -220,7 +220,7 @@ public partial class InvoiceBuilder: IDisposable
                 exemptionLease = exemption._diplomatHandle.Lease(BorrowKind.Shared);
                 fixed (byte* ratePtr = rateBytes)
                 {
-                    var result = Raw.InvoiceBuilder.AddDocumentAdjustment(selfLease!.Ptr, charge, valueLease!.Ptr, category, new DiplomatSliceU8 { Ptr = ratePtr, Len = (nuint)rateBytes.Length }, exemptionLease!.Ptr);
+                    var result = Raw.InvoiceBuilder.AddDocumentAdjustment(selfLease!.Ptr, kind, valueLease!.Ptr, category, new DiplomatSliceU8 { Ptr = ratePtr, Len = (nuint)rateBytes.Length }, exemptionLease!.Ptr);
                     if (!result.IsOk)
                     {
                         throw new BindingErrorException(new BindingError(result.Err));
@@ -275,7 +275,7 @@ public partial class InvoiceBuilder: IDisposable
     /// <returns>
     /// A <c>InvoiceBuilder</c> allocated on Rust side.
     /// </returns>
-    public static InvoiceBuilder NewWithReference(byte kind, byte subtype, OriginalInvoiceRef reference, string reason)
+    public static InvoiceBuilder NewWithReference(InvoiceTypeKind kind, InvoiceSubType subtype, OriginalInvoiceRef reference, string reason)
     {
         unsafe
         {
@@ -476,7 +476,7 @@ public partial class InvoiceBuilder: IDisposable
     }
 
     /// <exception cref="BindingErrorException"></exception>
-    public void SetTaxExemption(byte category, string rate, TaxExemption exemption)
+    public void SetTaxExemption(VatCategory category, string rate, TaxExemption exemption)
     {
         unsafe
         {
@@ -565,7 +565,7 @@ public partial class InvoiceBuilder: IDisposable
     /// <returns>
     /// A <c>InvoiceBuilder</c> allocated on Rust side.
     /// </returns>
-    public static InvoiceBuilder New(byte kind, byte subtype, string? originalId, string? originalUuid, string? originalDate, string? reason)
+    public static InvoiceBuilder New(InvoiceTypeKind kind, InvoiceSubType subtype, string? originalId, string? originalUuid, string? originalDate, string? reason)
     {
         unsafe
         {
@@ -947,7 +947,7 @@ public partial class InvoiceBuilder: IDisposable
     }
 
     /// <exception cref="BindingErrorException"></exception>
-    public void SetVatCategory(byte value)
+    public void SetVatCategory(VatCategory value)
     {
         unsafe
         {
@@ -1132,7 +1132,7 @@ public partial class InvoiceBuilder: IDisposable
     }
 
     /// <exception cref="BindingErrorException"></exception>
-    public void AddLineItem(string description, string quantity, string unitCode, string unitPrice, string vatRate, byte category)
+    public void AddLineItem(string description, string quantity, string unitCode, string unitPrice, string vatRate, VatCategory category)
     {
         unsafe
         {

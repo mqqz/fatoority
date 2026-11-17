@@ -9,7 +9,7 @@ public static class SdkExamples
     {
         using var properties = CsrProperties.FromPropertiesStr(propertiesText);
         using var key = SigningKey.Generate();
-        using var csr = properties.Build(key, 0); // Nonproduction.
+        using var csr = properties.Build(key, ZatcaEnvironment.NonProduction);
         return (csr.ToPem(), key.ToPem());
     }
     // --8<-- [end:csr]
@@ -28,7 +28,7 @@ public static class SdkExamples
     public static JsonDocument ValidateInvoice(
         string xml, string previousHash, string evaluatedAt)
     {
-        using var config = Config.New(0);
+        using var config = Config.New(ZatcaEnvironment.NonProduction);
         var options = JsonSerializer.Serialize(new
         {
             previous_invoice_hash = previousHash,
@@ -50,12 +50,12 @@ public static class SdkExamples
     // --8<-- [start:api]
     public static void ReportInvoice(string signedXml, string token, string secret)
     {
-        using var config = Config.New(2); // Production.
+        using var config = Config.New(ZatcaEnvironment.Production);
         using var client = ZatcaClient.Create(config);
-        using var credentials = CsidProduction.Create(2, null, token, secret);
+        using var credentials = CsidProduction.Create(ZatcaEnvironment.Production, null, token, secret);
         using var invoice = SignedInvoice.FromXml(signedXml);
         using var response = client.ReportSimplifiedInvoice(
-            invoice, credentials, false, "en");
+            invoice, credentials, ClearanceMode.Disabled, "en");
         response.EnsureAccepted(); // HTTP success alone does not mean acceptance.
         Console.WriteLine(response.Outcome());
     }

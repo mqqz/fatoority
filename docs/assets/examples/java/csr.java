@@ -12,7 +12,7 @@ public class Guide {
     public static void main(String[] args) throws Exception {
         try (CsrProperties properties = CsrProperties.fromPropertiesStr(read("csr.properties"));
              SigningKey key = SigningKey.generate();
-             Csr csr = properties.build(key, 0)) {
+             Csr csr = properties.build(key, Environment.NonProduction)) {
             write("csr.pem", csr.toPem());
             write("key.pem", key.toPem());
         }

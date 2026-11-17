@@ -13,7 +13,7 @@ internal interface InvoiceLineItemLib: Library {
     fun fatoora_InvoiceLineItem_item_price_base_quantity_unit_code(handle: Pointer): ResultPointerPointer
     fun fatoora_InvoiceLineItem_adjustments_len(handle: Pointer): FFISizet
     fun fatoora_InvoiceLineItem_adjustment(handle: Pointer, index: FFISizet): ResultPointerPointer
-    fun fatoora_InvoiceLineItem_adjustment_is_charge(handle: Pointer, index: FFISizet): ResultBytePointer
+    fun fatoora_InvoiceLineItem_adjustment_kind(handle: Pointer, index: FFISizet): ResultIntPointer
     fun fatoora_InvoiceLineItem_item_seller_identifier(handle: Pointer): ResultPointerPointer
     fun fatoora_InvoiceLineItem_item_buyer_identifier(handle: Pointer): ResultPointerPointer
     fun fatoora_InvoiceLineItem_item_standard_identifier(handle: Pointer): ResultPointerPointer
@@ -23,7 +23,7 @@ internal interface InvoiceLineItemLib: Library {
     fun fatoora_InvoiceLineItem_document_reference(handle: Pointer, index: FFISizet): ResultPointerPointer
     fun fatoora_InvoiceLineItem_tax_subtotals_len(handle: Pointer): FFISizet
     fun fatoora_InvoiceLineItem_tax_subtotal(handle: Pointer, index: FFISizet): ResultPointerPointer
-    fun fatoora_InvoiceLineItem_new(description: Slice, quantity: Slice, unitCode: Slice, unitPrice: Slice, rate: Slice, category: FFIUint8): ResultPointerPointer
+    fun fatoora_InvoiceLineItem_new(description: Slice, quantity: Slice, unitCode: Slice, unitPrice: Slice, rate: Slice, category: Int): ResultPointerPointer
     fun fatoora_InvoiceLineItem_with_metadata(handle: Pointer, id: OptionSlice, exemption: Pointer): ResultPointerPointer
     fun fatoora_InvoiceLineItem_id(handle: Pointer): ResultPointerPointer
     fun fatoora_InvoiceLineItem_exemption(handle: Pointer): ResultPointerPointer
@@ -37,7 +37,7 @@ internal interface InvoiceLineItemLib: Library {
     fun fatoora_InvoiceLineItem_has_vat_rate(handle: Pointer): Byte
     fun fatoora_InvoiceLineItem_has_tax_total(handle: Pointer): Byte
     fun fatoora_InvoiceLineItem_has_gross_amount(handle: Pointer): Byte
-    fun fatoora_InvoiceLineItem_vat_category(handle: Pointer): FFIUint8
+    fun fatoora_InvoiceLineItem_vat_category(handle: Pointer): Int
 }
 
 class InvoiceLineItem internal constructor (
@@ -70,14 +70,14 @@ class InvoiceLineItem internal constructor (
         internal val lib: InvoiceLineItemLib = Native.load("fatoora_ffi", libClass)
         @JvmStatic
 
-        fun new_(description: String, quantity: String, unitCode: String, unitPrice: String, rate: String, category: UByte): Result<InvoiceLineItem> {
+        fun new_(description: String, quantity: String, unitCode: String, unitPrice: String, rate: String, category: VatCategory): Result<InvoiceLineItem> {
             val descriptionSliceMemory = PrimitiveArrayTools.borrowUtf8(description)
             val quantitySliceMemory = PrimitiveArrayTools.borrowUtf8(quantity)
             val unitCodeSliceMemory = PrimitiveArrayTools.borrowUtf8(unitCode)
             val unitPriceSliceMemory = PrimitiveArrayTools.borrowUtf8(unitPrice)
             val rateSliceMemory = PrimitiveArrayTools.borrowUtf8(rate)
 
-            val returnVal = lib.fatoora_InvoiceLineItem_new(descriptionSliceMemory.slice, quantitySliceMemory.slice, unitCodeSliceMemory.slice, unitPriceSliceMemory.slice, rateSliceMemory.slice, FFIUint8(category));
+            val returnVal = lib.fatoora_InvoiceLineItem_new(descriptionSliceMemory.slice, quantitySliceMemory.slice, unitCodeSliceMemory.slice, unitPriceSliceMemory.slice, rateSliceMemory.slice, category.toNative());
             try {
                 val nativeOkVal = returnVal.getNativeOk();
                 if (nativeOkVal != null) {
@@ -192,12 +192,12 @@ class InvoiceLineItem internal constructor (
         }
     }
 
-    fun adjustmentIsCharge(index: ULong): Result<Boolean> {
+    fun adjustmentKind(index: ULong): Result<AdjustmentKind> {
 
-        val returnVal = lib.fatoora_InvoiceLineItem_adjustment_is_charge(handle, FFISizet(index));
+        val returnVal = lib.fatoora_InvoiceLineItem_adjustment_kind(handle, FFISizet(index));
         val nativeOkVal = returnVal.getNativeOk();
         if (nativeOkVal != null) {
-            return (nativeOkVal > 0).ok()
+            return (AdjustmentKind.fromNative(nativeOkVal)).ok()
         } else {
             val selfEdges: List<Any> = listOf()
             val handle = returnVal.getNativeErr()!!
@@ -530,10 +530,10 @@ class InvoiceLineItem internal constructor (
         return (returnVal > 0)
     }
 
-    fun vatCategory(): UByte {
+    fun vatCategory(): VatCategory {
 
         val returnVal = lib.fatoora_InvoiceLineItem_vat_category(handle);
-        return (returnVal.toUByte())
+        return (VatCategory.fromNative(returnVal))
     }
 
 }

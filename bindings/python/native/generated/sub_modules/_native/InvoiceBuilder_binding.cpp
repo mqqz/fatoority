@@ -3,13 +3,17 @@
 
 #include "Address.hpp"
 #include "Adjustment.hpp"
+#include "AdjustmentKind.hpp"
 #include "AllowanceCharge.hpp"
 #include "InvoiceBuilder.hpp"
 #include "InvoiceLineItem.hpp"
+#include "InvoiceSubType.hpp"
+#include "InvoiceTypeKind.hpp"
 #include "OriginalInvoiceRef.hpp"
 #include "PaymentMeans.hpp"
 #include "TaxExemption.hpp"
 #include "VatBreakdown.hpp"
+#include "VatCategory.hpp"
 
 namespace _native {
 void add_InvoiceBuilder_binding(nb::module_ mod) {
@@ -23,7 +27,7 @@ void add_InvoiceBuilder_binding(nb::module_ mod) {
         .def("add_adjustment", std::move(maybe_op_unwrap(&_native::InvoiceBuilder::add_adjustment)), "adjustment"_a)
         .def("add_billing_reference", std::move(maybe_op_unwrap(&_native::InvoiceBuilder::add_billing_reference)), "value"_a)
         .def("add_buyer_identifier", std::move(maybe_op_unwrap(&_native::InvoiceBuilder::add_buyer_identifier)), "value"_a, "scheme"_a= nb::none())
-        .def("add_document_adjustment", std::move(maybe_op_unwrap(&_native::InvoiceBuilder::add_document_adjustment)), "charge"_a, "value"_a, "category"_a, "rate"_a, "exemption"_a)
+        .def("add_document_adjustment", std::move(maybe_op_unwrap(&_native::InvoiceBuilder::add_document_adjustment)), "kind"_a, "value"_a, "category"_a, "rate"_a, "exemption"_a)
         .def("add_item", std::move(maybe_op_unwrap(&_native::InvoiceBuilder::add_item)), "item"_a)
         .def("add_line_item", std::move(maybe_op_unwrap(&_native::InvoiceBuilder::add_line_item)), "description"_a, "quantity"_a, "unit_code"_a, "unit_price"_a, "vat_rate"_a, "category"_a)
         .def("add_note", std::move(maybe_op_unwrap(&_native::InvoiceBuilder::add_note)), "language"_a= nb::none(), "value"_a)

@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include "../diplomat_runtime.hpp"
 #include "BindingError.hpp"
+#include "Environment.hpp"
 #include "Text.hpp"
 
 
@@ -21,9 +22,10 @@ namespace capi {
     extern "C" {
 
     typedef struct fatoora_CsidProduction_create_result {union {fatoora::capi::CsidProduction* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_CsidProduction_create_result;
-    fatoora_CsidProduction_create_result fatoora_CsidProduction_create(uint8_t environment, diplomat::capi::OptionStringView request_id, diplomat::capi::DiplomatStringView token, diplomat::capi::DiplomatStringView secret);
+    fatoora_CsidProduction_create_result fatoora_CsidProduction_create(fatoora::capi::Environment environment, diplomat::capi::OptionStringView request_id, diplomat::capi::DiplomatStringView token, diplomat::capi::DiplomatStringView secret);
 
-    uint8_t fatoora_CsidProduction_env(const fatoora::capi::CsidProduction* self);
+    typedef struct fatoora_CsidProduction_env_result {union {fatoora::capi::Environment ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_CsidProduction_env_result;
+    fatoora_CsidProduction_env_result fatoora_CsidProduction_env(const fatoora::capi::CsidProduction* self);
 
     typedef struct fatoora_CsidProduction_request_id_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_CsidProduction_request_id_result;
     fatoora_CsidProduction_request_id_result fatoora_CsidProduction_request_id(const fatoora::capi::CsidProduction* self);
@@ -40,17 +42,17 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline diplomat::result<std::unique_ptr<fatoora::CsidProduction>, std::unique_ptr<fatoora::BindingError>> fatoora::CsidProduction::create(uint8_t environment, std::optional<std::string_view> request_id, std::string_view token, std::string_view secret) {
-    auto result = fatoora::capi::fatoora_CsidProduction_create(environment,
+inline diplomat::result<std::unique_ptr<fatoora::CsidProduction>, std::unique_ptr<fatoora::BindingError>> fatoora::CsidProduction::create(fatoora::Environment environment, std::optional<std::string_view> request_id, std::string_view token, std::string_view secret) {
+    auto result = fatoora::capi::fatoora_CsidProduction_create(environment.AsFFI(),
         request_id.has_value() ? (diplomat::capi::OptionStringView{ { {request_id.value().data(), request_id.value().size()} }, true }) : (diplomat::capi::OptionStringView{ {}, false }),
         {token.data(), token.size()},
         {secret.data(), secret.size()});
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::CsidProduction>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::CsidProduction>>(std::unique_ptr<fatoora::CsidProduction>(fatoora::CsidProduction::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::CsidProduction>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline uint8_t fatoora::CsidProduction::env() const {
+inline diplomat::result<fatoora::Environment, std::unique_ptr<fatoora::BindingError>> fatoora::CsidProduction::env() const {
     auto result = fatoora::capi::fatoora_CsidProduction_env(this->AsFFI());
-    return result;
+    return result.is_ok ? diplomat::result<fatoora::Environment, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<fatoora::Environment>(fatoora::Environment::FromFFI(result.ok))) : diplomat::result<fatoora::Environment, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
 inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::CsidProduction::request_id() const {

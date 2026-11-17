@@ -8,6 +8,7 @@
 #include "diplomat_runtime.h"
 
 #include "BindingError.d.h"
+#include "ClearanceMode.d.h"
 #include "ComplianceRequest.d.h"
 #include "Config.d.h"
 #include "CsidCompliance.d.h"
@@ -41,10 +42,10 @@ typedef struct fatoora_ZatcaClient_check_invoice_compliance_result {union {Valid
 fatoora_ZatcaClient_check_invoice_compliance_result fatoora_ZatcaClient_check_invoice_compliance(const ZatcaClient* self, const SignedInvoice* invoice, const CsidCompliance* credentials);
 
 typedef struct fatoora_ZatcaClient_report_simplified_invoice_result {union {ValidationResponse* ok; BindingError* err;}; bool is_ok;} fatoora_ZatcaClient_report_simplified_invoice_result;
-fatoora_ZatcaClient_report_simplified_invoice_result fatoora_ZatcaClient_report_simplified_invoice(const ZatcaClient* self, const SignedInvoice* invoice, const CsidProduction* credentials, bool clearance_status, OptionStringView accept_language);
+fatoora_ZatcaClient_report_simplified_invoice_result fatoora_ZatcaClient_report_simplified_invoice(const ZatcaClient* self, const SignedInvoice* invoice, const CsidProduction* credentials, ClearanceMode clearance_mode, OptionStringView accept_language);
 
 typedef struct fatoora_ZatcaClient_clear_standard_invoice_result {union {ValidationResponse* ok; BindingError* err;}; bool is_ok;} fatoora_ZatcaClient_clear_standard_invoice_result;
-fatoora_ZatcaClient_clear_standard_invoice_result fatoora_ZatcaClient_clear_standard_invoice(const ZatcaClient* self, const SignedInvoice* invoice, const CsidProduction* credentials, bool clearance_status, OptionStringView accept_language);
+fatoora_ZatcaClient_clear_standard_invoice_result fatoora_ZatcaClient_clear_standard_invoice(const ZatcaClient* self, const SignedInvoice* invoice, const CsidProduction* credentials, ClearanceMode clearance_mode, OptionStringView accept_language);
 
 typedef struct fatoora_ZatcaClient_prepare_post_csr_for_ccsid_result {union {ComplianceRequest* ok; BindingError* err;}; bool is_ok;} fatoora_ZatcaClient_prepare_post_csr_for_ccsid_result;
 fatoora_ZatcaClient_prepare_post_csr_for_ccsid_result fatoora_ZatcaClient_prepare_post_csr_for_ccsid(const ZatcaClient* self, const Csr* csr, DiplomatStringView otp);
@@ -59,10 +60,10 @@ typedef struct fatoora_ZatcaClient_prepare_check_invoice_compliance_result {unio
 fatoora_ZatcaClient_prepare_check_invoice_compliance_result fatoora_ZatcaClient_prepare_check_invoice_compliance(const ZatcaClient* self, const SignedInvoice* invoice, const CsidCompliance* credentials);
 
 typedef struct fatoora_ZatcaClient_prepare_report_simplified_invoice_result {union {InvoiceRequest* ok; BindingError* err;}; bool is_ok;} fatoora_ZatcaClient_prepare_report_simplified_invoice_result;
-fatoora_ZatcaClient_prepare_report_simplified_invoice_result fatoora_ZatcaClient_prepare_report_simplified_invoice(const ZatcaClient* self, const SignedInvoice* invoice, const CsidProduction* credentials, bool clearance_status, OptionStringView accept_language);
+fatoora_ZatcaClient_prepare_report_simplified_invoice_result fatoora_ZatcaClient_prepare_report_simplified_invoice(const ZatcaClient* self, const SignedInvoice* invoice, const CsidProduction* credentials, ClearanceMode clearance_mode, OptionStringView accept_language);
 
 typedef struct fatoora_ZatcaClient_prepare_clear_standard_invoice_result {union {InvoiceRequest* ok; BindingError* err;}; bool is_ok;} fatoora_ZatcaClient_prepare_clear_standard_invoice_result;
-fatoora_ZatcaClient_prepare_clear_standard_invoice_result fatoora_ZatcaClient_prepare_clear_standard_invoice(const ZatcaClient* self, const SignedInvoice* invoice, const CsidProduction* credentials, bool clearance_status, OptionStringView accept_language);
+fatoora_ZatcaClient_prepare_clear_standard_invoice_result fatoora_ZatcaClient_prepare_clear_standard_invoice(const ZatcaClient* self, const SignedInvoice* invoice, const CsidProduction* credentials, ClearanceMode clearance_mode, OptionStringView accept_language);
 
 void fatoora_ZatcaClient_destroy(ZatcaClient* self);
 

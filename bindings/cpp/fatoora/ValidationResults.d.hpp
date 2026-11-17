@@ -18,6 +18,7 @@ namespace capi { struct Text; }
 class Text;
 namespace capi { struct ValidationMessage; }
 class ValidationMessage;
+class ValidationStatus;
 } // namespace fatoora
 
 
@@ -33,7 +34,15 @@ namespace fatoora {
 class ValidationResults {
 public:
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> status() const;
+  /**
+   * The parsed overall status, or null when the response has none.
+   */
+  inline std::optional<fatoora::ValidationStatus> status() const;
+
+  /**
+   * The overall status exactly as ZATCA sent it, or null when absent.
+   */
+  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> status_raw() const;
 
   inline size_t info_len() const;
 

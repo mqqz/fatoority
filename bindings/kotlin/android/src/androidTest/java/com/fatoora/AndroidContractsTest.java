@@ -19,13 +19,13 @@ public class AndroidContractsTest {
             assertEquals("الرياض", address.city());
             assertNull(address.additionalStreet());
         }
-        try { Config.create(99); fail("invalid environment accepted"); }
+        try { Address.create("XX", "a", "b", "1", "1"); fail("invalid country accepted"); }
         catch (BindingException expected) { assertEquals(1, expected.getCode()); }
     }
     @Test public void clientInitializesTlsAndPreparesRequests() {
-        try (Config config = Config.create(0);
+        try (Config config = Config.create(Environment.NonProduction);
              ZatcaClient client = ZatcaClient.create(config);
-             CsidProduction credentials = CsidProduction.create(0, null, "token", "secret")) {
+             CsidProduction credentials = CsidProduction.create(Environment.NonProduction, null, "token", "secret")) {
             assertNotNull(client);
             assertNotNull(credentials);
         }

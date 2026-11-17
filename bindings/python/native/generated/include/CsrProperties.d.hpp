@@ -19,6 +19,7 @@ namespace capi { struct CsrProperties; }
 class CsrProperties;
 namespace capi { struct SigningKey; }
 class SigningKey;
+class Environment;
 } // namespace _native
 
 
@@ -39,7 +40,7 @@ public:
 
   inline static _native::diplomat::result<std::unique_ptr<_native::CsrProperties>, std::unique_ptr<_native::BindingError>> parse_csr_config_file(std::string_view path);
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Csr>, std::unique_ptr<_native::BindingError>> build(const _native::SigningKey& key, uint8_t env) const;
+  inline _native::diplomat::result<std::unique_ptr<_native::Csr>, std::unique_ptr<_native::BindingError>> build(const _native::SigningKey& key, _native::Environment env) const;
 
     inline const _native::capi::CsrProperties* AsFFI() const;
     inline _native::capi::CsrProperties* AsFFI();

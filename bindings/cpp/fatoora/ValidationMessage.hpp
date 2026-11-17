@@ -13,15 +13,20 @@
 #include <cstdlib>
 #include "../diplomat_runtime.hpp"
 #include "BindingError.hpp"
+#include "MessageType.hpp"
 #include "Text.hpp"
+#include "ValidationStatus.hpp"
 
 
 namespace fatoora {
 namespace capi {
     extern "C" {
 
-    typedef struct fatoora_ValidationMessage_message_type_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationMessage_message_type_result;
+    typedef struct fatoora_ValidationMessage_message_type_result {union {fatoora::capi::MessageType ok; }; bool is_ok;} fatoora_ValidationMessage_message_type_result;
     fatoora_ValidationMessage_message_type_result fatoora_ValidationMessage_message_type(const fatoora::capi::ValidationMessage* self);
+
+    typedef struct fatoora_ValidationMessage_message_type_raw_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationMessage_message_type_raw_result;
+    fatoora_ValidationMessage_message_type_raw_result fatoora_ValidationMessage_message_type_raw(const fatoora::capi::ValidationMessage* self);
 
     typedef struct fatoora_ValidationMessage_code_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationMessage_code_result;
     fatoora_ValidationMessage_code_result fatoora_ValidationMessage_code(const fatoora::capi::ValidationMessage* self);
@@ -32,8 +37,11 @@ namespace capi {
     typedef struct fatoora_ValidationMessage_message_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationMessage_message_result;
     fatoora_ValidationMessage_message_result fatoora_ValidationMessage_message(const fatoora::capi::ValidationMessage* self);
 
-    typedef struct fatoora_ValidationMessage_status_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationMessage_status_result;
+    typedef struct fatoora_ValidationMessage_status_result {union {fatoora::capi::ValidationStatus ok; }; bool is_ok;} fatoora_ValidationMessage_status_result;
     fatoora_ValidationMessage_status_result fatoora_ValidationMessage_status(const fatoora::capi::ValidationMessage* self);
+
+    typedef struct fatoora_ValidationMessage_status_raw_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationMessage_status_raw_result;
+    fatoora_ValidationMessage_status_raw_result fatoora_ValidationMessage_status_raw(const fatoora::capi::ValidationMessage* self);
 
     void fatoora_ValidationMessage_destroy(ValidationMessage* self);
 
@@ -41,8 +49,13 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::ValidationMessage::message_type() const {
+inline std::optional<fatoora::MessageType> fatoora::ValidationMessage::message_type() const {
     auto result = fatoora::capi::fatoora_ValidationMessage_message_type(this->AsFFI());
+    return result.is_ok ? std::optional<fatoora::MessageType>(fatoora::MessageType::FromFFI(result.ok)) : std::nullopt;
+}
+
+inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::ValidationMessage::message_type_raw() const {
+    auto result = fatoora::capi::fatoora_ValidationMessage_message_type_raw(this->AsFFI());
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
@@ -61,8 +74,13 @@ inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora:
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::ValidationMessage::status() const {
+inline std::optional<fatoora::ValidationStatus> fatoora::ValidationMessage::status() const {
     auto result = fatoora::capi::fatoora_ValidationMessage_status(this->AsFFI());
+    return result.is_ok ? std::optional<fatoora::ValidationStatus>(fatoora::ValidationStatus::FromFFI(result.ok)) : std::nullopt;
+}
+
+inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::ValidationMessage::status_raw() const {
+    auto result = fatoora::capi::fatoora_ValidationMessage_status_raw(this->AsFFI());
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 

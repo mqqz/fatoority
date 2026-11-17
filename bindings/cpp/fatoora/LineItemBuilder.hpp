@@ -18,6 +18,7 @@
 #include "OriginalInvoiceRef.hpp"
 #include "TaxExemption.hpp"
 #include "VatBreakdown.hpp"
+#include "VatCategory.hpp"
 
 
 namespace fatoora {
@@ -75,7 +76,7 @@ namespace capi {
     fatoora_LineItemBuilder_set_vat_rate_result fatoora_LineItemBuilder_set_vat_rate(fatoora::capi::LineItemBuilder* self, diplomat::capi::DiplomatStringView value);
 
     typedef struct fatoora_LineItemBuilder_set_vat_category_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_LineItemBuilder_set_vat_category_result;
-    fatoora_LineItemBuilder_set_vat_category_result fatoora_LineItemBuilder_set_vat_category(fatoora::capi::LineItemBuilder* self, uint8_t value);
+    fatoora_LineItemBuilder_set_vat_category_result fatoora_LineItemBuilder_set_vat_category(fatoora::capi::LineItemBuilder* self, fatoora::capi::VatCategory value);
 
     typedef struct fatoora_LineItemBuilder_set_exemption_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_LineItemBuilder_set_exemption_result;
     fatoora_LineItemBuilder_set_exemption_result fatoora_LineItemBuilder_set_exemption(fatoora::capi::LineItemBuilder* self, const fatoora::capi::TaxExemption* value);
@@ -207,9 +208,9 @@ inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> 
     return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> fatoora::LineItemBuilder::set_vat_category(uint8_t value) {
+inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> fatoora::LineItemBuilder::set_vat_category(fatoora::VatCategory value) {
     auto result = fatoora::capi::fatoora_LineItemBuilder_set_vat_category(this->AsFFI(),
-        value);
+        value.AsFFI());
     return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 

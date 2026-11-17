@@ -15,6 +15,7 @@ namespace capi { struct BindingError; }
 class BindingError;
 namespace capi { struct Config; }
 class Config;
+class Environment;
 } // namespace _native
 
 
@@ -29,9 +30,9 @@ namespace _native {
 class Config {
 public:
 
-  inline static _native::diplomat::result<std::unique_ptr<_native::Config>, std::unique_ptr<_native::BindingError>> new_(uint8_t env);
+  inline static _native::diplomat::result<std::unique_ptr<_native::Config>, std::unique_ptr<_native::BindingError>> new_(_native::Environment env);
 
-  inline uint8_t env() const;
+  inline _native::diplomat::result<_native::Environment, std::unique_ptr<_native::BindingError>> env() const;
 
     inline const _native::capi::Config* AsFFI() const;
     inline _native::capi::Config* AsFFI();

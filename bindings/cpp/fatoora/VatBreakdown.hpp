@@ -14,6 +14,7 @@
 #include "../diplomat_runtime.hpp"
 #include "BindingError.hpp"
 #include "TaxExemption.hpp"
+#include "VatCategory.hpp"
 
 
 namespace fatoora {
@@ -26,9 +27,9 @@ namespace capi {
     fatoora_VatBreakdown_without_vat_rate_result fatoora_VatBreakdown_without_vat_rate(const fatoora::capi::VatBreakdown* self);
 
     typedef struct fatoora_VatBreakdown_new_result {union {fatoora::capi::VatBreakdown* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_VatBreakdown_new_result;
-    fatoora_VatBreakdown_new_result fatoora_VatBreakdown_new(uint8_t category, diplomat::capi::DiplomatStringView rate, diplomat::capi::DiplomatStringView taxable_amount, diplomat::capi::DiplomatStringView tax_amount, const fatoora::capi::TaxExemption* exemption);
+    fatoora_VatBreakdown_new_result fatoora_VatBreakdown_new(fatoora::capi::VatCategory category, diplomat::capi::DiplomatStringView rate, diplomat::capi::DiplomatStringView taxable_amount, diplomat::capi::DiplomatStringView tax_amount, const fatoora::capi::TaxExemption* exemption);
 
-    uint8_t fatoora_VatBreakdown_category(const fatoora::capi::VatBreakdown* self);
+    fatoora::capi::VatCategory fatoora_VatBreakdown_category(const fatoora::capi::VatBreakdown* self);
 
     typedef struct fatoora_VatBreakdown_rate_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_VatBreakdown_rate_result;
     fatoora_VatBreakdown_rate_result fatoora_VatBreakdown_rate(const fatoora::capi::VatBreakdown* self, diplomat::capi::DiplomatWrite* write);
@@ -58,8 +59,8 @@ inline diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::VatBreakdown>>(std::unique_ptr<fatoora::VatBreakdown>(fatoora::VatBreakdown::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>> fatoora::VatBreakdown::new_(uint8_t category, std::string_view rate, std::string_view taxable_amount, std::string_view tax_amount, const fatoora::TaxExemption& exemption) {
-    auto result = fatoora::capi::fatoora_VatBreakdown_new(category,
+inline diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>> fatoora::VatBreakdown::new_(fatoora::VatCategory category, std::string_view rate, std::string_view taxable_amount, std::string_view tax_amount, const fatoora::TaxExemption& exemption) {
+    auto result = fatoora::capi::fatoora_VatBreakdown_new(category.AsFFI(),
         {rate.data(), rate.size()},
         {taxable_amount.data(), taxable_amount.size()},
         {tax_amount.data(), tax_amount.size()},
@@ -67,9 +68,9 @@ inline diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::VatBreakdown>>(std::unique_ptr<fatoora::VatBreakdown>(fatoora::VatBreakdown::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline uint8_t fatoora::VatBreakdown::category() const {
+inline fatoora::VatCategory fatoora::VatBreakdown::category() const {
     auto result = fatoora::capi::fatoora_VatBreakdown_category(this->AsFFI());
-    return result;
+    return fatoora::VatCategory::FromFFI(result);
 }
 
 inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> fatoora::VatBreakdown::rate() const {

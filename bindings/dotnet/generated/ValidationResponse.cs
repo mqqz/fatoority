@@ -193,11 +193,7 @@ public partial class ValidationResponse: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? ReportingStatus()
+    public ReportingStatus? ReportingStatus()
     {
         unsafe
         {
@@ -206,6 +202,28 @@ public partial class ValidationResponse: IDisposable
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 var result = Raw.ValidationResponse.ReportingStatus(selfLease!.Ptr);
+                return result.IsSome ? result.Value : (ReportingStatus?)null;
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>Text</c> allocated on Rust side.
+    /// </returns>
+    public Text? ReportingStatusRaw()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.ValidationResponse>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.ValidationResponse.ReportingStatusRaw(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
                     throw new BindingErrorException(new BindingError(result.Err));
@@ -219,11 +237,7 @@ public partial class ValidationResponse: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? ClearanceStatus()
+    public ClearanceStatus? ClearanceStatus()
     {
         unsafe
         {
@@ -232,6 +246,28 @@ public partial class ValidationResponse: IDisposable
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 var result = Raw.ValidationResponse.ClearanceStatus(selfLease!.Ptr);
+                return result.IsSome ? result.Value : (ClearanceStatus?)null;
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="BindingErrorException"></exception>
+    /// <returns>
+    /// A <c>Text</c> allocated on Rust side.
+    /// </returns>
+    public Text? ClearanceStatusRaw()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.ValidationResponse>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.ValidationResponse.ClearanceStatusRaw(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
                     throw new BindingErrorException(new BindingError(result.Err));

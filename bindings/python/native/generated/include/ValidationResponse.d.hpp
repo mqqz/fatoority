@@ -17,7 +17,9 @@ namespace capi { struct Text; }
 class Text;
 namespace capi { struct ValidationResults; }
 class ValidationResults;
+class ClearanceStatus;
 class InvoiceOutcome;
+class ReportingStatus;
 } // namespace _native
 
 
@@ -44,9 +46,25 @@ public:
 
   inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> cleared_invoice_base64() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> reporting_status() const;
+  /**
+   * The parsed `reportingStatus`, or null when the response has none.
+   */
+  inline std::optional<_native::ReportingStatus> reporting_status() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> clearance_status() const;
+  /**
+   * The `reportingStatus` exactly as ZATCA sent it, or null when absent.
+   */
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> reporting_status_raw() const;
+
+  /**
+   * The parsed `clearanceStatus`, or null when the response has none.
+   */
+  inline std::optional<_native::ClearanceStatus> clearance_status() const;
+
+  /**
+   * The `clearanceStatus` exactly as ZATCA sent it, or null when absent.
+   */
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> clearance_status_raw() const;
 
   inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> qr_seller_status() const;
 

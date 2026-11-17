@@ -12,14 +12,14 @@ internal interface ZatcaClientLib: Library {
     fun fatoora_ZatcaClient_post_ccsid_for_pcsid(handle: Pointer, credentials: Pointer): ResultPointerPointer
     fun fatoora_ZatcaClient_renew_csid(handle: Pointer, credentials: Pointer, csr: Pointer, otp: Slice, acceptLanguage: OptionSlice): ResultPointerPointer
     fun fatoora_ZatcaClient_check_invoice_compliance(handle: Pointer, invoice: Pointer, credentials: Pointer): ResultPointerPointer
-    fun fatoora_ZatcaClient_report_simplified_invoice(handle: Pointer, invoice: Pointer, credentials: Pointer, clearanceStatus: Boolean, acceptLanguage: OptionSlice): ResultPointerPointer
-    fun fatoora_ZatcaClient_clear_standard_invoice(handle: Pointer, invoice: Pointer, credentials: Pointer, clearanceStatus: Boolean, acceptLanguage: OptionSlice): ResultPointerPointer
+    fun fatoora_ZatcaClient_report_simplified_invoice(handle: Pointer, invoice: Pointer, credentials: Pointer, clearanceMode: Int, acceptLanguage: OptionSlice): ResultPointerPointer
+    fun fatoora_ZatcaClient_clear_standard_invoice(handle: Pointer, invoice: Pointer, credentials: Pointer, clearanceMode: Int, acceptLanguage: OptionSlice): ResultPointerPointer
     fun fatoora_ZatcaClient_prepare_post_csr_for_ccsid(handle: Pointer, csr: Pointer, otp: Slice): ResultPointerPointer
     fun fatoora_ZatcaClient_prepare_post_ccsid_for_pcsid(handle: Pointer, credentials: Pointer): ResultPointerPointer
     fun fatoora_ZatcaClient_prepare_renew_csid(handle: Pointer, credentials: Pointer, csr: Pointer, otp: Slice, acceptLanguage: OptionSlice): ResultPointerPointer
     fun fatoora_ZatcaClient_prepare_check_invoice_compliance(handle: Pointer, invoice: Pointer, credentials: Pointer): ResultPointerPointer
-    fun fatoora_ZatcaClient_prepare_report_simplified_invoice(handle: Pointer, invoice: Pointer, credentials: Pointer, clearanceStatus: Boolean, acceptLanguage: OptionSlice): ResultPointerPointer
-    fun fatoora_ZatcaClient_prepare_clear_standard_invoice(handle: Pointer, invoice: Pointer, credentials: Pointer, clearanceStatus: Boolean, acceptLanguage: OptionSlice): ResultPointerPointer
+    fun fatoora_ZatcaClient_prepare_report_simplified_invoice(handle: Pointer, invoice: Pointer, credentials: Pointer, clearanceMode: Int, acceptLanguage: OptionSlice): ResultPointerPointer
+    fun fatoora_ZatcaClient_prepare_clear_standard_invoice(handle: Pointer, invoice: Pointer, credentials: Pointer, clearanceMode: Int, acceptLanguage: OptionSlice): ResultPointerPointer
 }
 
 class ZatcaClient internal constructor (
@@ -150,10 +150,10 @@ class ZatcaClient internal constructor (
         }
     }
 
-    fun reportSimplifiedInvoice(invoice: SignedInvoice, credentials: CsidProduction, clearanceStatus: Boolean, acceptLanguage: String?): Result<ValidationResponse> {
+    fun reportSimplifiedInvoice(invoice: SignedInvoice, credentials: CsidProduction, clearanceMode: ClearanceMode, acceptLanguage: String?): Result<ValidationResponse> {
         val acceptLanguageSliceMemory = acceptLanguage?.let { PrimitiveArrayTools.borrowUtf8(it) }
 
-        val returnVal = lib.fatoora_ZatcaClient_report_simplified_invoice(handle, invoice.handle, credentials.handle, clearanceStatus, acceptLanguageSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none());
+        val returnVal = lib.fatoora_ZatcaClient_report_simplified_invoice(handle, invoice.handle, credentials.handle, clearanceMode.toNative(), acceptLanguageSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none());
         try {
             val nativeOkVal = returnVal.getNativeOk();
             if (nativeOkVal != null) {
@@ -172,10 +172,10 @@ class ZatcaClient internal constructor (
         }
     }
 
-    fun clearStandardInvoice(invoice: SignedInvoice, credentials: CsidProduction, clearanceStatus: Boolean, acceptLanguage: String?): Result<ValidationResponse> {
+    fun clearStandardInvoice(invoice: SignedInvoice, credentials: CsidProduction, clearanceMode: ClearanceMode, acceptLanguage: String?): Result<ValidationResponse> {
         val acceptLanguageSliceMemory = acceptLanguage?.let { PrimitiveArrayTools.borrowUtf8(it) }
 
-        val returnVal = lib.fatoora_ZatcaClient_clear_standard_invoice(handle, invoice.handle, credentials.handle, clearanceStatus, acceptLanguageSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none());
+        val returnVal = lib.fatoora_ZatcaClient_clear_standard_invoice(handle, invoice.handle, credentials.handle, clearanceMode.toNative(), acceptLanguageSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none());
         try {
             val nativeOkVal = returnVal.getNativeOk();
             if (nativeOkVal != null) {
@@ -274,10 +274,10 @@ class ZatcaClient internal constructor (
         }
     }
 
-    fun prepareReportSimplifiedInvoice(invoice: SignedInvoice, credentials: CsidProduction, clearanceStatus: Boolean, acceptLanguage: String?): Result<InvoiceRequest> {
+    fun prepareReportSimplifiedInvoice(invoice: SignedInvoice, credentials: CsidProduction, clearanceMode: ClearanceMode, acceptLanguage: String?): Result<InvoiceRequest> {
         val acceptLanguageSliceMemory = acceptLanguage?.let { PrimitiveArrayTools.borrowUtf8(it) }
 
-        val returnVal = lib.fatoora_ZatcaClient_prepare_report_simplified_invoice(handle, invoice.handle, credentials.handle, clearanceStatus, acceptLanguageSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none());
+        val returnVal = lib.fatoora_ZatcaClient_prepare_report_simplified_invoice(handle, invoice.handle, credentials.handle, clearanceMode.toNative(), acceptLanguageSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none());
         try {
             val nativeOkVal = returnVal.getNativeOk();
             if (nativeOkVal != null) {
@@ -296,10 +296,10 @@ class ZatcaClient internal constructor (
         }
     }
 
-    fun prepareClearStandardInvoice(invoice: SignedInvoice, credentials: CsidProduction, clearanceStatus: Boolean, acceptLanguage: String?): Result<InvoiceRequest> {
+    fun prepareClearStandardInvoice(invoice: SignedInvoice, credentials: CsidProduction, clearanceMode: ClearanceMode, acceptLanguage: String?): Result<InvoiceRequest> {
         val acceptLanguageSliceMemory = acceptLanguage?.let { PrimitiveArrayTools.borrowUtf8(it) }
 
-        val returnVal = lib.fatoora_ZatcaClient_prepare_clear_standard_invoice(handle, invoice.handle, credentials.handle, clearanceStatus, acceptLanguageSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none());
+        val returnVal = lib.fatoora_ZatcaClient_prepare_clear_standard_invoice(handle, invoice.handle, credentials.handle, clearanceMode.toNative(), acceptLanguageSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none());
         try {
             val nativeOkVal = returnVal.getNativeOk();
             if (nativeOkVal != null) {

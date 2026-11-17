@@ -9,6 +9,7 @@
 
 #include "BindingError.d.h"
 #include "Csr.d.h"
+#include "Environment.d.h"
 #include "SigningKey.d.h"
 
 #include "CsrProperties.d.h"
@@ -28,7 +29,7 @@ typedef struct fatoora_CsrProperties_parse_csr_config_file_result {union {CsrPro
 fatoora_CsrProperties_parse_csr_config_file_result fatoora_CsrProperties_parse_csr_config_file(DiplomatStringView path);
 
 typedef struct fatoora_CsrProperties_build_result {union {Csr* ok; BindingError* err;}; bool is_ok;} fatoora_CsrProperties_build_result;
-fatoora_CsrProperties_build_result fatoora_CsrProperties_build(const CsrProperties* self, const SigningKey* key, uint8_t env);
+fatoora_CsrProperties_build_result fatoora_CsrProperties_build(const CsrProperties* self, const SigningKey* key, Environment env);
 
 void fatoora_CsrProperties_destroy(CsrProperties* self);
 

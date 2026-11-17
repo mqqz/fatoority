@@ -15,8 +15,10 @@ void add_ValidationMessage_binding(nb::module_ mod) {
         .def("category", std::move(maybe_op_unwrap(&_native::ValidationMessage::category)))
         .def("code", std::move(maybe_op_unwrap(&_native::ValidationMessage::code)))
         .def("message", std::move(maybe_op_unwrap(&_native::ValidationMessage::message)))
-        .def("message_type", std::move(maybe_op_unwrap(&_native::ValidationMessage::message_type)))
-        .def("status", std::move(maybe_op_unwrap(&_native::ValidationMessage::status)));
+        .def("message_type", &_native::ValidationMessage::message_type, "The parsed message `type`, or null when the message has none.")
+        .def("message_type_raw", std::move(maybe_op_unwrap(&_native::ValidationMessage::message_type_raw)), "The message `type` exactly as ZATCA sent it, or null when absent.")
+        .def("status", &_native::ValidationMessage::status, "The parsed message `status`, or null when the message has none.")
+        .def("status_raw", std::move(maybe_op_unwrap(&_native::ValidationMessage::status_raw)), "The message `status` exactly as ZATCA sent it, or null when absent.");
 }
 
 } 

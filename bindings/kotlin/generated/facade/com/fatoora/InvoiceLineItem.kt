@@ -11,8 +11,8 @@ class InvoiceLineItem internal constructor(internal val raw: com.fatoora.raw.Inv
     }
     companion object {
         @JvmStatic
-        fun create(description: String, quantity: String, unitCode: String, unitPrice: String, rate: String, category: Int): InvoiceLineItem = nativeCall(listOfNotNull()) {
-            InvoiceLineItem(unwrap(com.fatoora.raw.InvoiceLineItem.new_(checkedText(description), checkedText(quantity), checkedText(unitCode), checkedText(unitPrice), checkedText(rate), checkedUnsigned(category.toLong(), 255).toUByte())))
+        fun create(description: String, quantity: String, unitCode: String, unitPrice: String, rate: String, category: VatCategory): InvoiceLineItem = nativeCall(listOfNotNull()) {
+            InvoiceLineItem(unwrap(com.fatoora.raw.InvoiceLineItem.new_(checkedText(description), checkedText(quantity), checkedText(unitCode), checkedText(unitPrice), checkedText(rate), com.fatoora.raw.VatCategory.valueOf(category.name))))
         }
     }
     fun itemGrossPrice(): Text? = nativeCall(listOfNotNull(this)) {
@@ -39,8 +39,8 @@ class InvoiceLineItem internal constructor(internal val raw: com.fatoora.raw.Inv
         Adjustment(unwrap(raw.adjustment(checkedCounter(index))))
     }
 
-    fun adjustmentIsCharge(index: java.math.BigInteger): Boolean = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.adjustmentIsCharge(checkedCounter(index)))
+    fun adjustmentKind(index: java.math.BigInteger): AdjustmentKind = nativeCall(listOfNotNull(this)) {
+        AdjustmentKind.valueOf(unwrap(raw.adjustmentKind(checkedCounter(index))).name)
     }
 
     fun itemSellerIdentifier(): OtherId? = nativeCall(listOfNotNull(this)) {
@@ -131,7 +131,7 @@ class InvoiceLineItem internal constructor(internal val raw: com.fatoora.raw.Inv
         raw.hasGrossAmount()
     }
 
-    fun vatCategory(): Int = nativeCall(listOfNotNull(this)) {
-        raw.vatCategory().toInt()
+    fun vatCategory(): VatCategory = nativeCall(listOfNotNull(this)) {
+        VatCategory.valueOf(raw.vatCategory().name)
     }
 }

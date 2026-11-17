@@ -15,10 +15,13 @@
 #include "BindingError.hpp"
 #include "InvoiceLineItem.hpp"
 #include "InvoiceNote.hpp"
+#include "InvoiceSubType.hpp"
+#include "InvoiceTypeKind.hpp"
 #include "OriginalInvoiceRef.hpp"
 #include "Party.hpp"
 #include "PaymentMeans.hpp"
 #include "Text.hpp"
+#include "VatCategory.hpp"
 #include "diplomat_runtime.hpp"
 
 
@@ -92,13 +95,13 @@ namespace capi {
 
     uint64_t fatoora_InvoiceData_invoice_counter(const _native::capi::InvoiceData* self);
 
-    uint8_t fatoora_InvoiceData_vat_category(const _native::capi::InvoiceData* self);
+    _native::capi::VatCategory fatoora_InvoiceData_vat_category(const _native::capi::InvoiceData* self);
 
     uint8_t fatoora_InvoiceData_flags_raw(const _native::capi::InvoiceData* self);
 
-    uint8_t fatoora_InvoiceData_invoice_type_kind(const _native::capi::InvoiceData* self);
+    _native::capi::InvoiceTypeKind fatoora_InvoiceData_invoice_type_kind(const _native::capi::InvoiceData* self);
 
-    uint8_t fatoora_InvoiceData_invoice_sub_type(const _native::capi::InvoiceData* self);
+    _native::capi::InvoiceSubType fatoora_InvoiceData_invoice_sub_type(const _native::capi::InvoiceData* self);
 
     typedef struct fatoora_InvoiceData_seller_result {union {_native::capi::Party* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_seller_result;
     fatoora_InvoiceData_seller_result fatoora_InvoiceData_seller(const _native::capi::InvoiceData* self);
@@ -353,9 +356,9 @@ inline uint64_t _native::InvoiceData::invoice_counter() const {
     return result;
 }
 
-inline uint8_t _native::InvoiceData::vat_category() const {
+inline _native::VatCategory _native::InvoiceData::vat_category() const {
     auto result = _native::capi::fatoora_InvoiceData_vat_category(this->AsFFI());
-    return result;
+    return _native::VatCategory::FromFFI(result);
 }
 
 inline uint8_t _native::InvoiceData::flags_raw() const {
@@ -363,14 +366,14 @@ inline uint8_t _native::InvoiceData::flags_raw() const {
     return result;
 }
 
-inline uint8_t _native::InvoiceData::invoice_type_kind() const {
+inline _native::InvoiceTypeKind _native::InvoiceData::invoice_type_kind() const {
     auto result = _native::capi::fatoora_InvoiceData_invoice_type_kind(this->AsFFI());
-    return result;
+    return _native::InvoiceTypeKind::FromFFI(result);
 }
 
-inline uint8_t _native::InvoiceData::invoice_sub_type() const {
+inline _native::InvoiceSubType _native::InvoiceData::invoice_sub_type() const {
     auto result = _native::capi::fatoora_InvoiceData_invoice_sub_type(this->AsFFI());
-    return result;
+    return _native::InvoiceSubType::FromFFI(result);
 }
 
 inline _native::diplomat::result<std::unique_ptr<_native::Party>, std::unique_ptr<_native::BindingError>> _native::InvoiceData::seller() const {

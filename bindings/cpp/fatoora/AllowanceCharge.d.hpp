@@ -20,6 +20,8 @@ namespace capi { struct TaxExemption; }
 class TaxExemption;
 namespace capi { struct Text; }
 class Text;
+class AdjustmentKind;
+class VatCategory;
 } // namespace fatoora
 
 
@@ -48,9 +50,9 @@ public:
 
   inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> percentage() const;
 
-  inline static diplomat::result<std::unique_ptr<fatoora::AllowanceCharge>, std::unique_ptr<fatoora::BindingError>> new_(bool charge, std::string_view amount, std::optional<std::string_view> reason, std::optional<std::string_view> reason_code, uint8_t category, std::string_view rate, const fatoora::TaxExemption& exemption);
+  inline static diplomat::result<std::unique_ptr<fatoora::AllowanceCharge>, std::unique_ptr<fatoora::BindingError>> new_(fatoora::AdjustmentKind kind, std::string_view amount, std::optional<std::string_view> reason, std::optional<std::string_view> reason_code, fatoora::VatCategory category, std::string_view rate, const fatoora::TaxExemption& exemption);
 
-  inline bool is_charge() const;
+  inline fatoora::AdjustmentKind kind() const;
 
   inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> amount() const;
   template<typename W>
@@ -60,7 +62,7 @@ public:
   template<typename W>
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> rate_write(W& writeable_output) const;
 
-  inline uint8_t category() const;
+  inline fatoora::VatCategory category() const;
 
   /**
    * Return an independent adjustment with the given number of identical tax classifications.

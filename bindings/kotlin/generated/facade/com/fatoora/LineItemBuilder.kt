@@ -79,8 +79,8 @@ class LineItemBuilder internal constructor(internal val raw: com.fatoora.raw.Lin
         unwrap(raw.setVatRate(checkedText(value)))
     }
 
-    fun setVatCategory(value: Int): Unit = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.setVatCategory(checkedUnsigned(value.toLong(), 255).toUByte()))
+    fun setVatCategory(value: VatCategory): Unit = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.setVatCategory(com.fatoora.raw.VatCategory.valueOf(value.name)))
     }
 
     fun setExemption(value: TaxExemption): Unit = nativeCall(listOfNotNull(this, value)) {

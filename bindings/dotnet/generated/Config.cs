@@ -61,7 +61,7 @@ public partial class Config: IDisposable
     /// <returns>
     /// A <c>Config</c> allocated on Rust side.
     /// </returns>
-    public static Config New(byte env)
+    public static Config New(ZatcaEnvironment env)
     {
         unsafe
         {
@@ -74,7 +74,8 @@ public partial class Config: IDisposable
         }
     }
 
-    public byte Env()
+    /// <exception cref="BindingErrorException"></exception>
+    public ZatcaEnvironment Env()
     {
         unsafe
         {
@@ -82,7 +83,12 @@ public partial class Config: IDisposable
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.Config.Env(selfLease!.Ptr);
+                var result = Raw.Config.Env(selfLease!.Ptr);
+                if (!result.IsOk)
+                {
+                    throw new BindingErrorException(new BindingError(result.Err));
+                }
+                return result.Ok;
             }
             finally
             {

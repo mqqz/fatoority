@@ -26,14 +26,15 @@ public class JavaContractsTest {
                  Files.readAllBytes(fixtures.resolve("credentials/certificate.der")),
                  Files.readAllBytes(fixtures.resolve("credentials/private-key.der")));
              SignedInvoice invoice = SignedInvoice.fromXml(signer.signXml(xml));
-             Config config = Config.create(0);
+             Config config = Config.create(Environment.NonProduction);
              ZatcaClient client = ZatcaClient.create(config);
-             CsidProduction credentials = CsidProduction.create(0, null, "token", "secret");
-             InvoiceRequest request = client.prepareReportSimplifiedInvoice(invoice, credentials, false);
+             CsidProduction credentials = CsidProduction.create(Environment.NonProduction, null, "token", "secret");
+             InvoiceRequest request = client.prepareReportSimplifiedInvoice(invoice, credentials, ClearanceMode.Disabled);
              ValidationResponse response = request.decode(200,
                  "{\"validationResults\":{\"status\":\"PASS\"},\"reportingStatus\":\"REPORTED\"}".getBytes(StandardCharsets.UTF_8))) {
             Integer status = response.httpStatus();
             assertEquals(Integer.valueOf(200), status);
+            assertEquals(ReportingStatus.Reported, response.reportingStatus());
         }
     }
 
@@ -45,7 +46,7 @@ public class JavaContractsTest {
             assertEquals("الرياض", address.city());
             assertNull(address.additionalStreet());
         }
-        try { Config.create(99); fail("Expected BindingException"); }
+        try { Address.create("XX", "a", "b", "1", "1"); fail("Expected BindingException"); }
         catch (BindingException e) { assertEquals(1, e.getCode()); assertNotNull(e.getMessage()); }
     }
 }

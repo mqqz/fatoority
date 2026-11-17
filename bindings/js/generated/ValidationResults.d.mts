@@ -2,6 +2,7 @@
 import type { BindingError } from "./BindingError.mjs"
 import type { Text } from "./Text.mjs"
 import type { ValidationMessage } from "./ValidationMessage.mjs"
+import type { ValidationStatus } from "./ValidationStatus.mjs"
 import type { pointer, codepoint } from "./diplomat-runtime.mjs";
 
 
@@ -13,7 +14,15 @@ export class ValidationResults {
     constructor();
 
 
-    status(): Text | null;
+    /**
+     * The parsed overall status, or null when the response has none.
+     */
+    status(): ValidationStatus | null;
+
+    /**
+     * The overall status exactly as ZATCA sent it, or null when absent.
+     */
+    statusRaw(): Text | null;
 
     infoLen(): number;
 

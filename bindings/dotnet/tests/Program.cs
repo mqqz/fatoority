@@ -75,16 +75,17 @@ key.Dispose();
 Throws<ObjectDisposedException>(() => key.ToPem());
 NativeError(() => SigningKey.FromDer(new byte[] { 1, 2 }), 1);
 
-using var builder = InvoiceBuilder.New(0, 0, null, null, null, null);
+using var builder = InvoiceBuilder.New(InvoiceTypeKind.Tax, InvoiceSubType.Standard, null, null, null, null);
 NativeError(() => builder.Build(), 2);
 NativeError(() => builder.SetId("again"), 1, "consumed");
 
 var corpus = Path.Combine(root, "fatoora-core/tests/fixtures/sdk-parity");
 using var signer = Signer.FromDer(File.ReadAllBytes(Path.Combine(corpus, "credentials/certificate.der")), File.ReadAllBytes(Path.Combine(corpus, "credentials/private-key.der")));
 Check(Copy(signer.CertificateDer()).SequenceEqual(File.ReadAllBytes(Path.Combine(corpus, "credentials/certificate.der"))), "Certificate fixture");
-using var config = Config.New(0);
+using var config = Config.New(ZatcaEnvironment.NonProduction);
+Check(config.Env() == ZatcaEnvironment.NonProduction, "Environment round trip");
 using var client = ZatcaClient.Create(config);
-using var credentials = CsidProduction.Create(0, null, "token", "secret");
+using var credentials = CsidProduction.Create(ZatcaEnvironment.NonProduction, null, "token", "secret");
 foreach (var kind in new[] { "simplified", "standard" })
 {
     var fixture = Path.Combine(corpus, $"cases/{kind}-invoice");
@@ -101,8 +102,8 @@ foreach (var kind in new[] { "simplified", "standard" })
     var inputTotal = XDocument.Parse(xml).Descendants().Single(e => e.Name.LocalName == "LegalMonetaryTotal").Elements().Single(e => e.Name.LocalName == "PayableAmount").Value;
     Check(decimal.Parse(totals.PayableAmount(), System.Globalization.CultureInfo.InvariantCulture) == decimal.Parse(inputTotal, System.Globalization.CultureInfo.InvariantCulture), "Invoice totals match XML");
     using var request = kind == "simplified"
-        ? client.PrepareReportSimplifiedInvoice(signed, credentials, false, null)
-        : client.PrepareClearStandardInvoice(signed, credentials, true, "ar");
+        ? client.PrepareReportSimplifiedInvoice(signed, credentials, ClearanceMode.Disabled, null)
+        : client.PrepareClearStandardInvoice(signed, credentials, ClearanceMode.Enabled, "ar");
     Check(request.Method() == "POST", "Prepared method");
     using var headers = JsonDocument.Parse(request.HeadersJson());
     using var body = JsonDocument.Parse(Copy(request.Body()));
@@ -118,7 +119,18 @@ foreach (var kind in new[] { "simplified", "standard" })
     using var response = request.Decode(200, Encoding.UTF8.GetBytes(responseBody));
     Check(response.HttpStatus() == 200 && response.Outcome() == InvoiceOutcome.Accepted, "Response outcome/status");
     response.EnsureAccepted();
+    if (kind == "simplified")
+    {
+        Check(response.ReportingStatus() == ReportingStatus.Reported && response.ClearanceStatus() == null, "Reporting status enum");
+        using var rawStatus = response.ReportingStatusRaw();
+        Check(rawStatus?.Value() == "REPORTED", "Reporting status wire value");
+    }
+    else
+    {
+        Check(response.ClearanceStatus() == ClearanceStatus.Cleared, "Clearance status enum");
+    }
     using var results = response.ValidationResults();
+    Check(results.Status() == ValidationStatus.Pass, "Validation status enum");
     response.Dispose();
     using var warning = results.WarningMessage(0);
     results.Dispose();
@@ -127,7 +139,7 @@ foreach (var kind in new[] { "simplified", "standard" })
     NativeError(() => request.Decode(401, Encoding.UTF8.GetBytes("{}")), 8);
     NativeError(() => request.Decode(200, Encoding.UTF8.GetBytes("invalid json")), 3);
 }
-using var compliance = CsidCompliance.Create(0, "request-id", "token", "secret");
+using var compliance = CsidCompliance.Create(ZatcaEnvironment.NonProduction, "request-id", "token", "secret");
 using var productionRequest = client.PreparePostCcsidForPcsid(compliance);
 compliance.Dispose(); client.Dispose();
 Check(productionRequest.Method() == "POST", "Request owns dependencies");

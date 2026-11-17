@@ -11,11 +11,11 @@ class Config internal constructor(internal val raw: com.fatoora.raw.Config) : Na
     }
     companion object {
         @JvmStatic
-        fun create(env: Int): Config = nativeCall(listOfNotNull()) {
-            Config(unwrap(com.fatoora.raw.Config.new_(checkedUnsigned(env.toLong(), 255).toUByte())))
+        fun create(env: Environment): Config = nativeCall(listOfNotNull()) {
+            Config(unwrap(com.fatoora.raw.Config.new_(com.fatoora.raw.Environment.valueOf(env.name))))
         }
     }
-    fun env(): Int = nativeCall(listOfNotNull(this)) {
-        raw.env().toInt()
+    fun env(): Environment = nativeCall(listOfNotNull(this)) {
+        Environment.valueOf(unwrap(raw.env()).name)
     }
 }
