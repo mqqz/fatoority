@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## [0.6.0] - 2026-11-17
+## [0.6.0] - 2026-11-18
 
 The breaking 0.6 release. `fatoora-core` renames items for consistency and
 replaces strings and Booleans with typed values; the `fatoora-ffi` bridge and
