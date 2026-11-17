@@ -11,7 +11,7 @@ use fatoora_core::{
     config::Environment,
     csr::CsrProperties,
     invoice::{
-        FinalizedInvoice, SignedInvoice, hash_xml,
+        FinalizedInvoice, InvoiceHash, SignedInvoice, hash_xml,
         validation::{
             Severity, ValidationFinding, ValidationLocation, Validator, ZatcaStage,
             ZatcaStageStatus, ZatcaValidationOptions, ZatcaValidationReport,
@@ -362,9 +362,18 @@ fn validate_command(
         });
     }
 
-    let options: ZatcaValidationOptions = match serde_json::from_value(json!({
+    let previous_invoice_hash = match previous_invoice_hash.map(InvoiceHash::parse).transpose() {
+        Ok(hash) => hash,
+        Err(error) => {
+            return Ok(validation_input_failure(
+                format,
+                "invalid_options",
+                &format!("invalid validation context: previous_invoice_hash: {error}"),
+            ));
+        }
+    };
+    let mut options: ZatcaValidationOptions = match serde_json::from_value(json!({
         "evaluated_at": evaluated_at,
-        "previous_invoice_hash": previous_invoice_hash,
     })) {
         Ok(options) => options,
         Err(error) => {
@@ -375,6 +384,7 @@ fn validate_command(
             ));
         }
     };
+    options.previous_invoice_hash = previous_invoice_hash;
     let xml = match read_zatca_xml(invoice) {
         Ok(xml) => xml,
         Err(error) => {

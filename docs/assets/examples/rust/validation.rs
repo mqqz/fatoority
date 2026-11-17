@@ -5,7 +5,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let xml = std::fs::read_to_string("invoice.xml")?;
     if std::env::args().any(|arg| arg == "--zatca") {
         let options = ZatcaValidationOptions {
-            previous_invoice_hash: Some(std::fs::read_to_string("previous-hash.txt")?.trim().into()),
+            previous_invoice_hash: Some(std::fs::read_to_string("previous-hash.txt")?.parse()?),
             ..Default::default()
         };
         let report = validator.validate_zatca(&xml, &options)?;

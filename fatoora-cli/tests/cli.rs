@@ -629,6 +629,21 @@ fn zatca_cli_reports_file_and_option_errors_without_inventing_a_report() {
     );
     assert_eq!(invalid_hash["kind"], "invalid_context");
     assert!(invalid_hash.get("report").is_some());
+    let blank_hash = validation_json(
+        &validate_zatca(
+            &standard_invoice_fixture(),
+            &["--previous-invoice-hash", " "],
+        ),
+        3,
+    );
+    assert_eq!(blank_hash["kind"], "invalid_options");
+    assert!(
+        blank_hash["message"]
+            .as_str()
+            .unwrap()
+            .starts_with("invalid validation context: previous_invoice_hash")
+    );
+    assert!(blank_hash.get("report").is_none());
 }
 
 #[test]

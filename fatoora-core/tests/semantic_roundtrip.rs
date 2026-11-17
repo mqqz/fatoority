@@ -263,7 +263,7 @@ fn regenerated_compliant_standard_fixture_passes_business_rules() {
         let xml = invoice.to_xml().unwrap();
         let options = ZatcaValidationOptions {
             evaluated_at: Some("2026-10-18T12:00:00Z".parse().unwrap()),
-            previous_invoice_hash: Some(invoice.data().previous_invoice_hash().to_string()),
+            previous_invoice_hash: Some(invoice.data().previous_invoice_hash().clone()),
         };
         let report = Validator::new().validate_zatca(&xml, &options).unwrap();
         for stage in report

@@ -30,6 +30,7 @@ fn options_limit_is_in_bytes_and_invalid_options_do_not_run_validation() {
         b"{}\0",
         b"\xff",
         br#"{"evaluated_at":"bad"}"#,
+        br#"{"previous_invoice_hash":" "}"#,
     ] {
         let output = written(|out| {
             let error = Xml::validate_zatca(&config, b"<wrong/>", Some(invalid), out)
