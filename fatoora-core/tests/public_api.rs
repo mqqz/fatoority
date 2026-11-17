@@ -46,10 +46,7 @@ fn construction_import_signing_and_validation_use_direct_methods() {
         signed.totals().payable_amount(),
         Decimal::parse("115").unwrap()
     );
-    assert_eq!(
-        signed.invoice_hash(),
-        &hash_xml(signed.xml()).unwrap()
-    );
+    assert_eq!(signed.invoice_hash(), &hash_xml(signed.xml()).unwrap());
     let imported = parse_signed_invoice_xml(signed.xml()).unwrap();
     assert_eq!(imported.into_xml(), signed.xml());
     let raw_signed = signer.sign_xml(&xml).unwrap();
