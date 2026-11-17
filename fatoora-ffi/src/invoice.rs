@@ -338,7 +338,7 @@ pub mod ffi {
                     base_amount: None,
                     percentage: None,
                     tax_category_count: 1,
-                    charge,
+                    kind: inv_core::AdjustmentKind::from_charge_indicator(charge),
                     amount: decimal(amount, "amount")?,
                     reason: optional_text(reason)?,
                     reason_code: optional_text(reason_code)?,
@@ -349,7 +349,7 @@ pub mod ffi {
             })
         }
         pub fn is_charge(&self) -> bool {
-            self.0.charge
+            self.0.kind.is_charge()
         }
         pub fn amount(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
             boundary(|| write(self.0.amount.to_string(), out))
@@ -856,7 +856,7 @@ pub mod ffi {
             boundary(|| {
                 let value = inv_core::AllowanceCharge {
                     omitted_rate: false,
-                    charge,
+                    kind: inv_core::AdjustmentKind::from_charge_indicator(charge),
                     tax_category_count: 1,
                     amount: value.0.value().map_err(core_error)?,
                     base_amount: value.0.calculation_base_amount(),
@@ -1666,7 +1666,7 @@ pub mod ffi {
                 self.0
                     .adjustments()
                     .get(index)
-                    .map(|v| v.charge)
+                    .map(|v| v.kind.is_charge())
                     .ok_or_else(|| local_error(1, "adjustment index out of range"))
             })
         }

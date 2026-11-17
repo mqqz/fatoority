@@ -366,7 +366,10 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
             tax_category_count: adjustment
                 .children(super::constants::CAC_NS, "TaxCategory")
                 .count(),
-            charge: matches!(is_charge.as_str(), "true" | "1"),
+            kind: crate::invoice::AdjustmentKind::from_charge_indicator(matches!(
+                is_charge.as_str(),
+                "true" | "1"
+            )),
             amount,
             reason: adjustment.basic("AllowanceChargeReason").content(),
             reason_code: adjustment.basic("AllowanceChargeReasonCode").content(),
@@ -1477,14 +1480,14 @@ fn parse_line_items(ctx: &Element<'_, '_>) -> Result<Vec<LineItem>, ParseError> 
         }
         let mut adjustments = Vec::new();
         for node in line.children(super::constants::CAC_NS, "AllowanceCharge") {
-            let charge = match node
+            let kind = match node
                 .basic("ChargeIndicator")
                 .content()
                 .as_deref()
                 .map(str::trim)
             {
-                Some("true" | "1") => true,
-                Some("false" | "0") => false,
+                Some("true" | "1") => crate::invoice::AdjustmentKind::Charge,
+                Some("false" | "0") => crate::invoice::AdjustmentKind::Allowance,
                 _ => return Err(ParseError::MissingField("ChargeIndicator")),
             };
             let adjustment = crate::invoice::Adjustment {
@@ -1498,7 +1501,7 @@ fn parse_line_items(ctx: &Element<'_, '_>) -> Result<Vec<LineItem>, ParseError> 
                 reason_code: node.basic("AllowanceChargeReasonCode").content(),
             }
             .finalize()?;
-            adjustments.push(crate::invoice::LineAdjustment { charge, adjustment });
+            adjustments.push(crate::invoice::LineAdjustment { kind, adjustment });
         }
         let item_id = |name| -> Result<Option<OtherId>, ParseError> {
             let node = line.aggregate("Item").aggregate(name);

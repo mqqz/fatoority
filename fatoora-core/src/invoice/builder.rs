@@ -109,7 +109,7 @@ pub struct InvoiceBuilder {
     pub(crate) adjustment_vat_rate: Option<Decimal>,
     allowance_reason: Option<String>,
     adjustments: Vec<super::AllowanceCharge>,
-    pending_adjustments: Vec<(usize, bool, super::DocumentAdjustment)>,
+    pending_adjustments: Vec<(usize, super::AdjustmentKind, super::DocumentAdjustment)>,
     exemptions: Vec<(VatCategory, Decimal, super::TaxExemption)>,
     supplied_breakdowns: Vec<super::VatBreakdown>,
     party_identifiers: Vec<(bool, super::OtherId)>,
@@ -163,7 +163,7 @@ impl InvoiceBuilder {
     pub fn allowance(mut self, adjustment: super::DocumentAdjustment) -> Self {
         self.pending_adjustments.push((
             self.adjustments.len() + self.pending_adjustments.len(),
-            false,
+            super::AdjustmentKind::Allowance,
             adjustment,
         ));
         self
@@ -174,7 +174,7 @@ impl InvoiceBuilder {
     pub fn charge(mut self, adjustment: super::DocumentAdjustment) -> Self {
         self.pending_adjustments.push((
             self.adjustments.len() + self.pending_adjustments.len(),
-            true,
+            super::AdjustmentKind::Charge,
             adjustment,
         ));
         self
@@ -497,9 +497,8 @@ impl InvoiceBuilder {
     ///
     /// Consumes the builder.
     pub fn build(mut self) -> Result<FinalizedInvoice, InvoiceError> {
-        for (index, charge, adjustment) in self.pending_adjustments {
-            self.adjustments
-                .insert(index, adjustment.into_entry(charge)?);
+        for (index, kind, adjustment) in self.pending_adjustments {
+            self.adjustments.insert(index, adjustment.into_entry(kind)?);
         }
 
         for (index, line) in self.line_items.iter_mut().enumerate() {
@@ -762,7 +761,7 @@ impl InvoiceBuilder {
                     )])
                     .into());
                 }
-                if adjustment.charge {
+                if adjustment.kind.is_charge() {
                     self.invoice_level_charge = self.invoice_level_charge.add(adjustment.amount)?;
                 } else {
                     self.invoice_level_discount =

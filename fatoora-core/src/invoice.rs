@@ -1372,6 +1372,55 @@ fn one_tax_category() -> usize {
     1
 }
 
+/// Whether an adjustment is an allowance (discount) or a charge (surcharge).
+///
+/// Maps to the UBL `cbc:ChargeIndicator` element: `false` for
+/// [`Allowance`](Self::Allowance), `true` for [`Charge`](Self::Charge).
+///
+/// # Examples
+/// ```rust
+/// use fatoora_core::invoice::AdjustmentKind;
+///
+/// let kind = AdjustmentKind::from_charge_indicator(true);
+/// assert_eq!(kind, AdjustmentKind::Charge);
+/// assert!(kind.is_charge());
+/// assert!(!AdjustmentKind::Allowance.charge_indicator());
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AdjustmentKind {
+    /// An allowance, which reduces the amount it applies to (`cbc:ChargeIndicator` `false`).
+    Allowance,
+    /// A charge, which increases the amount it applies to (`cbc:ChargeIndicator` `true`).
+    Charge,
+}
+
+impl AdjustmentKind {
+    /// Converts a UBL `cbc:ChargeIndicator` value: `true` is a charge, `false` an allowance.
+    pub const fn from_charge_indicator(charge: bool) -> Self {
+        if charge {
+            Self::Charge
+        } else {
+            Self::Allowance
+        }
+    }
+
+    /// Returns the UBL `cbc:ChargeIndicator` value: `true` for a charge, `false` for an allowance.
+    pub const fn charge_indicator(self) -> bool {
+        matches!(self, Self::Charge)
+    }
+
+    /// Returns `true` for [`AdjustmentKind::Charge`].
+    pub const fn is_charge(self) -> bool {
+        matches!(self, Self::Charge)
+    }
+
+    /// Returns `true` for [`AdjustmentKind::Allowance`].
+    pub const fn is_allowance(self) -> bool {
+        matches!(self, Self::Allowance)
+    }
+}
+
 /// One document allowance or charge, retaining its own VAT category and reason.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AllowanceCharge {
@@ -1388,8 +1437,8 @@ pub struct AllowanceCharge {
     /// Must be in `1..=Self::MAX_TAX_CATEGORY_COUNT` (an implementation resource limit).
     #[serde(default = "one_tax_category")]
     pub tax_category_count: usize,
-    /// `true` for a charge, `false` for an allowance (`cbc:ChargeIndicator`).
-    pub charge: bool,
+    /// Whether this is an allowance or a charge (`cbc:ChargeIndicator`).
+    pub kind: AdjustmentKind,
     /// Allowance or charge amount, excluding VAT (`cbc:Amount`).
     pub amount: Decimal,
     /// Free-text reason (`cbc:AllowanceChargeReason`).
@@ -2103,7 +2152,7 @@ impl InvoiceTotals {
                 groups.len() - 1
             });
             let group = &mut groups[index];
-            group.taxable_amount = if adjustment.charge {
+            group.taxable_amount = if adjustment.kind.is_charge() {
                 group.taxable_amount.add(adjustment.amount)?
             } else {
                 group.taxable_amount.sub(adjustment.amount)?

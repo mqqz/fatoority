@@ -672,7 +672,7 @@ impl Serialize for AdjustmentXml<'_> {
             ));
         }
         let mut st = s.serialize_struct("cac:AllowanceCharge", 0)?;
-        st.serialize_field("cbc:ChargeIndicator", &a.charge)?;
+        st.serialize_field("cbc:ChargeIndicator", &a.kind.charge_indicator())?;
         if let Some(code) = &a.reason_code {
             st.serialize_field("cbc:AllowanceChargeReasonCode", code)?;
         }
@@ -999,7 +999,7 @@ impl Serialize for LineAdjustmentXml<'_> {
     fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
         let a = &self.0.adjustment;
         let mut st = s.serialize_struct("cac:AllowanceCharge", 0)?;
-        st.serialize_field("cbc:ChargeIndicator", &self.0.charge)?;
+        st.serialize_field("cbc:ChargeIndicator", &self.0.kind.charge_indicator())?;
         if let Some(code) = &a.reason_code {
             st.serialize_field("cbc:AllowanceChargeReasonCode", code)?;
         }
@@ -1541,7 +1541,7 @@ mod tests {
             base_amount: None,
             percentage: None,
             tax_category_count: 1,
-            charge: true,
+            kind: crate::invoice::AdjustmentKind::Charge,
             amount: Decimal::from(1),
             reason: None,
             reason_code: None,
@@ -1654,7 +1654,7 @@ mod tests {
             base_amount: None,
             percentage: None,
             tax_category_count: 2,
-            charge: true,
+            kind: crate::invoice::AdjustmentKind::Charge,
             amount: Decimal::from(1),
             reason: Some("fee".into()),
             reason_code: Some("95".into()),
@@ -1742,7 +1742,7 @@ mod tests {
             fails(invoice_line_price("SAR", &priced_line), field);
         }
         let line_adjustment = crate::invoice::LineAdjustment {
-            charge: false,
+            kind: crate::invoice::AdjustmentKind::Allowance,
             adjustment: crate::invoice::Adjustment::percentage(
                 Decimal::from(10),
                 Decimal::from(10),
