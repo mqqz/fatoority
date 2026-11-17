@@ -9,8 +9,9 @@ This page covers the `fatoora-core` Rust crate. The generated language
 bindings (JavaScript/TypeScript, Kotlin/Java, C#/.NET and C/C++) have a shorter
 list of breaking changes, summarised in
 [Language bindings](#language-bindings). The Python `fatoora` package has its
-own [0.5 to 0.6 table](../reference/bindings/python.md#migrate-from-05); its
-0.5 names keep working, with a `DeprecationWarning`, until 0.7.
+own [0.5 to 0.6 table](../reference/bindings/python.md#migrate-from-05): getters
+become properties as a hard break, and its renamed 0.5 names keep working, with
+a `DeprecationWarning`, until 0.7.
 
 0.6 renames items for consistency, replaces strings and Booleans with typed
 values, and makes the fields of invoice value types private. Each change below
@@ -281,8 +282,9 @@ The report object exposes `isValid()`, `isComplete()`, `hasErrors()` and
 Credential `requestId()` returns null when the credentials have no request ID.
 
 Python renames its API to match (`InvoiceSigner`, `ComplianceCsid`,
-`request_compliance_csid`, getters as properties, ...) and keeps the 0.5 names as
-deprecated aliases until 0.7; see the
+`request_compliance_csid`, ...) and keeps the renamed 0.5 names as deprecated
+aliases until 0.7; its getters become properties as a hard break (drop the
+parentheses). See the
 [Python reference](../reference/bindings/python.md#migrate-from-05). Two
 behaviours of the deprecated names differ from 0.5: `set_payment_means_code`
 appends a payment means instead of changing the code of an existing one, and the

@@ -91,14 +91,3 @@ assert not validate_zatca("<wrong/>").is_valid
 for notice in ("LICENSE-LGPL-3.0.txt", "LICENSE-GPL-3.0.txt", "NOTICE.md"):
     assert (package / "licenses/zatca" / notice).is_file(), notice
 print("Installed wheel exercised embedded schemas and all 257 business-rule assertions")
-
-# The 0.5 getter call form keeps working (with a DeprecationWarning) on every
-# interpreter a wheel is built for; see fatoora/_compat.py.
-import warnings
-with warnings.catch_warnings(record=True) as caught:
-    warnings.simplefilter("always")
-    assert invoice.id() == "WHEEL-1"
-    assert invoice.buyer() is None
-assert invoice.id == "WHEEL-1" and invoice.buyer is None
-assert [w.category for w in caught] == [DeprecationWarning, DeprecationWarning], caught
-print("Deprecated getter calls still resolve")

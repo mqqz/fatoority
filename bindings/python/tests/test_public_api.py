@@ -11,9 +11,7 @@ and review the JSON diff. For each exported name the contract records:
   the start of keyword-only parameters;
 * functions: the parameter list;
 * ``__deprecated__``: every name that still works but warns (removed in 0.7),
-  including the class aliases served by the module ``__getattr__``. (Calling
-  a property the 0.5 way, ``invoice.id()``, also still works with a warning
-  until 0.7; see ``fatoora/_compat.py``.)
+  including the class aliases served by the module ``__getattr__``.
 """
 from __future__ import annotations
 

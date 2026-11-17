@@ -104,8 +104,9 @@ checkout are unnecessary.
 
 ### Deprecations
 
-0.6 renames the 0.5 API (`Signer` -> `InvoiceSigner`, getters -> properties, ...).
-The old names keep working with a `DeprecationWarning` until 0.7; see the
+0.6 turns getters into properties (a hard break: drop the parentheses) and
+renames parts of the 0.5 API (`Signer` -> `InvoiceSigner`, ...). The renamed
+names keep working with a `DeprecationWarning` until 0.7; see the
 [Python reference](../../docs/reference/bindings/python.md#migrate-from-05). The
 public surface is recorded in `tests/public_api.json`; regenerate it after an
 intentional change with `python tests/test_public_api.py --update`.

@@ -13,7 +13,7 @@ from typing import Any, Optional, Union
 import uuid as _uuid
 
 from . import _native
-from ._compat import alias_getattr, deprecated, prop, warn
+from ._compat import alias_getattr, deprecated
 from .errors import InvalidInputError, error_class_for_code
 
 class Environment(IntEnum):
@@ -337,7 +337,7 @@ class Config(_Owned):
     def __init__(self, env: Environment = Environment.NON_PRODUCTION):
         super().__init__(_call(_native.Config.new, int(env)))
 
-    @prop()
+    @property
     def env(self) -> Environment:
         return Environment(self._invoke("env"))
 
@@ -355,11 +355,11 @@ class InvoiceSigner(_Owned):
     def from_der(cls, cert_der: bytes, key_der: bytes) -> 'InvoiceSigner':
         return cls._wrap(_call(_native.InvoiceSigner.from_der, cert_der, key_der))
 
-    @prop()
+    @property
     def certificate_der(self) -> bytes:
         return self._invoke("certificate_der")
 
-    @prop()
+    @property
     def certificate_pem(self) -> str:
         return self._invoke("certificate_pem")
 
@@ -434,11 +434,11 @@ class Csr(_Owned):
     def to_pem(self) -> str:
         return self._invoke("to_pem")
 
-    @prop()
+    @property
     def subject_string(self) -> str:
         return self._invoke("subject_string")
 
-    @prop()
+    @property
     def extension_values_der(self) -> list[bytes]:
         return self._invoke("extension_values_der")
 
@@ -451,20 +451,20 @@ class _Csid(_Owned):
     def new(cls, env: Environment, token: str, secret: str, request_id: Optional[str]=None):
         return cls._wrap(_call(cls._native_type.create, int(env), request_id, token, secret))
 
-    @prop()
+    @property
     def request_id(self) -> Optional[str]:
         """The ZATCA request ID, or ``None`` when the credentials have none."""
         return self._invoke("request_id")
 
-    @prop()
+    @property
     def env(self) -> Environment:
         return Environment(self._invoke("env"))
 
-    @prop()
+    @property
     def binary_security_token(self) -> str:
         return self._invoke("binary_security_token")
 
-    @prop()
+    @property
     def secret(self) -> str:
         return self._invoke("secret")
 
@@ -487,102 +487,102 @@ class ProductionCsid(_Csid):
 class ValidationMessage(_Owned):
     _repr_fields = ('message_type', 'code', 'status')
 
-    @prop()
+    @property
     def message_type(self) -> Optional[str]:
         return self._invoke("message_type_raw")
 
-    @prop()
+    @property
     def code(self) -> Optional[str]:
         return self._invoke("code")
 
-    @prop()
+    @property
     def category(self) -> Optional[str]:
         return self._invoke("category")
 
-    @prop()
+    @property
     def message(self) -> Optional[str]:
         return self._invoke("message")
 
-    @prop()
+    @property
     def status(self) -> Optional[str]:
         return self._invoke("status_raw")
 
 class ValidationResults(_Owned):
     _repr_fields = ('status',)
 
-    @prop()
+    @property
     def status(self) -> Optional[str]:
         return self._invoke("status_raw")
 
-    @prop()
+    @property
     def info_messages(self) -> list[ValidationMessage]:
         return [ValidationMessage._wrap(self._invoke("info_message", i)) for i in range(self._invoke("info_len"))]
 
-    @prop()
+    @property
     def warning_messages(self) -> list[ValidationMessage]:
         return [ValidationMessage._wrap(self._invoke("warning_message", i)) for i in range(self._invoke("warning_len"))]
 
-    @prop()
+    @property
     def error_messages(self) -> list[ValidationMessage]:
         return [ValidationMessage._wrap(self._invoke("error_message", i)) for i in range(self._invoke("error_len"))]
 
 class ValidationResponse(_Owned):
     _repr_fields = ('http_status', 'outcome')
 
-    @prop()
+    @property
     def http_status(self) -> Optional[int]:
         return self._invoke("http_status")
 
-    @prop()
+    @property
     def outcome(self) -> InvoiceOutcome:
         return self._invoke("outcome")
 
     def ensure_accepted(self) -> None:
         return self._invoke("ensure_accepted")
 
-    @prop()
+    @property
     def cleared_invoice_base64(self) -> Optional[str]:
         return self._invoke("cleared_invoice_base64")
 
-    @prop()
+    @property
     def cleared_invoice_xml(self) -> Optional[str]:
         return self._invoke("cleared_invoice_xml")
 
-    @prop()
+    @property
     def reporting_status(self) -> Optional[str]:
         return self._invoke("reporting_status_raw")
 
-    @prop()
+    @property
     def clearance_status(self) -> Optional[str]:
         return self._invoke("clearance_status_raw")
 
-    @prop()
+    @property
     def qr_seller_status(self) -> Optional[str]:
         return self._invoke("qr_seller_status")
 
-    @prop()
+    @property
     def qr_buyer_status(self) -> Optional[str]:
         return self._invoke("qr_buyer_status")
 
-    @prop()
+    @property
     def validation_results(self) -> ValidationResults:
         return ValidationResults._wrap(self._invoke("validation_results"))
 
 class VatId(_Owned):
     _repr_fields = ('value',)
 
-    @prop()
+    @property
     def value(self) -> str:
         return self._invoke("value")
 
 class OtherId(_Owned):
     _repr_fields = ('value', 'scheme')
 
-    @prop()
+    @property
     def value(self) -> str:
         return self._invoke("value")
 
-    @prop()
+    @property
     def scheme(self) -> Optional[str]:
         return self._invoke("scheme")
 
@@ -592,7 +592,7 @@ class Address(_Owned):
     def with_province(self, province: str) -> "Address":
         return Address._wrap(self._invoke("with_province", province))
 
-    @prop()
+    @property
     def province(self) -> Optional[str]:
         return self._invoke("province")
 
@@ -600,73 +600,73 @@ class Address(_Owned):
     def new(cls, country_code: str, city: str, street: str, building_number: str, postal_code: str, additional_street: Optional[str]=None, additional_number: Optional[str]=None, district: Optional[str]=None) -> 'Address':
         return cls._wrap(_call(_native.Address.new, country_code, city, street, building_number, postal_code, additional_street, additional_number, district))
 
-    @prop()
+    @property
     def country_code(self) -> str:
         return self._invoke("country_code")
 
-    @prop()
+    @property
     def city(self) -> str:
         return self._invoke("city")
 
-    @prop()
+    @property
     def street(self) -> str:
         return self._invoke("street")
 
-    @prop()
+    @property
     def additional_street(self) -> Optional[str]:
         return self._invoke("additional_street")
 
-    @prop()
+    @property
     def building_number(self) -> str:
         return self._invoke("building_number")
 
-    @prop()
+    @property
     def additional_number(self) -> Optional[str]:
         return self._invoke("additional_number")
 
-    @prop()
+    @property
     def postal_code(self) -> str:
         return self._invoke("postal_code")
 
-    @prop()
+    @property
     def district(self) -> Optional[str]:
         return self._invoke("district")
 
 class Party(_Owned):
     _repr_fields = ('name',)
 
-    @prop()
+    @property
     def identifiers(self) -> list[OtherId]:
         return [OtherId._wrap(self._invoke("identifier", i)) for i in range(self._invoke("identifiers_len"))]
 
-    @prop()
+    @property
     def name(self) -> str:
         return self._invoke("name")
 
-    @prop()
+    @property
     def address(self) -> Optional[Address]:
         return _optional(Address, self._invoke("address"))
 
-    @prop()
+    @property
     def vat_id(self) -> Optional[VatId]:
         return _optional(VatId, self._invoke("vat_id"))
 
-    @prop()
+    @property
     def other_id(self) -> Optional[OtherId]:
         return _optional(OtherId, self._invoke("other_id"))
 
 class InvoiceNote(_Owned):
     _repr_fields = ('language_id', 'text')
 
-    @prop()
+    @property
     def language_id(self) -> Optional[str]:
         return self._invoke("language_id")
 
-    @prop()
+    @property
     def language(self) -> str:
         return self._invoke("language")
 
-    @prop()
+    @property
     def text(self) -> str:
         return self._invoke("text")
 
@@ -677,24 +677,24 @@ class OriginalInvoiceRef(_Owned):
     def new(cls, id: str, uuid: Optional[_UuidIn] = None, date: Optional[_DateIn] = None, time: Optional[str] = None, type_code: Optional[str] = None) -> 'OriginalInvoiceRef':
         return cls._wrap(_call(_native.OriginalInvoiceRef.new, id, _uuid_text(uuid), _date_text(date, "date"), time, type_code))
 
-    @prop()
+    @property
     def issue_time(self) -> Optional[str]:
         """``HH:MM:SS`` (AST) or ``HH:MM:SSZ`` (UTC), as written in the invoice."""
         return self._invoke("issue_time")
 
-    @prop()
+    @property
     def document_type_code(self) -> Optional[str]:
         return self._invoke("document_type_code")
 
-    @prop()
+    @property
     def id(self) -> str:
         return self._invoke("id")
 
-    @prop()
+    @property
     def uuid(self) -> Optional[str]:
         return self._invoke("uuid")
 
-    @prop(legacy=lambda self: self._invoke("issue_date"))
+    @property
     def issue_date(self) -> Optional[date]:
         return _parse_date(self._invoke("issue_date"))
 
@@ -745,133 +745,133 @@ class _Invoice(_Owned):
         data = self._invoke("data")
         return _call(getattr(data, name), *args)
 
-    @prop()
+    @property
     def issue_time(self) -> str:
         """``HH:MM:SS`` (AST) or ``HH:MM:SSZ`` (UTC), as written in the invoice."""
         return self._data("issue_time")
 
-    @prop(legacy=lambda self: self._data("issue_date"))
+    @property
     def issue_date(self) -> date:
         return _parse_date(self._data("issue_date"))
 
-    @prop()
+    @property
     def id(self) -> str:
         return self._data("id")
 
-    @prop()
+    @property
     def uuid(self) -> str:
         """The invoice UUID text (core keeps it verbatim; it may not be RFC 4122)."""
         return self._data("uuid")
 
-    @prop(legacy=lambda self: self._data("issue_datetime"))
+    @property
     def issue_datetime(self) -> datetime:
         """Issue timestamp as a timezone-aware (UTC) ``datetime``."""
         return _parse_timestamp(self._data("issue_datetime"))
 
-    @prop()
+    @property
     def currency(self) -> str:
         return self._data("currency")
 
-    @prop()
+    @property
     def previous_invoice_hash(self) -> str:
         return self._data("previous_invoice_hash")
 
-    @prop()
+    @property
     def invoice_counter(self) -> int:
         return self._data("invoice_counter")
 
-    @prop()
+    @property
     def payment_means_code(self) -> str:
         return self._data("payment_means_code")
 
-    @prop()
+    @property
     def vat_category(self) -> VatCategory:
         return VatCategory(self._data("vat_category"))
 
-    @prop()
+    @property
     def invoice_level_charge(self) -> Decimal:
         return Decimal(self._data("invoice_level_charge"))
 
-    @prop()
+    @property
     def invoice_level_discount(self) -> Decimal:
         return Decimal(self._data("invoice_level_discount"))
 
-    @prop()
+    @property
     def allowance_reason(self) -> Optional[str]:
         return self._data("allowance_reason")
 
-    @prop()
+    @property
     def seller(self) -> Party:
         return Party._wrap(self._data("seller"))
 
-    @prop()
+    @property
     def buyer(self) -> Optional[Party]:
         return _optional(Party, self._data("buyer"))
 
-    @prop()
+    @property
     def note(self) -> Optional[InvoiceNote]:
         return _optional(InvoiceNote, self._data("note"))
 
-    @prop()
+    @property
     def invoice_type_kind(self) -> InvoiceTypeKind:
         return InvoiceTypeKind(self._data("invoice_type_kind"))
 
-    @prop()
+    @property
     def invoice_sub_type(self) -> InvoiceSubType:
         return InvoiceSubType(self._data("invoice_sub_type"))
 
-    @prop()
+    @property
     def original_invoice_ref(self) -> Optional[OriginalInvoiceRef]:
         return _optional(OriginalInvoiceRef, self._data("original_invoice_ref"))
 
-    @prop()
+    @property
     def original_invoice_reason(self) -> Optional[str]:
         return self._data("original_invoice_reason")
 
-    @prop(legacy=lambda self: self._data("actual_delivery_date"))
+    @property
     def actual_delivery_date(self) -> Optional[date]:
         return _parse_date(self._data("actual_delivery_date"))
 
-    @prop(legacy=lambda self: self._data("latest_delivery_date"))
+    @property
     def latest_delivery_date(self) -> Optional[date]:
         return _parse_date(self._data("latest_delivery_date"))
 
-    @prop()
+    @property
     def payment_instruction(self) -> Optional[str]:
         return self._data("payment_instruction")
 
-    @prop()
+    @property
     def tax_currency(self) -> Optional[str]:
         return self._data("tax_currency")
 
-    @prop()
+    @property
     def tax_currency_amount(self) -> Optional[Decimal]:
         return _optional_decimal(self._data("tax_currency_amount"))
 
-    @prop()
+    @property
     def notes(self) -> list[InvoiceNote]:
         data = self._invoke("data")
         return [InvoiceNote._wrap(_call(data.note_at, i)) for i in range(_call(data.notes_len))]
 
-    @prop()
+    @property
     def billing_references(self) -> list[OriginalInvoiceRef]:
         data = self._invoke("data")
         return [OriginalInvoiceRef._wrap(_call(data.billing_reference, i)) for i in range(_call(data.billing_references_len))]
 
-    @prop()
+    @property
     def payment_means(self) -> list[PaymentMeans]:
         data = self._invoke("data")
         return [PaymentMeans._wrap(_call(data.payment_means, i)) for i in range(_call(data.payment_means_len))]
 
-    @prop()
+    @property
     def purchase_order_id(self) -> Optional[str]:
         return self._data("purchase_order_id")
 
-    @prop()
+    @property
     def contract_id(self) -> Optional[str]:
         return self._data("contract_id")
 
-    @prop()
+    @property
     def adjustments(self) -> list[AllowanceCharge]:
         data = self._invoke("data")
         result = []
@@ -880,7 +880,7 @@ class _Invoice(_Owned):
             result.append(AllowanceCharge(_call(a.kind) == _CHARGE, Decimal(_call(a.amount)), VatCategory(_call(a.category)), Decimal(_call(a.rate)), _call(a.reason), _call(a.reason_code), TaxExemption._from_native(_call(a.exemption)), _call(a.tax_category_count), _optional_decimal(_call(a.base_amount)), _optional_decimal(_call(a.percentage)), not _call(a.has_vat_rate)))
         return result
 
-    @prop()
+    @property
     def vat_breakdown(self) -> list[VatBreakdown]:
         totals = self._invoke("totals")
         result = []
@@ -889,7 +889,7 @@ class _Invoice(_Owned):
             result.append(VatBreakdown(VatCategory(_call(group.category)), Decimal(_call(group.rate)), Decimal(_call(group.taxable_amount)), Decimal(_call(group.tax_amount)), TaxExemption._from_native(_call(group.exemption)), not _call(group.has_vat_rate)))
         return result
 
-    @prop()
+    @property
     def line_item_count(self) -> int:
         return self._data("line_items_len")
 
@@ -919,22 +919,22 @@ class _Invoice(_Owned):
             omitted_tax_amount=not _call(item.has_tax_total),
             omitted_gross_amount=not _call(item.has_gross_amount))
 
-    @prop()
+    @property
     def line_items(self) -> list[InvoiceLineItem]:
         data = self._invoke("data")
         return [self._line_item_value(_call(data.line_item, i))
                 for i in range(_call(data.line_items_len))]
 
-    @prop()
+    @property
     def totals(self) -> InvoiceTotals:
         totals = self._invoke("totals")
         return InvoiceTotals(**{name: Decimal(_call(getattr(totals, name))) for name in InvoiceTotals.__dataclass_fields__})
 
-    @prop()
+    @property
     def flags_raw(self) -> int:
         return self._data("flags")
 
-    @prop()
+    @property
     def flags(self) -> set[InvoiceFlag]:
         bits = self._data("flags")
         # Use the declared single-bit members rather than version-specific flag iteration.
@@ -961,7 +961,7 @@ class _Invoice(_Owned):
     def is_simplified(self) -> bool:
         return InvoiceSubType(self._data("invoice_sub_type")) == InvoiceSubType.SIMPLIFIED
 
-    @prop()
+    @property
     def xml(self) -> str:
         """The invoice XML."""
         return self._invoke("xml")
@@ -1016,45 +1016,45 @@ class SignedInvoice(_Invoice):
     def to_xml_base64(self) -> str:
         return self._invoke("to_xml_base64")
 
-    @prop()
+    @property
     def qr_code(self) -> str:
         return self._invoke("qr_code")
 
-    @prop()
+    @property
     def invoice_hash(self) -> str:
         """The invoice hash stored in the signature (see ``hash()`` to recompute it)."""
         return self._invoke("invoice_hash")
 
-    @prop()
+    @property
     def signature(self) -> str:
         return self._invoke("signature")
 
-    @prop()
+    @property
     def public_key(self) -> str:
         return self._invoke("public_key")
 
-    @prop()
+    @property
     def zatca_key_signature(self) -> Optional[str]:
         return self._invoke("zatca_key_signature")
 
-    @prop()
+    @property
     def cert_hash(self) -> str:
         return self._invoke("cert_hash")
 
-    @prop()
+    @property
     def signed_props_hash(self) -> str:
         return self._invoke("signed_props_hash")
 
-    @prop(legacy=lambda self: self._invoke("signing_time"))
+    @property
     def signing_time(self) -> datetime:
         """Signing time as a timezone-aware (UTC) ``datetime``."""
         return _parse_timestamp(self._invoke("signing_time"))
 
-    @prop()
+    @property
     def issuer(self) -> str:
         return self._invoke("issuer")
 
-    @prop()
+    @property
     def serial(self) -> str:
         return self._invoke("serial")
 
@@ -1075,23 +1075,23 @@ class Adjustment(_Owned):
     def with_reason(self, reason: Optional[str] = None, code: Optional[str] = None) -> "Adjustment":
         return Adjustment._wrap(self._invoke("with_reason", reason, code))
 
-    @prop()
+    @property
     def value(self) -> Decimal:
         return Decimal(self._invoke("value"))
 
-    @prop()
+    @property
     def base_amount(self) -> Optional[Decimal]:
         return _optional_decimal(self._invoke("base_amount"))
 
-    @prop()
+    @property
     def percent(self) -> Optional[Decimal]:
         return _optional_decimal(self._invoke("percent"))
 
-    @prop()
+    @property
     def reason(self) -> Optional[str]:
         return self._invoke("reason")
 
-    @prop()
+    @property
     def reason_code(self) -> Optional[str]:
         return self._invoke("reason_code")
 
@@ -1101,7 +1101,7 @@ class PaymentMeans(_Owned):
     def with_instruction_note(self, value: str) -> "PaymentMeans":
         return PaymentMeans._wrap(self._invoke("with_instruction_note", value))
 
-    @prop()
+    @property
     def instruction_notes(self) -> list[str]:
         return [self._invoke("instruction_note_at", i) for i in range(self._invoke("instruction_notes_len"))]
 
@@ -1112,22 +1112,22 @@ class PaymentMeans(_Owned):
     def with_account(self, id: Optional[str] = None, terms: Optional[str] = None) -> "PaymentMeans":
         return PaymentMeans._wrap(self._invoke("with_account", id, terms))
 
-    @prop()
+    @property
     def code(self) -> str:
         return self._invoke("code")
 
-    @prop()
+    @property
     def instruction_note(self) -> Optional[str]:
         return self._invoke("instruction_note")
 
     def has_account(self) -> bool:
         return self._invoke("has_account")
 
-    @prop()
+    @property
     def account_identifier(self) -> Optional[str]:
         return self._invoke("account_identifier")
 
-    @prop()
+    @property
     def payment_terms(self) -> Optional[str]:
         return self._invoke("payment_terms")
 

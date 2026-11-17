@@ -1,7 +1,6 @@
 """Every 0.5 name deprecated in 0.6 still works, warns at the caller, and names its replacement."""
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
 from decimal import Decimal
 import json
 from pathlib import Path
@@ -115,44 +114,15 @@ def test_deprecated_validation_keeps_the_dict_report():
         evaluated_at=report["evaluated_at"]).to_dict()
 
 
-# --- getter call form -----------------------------------------------------------------
+# --- getters are properties (hard break in 0.6, no call form) ------------------------
 
-def test_calling_a_property_warns_and_returns_the_05_value():
-    invoice = SignedInvoice.from_file(SIGNED_XML)
-    with pytest.warns(DeprecationWarning, match=r"SignedInvoice.id\(\) is deprecated; read the 'id' property") as record:
-        value = invoice.id()
-    assert value == invoice.id and record[0].filename == __file__
-    # Properties whose type changed keep the 0.5 string through the call form.
-    with pytest.warns(DeprecationWarning):
-        assert invoice.issue_datetime() == "2022-08-17T14:41:08Z"
-    assert invoice.issue_datetime == datetime(2022, 8, 17, 14, 41, 8, tzinfo=timezone.utc)
-    with pytest.warns(DeprecationWarning):
-        assert invoice.issue_date() == "2022-08-17"
-    assert invoice.issue_date == date(2022, 8, 17)
-    with pytest.warns(DeprecationWarning):
-        assert invoice.signing_time() == "2025-07-22T15:51:28"
-    with pytest.warns(DeprecationWarning):
-        assert invoice.totals().payable_amount == invoice.totals.payable_amount
-
-
-def test_calling_a_property_that_is_none_still_works():
+def test_calling_a_property_fails_like_calling_its_value():
     invoice = built()
-    with pytest.warns(DeprecationWarning):
-        assert invoice.buyer() is None
-    with pytest.warns(DeprecationWarning):
-        assert invoice.seller().address().district() is None
-    assert invoice.buyer is None
-
-
-def test_property_call_form_inside_pytest_assert_rewriting():
-    # pytest rewrites ``assert x.f() == y`` to ``@py_assert1 = x.f; @py_assert1()``.
-    invoice = built()
-    with pytest.warns(DeprecationWarning):
-        assert invoice.id() == "numeric"
-    with pytest.warns(DeprecationWarning):
-        assert invoice.buyer() is None
-    assert invoice.id == "numeric"
-    assert invoice.buyer is None
+    assert invoice.id == "numeric" and invoice.buyer is None
+    with pytest.raises(TypeError, match="not callable"):
+        invoice.id()
+    with pytest.raises(TypeError, match="not callable"):
+        invoice.buyer()
 
 
 def test_property_access_never_warns():
@@ -160,16 +130,7 @@ def test_property_access_never_warns():
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         values = [invoice.id, getattr(invoice, "uuid"), invoice.totals, invoice.flags]
-        assert [f"{invoice.id}"] == ["numeric"]
         assert all(v is not None for v in values)
-
-
-def test_stored_bound_getter_is_the_plain_value():
-    # The one 0.5 spelling the transition cannot serve: keeping the getter to call later.
-    getter = built().id
-    assert getter == "numeric"
-    with pytest.raises(TypeError):
-        getter()
 
 
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")

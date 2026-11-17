@@ -453,15 +453,14 @@ Kotlin/Java facade, removed in 0.7:
 
 ### Python
 
-The `fatoora` package gets a Pythonic surface that mirrors the core names. Every
-0.5 name keeps working until 0.7 and emits a `DeprecationWarning` naming its
-replacement (see [the Python reference](https://docs.fatoority.com/reference/bindings/python/#migrate-from-05)).
+The `fatoora` package gets a Pythonic surface that mirrors the core names.
+Getters becoming properties is a hard break; every renamed 0.5 name keeps
+working until 0.7 and emits a `DeprecationWarning` naming its replacement (see [the Python reference](https://docs.fatoority.com/reference/bindings/python/#migrate-from-05)).
 
-- Getters are read-only properties: `invoice.id`, `address.city`,
-  `response.reporting_status`, `config.env`, `signed.qr_code`, ... Calling one
-  the 0.5 way (`invoice.id()`) still returns the 0.5 value with a warning,
-  including inside pytest-rewritten `assert` statements; a getter stored and
-  called later is not supported.
+- Breaking: getters are read-only properties (`invoice.id`, `address.city`,
+  `response.reporting_status`, `config.env`, `signed.qr_code`, ...). Drop the
+  parentheses; `invoice.id()` now fails with `TypeError` like calling the
+  value.
 - `InvoiceBuilder(invoice_type, invoice_subtype, *, id=, uuid=, issue_datetime=,
   currency=, previous_invoice_hash=, invoice_counter=, vat_category=, flags=,
   original_invoice=, original_invoice_reason=)` constructor; `InvoiceBuilder.new`

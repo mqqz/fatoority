@@ -240,17 +240,20 @@ Run explicit validation for schema and business-rule checks; issuer trust and cl
 
 ## Migrate from 0.5
 
-Every 0.5 name below still works in 0.6 and emits a `DeprecationWarning` that
-names its replacement; they are removed in 0.7. Run your tests with
+Getters became read-only properties in 0.6. This is a hard break: drop the
+parentheses (`invoice.id()` becomes `invoice.id`); calling a property now fails
+like calling its value (`TypeError: 'str' object is not callable`). Rows marked
+"enforced" were warnings in 0.5.1 and are now `TypeError`s too. Every other 0.5
+name below still works in 0.6 and emits a `DeprecationWarning` that names its
+replacement; they are removed in 0.7. Run your tests with
 `python -W error::DeprecationWarning` (or pytest's
 `filterwarnings = ["error::DeprecationWarning"]`) to find the remaining uses.
-Rows marked "enforced" were warnings in 0.5.1 and are now `TypeError`s.
 
 | 0.5 | 0.6 |
 | --- | --- |
-| Getter methods: `invoice.id()`, `address.city()`, `response.reporting_status()`, ... | Properties: `invoice.id`, `address.city`, `response.reporting_status` |
-| `invoice.issue_datetime()`, `signed.signing_time()` return `str` | `invoice.issue_datetime`, `signed.signing_time` are aware `datetime`s |
-| `issue_date()`, `actual_delivery_date()`, `latest_delivery_date()`, `OriginalInvoiceRef.issue_date()` return `str` | Properties of type `datetime.date` |
+| Getter methods: `invoice.id()`, `address.city()`, `response.reporting_status()`, ... (hard break) | Properties: `invoice.id`, `address.city`, `response.reporting_status` |
+| `invoice.issue_datetime()`, `signed.signing_time()` return `str` (hard break) | `invoice.issue_datetime`, `signed.signing_time` are aware `datetime`s |
+| `issue_date()`, `actual_delivery_date()`, `latest_delivery_date()`, `OriginalInvoiceRef.issue_date()` return `str` (hard break) | Properties of type `datetime.date` |
 | `InvoiceBuilder.new(type, subtype, ...)` / `new_with_reference(type, subtype, ref, reason)` | `InvoiceBuilder(type, subtype, *, id=..., ..., original_invoice=ref, original_invoice_reason=reason)` |
 | Setters return `None` | Setters return the builder |
 | `set_seller(name, country_code, ...)` positional (enforced) | `set_seller(name, *, vat_id=..., address=Address.new(...))` or the address keywords |
@@ -272,14 +275,8 @@ Rows marked "enforced" were warnings in 0.5.1 and are now `TypeError`s.
 | `report_simplified_invoice(invoice, pcsid, False)` positional flags (enforced) | `report_simplified_invoice(invoice, pcsid, clearance_status=False)` |
 | `parse_finalized_invoice_xml(xml)` / `parse_finalized_invoice_xml_file(path)` | `FinalizedInvoice.from_xml(xml)` / `FinalizedInvoice.from_file(path)` |
 | `parse_signed_invoice_xml(xml)` / `parse_signed_invoice_xml_file(path)` | `SignedInvoice.from_xml(xml)` / `SignedInvoice.from_file(path)` |
-| `invoice.xml()`, `to_xml()`, `into_xml()` | `invoice.xml` |
+| `invoice.xml()` (hard break), `to_xml()`, `into_xml()` | `invoice.xml` |
 | `invoice.hash_base64()` | `invoice.hash()` |
 | `invoice_hash_base64_from_xml_str(xml)` | `hash_xml(xml)` |
 | `validate_xml_invoice_from_str(config, xml)` | `validate_xml(xml)` |
 | `validate_zatca_invoice_from_str(config, xml, ...)` returns a `dict` | `validate_zatca(xml, ...)` returns a `ZatcaReport`; `report.to_dict()` gives the 0.5 dictionary |
-
-The deprecated call form of a property (`invoice.id()`) returns exactly the 0.5
-value, including the 0.5 string for values that are now `datetime` or `date`. It
-is recognised wherever the call is written directly on the attribute, including
-inside `assert` statements rewritten by pytest; a getter stored first and called
-later (`f = invoice.id; f()`) gets the plain property value and fails.
