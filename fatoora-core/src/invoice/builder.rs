@@ -444,7 +444,7 @@ impl InvoiceBuilder {
     /// [`charge`](Self::charge).
     #[deprecated(
         since = "0.6.0",
-        note = "set the reason on each entry with `DocumentAdjustment::reason` and add it \
+        note = "set the reason on each entry with `DocumentAdjustment::with_reason` and add it \
                 with `allowance` or `charge` instead"
     )]
     pub fn allowance_reason(mut self, reason: impl Into<String>) -> Self {
