@@ -78,7 +78,7 @@ the line, then append it with the invoice builder's `add_item` equivalent.
 
 | Operation | Python | JavaScript / TypeScript | C# | Kotlin / Java |
 | --- | --- | --- | --- | --- |
-| Create a line builder | `LineItemBuilder.new()` | `LineItemBuilder.new_()` | `LineItemBuilder.New()` | `LineItemBuilder.create()` |
+| Create a line builder | `LineItemBuilder.new()` | `LineItemBuilder.create()` | `LineItemBuilder.New()` | `LineItemBuilder.create()` |
 | Set price base | `set_item_price_base_quantity(value)` | `setItemPriceBaseQuantity(value)` | `SetItemPriceBaseQuantity(value)` | `setItemPriceBaseQuantity(value)` |
 | Add line allowance | `add_allowance(adjustment)` | `addAllowance(adjustment)` | `AddAllowance(adjustment)` | `addAllowance(adjustment)` |
 | Add line charge | `add_charge(adjustment)` | `addCharge(adjustment)` | `AddCharge(adjustment)` | `addCharge(adjustment)` |
@@ -300,7 +300,7 @@ correspond to the fields above.
 
 === "JavaScript"
 
-    Import from `fatoority`. All decimal arguments and amounts are strings; counters use `bigint`, indexes and the flag mask use `number`, and codes are enum classes. Pass `null` for absent optional arguments. Operations are synchronous and throw an `Error` with a `BindingError` cause on failure. Returned `Text` objects expose `.value()`.
+    Import from `fatoority`. All decimal arguments and amounts are strings; counters use `bigint`, indexes and the flag mask use `number`, and codes are enum classes. Pass `null` for absent optional arguments. Operations are synchronous and throw a `FatooraError` subclass on failure. Returned `Text` objects expose `.value()`.
 
     Enums: `InvoiceTypeKind` (`Tax`, `Prepayment`, `CreditNote`, `DebitNote`), `InvoiceSubType` (`Standard`, `Simplified`), and `VatCategory` (`Exempt`, `Standard`, `Zero`, `OutOfScope`); pass them as `InvoiceTypeKind.Tax`, `VatCategory.Standard`, and so on. A returned enum's `.value` is the variant name, such as `'Standard'`. Flags remain a `number` bitmask; build it from `InvoiceFlag` bits, for example `InvoiceFlag.Export.bit() | InvoiceFlag.Summary.bit()` (`1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed). Use zero for no flags.
 
@@ -308,7 +308,7 @@ correspond to the fields above.
 
     | Call | Returns |
     | --- | --- |
-    | `new_(kind: InvoiceTypeKind, subtype: InvoiceSubType, originalId, originalUuid, originalDate, reason)` | `InvoiceBuilder` |
+    | `create(kind: InvoiceTypeKind, subtype: InvoiceSubType, originalId, originalUuid, originalDate, reason)` | `InvoiceBuilder` |
     | `setId(value)` | `void` |
     | `setUuid(value)` | `void` |
     | `setIssueDatetime(value)` | `void` |
@@ -328,7 +328,7 @@ correspond to the fields above.
 
     | Call | Returns |
     | --- | --- |
-    | `new_(countryCode, city, street, buildingNumber, postalCode, additionalStreet, additionalNumber, district)` | `Address` |
+    | `create(countryCode, city, street, buildingNumber, postalCode, additionalStreet, additionalNumber, district)` | `Address` |
 
     Setters replace values; line-item calls append. Building consumes builder state even on validation failure. Signing through the signer consumes finalized invoice state. Further calls on consumed state fail.
 

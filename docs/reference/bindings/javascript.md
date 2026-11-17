@@ -21,7 +21,7 @@ automatically supplied clock:
 ```js
 import { Config, Environment, SigningKey, Xml, ZatcaClient } from 'fatoority';
 
-const config = Config.new_(Environment.NonProduction);
+const config = Config.create(Environment.NonProduction);
 const key = SigningKey.generate();
 const privateKeyPem = key.toPem();
 ```
@@ -47,12 +47,14 @@ package is needed.
 | Binary output | `Bytes.asSlice()` returns a copied `number[]`; use `Uint8Array.from(...)` for a typed byte array |
 | Native object | Object managed by `FinalizationRegistry` |
 | Invoice outcome | `InvoiceOutcome.Accepted`, `Rejected`, or `Unknown` |
-| Enumerated code | Enum class static, such as `Environment.NonProduction`, `InvoiceTypeKind.Tax`, `InvoiceSubType.Simplified`, `VatCategory.Standard`, `AdjustmentKind.Charge`, or `ClearanceMode.Disabled`; `.value` is the variant name string, such as `'Standard'` |
+| Enumerated code | Enum class static, such as `Environment.NonProduction`, `InvoiceTypeKind.Tax`, `InvoiceSubType.Simplified`, `VatCategory.Standard`, `AdjustmentKind.Charge`, or `ClearanceMode.Disabled`; `.value` is the variant name string, such as `'Standard'`. Each enum has a matching string-literal union type named with a `Value` suffix, such as `VatCategoryValue` |
 | Response status | `ReportingStatus`, `ClearanceStatus`, `ValidationStatus`, or `MessageType` enum, or `null` when absent; `Unknown` means present but not recognized by this version, and the matching `*Raw()` getter returns the exact text |
 | Invoice flags | `number` bitmask; combine `InvoiceFlag.ThirdParty.bit()`, `Nominal`, `Export`, `Summary`, and `SelfBilled` bits with bitwise OR |
 
-Method names use camelCase. Constructors named `new` in the underlying API use
-`new_`, such as `Config.new_(Environment.NonProduction)`. Read the [number reference](../numbers.md) for
+Method names use camelCase. Constructors named `new` in the underlying API are
+`create`, such as `Config.create(Environment.NonProduction)`. The generated name
+`new_` still works but is deprecated in the TypeScript declarations. Generated
+constructors (`new Config()`) are internal. Read the [number reference](../numbers.md) for
 accepted decimal syntax and rounding rules.
 
 `InvoiceBuilder.build()`, `InvoiceSigner.sign()`, and `SignedInvoice.intoXml()` consume
@@ -65,31 +67,53 @@ Objects belong to the WebAssembly instance that created them. Each worker needs
 its own instance and objects; do not transfer internal pointers between workers.
 Garbage collection does not guarantee immediate cleanup or erasure of secrets.
 
-A library failure throws an `Error` with a `BindingError` in `cause`. Read
-`code()`, `message()`, and `detailsJson()` from that cause. The JSON contains
-structured information such as validation findings or an HTTP response body.
+A library failure throws one `FatooraError` subclass per error code:
+
+| Code | Class | Meaning |
+| --- | --- | --- |
+| 1 | `InvalidInputError` | A caller-supplied value is malformed or out of range |
+| 2 | `ValidationError` | Input fails invoice, CSR, or schema rules |
+| 3 | `ParseError` | Structured input, such as an API response body, could not be parsed |
+| 4 | `XmlError` | XML could not be serialized, parsed, or processed |
+| 5 | `CryptoError` | Key, signing, hashing, or certificate processing failed |
+| 6 | `IoError` | An I/O operation failed |
+| 7 | `NetworkError` | The HTTP transport failed |
+| 8 | `UnauthorizedError` | ZATCA rejected the credentials |
+| 9 | `InternalError` | Internal invariant or consumed-state error |
+| 10 | `ApiError` | ZATCA returned an error or non-accepted response |
+
+Each error has `code`, `kind` (the name column without `Error`, or `null` for a
+code this version does not know), `message`, and `details`, the parsed JSON
+object with structured information such as validation findings or an HTTP
+response body. `cause` is the underlying `BindingError`. `ErrorCode` maps kinds
+to codes and `errorClassForCode(code)` returns the class. Typed errors apply to
+`fatoority/raw` too, because it shares the generated classes.
 See [error codes and details](../errors.md).
 
 ```js
+import { Address, FatooraError, InvalidInputError } from 'fatoority';
+
 try {
-  Address.new_('XX', 'Riyadh', 'King Fahd Road', '1234', '12345', null, null, null);
+  Address.create('XX', 'Riyadh', 'King Fahd Road', '1234', '12345', null, null, null);
 } catch (error) {
-  const details = JSON.parse(error.cause.detailsJson());
-  console.error(error.cause.code(), error.cause.message(), details);
+  if (error instanceof InvalidInputError) console.error('Fix the address:', error.message);
+  else if (error instanceof FatooraError) console.error(error.code, error.kind, error.details);
+  else throw error;
 }
 ```
 
-Network, cancellation, and response-body read failures throw `TransportError`.
-It preserves the original `cause`; `httpStatus` is present when a response was
-received but its body could not be read. HTTP rejection decoded by the library
-uses the structured library error instead.
+Network, cancellation, and response-body read failures throw `TransportError`,
+a `NetworkError` subclass. It preserves the original host error in `cause`;
+`httpStatus` is present when a response was received but its body could not be
+read. HTTP rejection decoded by the library uses the class for its code instead,
+such as `UnauthorizedError` or `ApiError`.
 
 ## Local validation
 
 | Method | Inputs | Returns |
 | --- | --- | --- |
 | `Xml.validate(xml)` | Invoice XML string | `true` on schema success; throws on invalid XML or schema rejection |
-| `Xml.validateZatca(xml, optionsJson?)` | Invoice XML, optional JSON string or `null` | `ZatcaValidationReport`, including rejection or incomplete coverage |
+| `Xml.validateZatca(xml, options?)` | Invoice XML; optional `{ previousInvoiceHash, evaluatedAt }`, options JSON string, or `null` | `ZatcaValidationReport` plain object, including rejection or incomplete coverage |
 | `Xml.hash(xml)` | Invoice XML string | Base64 invoice hash; throws when XML cannot be processed |
 
 For Node.js, save your invoice as `invoice.xml` and read it as UTF-8:
@@ -100,19 +124,40 @@ import { Xml } from 'fatoority';
 
 const invoiceXml = await readFile('invoice.xml', 'utf8');
 const report = Xml.validateZatca(invoiceXml);
-console.log(report.isValid(), report.isComplete());
-console.log(report.toJson()); // the same report as JSON
+console.log(report.isValid, report.isComplete);
+for (const stage of report.stages) {
+  for (const finding of stage.findings) {
+    console.log(stage.stage, finding.severity, finding.code, finding.message, finding.location);
+  }
+}
 ```
 
-`optionsJson` accepts `previous_invoice_hash` and `evaluated_at`. Use
-`JSON.stringify({ previous_invoice_hash: previousHash })` to supply invoice-history
-context. `evaluated_at` is an RFC3339 timestamp; the package root supplies the
-current time once if omitted. Set it explicitly for repeatable checks. The
+Pass `{ previousInvoiceHash }` to supply invoice-history context.
+`evaluatedAt` is an RFC3339 timestamp or a `Date`; the package root supplies the
+current time once if omitted. Set it explicitly for repeatable checks. A JSON
+string with `previous_invoice_hash` and `evaluated_at` is also accepted. The
 `fatoority/raw` validation API requires an explicit timestamp.
 
-A returned report does not imply validity: inspect `is_valid`. Missing predecessor
+The report is plain data, copied out of WebAssembly before `validateZatca`
+returns: it can be serialized with `JSON.stringify`, posted to a worker, and
+kept without holding native memory. Its TypeScript interfaces are
+`ZatcaValidationReport`, `ZatcaStageReport`, `ZatcaFinding`,
+`ZatcaFindingLocation`, and `ZatcaRuleSource`.
+
+| Field | Type |
+| --- | --- |
+| `schemaVersion`, `profile`, `evaluatedAt` | `number`, `string`, RFC3339 `string` |
+| `isComplete`, `hasErrors`, `isValid` | `boolean` |
+| `stages[]` | `{ stage, status, provenance, evaluatedAssertions, findings }`; `stage` is a `ZatcaStageValue` such as `'Ksa'`, `status` a `ZatcaStageStatusValue` such as `'Completed'`, `provenance` is `{ stylesheet, sha256 }` or `null` |
+| `stages[].findings[]` | `{ code, severity, layer, message, assertionSite, location }`; `severity` is `'Warning'` or `'Error'`, `layer` a `ValidationLayerValue` such as `'BusinessRules'` |
+| `location` | `null`, `{ kind: 'Field', path }` or `{ kind: 'XPath', path }`, `{ kind: 'Xml', line, column }`, or `{ kind: 'Unknown' }` |
+
+The snake_case JSON form documented in the [validation reference](../invoice-validation.md)
+comes from the native report's `toJson()` in `fatoority/raw`.
+
+A returned report does not imply validity: inspect `isValid`. Missing predecessor
 context produces incomplete coverage. Execution failures throw and may include a
-partial report in the error details. See the [validation reference](../invoice-validation.md)
+partial report in `error.details.report`. See the [validation reference](../invoice-validation.md)
 for fields, stage statuses, and limits. Local validation does not establish
 remote acceptance or certificate issuer trust. Read files using Node.js or browser
 APIs and pass their contents; filesystem helpers are not available in WebAssembly.
@@ -134,8 +179,8 @@ All methods below return promises. Optional `options` accepts `{ signal }`, wher
 | `clearStandardInvoice(invoice, credentials, clearanceStatus?, acceptLanguage?, options?)` | `SignedInvoice`, `ProductionCsid`; status defaults to `true`, language to `null` | `ValidationResponse` |
 
 `clearanceStatus` controls the clearance-status request header; it is not the
-result of the operation. It accepts a boolean or a `ClearanceMode`
-(`ClearanceMode.Enabled`/`ClearanceMode.Disabled`); the prepared-request methods
+result of the operation. It accepts a boolean, a `ClearanceMode`
+(`ClearanceMode.Enabled`/`ClearanceMode.Disabled`), or its name; the prepared-request methods
 on `fatoority/raw` require a `ClearanceMode`. `acceptLanguage` controls the language request header.
 Pass optional positional arguments explicitly when supplying a later argument.
 

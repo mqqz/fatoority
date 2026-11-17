@@ -3,9 +3,9 @@ import { randomUUID } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 import {
-  Address, BindingError, Config, Environment, InvoiceBuilder, InvoiceSigner, InvoiceSubType,
+  Address, Config, Environment, FatooraError, InvoiceBuilder, InvoiceSigner, InvoiceSubType,
   InvoiceTypeKind, PaymentMeans, ProductionCsid, VatCategory, Xml, ZatcaClient,
-  type ValidationResponse, type ValidationMessage,
+  type ValidationResponse, type ValidationMessage, type ZatcaValidationReport,
 } from 'fatoority';
 
 const ENVIRONMENT = Environment.NonProduction; // Integration Sandbox only.
@@ -42,8 +42,16 @@ export function handleResponse(response: ValidationResponse, output: string): vo
   };
   saveJson(`${output}/response.json`, summary);
   console.log(JSON.stringify(summary, null, 2));
-  response.ensureAccepted(); // A successful HTTP status alone is insufficient.
+  response.ensureAccepted(); // A successful HTTP status alone is insufficient; throws ApiError.
   console.log('Sandbox reporting accepted. Keep any warnings in response.json.');
+}
+
+function printFindings(report: ZatcaValidationReport): void {
+  for (const stage of report.stages) {
+    for (const finding of stage.findings) {
+      console.log(`${finding.severity} ${stage.stage}/${finding.code}: ${finding.message}`);
+    }
+  }
 }
 
 export async function run(inputPath: string, submit: boolean, transport?: typeof fetch): Promise<void> {
@@ -63,16 +71,16 @@ export async function run(inputPath: string, submit: boolean, transport?: typeof
   };
   saveJson(`${output}/state.json`, state);
   try {
-    const builder = InvoiceBuilder.new_(InvoiceTypeKind.Tax, InvoiceSubType.Simplified, null, null, null, null);
+    const builder = InvoiceBuilder.create(InvoiceTypeKind.Tax, InvoiceSubType.Simplified, null, null, null, null);
     builder.setId(data.invoice_id);
     builder.setUuid(uuid);
     builder.setIssueDatetime(new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'));
     builder.setCurrency('SAR');
     builder.setInvoiceCounter(BigInt(data.invoice_counter));
     builder.setPreviousInvoiceHash(data.previous_invoice_hash);
-    builder.addPaymentMeans(PaymentMeans.new_('10', null));
+    builder.addPaymentMeans(PaymentMeans.create('10', null));
     builder.setVatCategory(VatCategory.Standard);
-    const address = Address.new_('SA', seller.city, seller.street, seller.building_number,
+    const address = Address.create('SA', seller.city, seller.street, seller.building_number,
       seller.postal_code, null, seller.additional_number, seller.district);
     builder.setSeller(seller.name, address, seller.vat_id, seller.crn, 'CRN');
     builder.addLineItem('دفتر', '2', 'PCE', '50', '15', VatCategory.Standard);
@@ -85,11 +93,12 @@ export async function run(inputPath: string, submit: boolean, transport?: typeof
     writeFileSync(`${output}/signed.xml`, signedXml);
     state.invoice_hash = signed.invoiceHash();
     state.stage = 'validate';
-    const report = Xml.validateZatca(signedXml, JSON.stringify({
-      previous_invoice_hash: data.previous_invoice_hash,
-    }));
-    saveJson(`${output}/validation.json`, JSON.parse(report.toJson()));
-    if (!report.isValid()) throw new Error('Local validation failed; inspect validation.json. Nothing was submitted.');
+    const report = Xml.validateZatca(signedXml, {
+      previousInvoiceHash: data.previous_invoice_hash,
+    });
+    saveJson(`${output}/validation.json`, report);
+    printFindings(report);
+    if (!report.isValid) throw new Error('Local validation failed; inspect validation.json. Nothing was submitted.');
     console.log('Local validation passed; inspect validation.json for warnings');
     if (!submit) {
       state.stage = 'local_only';
@@ -99,15 +108,15 @@ export async function run(inputPath: string, submit: boolean, transport?: typeof
     state.stage = 'report';
     state.submitted = true; // Attempted; a failed connection can leave the outcome unknown.
     saveJson(`${output}/state.json`, state);
-    const client = new ZatcaClient(Config.new_(ENVIRONMENT), transport ? { fetch: transport } : {});
+    const client = new ZatcaClient(Config.create(ENVIRONMENT), transport ? { fetch: transport } : {});
     const credentials = ProductionCsid.create(ENVIRONMENT, null, token, secret);
     const response = await client.reportSimplifiedInvoice(signed, credentials, false, 'en');
     handleResponse(response, output);
     state.stage = 'accepted';
   } catch (error) {
     state.error_type = error instanceof Error ? error.name : 'UnknownError';
-    if (error instanceof Error && error.cause instanceof BindingError) {
-      saveJson(`${output}/error.json`, { code: error.cause.code(), details: JSON.parse(error.cause.detailsJson()) });
+    if (error instanceof FatooraError) {
+      saveJson(`${output}/error.json`, { code: error.code, kind: error.kind, message: error.message, details: error.details });
     }
     throw error;
   } finally {

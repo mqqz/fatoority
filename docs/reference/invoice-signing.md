@@ -122,7 +122,7 @@ The signed computed hash equals the XML hash operation on `xml()`. Signed import
 
     `SignedInvoice` text getters: `xml()`, `toXmlBase64()`, `qrCode()`, `invoiceHash()`, `hash()`, `signature()`, `publicKey()`, `issuer()`, `serial()`, `certHash()`, `signedPropsHash()`, `signingTime()`. Each returns `string`. `zatcaKeySignature()` returns optional `Text`; read its `value()` to obtain text.
 
-    Objects use garbage-collected cleanup. `Bytes.asSlice()` returns a copied number array. Native failures throw an `Error` with a `BindingError` in `error.cause`; see [error handling](errors.md).
+    Objects use garbage-collected cleanup. `Bytes.asSlice()` returns a copied number array. Native failures throw a `FatooraError` subclass; see [error handling](errors.md).
 
 === "C#"
 

@@ -66,7 +66,7 @@ Clients reject credentials issued for a different environment before sending a r
 
     | Operation | Returns | Behavior |
     | --- | --- | --- |
-    | `Config.new_(env: Environment)` | `Config` | Stores the selected environment. |
+    | `Config.create(env: Environment)` | `Config` | Stores the selected environment. |
     | `config.env()` | `Environment` | Returns the stored environment. |
 
     Pass `Environment.NonProduction`, `Environment.Simulation`, or
