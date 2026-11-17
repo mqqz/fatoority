@@ -10,10 +10,10 @@ fn builder() -> InvoiceBuilder {
     let invoice = common::dummy_finalized_invoice();
     InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified))
         .id("roundtrip")
-        .uuid(invoice.data().uuid())
-        .issue_datetime("2024-01-01T12:30:00Z")
-        .currency("SAR")
-        .previous_invoice_hash(invoice.data().previous_invoice_hash())
+        .uuid(invoice.data().uuid().clone())
+        .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+        .currency("SAR".parse().unwrap())
+        .previous_invoice_hash(invoice.data().previous_invoice_hash().clone())
         .invoice_counter(1)
         .seller(invoice.data().seller().clone())
         .payment_means_code("10")
@@ -47,13 +47,13 @@ fn buyers_preserve_identifiers_address_and_optional_fields() {
     let standard = common::complex_standard_invoice();
     let result = roundtrip(&standard.to_xml().unwrap());
     assert_eq!(result.data().buyer(), standard.data().buyer());
-    for vat in [None, Some("310122393500003".into())] {
+    for vat in [None, Some(VatId::parse("310122393500003").unwrap())] {
         for other in [None, Some(OtherId::with_scheme("1234567890", "NAT"))] {
             let mut address = standard.data().buyer().unwrap().address().unwrap().clone();
             address.building_number.clear();
             address.postal_code.clear();
             address.additional_street = Some("شارع & آخر".into());
-            let buyer = Buyer::new("مشتري".into(), address, vat.clone(), other).unwrap();
+            let buyer = Buyer::new("مشتري", address, vat.clone(), other);
             let invoice = builder()
                 .buyer(buyer.clone())
                 .line_item(line(VatCategory::Standard))
@@ -188,7 +188,7 @@ fn description_without_exemption_code_survives() {
 #[test]
 fn foreign_currency_tax_total_is_not_replaced_by_document_tax() {
     let invoice = builder()
-        .currency("USD")
+        .currency("USD".parse().unwrap())
         .tax_currency(CurrencyCode::parse("SAR").unwrap(), d("11.40"))
         .line_item(line(VatCategory::Standard))
         .build()
@@ -236,7 +236,7 @@ fn regenerated_compliant_standard_fixture_passes_business_rules() {
         let xml = invoice.to_xml().unwrap();
         let options = ZatcaValidationOptions {
             evaluated_at: Some("2026-10-18T12:00:00Z".parse().unwrap()),
-            previous_invoice_hash: Some(invoice.data().previous_invoice_hash().into()),
+            previous_invoice_hash: Some(invoice.data().previous_invoice_hash().to_string()),
         };
         let report = Validator::new().validate_zatca(&xml, &options).unwrap();
         for stage in report
@@ -340,7 +340,7 @@ fn prepayment_reference_and_subtotals_are_read_from_source() {
     let reference = &line.document_references()[0];
     assert_eq!(reference.id(), "46531");
     assert_eq!(
-        reference.uuid(),
+        reference.uuid().map(InvoiceUuid::as_str),
         Some("a79760f7-2f48-4da9-85a5-40459a147c80")
     );
     assert_eq!(reference.issue_date().unwrap().as_str(), "2022-08-15");
@@ -646,13 +646,7 @@ fn buyer_without_identification_scheme_and_empty_optional_address_roundtrips() {
     let mut address = original.data().buyer().unwrap().address().unwrap().clone();
     address.street.clear();
     address.city.clear();
-    let buyer = Buyer::new(
-        "Buyer".into(),
-        address,
-        None,
-        Some(OtherId::new("customer-id")),
-    )
-    .unwrap();
+    let buyer = Buyer::new("Buyer", address, None, Some(OtherId::new("customer-id")));
     let invoice = builder()
         .buyer(buyer.clone())
         .line_item(line(VatCategory::Standard))
@@ -667,7 +661,7 @@ fn buyer_without_identification_scheme_and_empty_optional_address_roundtrips() {
 #[test]
 fn foreign_tax_totals_require_one_valid_accounting_amount() {
     let invoice = builder()
-        .currency("USD")
+        .currency("USD".parse().unwrap())
         .tax_currency(CurrencyCode::parse("SAR").unwrap(), d("11.40"))
         .line_item(line(VatCategory::Standard))
         .build()
@@ -970,7 +964,7 @@ fn repeated_adjustment_classifications_compare_normalized_scalars() {
 fn currency_normalization_is_consistent_across_tax_totals() {
     for currency in ["SAR", "USD"] {
         let mut source = builder()
-            .currency(currency)
+            .currency(currency.parse().unwrap())
             .line_item(line(VatCategory::Standard));
         if currency == "USD" {
             source = source.tax_currency(CurrencyCode::parse("SAR").unwrap(), d("11.40"));
@@ -1009,10 +1003,10 @@ fn credit_debit_reasons_cannot_conflict_with_payment_instructions() {
                     .billing_reference(original)
                     .payment_instruction(reason)
                     .id("note")
-                    .uuid(source.data().uuid())
-                    .issue_datetime("2024-01-01T12:30:00Z")
-                    .currency("SAR")
-                    .previous_invoice_hash(source.data().previous_invoice_hash())
+                    .uuid(source.data().uuid().clone())
+                    .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+                    .currency("SAR".parse().unwrap())
+                    .previous_invoice_hash(source.data().previous_invoice_hash().clone())
                     .invoice_counter(1)
                     .seller(source.data().seller().clone())
                     .payment_means_code("10")

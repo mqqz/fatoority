@@ -153,17 +153,17 @@ correspond to the fields above.
 
     **Create and configure**
 
-    Import model types from `fatoora_core::invoice`. `InvoiceBuilder::new(invoice_type: InvoiceType) -> InvoiceBuilder` accepts `InvoiceType::Tax(subtype)`, `Prepayment(subtype)`, `CreditNote(subtype)`, or `DebitNote(subtype)`. Subtype is `InvoiceSubType::Standard` or `Simplified`; add references with `.billing_reference(OriginalInvoiceRef::new(id))` and a reason with `.payment_instruction(reason)`. References support `OriginalInvoiceRef::new(id)` with optional `with_uuid(uuid)` and `with_issue_date_str(date)`.
+    Import model types from `fatoora_core::invoice`. `InvoiceBuilder::new(invoice_type: InvoiceType) -> InvoiceBuilder` accepts `InvoiceType::Tax(subtype)`, `Prepayment(subtype)`, `CreditNote(subtype)`, or `DebitNote(subtype)`. Subtype is `InvoiceSubType::Standard` or `Simplified`; add references with `.billing_reference(OriginalInvoiceRef::new(id))` and a reason with `.payment_instruction(reason)`. References support `OriginalInvoiceRef::new(id)` with optional `with_uuid(uuid: InvoiceUuid)`, `with_issue_date(date: InvoiceDate)` and `with_issue_time(time: InvoiceTime)`.
 
     Every setter consumes and returns `Self`: chain calls or reassign the result.
 
     | Call | Returns |
     | --- | --- |
     | `id(value: impl Into<String>)` | `Self` |
-    | `uuid(value: impl Into<String>)` | `Self` |
-    | `issue_datetime(value: impl Into<String>)` | `Self` |
-    | `currency(value: impl Into<String>)` | `Self` |
-    | `previous_invoice_hash(value: impl Into<String>)` | `Self` |
+    | `uuid(value: InvoiceUuid)` | `Self` |
+    | `issue_datetime(value: InvoiceTimestamp)` | `Self` |
+    | `currency(value: CurrencyCode)` | `Self` |
+    | `previous_invoice_hash(value: InvoiceHash)` | `Self` |
     | `payment_means_code(value: impl Into<String>)` | `Self` |
     | `allowance_reason(value: impl Into<String>)` | `Self` |
     | `invoice_counter(value: u64)` | `Self` |
@@ -194,11 +194,11 @@ correspond to the fields above.
 
     `LineItem::new(description, quantity, unit_code, unit_price, vat_rate, vat_category)` takes text values for description/unit code, `Decimal` for quantities/amounts/rate, and `VatCategory`; it returns `Result<LineItem, InvoiceError>`. `LineItem::from_totals(...)` adds an explicit `total_amount` after unit price; `try_from_parts(...)` also adds `vat_amount` after VAT rate and checks both supplied amounts.
 
-    Use `CountryCode::parse`, `CurrencyCode::parse`, `InvoiceTimestamp::parse`, `InvoiceDate::parse`, and `VatId::parse` for validated wrappers; each returns `Result<Wrapper, InvoiceError>`. `InvoiceNote::new(language, text)` returns a note. `OtherId::new(value)` creates an ID without a scheme; `OtherId::with_scheme(value, scheme_id)` supplies both.
+    Use `CountryCode::parse`, `CurrencyCode::parse`, `InvoiceTimestamp::parse`, `InvoiceDate::parse`, `InvoiceTime::parse`, `InvoiceUuid::parse`, `InvoiceHash::parse`, and `VatId::parse` for validated wrappers; each returns `Result<Wrapper, InvoiceError>`, and each wrapper also implements `FromStr` and `TryFrom<&str>`. With the `chrono` feature, `InvoiceTimestamp` and `InvoiceDate` convert from chrono values via `From`; with the `uuid` feature, `InvoiceUuid` converts from `uuid::Uuid`. `InvoiceNote::new(language, text)` returns a note. `OtherId::new(value)` creates an ID without a scheme; `OtherId::with_scheme(value, scheme_id)` supplies both.
 
     Construct `Address` with its public fields: `country_code: CountryCode`, `city: String`, `street: String`, `building_number: String`, `postal_code: String`, and optional `additional_street`, `additional_number`, `district`, `province` (`Option<String>`).
 
-    `Seller::new(name: String, address: Address, vat_id: impl Into<String>, other_id: Option<OtherId>) -> Result<Seller, InvoiceError>` requires a VAT ID. `Buyer::new(name: String, address: impl Into<Option<Address>>, vat_id: Option<String>, other_id: Option<OtherId>) -> Result<Buyer, InvoiceError>` accepts an absent address and identifiers; business validation checks applicability.
+    `Seller::new(name: impl Into<String>, address: Address, vat_id: VatId, other_id: Option<OtherId>) -> Seller` requires a VAT ID. `Buyer::new(name: impl Into<String>, address: impl Into<Option<Address>>, vat_id: Option<VatId>, other_id: Option<OtherId>) -> Buyer` accepts an absent address and identifiers; business validation checks applicability.
 
     `LineItem::builder()` adds price-base quantities, gross pricing, line allowances
     and charges. It also accepts supplied amounts and supports item identifiers
@@ -208,7 +208,7 @@ correspond to the fields above.
 
     **Read invoice data**
 
-    Both invoice types provide `data() -> &InvoiceData`, `totals() -> &InvoiceTotals`, and `hash_base64() -> Result<String, SigningError>`. Read fields through the returned data's accessor methods, including `id()`, `uuid()`, `seller()`, `buyer()`, `line_items()`, `flags()`, and `invoice_type()`. Decimal accessors return `Decimal`; optional fields return `Option`.
+    Both invoice types provide `data() -> &InvoiceData`, `totals() -> &InvoiceTotals`, and `hash_base64() -> Result<String, SigningError>`. Read fields through the returned data's accessor methods, including `id()`, `uuid() -> &InvoiceUuid`, `issue_date() -> InvoiceDate`, `issue_time() -> InvoiceTime`, `previous_invoice_hash() -> &InvoiceHash`, `seller()`, `buyer()`, `line_items()`, `flags()`, and `invoice_type()`. Decimal accessors return `Decimal`; optional fields return `Option`.
 
     `FinalizedInvoice::sign(self, signer: &InvoiceSigner) -> Result<SignedInvoice, SigningError>` consumes the finalized invoice even if signing fails. Signed metadata and XML access are described in [signing](invoice-signing.md) and [XML](xml.md).
 

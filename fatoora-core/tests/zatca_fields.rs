@@ -10,10 +10,10 @@ fn builder() -> InvoiceBuilder {
     let source = common::dummy_finalized_invoice();
     InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified))
         .id("fields")
-        .uuid(source.data().uuid())
-        .issue_datetime("2024-01-01T12:30:00Z")
-        .currency("SAR")
-        .previous_invoice_hash(source.data().previous_invoice_hash())
+        .uuid(source.data().uuid().clone())
+        .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+        .currency("SAR".parse().unwrap())
+        .previous_invoice_hash(source.data().previous_invoice_hash().clone())
         .invoice_counter(1)
         .seller(source.data().seller().clone())
         .vat_category(VatCategory::Standard)
@@ -138,7 +138,7 @@ fn accepted_line_and_group_tax_values_drive_serialized_totals() {
 fn optional_containers_are_not_missing_required_children() {
     let invoice = builder()
         .line_item(line().build().unwrap())
-        .buyer(Buyer::new("Buyer".into(), None, None, None).unwrap())
+        .buyer(Buyer::new("Buyer", None, None, None))
         .delivery(Delivery::default())
         .build()
         .unwrap();
@@ -211,12 +211,11 @@ fn dictionary_source_to_output_coverage() {
     address.province = Some("Riyadh Province".into());
     address.additional_street = Some("Second street".into());
     let seller = Seller::new(
-        "Seller".into(),
+        "Seller",
         address.clone(),
-        "399999999900003",
+        "399999999900003".parse().unwrap(),
         Some(OtherId::with_scheme("123", "CRN")),
-    )
-    .unwrap();
+    );
     let item = line()
         .item_price_base_quantity(d("12"))
         .item_price_base_quantity_unit_code("PCE")
@@ -239,15 +238,12 @@ fn dictionary_source_to_output_coverage() {
         .unwrap();
     let rich = builder()
         .seller(seller)
-        .buyer(
-            Buyer::new(
-                "Buyer".into(),
-                address,
-                Some("399999999900003".into()),
-                Some(OtherId::with_scheme("456", "CRN")),
-            )
-            .unwrap(),
-        )
+        .buyer(Buyer::new(
+            "Buyer",
+            address,
+            Some("399999999900003".parse().unwrap()),
+            Some(OtherId::with_scheme("456", "CRN")),
+        ))
         .line_item(item)
         .purchase_order_id("PO")
         .contract_id("CON")
@@ -486,12 +482,11 @@ fn prepayment_adjustments_are_not_sales_lines() {
 #[test]
 fn repeated_identifiers_and_payment_instructions_keep_order() {
     let buyer = Buyer::new(
-        "Buyer".into(),
+        "Buyer",
         None,
         None,
         Some(OtherId::with_scheme("one", "NAT")),
     )
-    .unwrap()
     .identifier(OtherId::with_scheme("two", "PAS"));
     let invoice = builder()
         .line_item(line().build().unwrap())
@@ -568,7 +563,7 @@ fn document_tax_order_and_optional_accounting_total_are_preserved() {
 #[test]
 fn utc_and_ast_clock_values_survive_import_including_midnight() {
     let xml = builder()
-        .issue_datetime("2024-01-01T01:30:00Z")
+        .issue_datetime("2024-01-01T01:30:00Z".parse().unwrap())
         .line_item(line().build().unwrap())
         .billing_reference(
             OriginalInvoiceRef::new("advance")
@@ -597,8 +592,8 @@ fn utc_and_ast_clock_values_survive_import_including_midnight() {
         parsed.data().issue_datetime().as_str(),
         "2023-12-31T22:30:00Z"
     );
-    assert_eq!(parsed.data().issue_date(), "2024-01-01");
-    assert_eq!(parsed.data().issue_time(), "01:30:00");
+    assert_eq!(parsed.data().issue_date().as_str(), "2024-01-01");
+    assert_eq!(parsed.data().issue_time().as_str(), "01:30:00");
     assert_eq!(
         InvoiceTime::parse("24:00:00Z").unwrap().as_str(),
         "24:00:00Z"
@@ -629,8 +624,8 @@ fn utc_and_ast_clock_values_survive_import_including_midnight() {
                 format!("{date}T21:00:00Z")
             };
             assert_eq!(parsed.data().issue_datetime().as_str(), expected);
-            assert_eq!(parsed.data().issue_date(), date);
-            assert_eq!(parsed.data().issue_time(), time);
+            assert_eq!(parsed.data().issue_date().as_str(), date);
+            assert_eq!(parsed.data().issue_time().as_str(), time);
             let output = parsed.to_xml().unwrap();
             assert_eq!(leaves(&source), leaves(&output));
             Validator::new().validate_xml(&output).unwrap();
@@ -723,7 +718,12 @@ fn malformed_optional_prices_and_buyer_identity_are_rejected() {
                 .build()
                 .unwrap(),
         )
-        .buyer(Buyer::new("Buyer".into(), None, Some("301121971500003".into()), None).unwrap())
+        .buyer(Buyer::new(
+            "Buyer",
+            None,
+            Some("301121971500003".parse().unwrap()),
+            None,
+        ))
         .build()
         .unwrap()
         .to_xml()

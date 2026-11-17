@@ -165,7 +165,7 @@ pub mod ffi {
             boundary(|| {
                 let mut r = inv_core::OriginalInvoiceRef::new(text(id)?);
                 if let Some(v) = optional_text(uuid)? {
-                    r = r.with_uuid(v);
+                    r = r.with_uuid(inv_core::InvoiceUuid::parse(v).map_err(core_error)?);
                 }
                 if let Some(v) = optional_text(date)? {
                     r = r.with_issue_date(inv_core::InvoiceDate::parse(v).map_err(core_error)?);
@@ -878,13 +878,14 @@ pub mod ffi {
             scheme: Option<&DiplomatStr>,
         ) -> Result<(), Box<BindingError>> {
             boundary(|| {
-                let buyer = inv_core::Buyer::new(
-                    text(name)?.into(),
-                    None,
-                    optional_text(vat_id)?,
-                    Self::other(other_id, scheme)?,
-                )
-                .map_err(core_error)?;
+                let name = text(name)?;
+                let vat_id = optional_text(vat_id)?;
+                let other = Self::other(other_id, scheme)?;
+                let vat_id = vat_id
+                    .map(inv_core::VatId::parse)
+                    .transpose()
+                    .map_err(core_error)?;
+                let buyer = inv_core::Buyer::new(name, None, vat_id, other);
                 self.update(|b| b.buyer(buyer))
             })
         }
@@ -1038,11 +1039,14 @@ pub mod ffi {
                         if let Some(id) = original_id {
                             let mut original = inv_core::OriginalInvoiceRef::new(text(id)?);
                             if let Some(v) = original_uuid {
-                                original = original.with_uuid(text(v)?);
+                                original = original.with_uuid(
+                                    inv_core::InvoiceUuid::parse(text(v)?).map_err(core_error)?,
+                                );
                             }
                             if let Some(v) = original_date {
-                                original =
-                                    original.with_issue_date_str(text(v)?).map_err(core_error)?;
+                                original = original.with_issue_date(
+                                    inv_core::InvoiceDate::parse(text(v)?).map_err(core_error)?,
+                                );
                             }
                             billing = Some(original);
                         } else if original_uuid.is_some() || original_date.is_some() {
@@ -1099,21 +1103,19 @@ pub mod ffi {
         }
         pub fn set_uuid(&mut self, value: &DiplomatStr) -> Result<(), Box<BindingError>> {
             boundary(|| {
-                let value = text(value)?;
+                let value = inv_core::InvoiceUuid::parse(text(value)?).map_err(core_error)?;
                 self.update(|b| b.uuid(value))
             })
         }
         pub fn set_issue_datetime(&mut self, value: &DiplomatStr) -> Result<(), Box<BindingError>> {
             boundary(|| {
-                let value = text(value)?;
-                inv_core::InvoiceTimestamp::parse(value).map_err(core_error)?;
+                let value = inv_core::InvoiceTimestamp::parse(text(value)?).map_err(core_error)?;
                 self.update(|b| b.issue_datetime(value))
             })
         }
         pub fn set_currency(&mut self, value: &DiplomatStr) -> Result<(), Box<BindingError>> {
             boundary(|| {
-                let value = text(value)?;
-                inv_core::CurrencyCode::parse(value).map_err(core_error)?;
+                let value = inv_core::CurrencyCode::parse(text(value)?).map_err(core_error)?;
                 self.update(|b| b.currency(value))
             })
         }
@@ -1122,7 +1124,7 @@ pub mod ffi {
             value: &DiplomatStr,
         ) -> Result<(), Box<BindingError>> {
             boundary(|| {
-                let value = text(value)?;
+                let value = inv_core::InvoiceHash::parse(text(value)?).map_err(core_error)?;
                 self.update(|b| b.previous_invoice_hash(value))
             })
         }
@@ -1206,13 +1208,14 @@ pub mod ffi {
         ) -> Result<(), Box<BindingError>> {
             boundary(|| {
                 let other = Self::other(other_id, scheme)?;
+                let name = text(name)?;
+                let vat_id = inv_core::VatId::parse(text(vat_id)?).map_err(core_error)?;
                 let seller = inv_core::Party::<inv_core::SellerRole>::new(
-                    text(name)?.into(),
+                    name,
                     address.0.clone(),
-                    text(vat_id)?,
+                    vat_id,
                     other,
-                )
-                .map_err(core_error)?;
+                );
                 self.update(|b| b.seller(seller))
             })
         }
@@ -1226,13 +1229,17 @@ pub mod ffi {
         ) -> Result<(), Box<BindingError>> {
             boundary(|| {
                 let other = Self::other(other_id, scheme)?;
+                let name = text(name)?;
+                let vat_id = optional_text(vat_id)?
+                    .map(inv_core::VatId::parse)
+                    .transpose()
+                    .map_err(core_error)?;
                 let buyer = inv_core::Party::<inv_core::BuyerRole>::new(
-                    text(name)?.into(),
+                    name,
                     address.0.clone(),
-                    optional_text(vat_id)?,
+                    vat_id,
                     other,
-                )
-                .map_err(core_error)?;
+                );
                 self.update(|b| b.buyer(buyer))
             })
         }
@@ -1365,7 +1372,11 @@ pub mod ffi {
             boundary(|| write(self.get()?.signed_properties().signed_props_hash(), out))
         }
         pub fn signing_time(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
-            boundary(|| write(self.get()?.signed_properties().signing_time(), out))
+            boundary(|| {
+                // The exported string keeps the XAdES form, without the `Z` suffix.
+                let time = self.get()?.signed_properties().signing_time();
+                write(time.as_str().trim_end_matches('Z'), out)
+            })
         }
         pub fn zatca_key_signature(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
             boundary(|| {

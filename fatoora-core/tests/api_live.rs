@@ -260,7 +260,7 @@ async fn clear_invoice_with_live_pcsid() {
         };
 
         let seller = Party::<SellerRole>::new(
-            "Acme Inc".into(),
+            "Acme Inc",
             Address {
                 province: None,
                 country_code: CountryCode::parse("SAU").expect("country code"),
@@ -272,10 +272,9 @@ async fn clear_invoice_with_live_pcsid() {
                 postal_code: "12222".into(),
                 district: Some("Olaya".into()),
             },
-            "399999999900003",
+            "399999999900003".parse().unwrap(),
             Some(OtherId::with_scheme("7003339333", "CRN")),
-        )
-        .expect("valid seller");
+        );
 
         let line_items = vec![
             LineItem::new(
@@ -292,12 +291,10 @@ async fn clear_invoice_with_live_pcsid() {
         let mut builder = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Standard));
         builder = builder
             .id("INV-0-1")
-            .uuid("8e6000cf-1a98-4174-b3e7-b5d5954bc10d")
-            .issue_datetime("2024-01-01T12:30:00Z")
-            .currency("SAR")
-            .previous_invoice_hash(
-                "NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ==",
-            )
+            .uuid("8e6000cf-1a98-4174-b3e7-b5d5954bc10d".parse().unwrap())
+            .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+            .currency("SAR".parse().unwrap())
+            .previous_invoice_hash("NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ==".parse().unwrap())
             .invoice_counter(0)
             .seller(seller)
             .payment_means_code("10")

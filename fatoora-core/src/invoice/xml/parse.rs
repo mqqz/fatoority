@@ -8,8 +8,8 @@ use crate::invoice::sign::SignedProperties;
 use crate::invoice::xml::constants::{DS_NS, XADES_NS};
 use crate::invoice::{
     Address, CountryCode, CurrencyCode, FinalizedInvoice, InvoiceBuilder, InvoiceDate,
-    InvoiceFlags, InvoiceSubType, InvoiceTimestamp, InvoiceType, LineItem, OriginalInvoiceRef,
-    OtherId, Party, SellerRole, SignedInvoice, VatCategory,
+    InvoiceFlags, InvoiceHash, InvoiceSubType, InvoiceTimestamp, InvoiceType, InvoiceUuid,
+    LineItem, OriginalInvoiceRef, OtherId, Party, SellerRole, SignedInvoice, VatCategory, VatId,
 };
 use base64ct::{Base64, Encoding};
 use chrono::{NaiveDateTime, NaiveTime};
@@ -195,10 +195,10 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
     let mut builder = InvoiceBuilder::new(invoice_type);
     builder = builder
         .id(id)
-        .uuid(uuid)
-        .issue_datetime(issue_datetime)
-        .currency(currency_code.as_str())
-        .previous_invoice_hash(previous_invoice_hash)
+        .uuid(InvoiceUuid::parse(uuid)?)
+        .issue_datetime(InvoiceTimestamp::parse(issue_datetime)?)
+        .currency(currency_code.clone())
+        .previous_invoice_hash(InvoiceHash::parse(previous_invoice_hash)?)
         .invoice_counter(invoice_counter)
         .seller(seller)
         .vat_category(vat_category)
@@ -956,7 +956,7 @@ fn parse_signed_properties(doc: &Document<'_>) -> Result<SignedProperties, Parse
             field: "SigningTime",
             value: format!("{signing_time} ({e:?})"),
         })?;
-    let signing_time = signing_time.format("%Y-%m-%dT%H:%M:%S").to_string();
+    let signing_time = InvoiceTimestamp::from_naive_utc(signing_time);
 
     let cert_hash = text_required(
         nav::signed_properties(ctx)
@@ -1002,7 +1002,7 @@ fn parse_signed_properties(doc: &Document<'_>) -> Result<SignedProperties, Parse
     )?;
 
     Ok(SignedProperties {
-        invoice_hash,
+        invoice_hash: InvoiceHash::parse(invoice_hash)?,
         signature,
         public_key,
         issuer,
@@ -1043,7 +1043,7 @@ fn parse_reference(node: Element<'_, '_>) -> Result<OriginalInvoiceRef, ParseErr
         "BillingReferenceID",
     )?);
     if let Some(uuid) = node.basic("UUID").content() {
-        reference = reference.with_uuid(uuid);
+        reference = reference.with_uuid(InvoiceUuid::parse(uuid)?);
     }
     if let Some(date) = node.basic("IssueDate").content() {
         reference = reference.with_issue_date(InvoiceDate::parse(&date).map_err(|_| {
@@ -1079,7 +1079,7 @@ fn parse_seller(ctx: &Element<'_, '_>) -> Result<Party<SellerRole>, ParseError> 
         "SellerVAT",
     )?;
     let address = parse_address(seller, false)?;
-    let mut result = Party::<SellerRole>::new(name, address, vat, None)?;
+    let mut result = Party::<SellerRole>::new(name, address, VatId::parse(vat)?, None);
     for id in parse_party_identifiers(seller, "SellerID")? {
         result = result.identifier(id);
     }
@@ -1126,9 +1126,9 @@ fn parse_buyer(ctx: Element<'_, '_>) -> Result<Option<crate::invoice::Buyer>, Pa
         } else {
             None
         },
-        vat,
+        vat.map(VatId::parse).transpose()?,
         None,
-    )?;
+    );
     for id in parse_party_identifiers(party, "BuyerID")? {
         result = result.identifier(id);
     }

@@ -110,7 +110,7 @@ fn regenerated_compliant_fixtures_retain_business_rule_compliance() {
                 let invoice = parse_finalized_invoice_xml(&source).unwrap();
                 let options = ZatcaValidationOptions {
                     evaluated_at: Some("2026-10-18T12:00:00Z".parse().unwrap()),
-                    previous_invoice_hash: Some(invoice.data().previous_invoice_hash().into()),
+                    previous_invoice_hash: Some(invoice.data().previous_invoice_hash().to_string()),
                 };
                 let original = Validator::new().validate_zatca(&source, &options).unwrap();
                 let errors = |report: &fatoora_core::invoice::validation::ZatcaValidationReport| -> Vec<String> {

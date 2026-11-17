@@ -2011,7 +2011,7 @@ mod tests {
 
     pub(super) fn build_signed_invoice(invoice_type: InvoiceType) -> SignedInvoice {
         let seller = Party::<SellerRole>::new(
-            "Acme Inc".into(),
+            "Acme Inc",
             Address {
                 province: None,
                 country_code: CountryCode::parse("SAU").expect("country code"),
@@ -2023,10 +2023,9 @@ mod tests {
                 postal_code: "12222".into(),
                 district: None,
             },
-            "301121971500003",
+            "301121971500003".parse().unwrap(),
             None,
-        )
-        .expect("seller");
+        );
 
         let line_item = LineItem::new(
             "Item",
@@ -2041,10 +2040,10 @@ mod tests {
         let mut builder = InvoiceBuilder::new(invoice_type);
         builder = builder
             .id("INV-TEST-1")
-            .uuid("uuid-test-1")
-            .issue_datetime("2024-01-01T12:30:00Z")
-            .currency("SAR")
-            .previous_invoice_hash("hash")
+            .uuid("uuid-test-1".parse().unwrap())
+            .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+            .currency("SAR".parse().unwrap())
+            .previous_invoice_hash("hash".parse().unwrap())
             .invoice_counter(0)
             .seller(seller)
             .payment_means_code("10")

@@ -124,8 +124,8 @@ let advance = LineItem::builder()
     .vat_rate("15".parse()?)
     .document_reference(
         OriginalInvoiceRef::new("PRE-1001")
-            .with_uuid("b2a43c49-3aab-4e3b-9d67-0da45a5e33cc")
-            .with_issue_date_str("2026-10-25")?
+            .with_uuid("b2a43c49-3aab-4e3b-9d67-0da45a5e33cc".parse()?)
+            .with_issue_date("2026-10-25".parse()?)
             .with_issue_time(InvoiceTime::parse("09:00:00Z")?)
             .with_document_type_code("386"),
     )

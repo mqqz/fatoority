@@ -30,6 +30,8 @@ bindings do not change yet.
 - `invoice::hash_xml(xml)`, returning the invoice hash as an `InvoiceHash`
   (the base64 SHA-256 of the canonicalised invoice, ready to pass on as the
   next invoice's previous invoice hash).
+- `AsRef<str>`, `FromStr`, `TryFrom<&str>` and `TryFrom<String>` for
+  `InvoiceTime`, matching the other validated wrappers.
 
 ### Changed
 
@@ -73,6 +75,37 @@ For the status getters, compare with the enum (`Some(&ReportingStatus::Reported)
 or call `.map(ReportingStatus::as_str)` for the previous `Option<&str>`. The JSON
 wire format and the `fatoora-ffi` getters, which still return text, are unchanged.
 
+Typed inputs and getters: parse strings with the wrapper's `parse`, `FromStr`
+or `TryFrom<&str>` (for example `"SAR".parse()?`). Invalid values now fail
+when the wrapper is parsed instead of in `InvoiceBuilder::build`, so `build`
+reports these four fields only as missing.
+
+- `InvoiceBuilder::uuid` takes `InvoiceUuid` (was `impl Into<String>`).
+- `InvoiceBuilder::issue_datetime` takes `InvoiceTimestamp` (was
+  `impl Into<String>`).
+- `InvoiceBuilder::currency` takes `CurrencyCode` (was `impl Into<String>`).
+- `InvoiceBuilder::previous_invoice_hash` takes `InvoiceHash` (was
+  `impl Into<String>`).
+- `InvoiceData::uuid` returns `&InvoiceUuid` (was `&str`).
+- `InvoiceData::issue_date` returns `InvoiceDate` (was `&str`).
+- `InvoiceData::issue_time` returns `InvoiceTime` (was `&str`).
+- `InvoiceData::previous_invoice_hash` returns `&InvoiceHash` (was `&str`).
+- `SignedInvoice::uuid` returns `&InvoiceUuid` (was `&str`).
+- `SignedInvoice::invoice_hash` and `SignedProperties::invoice_hash` return
+  `&InvoiceHash` (was `&str`).
+- `SignedProperties::signing_time` returns `&InvoiceTimestamp` (was `&str`).
+  Its `as_str()` is the canonical `YYYY-MM-DDTHH:MM:SSZ` form; the XAdES
+  `SigningTime` element in the XML is unchanged and still has no `Z`.
+- `OriginalInvoiceRef::with_uuid` takes `InvoiceUuid` (was
+  `impl Into<String>`), and `OriginalInvoiceRef::uuid` returns
+  `Option<&InvoiceUuid>` (was `Option<&str>`).
+- `Seller::new` (`Party::<SellerRole>::new`) takes `name: impl Into<String>`
+  and `vat_id: VatId` (was `String` and `impl Into<String>`) and returns
+  `Seller` (was `Result<Seller, InvoiceError>`); it can no longer fail.
+- `Buyer::new` (`Party::<BuyerRole>::new`) takes `name: impl Into<String>` and
+  `vat_id: Option<VatId>` (was `String` and `Option<String>`) and returns
+  `Buyer` (was `Result<Buyer, InvoiceError>`).
+
 ### Deprecated
 
 - `EnvironmentType`, `InvoiceTotalsData`, `ZatcaClient::{post_csr_for_ccsid,
@@ -91,6 +124,8 @@ wire format and the `fatoora-ffi` getters, which still return text, are unchange
 
 - `InvoiceData::note()`, which returned only the first note. Use
   `notes().first()`.
+- `OriginalInvoiceRef::with_issue_date_str`. Use
+  `with_issue_date(InvoiceDate::parse(date)?)` or `with_issue_date(date.parse()?)`.
 
 ## [0.5.1] - 2026-11-17
 

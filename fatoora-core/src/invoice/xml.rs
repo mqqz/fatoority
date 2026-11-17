@@ -478,7 +478,7 @@ impl<'a> Serialize for InvoiceDocumentReferenceXml<'a> {
         let mut st = s.serialize_struct("cac:InvoiceDocumentReference", 0)?;
         st.serialize_field("cbc:ID", self.0.id())?;
         if let Some(uuid) = self.0.uuid() {
-            st.serialize_field("cbc:UUID", uuid)?;
+            st.serialize_field("cbc:UUID", uuid.as_str())?;
         }
         if let Some(issue_date) = self.0.issue_date() {
             st.serialize_field("cbc:IssueDate", issue_date.as_str())?;
@@ -1363,9 +1363,9 @@ impl<'a, T: InvoiceView + ?Sized> Serialize for InvoiceXml<'a, T> {
         // ---- identifiers & issue info ----
         root.serialize_field("cbc:ProfileID", "reporting:1.0")?;
         root.serialize_field("cbc:ID", &data.id)?;
-        root.serialize_field("cbc:UUID", &data.uuid)?;
-        root.serialize_field("cbc:IssueDate", data.issue_date())?;
-        root.serialize_field("cbc:IssueTime", data.issue_time())?;
+        root.serialize_field("cbc:UUID", data.uuid().as_str())?;
+        root.serialize_field("cbc:IssueDate", data.issue_date().as_str())?;
+        root.serialize_field("cbc:IssueTime", data.issue_time().as_str())?;
 
         // ---- invoice type ----
         root.serialize_field(
@@ -1403,7 +1403,9 @@ impl<'a, T: InvoiceView + ?Sized> Serialize for InvoiceXml<'a, T> {
         )?;
         root.serialize_field(
             "cac:AdditionalDocumentReference",
-            &AdditionalDocumentReferenceXml::PreviousInvoiceHash(&data.previous_invoice_hash),
+            &AdditionalDocumentReferenceXml::PreviousInvoiceHash(
+                data.previous_invoice_hash.as_str(),
+            ),
         )?;
         if let Some(qr) = view.qr_code() {
             root.serialize_field(
@@ -1569,7 +1571,7 @@ mod tests {
     #[test]
     fn test_invoice_xml_serialization() {
         let seller = Party::<SellerRole>::new(
-            "Acme Inc".into(),
+            "Acme Inc",
             Address {
                 province: None,
                 country_code: CountryCode::parse("SAU").expect("country code"),
@@ -1581,10 +1583,9 @@ mod tests {
                 postal_code: "12222".into(),
                 district: None,
             },
-            "301121971500003",
+            "301121971500003".parse().unwrap(),
             None,
-        )
-        .expect("valid seller");
+        );
 
         let line_item = LineItem::new(
             "Item",
@@ -1599,10 +1600,10 @@ mod tests {
         let mut builder = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified));
         builder = builder
             .id("INV-1")
-            .uuid("uuid-123")
-            .issue_datetime("2024-01-01T12:30:00Z")
-            .currency("SAR")
-            .previous_invoice_hash("hash")
+            .uuid("uuid-123".parse().unwrap())
+            .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+            .currency("SAR".parse().unwrap())
+            .previous_invoice_hash("hash".parse().unwrap())
             .invoice_counter(0)
             .seller(seller)
             .payment_means_code("10")
@@ -1676,10 +1677,10 @@ mod tests {
             );
         let invoice = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified))
             .id("writer-test")
-            .uuid("writer-test")
-            .issue_datetime("2024-01-01T12:30:00Z")
-            .currency("SAR")
-            .previous_invoice_hash("hash")
+            .uuid("writer-test".parse().unwrap())
+            .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+            .currency("SAR".parse().unwrap())
+            .previous_invoice_hash("hash".parse().unwrap())
             .invoice_counter(1)
             .seller(original.data().seller().clone())
             .payment_means_code("10")
