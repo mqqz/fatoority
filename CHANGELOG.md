@@ -12,6 +12,11 @@ bindings do not change yet.
   `CsidCredentials<Compliance>` and `CsidCredentials<Production>`.
 - `impl FromStr for CsrProperties` (`text.parse::<CsrProperties>()`) and
   `CsrProperties::from_file(path)`.
+- `fatoora_core::api::{ReportingStatus, ClearanceStatus, ValidationStatus,
+  MessageType}`: non-exhaustive enums for ZATCA response status values. Each
+  has an `Other(String)` variant that keeps unrecognized values verbatim,
+  `as_str()`, `Display`, infallible `From<&str>`/`From<String>`/`FromStr`, and
+  serializes as the plain wire string.
 
 ### Changed
 
@@ -21,6 +26,24 @@ bindings do not change yet.
   `prepare_post_csr_for_ccsid`/`prepare_post_ccsid_for_pcsid` are renamed
   `prepare_request_compliance_csid`/`prepare_request_production_csid`.
 - `invoice::InvoiceTotalsData` is renamed `invoice::InvoiceTotals`.
+
+### Changed (breaking)
+
+These getters change return type in place, so they have no deprecation period.
+Compare with the enum (`Some(&ReportingStatus::Reported)`) or call
+`.map(ReportingStatus::as_str)` for the previous `Option<&str>`. The JSON wire
+format and the `fatoora-ffi` getters, which still return text, are unchanged.
+
+- `ValidationResponse::reporting_status()` returns `Option<&ReportingStatus>`
+  (was `Option<&str>`).
+- `ValidationResponse::clearance_status()` returns `Option<&ClearanceStatus>`
+  (was `Option<&str>`).
+- `ValidationResults::status()` returns `Option<&ValidationStatus>` (was
+  `Option<&str>`).
+- `ValidationMessage::message_type()` returns `Option<&MessageType>` (was
+  `Option<&str>`).
+- `ValidationMessage::status()` returns `Option<&ValidationStatus>` (was
+  `Option<&str>`).
 
 ### Deprecated
 

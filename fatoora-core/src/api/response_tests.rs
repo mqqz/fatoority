@@ -345,3 +345,173 @@ async fn native_csid_body_read_failures_keep_legacy_classification() {
         }
     }
 }
+
+fn all_messages(results: &ValidationResults) -> Vec<&ValidationMessage> {
+    let info: Vec<&ValidationMessage> = match results.info_messages() {
+        MessageList::One(message) => vec![message],
+        MessageList::Many(messages) => messages.iter().collect(),
+        MessageList::Empty => Vec::new(),
+    };
+    info.into_iter()
+        .chain(results.warning_messages())
+        .chain(results.error_messages())
+        .collect()
+}
+
+#[test]
+fn status_enums_parse_every_value_in_the_live_capture() {
+    let capture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../tests/fixtures/qr-correctness/development-api.json"
+    ))
+    .unwrap();
+    let mut seen = std::collections::BTreeSet::new();
+    for (name, case) in capture["cases"].as_object().unwrap() {
+        let response: ValidationResponse =
+            serde_json::from_value(case["response"].clone()).unwrap();
+        let reporting = response.reporting_status();
+        let clearance = response.clearance_status();
+        assert!(
+            reporting.is_some() != clearance.is_some(),
+            "{name}: exactly one of reporting/clearance status"
+        );
+        if let Some(status) = reporting {
+            assert!(!matches!(status, ReportingStatus::Other(_)), "{name}");
+            seen.insert(status.to_string());
+        }
+        if let Some(status) = clearance {
+            assert!(!matches!(status, ClearanceStatus::Other(_)), "{name}");
+            seen.insert(status.to_string());
+        }
+        let results = response.validation_results();
+        let status = results.status().expect("validation status");
+        assert!(!matches!(status, ValidationStatus::Other(_)), "{name}");
+        seen.insert(format!("results:{status}"));
+        for message in all_messages(results) {
+            let kind = message.message_type().expect("message type");
+            let status = message.status().expect("message status");
+            assert!(!matches!(kind, MessageType::Other(_)), "{name}: {kind}");
+            assert!(!matches!(status, ValidationStatus::Other(_)), "{name}");
+            seen.insert(format!("type:{kind}/status:{status}"));
+        }
+        // Serializing reproduces the captured wire values.
+        let reserialized = serde_json::to_value(&response).unwrap();
+        for field in ["reportingStatus", "clearanceStatus"] {
+            if let Some(value) = case["response"].get(field) {
+                assert_eq!(&reserialized[field], value, "{name}: {field}");
+            }
+        }
+        assert_eq!(
+            reserialized["validationResults"]["status"],
+            case["response"]["validationResults"]["status"]
+        );
+    }
+    for expected in [
+        "REPORTED",
+        "NOT_REPORTED",
+        "CLEARED",
+        "results:PASS",
+        "results:WARNING",
+        "results:ERROR",
+        "type:INFO/status:PASS",
+        "type:WARNING/status:WARNING",
+        "type:ERROR/status:ERROR",
+    ] {
+        assert!(seen.contains(expected), "capture lacks {expected}");
+    }
+}
+
+#[test]
+fn status_enums_map_known_wire_values() {
+    for (wire, status) in [
+        ("REPORTED", ReportingStatus::Reported),
+        ("NOT_REPORTED", ReportingStatus::NotReported),
+    ] {
+        assert_eq!(ReportingStatus::from(wire), status);
+        assert_eq!(status.as_str(), wire);
+    }
+    for (wire, status) in [
+        ("CLEARED", ClearanceStatus::Cleared),
+        ("NOT_CLEARED", ClearanceStatus::NotCleared),
+    ] {
+        assert_eq!(ClearanceStatus::from(wire.to_owned()), status);
+        assert_eq!(status.to_string(), wire);
+    }
+    for (wire, status) in [
+        ("PASS", ValidationStatus::Pass),
+        ("WARNING", ValidationStatus::Warning),
+        ("ERROR", ValidationStatus::Error),
+    ] {
+        assert_eq!(ValidationStatus::from(wire), status);
+        assert_eq!(status.as_str(), wire);
+    }
+    for (wire, kind) in [
+        ("INFO", MessageType::Info),
+        ("WARNING", MessageType::Warning),
+        ("ERROR", MessageType::Error),
+    ] {
+        assert_eq!(wire.parse::<MessageType>(), Ok(kind.clone()));
+        assert_eq!(kind.to_string(), wire);
+    }
+}
+
+#[test]
+fn status_enums_preserve_unknown_values() {
+    for raw in ["WARN", "reported", "", " CLEARED", "NEW_STATUS"] {
+        let reporting = ReportingStatus::from(raw);
+        let clearance = ClearanceStatus::from(raw.to_owned());
+        let validation: ValidationStatus = raw.parse().unwrap();
+        let kind = MessageType::from(raw);
+        assert_eq!(reporting, ReportingStatus::Other(raw.into()));
+        assert_eq!(clearance, ClearanceStatus::Other(raw.into()));
+        assert_eq!(validation, ValidationStatus::Other(raw.into()));
+        assert_eq!(kind, MessageType::Other(raw.into()));
+        assert_eq!(reporting.as_str(), raw);
+        assert_eq!(clearance.to_string(), raw);
+        assert_eq!(validation.as_str(), raw);
+        assert_eq!(kind.to_string(), raw);
+    }
+}
+
+#[test]
+fn status_enums_serde_round_trip_as_plain_strings() {
+    let body = r#"{"clearedInvoice":null,"validationResults":{"infoMessages":{"type":"NOTICE","code":"c","category":null,"message":null,"status":"PASS"},"warningMessages":[{"type":"WARNING","code":null,"category":null,"message":null,"status":"WARN"}],"errorMessages":[],"status":"PARTIAL"},"reportingStatus":"QUEUED","clearanceStatus":"NOT_CLEARED","qrSellertStatus":null,"qrBuyertStatus":null}"#;
+    let response: ValidationResponse = serde_json::from_str(body).unwrap();
+    assert_eq!(
+        response.reporting_status(),
+        Some(&ReportingStatus::Other("QUEUED".into()))
+    );
+    assert_eq!(
+        response.clearance_status(),
+        Some(&ClearanceStatus::NotCleared)
+    );
+    let results = response.validation_results();
+    assert_eq!(
+        results.status(),
+        Some(&ValidationStatus::Other("PARTIAL".into()))
+    );
+    let MessageList::One(info) = results.info_messages() else {
+        panic!("expected one info message");
+    };
+    assert_eq!(
+        info.message_type(),
+        Some(&MessageType::Other("NOTICE".into()))
+    );
+    assert_eq!(info.status(), Some(&ValidationStatus::Pass));
+    let warning = &results.warning_messages()[0];
+    assert_eq!(warning.message_type(), Some(&MessageType::Warning));
+    assert_eq!(
+        warning.status(),
+        Some(&ValidationStatus::Other("WARN".into()))
+    );
+    assert_eq!(serde_json::to_string(&response).unwrap(), body);
+
+    for status in [ValidationStatus::Error, ValidationStatus::Other("x".into())] {
+        let json = serde_json::to_string(&status).unwrap();
+        assert_eq!(json, format!("\"{}\"", status.as_str()));
+        assert_eq!(
+            serde_json::from_str::<ValidationStatus>(&json).unwrap(),
+            status
+        );
+    }
+    assert!(serde_json::from_str::<ReportingStatus>("1").is_err());
+}

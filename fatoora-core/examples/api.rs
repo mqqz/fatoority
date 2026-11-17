@@ -34,6 +34,9 @@ pub async fn main() {
         .unwrap();
 
     response.ensure_accepted().expect("reporting accepted");
-    assert_eq!(response.reporting_status(), Some("REPORTED"));
+    assert_eq!(
+        response.reporting_status(),
+        Some(&fatoora_core::api::ReportingStatus::Reported)
+    );
 }
 // --8<-- [end:example]

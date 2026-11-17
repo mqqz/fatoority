@@ -156,14 +156,20 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     | `response.outcome()` | `InvoiceOutcome::{Accepted, Rejected, Unknown}` |
     | `response.ensure_accepted()` | `Result<(), ZatcaError>` |
     | `response.validation_results()` | `&ValidationResults` |
-    | `response.reporting_status()` / `clearance_status()` / `qr_seller_status()` / `qr_buyer_status()` | `Option<&str>` |
+    | `response.reporting_status()` | `Option<&ReportingStatus>`: `Reported`, `NotReported`, `Other(String)` |
+    | `response.clearance_status()` | `Option<&ClearanceStatus>`: `Cleared`, `NotCleared`, `Other(String)` |
+    | `response.qr_seller_status()` / `qr_buyer_status()` | `Option<&str>` |
     | `response.cleared_invoice_base64()` | `Option<&str>` |
     | `response.cleared_invoice_xml()` | `Result<Option<String>, ZatcaError>` |
-    | `results.status()` | `Option<&str>` |
+    | `results.status()` | `Option<&ValidationStatus>`: `Pass`, `Warning`, `Error`, `Other(String)` |
     | `results.info_messages()` | `&MessageList`: `One`, `Many`, or `Empty` |
     | `results.warning_messages()` / `results.error_messages()` | `&[ValidationMessage]` |
-    | `message.message_type()` / `code()` / `category()` / `message()` / `status()` | `Option<&str>` |
+    | `message.message_type()` | `Option<&MessageType>`: `Info`, `Warning`, `Error`, `Other(String)` |
+    | `message.status()` | `Option<&ValidationStatus>` |
+    | `message.code()` / `category()` / `message()` | `Option<&str>` |
 
+    The status enums are non-exhaustive. A value they do not recognize is kept
+    verbatim in `Other`; `as_str()` and `Display` return the exact wire text.
     These getters borrow the response. Serializing and deserializing the response body
     does not preserve HTTP status or operation context; the deserialized outcome is
     `Unknown`. `ZatcaError::NotAccepted` retains the response. For HTTP failures,
