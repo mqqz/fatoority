@@ -1024,8 +1024,8 @@ class InvoiceBuilder(_Owned):
 
     def add_document_adjustment(self, charge: bool, value: Adjustment, category: VatCategory, rate: Decimal | str | int, exemption: TaxExemption = TaxExemption()) -> None:
         _flag(charge, "charge")
-        self._explicit_adjustments = True
         self._invoke("add_charge" if charge else "add_allowance", value, int(category), _decimal(rate), exemption._native_value())
+        self._explicit_adjustments = True
 
     def add_item(self, item: InvoiceLineItem) -> None:
         b = LineItemBuilder.new()
@@ -1105,8 +1105,8 @@ class InvoiceBuilder(_Owned):
             native = _call(native.with_percentage, _decimal(adjustment.base_amount), _decimal(adjustment.percentage))
         if adjustment.omitted_rate:
             native = _call(native.without_vat_rate)
-        self._explicit_adjustments = True
         self._invoke("add_adjustment", native)
+        self._explicit_adjustments = True
 
     def set_id(self, invoice_id: str) -> None:
         self._invoke("set_id", invoice_id)

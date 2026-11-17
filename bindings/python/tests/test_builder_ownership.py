@@ -92,6 +92,14 @@ def test_aggregate_setters_build_document_adjustments():
     with pytest.raises(ValueError):
         b.build()
 
+    # A failed explicit add leaves the builder free to use the aggregate setters.
+    b = builder()
+    b.add_line_item("item", 1, "PCE", 100, 15, VatCategory.STANDARD)
+    with pytest.raises(FfiError):
+        b.add_document_adjustment(False, Adjustment.amount(1), VatCategory.STANDARD, "NaN")
+    b.invoice_level_discount(1)
+    assert b.build().totals().allowance_total == Decimal("1")
+
     b = builder()
     b.add_line_item("a", 1, "PCE", 100, 15, VatCategory.STANDARD)
     b.add_line_item("b", 1, "PCE", 100, 5, VatCategory.STANDARD)
