@@ -3,8 +3,8 @@ use fatoora_core::invoice::xml::parse::{
     parse_signed_invoice_xml, parse_signed_invoice_xml_file,
 };
 use fatoora_core::invoice::{
-    Address, CountryCode, InvoiceBuilder, InvoiceSubType, InvoiceType, LineItem,
-    OriginalInvoiceRef, Party, SellerRole, VatCategory,
+    Address, Adjustment, CountryCode, DocumentAdjustment, InvoiceBuilder, InvoiceSubType,
+    InvoiceType, LineItem, OriginalInvoiceRef, Party, SellerRole, VatCategory,
 };
 use std::path::Path;
 
@@ -276,7 +276,7 @@ fn credit_note_serializes_billing_reference_and_reason() {
         .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(0)
         .seller(seller)
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
         .line_item(line_item);
     let invoice = builder.build().expect("build credit note");
@@ -317,7 +317,7 @@ fn debit_note_serializes_billing_reference_and_reason() {
         .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(0)
         .seller(seller)
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
         .line_item(line_item);
     let invoice = builder.build().expect("build debit note");
@@ -471,7 +471,7 @@ fn credit_note_serialization_preserves_whitespace_reason() {
         .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(0)
         .seller(seller)
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
         .line_item(line_item);
     let invoice = builder.build().expect("build credit note");
@@ -505,10 +505,16 @@ fn credit_note_allowance_discount_round_trip() {
         .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(0)
         .seller(seller)
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
-        .invoice_level_discount(fatoora_core::Decimal::parse("10.0").unwrap())
-        .allowance_reason("Discount")
+        .allowance(
+            DocumentAdjustment::new(
+                Adjustment::amount(fatoora_core::Decimal::parse("10.0").unwrap()),
+                VatCategory::Standard,
+                fatoora_core::Decimal::parse("15.0").unwrap(),
+            )
+            .reason("Discount"),
+        )
         .line_item(line_item);
     let invoice = builder.build().expect("build credit note");
 
@@ -567,10 +573,16 @@ fn debit_note_charge_serializes_allowance_charge() {
         .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(0)
         .seller(seller)
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
-        .invoice_level_charge(fatoora_core::Decimal::parse("7.5").unwrap())
-        .allowance_reason("Charge")
+        .charge(
+            DocumentAdjustment::new(
+                Adjustment::amount(fatoora_core::Decimal::parse("7.5").unwrap()),
+                VatCategory::Standard,
+                fatoora_core::Decimal::parse("15.0").unwrap(),
+            )
+            .reason("Charge"),
+        )
         .line_item(line_item);
     let invoice = builder.build().expect("build debit note");
 
@@ -615,10 +627,16 @@ fn debit_note_allowance_round_trip() {
         .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(0)
         .seller(seller)
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
-        .invoice_level_discount(fatoora_core::Decimal::parse("8.0").unwrap())
-        .allowance_reason("Adjustment")
+        .allowance(
+            DocumentAdjustment::new(
+                Adjustment::amount(fatoora_core::Decimal::parse("8.0").unwrap()),
+                VatCategory::Standard,
+                fatoora_core::Decimal::parse("15.0").unwrap(),
+            )
+            .reason("Adjustment"),
+        )
         .line_item(line_item);
     let invoice = builder.build().expect("build debit note");
 
@@ -676,7 +694,7 @@ fn credit_note_round_trip_preserves_original_ref_and_reason() {
         .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(0)
         .seller(seller)
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
         .line_item(line_item);
     let invoice = builder.build().expect("build credit note");

@@ -136,12 +136,23 @@ pub struct DocumentAdjustment {
     pub rate: Decimal,
     /// Exemption reason, for non-standard VAT categories.
     pub exemption: TaxExemption,
+    /// Omit the VAT rate (`cbc:Percent`) from XML; only valid for an out-of-scope
+    /// adjustment with a zero rate. Set it with [`omit_vat_rate`](Self::omit_vat_rate).
+    #[serde(default)]
+    pub omitted_rate: bool,
+    /// Number of identical `cac:TaxCategory` elements to emit, as used by the bundled SDK
+    /// fixtures. Must be in `1..=AllowanceCharge::MAX_TAX_CATEGORY_COUNT`; checked in `build`.
+    #[serde(default = "one_tax_category")]
+    pub tax_category_count: usize,
+}
+fn one_tax_category() -> usize {
+    1
 }
 impl DocumentAdjustment {
     pub(crate) fn into_entry(self, kind: AdjustmentKind) -> Result<AllowanceCharge> {
         Ok(AllowanceCharge {
-            omitted_rate: false,
-            tax_category_count: 1,
+            omitted_rate: self.omitted_rate,
+            tax_category_count: self.tax_category_count,
             kind,
             amount: self.adjustment.value()?,
             base_amount: self.adjustment.base_amount,
@@ -160,7 +171,29 @@ impl DocumentAdjustment {
             category,
             rate,
             exemption: TaxExemption::default(),
+            omitted_rate: false,
+            tax_category_count: 1,
         }
+    }
+    /// Omits the VAT rate (`cbc:Percent`) from XML.
+    ///
+    /// Only an out-of-scope adjustment with a zero rate may omit its rate;
+    /// [`InvoiceBuilder::build`](super::InvoiceBuilder::build) rejects any other combination.
+    pub fn omit_vat_rate(mut self) -> Self {
+        self.omitted_rate = true;
+        self
+    }
+    /// Returns `false` if the VAT rate (`cbc:Percent`) is omitted from XML.
+    pub fn has_vat_rate(&self) -> bool {
+        !self.omitted_rate
+    }
+    /// Sets how many identical `cac:TaxCategory` elements are emitted (default `1`).
+    ///
+    /// [`InvoiceBuilder::build`](super::InvoiceBuilder::build) rejects a count outside
+    /// `1..=`[`AllowanceCharge::MAX_TAX_CATEGORY_COUNT`].
+    pub fn tax_category_count(mut self, count: usize) -> Self {
+        self.tax_category_count = count;
+        self
     }
     /// Sets the free-text allowance/charge reason.
     pub fn reason(mut self, value: impl Into<String>) -> Self {
@@ -176,6 +209,31 @@ impl DocumentAdjustment {
     pub fn exemption(mut self, value: TaxExemption) -> Self {
         self.exemption = value;
         self
+    }
+}
+
+/// Converts a finalized entry back into a document adjustment.
+///
+/// The amount, base amount, percentage, reasons, VAT category and rate, exemption,
+/// omitted rate and tax category count are kept. The [`AdjustmentKind`] is not: pass the
+/// result to [`InvoiceBuilder::allowance`](super::InvoiceBuilder::allowance) or
+/// [`InvoiceBuilder::charge`](super::InvoiceBuilder::charge) according to `entry.kind`.
+impl From<AllowanceCharge> for DocumentAdjustment {
+    fn from(entry: AllowanceCharge) -> Self {
+        Self {
+            adjustment: Adjustment {
+                amount: Some(entry.amount),
+                base_amount: entry.base_amount,
+                percentage: entry.percentage,
+                reason: entry.reason,
+                reason_code: entry.reason_code,
+            },
+            category: entry.category,
+            rate: entry.rate,
+            exemption: entry.exemption,
+            omitted_rate: entry.omitted_rate,
+            tax_category_count: entry.tax_category_count,
+        }
     }
 }
 

@@ -351,7 +351,7 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
                 value: amount.to_string(),
             });
         }
-        builder = builder.adjustment(crate::invoice::AllowanceCharge {
+        let entry = crate::invoice::AllowanceCharge {
             omitted_rate: rate_text.is_none(),
             base_amount: adjustment
                 .basic("BaseAmount")
@@ -376,7 +376,11 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
             category,
             rate,
             exemption: parse_exemption(adjustment.aggregate("TaxCategory")),
-        });
+        };
+        builder = match entry.kind {
+            crate::invoice::AdjustmentKind::Allowance => builder.allowance(entry.into()),
+            crate::invoice::AdjustmentKind::Charge => builder.charge(entry.into()),
+        };
     }
     if let Some(code) = ctx.basic("TaxCurrencyCode").content() {
         let tax_currency = CurrencyCode::parse(code)?;

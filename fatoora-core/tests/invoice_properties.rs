@@ -3,8 +3,8 @@ mod common;
 use fatoora_core::Decimal;
 use fatoora_core::invoice::xml::parse::parse_finalized_invoice_xml;
 use fatoora_core::invoice::{
-    FinalizedInvoice, InvoiceBuilder, InvoiceFlags, InvoiceNote, InvoiceSubType, InvoiceType,
-    LineItem, OriginalInvoiceRef, VatCategory,
+    Adjustment, DocumentAdjustment, FinalizedInvoice, InvoiceBuilder, InvoiceFlags, InvoiceNote,
+    InvoiceSubType, InvoiceType, LineItem, OriginalInvoiceRef, VatCategory,
 };
 use proptest::prelude::*;
 use std::collections::BTreeMap;
@@ -124,15 +124,27 @@ fn build(
         .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(42)
         .seller(seller)
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .payment_instruction(text)
         .billing_reference(OriginalInvoiceRef::new("ORIGINAL"))
         .vat_category(category(selected))
         .flags(InvoiceFlags::from_bits(flags).unwrap())
-        .note(InvoiceNote::new("ar", text))
-        .invoice_level_discount(decimal(discount, 2))
-        .invoice_level_charge(decimal(charge, 2))
-        .allowance_reason(text);
+        .note(InvoiceNote::new("ar", text));
+    let vat_rate = Decimal::from(rate(selected) as i64);
+    let entry = |amount| {
+        DocumentAdjustment::new(
+            Adjustment::amount(decimal(amount, 2)),
+            category(selected),
+            vat_rate,
+        )
+        .reason(text)
+    };
+    // The reason is always present, so an allowance is always emitted, as the
+    // former aggregate setters did.
+    builder = builder.allowance(entry(discount));
+    if charge != 0 {
+        builder = builder.charge(entry(charge));
+    }
     for line in lines {
         builder = builder.line_item(
             LineItem::new(

@@ -297,7 +297,7 @@ async fn clear_invoice_with_live_pcsid() {
             .previous_invoice_hash("NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ==".parse().unwrap())
             .invoice_counter(0)
             .seller(seller)
-            .payment_means_code("10")
+            .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
             .vat_category(VatCategory::Standard);
         for item in line_items {
             builder = builder.line_item(item);

@@ -17,7 +17,7 @@ fn chained_builder_moves_owned_fields_into_invoice() {
         .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(1)
         .seller(source.data().seller().clone())
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
         .line_item(item)
         .build()
@@ -41,7 +41,7 @@ fn conditional_configuration_and_repeated_lines_keep_order() {
         .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(1)
         .seller(source.data().seller().clone())
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard);
     if let Some(id) = Some("INV-replaced") {
         builder = builder.id(id);

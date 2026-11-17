@@ -1,6 +1,6 @@
 use fatoora_core::invoice::{
     Address, CountryCode, InvoiceBuilder, InvoiceSubType, InvoiceType, LineItem, OtherId, Party,
-    SellerRole, VatCategory, VatId,
+    PaymentMeans, SellerRole, VatCategory, VatId,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .previous_invoice_hash("NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ==".parse()?)
         .invoice_counter(1)
         .seller(seller)
-        .payment_means_code("10")
+        .payment_means(PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
         .line_item(item)
         .build()?;

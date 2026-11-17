@@ -1606,7 +1606,7 @@ mod tests {
             .previous_invoice_hash("hash".parse().unwrap())
             .invoice_counter(0)
             .seller(seller)
-            .payment_means_code("10")
+            .payment_means(crate::invoice::PaymentMeans::new("10"))
             .vat_category(VatCategory::Standard)
             .line_item(line_item);
         let invoice = builder.build().expect("build invoice");
@@ -1683,11 +1683,11 @@ mod tests {
             .previous_invoice_hash("hash".parse().unwrap())
             .invoice_counter(1)
             .seller(original.data().seller().clone())
-            .payment_means_code("10")
+            .payment_means(crate::invoice::PaymentMeans::new("10"))
             .vat_category(VatCategory::Standard)
             .line_item(line)
             .delivery(delivery)
-            .adjustment(adjustment)
+            .charge(adjustment.into())
             .build()
             .unwrap();
         fn fails(value: impl Serialize, field: &'static str) {

@@ -183,6 +183,7 @@ fn incomplete_builder_reports_every_missing_field_to_bindings() {
 }
 
 #[test]
+#[allow(deprecated)] // covers the deprecated aggregate setters' field checks
 fn invalid_imported_line_reports_zero_based_locations_and_numeric_ranges() {
     use fatoora_core::invoice::validation::{ValidationLocation, ValidationReport};
     use fatoora_core::invoice::{InvoiceBuilder, InvoiceSubType, InvoiceType};
