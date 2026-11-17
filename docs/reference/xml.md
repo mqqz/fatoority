@@ -87,18 +87,18 @@ Choose your language for imports, exact calls, returns, and ownership behavior.
 
 === "JavaScript"
 
-    Import `FinalizedInvoice` and `SignedInvoice` from `fatoority`. These operations are synchronous and throw an `Error` with a `BindingError` cause on failure.
+    Import `FinalizedInvoice` and `SignedInvoice` from `fatoority`. These operations are synchronous and throw a `FatooraError` subclass on failure.
 
     ```javascript
     const finalized = FinalizedInvoice.fromXml(xml);
     const signed = SignedInvoice.fromXml(signedXml);
-    const unsignedText = finalized.xml();
-    const signedText = signed.xml();
+    const unsignedText = finalized.xml;
+    const signedText = signed.xml;
     const encoded = signed.toXmlBase64();
     const takenText = signed.intoXml();
     ```
 
-    Both `fromXml` methods expect a string and return their named invoice object. Every XML accessor returns a string. `intoXml()` consumes the signed invoice state; subsequent access fails. `xml()` and `toXmlBase64()` leave it available. Read a file using your host environment before passing its text to `fromXml`; filesystem parsing methods are not exposed in this binding. Finalized formatting is fixed to the default; signed output is exact stored text.
+    Both `fromXml` methods expect a string and return their named invoice object. The `xml` property and the XML methods are strings. `intoXml()` consumes the signed invoice state; subsequent access fails. Reading `xml` or calling `toXmlBase64()` leaves it available. Read a file using your host environment before passing its text to `fromXml`; filesystem parsing methods are not exposed in this binding. Finalized formatting is fixed to the default; signed output is exact stored text.
 
 === "C#"
 

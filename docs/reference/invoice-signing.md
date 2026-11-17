@@ -115,13 +115,13 @@ The signed computed hash equals the XML hash operation on `xml()`. Signed import
     | --- | --- |
     | `InvoiceSigner.fromPem(certPem: string, keyPem: string)` | `InvoiceSigner` |
     | `InvoiceSigner.fromDer(certDer: Array<number>, keyDer: Array<number>)` | `InvoiceSigner` |
-    | `signer.certificatePem()` | `string` |
+    | `signer.certificatePem` | `string` (property) |
     | `signer.certificateDer()` | `Bytes` |
     | `signer.signXml(xml: string)` | `string` |
     | `signer.sign(invoice: FinalizedInvoice)` | `SignedInvoice`; consumes invoice state |
     | `Xml.hash(xml: string)` | `string` |
 
-    `SignedInvoice` text getters: `xml()`, `toXmlBase64()`, `qrCode()`, `invoiceHash()`, `hash()`, `signature()`, `publicKey()`, `issuer()`, `serial()`, `certHash()`, `signedPropsHash()`, `signingTime()`. Each returns `string`. `zatcaKeySignature()` returns optional `Text`; read its `value()` to obtain text.
+    `SignedInvoice` string properties: `xml`, `qrCode`, `invoiceHash`, `hash`, `signature`, `publicKey`, `issuer`, `serial`, `certHash`, `signedPropsHash`, `signingTime`; `zatcaKeySignature` is a `string` or `null`. `toXmlBase64()` is a method returning `string`.
 
     Objects use garbage-collected cleanup. `Bytes.asSlice()` returns a copied number array. Native failures throw a `FatooraError` subclass; see [error handling](errors.md).
 

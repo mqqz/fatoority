@@ -104,7 +104,7 @@ mirrors the Rust report. Python keeps returning the JSON dictionary.
 | `ZatcaRuleSource` | `stylesheet`, `sha256` |
 | `ZatcaFinding` | nullable `assertion_site`, `layer` (`ValidationLayer`), `code`, `severity` (`Severity`), `message`, nullable `location_kind` (`ValidationLocationKind`: `Field`, `XPath`, `Xml`), nullable `location_path` for field and XPath locations, nullable `location_line` and `location_column` for XML coordinates |
 
-Names follow each language's convention (`isValid()`, the C# `IsValid` property, `fatoora_zatca_validation_report_is_valid`); Kotlin exposes the zero-argument value accessors as properties (`report.isValid`, `stage.status`), which Java reads as `isValid()` and `getStatus()`.
+Names follow each language's convention (the C# `IsValid` property, `fatoora_zatca_validation_report_is_valid`); Kotlin and the JavaScript `fatoority/raw` report expose the zero-argument value accessors as properties (`report.isValid`, `stage.status`), which Java reads as `isValid()` and `getStatus()`.
 Stage, status, and layer enums carry an `Unknown` variant for values added by a later core version.
 Child objects are independent snapshots and outlive the report.
 

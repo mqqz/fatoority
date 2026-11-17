@@ -85,6 +85,8 @@ The combined check covers all generators, including C# and Kotlin. It requires a
 
     Use the build script so optimization and artifact-size checks run consistently. The checks cover declarations, runtime behavior, browser loading and an installed npm package.
 
+    `scripts/generate_bindings.py` also runs `scripts/generate_js_facade.py`, which derives `bindings/js/members.mjs` (the property and text tables `patch.mjs` applies) and `bindings/js/raw.d.mts` (the adapted declarations) from the generated JavaScript. Change that script, not its output, to adjust which getters are properties.
+
 === "C#"
 
     Install the .NET SDK required by [`bindings/dotnet`](https://github.com/mqqz/fatoority/tree/main/bindings/dotnet), plus Rust and Python. Run:

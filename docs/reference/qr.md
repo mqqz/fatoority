@@ -39,7 +39,7 @@ The getter takes no arguments and leaves the signed invoice usable.
 
 === "JavaScript"
 
-    `SignedInvoice.qrCode()` returns a string.
+    The `SignedInvoice.qrCode` property is a string.
 
 === "C#"
 

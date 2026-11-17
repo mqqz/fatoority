@@ -337,7 +337,7 @@ for your integration requirements.
 For standard invoices, supply the required buyer data and use the clearance
 operation. The library accepts a `SignedInvoice` for that call; ZATCA clearance
 produces the document to deliver. Inspect `clearance_status`.
-On successful clearance, save `cleared_invoice_xml()` / `ClearedInvoiceXml()` /
-`clearedInvoiceXml()` and use the returned document for customer delivery. The
+On successful clearance, save `cleared_invoice_xml` / `ClearedInvoiceXml` /
+`clearedInvoiceXml` and use the returned document for customer delivery. The
 [API reference](../reference/api-client.md) explains those return types and the
 nullable cleared-document field.
