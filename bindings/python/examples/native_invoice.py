@@ -10,7 +10,7 @@ builder = (
     .set_currency("SAR")
     .set_previous_invoice_hash("hash")
     .set_invoice_counter(1)
-    .add_payment_means(PaymentMeans.new("10"))
+    .add_payment_means(PaymentMeans("10"))
     .set_vat_category(VatCategory.STANDARD)
     .set_seller("شركة الاختبار", country_code="SA", city="Riyadh", street="King Fahd",
                 building_number="1234", postal_code="12222", vat_id="399999999900003")

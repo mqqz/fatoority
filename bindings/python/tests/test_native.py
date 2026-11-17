@@ -17,7 +17,7 @@ def builder():
     b.set_previous_invoice_hash("hash")
     b.set_invoice_counter(1)
     b.set_currency("SAR")
-    b.add_payment_means(PaymentMeans.new("10"))
+    b.add_payment_means(PaymentMeans("10"))
     b.set_vat_category(VatCategory.STANDARD)
     b.set_seller(name="شركة الاختبار", vat_id="399999999900003", other_id="7003339333", other_id_scheme="CRN",
                  country_code="SA", city="Riyadh", street="King Fahd", building_number="1234", postal_code="12222", district="Olaya")
@@ -86,29 +86,37 @@ def test_float_bool_and_none_are_rejected(value):
     assert line(b).build().xml
 
 
+def counting(monkeypatch, invoice):
+    """Count native ``data``/``totals`` reads of ``invoice``."""
+    invoke = invoice._invoke
+    reads = []
+
+    def counted_invoke(name, *args):
+        if name in ("data", "totals"):
+            reads.append(name)
+        return invoke(name, *args)
+
+    monkeypatch.setattr(invoice, "_invoke", counted_invoke)
+    return reads
+
+
 @pytest.mark.parametrize("count", [1, 64])
-def test_line_items_uses_one_snapshot_and_preserves_values(monkeypatch, count):
+def test_invoice_data_is_read_once_and_cached(monkeypatch, count):
     b = builder()
     for index in range(count):
         b.add_line_item(description=f"Item {index}", quantity=1, unit_code="PCE",
                         unit_price=str(index + 1), vat_rate=15,
                         vat_category=VatCategory.STANDARD)
     invoice = b.build()
+    reads = counting(monkeypatch, invoice)
     expected = [invoice.line_item(i) for i in range(count)]
-    invoke = invoice._invoke
-    snapshots = 0
-
-    def counted_invoke(name, *args):
-        nonlocal snapshots
-        if name == "data":
-            snapshots += 1
-        return invoke(name, *args)
-
-    monkeypatch.setattr(invoice, "_invoke", counted_invoke)
     items = invoice.line_items
+    assert (invoice.id, invoice.seller.name, invoice.totals, invoice.adjustments) is not None
+    assert items == expected and items is not invoice.line_items
+    assert reads == ["data", "totals"], "invoice data must cross the FFI only once"
     invoice.close()
-    assert items == expected
-    assert snapshots == 1, "collection must clone the invoice only once"
+    with pytest.raises(InvalidInputError, match="closed"):
+        invoice.line_items
 
 
 @pytest.mark.parametrize("method,expected", [
@@ -120,16 +128,7 @@ def test_flag_queries_use_one_invoice_snapshot(monkeypatch, method, expected):
     b = builder()
     b.set_flags(1 | 4)
     invoice = line(b).build()
-    invoke = invoice._invoke
-    snapshots = 0
-
-    def counted_invoke(name, *args):
-        nonlocal snapshots
-        if name == "data":
-            snapshots += 1
-        return invoke(name, *args)
-
-    monkeypatch.setattr(invoice, "_invoke", counted_invoke)
+    reads = counting(monkeypatch, invoice)
     value = getattr(invoice, method)  # ``flags`` is a property, the ``is_*`` queries are methods
     assert (value() if callable(value) else value) == expected
-    assert snapshots == 1, "flag queries must clone the invoice only once"
+    assert reads.count("data") == 1, "flag queries must clone the invoice only once"

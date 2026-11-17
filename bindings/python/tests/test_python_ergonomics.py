@@ -57,18 +57,19 @@ def test_invoice_file_parsers_accept_path_like(tmp_path, as_path):
 
 def test_handle_reprs_show_identifying_fields():
     assert repr(Config(Environment.NON_PRODUCTION)) == "Config(env=Environment.NON_PRODUCTION)"
-    address = Address.new("SA", "Riyadh", "King Fahd", "1234", "12222")
+    address = Address("SA", "Riyadh", "King Fahd", "1234", "12222")
     assert repr(address) == ("Address(country_code='SAU', city='Riyadh', street='King Fahd', "
-                             "building_number='1234', postal_code='12222')")
+                             "building_number='1234', postal_code='12222', additional_street=None, "
+                             "additional_number=None, district=None, province=None)")
     signed = SignedInvoice.from_xml(SIGNED_XML.read_text())
     assert repr(signed) == f"SignedInvoice(id={signed.id!r}, uuid={signed.uuid!r})"
     assert repr(InvoiceBuilder(InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED)) == "InvoiceBuilder()"
 
 
 def test_closed_handles_repr_safely():
-    address = Address.new("SA", "Riyadh", "King Fahd", "1234", "12222")
-    address.close()
-    assert repr(address) == "<Address closed>"
+    config = Config(Environment.NON_PRODUCTION)
+    config.close()
+    assert repr(config) == "<Config closed>"
     b = builder()
     b.add_line_item("item", 1, "PCE", 100, 15, VatCategory.STANDARD)
     b.build()
@@ -77,9 +78,9 @@ def test_closed_handles_repr_safely():
 
 
 def test_repr_never_raises_when_a_getter_fails():
-    address = Address.new("SA", "Riyadh", "King Fahd", "1234", "12222")
-    address._repr_fields = ("city", "does_not_exist")
-    assert repr(address).startswith("<Address object at 0x")
+    config = Config(Environment.NON_PRODUCTION)
+    config._repr_fields = ("env", "does_not_exist")
+    assert repr(config).startswith("<Config object at 0x")
 
 
 @pytest.mark.parametrize("cls", [ComplianceCsid, ProductionCsid])

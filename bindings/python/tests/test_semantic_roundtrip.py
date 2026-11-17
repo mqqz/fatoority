@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
-from fatoora import (AllowanceCharge, TaxExemption, VatCategory,
+from fatoora import (Adjustment, TaxExemption, VatCategory,
                      FinalizedInvoice, SignedInvoice,
                      hash_xml)
 from test_numeric_contract import builder
@@ -16,8 +16,8 @@ def test_new_metadata_crosses_native_binding_and_xml():
     b.add_line_item("سلعة", 2, "PCE", "10.1234", 0, VatCategory.EXEMPT,
                     id="original-line", exemption=reason)
     b.add_tax_exemption(VatCategory.EXEMPT, 0, reason)
-    b.add_adjustment(AllowanceCharge(False, Decimal("1"), VatCategory.EXEMPT,
-                                    Decimal("0"), "خصم", "95", reason))
+    b.add_adjustment(Adjustment("1", reason="خصم", reason_code="95", category=VatCategory.EXEMPT,
+                                rate=0, exemption=reason))
     b.set_payment_instruction("تحويل")
     b.set_prepaid_amount("1")
     b.set_payable_rounding_amount("-0.01")
@@ -65,8 +65,8 @@ def test_repeated_adjustment_classifications_can_be_rebuilt():
     from fatoora.errors import FfiError
 
     exemption = TaxExemption("VATEX-SA-29", "إعفاء & <test>")
-    adjustment = AllowanceCharge(True, Decimal("1"), VatCategory.EXEMPT,
-                                 Decimal("0"), "رسوم &", "95", exemption)
+    adjustment = Adjustment(Decimal("1"), "رسوم &", "95", charge=True, category=VatCategory.EXEMPT,
+                            rate=Decimal("0"), exemption=exemption)
     source = builder()
     source.add_line_item("item", 1, "PCE", 100, 0, VatCategory.EXEMPT)
     source.add_adjustment(adjustment)
@@ -102,7 +102,7 @@ def test_repeated_adjustment_classifications_can_be_rebuilt():
 
 
 def test_optional_line_builder_and_repeated_metadata():
-    from fatoora import Adjustment, LineItemBuilder, PaymentMeans, OriginalInvoiceRef
+    from fatoora import Identifier, LineItemBuilder, PaymentMeans, OriginalInvoiceRef
     line = LineItemBuilder()
     line.set_item_name("case of items")
     line.set_invoiced_quantity("30")
@@ -115,22 +115,22 @@ def test_optional_line_builder_and_repeated_metadata():
     line.set_vat_category(VatCategory.STANDARD)
     line.set_vat_rate("15")
     line.set_item_seller_identifier("SKU", None)
-    line.add_allowance(Adjustment.percentage("250", "10").with_reason("discount", "95"))
-    line.add_charge(Adjustment.amount("5").with_reason("freight"))
+    line.add_allowance(Adjustment.percent_of("250", "10").with_reason("discount", "95"))
+    line.add_charge(Adjustment("5").with_reason("freight"))
     item = line.build()
     assert item.total_amount == Decimal("230")
     b = builder()
     b.add_item(item)
     b.add_note("one", language="en")
     b.add_note("اثنان")
-    b.add_payment_means(PaymentMeans.new("30", "first").with_instruction_note("second").with_account("account", "net 30"))
+    b.add_payment_means(PaymentMeans("30", ("first",)).with_instruction_note("second").with_account("account", "net 30"))
     b.add_seller_identifier("secondary", "OTH")
-    b.add_billing_reference(OriginalInvoiceRef.new("original", None, None, None, None))
+    b.add_billing_reference(OriginalInvoiceRef("original"))
     b.set_purchase_order_id("PO")
     b.set_contract_id("CON")
     b.set_buyer_without_address("buyer")
     b.add_buyer_identifier("buyer-id", "NAT")
-    b.add_allowance(Adjustment.percentage("230", "10"), VatCategory.STANDARD, "15")
+    b.add_allowance(Adjustment.percent_of("230", "10"), VatCategory.STANDARD, "15")
     invoice = b.build()
     restored = FinalizedInvoice.from_xml(invoice.xml)
     assert restored.line_items == invoice.line_items
@@ -144,14 +144,15 @@ def test_optional_line_builder_and_repeated_metadata():
     assert restored.buyer.address is None
     assert restored.buyer.identifiers[0].value == "buyer-id"
     assert restored.seller.identifiers[-1].value == "secondary"
-    assert restored.payment_means[-1].instruction_notes == ["first", "second"]
+    assert restored.payment_means[-1].instruction_notes == ("first", "second")
+    assert restored.line_item(0).item_seller_identifier == Identifier("SKU")
     assert restored.issue_time == "12:30:00Z"
 
 
 def test_percentage_adjustment_keeps_repeated_tax_categories():
-    adjustment = AllowanceCharge(False, Decimal("10"), VatCategory.STANDARD,
-                                 Decimal("15"), tax_category_count=3,
-                                 base_amount=Decimal("100"), percentage=Decimal("10"))
+    adjustment = Adjustment.percent_of(100, 10, category=VatCategory.STANDARD, rate=15,
+                                       tax_category_count=3)
+    assert adjustment.amount == Decimal("10")
     b = builder()
     b.add_line_item("item", 1, "PCE", 100, 15, VatCategory.STANDARD)
     b.add_adjustment(adjustment)
@@ -172,8 +173,7 @@ def test_python_party_setters_expose_province():
 
 
 def test_out_of_scope_adjustment_without_rate_survives_rebuild():
-    adjustment = AllowanceCharge(True, Decimal("10"), VatCategory.OUT_OF_SCOPE,
-                                 Decimal("0"), omitted_rate=True)
+    adjustment = Adjustment(10, charge=True, category=VatCategory.OUT_OF_SCOPE, rate=0, omitted_rate=True)
     b = builder()
     b.add_line_item("item", 1, "PCE", 100, 0, VatCategory.OUT_OF_SCOPE)
     b.add_adjustment(adjustment)

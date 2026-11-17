@@ -26,10 +26,10 @@ def main() -> None:
         invoice_counter=42,
         vat_category=VatCategory.STANDARD,
     )
-    address = Address.new("SAU", "Riyadh", "King Fahd", "1234", "12222")
+    address = Address("SAU", "Riyadh", "King Fahd", "1234", "12222")
     invoice = (
         builder.set_seller("Acme Inc", address=address, vat_id="399999999900003")
-        .add_payment_means(PaymentMeans.new("10"))
+        .add_payment_means(PaymentMeans("10"))
         .add_line_item(
             description="Item",
             quantity="1.0",
