@@ -1295,3 +1295,26 @@ fn adjustment_kinds_round_trip_through_charge_indicator() {
         assert_eq!(parsed.data().line_items(), invoice.data().line_items());
     }
 }
+
+#[test]
+fn adjustment_kind_helpers_agree_with_charge_indicator() {
+    use fatoora_core::invoice::AdjustmentKind;
+
+    for (kind, charge) in [
+        (AdjustmentKind::Allowance, false),
+        (AdjustmentKind::Charge, true),
+    ] {
+        assert_eq!(AdjustmentKind::from_charge_indicator(charge), kind);
+        assert_eq!(kind.charge_indicator(), charge);
+        assert_eq!(kind.is_charge(), charge);
+        assert_eq!(kind.is_allowance(), !charge);
+    }
+    assert_eq!(
+        serde_json::to_string(&AdjustmentKind::Allowance).unwrap(),
+        "\"allowance\""
+    );
+    assert_eq!(
+        serde_json::from_str::<AdjustmentKind>("\"charge\"").unwrap(),
+        AdjustmentKind::Charge
+    );
+}
