@@ -1679,6 +1679,19 @@ impl AdjustmentKind {
     }
 }
 
+/// Deserializes a field that is serialized bare (not as an `Option`) into
+/// `Some`, so formats with explicit options (such as RON) still round-trip.
+/// An absent field falls back to `None` through `#[serde(default)]`.
+pub(crate) fn deserialize_present<'de, D, T>(
+    deserializer: D,
+) -> std::result::Result<Option<T>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    T::deserialize(deserializer).map(Some)
+}
+
 /// One document allowance or charge, retaining its own VAT category and reason.
 ///
 /// Entries are read back from [`InvoiceData::adjustments`]. To add one to
@@ -1748,9 +1761,9 @@ struct AllowanceChargeRepr {
     percentage: Option<Decimal>,
     #[serde(default = "one_tax_category")]
     tax_category_count: usize,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_present")]
     kind: Option<AdjustmentKind>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_present")]
     charge: Option<bool>,
     amount: Decimal,
     reason: Option<String>,

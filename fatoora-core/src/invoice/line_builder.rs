@@ -151,9 +151,9 @@ pub struct LineAdjustment {
 /// Deserialization shape of [`LineAdjustment`]: accepts `kind`, or the 0.5 `charge` boolean.
 #[derive(Deserialize)]
 struct LineAdjustmentRepr {
-    #[serde(default)]
+    #[serde(default, deserialize_with = "crate::invoice::deserialize_present")]
     kind: Option<AdjustmentKind>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "crate::invoice::deserialize_present")]
     charge: Option<bool>,
     adjustment: Adjustment,
 }

@@ -211,3 +211,24 @@ fn standalone_adjustments_accept_either_spelling() {
     assert_eq!(entry.tax_category_count(), 1);
     assert!(entry.has_vat_rate());
 }
+
+#[test]
+fn option_aware_formats_round_trip_adjustments() {
+    // RON spells `Option` explicitly; the bare `kind` written by `Serialize`
+    // must still be read back.
+    let data = current_invoice();
+    let ron_text = ron::to_string(&data).unwrap();
+    assert!(!ron_text.contains("Some(allowance)"), "{ron_text}");
+    assert_eq!(ron::from_str::<InvoiceData>(&ron_text).unwrap(), data);
+
+    for entry in data.adjustments() {
+        let text = ron::to_string(entry).unwrap();
+        assert_eq!(&ron::from_str::<AllowanceCharge>(&text).unwrap(), entry);
+    }
+    for line in data.line_items() {
+        for adjustment in line.adjustments() {
+            let text = ron::to_string(adjustment).unwrap();
+            assert_eq!(&ron::from_str::<LineAdjustment>(&text).unwrap(), adjustment);
+        }
+    }
+}
