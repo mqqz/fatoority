@@ -113,13 +113,13 @@ fn exercise_client() {
     let runtime = tokio::runtime::Runtime::new().unwrap();
     runtime.block_on(async {
         for token in ["accepted", "rejected", "unknown", "http-error"] {
-            let production = ok(CsidProduction::create(
+            let production = ok(ProductionCsid::create(
                 Environment::NonProduction,
                 None,
                 token.as_bytes(),
                 b"secret",
             ));
-            let compliance = ok(CsidCompliance::create(
+            let compliance = ok(ComplianceCsid::create(
                 Environment::NonProduction,
                 None,
                 token.as_bytes(),
@@ -170,13 +170,13 @@ fn exercise_client() {
             }
         }
     });
-    let production = ok(CsidProduction::create(
+    let production = ok(ProductionCsid::create(
         Environment::NonProduction,
         None,
         b"accepted",
         b"secret",
     ));
-    let compliance = ok(CsidCompliance::create(
+    let compliance = ok(ComplianceCsid::create(
         Environment::NonProduction,
         None,
         b"accepted",
@@ -193,7 +193,7 @@ fn exercise_client() {
             .report_simplified_invoice(&standard, &production, ClearanceMode::Disabled, None)
             .is_err()
     );
-    let wrong_env = ok(CsidProduction::create(
+    let wrong_env = ok(ProductionCsid::create(
         Environment::Simulation,
         None,
         b"accepted",
@@ -238,5 +238,5 @@ fn exercise_client() {
             .code(),
         1
     );
-    assert!(client.post_ccsid_for_pcsid(&compliance).is_err());
+    assert!(client.request_production_csid(&compliance).is_err());
 }

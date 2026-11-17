@@ -8,8 +8,8 @@ import com.sun.jna.Structure
 internal interface CsrPropertiesLib: Library {
     fun fatoora_CsrProperties_destroy(handle: Pointer)
     fun fatoora_CsrProperties_new(commonName: Slice, serialNumber: Slice, organizationIdentifier: Slice, organizationUnitName: Slice, organizationName: Slice, countryName: Slice, invoiceType: Slice, locationAddress: Slice, industryBusinessCategory: Slice): ResultPointerPointer
-    fun fatoora_CsrProperties_from_properties_str(properties: Slice): ResultPointerPointer
-    fun fatoora_CsrProperties_parse_csr_config_file(path: Slice): ResultPointerPointer
+    fun fatoora_CsrProperties_from_str(properties: Slice): ResultPointerPointer
+    fun fatoora_CsrProperties_from_file(path: Slice): ResultPointerPointer
     fun fatoora_CsrProperties_build(handle: Pointer, key: Pointer, env: Int): ResultPointerPointer
 }
 
@@ -82,10 +82,13 @@ class CsrProperties internal constructor (
         }
         @JvmStatic
 
-        fun fromPropertiesStr(properties: String): Result<CsrProperties> {
+        /**
+         * Parse `csr.*` properties text, mirroring core `CsrProperties::from_str`.
+         */
+        fun fromStr(properties: String): Result<CsrProperties> {
             val propertiesSliceMemory = PrimitiveArrayTools.borrowUtf8(properties)
 
-            val returnVal = lib.fatoora_CsrProperties_from_properties_str(propertiesSliceMemory.slice);
+            val returnVal = lib.fatoora_CsrProperties_from_str(propertiesSliceMemory.slice);
             try {
                 val nativeOkVal = returnVal.getNativeOk();
                 if (nativeOkVal != null) {
@@ -105,10 +108,13 @@ class CsrProperties internal constructor (
         }
         @JvmStatic
 
-        fun parseCsrConfigFile(path: String): Result<CsrProperties> {
+        /**
+         * Load a `csr.*` properties file, mirroring core `CsrProperties::from_file`.
+         */
+        fun fromFile(path: String): Result<CsrProperties> {
             val pathSliceMemory = PrimitiveArrayTools.borrowUtf8(path)
 
-            val returnVal = lib.fatoora_CsrProperties_parse_csr_config_file(pathSliceMemory.slice);
+            val returnVal = lib.fatoora_CsrProperties_from_file(pathSliceMemory.slice);
             try {
                 val nativeOkVal = returnVal.getNativeOk();
                 if (nativeOkVal != null) {

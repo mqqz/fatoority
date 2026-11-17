@@ -65,7 +65,7 @@ fn rejected_inputs_preserve_builder_and_structured_error() {
     for id in [&b"bad\0id"[..], &[0xff][..]] {
         assert_eq!(b.set_id(id).err().unwrap().code(), 1);
     }
-    assert!(b.flags(0x80).is_err());
+    assert!(b.set_flags(0x80).is_err());
     ok(b.add_line_item(
         b"Item",
         b"1",
@@ -176,8 +176,25 @@ fn builder() -> Box<InvoiceBuilder> {
     )))
 }
 
+/// Append a standard-rated document-level allowance or charge with a reason.
+fn add_document(b: &mut InvoiceBuilder, kind: AdjustmentKind, amount: &[u8], reason: &[u8]) {
+    let value =
+        ok(ok(fatoora_ffi::invoice::ffi::Adjustment::amount(amount))
+            .with_reason(Some(reason), None));
+    let exemption = ok(fatoora_ffi::invoice::ffi::TaxExemption::new(None, None));
+    match kind {
+        AdjustmentKind::Allowance => {
+            ok(b.add_allowance(&value, VatCategory::Standard, b"15", &exemption))
+        }
+        AdjustmentKind::Charge => {
+            ok(b.add_charge(&value, VatCategory::Standard, b"15", &exemption))
+        }
+    }
+}
+
 fn configured(mut b: Box<InvoiceBuilder>) -> Box<InvoiceBuilder> {
-    ok(b.set_payment_means_code(b"10"));
+    let means = ok(fatoora_ffi::invoice::ffi::PaymentMeans::new(b"10", None));
+    ok(b.add_payment_means(&means));
     configured_without_payment_code(b)
 }
 
@@ -212,15 +229,31 @@ fn configured_without_payment_code(mut b: Box<InvoiceBuilder>) -> Box<InvoiceBui
 #[test]
 fn rejected_setters_leave_previous_values_and_totals_intact() {
     let mut b = builder();
-    ok(b.set_note(b"ar", "خصم & خدمة".as_bytes()));
-    ok(b.set_allowance(b"Discount", b"10"));
-    ok(b.invoice_level_charge(b"5"));
+    ok(b.add_note(Some(b"ar"), "خصم & خدمة".as_bytes()));
+    add_document(&mut b, AdjustmentKind::Allowance, b"10", b"Discount");
+    add_document(&mut b, AdjustmentKind::Charge, b"5", b"Discount");
     assert!(b.set_issue_datetime(b"2024-02-30T12:00:00Z").is_err());
     assert!(b.set_currency(b"NOT-CURRENCY").is_err());
-    assert!(b.set_note(b"ar", b"bad\0note").is_err());
-    assert!(b.set_allowance(b"overwrite", b"NaN").is_err());
-    assert!(b.invoice_level_charge(b"Infinity").is_err());
-    assert!(b.invoice_level_discount(b"invalid").is_err());
+    assert!(b.add_note(Some(b"ar"), b"bad\0note").is_err());
+    let exemption = ok(fatoora_ffi::invoice::ffi::TaxExemption::new(None, None));
+    let value = ok(fatoora_ffi::invoice::ffi::Adjustment::amount(b"1"));
+    assert!(
+        b.add_allowance(&value, VatCategory::Standard, b"NaN", &exemption)
+            .is_err()
+    );
+    assert!(
+        b.add_charge(&value, VatCategory::Standard, b"Infinity", &exemption)
+            .is_err()
+    );
+    let invalid = ok(fatoora_ffi::invoice::ffi::Adjustment::percentage(
+        b"10", b"10",
+    ))
+    .with_supplied_amount(b"5");
+    let invalid = ok(invalid);
+    assert!(
+        b.add_allowance(&invalid, VatCategory::Standard, b"15", &exemption)
+            .is_err()
+    );
     ok(b.add_line_item(b"Item", b"2", b"PCE", b"50", b"15", VatCategory::Standard));
     let invoice = ok(b.build());
     let data = ok(invoice.data());
@@ -392,11 +425,10 @@ fn prepayment_handoff_preserves_transaction_identity_and_amounts() {
             None,
             None,
         )));
-        ok(b.flags(0b00101));
+        ok(b.set_flags(0b00101));
         ok(b.set_invoice_counter(u64::MAX));
-        ok(b.invoice_level_discount(b"10"));
-        ok(b.allowance_reason(b"Loyalty"));
-        ok(b.invoice_level_charge(b"5"));
+        add_document(&mut b, AdjustmentKind::Allowance, b"10", b"Loyalty");
+        add_document(&mut b, AdjustmentKind::Charge, b"5", b"Loyalty");
         ok(b.add_line_item(
             b"Service",
             b"2",
@@ -411,7 +443,7 @@ fn prepayment_handoff_preserves_transaction_identity_and_amounts() {
         let data = ok(parsed.data());
         let line = ok(data.line_item(0));
         let address = ok(ok(data.seller()).address()).unwrap();
-        let expected_hash = written(|out| ok(invoice.hash_base64(out)));
+        let expected_hash = written(|out| ok(invoice.hash(out)));
         assert_eq!(
             written(|out| ok(fatoora_ffi::invoice::ffi::Xml::hash(xml.as_bytes(), out))),
             expected_hash
@@ -420,7 +452,7 @@ fn prepayment_handoff_preserves_transaction_identity_and_amounts() {
         drop(parsed);
         assert_eq!(data.invoice_type_kind(), InvoiceTypeKind::Prepayment);
         assert_eq!(data.invoice_sub_type(), subtype);
-        assert_eq!(data.flags_raw(), 0b00101);
+        assert_eq!(data.flags(), 0b00101);
         assert_eq!(data.invoice_counter(), u64::MAX);
         assert_eq!(
             written(|out| ok(data.uuid(out))),
@@ -498,8 +530,8 @@ fn roundtrip_metadata_crosses_binding_boundary_and_snapshots_own_their_data() {
     ok(b.set_payment_instruction(b"Transfer & receipt"));
     ok(b.set_prepaid_amount(b"10"));
     ok(b.set_payable_rounding_amount(b"0.01"));
-    ok(b.set_note(b"ar", "فاتورة".as_bytes()));
-    ok(b.set_tax_exemption(VatCategory::Zero, b"0", &exemption));
+    ok(b.add_note(Some(b"ar"), "فاتورة".as_bytes()));
+    ok(b.add_tax_exemption(VatCategory::Zero, b"0", &exemption));
     ok(b.add_item(&item));
     ok(b.add_adjustment(&adjustment));
     let invoice = ok(b.build());
@@ -846,12 +878,12 @@ fn full_billing_references_and_language_less_notes_are_constructible() {
                 &reference,
                 "تصحيح &".as_bytes(),
             )));
-            assert!(b.set_note_without_language(&[0xff]).is_err());
-            ok(b.set_note(b"en", b"old"));
-            ok(b.set_note_without_language("ملاحظة &".as_bytes()));
+            assert!(b.add_note(None, &[0xff]).is_err());
+            ok(b.add_note(Some(b"en"), b"old"));
+            ok(b.add_note(None, "ملاحظة &".as_bytes()));
             ok(b.add_line_item(b"Item", b"1", b"PCE", b"100", b"15", VatCategory::Standard));
             let invoice = ok(b.build());
-            assert!(b.set_note_without_language(b"consumed").is_err());
+            assert!(b.add_note(None, b"consumed").is_err());
             let xml = written(|out| ok(invoice.xml(out)));
             let parsed = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
             let data = ok(parsed.data());
@@ -998,7 +1030,7 @@ fn imported_notes_do_not_invent_payment_instructions() {
             None,
             Some(b"reason"),
         )));
-        ok(b.set_note_without_language(b"fallback"));
+        ok(b.add_note(None, b"fallback"));
         ok(b.add_line_item(b"Item", b"1", b"PCE", b"100", b"15", VatCategory::Standard));
         let invoice = ok(b.build());
         let source = written(|out| ok(invoice.xml(out)));
@@ -1085,20 +1117,8 @@ fn optional_builder_fields_survive_binding_snapshots_and_xml() {
         b"31.36",
         &exemption,
     ));
-    ok(b.add_document_adjustment(
-        AdjustmentKind::Allowance,
-        &allowance,
-        VatCategory::Standard,
-        b"15",
-        &exemption,
-    ));
-    ok(b.add_document_adjustment(
-        AdjustmentKind::Charge,
-        &charge,
-        VatCategory::Standard,
-        b"15",
-        &exemption,
-    ));
+    ok(b.add_allowance(&allowance, VatCategory::Standard, b"15", &exemption));
+    ok(b.add_charge(&charge, VatCategory::Standard, b"15", &exemption));
     ok(b.add_vat_breakdown(&breakdown));
     ok(b.set_purchase_order_id(b"PO"));
     ok(b.set_contract_id(b"CON"));
@@ -1353,8 +1373,8 @@ fn invoice_flag_bits_match_core_flags_and_build_a_mask() {
         assert_eq!(flag.bit(), core.bits());
     }
     let mut b = builder();
-    ok(b.flags(InvoiceFlag::ThirdParty.bit() | InvoiceFlag::Export.bit()));
+    ok(b.set_flags(InvoiceFlag::ThirdParty.bit() | InvoiceFlag::Export.bit()));
     ok(b.add_line_item(b"Item", b"1", b"PCE", b"100", b"15", VatCategory::Standard));
     let data = ok(ok(b.build()).data());
-    assert_eq!(data.flags_raw(), 0b00101);
+    assert_eq!(data.flags(), 0b00101);
 }

@@ -25,7 +25,7 @@ class ComplianceRequest internal constructor(internal val raw: com.fatoora.raw.C
         Bytes(unwrap(raw.body()))
     }
 
-    fun decode(status: Int, body: ByteArray): CsidCompliance = nativeCall(listOfNotNull(this)) {
-        CsidCompliance(unwrap(raw.decode(checkedUnsigned(status.toLong(), 65535).toUShort(), body.asUByteArray())))
+    fun decode(status: Int, body: ByteArray): ComplianceCsid = nativeCall(listOfNotNull(this)) {
+        ComplianceCsid(unwrap(raw.decode(checkedUnsigned(status.toLong(), 65535).toUShort(), body.asUByteArray())))
     }
 }

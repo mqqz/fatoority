@@ -528,9 +528,9 @@ export class InvoiceData {
         }
     }
 
-    flagsRaw() {
+    flags() {
 
-        const result = wasm.fatoora_InvoiceData_flags_raw(this.ffiValue);
+        const result = wasm.fatoora_InvoiceData_flags(this.ffiValue);
 
         try {
             return result;

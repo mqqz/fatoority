@@ -16,7 +16,10 @@ export class CsrProperties {
 
     static new_(commonName: string, serialNumber: string, organizationIdentifier: string, organizationUnitName: string, organizationName: string, countryName: string, invoiceType: string, locationAddress: string, industryBusinessCategory: string): CsrProperties;
 
-    static fromPropertiesStr(properties: string): CsrProperties;
+    /**
+     * Parse `csr.*` properties text, mirroring core `CsrProperties::from_str`.
+     */
+    static fromStr(properties: string): CsrProperties;
 
     build(key: SigningKey, env: Environment): Csr;
 }

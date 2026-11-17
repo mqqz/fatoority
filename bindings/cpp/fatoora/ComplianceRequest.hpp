@@ -14,7 +14,7 @@
 #include "../diplomat_runtime.hpp"
 #include "BindingError.hpp"
 #include "Bytes.hpp"
-#include "CsidCompliance.hpp"
+#include "ComplianceCsid.hpp"
 
 
 namespace fatoora {
@@ -33,7 +33,7 @@ namespace capi {
     typedef struct fatoora_ComplianceRequest_body_result {union {fatoora::capi::Bytes* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ComplianceRequest_body_result;
     fatoora_ComplianceRequest_body_result fatoora_ComplianceRequest_body(const fatoora::capi::ComplianceRequest* self);
 
-    typedef struct fatoora_ComplianceRequest_decode_result {union {fatoora::capi::CsidCompliance* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ComplianceRequest_decode_result;
+    typedef struct fatoora_ComplianceRequest_decode_result {union {fatoora::capi::ComplianceCsid* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ComplianceRequest_decode_result;
     fatoora_ComplianceRequest_decode_result fatoora_ComplianceRequest_decode(const fatoora::capi::ComplianceRequest* self, uint16_t status, diplomat::capi::DiplomatU8View body);
 
     void fatoora_ComplianceRequest_destroy(ComplianceRequest* self);
@@ -92,11 +92,11 @@ inline diplomat::result<std::unique_ptr<fatoora::Bytes>, std::unique_ptr<fatoora
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Bytes>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Bytes>>(std::unique_ptr<fatoora::Bytes>(fatoora::Bytes::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Bytes>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::CsidCompliance>, std::unique_ptr<fatoora::BindingError>> fatoora::ComplianceRequest::decode(uint16_t status, diplomat::span<const uint8_t> body) const {
+inline diplomat::result<std::unique_ptr<fatoora::ComplianceCsid>, std::unique_ptr<fatoora::BindingError>> fatoora::ComplianceRequest::decode(uint16_t status, diplomat::span<const uint8_t> body) const {
     auto result = fatoora::capi::fatoora_ComplianceRequest_decode(this->AsFFI(),
         status,
         {body.data(), body.size()});
-    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::CsidCompliance>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::CsidCompliance>>(std::unique_ptr<fatoora::CsidCompliance>(fatoora::CsidCompliance::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::CsidCompliance>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::ComplianceCsid>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::ComplianceCsid>>(std::unique_ptr<fatoora::ComplianceCsid>(fatoora::ComplianceCsid::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::ComplianceCsid>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
 inline const fatoora::capi::ComplianceRequest* fatoora::ComplianceRequest::AsFFI() const {

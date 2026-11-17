@@ -178,9 +178,9 @@ public partial class ComplianceRequest: IDisposable
 
     /// <exception cref="BindingErrorException"></exception>
     /// <returns>
-    /// A <c>CsidCompliance</c> allocated on Rust side.
+    /// A <c>ComplianceCsid</c> allocated on Rust side.
     /// </returns>
-    public CsidCompliance Decode(ushort status, byte[] body)
+    public ComplianceCsid Decode(ushort status, byte[] body)
     {
         unsafe
         {
@@ -196,7 +196,7 @@ public partial class ComplianceRequest: IDisposable
                     {
                         throw new BindingErrorException(new BindingError(result.Err));
                     }
-                    return new CsidCompliance(result.Ok);
+                    return new ComplianceCsid(result.Ok);
                 }
             }
             finally

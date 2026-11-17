@@ -114,7 +114,7 @@ class ComplianceRequest internal constructor (
         }
     }
 
-    fun decode(status: UShort, body: UByteArray): Result<CsidCompliance> {
+    fun decode(status: UShort, body: UByteArray): Result<ComplianceCsid> {
         val bodySliceMemory = PrimitiveArrayTools.borrow(body)
 
         val returnVal = lib.fatoora_ComplianceRequest_decode(handle, FFIUint16(status), bodySliceMemory.slice);
@@ -123,7 +123,7 @@ class ComplianceRequest internal constructor (
             if (nativeOkVal != null) {
                 val selfEdges: List<Any> = listOf()
                 val handle = nativeOkVal
-                val returnOpaque = CsidCompliance(handle, selfEdges, true)
+                val returnOpaque = ComplianceCsid(handle, selfEdges, true)
                 return returnOpaque.ok()
             } else {
                 val selfEdges: List<Any> = listOf()

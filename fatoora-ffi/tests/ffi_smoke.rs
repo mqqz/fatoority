@@ -1,7 +1,7 @@
 use diplomat_runtime::DiplomatWrite;
 use fatoora_ffi::common::ffi::BindingError;
 use fatoora_ffi::common::ffi::Environment;
-use fatoora_ffi::crypto::ffi::{Config, Csr, CsrProperties, Signer, SigningKey};
+use fatoora_ffi::crypto::ffi::{Csr, CsrProperties, InvoiceSigner, SigningKey};
 use fatoora_ffi::invoice::ffi::{FinalizedInvoice, SignedInvoice, Xml};
 
 const INVOICE: &[u8] =
@@ -23,17 +23,17 @@ fn ok<T>(result: Result<T, Box<BindingError>>) -> T {
 
 #[test]
 fn signing_consumes_finalized_and_preserves_signed_xml_exactly() {
-    let signer = ok(Signer::from_der(CERT, KEY));
+    let signer = ok(InvoiceSigner::from_der(CERT, KEY));
     let mut invoice = ok(FinalizedInvoice::from_xml(INVOICE));
     let data_before = ok(invoice.data());
-    let unsigned_hash = written(|out| ok(invoice.hash_base64(out)));
+    let unsigned_hash = written(|out| ok(invoice.hash(out)));
     let mut signed = ok(signer.sign(&mut invoice));
     assert!(invoice.data().is_err());
     assert!(invoice.totals().is_err());
     assert!(signer.sign(&mut invoice).is_err());
     assert_eq!(written(|out| ok(data_before.id(out))), "SME00010");
     let xml = written(|out| ok(signed.xml(out)));
-    assert_eq!(written(|out| ok(signed.hash_base64(out))), unsigned_hash);
+    assert_eq!(written(|out| ok(signed.hash(out))), unsigned_hash);
     assert!(!written(|out| ok(signed.signature(out))).is_empty());
     assert!(!written(|out| ok(signed.qr_code(out))).is_empty());
     let parsed = ok(SignedInvoice::from_xml(xml.as_bytes()));
@@ -70,7 +70,7 @@ fn failed_signing_also_consumes_finalized_invoice() {
     assert_eq!(cert[signature], 0);
     cert[signature] = 1;
     cert[signature + signature_len - 1] &= 0xfe;
-    let signer = ok(Signer::from_der(&cert, KEY));
+    let signer = ok(InvoiceSigner::from_der(&cert, KEY));
     let mut invoice = ok(FinalizedInvoice::from_xml(INVOICE));
     let error = signer
         .sign(&mut invoice)
@@ -88,7 +88,7 @@ fn imported_signed_xml_retains_whitespace_and_declaration() {
     let source = std::str::from_utf8(INVOICE).unwrap();
     let mut invoice = ok(SignedInvoice::from_xml(INVOICE));
     assert_eq!(
-        written(|out| ok(invoice.hash_base64(out))),
+        written(|out| ok(invoice.hash(out))),
         written(|out| ok(Xml::hash(INVOICE, out)))
     );
     assert_eq!(written(|out| ok(invoice.xml(out))), source);
@@ -108,18 +108,17 @@ fn file_parsing_and_validation_errors_remain_structured() {
     assert!(SignedInvoice::from_xml(b"<nope/>").is_err());
     assert!(FinalizedInvoice::from_xml(&[0xff]).is_err());
     assert!(FinalizedInvoice::from_xml(b"<Invoice/>\0").is_err());
-    let config = ok(Config::new(Environment::NonProduction));
-    let error = Xml::validate(&config, b"<Invoice/>").err().unwrap();
+    let error = Xml::validate(b"<Invoice/>").err().unwrap();
     let details: serde_json::Value =
         serde_json::from_str(&written(|out| error.details_json(out))).unwrap();
     assert!(details["type"].is_string());
-    assert!(Xml::validate(&config, &[0xff]).is_err());
+    assert!(Xml::validate(&[0xff]).is_err());
     written(|out| assert!(Xml::hash(b"<bad\0", out).is_err()));
 }
 
 #[test]
 fn csr_build_preserves_subject_key_and_owned_extensions() {
-    let props = ok(CsrProperties::from_properties_str(include_bytes!(
+    let props = ok(CsrProperties::from_str(include_bytes!(
         "../../fatoora-core/tests/fixtures/csr-configs/csr-config-example-EN.properties"
     )));
     let key = ok(SigningKey::from_der(KEY));
@@ -141,7 +140,7 @@ fn csr_build_preserves_subject_key_and_owned_extensions() {
 
 #[test]
 fn signer_certificate_der_is_exact_and_xml_errors_are_fallible() {
-    let signer = ok(Signer::from_der(CERT, KEY));
+    let signer = ok(InvoiceSigner::from_der(CERT, KEY));
     assert_eq!(ok(signer.certificate_der()).as_slice(), CERT);
     written(|out| assert!(signer.sign_xml(b"<broken", out).is_err()));
     written(|out| assert!(signer.sign_xml(b"<Invoice/>\0", out).is_err()));
@@ -180,7 +179,10 @@ fn pem_signing_and_exports_preserve_certificate_key_and_signature() {
     let key_pem = written(|out| ok(key.to_pem(out)));
     let restored_key = ok(SigningKey::from_pem(key_pem.as_bytes()));
     assert_eq!(ok(restored_key.to_der()).as_slice(), KEY);
-    let signer = ok(Signer::from_pem(cert_pem.as_bytes(), key_pem.as_bytes()));
+    let signer = ok(InvoiceSigner::from_pem(
+        cert_pem.as_bytes(),
+        key_pem.as_bytes(),
+    ));
     drop(restored_key);
     drop(key);
     assert_eq!(written(|out| ok(signer.certificate_pem(out))), cert_pem);
@@ -311,9 +313,7 @@ fn csr_binding_encodings_preserve_proof_of_possession_and_environment() {
     }
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../fatoora-core/tests/fixtures/csr-configs/csr-config-example-EN.properties");
-    let from_file = ok(CsrProperties::parse_csr_config_file(
-        path.to_str().unwrap().as_bytes(),
-    ));
+    let from_file = ok(CsrProperties::from_file(path.to_str().unwrap().as_bytes()));
     let csr = ok(from_file.build(&key, Environment::NonProduction));
     let parsed = CertReq::from_der(ok(csr.to_der()).as_slice()).unwrap();
     assert_eq!(

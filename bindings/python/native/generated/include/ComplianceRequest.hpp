@@ -13,7 +13,7 @@
 #include <cstdlib>
 #include "BindingError.hpp"
 #include "Bytes.hpp"
-#include "CsidCompliance.hpp"
+#include "ComplianceCsid.hpp"
 #include "diplomat_runtime.hpp"
 
 
@@ -33,7 +33,7 @@ namespace capi {
     typedef struct fatoora_ComplianceRequest_body_result {union {_native::capi::Bytes* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ComplianceRequest_body_result;
     fatoora_ComplianceRequest_body_result fatoora_ComplianceRequest_body(const _native::capi::ComplianceRequest* self);
 
-    typedef struct fatoora_ComplianceRequest_decode_result {union {_native::capi::CsidCompliance* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ComplianceRequest_decode_result;
+    typedef struct fatoora_ComplianceRequest_decode_result {union {_native::capi::ComplianceCsid* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ComplianceRequest_decode_result;
     fatoora_ComplianceRequest_decode_result fatoora_ComplianceRequest_decode(const _native::capi::ComplianceRequest* self, uint16_t status, _native::diplomat::capi::DiplomatU8View body);
 
     void fatoora_ComplianceRequest_destroy(ComplianceRequest* self);
@@ -92,11 +92,11 @@ inline _native::diplomat::result<std::unique_ptr<_native::Bytes>, std::unique_pt
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Bytes>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Bytes>>(std::unique_ptr<_native::Bytes>(_native::Bytes::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Bytes>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::CsidCompliance>, std::unique_ptr<_native::BindingError>> _native::ComplianceRequest::decode(uint16_t status, _native::diplomat::span<const uint8_t> body) const {
+inline _native::diplomat::result<std::unique_ptr<_native::ComplianceCsid>, std::unique_ptr<_native::BindingError>> _native::ComplianceRequest::decode(uint16_t status, _native::diplomat::span<const uint8_t> body) const {
     auto result = _native::capi::fatoora_ComplianceRequest_decode(this->AsFFI(),
         status,
         {body.data(), body.size()});
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::CsidCompliance>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::CsidCompliance>>(std::unique_ptr<_native::CsidCompliance>(_native::CsidCompliance::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::CsidCompliance>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::ComplianceCsid>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::ComplianceCsid>>(std::unique_ptr<_native::ComplianceCsid>(_native::ComplianceCsid::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::ComplianceCsid>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
 inline const _native::capi::ComplianceRequest* _native::ComplianceRequest::AsFFI() const {

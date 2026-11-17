@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
     FatooraStatus status = FATOORA_OK;
     int exit_code = 1;
 #define TRY(call) do { status = (call); if (status != FATOORA_OK) goto cleanup; } while (0)
-    TRY(fatoora_csr_properties_parse_csr_config_file(argv[1], &properties, &error));
+    TRY(fatoora_csr_properties_from_file(argv[1], &properties, &error));
     TRY(fatoora_signing_key_generate(&key, &error));
     TRY(fatoora_csr_properties_build(properties, key, FATOORA_NON_PRODUCTION, &csr, &error));
     TRY(fatoora_csr_to_pem(csr, &csr_pem, &error));

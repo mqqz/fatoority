@@ -41,9 +41,9 @@ public:
 
   inline _native::diplomat::result<std::unique_ptr<_native::InvoiceTotals>, std::unique_ptr<_native::BindingError>> totals() const;
 
-  inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> hash_base64() const;
+  inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> hash() const;
   template<typename W>
-  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> hash_base64_write(W& writeable_output) const;
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> hash_write(W& writeable_output) const;
 
   inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> xml() const;
   template<typename W>

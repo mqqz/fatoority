@@ -695,7 +695,7 @@ public partial class InvoiceData: IDisposable
         }
     }
 
-    public byte FlagsRaw()
+    public byte Flags()
     {
         unsafe
         {
@@ -703,7 +703,7 @@ public partial class InvoiceData: IDisposable
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.InvoiceData.FlagsRaw(selfLease!.Ptr);
+                return Raw.InvoiceData.Flags(selfLease!.Ptr);
             }
             finally
             {

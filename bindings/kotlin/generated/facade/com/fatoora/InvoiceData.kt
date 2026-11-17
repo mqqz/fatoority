@@ -105,8 +105,8 @@ class InvoiceData internal constructor(internal val raw: com.fatoora.raw.Invoice
         VatCategory.valueOf(raw.vatCategory().name)
     }
 
-    fun flagsRaw(): Int = nativeCall(listOfNotNull(this)) {
-        raw.flagsRaw().toInt()
+    fun flags(): Int = nativeCall(listOfNotNull(this)) {
+        raw.flags().toInt()
     }
 
     fun invoiceTypeKind(): InvoiceTypeKind = nativeCall(listOfNotNull(this)) {

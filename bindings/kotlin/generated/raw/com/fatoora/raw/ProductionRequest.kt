@@ -114,7 +114,7 @@ class ProductionRequest internal constructor (
         }
     }
 
-    fun decode(status: UShort, body: UByteArray): Result<CsidProduction> {
+    fun decode(status: UShort, body: UByteArray): Result<ProductionCsid> {
         val bodySliceMemory = PrimitiveArrayTools.borrow(body)
 
         val returnVal = lib.fatoora_ProductionRequest_decode(handle, FFIUint16(status), bodySliceMemory.slice);
@@ -123,7 +123,7 @@ class ProductionRequest internal constructor (
             if (nativeOkVal != null) {
                 val selfEdges: List<Any> = listOf()
                 val handle = nativeOkVal
-                val returnOpaque = CsidProduction(handle, selfEdges, true)
+                val returnOpaque = ProductionCsid(handle, selfEdges, true)
                 return returnOpaque.ok()
             } else {
                 val selfEdges: List<Any> = listOf()

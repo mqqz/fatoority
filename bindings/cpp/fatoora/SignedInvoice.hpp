@@ -34,8 +34,8 @@ namespace capi {
     typedef struct fatoora_SignedInvoice_totals_result {union {fatoora::capi::InvoiceTotals* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_totals_result;
     fatoora_SignedInvoice_totals_result fatoora_SignedInvoice_totals(const fatoora::capi::SignedInvoice* self);
 
-    typedef struct fatoora_SignedInvoice_hash_base64_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_hash_base64_result;
-    fatoora_SignedInvoice_hash_base64_result fatoora_SignedInvoice_hash_base64(const fatoora::capi::SignedInvoice* self, diplomat::capi::DiplomatWrite* write);
+    typedef struct fatoora_SignedInvoice_hash_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_hash_result;
+    fatoora_SignedInvoice_hash_result fatoora_SignedInvoice_hash(const fatoora::capi::SignedInvoice* self, diplomat::capi::DiplomatWrite* write);
 
     typedef struct fatoora_SignedInvoice_xml_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_xml_result;
     fatoora_SignedInvoice_xml_result fatoora_SignedInvoice_xml(const fatoora::capi::SignedInvoice* self, diplomat::capi::DiplomatWrite* write);
@@ -102,17 +102,17 @@ inline diplomat::result<std::unique_ptr<fatoora::InvoiceTotals>, std::unique_ptr
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::InvoiceTotals>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::InvoiceTotals>>(std::unique_ptr<fatoora::InvoiceTotals>(fatoora::InvoiceTotals::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::InvoiceTotals>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> fatoora::SignedInvoice::hash_base64() const {
+inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> fatoora::SignedInvoice::hash() const {
     std::string output;
     diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
-    auto result = fatoora::capi::fatoora_SignedInvoice_hash_base64(this->AsFFI(),
+    auto result = fatoora::capi::fatoora_SignedInvoice_hash(this->AsFFI(),
         &write);
     return result.is_ok ? diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::string>(std::move(output))) : diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 template<typename W>
-inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> fatoora::SignedInvoice::hash_base64_write(W& writeable) const {
+inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> fatoora::SignedInvoice::hash_write(W& writeable) const {
     diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
-    auto result = fatoora::capi::fatoora_SignedInvoice_hash_base64(this->AsFFI(),
+    auto result = fatoora::capi::fatoora_SignedInvoice_hash(this->AsFFI(),
         &write);
     return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }

@@ -114,7 +114,7 @@ public:
 
   inline fatoora::VatCategory vat_category() const;
 
-  inline uint8_t flags_raw() const;
+  inline uint8_t flags() const;
 
   inline fatoora::InvoiceTypeKind invoice_type_kind() const;
 

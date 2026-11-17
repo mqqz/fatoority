@@ -94,7 +94,7 @@ uint64_t fatoora_InvoiceData_invoice_counter(const InvoiceData* self);
 
 VatCategory fatoora_InvoiceData_vat_category(const InvoiceData* self);
 
-uint8_t fatoora_InvoiceData_flags_raw(const InvoiceData* self);
+uint8_t fatoora_InvoiceData_flags(const InvoiceData* self);
 
 InvoiceTypeKind fatoora_InvoiceData_invoice_type_kind(const InvoiceData* self);
 

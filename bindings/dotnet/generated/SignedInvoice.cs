@@ -154,7 +154,7 @@ public partial class SignedInvoice: IDisposable
     }
 
     /// <exception cref="BindingErrorException"></exception>
-    public string HashBase64()
+    public string Hash()
     {
         unsafe
         {
@@ -165,7 +165,7 @@ public partial class SignedInvoice: IDisposable
                 DiplomatWrite writeable = new DiplomatWrite();
                 try
                 {
-                    var result = Raw.SignedInvoice.HashBase64(selfLease!.Ptr, &writeable);
+                    var result = Raw.SignedInvoice.Hash(selfLease!.Ptr, &writeable);
                     if (!result.IsOk)
                     {
                         throw new BindingErrorException(new BindingError(result.Err));

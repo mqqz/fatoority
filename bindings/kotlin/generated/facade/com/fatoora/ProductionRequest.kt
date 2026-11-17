@@ -25,7 +25,7 @@ class ProductionRequest internal constructor(internal val raw: com.fatoora.raw.P
         Bytes(unwrap(raw.body()))
     }
 
-    fun decode(status: Int, body: ByteArray): CsidProduction = nativeCall(listOfNotNull(this)) {
-        CsidProduction(unwrap(raw.decode(checkedUnsigned(status.toLong(), 65535).toUShort(), body.asUByteArray())))
+    fun decode(status: Int, body: ByteArray): ProductionCsid = nativeCall(listOfNotNull(this)) {
+        ProductionCsid(unwrap(raw.decode(checkedUnsigned(status.toLong(), 65535).toUShort(), body.asUByteArray())))
     }
 }

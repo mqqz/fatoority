@@ -127,12 +127,12 @@ pub mod ffi {
     pub struct ZatcaClient(pub(crate) fatoora_core::api::ZatcaClient);
     #[diplomat::opaque]
     #[diplomat::attr(dotnet, manually_disposable)]
-    pub struct CsidCompliance(
+    pub struct ComplianceCsid(
         pub(crate) fatoora_core::api::CsidCredentials<fatoora_core::api::Compliance>,
     );
     #[diplomat::opaque]
     #[diplomat::attr(dotnet, manually_disposable)]
-    pub struct CsidProduction(
+    pub struct ProductionCsid(
         pub(crate) fatoora_core::api::CsidCredentials<fatoora_core::api::Production>,
     );
     #[diplomat::opaque]
@@ -269,11 +269,11 @@ pub mod ffi {
             &self,
             status: u16,
             body: &[u8],
-        ) -> Result<Box<CsidCompliance>, Box<BindingError>> {
+        ) -> Result<Box<ComplianceCsid>, Box<BindingError>> {
             boundary(|| {
                 self.0
                     .decode(status, body)
-                    .map(|v| Box::new(CsidCompliance(v)))
+                    .map(|v| Box::new(ComplianceCsid(v)))
                     .map_err(core_error)
             })
         }
@@ -288,16 +288,16 @@ pub mod ffi {
             &self,
             status: u16,
             body: &[u8],
-        ) -> Result<Box<CsidProduction>, Box<BindingError>> {
+        ) -> Result<Box<ProductionCsid>, Box<BindingError>> {
             boundary(|| {
                 self.0
                     .decode(status, body)
-                    .map(|v| Box::new(CsidProduction(v)))
+                    .map(|v| Box::new(ProductionCsid(v)))
                     .map_err(core_error)
             })
         }
     }
-    impl CsidCompliance {
+    impl ComplianceCsid {
         pub fn create(
             environment: Environment,
             request_id: Option<&DiplomatStr>,
@@ -332,7 +332,7 @@ pub mod ffi {
         }
     }
 
-    impl CsidProduction {
+    impl ProductionCsid {
         pub fn create(
             environment: Environment,
             request_id: Option<&DiplomatStr>,
@@ -377,36 +377,36 @@ pub mod ffi {
         }
         #[cfg(not(target_arch = "wasm32"))]
         #[diplomat::attr(js, disable)]
-        pub fn post_csr_for_ccsid(
+        pub fn request_compliance_csid(
             &self,
             csr: &Csr,
             otp: &DiplomatStr,
-        ) -> Result<Box<CsidCompliance>, Box<BindingError>> {
+        ) -> Result<Box<ComplianceCsid>, Box<BindingError>> {
             boundary(|| {
                 run(self.0.request_compliance_csid(&csr.0, text(otp)?))
-                    .map(|value| Box::new(CsidCompliance(value)))
+                    .map(|value| Box::new(ComplianceCsid(value)))
             })
         }
         #[cfg(not(target_arch = "wasm32"))]
         #[diplomat::attr(js, disable)]
-        pub fn post_ccsid_for_pcsid(
+        pub fn request_production_csid(
             &self,
-            credentials: &CsidCompliance,
-        ) -> Result<Box<CsidProduction>, Box<BindingError>> {
+            credentials: &ComplianceCsid,
+        ) -> Result<Box<ProductionCsid>, Box<BindingError>> {
             boundary(|| {
                 run(self.0.request_production_csid(&credentials.0))
-                    .map(|value| Box::new(CsidProduction(value)))
+                    .map(|value| Box::new(ProductionCsid(value)))
             })
         }
         #[cfg(not(target_arch = "wasm32"))]
         #[diplomat::attr(js, disable)]
         pub fn renew_csid(
             &self,
-            credentials: &CsidProduction,
+            credentials: &ProductionCsid,
             csr: &Csr,
             otp: &DiplomatStr,
             accept_language: Option<&DiplomatStr>,
-        ) -> Result<Box<CsidProduction>, Box<BindingError>> {
+        ) -> Result<Box<ProductionCsid>, Box<BindingError>> {
             boundary(|| {
                 run(self.0.renew_csid(
                     &credentials.0,
@@ -414,7 +414,7 @@ pub mod ffi {
                     text(otp)?,
                     optional_input(accept_language)?,
                 ))
-                .map(|value| Box::new(CsidProduction(value)))
+                .map(|value| Box::new(ProductionCsid(value)))
             })
         }
         #[cfg(not(target_arch = "wasm32"))]
@@ -422,7 +422,7 @@ pub mod ffi {
         pub fn check_invoice_compliance(
             &self,
             invoice: &SignedInvoice,
-            credentials: &CsidCompliance,
+            credentials: &ComplianceCsid,
         ) -> Result<Box<ValidationResponse>, Box<BindingError>> {
             boundary(|| {
                 let invoice = invoice
@@ -438,7 +438,7 @@ pub mod ffi {
         pub fn report_simplified_invoice(
             &self,
             invoice: &SignedInvoice,
-            credentials: &CsidProduction,
+            credentials: &ProductionCsid,
             clearance_mode: ClearanceMode,
             accept_language: Option<&DiplomatStr>,
         ) -> Result<Box<ValidationResponse>, Box<BindingError>> {
@@ -461,7 +461,7 @@ pub mod ffi {
         pub fn clear_standard_invoice(
             &self,
             invoice: &SignedInvoice,
-            credentials: &CsidProduction,
+            credentials: &ProductionCsid,
             clearance_mode: ClearanceMode,
             accept_language: Option<&DiplomatStr>,
         ) -> Result<Box<ValidationResponse>, Box<BindingError>> {
@@ -481,7 +481,7 @@ pub mod ffi {
         }
     }
     impl ZatcaClient {
-        pub fn prepare_post_csr_for_ccsid(
+        pub fn prepare_request_compliance_csid(
             &self,
             csr: &Csr,
             otp: &DiplomatStr,
@@ -493,9 +493,9 @@ pub mod ffi {
                     .map_err(core_error)
             })
         }
-        pub fn prepare_post_ccsid_for_pcsid(
+        pub fn prepare_request_production_csid(
             &self,
-            credentials: &CsidCompliance,
+            credentials: &ComplianceCsid,
         ) -> Result<Box<ProductionRequest>, Box<BindingError>> {
             boundary(|| {
                 self.0
@@ -506,7 +506,7 @@ pub mod ffi {
         }
         pub fn prepare_renew_csid(
             &self,
-            credentials: &CsidProduction,
+            credentials: &ProductionCsid,
             csr: &Csr,
             otp: &DiplomatStr,
             accept_language: Option<&DiplomatStr>,
@@ -526,7 +526,7 @@ pub mod ffi {
         pub fn prepare_check_invoice_compliance(
             &self,
             invoice: &SignedInvoice,
-            credentials: &CsidCompliance,
+            credentials: &ComplianceCsid,
         ) -> Result<Box<InvoiceRequest>, Box<BindingError>> {
             boundary(|| {
                 let invoice = invoice
@@ -542,7 +542,7 @@ pub mod ffi {
         pub fn prepare_report_simplified_invoice(
             &self,
             invoice: &SignedInvoice,
-            credentials: &CsidProduction,
+            credentials: &ProductionCsid,
             clearance_mode: ClearanceMode,
             accept_language: Option<&DiplomatStr>,
         ) -> Result<Box<InvoiceRequest>, Box<BindingError>> {
@@ -565,7 +565,7 @@ pub mod ffi {
         pub fn prepare_clear_standard_invoice(
             &self,
             invoice: &SignedInvoice,
-            credentials: &CsidProduction,
+            credentials: &ProductionCsid,
             clearance_mode: ClearanceMode,
             accept_language: Option<&DiplomatStr>,
         ) -> Result<Box<InvoiceRequest>, Box<BindingError>> {
@@ -751,10 +751,10 @@ mod tests {
     #[test]
     fn credentials_validate_environment_utf8_nul_and_optional_id() {
         assert!(
-            CsidProduction::create(Environment::NonProduction, None, b"\xff", b"secret").is_err()
+            ProductionCsid::create(Environment::NonProduction, None, b"\xff", b"secret").is_err()
         );
         assert!(
-            CsidCompliance::create(
+            ComplianceCsid::create(
                 Environment::NonProduction,
                 Some(b"id\0bad"),
                 b"token",
@@ -762,10 +762,10 @@ mod tests {
             )
             .is_err()
         );
-        let absent = CsidCompliance::create(Environment::Simulation, None, b"token", b"secret")
+        let absent = ComplianceCsid::create(Environment::Simulation, None, b"token", b"secret")
             .ok()
             .unwrap();
-        let empty = CsidProduction::create(Environment::Production, Some(b""), b"token", b"secret")
+        let empty = ProductionCsid::create(Environment::Production, Some(b""), b"token", b"secret")
             .ok()
             .unwrap();
         assert_eq!(absent.env().ok(), Some(Environment::Simulation));

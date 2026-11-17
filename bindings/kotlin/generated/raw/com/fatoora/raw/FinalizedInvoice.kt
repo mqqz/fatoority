@@ -11,7 +11,7 @@ internal interface FinalizedInvoiceLib: Library {
     fun fatoora_FinalizedInvoice_from_file(value: Slice): ResultPointerPointer
     fun fatoora_FinalizedInvoice_data(handle: Pointer): ResultPointerPointer
     fun fatoora_FinalizedInvoice_totals(handle: Pointer): ResultPointerPointer
-    fun fatoora_FinalizedInvoice_hash_base64(handle: Pointer, write: Pointer): ResultUnitPointer
+    fun fatoora_FinalizedInvoice_hash(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_FinalizedInvoice_xml(handle: Pointer, write: Pointer): ResultUnitPointer
 }
 
@@ -125,9 +125,9 @@ class FinalizedInvoice internal constructor (
         }
     }
 
-    fun hashBase64(): Result<String> {
+    fun hash(): Result<String> {
         val write = DW.lib.diplomat_buffer_write_create(0)
-        val returnVal = lib.fatoora_FinalizedInvoice_hash_base64(handle, write);
+        val returnVal = lib.fatoora_FinalizedInvoice_hash(handle, write);
         val nativeOkVal = returnVal.getNativeOk();
         if (nativeOkVal != null) {
 

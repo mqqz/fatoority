@@ -14,7 +14,7 @@
 #include "../diplomat_runtime.hpp"
 #include "BindingError.hpp"
 #include "Bytes.hpp"
-#include "CsidProduction.hpp"
+#include "ProductionCsid.hpp"
 
 
 namespace fatoora {
@@ -33,7 +33,7 @@ namespace capi {
     typedef struct fatoora_ProductionRequest_body_result {union {fatoora::capi::Bytes* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ProductionRequest_body_result;
     fatoora_ProductionRequest_body_result fatoora_ProductionRequest_body(const fatoora::capi::ProductionRequest* self);
 
-    typedef struct fatoora_ProductionRequest_decode_result {union {fatoora::capi::CsidProduction* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ProductionRequest_decode_result;
+    typedef struct fatoora_ProductionRequest_decode_result {union {fatoora::capi::ProductionCsid* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ProductionRequest_decode_result;
     fatoora_ProductionRequest_decode_result fatoora_ProductionRequest_decode(const fatoora::capi::ProductionRequest* self, uint16_t status, diplomat::capi::DiplomatU8View body);
 
     void fatoora_ProductionRequest_destroy(ProductionRequest* self);
@@ -92,11 +92,11 @@ inline diplomat::result<std::unique_ptr<fatoora::Bytes>, std::unique_ptr<fatoora
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Bytes>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Bytes>>(std::unique_ptr<fatoora::Bytes>(fatoora::Bytes::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Bytes>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::CsidProduction>, std::unique_ptr<fatoora::BindingError>> fatoora::ProductionRequest::decode(uint16_t status, diplomat::span<const uint8_t> body) const {
+inline diplomat::result<std::unique_ptr<fatoora::ProductionCsid>, std::unique_ptr<fatoora::BindingError>> fatoora::ProductionRequest::decode(uint16_t status, diplomat::span<const uint8_t> body) const {
     auto result = fatoora::capi::fatoora_ProductionRequest_decode(this->AsFFI(),
         status,
         {body.data(), body.size()});
-    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::CsidProduction>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::CsidProduction>>(std::unique_ptr<fatoora::CsidProduction>(fatoora::CsidProduction::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::CsidProduction>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::ProductionCsid>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::ProductionCsid>>(std::unique_ptr<fatoora::ProductionCsid>(fatoora::ProductionCsid::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::ProductionCsid>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
 inline const fatoora::capi::ProductionRequest* fatoora::ProductionRequest::AsFFI() const {

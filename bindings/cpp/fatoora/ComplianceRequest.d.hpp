@@ -16,8 +16,8 @@ namespace capi { struct BindingError; }
 class BindingError;
 namespace capi { struct Bytes; }
 class Bytes;
-namespace capi { struct CsidCompliance; }
-class CsidCompliance;
+namespace capi { struct ComplianceCsid; }
+class ComplianceCsid;
 } // namespace fatoora
 
 
@@ -50,7 +50,7 @@ public:
 
   inline diplomat::result<std::unique_ptr<fatoora::Bytes>, std::unique_ptr<fatoora::BindingError>> body() const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::CsidCompliance>, std::unique_ptr<fatoora::BindingError>> decode(uint16_t status, diplomat::span<const uint8_t> body) const;
+  inline diplomat::result<std::unique_ptr<fatoora::ComplianceCsid>, std::unique_ptr<fatoora::BindingError>> decode(uint16_t status, diplomat::span<const uint8_t> body) const;
 
     inline const fatoora::capi::ComplianceRequest* AsFFI() const;
     inline fatoora::capi::ComplianceRequest* AsFFI();

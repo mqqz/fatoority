@@ -34,8 +34,8 @@ namespace capi {
     typedef struct fatoora_SignedInvoice_totals_result {union {_native::capi::InvoiceTotals* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_totals_result;
     fatoora_SignedInvoice_totals_result fatoora_SignedInvoice_totals(const _native::capi::SignedInvoice* self);
 
-    typedef struct fatoora_SignedInvoice_hash_base64_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_hash_base64_result;
-    fatoora_SignedInvoice_hash_base64_result fatoora_SignedInvoice_hash_base64(const _native::capi::SignedInvoice* self, _native::diplomat::capi::DiplomatWrite* write);
+    typedef struct fatoora_SignedInvoice_hash_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_hash_result;
+    fatoora_SignedInvoice_hash_result fatoora_SignedInvoice_hash(const _native::capi::SignedInvoice* self, _native::diplomat::capi::DiplomatWrite* write);
 
     typedef struct fatoora_SignedInvoice_xml_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_xml_result;
     fatoora_SignedInvoice_xml_result fatoora_SignedInvoice_xml(const _native::capi::SignedInvoice* self, _native::diplomat::capi::DiplomatWrite* write);
@@ -102,17 +102,17 @@ inline _native::diplomat::result<std::unique_ptr<_native::InvoiceTotals>, std::u
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::InvoiceTotals>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::InvoiceTotals>>(std::unique_ptr<_native::InvoiceTotals>(_native::InvoiceTotals::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::InvoiceTotals>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> _native::SignedInvoice::hash_base64() const {
+inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> _native::SignedInvoice::hash() const {
     std::string output;
     _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
-    auto result = _native::capi::fatoora_SignedInvoice_hash_base64(this->AsFFI(),
+    auto result = _native::capi::fatoora_SignedInvoice_hash(this->AsFFI(),
         &write);
     return result.is_ok ? _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::string>(std::move(output))) : _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 template<typename W>
-inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::SignedInvoice::hash_base64_write(W& writeable) const {
+inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::SignedInvoice::hash_write(W& writeable) const {
     _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
-    auto result = _native::capi::fatoora_SignedInvoice_hash_base64(this->AsFFI(),
+    auto result = _native::capi::fatoora_SignedInvoice_hash(this->AsFFI(),
         &write);
     return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
