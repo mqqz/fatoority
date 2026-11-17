@@ -6,6 +6,21 @@ use fatoora_core::{
 fn d(s: &str) -> Decimal {
     s.parse().unwrap()
 }
+/// Adds a finalized entry through `allowance`/`charge`, the replacement for the
+/// deprecated `InvoiceBuilder::adjustment`.
+trait AddEntry {
+    fn entry(self, entry: AllowanceCharge) -> Self;
+}
+impl AddEntry for InvoiceBuilder {
+    fn entry(self, entry: AllowanceCharge) -> Self {
+        let kind = entry.kind;
+        let adjustment = DocumentAdjustment::from(entry);
+        match kind {
+            AdjustmentKind::Allowance => self.allowance(adjustment),
+            AdjustmentKind::Charge => self.charge(adjustment),
+        }
+    }
+}
 fn builder() -> InvoiceBuilder {
     let invoice = common::dummy_finalized_invoice();
     InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified))
@@ -16,7 +31,7 @@ fn builder() -> InvoiceBuilder {
         .previous_invoice_hash(invoice.data().previous_invoice_hash().clone())
         .invoice_counter(1)
         .seller(invoice.data().seller().clone())
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
 }
 fn line(category: VatCategory) -> LineItem {
@@ -145,7 +160,7 @@ fn mixed_exemptions_and_repeated_adjustments_preserve_independent_metadata() {
             .line_item(item)
             .tax_exemption(category, rate, exemption.clone());
         for charge in [false, true] {
-            b = b.adjustment(AllowanceCharge {
+            b = b.entry(AllowanceCharge {
                 omitted_rate: false,
                 base_amount: None,
                 percentage: None,
@@ -431,8 +446,8 @@ fn adjustment_balances_are_validated_after_all_entries() {
     for adjustments in [[allowance.clone(), charge.clone()], [charge, allowance]] {
         let invoice = builder()
             .line_item(line(VatCategory::Standard))
-            .adjustment(adjustments[0].clone())
-            .adjustment(adjustments[1].clone())
+            .entry(adjustments[0].clone())
+            .entry(adjustments[1].clone())
             .build()
             .unwrap();
         assert_eq!(invoice.totals().taxable_amount(), d("25.25"));
@@ -447,8 +462,8 @@ fn adjustment_balances_are_validated_after_all_entries() {
 fn adjustment_balances_in_import_do_not_depend_on_xml_order() {
     let invoice = builder()
         .line_item(line(VatCategory::Standard))
-        .adjustment(balance_adjustment(true, "30", VatCategory::Standard))
-        .adjustment(balance_adjustment(false, "25", VatCategory::Standard))
+        .entry(balance_adjustment(true, "30", VatCategory::Standard))
+        .entry(balance_adjustment(false, "25", VatCategory::Standard))
         .build()
         .unwrap();
     let xml = invoice.to_xml().unwrap();
@@ -483,8 +498,8 @@ fn adjustment_balances_still_reject_a_negative_final_vat_group() {
         for adjustments in [[allowance.clone(), charge.clone()], [charge, allowance]] {
             let error = builder()
                 .line_item(line(VatCategory::Standard))
-                .adjustment(adjustments[0].clone())
-                .adjustment(adjustments[1].clone())
+                .entry(adjustments[0].clone())
+                .entry(adjustments[1].clone())
                 .build()
                 .unwrap_err();
             let InvoiceError::Validation(error) = error else {
@@ -502,6 +517,7 @@ fn adjustment_balances_still_reject_a_negative_final_vat_group() {
 }
 
 #[test]
+#[allow(deprecated)] // covers rejecting the deprecated aggregate setters combined with entries
 fn builder_rejects_invalid_adjustments_and_inconsistent_accounting_metadata() {
     let adjustment = AllowanceCharge {
         omitted_rate: false,
@@ -524,7 +540,7 @@ fn builder_rejects_invalid_adjustments_and_inconsistent_accounting_metadata() {
         assert!(
             legacy
                 .line_item(line(VatCategory::Standard))
-                .adjustment(adjustment.clone())
+                .entry(adjustment.clone())
                 .build()
                 .is_err()
         );
@@ -548,7 +564,7 @@ fn builder_rejects_invalid_adjustments_and_inconsistent_accounting_metadata() {
         assert!(
             builder()
                 .line_item(line(VatCategory::Standard))
-                .adjustment(invalid)
+                .entry(invalid)
                 .build()
                 .is_err(),
             "{amount}/{rate}/{category:?}/{count}"
@@ -786,7 +802,7 @@ fn document_adjustments_do_not_replace_the_line_derived_vat_category() {
                 b = b.line_item(line(adjustment_category));
             }
             let invoice = b
-                .adjustment(AllowanceCharge {
+                .entry(AllowanceCharge {
                     omitted_rate: false,
                     base_amount: None,
                     percentage: None,
@@ -902,7 +918,7 @@ fn repeated_adjustment_classifications_compare_normalized_scalars() {
     };
     let invoice = builder()
         .line_item(line(VatCategory::Standard))
-        .adjustment(adjustment)
+        .entry(adjustment)
         .build()
         .unwrap();
     let xml = invoice.to_xml().unwrap();
@@ -1009,7 +1025,7 @@ fn credit_debit_reasons_cannot_conflict_with_payment_instructions() {
                     .previous_invoice_hash(source.data().previous_invoice_hash().clone())
                     .invoice_counter(1)
                     .seller(source.data().seller().clone())
-                    .payment_means_code("10")
+                    .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
                     .vat_category(VatCategory::Standard)
                     .line_item(line(VatCategory::Standard))
                     .note(InvoiceNote::without_language("unrelated note"))
@@ -1060,7 +1076,7 @@ fn credit_debit_reasons_cannot_conflict_with_payment_instructions() {
 fn numeric_xml_content_accepts_surrounding_whitespace_without_skipping_validation() {
     let invoice = builder()
         .line_item(line(VatCategory::Standard))
-        .adjustment(balance_adjustment(true, "1", VatCategory::Standard))
+        .entry(balance_adjustment(true, "1", VatCategory::Standard))
         .prepaid_amount(d("1"))
         .payable_rounding_amount(d("0.01"))
         .tax_currency(CurrencyCode::parse("USD").unwrap(), d("4.02"))
@@ -1209,7 +1225,7 @@ fn oversized_adjustment_counts_are_rejected_before_serialization() {
         assert!(
             builder()
                 .line_item(line(VatCategory::Standard))
-                .adjustment(adjustment)
+                .entry(adjustment)
                 .build()
                 .is_err()
         );
@@ -1220,7 +1236,7 @@ fn oversized_adjustment_counts_are_rejected_before_serialization() {
 fn adjustment_count_limit_accepts_boundary_and_rejects_oversized_imports() {
     let invoice = builder()
         .line_item(line(VatCategory::Standard))
-        .adjustment(AllowanceCharge {
+        .entry(AllowanceCharge {
             omitted_rate: false,
             base_amount: None,
             percentage: None,
@@ -1264,11 +1280,7 @@ fn adjustment_kinds_round_trip_through_charge_indicator() {
         .unwrap();
         let document = balance_adjustment(kind.is_charge(), "5", VatCategory::Standard);
         assert_eq!(document.kind, kind);
-        let invoice = builder()
-            .line_item(item)
-            .adjustment(document)
-            .build()
-            .unwrap();
+        let invoice = builder().line_item(item).entry(document).build().unwrap();
         let xml = invoice.to_xml().unwrap();
         let indicator = format!(
             "<cbc:ChargeIndicator>{}</cbc:ChargeIndicator>",

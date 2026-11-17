@@ -1,6 +1,9 @@
 //! Independent expected values from ZATCA XML standard section 10.
 mod common;
-use fatoora_core::invoice::{InvoiceBuilder, InvoiceSubType, InvoiceType, LineItem, VatCategory};
+use fatoora_core::invoice::{
+    Adjustment, DocumentAdjustment, InvoiceBuilder, InvoiceSubType, InvoiceType, LineItem,
+    VatCategory,
+};
 
 fn invoice(
     lines: Vec<LineItem>,
@@ -16,10 +19,18 @@ fn invoice(
         .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(1)
         .seller(common::dummy_finalized_invoice().data().seller().clone())
-        .payment_means_code("10")
-        .vat_category(VatCategory::Standard)
-        .invoice_level_discount(discount)
-        .invoice_level_charge(charge);
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
+        .vat_category(VatCategory::Standard);
+    // Adjustments use the first line's standard rate, as the former aggregate did.
+    let rate = lines[0].vat_rate();
+    let entry =
+        |amount| DocumentAdjustment::new(Adjustment::amount(amount), VatCategory::Standard, rate);
+    if discount != fatoora_core::Decimal::ZERO {
+        b = b.allowance(entry(discount));
+    }
+    if charge != fatoora_core::Decimal::ZERO {
+        b = b.charge(entry(charge));
+    }
     for line in lines {
         b = b.line_item(line);
     }
@@ -328,6 +339,7 @@ fn imported_category_tax_mismatch_is_rejected() {
 }
 
 #[test]
+#[allow(deprecated)] // covers the deprecated aggregate setters' VAT group inference
 fn adjustments_require_one_unambiguous_vat_group() {
     use fatoora_core::invoice::{InvoiceError, InvoiceField, ValidationKind};
     // Both lines are standard VAT, but the document discount has no rate selector.
@@ -370,22 +382,30 @@ fn invoice_builder_for_adjustments() -> fatoora_core::invoice::InvoiceBuilder {
         .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(1)
         .seller(common::dummy_finalized_invoice().data().seller().clone())
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
+}
+
+fn standard_allowance(amount: &str) -> DocumentAdjustment {
+    DocumentAdjustment::new(
+        Adjustment::amount(d(amount)),
+        VatCategory::Standard,
+        d("15"),
+    )
 }
 
 #[test]
 fn discount_cannot_make_its_tax_group_negative() {
     let at_limit = invoice_builder_for_adjustments()
         .line_item(line(d("100"), d("1"), d("15")))
-        .invoice_level_discount(d("100"))
+        .allowance(standard_allowance("100"))
         .build()
         .unwrap();
     assert_eq!(at_limit.totals().taxable_amount(), d("0"));
     assert_eq!(at_limit.totals().payable_amount(), d("0"));
     let error: fatoora_core::Error = invoice_builder_for_adjustments()
         .line_item(line(d("100"), d("1"), d("15")))
-        .invoice_level_discount(d("100.01"))
+        .allowance(standard_allowance("100.01"))
         .build()
         .unwrap_err()
         .into();
@@ -437,9 +457,14 @@ fn nonstandard_vat_adjustments_preserve_category_and_amounts_on_import() {
         let invoice = invoice_builder_for_adjustments()
             .vat_category(category)
             .line_item(LineItem::new("Service", d("2"), "PCE", d("50"), d("0"), category).unwrap())
-            .invoice_level_discount(d("10"))
-            .invoice_level_charge(d("5"))
-            .allowance_reason("Contract adjustment")
+            .allowance(
+                DocumentAdjustment::new(Adjustment::amount(d("10")), category, d("0"))
+                    .reason("Contract adjustment"),
+            )
+            .charge(
+                DocumentAdjustment::new(Adjustment::amount(d("5")), category, d("0"))
+                    .reason("Contract adjustment"),
+            )
             .build()
             .unwrap();
         let imported = parse_finalized_invoice_xml(&invoice.to_xml().unwrap()).unwrap();

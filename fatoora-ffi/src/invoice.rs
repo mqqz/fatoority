@@ -20,6 +20,31 @@ fn vat_code(value: inv_core::VatCategory) -> u8 {
         inv_core::VatCategory::OutOfScope => 3,
     }
 }
+/// Legacy builder setters whose exported semantics have no equivalent in the
+/// current core API. The exported Diplomat API keeps them until the next
+/// binding redesign, so they call the deprecated core methods here.
+#[allow(deprecated)]
+mod legacy {
+    use fatoora_core::Decimal;
+    use fatoora_core::invoice::InvoiceBuilder;
+
+    /// Replaces the first payment means' code, creating one if none exists.
+    pub(super) fn payment_means_code(b: InvoiceBuilder, value: &str) -> InvoiceBuilder {
+        b.payment_means_code(value)
+    }
+    /// Sets the aggregate reason shared by the aggregate allowance and charge.
+    pub(super) fn allowance_reason(b: InvoiceBuilder, value: &str) -> InvoiceBuilder {
+        b.allowance_reason(value)
+    }
+    /// Replaces the aggregate document-level charge.
+    pub(super) fn invoice_level_charge(b: InvoiceBuilder, value: Decimal) -> InvoiceBuilder {
+        b.invoice_level_charge(value)
+    }
+    /// Replaces the aggregate document-level discount.
+    pub(super) fn invoice_level_discount(b: InvoiceBuilder, value: Decimal) -> InvoiceBuilder {
+        b.invoice_level_discount(value)
+    }
+}
 fn decimal(value: &[u8], label: &str) -> Result<fatoora_core::Decimal, Box<BindingError>> {
     fatoora_core::Decimal::parse(text(value)?).map_err(|e| crate::common::context_error(e, label))
 }
@@ -276,7 +301,7 @@ pub mod ffi {
     pub struct AllowanceCharge(pub(crate) inv_core::AllowanceCharge);
     impl AllowanceCharge {
         pub fn has_vat_rate(&self) -> bool {
-            !self.0.omitted_rate
+            self.0.has_vat_rate()
         }
 
         pub fn without_vat_rate(&self) -> Result<Box<AllowanceCharge>, Box<BindingError>> {
@@ -289,9 +314,7 @@ pub mod ffi {
                         "only out-of-scope adjustments can omit a zero VAT rate",
                     ));
                 }
-                let mut value = self.0.clone();
-                value.omitted_rate = true;
-                Ok(Box::new(Self(value)))
+                Ok(Box::new(Self(self.0.clone().omit_vat_rate())))
             })
         }
 
@@ -401,7 +424,7 @@ pub mod ffi {
         pub fn without_vat_rate(&self) -> Result<Box<VatBreakdown>, Box<BindingError>> {
             boundary(|| {
                 Ok(Box::new(Self(
-                    self.0.clone().without_vat_rate().map_err(core_error)?,
+                    self.0.clone().omit_vat_rate().map_err(core_error)?,
                 )))
             })
         }
@@ -854,20 +877,21 @@ pub mod ffi {
             exemption: &TaxExemption,
         ) -> Result<(), Box<BindingError>> {
             boundary(|| {
-                let value = inv_core::AllowanceCharge {
-                    omitted_rate: false,
-                    kind: inv_core::AdjustmentKind::from_charge_indicator(charge),
-                    tax_category_count: 1,
-                    amount: value.0.value().map_err(core_error)?,
-                    base_amount: value.0.calculation_base_amount(),
-                    percentage: value.0.calculation_percentage(),
-                    reason: value.0.allowance_charge_reason().map(str::to_owned),
-                    reason_code: value.0.allowance_charge_reason_code().map(str::to_owned),
-                    category: vat(category)?,
-                    rate: decimal(rate, "rate")?,
-                    exemption: exemption.0.clone(),
-                };
-                self.update(|b| b.adjustment(value))
+                // Report an invalid calculation when the adjustment is added.
+                value.0.value().map_err(core_error)?;
+                let value = inv_core::DocumentAdjustment::new(
+                    value.0.clone(),
+                    vat(category)?,
+                    decimal(rate, "rate")?,
+                )
+                .exemption(exemption.0.clone());
+                self.update(|b| {
+                    if charge {
+                        b.charge(value)
+                    } else {
+                        b.allowance(value)
+                    }
+                })
             })
         }
         pub fn set_buyer_without_address(
@@ -1010,7 +1034,14 @@ pub mod ffi {
             &mut self,
             adjustment: &AllowanceCharge,
         ) -> Result<(), Box<BindingError>> {
-            boundary(|| self.update(|b| b.adjustment(adjustment.0.clone())))
+            boundary(|| {
+                let kind = adjustment.0.kind;
+                let value = inv_core::DocumentAdjustment::from(adjustment.0.clone());
+                self.update(|b| match kind {
+                    inv_core::AdjustmentKind::Allowance => b.allowance(value),
+                    inv_core::AdjustmentKind::Charge => b.charge(value),
+                })
+            })
         }
         pub fn add_item(&mut self, item: &InvoiceLineItem) -> Result<(), Box<BindingError>> {
             boundary(|| self.update(|b| b.line_item(item.0.clone())))
@@ -1134,13 +1165,13 @@ pub mod ffi {
         ) -> Result<(), Box<BindingError>> {
             boundary(|| {
                 let value = text(value)?;
-                self.update(|b| b.payment_means_code(value))
+                self.update(|b| super::legacy::payment_means_code(b, value))
             })
         }
         pub fn allowance_reason(&mut self, value: &DiplomatStr) -> Result<(), Box<BindingError>> {
             boundary(|| {
                 let value = text(value)?;
-                self.update(|b| b.allowance_reason(value))
+                self.update(|b| super::legacy::allowance_reason(b, value))
             })
         }
         pub fn invoice_level_charge(
@@ -1149,7 +1180,7 @@ pub mod ffi {
         ) -> Result<(), Box<BindingError>> {
             boundary(|| {
                 let value = decimal(value, "invoice_level_charge")?;
-                self.update(|b| b.invoice_level_charge(value))
+                self.update(|b| super::legacy::invoice_level_charge(b, value))
             })
         }
         pub fn invoice_level_discount(
@@ -1158,7 +1189,7 @@ pub mod ffi {
         ) -> Result<(), Box<BindingError>> {
             boundary(|| {
                 let value = decimal(value, "invoice_level_discount")?;
-                self.update(|b| b.invoice_level_discount(value))
+                self.update(|b| super::legacy::invoice_level_discount(b, value))
             })
         }
         pub fn set_invoice_counter(&mut self, value: u64) -> Result<(), Box<BindingError>> {
@@ -1195,7 +1226,12 @@ pub mod ffi {
             boundary(|| {
                 let reason = text(reason)?;
                 let amount = decimal(amount, "allowance")?;
-                self.update(|b| b.invoice_level_discount(amount).allowance_reason(reason))
+                self.update(|b| {
+                    super::legacy::allowance_reason(
+                        super::legacy::invoice_level_discount(b, amount),
+                        reason,
+                    )
+                })
             })
         }
         pub fn set_seller(

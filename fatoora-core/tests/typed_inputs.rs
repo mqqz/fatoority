@@ -55,7 +55,7 @@ fn typed_builder() -> InvoiceBuilder {
         .previous_invoice_hash(InvoiceHash::parse(HASH).unwrap())
         .invoice_counter(1)
         .seller(seller())
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
         .line_item(line())
 }

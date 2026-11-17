@@ -2046,7 +2046,7 @@ mod tests {
             .previous_invoice_hash("hash".parse().unwrap())
             .invoice_counter(0)
             .seller(seller)
-            .payment_means_code("10")
+            .payment_means(crate::invoice::PaymentMeans::new("10"))
             .vat_category(VatCategory::Standard)
             .line_item(line_item);
         let invoice = builder.build().expect("build invoice");

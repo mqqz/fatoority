@@ -49,7 +49,7 @@ pub struct SignedInvoice {
 /// # Examples
 /// ```rust,no_run
 /// use fatoora_core::invoice::{
-///     InvoiceBuilder, InvoiceSubType, InvoiceType, LineItem, VatCategory, Seller,
+///     InvoiceBuilder, InvoiceSubType, InvoiceType, LineItem, PaymentMeans, VatCategory, Seller,
 /// };
 ///
 /// let seller: Seller = unimplemented!();
@@ -61,7 +61,7 @@ pub struct SignedInvoice {
 ///     .previous_invoice_hash("hash".parse()?)
 ///     .invoice_counter(1)
 ///     .seller(seller)
-///     .payment_means_code("10")
+///     .payment_means(PaymentMeans::new("10"))
 ///     .vat_category(VatCategory::Standard)
 ///     .line_item(LineItem::new("Item", fatoora_core::Decimal::parse("1.0").unwrap(), "PCE", fatoora_core::Decimal::parse("100.0").unwrap(), fatoora_core::Decimal::parse("15.0").unwrap(), VatCategory::Standard).unwrap())
 ///     .build()?;
@@ -107,8 +107,7 @@ pub struct InvoiceBuilder {
     invoice_level_discount: Decimal,
     pub(crate) adjustment_vat_rate: Option<Decimal>,
     allowance_reason: Option<String>,
-    adjustments: Vec<super::AllowanceCharge>,
-    pending_adjustments: Vec<(usize, super::AdjustmentKind, super::DocumentAdjustment)>,
+    adjustments: Vec<(super::AdjustmentKind, super::DocumentAdjustment)>,
     exemptions: Vec<(VatCategory, Decimal, super::TaxExemption)>,
     supplied_breakdowns: Vec<super::VatBreakdown>,
     party_identifiers: Vec<(bool, super::OtherId)>,
@@ -156,26 +155,59 @@ impl InvoiceBuilder {
         self
     }
 
-    /// Append a document allowance; validation occurs in `build`.
+    /// Append a document-level allowance (`cac:AllowanceCharge` with
+    /// `cbc:ChargeIndicator` `false`); validation occurs in `build`.
+    ///
+    /// This is the way to add document-level allowances. Each entry carries its own
+    /// amount or percentage calculation, reason, reason code and VAT category and rate.
     ///
     /// Appends; allowances and charges keep their relative call order.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use fatoora_core::Decimal;
+    /// use fatoora_core::invoice::{
+    ///     Adjustment, DocumentAdjustment, InvoiceBuilder, InvoiceSubType, InvoiceType,
+    ///     VatCategory,
+    /// };
+    ///
+    /// let rate = Decimal::parse("15").unwrap();
+    /// let builder = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified))
+    ///     .allowance(
+    ///         DocumentAdjustment::new(
+    ///             Adjustment::amount(Decimal::parse("10").unwrap()),
+    ///             VatCategory::Standard,
+    ///             rate,
+    ///         )
+    ///         .reason("Loyalty discount"),
+    ///     )
+    ///     .charge(
+    ///         DocumentAdjustment::new(
+    ///             Adjustment::percentage(
+    ///                 Decimal::parse("100").unwrap(),
+    ///                 Decimal::parse("5").unwrap(),
+    ///             ),
+    ///             VatCategory::Standard,
+    ///             rate,
+    ///         )
+    ///         .reason_code("FC"),
+    ///     );
+    /// # let _ = builder;
+    /// ```
     pub fn allowance(mut self, adjustment: super::DocumentAdjustment) -> Self {
-        self.pending_adjustments.push((
-            self.adjustments.len() + self.pending_adjustments.len(),
-            super::AdjustmentKind::Allowance,
-            adjustment,
-        ));
+        self.adjustments
+            .push((super::AdjustmentKind::Allowance, adjustment));
         self
     }
-    /// Append a document charge; validation occurs in `build`.
+    /// Append a document-level charge (`cac:AllowanceCharge` with
+    /// `cbc:ChargeIndicator` `true`); validation occurs in `build`.
+    ///
+    /// This is the way to add document-level charges; see [`allowance`](Self::allowance).
     ///
     /// Appends; allowances and charges keep their relative call order.
     pub fn charge(mut self, adjustment: super::DocumentAdjustment) -> Self {
-        self.pending_adjustments.push((
-            self.adjustments.len() + self.pending_adjustments.len(),
-            super::AdjustmentKind::Charge,
-            adjustment,
-        ));
+        self.adjustments
+            .push((super::AdjustmentKind::Charge, adjustment));
         self
     }
     /// Append payment means, or fill the placeholder created by `payment_instruction`.
@@ -233,10 +265,21 @@ impl InvoiceBuilder {
 
     /// Add an individual document adjustment. Do not combine with legacy aggregate setters.
     ///
-    /// Appends; earlier adjustments are kept in call order.
-    pub fn adjustment(mut self, adjustment: super::AllowanceCharge) -> Self {
-        self.adjustments.push(adjustment);
-        self
+    /// Appends; earlier adjustments are kept in call order. Forwards to
+    /// [`allowance`](Self::allowance) or [`charge`](Self::charge) according to
+    /// `adjustment.kind`, converting with `DocumentAdjustment::from`.
+    #[deprecated(
+        since = "0.6.0",
+        note = "use `allowance(DocumentAdjustment)` or `charge(DocumentAdjustment)` instead; \
+                `DocumentAdjustment::from(AllowanceCharge)` converts an existing entry"
+    )]
+    pub fn adjustment(self, adjustment: super::AllowanceCharge) -> Self {
+        let kind = adjustment.kind;
+        let adjustment = super::DocumentAdjustment::from(adjustment);
+        match kind {
+            super::AdjustmentKind::Allowance => self.allowance(adjustment),
+            super::AdjustmentKind::Charge => self.charge(adjustment),
+        }
     }
 
     /// Append a VAT exemption reason for a category and rate.
@@ -292,7 +335,6 @@ impl InvoiceBuilder {
             adjustment_vat_rate: None,
             allowance_reason: None,
             adjustments: Vec::new(),
-            pending_adjustments: Vec::new(),
             exemptions: Vec::new(),
             supplied_breakdowns: Vec::new(),
             party_identifiers: Vec::new(),
@@ -360,7 +402,17 @@ impl InvoiceBuilder {
 
     /// Set the legacy aggregate document-level charge.
     ///
-    /// Replaces any previously set value.
+    /// Replaces any previously set value. The charge is emitted with the document
+    /// VAT category and a rate taken from the first line in that category, and its
+    /// reason is the [`allowance_reason`](Self::allowance_reason) (or `"charge"`).
+    /// It cannot be combined with [`allowance`](Self::allowance) or
+    /// [`charge`](Self::charge).
+    #[deprecated(
+        since = "0.6.0",
+        note = "use `charge(DocumentAdjustment::new(Adjustment::amount(..), category, rate))` \
+                instead; it appends an entry with an explicit VAT category and rate \
+                instead of replacing one aggregate inferred from the document"
+    )]
     pub fn invoice_level_charge(mut self, charge: Decimal) -> Self {
         self.invoice_level_charge = charge;
         self
@@ -368,7 +420,17 @@ impl InvoiceBuilder {
 
     /// Set the legacy aggregate document-level discount.
     ///
-    /// Replaces any previously set value.
+    /// Replaces any previously set value. The allowance is emitted with the document
+    /// VAT category and a rate taken from the first line in that category, and its
+    /// reason is the [`allowance_reason`](Self::allowance_reason) (or `"discount"`).
+    /// It cannot be combined with [`allowance`](Self::allowance) or
+    /// [`charge`](Self::charge).
+    #[deprecated(
+        since = "0.6.0",
+        note = "use `allowance(DocumentAdjustment::new(Adjustment::amount(..), category, rate))` \
+                instead; it appends an entry with an explicit VAT category and rate \
+                instead of replacing one aggregate inferred from the document"
+    )]
     pub fn invoice_level_discount(mut self, discount: Decimal) -> Self {
         self.invoice_level_discount = discount;
         self
@@ -376,7 +438,15 @@ impl InvoiceBuilder {
 
     /// Set the legacy aggregate allowance reason.
     ///
-    /// Replaces any previously set value.
+    /// Replaces any previously set value. The reason applies to both the aggregate
+    /// discount and the aggregate charge, and on its own emits a zero-amount
+    /// allowance. It cannot be combined with [`allowance`](Self::allowance) or
+    /// [`charge`](Self::charge).
+    #[deprecated(
+        since = "0.6.0",
+        note = "set the reason on each entry with `DocumentAdjustment::reason` and add it \
+                with `allowance` or `charge` instead"
+    )]
     pub fn allowance_reason(mut self, reason: impl Into<String>) -> Self {
         self.allowance_reason = Some(reason.into());
         self
@@ -441,6 +511,11 @@ impl InvoiceBuilder {
     /// one if none exists.
     ///
     /// Replaces the first payment means' code; later payment means are unchanged.
+    #[deprecated(
+        since = "0.6.0",
+        note = "use `payment_means(PaymentMeans::new(code))` instead; it appends a \
+                payment means rather than changing the code of the first one"
+    )]
     pub fn payment_means_code(mut self, code: impl Into<String>) -> Self {
         self.payment_instruction_placeholder = false;
         if self.payment_means.is_empty() {
@@ -499,9 +574,12 @@ impl InvoiceBuilder {
     ///
     /// Consumes the builder.
     pub fn build(mut self) -> Result<FinalizedInvoice, InvoiceError> {
-        for (index, kind, adjustment) in self.pending_adjustments {
-            self.adjustments.insert(index, adjustment.into_entry(kind)?);
-        }
+        // Conversion errors are reported with the other adjustment checks below,
+        // after the field checks.
+        let entries: Vec<_> = std::mem::take(&mut self.adjustments)
+            .into_iter()
+            .map(|(kind, adjustment)| adjustment.into_entry(kind))
+            .collect();
 
         for (index, line) in self.line_items.iter_mut().enumerate() {
             if line.id.is_none() {
@@ -684,7 +762,8 @@ impl InvoiceBuilder {
             return Err(InvoiceError::Validation(ValidationError::new(issues)));
         }
 
-        if !self.adjustments.is_empty() {
+        let mut adjustments = Vec::with_capacity(entries.len());
+        if !entries.is_empty() {
             if self.invoice_level_discount != Decimal::ZERO
                 || self.invoice_level_charge != Decimal::ZERO
                 || self.allowance_reason.is_some()
@@ -696,7 +775,8 @@ impl InvoiceBuilder {
                 )])
                 .into());
             }
-            for adjustment in &self.adjustments {
+            for entry in entries {
+                let adjustment = entry?;
                 super::Adjustment {
                     amount: Some(adjustment.amount),
                     base_amount: adjustment.base_amount,
@@ -727,6 +807,7 @@ impl InvoiceBuilder {
                     self.invoice_level_discount =
                         self.invoice_level_discount.add(adjustment.amount)?;
                 }
+                adjustments.push(adjustment);
             }
         }
         for (seller, value) in self.party_identifiers {
@@ -773,7 +854,7 @@ impl InvoiceBuilder {
             invoice_level_discount: self.invoice_level_discount,
             adjustment_vat_rate: self.adjustment_vat_rate,
             allowance_reason: self.allowance_reason,
-            adjustments: self.adjustments,
+            adjustments,
         };
 
         if self.prepaid_amount < Decimal::ZERO

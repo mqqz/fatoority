@@ -678,7 +678,7 @@ fn signing_document_limits_apply_before_parsing_and_after_generation() {
         .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(0)
         .seller(sample.data().seller().clone())
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
         .line_item(sample.data().line_items()[0].clone())
         .note(InvoiceNote::new("en", "x".repeat(limit)))

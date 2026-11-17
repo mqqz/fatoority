@@ -33,7 +33,7 @@ fn build_reports_missing_required_fields() {
         .currency("SAR".parse().unwrap())
         .invoice_counter(0)
         .seller(dummy_seller())
-        .payment_means_code("   ")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("   "))
         .vat_category(VatCategory::Standard);
 
     let err = builder.build().expect_err("expected validation error");
@@ -97,7 +97,7 @@ fn build_reports_invalid_line_items() {
         .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(0)
         .seller(dummy_seller())
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
         .line_item(line_item);
 
@@ -178,7 +178,7 @@ fn credit_note_missing_required_fields_reports_issues() {
         .payment_instruction("reason");
     builder = builder
         .id(" ")
-        .payment_means_code(" ")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new(" "))
         .vat_category(VatCategory::Standard);
 
     let err = builder.build().expect_err("expected validation error");
@@ -218,7 +218,7 @@ fn credit_note_invalid_line_item_reports_issues() {
         .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(0)
         .seller(dummy_seller())
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
         .line_item(line_item);
 

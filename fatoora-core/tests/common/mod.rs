@@ -1,9 +1,21 @@
 use base64ct::{Base64, Encoding};
 use fatoora_core::csr::SigningKey;
 use fatoora_core::invoice::{
-    Address, FinalizedInvoice, InvoiceBuilder, InvoiceFlags, InvoiceNote, InvoiceSubType,
-    InvoiceType, LineItem, OriginalInvoiceRef, OtherId, Party, SellerRole, VatCategory,
+    Address, Adjustment, DocumentAdjustment, FinalizedInvoice, InvoiceBuilder, InvoiceFlags,
+    InvoiceNote, InvoiceSubType, InvoiceType, LineItem, OriginalInvoiceRef, OtherId, Party,
+    SellerRole, VatCategory,
 };
+
+/// A standard-rated (15.0%) document allowance or charge with a reason.
+#[allow(dead_code)]
+pub fn document_adjustment(amount: &str, reason: &str) -> DocumentAdjustment {
+    DocumentAdjustment::new(
+        Adjustment::amount(fatoora_core::Decimal::parse(amount).unwrap()),
+        VatCategory::Standard,
+        fatoora_core::Decimal::parse("15.0").unwrap(),
+    )
+    .reason(reason)
+}
 
 #[allow(dead_code)]
 pub fn dummy_finalized_invoice() -> FinalizedInvoice {
@@ -28,7 +40,7 @@ pub fn dummy_finalized_invoice_with_seller_name(name: &str) -> FinalizedInvoice 
         .previous_invoice_hash("NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ==".parse().unwrap())
         .invoice_counter(0)
         .seller(seller)
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard);
     for item in dummy_line_items() {
         builder = builder.line_item(item);
@@ -62,12 +74,11 @@ pub fn complex_standard_invoice() -> FinalizedInvoice {
         .invoice_counter(7)
         .seller(seller)
         .buyer(buyer)
-        .payment_means_code("30")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("30"))
         .vat_category(VatCategory::Standard)
         .note(InvoiceNote::new("en", "Complex standard invoice"))
-        .invoice_level_charge(fatoora_core::Decimal::parse("12.5").unwrap())
-        .invoice_level_discount(fatoora_core::Decimal::parse("20.0").unwrap())
-        .allowance_reason("Seasonal discount")
+        .allowance(document_adjustment("20.0", "Seasonal discount"))
+        .charge(document_adjustment("12.5", "Seasonal discount"))
         .flags(InvoiceFlags::EXPORT | InvoiceFlags::SELF_BILLED);
 
     builder = builder
@@ -141,11 +152,10 @@ pub fn credit_note_standard_invoice() -> FinalizedInvoice {
         .invoice_counter(8)
         .seller(seller)
         .buyer(buyer)
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
         .note(InvoiceNote::new("en", "Credit note for returned items"))
-        .invoice_level_discount(fatoora_core::Decimal::parse("15.0").unwrap())
-        .allowance_reason("Return allowance");
+        .allowance(document_adjustment("15.0", "Return allowance"));
 
     builder = builder.line_item(
         LineItem::new(
@@ -195,11 +205,11 @@ pub fn debit_note_standard_invoice() -> FinalizedInvoice {
         .invoice_counter(9)
         .seller(seller)
         .buyer(buyer)
-        .payment_means_code("30")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("30"))
         .vat_category(VatCategory::Standard)
         .note(InvoiceNote::new("en", "Debit note for extra charges"))
-        .invoice_level_charge(fatoora_core::Decimal::parse("30.0").unwrap())
-        .allowance_reason("Additional service charge");
+        .allowance(document_adjustment("0", "Additional service charge"))
+        .charge(document_adjustment("30.0", "Additional service charge"));
 
     builder = builder.line_item(
         LineItem::new(
@@ -242,10 +252,10 @@ pub fn prepayment_standard_invoice() -> FinalizedInvoice {
         .invoice_counter(10)
         .seller(seller)
         .buyer(buyer)
-        .payment_means_code("30")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("30"))
         .vat_category(VatCategory::Standard)
         .note(InvoiceNote::new("en", "Prepayment invoice"))
-        .invoice_level_charge(fatoora_core::Decimal::parse("5.0").unwrap())
+        .charge(document_adjustment("5.0", "charge"))
         .flags(InvoiceFlags::THIRD_PARTY | InvoiceFlags::SUMMARY);
 
     builder = builder
@@ -293,11 +303,10 @@ pub fn mixed_vat_simplified_invoice() -> FinalizedInvoice {
         .previous_invoice_hash("NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ==".parse().unwrap())
         .invoice_counter(11)
         .seller(seller)
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
         .note(InvoiceNote::new("en", "Mixed VAT simplified invoice"))
-        .invoice_level_discount(fatoora_core::Decimal::parse("5.0").unwrap())
-        .allowance_reason("Promo")
+        .allowance(document_adjustment("5.0", "Promo"))
         .flags(InvoiceFlags::NOMINAL | InvoiceFlags::SUMMARY);
 
     builder = builder
@@ -364,7 +373,7 @@ pub fn export_self_billed_standard_invoice() -> FinalizedInvoice {
         .invoice_counter(12)
         .seller(seller)
         .buyer(buyer)
-        .payment_means_code("30")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("30"))
         .vat_category(VatCategory::Zero)
         .note(InvoiceNote::new("en", "Export self-billed invoice"))
         .flags(InvoiceFlags::EXPORT | InvoiceFlags::SELF_BILLED);
@@ -410,7 +419,7 @@ pub fn out_of_scope_standard_invoice() -> FinalizedInvoice {
         .invoice_counter(13)
         .seller(seller)
         .buyer(buyer)
-        .payment_means_code("30")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("30"))
         .vat_category(VatCategory::OutOfScope)
         .note(InvoiceNote::new("en", "Out of scope invoice"))
         .flags(InvoiceFlags::SUMMARY);
@@ -455,11 +464,10 @@ pub fn simplified_credit_note_invoice() -> FinalizedInvoice {
         .previous_invoice_hash("NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ==".parse().unwrap())
         .invoice_counter(14)
         .seller(seller)
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
         .note(InvoiceNote::new("en", "Simplified credit note"))
-        .invoice_level_discount(fatoora_core::Decimal::parse("10.0").unwrap())
-        .allowance_reason("Price adjustment");
+        .allowance(document_adjustment("10.0", "Price adjustment"));
 
     builder = builder.line_item(
         LineItem::new(
@@ -501,11 +509,11 @@ pub fn simplified_debit_note_invoice() -> FinalizedInvoice {
         .previous_invoice_hash("NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ==".parse().unwrap())
         .invoice_counter(15)
         .seller(seller)
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
         .note(InvoiceNote::new("en", "Simplified debit note"))
-        .invoice_level_charge(fatoora_core::Decimal::parse("8.0").unwrap())
-        .allowance_reason("Additional charge");
+        .allowance(document_adjustment("0", "Additional charge"))
+        .charge(document_adjustment("8.0", "Additional charge"));
 
     builder = builder.line_item(
         LineItem::new(
@@ -548,7 +556,7 @@ pub fn foreign_currency_standard_invoice() -> FinalizedInvoice {
         .invoice_counter(16)
         .seller(seller)
         .buyer(buyer)
-        .payment_means_code("30")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("30"))
         .vat_category(VatCategory::Standard)
         .note(InvoiceNote::new("en", "Foreign currency invoice"));
 

@@ -1522,6 +1522,20 @@ pub struct AllowanceCharge {
 impl AllowanceCharge {
     /// Resource limit for repeated identical classifications, not a UBL or ZATCA rule.
     pub const MAX_TAX_CATEGORY_COUNT: usize = 1024;
+
+    /// Omits the VAT rate (`cbc:Percent`) from XML.
+    ///
+    /// Only an out-of-scope adjustment with a zero rate may omit its rate;
+    /// [`InvoiceBuilder::build`] rejects any other combination.
+    pub fn omit_vat_rate(mut self) -> Self {
+        self.omitted_rate = true;
+        self
+    }
+
+    /// Returns `false` if the VAT rate (`cbc:Percent`) is omitted from XML.
+    pub fn has_vat_rate(&self) -> bool {
+        !self.omitted_rate
+    }
 }
 
 /// Single invoice line item.
@@ -1581,6 +1595,27 @@ impl LineItem {
     /// (out-of-scope lines), in which case no `cbc:Percent` is emitted.
     pub fn has_vat_rate(&self) -> bool {
         !self.omitted_vat_rate
+    }
+    /// Omits the line VAT rate (`cbc:Percent`) from XML.
+    ///
+    /// [`LineItemBuilder`] omits the rate when [`LineItemBuilder::vat_rate`] is not called
+    /// for an out-of-scope line; this marks an already built line the same way.
+    ///
+    /// # Errors
+    /// Returns [`InvoiceError::Validation`] with an [`InvoiceField::LineItemVatRate`] /
+    /// [`ValidationKind::OutOfRange`] issue unless the category is
+    /// [`VatCategory::OutOfScope`] and the rate is zero.
+    pub fn omit_vat_rate(mut self) -> Result<Self> {
+        if self.vat_category != VatCategory::OutOfScope || self.vat_rate != Decimal::ZERO {
+            return Err(ValidationError::new(vec![ValidationIssue::new(
+                InvoiceField::LineItemVatRate,
+                ValidationKind::OutOfRange,
+                None,
+            )])
+            .into());
+        }
+        self.omitted_vat_rate = true;
+        Ok(self)
     }
     /// Returns `false` if the line-level `cac:TaxTotal` is omitted from XML.
     pub fn has_tax_total(&self) -> bool {
@@ -2049,10 +2084,18 @@ impl VatBreakdown {
     /// Marks the subtotal so its VAT rate is omitted from XML.
     ///
     /// # Errors
+    /// Returns the errors of [`VatBreakdown::omit_vat_rate`].
+    #[deprecated(since = "0.6.0", note = "use `VatBreakdown::omit_vat_rate` instead")]
+    pub fn without_vat_rate(self) -> Result<Self> {
+        self.omit_vat_rate()
+    }
+    /// Marks the subtotal so its VAT rate (`cbc:Percent`) is omitted from XML.
+    ///
+    /// # Errors
     /// Returns [`InvoiceError::Validation`] with an [`InvoiceField::VatCategory`] /
     /// [`ValidationKind::OutOfRange`] issue unless the category is
     /// [`VatCategory::OutOfScope`] and the rate is zero.
-    pub fn without_vat_rate(mut self) -> Result<Self> {
+    pub fn omit_vat_rate(mut self) -> Result<Self> {
         if self.category != VatCategory::OutOfScope || self.rate != Decimal::ZERO {
             return Err(ValidationError::new(vec![ValidationIssue::new(
                 InvoiceField::VatCategory,

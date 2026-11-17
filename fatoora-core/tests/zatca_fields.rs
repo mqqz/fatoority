@@ -700,7 +700,7 @@ fn payment_instruction_placeholder_retains_notes_and_payment_metadata() {
             .payment_means(PaymentMeans::new("30")),
         builder()
             .payment_instruction("reason")
-            .payment_means_code("")
+            .payment_means(fatoora_core::invoice::PaymentMeans::new(""))
             .payment_means(PaymentMeans::new("30")),
     ] {
         assert!(b.line_item(line().build().unwrap()).build().is_err());
