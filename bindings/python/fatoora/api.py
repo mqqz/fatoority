@@ -1063,7 +1063,7 @@ class InvoiceBuilder(_Owned):
         for tax in item.tax_subtotals:
             b.add_tax_subtotal(tax)
         self._invoke("add_item", b._invoke("build"))
-        self._record_line(item.vat_category, item.vat_rate)
+        self._record_line(item.vat_category, item.vat_rate, item.document_references)
 
 
     @classmethod
@@ -1151,7 +1151,7 @@ class InvoiceBuilder(_Owned):
             native = tax._native_value()
             item = _call(item.with_tax_subtotal, native)
         self._invoke("add_item", item)
-        self._record_line(vat_category, vat_rate)
+        self._record_line(vat_category, vat_rate, document_references)
 
     @_deprecate_positional(2, "InvoiceBuilder.set_buyer(): pass every argument after name as a keyword argument; they become keyword-only in 0.6")
     def set_buyer(self, name: str, country_code: str, city: str, street: str, building_number: str, postal_code: str, vat_id: Optional[str]=None, other_id: Optional[str]=None, other_id_scheme: Optional[str]=None, additional_street: Optional[str]=None, additional_number: Optional[str]=None, district: Optional[str]=None, *, province: Optional[str]=None) -> None:
@@ -1202,7 +1202,11 @@ class InvoiceBuilder(_Owned):
             self._legacy = {"charge": None, "discount": None, "reason": None}
         return self._legacy
 
-    def _record_line(self, category, rate) -> None:
+    def _record_line(self, category, rate, document_references=()) -> None:
+        # Mirror core totals: prepayment adjustment lines (a reference to
+        # document type 386) are not part of the taxable groups.
+        if any((ref.document_type_code or "").strip() == "386" for ref in document_references):
+            return
         self._line_rates.append((VatCategory(category), Decimal(_decimal(rate))))
 
     def _apply_aggregate(self) -> None:
