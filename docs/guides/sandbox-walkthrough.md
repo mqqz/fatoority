@@ -75,9 +75,10 @@ to complete this sequence for your test EGS unit:
    **Production CSID** (`POST /production/csids`). Save that response's token and
    secret, and the issued certificate corresponding to your private key.
 
-The library exposes these operations as `post_csr_for_ccsid`,
-`check_invoice_compliance`, and `post_ccsid_for_pcsid` in Python, with corresponding
-methods in the [other bindings](../reference/api-client.md). ZATCA documents the
+The library exposes these operations as `request_compliance_csid`,
+`check_invoice_compliance`, and `request_production_csid`, with corresponding
+methods in the [other bindings](../reference/api-client.md); Python names the CSID
+requests `post_csr_for_ccsid` and `post_ccsid_for_pcsid`. ZATCA documents the
 onboarding sequence in section 3.3 of the
 [Detailed Technical Guidelines](https://www.zatca.gov.sa/ar/E-Invoicing/Introduction/Guidelines/Documents/E-invoicing%20Detailed%20Technical%20Guidelines.pdf).
 

@@ -55,7 +55,7 @@ Method names use camelCase. Constructors named `new` in the underlying API use
 `new_`, such as `Config.new_(Environment.NonProduction)`. Read the [number reference](../numbers.md) for
 accepted decimal syntax and rounding rules.
 
-`InvoiceBuilder.build()`, `Signer.sign()`, and `SignedInvoice.intoXml()` consume
+`InvoiceBuilder.build()`, `InvoiceSigner.sign()`, and `SignedInvoice.intoXml()` consume
 the object's inner state. Build and signing failures can also consume state;
 create a new input object before retrying. Subsequent use of consumed state
 throws an error. Returned invoice data, addresses, totals, and response children
@@ -88,20 +88,20 @@ uses the structured library error instead.
 
 | Method | Inputs | Returns |
 | --- | --- | --- |
-| `Xml.validate(config, xml)` | Live `Config`, invoice XML string | `true` on schema success; throws on invalid XML or schema rejection |
-| `Xml.validateZatca(config, xml, optionsJson?)` | Live `Config`, invoice XML, optional JSON string or `null` | JSON report string, including rejection or incomplete coverage |
+| `Xml.validate(xml)` | Invoice XML string | `true` on schema success; throws on invalid XML or schema rejection |
+| `Xml.validateZatca(xml, optionsJson?)` | Invoice XML, optional JSON string or `null` | `ZatcaValidationReport`, including rejection or incomplete coverage |
 | `Xml.hash(xml)` | Invoice XML string | Base64 invoice hash; throws when XML cannot be processed |
 
 For Node.js, save your invoice as `invoice.xml` and read it as UTF-8:
 
 ```js
 import { readFile } from 'node:fs/promises';
-import { Config, Environment, Xml } from 'fatoority';
+import { Xml } from 'fatoority';
 
 const invoiceXml = await readFile('invoice.xml', 'utf8');
-const config = Config.new_(Environment.NonProduction);
-const report = JSON.parse(Xml.validateZatca(config, invoiceXml));
-console.log(report.is_valid, report.is_complete);
+const report = Xml.validateZatca(invoiceXml);
+console.log(report.isValid(), report.isComplete());
+console.log(report.toJson()); // the same report as JSON
 ```
 
 `optionsJson` accepts `previous_invoice_hash` and `evaluated_at`. Use
@@ -126,12 +126,12 @@ All methods below return promises. Optional `options` accepts `{ signal }`, wher
 
 | Method | Inputs | Promise result |
 | --- | --- | --- |
-| `postCsrForCcsid(csr, otp, options?)` | `Csr`, OTP string | `CsidCompliance` |
-| `postCcsidForPcsid(credentials, options?)` | `CsidCompliance` | `CsidProduction` |
-| `renewCsid(credentials, csr, otp, acceptLanguage?, options?)` | `CsidProduction`, `Csr`, OTP, optional language string | `CsidProduction` |
-| `checkInvoiceCompliance(invoice, credentials, options?)` | `SignedInvoice`, `CsidCompliance` | `ValidationResponse` |
-| `reportSimplifiedInvoice(invoice, credentials, clearanceStatus?, acceptLanguage?, options?)` | `SignedInvoice`, `CsidProduction`; status defaults to `false`, language to `null` | `ValidationResponse` |
-| `clearStandardInvoice(invoice, credentials, clearanceStatus?, acceptLanguage?, options?)` | `SignedInvoice`, `CsidProduction`; status defaults to `true`, language to `null` | `ValidationResponse` |
+| `requestComplianceCsid(csr, otp, options?)` | `Csr`, OTP string | `ComplianceCsid` |
+| `requestProductionCsid(credentials, options?)` | `ComplianceCsid` | `ProductionCsid` |
+| `renewCsid(credentials, csr, otp, acceptLanguage?, options?)` | `ProductionCsid`, `Csr`, OTP, optional language string | `ProductionCsid` |
+| `checkInvoiceCompliance(invoice, credentials, options?)` | `SignedInvoice`, `ComplianceCsid` | `ValidationResponse` |
+| `reportSimplifiedInvoice(invoice, credentials, clearanceStatus?, acceptLanguage?, options?)` | `SignedInvoice`, `ProductionCsid`; status defaults to `false`, language to `null` | `ValidationResponse` |
+| `clearStandardInvoice(invoice, credentials, clearanceStatus?, acceptLanguage?, options?)` | `SignedInvoice`, `ProductionCsid`; status defaults to `true`, language to `null` | `ValidationResponse` |
 
 `clearanceStatus` controls the clearance-status request header; it is not the
 result of the operation. It accepts a boolean or a `ClearanceMode`

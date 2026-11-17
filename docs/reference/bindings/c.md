@@ -20,16 +20,12 @@ Configure your runtime loader to find the shared library: `.so` on Linux, `.dyli
     #include <stdio.h>
 
     int main(void) {
-        FatooraConfig *config = NULL;
         FatooraError *error = NULL;
         bool valid = false;
-        FatooraStatus status = fatoora_config_new(FATOORA_NON_PRODUCTION, &config, &error);
-        if (status == FATOORA_OK)
-            status = fatoora_xml_validate(config, "<Invoice></Invoice>", &valid, &error);
+        FatooraStatus status = fatoora_xml_validate("<Invoice></Invoice>", &valid, &error);
         if (status == FATOORA_OK) printf("valid: %s\n", valid ? "true" : "false");
         else fprintf(stderr, "error %d: %s\n", (int)status, fatoora_error_message(error));
         fatoora_error_free(error);
-        fatoora_config_free(config);
         return status == FATOORA_OK && valid ? 0 : 1;
     }
     ```
@@ -77,7 +73,7 @@ Configure your runtime loader to find the shared library: `.so` on Linux, `.dyli
     and do not validate them: passing a value that is not a declared enumerator is
     undefined behaviour. Prefer the facade from C.
 
-    Do not copy opaque owners by value or free them with the system allocator. `FATOORA_OK` from local invoice validation means a report was produced; inspect `is_valid` in that report.
+    Do not copy opaque owners by value or free them with the system allocator. `FATOORA_OK` from local invoice validation means a report was produced; check `fatoora_zatca_validation_report_is_valid` on that report.
 
 === "C++"
 
@@ -89,20 +85,12 @@ Configure your runtime loader to find the shared library: `.so` on Linux, `.dyli
 
     ```cpp
     #include "fatoora/BindingError.hpp"
-    #include "fatoora/Config.hpp"
     #include "fatoora/Xml.hpp"
     #include <iostream>
     #include <utility>
 
     int main() {
-        auto created = fatoora::Config::new_(fatoora::Environment::NonProduction);
-        if (!created.is_ok()) {
-            auto error = std::move(created).err().value();
-            std::cerr << error->code() << ": " << error->message() << '\n';
-            return 1;
-        }
-        auto config = std::move(created).ok().value();
-        auto result = fatoora::Xml::validate(*config, "<Invoice></Invoice>");
+        auto result = fatoora::Xml::validate("<Invoice></Invoice>");
         if (!result.is_ok()) {
             auto error = std::move(result).err().value();
             std::cerr << error->code() << ": " << error->message() << '\n';

@@ -10,7 +10,7 @@ public class Guide {
         Files.write(Paths.get(path), text.getBytes(StandardCharsets.UTF_8));
     }
     public static void main(String[] args) throws Exception {
-        try (CsrProperties properties = CsrProperties.fromPropertiesStr(read("csr.properties"));
+        try (CsrProperties properties = CsrProperties.fromStr(read("csr.properties"));
              SigningKey key = SigningKey.generate();
              Csr csr = properties.build(key, Environment.NonProduction)) {
             write("csr.pem", csr.toPem());

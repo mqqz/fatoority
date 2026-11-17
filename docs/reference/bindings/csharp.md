@@ -72,7 +72,7 @@ complete C# examples.
 | Invoice acceptance | `InvoiceOutcome.Accepted`, `Rejected`, or `Unknown` |
 | Enumerated code | C# enum: `ZatcaEnvironment`, `InvoiceTypeKind`, `InvoiceSubType`, `VatCategory`, `AdjustmentKind`, `ClearanceMode` |
 | Response status | `ReportingStatus?`, `ClearanceStatus?`, `ValidationStatus?`, or `MessageType?`; `null` when absent, `Unknown` when present but not recognized by this version. The `*Raw()` getter returns the exact text as `Text?` |
-| Invoice flags | `byte` bitmask taken by `InvoiceBuilder.Flags` and returned by `FlagsRaw()`; cast `InvoiceFlag` members, such as `(byte)InvoiceFlag.Export`, and combine bits with bitwise OR |
+| Invoice flags | `byte` bitmask taken by `InvoiceBuilder.Flags` and returned by `Flags()`; cast `InvoiceFlag` members, such as `(byte)InvoiceFlag.Export`, and combine bits with bitwise OR |
 
 Native object classes implement `IDisposable`, including returned snapshots and
 `BindingError`. Disposal is idempotent; later calls on that wrapper throw
@@ -80,7 +80,7 @@ Native object classes implement `IDisposable`, including returned snapshots and
 but its timing is not deterministic. Releasing an owner does not guarantee
 zeroization of secrets or copies exported to managed strings and arrays.
 
-`InvoiceBuilder.Build()`, `Signer.Sign()`, and `SignedInvoice.IntoXml()` consume
+`InvoiceBuilder.Build()`, `InvoiceSigner.Sign()`, and `SignedInvoice.IntoXml()` consume
 inner state. The outer wrapper remains disposable, but reusing consumed state
 raises `BindingErrorException`. Build and signing failures can also consume
 state. Returned invoice data, totals, addresses, and response children are owned
@@ -123,12 +123,12 @@ and responses with `using`. The following methods return owned objects:
 
 | Method | Inputs | Returns |
 | --- | --- | --- |
-| `PostCsrForCcsid(csr, otp)` | `Csr`, OTP string | `CsidCompliance` |
-| `PostCcsidForPcsid(credentials)` | `CsidCompliance` | `CsidProduction` |
-| `RenewCsid(credentials, csr, otp, acceptLanguage)` | `CsidProduction`, `Csr`, OTP, nullable language string | `CsidProduction` |
-| `CheckInvoiceCompliance(invoice, credentials)` | `SignedInvoice`, `CsidCompliance` | `ValidationResponse` |
-| `ReportSimplifiedInvoice(invoice, credentials, clearanceMode, acceptLanguage)` | `SignedInvoice`, `CsidProduction`, `ClearanceMode`, nullable language string | `ValidationResponse` |
-| `ClearStandardInvoice(invoice, credentials, clearanceMode, acceptLanguage)` | `SignedInvoice`, `CsidProduction`, `ClearanceMode`, nullable language string | `ValidationResponse` |
+| `RequestComplianceCsid(csr, otp)` | `Csr`, OTP string | `ComplianceCsid` |
+| `RequestProductionCsid(credentials)` | `ComplianceCsid` | `ProductionCsid` |
+| `RenewCsid(credentials, csr, otp, acceptLanguage)` | `ProductionCsid`, `Csr`, OTP, nullable language string | `ProductionCsid` |
+| `CheckInvoiceCompliance(invoice, credentials)` | `SignedInvoice`, `ComplianceCsid` | `ValidationResponse` |
+| `ReportSimplifiedInvoice(invoice, credentials, clearanceMode, acceptLanguage)` | `SignedInvoice`, `ProductionCsid`, `ClearanceMode`, nullable language string | `ValidationResponse` |
+| `ClearStandardInvoice(invoice, credentials, clearanceMode, acceptLanguage)` | `SignedInvoice`, `ProductionCsid`, `ClearanceMode`, nullable language string | `ValidationResponse` |
 
 All listed arguments are required, including nullable arguments: pass `null` when
 no language override is needed. `clearanceMode` sets the clearance-status
@@ -147,14 +147,14 @@ unknown outcomes, and cleared-document semantics.
 
 | Blocking method | Prepared equivalent | Credential scope / result |
 | --- | --- | --- |
-| `PostCsrForCcsid` | `PreparePostCsrForCcsid` | CSR and OTP to compliance credentials |
-| `PostCcsidForPcsid` | `PreparePostCcsidForPcsid` | Compliance to production credentials |
+| `RequestComplianceCsid` | `PrepareRequestComplianceCsid` | CSR and OTP to compliance credentials |
+| `RequestProductionCsid` | `PrepareRequestProductionCsid` | Compliance to production credentials |
 | `RenewCsid` | `PrepareRenewCsid` | Production credentials, CSR and OTP to renewed credentials |
 | `CheckInvoiceCompliance` | `PrepareCheckInvoiceCompliance` | Compliance credentials; validation response |
 | `ReportSimplifiedInvoice` | `PrepareReportSimplifiedInvoice` | Production credentials; reporting response |
 | `ClearStandardInvoice` | `PrepareClearStandardInvoice` | Production credentials; clearance response |
 
-`PreparePostCsrForCcsid` returns `ComplianceRequest`; credential exchange and
+`PrepareRequestComplianceCsid` returns `ComplianceRequest`; credential exchange and
 renewal return `ProductionRequest`; invoice operations return `InvoiceRequest`.
 Their arguments match the corresponding blocking method.
 
@@ -163,7 +163,7 @@ For asynchronous HTTP or cancellation, use a `Prepare*` method and your own
 array of header pairs), and an owned `Body()`. Copy its bytes before awaiting the
 transport. Pass the HTTP status and response bytes to `Decode(ushort, byte[])`,
 including non-2xx responses, so the library can classify gateway errors.
-`Decode` returns an owned `CsidCompliance`, `CsidProduction`, or
+`Decode` returns an owned `ComplianceCsid`, `ProductionCsid`, or
 `ValidationResponse` matching the request type; dispose it after use. Configure the
 transport to refuse redirects, and pass your cancellation token to send/read
 operations. The generated blocking methods do not accept a cancellation token.
@@ -176,8 +176,8 @@ should not be logged.
 
 | Method | Inputs | Returns |
 | --- | --- | --- |
-| `Xml.Validate(config, xml)` | Live `Config`, invoice XML string | `true` on schema success; throws on malformed XML or schema rejection |
-| `Xml.ValidateZatca(config, xml, optionsJson)` | Live `Config`, invoice XML string, nullable options JSON string | JSON report string, including rejection or incomplete coverage |
+| `Xml.Validate(xml)` | Invoice XML string | `true` on schema success; throws on malformed XML or schema rejection |
+| `Xml.ValidateZatca(xml, optionsJson)` | Invoice XML string, nullable options JSON string | Owned `ZatcaValidationReport`, including rejection or incomplete coverage |
 | `Xml.Hash(xml)` | Invoice XML string | Base64 invoice hash; throws when XML cannot be processed |
 
 Pass `null` explicitly for default validation options. Otherwise, serialize an
@@ -186,17 +186,16 @@ fields are rejected. The evaluation timestamp uses RFC3339 format.
 
 ```csharp
 using Fatoora;
-using System.Text.Json;
 using System.IO;
 
 string invoiceXml = File.ReadAllText("invoice.xml");
-using var config = Config.New(ZatcaEnvironment.NonProduction);
-using var report = JsonDocument.Parse(Xml.ValidateZatca(config, invoiceXml, null));
-bool valid = report.RootElement.GetProperty("is_valid").GetBoolean();
+using var report = Xml.ValidateZatca(invoiceXml, null);
+bool valid = report.IsValid();
+string json = report.ToJson(); // the same report as JSON
 ```
 
-`Xml.ValidateZatca(config, xml, optionsJson)` returns a JSON report string. Inspect
-`is_valid` and `stages`; a rejected document returns a report, while an execution
+`Xml.ValidateZatca(xml, optionsJson)` returns an owned `ZatcaValidationReport`. Inspect
+`IsValid()`, `IsComplete()` and `Stage(i)`; a rejected document returns a report, while an execution
 failure throws an exception that may carry a partial report in its details.
 Provide the predecessor hash from invoice history and set `evaluated_at` for
 repeatable checks. Omitting the timestamp uses the native clock.

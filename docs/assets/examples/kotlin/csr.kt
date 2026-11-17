@@ -2,7 +2,7 @@ import com.fatoora.*
 import java.io.File
 
 fun main(args: Array<String>) {
-    CsrProperties.fromPropertiesStr(File("csr.properties").readText()).use { properties ->
+    CsrProperties.fromStr(File("csr.properties").readText()).use { properties ->
         SigningKey.generate().use { key ->
             properties.build(key, Environment.NonProduction).use { csr ->
                 File("csr.pem").writeText(csr.toPem())

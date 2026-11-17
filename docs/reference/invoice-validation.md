@@ -92,6 +92,22 @@ An invalid invoice is different from a check that could not finish. Malformed XM
 
 Execution details include `kind`, optional `stage`, `assertion_site`, `location`, and `report`. The error message is exposed directly or in `diagnostics`, depending on the language API. Failure kinds are `invalid_xml`, `unsupported_xml`, `capacity_exceeded`, `invalid_context`, `rule_evaluation`, `schema`, and `integrity`. Invalid options rejected before validation starts need not carry a report. Never treat partial findings as complete coverage. See [errors](errors.md#local-zatca-execution-failures) for the shared error contract.
 
+## Report object in the generated bindings
+
+JavaScript, C#, Kotlin, Java, and C return an owned `ZatcaValidationReport` that
+mirrors the Rust report. Python keeps returning the JSON dictionary.
+
+| Object | Accessors |
+| --- | --- |
+| `ZatcaValidationReport` | `schema_version`, `profile`, `evaluated_at`, `is_complete`, `has_errors`, `is_valid`, `stages_len`, `stage(index)`, and `to_json` for the JSON report above |
+| `ZatcaStageReport` | `stage` (`ZatcaStage`), `status` (`ZatcaStageStatus`), nullable `provenance`, `evaluated_assertions_len`, `evaluated_assertion(index)`, `findings_len`, `finding(index)` |
+| `ZatcaRuleSource` | `stylesheet`, `sha256` |
+| `ZatcaFinding` | nullable `assertion_site`, `layer` (`ValidationLayer`), `code`, `severity` (`Severity`), `message`, nullable `location_kind` (`ValidationLocationKind`: `Field`, `XPath`, `Xml`), nullable `location_path` for field and XPath locations, nullable `location_line` and `location_column` for XML coordinates |
+
+Names follow each language's convention (`isValid()`, `IsValid()`, `fatoora_zatca_validation_report_is_valid`).
+Stage, status, and layer enums carry an `Unknown` variant for values added by a later core version.
+Child objects are independent snapshots and outlive the report.
+
 <span id="validate_xml_invoice_from_str"></span>
 <span id="validator"></span>
 <span id="validate"></span>
@@ -149,81 +165,88 @@ Execution details include `kind`, optional `stage`, `assertion_site`, `location`
 
     The schema function returns `True` on success; violations raise an exception rather than returning `False`. Local validation returns a dictionary even when the document is rejected or coverage is incomplete. Inspect `report["is_valid"]` and then `report["stages"]` for explanations.
 
-    The wrapper encodes context as JSON, subject to the 4096-byte options limit. XML and context must be strings (or `None` for absent options); interior NUL characters are rejected. Execution failures raise `FatooraError`; after validation starts, `error.details["report"]` contains partial results. Check whether the key exists because invalid input can fail before a report exists. Configuration is borrowed and remains reusable.
+    The wrapper encodes context as JSON, subject to the 4096-byte options limit. XML and context must be strings (or `None` for absent options); interior NUL characters are rejected. Execution failures raise `FatooraError`; after validation starts, `error.details["report"]` contains partial results. Check whether the key exists because invalid input can fail before a report exists. `config` is accepted for compatibility; validation does not depend on it.
 
 === "JavaScript"
 
     Import `Xml` from `fatoority`.
 
     ```javascript
-    const schemaValid = Xml.validate(config, xml);
-    const reportJson = Xml.validateZatca(config, xml, JSON.stringify({
+    const schemaValid = Xml.validate(xml);
+    const report = Xml.validateZatca(xml, JSON.stringify({
       previous_invoice_hash: previousHash,
       evaluated_at: "2026-10-15T09:30:00Z"
     }));
-    const report = JSON.parse(reportJson);
+    if (!report.isValid()) console.log(report.toJson());
     ```
 
-    `Xml.validate(config, xml)` accepts `Config` and XML string, returns `true` on schema success, and throws an `Error` with a `BindingError` cause on violations or execution failures; it does not return `false` for invalid XML.
+    `Xml.validate(xml)` returns `true` on schema success and throws an `Error` with a `BindingError` cause on violations or execution failures; it does not return `false` for invalid XML.
 
-    `Xml.validateZatca(config, xml, optionsJson = null)` returns a JSON **string**, not a parsed object or Promise. Pass `null` to omit options. The public wrapper supplies one host clock snapshot when `evaluated_at` is omitted. Options are restricted to 4096 UTF-8 bytes. Parse the result, then inspect `report.is_valid`; successful invocation alone is not validation success.
+    `Xml.validateZatca(xml, optionsJson = null)` returns a `ZatcaValidationReport`, not a Promise. Pass `null` to omit options. The public wrapper supplies one host clock snapshot when `evaluated_at` is omitted. Options are restricted to 4096 UTF-8 bytes. Inspect `report.isValid()`; successful invocation alone is not validation success. `report.toJson()` returns the JSON report.
 
-    On execution failure, parse `error.cause.detailsJson()` for structured details and an optional `report`. Invalid options can fail before a report exists. Inputs and configuration remain available; validation does not consume them.
+    On execution failure, parse `error.cause.detailsJson()` for structured details and an optional `report`. Invalid options can fail before a report exists. Validation does not consume its inputs.
 
 === "C#"
 
     Use `Fatoora.Xml`.
 
     ```csharp
-    bool Xml.Validate(Config config, string xml)
-    string Xml.ValidateZatca(Config config, string xml, string? optionsJson)
+    bool Xml.Validate(string xml)
+    ZatcaValidationReport Xml.ValidateZatca(string xml, string? optionsJson)
     ```
 
-    `Validate` returns `true` on schema success and throws on violations or execution failures. `ValidateZatca` returns JSON text even for a rejected or incomplete invoice. Pass `null` for default options or a JSON object string with the keys documented above (maximum 4096 UTF-8 bytes). Parse the result with `System.Text.Json` and inspect `is_valid`.
+    `Validate` returns `true` on schema success and throws on violations or execution failures. `ValidateZatca` returns an owned report even for a rejected or incomplete invoice; dispose it with `using`. Pass `null` for default options or a JSON object string with the keys documented above (maximum 4096 UTF-8 bytes). Inspect `report.IsValid()`; `report.ToJson()` returns the JSON report.
 
-    Both methods borrow configuration, which remains reusable. On `BindingErrorException`, `error.Inner.DetailsJson()` returns structured JSON; a failure after validation starts includes `report`. Dispose the owned `error.Inner` after reading it. Earlier input rejection may omit the report. Use `using` for configuration ownership.
+    On `BindingErrorException`, `error.Inner.DetailsJson()` returns structured JSON; a failure after validation starts includes `report`. Dispose the owned `error.Inner` after reading it. Earlier input rejection may omit the report.
 
 === "Kotlin"
 
-    Import `com.fatoora.Xml` and `com.fatoora.Config`.
+    Import `com.fatoora.Xml`.
 
     ```kotlin
-    Xml.validate(config: Config, xml: String): Boolean
-    Xml.validateZatca(config: Config, xml: String, optionsJson: String? = null): String
+    Xml.validate(xml: String): Boolean
+    Xml.validateZatca(xml: String, optionsJson: String? = null): ZatcaValidationReport
     ```
 
-    `validate` returns `true` on schema success; violations and execution failures throw `BindingException`. `validateZatca` returns JSON text for completed calls, including rejected or incomplete invoices. Parse it with your JSON library and inspect `is_valid`.
+    `validate` returns `true` on schema success; violations and execution failures throw `BindingException`. `validateZatca` returns an owned report for completed calls, including rejected or incomplete invoices. Close it with `use` and inspect `isValid()`; `toJson()` returns the JSON report.
 
-    Omit `optionsJson` or pass null for defaults; otherwise provide a JSON object string containing the documented context keys, limited to 4096 UTF-8 bytes. `BindingException.detailsJson` contains structured failure details and an optional partial `report`. Invalid options can fail before that report exists. Configuration is borrowed and reusable; close it with `use` when finished.
+    Omit `optionsJson` or pass null for defaults; otherwise provide a JSON object string containing the documented context keys, limited to 4096 UTF-8 bytes. `BindingException.detailsJson` contains structured failure details and an optional partial `report`. Invalid options can fail before that report exists.
 
 === "Java"
 
-    Import `com.fatoora.Xml` and `com.fatoora.Config`.
+    Import `com.fatoora.Xml`.
 
     ```java
-    boolean Xml.validate(Config config, String xml)
-    String Xml.validateZatca(Config config, String xml)
-    String Xml.validateZatca(Config config, String xml, String optionsJson)
+    boolean Xml.validate(String xml)
+    ZatcaValidationReport Xml.validateZatca(String xml)
+    ZatcaValidationReport Xml.validateZatca(String xml, String optionsJson)
     ```
 
-    `validate` returns `true` on schema success and throws `BindingException` on violations or execution failures. `validateZatca` returns a JSON string even if validation rejects the invoice or coverage is incomplete. Parse the result with your JSON library and inspect `is_valid`.
+    `validate` returns `true` on schema success and throws `BindingException` on violations or execution failures. `validateZatca` returns an owned report even if validation rejects the invoice or coverage is incomplete. Close it with try-with-resources and inspect `isValid()`; `toJson()` returns the JSON report.
 
-    The two-argument overload uses default options. The third argument accepts null or a JSON object string with the documented context keys, limited to 4096 UTF-8 bytes. On failure, `error.getDetailsJson()` returns structured details with an optional partial `report`; earlier input rejection may omit it. Configuration remains reusable. Use try-with-resources to close it when finished.
+    The one-argument overload uses default options. The second argument accepts null or a JSON object string with the documented context keys, limited to 4096 UTF-8 bytes. On failure, `error.getDetailsJson()` returns structured details with an optional partial `report`; earlier input rejection may omit it.
 
 === "C"
 
     Include `fatoora.h`.
 
     ```c
-    FatooraStatus fatoora_xml_validate(const FatooraConfig *config,
-        const char *xml, bool *out, FatooraError **error);
-    FatooraStatus fatoora_xml_validate_zatca(const FatooraConfig *config,
-        const char *xml, const char *options_json,
-        char **out, FatooraError **error);
+    FatooraStatus fatoora_xml_validate(const char *xml, bool *out,
+        FatooraError **error);
+    FatooraStatus fatoora_xml_validate_zatca(const char *xml,
+        const char *options_json, FatooraZatcaValidationReport **out,
+        FatooraError **error);
+    FatooraStatus fatoora_zatca_validation_report_is_valid(
+        const FatooraZatcaValidationReport *self, bool *out,
+        FatooraError **error);
+    FatooraStatus fatoora_zatca_validation_report_to_json(
+        const FatooraZatcaValidationReport *self, char **out,
+        FatooraError **error);
+    void fatoora_zatca_validation_report_free(FatooraZatcaValidationReport *self);
     ```
 
-    Inputs are NUL-terminated UTF-8 strings. `config` is borrowed and reusable. Schema validation returns `FATOORA_OK` with `*out = true` on success. Violations and execution failures return an error status, not a successful false result; do not read output on failure.
+    Inputs are NUL-terminated UTF-8 strings. Schema validation returns `FATOORA_OK` with `*out = true` on success. Violations and execution failures return an error status, not a successful false result; do not read output on failure.
 
-    For local validation, pass `NULL` options for defaults or a JSON object string (at most 4096 bytes). `FATOORA_OK` means the owned JSON report was produced; parse its `is_valid` field before treating validation as successful. Release report text with `fatoora_string_free()`.
+    For local validation, pass `NULL` options for defaults or a JSON object string (at most 4096 bytes). `FATOORA_OK` means the owned report was produced; check `fatoora_zatca_validation_report_is_valid` before treating validation as successful. Free the report with `fatoora_zatca_validation_report_free()` and JSON text with `fatoora_string_free()`.
 
     On failure, `fatoora_error_details_json(error)` returns borrowed JSON text with an optional partial `report`. Read or copy it before freeing the error with `fatoora_error_free()`. Invalid options can fail before a report exists. The error status indicates execution failure; a successfully returned report can separately describe invoice rejection.

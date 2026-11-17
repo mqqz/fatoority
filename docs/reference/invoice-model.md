@@ -15,8 +15,11 @@ Create a builder, set the required fields, append one or more line items, then b
 
 Scalar setters replace their previous value. Lines, notes, billing references, and
 independent adjustments append in order. Rust `allowance(DocumentAdjustment)` and
-`charge(DocumentAdjustment)` append document adjustments; binding convenience
-methods such as `set_allowance(reason, amount)` set the scalar discount.
+`charge(DocumentAdjustment)` append document adjustments, and the generated
+bindings mirror them as `add_allowance` and `add_charge`. In the generated
+bindings, `set_*` methods replace a value and `add_*` methods append one.
+Python's convenience `set_allowance(reason, amount)` and aggregate setters are
+applied as document adjustments when the invoice is built.
 Use collection getters to read every repeated entry.
 
 ## Fields and expected values
@@ -65,7 +68,7 @@ remain separate checks.
 | Invoice data | Identity, type/subtype, parties, notes, original invoice reference, flags, line items, and invoice adjustments. |
 | Line item | Description, quantity, unit code, unit price, line total, VAT rate, VAT amount, and category. Indexed access is zero-based and rejects out-of-range indexes. |
 | Totals | Line extension, allowance total, charge total, taxable amount, tax amount, tax inclusive total, prepaid amount, payable rounding amount, and payable amount. |
-| Computed hash | `hash()` (Rust) or `hash_base64()` (bindings) hashes emitted XML for a finalized model and stored XML for a signed invoice. Signed import rejects digest mismatches and retains the original XML. |
+| Computed hash | `hash()` (Rust and generated bindings; `hash_base64()` in Python) hashes emitted XML for a finalized model and stored XML for a signed invoice. Signed import rejects digest mismatches and retains the original XML. |
 
 ## Advanced building in the bindings
 
@@ -81,17 +84,17 @@ the line, then append it with the invoice builder's `add_item` equivalent.
 | Add line charge | `add_charge(adjustment)` | `addCharge(adjustment)` | `AddCharge(adjustment)` | `addCharge(adjustment)` |
 | Finish line | `build()` | `build()` | `Build()` | `build()` |
 | Append built line to invoice | `add_item(item)` | `addItem(item)` | `AddItem(item)` | `addItem(item)` |
-| Append document adjustment | `add_document_adjustment(...)` | `addDocumentAdjustment(...)` | `AddDocumentAdjustment(...)` | `addDocumentAdjustment(...)` |
+| Append document allowance | `add_document_adjustment(False, ...)` | `addAllowance(...)` | `AddAllowance(...)` | `addAllowance(...)` |
+| Append document charge | `add_document_adjustment(True, ...)` | `addCharge(...)` | `AddCharge(...)` | `addCharge(...)` |
 | Set prepaid amount | `set_prepaid_amount(value)` | `setPrepaidAmount(value)` | `SetPrepaidAmount(value)` | `setPrepaidAmount(value)` |
 | Set payable rounding | `set_payable_rounding_amount(value)` | `setPayableRoundingAmount(value)` | `SetPayableRoundingAmount(value)` | `setPayableRoundingAmount(value)` |
 | Append billing reference | `add_billing_reference(reference)` | `addBillingReference(reference)` | `AddBillingReference(reference)` | `addBillingReference(reference)` |
 | Append payment entry | `add_payment_means(payment)` | `addPaymentMeans(payment)` | `AddPaymentMeans(payment)` | `addPaymentMeans(payment)` |
 
-Document-adjustment arguments are `(kind, adjustment, category, rate, exemption)`.
-Pass `AdjustmentKind.Allowance` or `AdjustmentKind.Charge` as the kind in
-JavaScript, C#, Kotlin, and Java. Python keeps a Boolean first argument, `charge`:
-`False` for an allowance and `True` for a charge. Python defaults the exemption to empty metadata; the other bindings require a
-`TaxExemption` object. Category values and decimal representations follow the
+Document allowance and charge arguments are `(adjustment, category, rate, exemption)`,
+mirroring Rust `allowance` and `charge`. Python keeps one method with a Boolean first
+argument, `charge`: `False` for an allowance and `True` for a charge. Python defaults
+the exemption to empty metadata; the other bindings require a `TaxExemption` object. Category values and decimal representations follow the
 language reference below.
 
 For a prepayment adjustment line, use `add_document_reference` and
@@ -105,10 +108,9 @@ shows which line amounts must be zero and how to supply the advance VAT subtotal
 For C, use `fatoora_line_item_builder_new(&line, &error)` and
 `fatoora_line_item_builder_build(line, &item, &error)`. The setters above use the
 `fatoora_line_item_builder_` prefix with snake_case names. Invoice operations use
-`fatoora_invoice_builder_`, including `add_item`, `add_document_adjustment`, and
+`fatoora_invoice_builder_`, including `add_item`, `add_allowance`, `add_charge`, and
 `set_prepaid_amount`. Each accepts the builder first and `FatooraError **` last,
-and returns a status. Document adjustments take a `FatooraAdjustmentKind kind`
-(`FATOORA_ADJUSTMENT_ALLOWANCE` or `FATOORA_ADJUSTMENT_CHARGE`), adjustment handle,
+and returns a status. Document allowances and charges take an adjustment handle,
 `FatooraVatCategory category`, decimal rate text, and exemption handle. Free owned handles after
 use, including consumed builders. See [C ownership](bindings/c.md).
 
@@ -231,16 +233,22 @@ correspond to the fields above.
     | `set_currency(currency_code: str)` | `None` |
     | `set_previous_invoice_hash(previous_invoice_hash: str)` | `None` |
     | `set_invoice_counter(invoice_counter: int)` | `None` |
-    | `set_payment_means_code(payment_means_code: str)` | `None` |
+    | `set_payment_means_code(payment_means_code: str)` | `None`. Appends a payment means with this code, like `add_payment_means(PaymentMeans.new(code))`. |
     | `set_vat_category(vat_category: VatCategory)` | `None` |
     | `set_seller(name: str, country_code: str, city: str, street: str, building_number: str, postal_code: str, vat_id: str, additional_street: Optional[str]=None, additional_number: Optional[str]=None, district: Optional[str]=None, other_id: Optional[str]=None, other_id_scheme: Optional[str]=None)` | `None` |
     | `add_line_item(description: str, quantity: Decimal \| str \| int, unit_code: str, unit_price: Decimal \| str \| int, vat_rate: Decimal \| str \| int, vat_category: VatCategory)` | `None` |
     | `set_buyer(name: str, country_code: str, city: str, street: str, building_number: str, postal_code: str, vat_id: Optional[str]=None, other_id: Optional[str]=None, other_id_scheme: Optional[str]=None, additional_street: Optional[str]=None, additional_number: Optional[str]=None, district: Optional[str]=None)` | `None` |
     | `set_note(language: str, text: str)` | `None`. Deprecated: use `add_note(text, language=...)`. |
-    | `set_allowance(reason: str, amount: Decimal \| str \| int)` | `None` |
+    | `set_allowance(reason: str, amount: Decimal \| str \| int)` | `None`. Sets `invoice_level_discount` and `allowance_reason`. |
     | `invoice_level_charge(charge: Decimal \| str \| int)` | `None` |
     | `invoice_level_discount(discount: Decimal \| str \| int)` | `None` |
     | `allowance_reason(reason: str)` | `None` |
+
+    The aggregate setters replace their value. `build()` applies them as one
+    allowance and one charge in the document VAT category, at the single VAT rate
+    of that category's lines, with the reason (default `"discount"` or `"charge"`).
+    They raise `ValueError` at build time when that rate is ambiguous or when
+    combined with `add_document_adjustment` or `add_adjustment`.
     | `flags(flags: int)` | `None` |
     | `build()` | `FinalizedInvoice` |
 
@@ -306,15 +314,11 @@ correspond to the fields above.
     | `setIssueDatetime(value)` | `void` |
     | `setCurrency(value)` | `void` |
     | `setPreviousInvoiceHash(value)` | `void` |
-    | `setPaymentMeansCode(value)` | `void` |
-    | `allowanceReason(value)` | `void` |
-    | `invoiceLevelCharge(value)` | `void` |
-    | `invoiceLevelDiscount(value)` | `void` |
+    | `addPaymentMeans(payment)` | `void` |
     | `setInvoiceCounter(value)` | `void` |
     | `setVatCategory(value: VatCategory)` | `void` |
-    | `flags(value)` | `void` |
-    | `setNote(language, value)` | `void` |
-    | `setAllowance(reason, amount)` | `void` |
+    | `setFlags(value)` | `void` |
+    | `addNote(language, value)` | `void` |
     | `setSeller(name, address, vatId, otherId, scheme)` | `void` |
     | `setBuyer(name, address, vatId, otherId, scheme)` | `void` |
     | `addLineItem(description, quantity, unitCode, unitPrice, vatRate, category: VatCategory)` | `void` |
@@ -345,7 +349,7 @@ correspond to the fields above.
     | `allowanceReason()` | `Text \| null` |
     | `invoiceCounter()` | `bigint` |
     | `vatCategory()` | `VatCategory` |
-    | `flagsRaw()` | `number` |
+    | `flags()` | `number` |
     | `invoiceTypeKind()` | `InvoiceTypeKind` |
     | `invoiceSubType()` | `InvoiceSubType` |
     | `seller()` | `Party` |
@@ -388,15 +392,11 @@ correspond to the fields above.
     | `SetIssueDatetime(string value)` | `void` |
     | `SetCurrency(string value)` | `void` |
     | `SetPreviousInvoiceHash(string value)` | `void` |
-    | `SetPaymentMeansCode(string value)` | `void` |
-    | `AllowanceReason(string value)` | `void` |
-    | `InvoiceLevelCharge(string value)` | `void` |
-    | `InvoiceLevelDiscount(string value)` | `void` |
+    | `AddPaymentMeans(PaymentMeans payment)` | `void` |
     | `SetInvoiceCounter(ulong value)` | `void` |
     | `SetVatCategory(VatCategory value)` | `void` |
-    | `Flags(byte value)` | `void` |
-    | `SetNote(string language, string value)` | `void` |
-    | `SetAllowance(string reason, string amount)` | `void` |
+    | `SetFlags(byte value)` | `void` |
+    | `AddNote(string? language, string value)` | `void` |
     | `SetSeller(string name, Address address, string vatId, string? otherId, string? scheme)` | `void` |
     | `SetBuyer(string name, Address address, string? vatId, string? otherId, string? scheme)` | `void` |
     | `AddLineItem(string description, string quantity, string unitCode, string unitPrice, string vatRate, VatCategory category)` | `void` |
@@ -427,7 +427,7 @@ correspond to the fields above.
     | `AllowanceReason()` | `Text?` |
     | `InvoiceCounter()` | `ulong` |
     | `VatCategory()` | `VatCategory` |
-    | `FlagsRaw()` | `byte` |
+    | `Flags()` | `byte` |
     | `InvoiceTypeKind()` | `InvoiceTypeKind` |
     | `InvoiceSubType()` | `InvoiceSubType` |
     | `Seller()` | `Party` |
@@ -470,15 +470,11 @@ correspond to the fields above.
     | `setIssueDatetime(value: String)` | `Unit` |
     | `setCurrency(value: String)` | `Unit` |
     | `setPreviousInvoiceHash(value: String)` | `Unit` |
-    | `setPaymentMeansCode(value: String)` | `Unit` |
-    | `allowanceReason(value: String)` | `Unit` |
-    | `invoiceLevelCharge(value: String)` | `Unit` |
-    | `invoiceLevelDiscount(value: String)` | `Unit` |
+    | `addPaymentMeans(payment: PaymentMeans)` | `Unit` |
     | `setInvoiceCounter(value: java.math.BigInteger)` | `Unit` |
     | `setVatCategory(value: VatCategory)` | `Unit` |
-    | `flags(value: Int)` | `Unit` |
-    | `setNote(language: String, value: String)` | `Unit` |
-    | `setAllowance(reason: String, amount: String)` | `Unit` |
+    | `setFlags(value: Int)` | `Unit` |
+    | `addNote(language: String?, value: String)` | `Unit` |
     | `setSeller(name: String, address: Address, vatId: String, otherId: String? = null, scheme: String? = null)` | `Unit` |
     | `setBuyer(name: String, address: Address, vatId: String? = null, otherId: String? = null, scheme: String? = null)` | `Unit` |
     | `addLineItem(description: String, quantity: String, unitCode: String, unitPrice: String, vatRate: String, category: VatCategory)` | `Unit` |
@@ -509,7 +505,7 @@ correspond to the fields above.
     | `allowanceReason()` | `Text?` |
     | `invoiceCounter()` | `java.math.BigInteger` |
     | `vatCategory()` | `VatCategory` |
-    | `flagsRaw()` | `Int` |
+    | `flags()` | `Int` |
     | `invoiceTypeKind()` | `InvoiceTypeKind` |
     | `invoiceSubType()` | `InvoiceSubType` |
     | `seller()` | `Party` |
@@ -552,15 +548,11 @@ correspond to the fields above.
     | `setIssueDatetime(String value)` | `void` |
     | `setCurrency(String value)` | `void` |
     | `setPreviousInvoiceHash(String value)` | `void` |
-    | `setPaymentMeansCode(String value)` | `void` |
-    | `allowanceReason(String value)` | `void` |
-    | `invoiceLevelCharge(String value)` | `void` |
-    | `invoiceLevelDiscount(String value)` | `void` |
+    | `addPaymentMeans(PaymentMeans payment)` | `void` |
     | `setInvoiceCounter(BigInteger value)` | `void` |
     | `setVatCategory(VatCategory value)` | `void` |
-    | `flags(int value)` | `void` |
-    | `setNote(String language, String value)` | `void` |
-    | `setAllowance(String reason, String amount)` | `void` |
+    | `setFlags(int value)` | `void` |
+    | `addNote(String language, String value)` | `void` |
     | `setSeller(String name, Address address, String vatId, String otherId, String scheme)` | `void` |
     | `setBuyer(String name, Address address, String vatId, String otherId, String scheme)` | `void` |
     | `addLineItem(String description, String quantity, String unitCode, String unitPrice, String vatRate, VatCategory category)` | `void` |
@@ -591,7 +583,7 @@ correspond to the fields above.
     | `allowanceReason()` | `Text` |
     | `invoiceCounter()` | `BigInteger` |
     | `vatCategory()` | `VatCategory` |
-    | `flagsRaw()` | `int` |
+    | `flags()` | `int` |
     | `invoiceTypeKind()` | `InvoiceTypeKind` |
     | `invoiceSubType()` | `InvoiceSubType` |
     | `seller()` | `Party` |
@@ -641,13 +633,12 @@ correspond to the fields above.
 
     | Function suffix after `fatoora_invoice_builder_` | Value arguments |
     | --- | --- |
-    | `set_id`, `set_uuid`, `set_issue_datetime`, `set_currency`, `set_previous_invoice_hash`, `set_payment_means_code`, `allowance_reason` | `const char *value` |
-    | `invoice_level_charge`, `invoice_level_discount` | `const char *value` containing decimal text |
+    | `set_id`, `set_uuid`, `set_issue_datetime`, `set_currency`, `set_previous_invoice_hash` | `const char *value` |
+    | `add_payment_means` | `const FatooraPaymentMeans *value` from `fatoora_payment_means_new(code, instruction, &means, &error)` |
     | `set_invoice_counter` | `uint64_t value` |
     | `set_vat_category` | `FatooraVatCategory value` |
-    | `flags` | `int32_t value` (bitmask of `FATOORA_FLAG_*`) |
-    | `set_note` | `const char *language, const char *value` |
-    | `set_allowance` | `const char *reason, const char *amount` |
+    | `set_flags` | `int32_t value` (bitmask of `FATOORA_FLAG_*`) |
+    | `add_note` | `const char *language` (`NULL` for none), `const char *value` |
     | `set_seller`, `set_buyer` | `const FatooraPartyOptions *options` |
     | `add_line_item` | `const FatooraLineItemOptions *options` |
 
@@ -672,7 +663,7 @@ correspond to the fields above.
     | `vat_category` | `FatooraVatCategory *out` |
     | `invoice_type_kind` | `FatooraInvoiceTypeKind *out` |
     | `invoice_sub_type` | `FatooraInvoiceSubType *out` |
-    | `flags_raw` | `uint8_t *out` bitmask of `FATOORA_FLAG_*` |
+    | `flags` | `uint8_t *out` bitmask of `FATOORA_FLAG_*` |
     | `seller`, `buyer` | Owned `FatooraParty **out`; buyer may be `NULL` |
     | `note` | Optional owned `FatooraInvoiceNote **out` |
     | `original_invoice_ref` | Optional owned `FatooraOriginalInvoiceRef **out` |

@@ -216,7 +216,7 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     `CsidCompliance.new(env: Environment, token: str, secret: str, request_id: Optional[str] = None)`
     returns `CsidCompliance`. `CsidProduction.new` accepts the same arguments and returns
     `CsidProduction`. `env()` returns `Environment`; `binary_security_token()` and
-    `secret()` return `str`. `request_id()` returns `str`, using `""` when absent.
+    `secret()` return `str`. `request_id()` returns `Optional[str]`, `None` when absent.
 
     **Responses**
 
@@ -239,7 +239,7 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     prepared-request methods are not exposed by this facade.
 
 === "JavaScript"
-    Import `ZatcaClient`, `CsidCompliance`, `CsidProduction`, and `InvoiceOutcome`
+    Import `ZatcaClient`, `ComplianceCsid`, `ProductionCsid`, and `InvoiceOutcome`
     from `fatoority`. Create `new ZatcaClient(config, { fetch })`; the second argument
     is optional and defaults to `globalThis.fetch`. Calls return promises; use `await`.
 
@@ -247,25 +247,25 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
     | Method on `client` | Promise resolves to |
     | --- | --- |
-    | `postCsrForCcsid(csr, otp, options = {})` | `CsidCompliance` |
-    | `postCcsidForPcsid(credentials, options = {})` | `CsidProduction` |
-    | `renewCsid(credentials, csr, otp, acceptLanguage = null, options = {})` | `CsidProduction` |
+    | `requestComplianceCsid(csr, otp, options = {})` | `ComplianceCsid` |
+    | `requestProductionCsid(credentials, options = {})` | `ProductionCsid` |
+    | `renewCsid(credentials, csr, otp, acceptLanguage = null, options = {})` | `ProductionCsid` |
     | `checkInvoiceCompliance(invoice, credentials, options = {})` | `ValidationResponse` |
     | `reportSimplifiedInvoice(invoice, credentials, clearanceStatus = false, acceptLanguage = null, options = {})` | `ValidationResponse` |
     | `clearStandardInvoice(invoice, credentials, clearanceStatus = true, acceptLanguage = null, options = {})` | `ValidationResponse` |
 
     Pass `Csr` for `csr`, `SignedInvoice` for `invoice`, strings for OTP/language, and
     a boolean or `ClearanceMode` (`ClearanceMode.Disabled`/`.Enabled`) for `clearanceStatus`. Compliance issuance uses no credential; compliance checks
-    and production issuance take `CsidCompliance`; reporting, clearance, and renewal
-    take `CsidProduction`. Each `options` accepts `{ signal: AbortSignal }` for cancellation.
+    and production issuance take `ComplianceCsid`; reporting, clearance, and renewal
+    take `ProductionCsid`. Each `options` accepts `{ signal: AbortSignal }` for cancellation.
     Transport failures reject with `TransportError`; response/acceptance failures reject with an `Error` whose cause is
     `BindingError`. See [JavaScript HTTP setup](bindings/javascript.md#api-requests)
     for browser CORS and custom fetch behavior.
 
     **Credentials**
 
-    `CsidCompliance.create(environment, requestId, token, secret)` returns compliance
-    credentials; `CsidProduction.create` returns production credentials. Pass an `Environment`
+    `ComplianceCsid.create(environment, requestId, token, secret)` returns compliance
+    credentials; `ProductionCsid.create` returns production credentials. Pass an `Environment`
     (`Environment.NonProduction`, `.Simulation`, or `.Production`), a string or `null`
     request ID, and string token/secret. `env()` returns the `Environment`; `binarySecurityToken()` and `secret()` return strings;
     `requestId()` returns `Text` or `null`. Read optional text with `text?.value()`.
@@ -303,7 +303,7 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
     For custom transport, import `ZatcaClient as RequestClient` from `fatoority/raw` and
     create it with `RequestClient.create(config)`. Its synchronous methods are
-    `preparePostCsrForCcsid`, `preparePostCcsidForPcsid`, `prepareRenewCsid`,
+    `prepareRequestComplianceCsid`, `prepareRequestProductionCsid`, `prepareRenewCsid`,
     `prepareCheckInvoiceCompliance`, `prepareReportSimplifiedInvoice`, and
     `prepareClearStandardInvoice`. They take the same operation arguments as above,
     without `options`; supply a `ClearanceMode` (not a boolean) and nullable language
@@ -326,19 +326,19 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
     | Method on `client` | Inputs in order | Returns |
     | --- | --- | --- |
-    | `PostCsrForCcsid` | `Csr csr`, `string otp` | `CsidCompliance` |
-    | `PostCcsidForPcsid` | `CsidCompliance credentials` | `CsidProduction` |
-    | `RenewCsid` | `CsidProduction credentials`, `Csr csr`, `string otp`, `string? acceptLanguage` | `CsidProduction` |
-    | `CheckInvoiceCompliance` | `SignedInvoice invoice`, `CsidCompliance credentials` | `ValidationResponse` |
-    | `ReportSimplifiedInvoice` | `SignedInvoice invoice`, `CsidProduction credentials`, `ClearanceMode clearanceMode`, `string? acceptLanguage` | `ValidationResponse` |
-    | `ClearStandardInvoice` | `SignedInvoice invoice`, `CsidProduction credentials`, `ClearanceMode clearanceMode`, `string? acceptLanguage` | `ValidationResponse` |
+    | `RequestComplianceCsid` | `Csr csr`, `string otp` | `ComplianceCsid` |
+    | `RequestProductionCsid` | `ComplianceCsid credentials` | `ProductionCsid` |
+    | `RenewCsid` | `ProductionCsid credentials`, `Csr csr`, `string otp`, `string? acceptLanguage` | `ProductionCsid` |
+    | `CheckInvoiceCompliance` | `SignedInvoice invoice`, `ComplianceCsid credentials` | `ValidationResponse` |
+    | `ReportSimplifiedInvoice` | `SignedInvoice invoice`, `ProductionCsid credentials`, `ClearanceMode clearanceMode`, `string? acceptLanguage` | `ValidationResponse` |
+    | `ClearStandardInvoice` | `SignedInvoice invoice`, `ProductionCsid credentials`, `ClearanceMode clearanceMode`, `string? acceptLanguage` | `ValidationResponse` |
 
     Pass `null` explicitly when omitting response language.
 
     **Credentials**
 
-    `CsidCompliance.Create(environment, requestId, token, secret)` returns
-    compliance credentials; `CsidProduction.Create` returns production credentials.
+    `ComplianceCsid.Create(environment, requestId, token, secret)` returns
+    compliance credentials; `ProductionCsid.Create` returns production credentials.
     Pass a `ZatcaEnvironment` (`NonProduction`, `Simulation`, or `Production`), a
     nullable `string` request ID, and `string` token/secret. `Env()` returns
     `ZatcaEnvironment`;
@@ -375,8 +375,8 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
     **Prepared requests**
 
-    Use the six methods `PreparePostCsrForCcsid`,
-    `PreparePostCcsidForPcsid`, `PrepareRenewCsid`,
+    Use the six methods `PrepareRequestComplianceCsid`,
+    `PrepareRequestProductionCsid`, `PrepareRenewCsid`,
     `PrepareCheckInvoiceCompliance`, `PrepareReportSimplifiedInvoice`,
     and `PrepareClearStandardInvoice` with the same inputs as their HTTP
     counterparts. They return `ComplianceRequest` for compliance credentials,
@@ -398,19 +398,19 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
     | Method on `client` | Inputs in order | Returns |
     | --- | --- | --- |
-    | `postCsrForCcsid` | `Csr csr`, `String otp` | `CsidCompliance` |
-    | `postCcsidForPcsid` | `CsidCompliance credentials` | `CsidProduction` |
-    | `renewCsid` | `CsidProduction credentials`, `Csr csr`, `String otp`, `String? acceptLanguage` | `CsidProduction` |
-    | `checkInvoiceCompliance` | `SignedInvoice invoice`, `CsidCompliance credentials` | `ValidationResponse` |
-    | `reportSimplifiedInvoice` | `SignedInvoice invoice`, `CsidProduction credentials`, `ClearanceMode clearanceMode`, `String? acceptLanguage` | `ValidationResponse` |
-    | `clearStandardInvoice` | `SignedInvoice invoice`, `CsidProduction credentials`, `ClearanceMode clearanceMode`, `String? acceptLanguage` | `ValidationResponse` |
+    | `requestComplianceCsid` | `Csr csr`, `String otp` | `ComplianceCsid` |
+    | `requestProductionCsid` | `ComplianceCsid credentials` | `ProductionCsid` |
+    | `renewCsid` | `ProductionCsid credentials`, `Csr csr`, `String otp`, `String? acceptLanguage` | `ProductionCsid` |
+    | `checkInvoiceCompliance` | `SignedInvoice invoice`, `ComplianceCsid credentials` | `ValidationResponse` |
+    | `reportSimplifiedInvoice` | `SignedInvoice invoice`, `ProductionCsid credentials`, `ClearanceMode clearanceMode`, `String? acceptLanguage` | `ValidationResponse` |
+    | `clearStandardInvoice` | `SignedInvoice invoice`, `ProductionCsid credentials`, `ClearanceMode clearanceMode`, `String? acceptLanguage` | `ValidationResponse` |
 
     Response language defaults to `null`; an overload allows it to be omitted.
 
     **Credentials**
 
-    `CsidCompliance.create(environment, requestId, token, secret)` returns
-    compliance credentials; `CsidProduction.create` returns production credentials.
+    `ComplianceCsid.create(environment, requestId, token, secret)` returns
+    compliance credentials; `ProductionCsid.create` returns production credentials.
     Pass an `Environment` (`NonProduction`, `Simulation`, or `Production`), a nullable
     `String` request ID, and `String` token/secret. `env()` returns `Environment`;
     `binarySecurityToken()` and `secret()` return `String`;
@@ -446,8 +446,8 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
     **Prepared requests**
 
-    Use the six methods `preparePostCsrForCcsid`,
-    `preparePostCcsidForPcsid`, `prepareRenewCsid`,
+    Use the six methods `prepareRequestComplianceCsid`,
+    `prepareRequestProductionCsid`, `prepareRenewCsid`,
     `prepareCheckInvoiceCompliance`, `prepareReportSimplifiedInvoice`,
     and `prepareClearStandardInvoice` with the same inputs as their HTTP
     counterparts. They return `ComplianceRequest` for compliance credentials,
@@ -469,19 +469,19 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
     | Method on `client` | Inputs in order | Returns |
     | --- | --- | --- |
-    | `postCsrForCcsid` | `Csr csr`, `String otp` | `CsidCompliance` |
-    | `postCcsidForPcsid` | `CsidCompliance credentials` | `CsidProduction` |
-    | `renewCsid` | `CsidProduction credentials`, `Csr csr`, `String otp`, `String (nullable) acceptLanguage` | `CsidProduction` |
-    | `checkInvoiceCompliance` | `SignedInvoice invoice`, `CsidCompliance credentials` | `ValidationResponse` |
-    | `reportSimplifiedInvoice` | `SignedInvoice invoice`, `CsidProduction credentials`, `ClearanceMode clearanceMode`, `String (nullable) acceptLanguage` | `ValidationResponse` |
-    | `clearStandardInvoice` | `SignedInvoice invoice`, `CsidProduction credentials`, `ClearanceMode clearanceMode`, `String (nullable) acceptLanguage` | `ValidationResponse` |
+    | `requestComplianceCsid` | `Csr csr`, `String otp` | `ComplianceCsid` |
+    | `requestProductionCsid` | `ComplianceCsid credentials` | `ProductionCsid` |
+    | `renewCsid` | `ProductionCsid credentials`, `Csr csr`, `String otp`, `String (nullable) acceptLanguage` | `ProductionCsid` |
+    | `checkInvoiceCompliance` | `SignedInvoice invoice`, `ComplianceCsid credentials` | `ValidationResponse` |
+    | `reportSimplifiedInvoice` | `SignedInvoice invoice`, `ProductionCsid credentials`, `ClearanceMode clearanceMode`, `String (nullable) acceptLanguage` | `ValidationResponse` |
+    | `clearStandardInvoice` | `SignedInvoice invoice`, `ProductionCsid credentials`, `ClearanceMode clearanceMode`, `String (nullable) acceptLanguage` | `ValidationResponse` |
 
     Response language defaults to `null`; an overload allows it to be omitted.
 
     **Credentials**
 
-    `CsidCompliance.create(environment, requestId, token, secret)` returns
-    compliance credentials; `CsidProduction.create` returns production credentials.
+    `ComplianceCsid.create(environment, requestId, token, secret)` returns
+    compliance credentials; `ProductionCsid.create` returns production credentials.
     Pass an `Environment` (`NonProduction`, `Simulation`, or `Production`), a nullable
     `String` request ID, and `String` token/secret. `env()` returns `Environment`;
     `binarySecurityToken()` and `secret()` return `String`;
@@ -517,8 +517,8 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
     **Prepared requests**
 
-    Use the six methods `preparePostCsrForCcsid`,
-    `preparePostCcsidForPcsid`, `prepareRenewCsid`,
+    Use the six methods `prepareRequestComplianceCsid`,
+    `prepareRequestProductionCsid`, `prepareRenewCsid`,
     `prepareCheckInvoiceCompliance`, `prepareReportSimplifiedInvoice`,
     and `prepareClearStandardInvoice` with the same inputs as their HTTP
     counterparts. They return `ComplianceRequest` for compliance credentials,
@@ -542,52 +542,52 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     FatooraStatus fatoora_zatca_client_create(const FatooraConfig *config,
         FatooraZatcaClient **out,
         FatooraError **error);
-    FatooraStatus fatoora_zatca_client_post_csr_for_ccsid(const FatooraZatcaClient *self,
+    FatooraStatus fatoora_zatca_client_request_compliance_csid(const FatooraZatcaClient *self,
         const FatooraCsr *csr,
         const char *otp,
-        FatooraCsidCompliance **out,
+        FatooraComplianceCsid **out,
         FatooraError **error);
-    FatooraStatus fatoora_zatca_client_post_ccsid_for_pcsid(const FatooraZatcaClient *self,
-        const FatooraCsidCompliance *credentials,
-        FatooraCsidProduction **out,
+    FatooraStatus fatoora_zatca_client_request_production_csid(const FatooraZatcaClient *self,
+        const FatooraComplianceCsid *credentials,
+        FatooraProductionCsid **out,
         FatooraError **error);
     FatooraStatus fatoora_zatca_client_renew_csid(const FatooraZatcaClient *self,
-        const FatooraCsidProduction *credentials,
+        const FatooraProductionCsid *credentials,
         const FatooraCsr *csr,
         const char *otp,
         const char *accept_language,
-        FatooraCsidProduction **out,
+        FatooraProductionCsid **out,
         FatooraError **error);
     FatooraStatus fatoora_zatca_client_check_invoice_compliance(const FatooraZatcaClient *self,
         const FatooraSignedInvoice *invoice,
-        const FatooraCsidCompliance *credentials,
+        const FatooraComplianceCsid *credentials,
         FatooraValidationResponse **out,
         FatooraError **error);
     FatooraStatus fatoora_zatca_client_report_simplified_invoice(const FatooraZatcaClient *self,
         const FatooraSignedInvoice *invoice,
-        const FatooraCsidProduction *credentials,
+        const FatooraProductionCsid *credentials,
         FatooraClearanceMode clearance_mode,
         const char *accept_language,
         FatooraValidationResponse **out,
         FatooraError **error);
     FatooraStatus fatoora_zatca_client_clear_standard_invoice(const FatooraZatcaClient *self,
         const FatooraSignedInvoice *invoice,
-        const FatooraCsidProduction *credentials,
+        const FatooraProductionCsid *credentials,
         FatooraClearanceMode clearance_mode,
         const char *accept_language,
         FatooraValidationResponse **out,
         FatooraError **error);
-    FatooraStatus fatoora_csid_compliance_create(FatooraEnvironment environment,
+    FatooraStatus fatoora_compliance_csid_create(FatooraEnvironment environment,
         const char *request_id,
         const char *token,
         const char *secret,
-        FatooraCsidCompliance **out,
+        FatooraComplianceCsid **out,
         FatooraError **error);
-    FatooraStatus fatoora_csid_production_create(FatooraEnvironment environment,
+    FatooraStatus fatoora_production_csid_create(FatooraEnvironment environment,
         const char *request_id,
         const char *token,
         const char *secret,
-        FatooraCsidProduction **out,
+        FatooraProductionCsid **out,
         FatooraError **error);
     ```
 
@@ -596,8 +596,8 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     `FATOORA_CLEARANCE_ENABLED` (the Clearance-Status header). Any other enum value
     returns `FATOORA_INVALID_INPUT`.
     Use `NULL` for absent request ID or language. Text inputs are UTF-8 strings.
-    Credential getters start with `fatoora_csid_compliance_` or
-    `fatoora_csid_production_`, take `const` credential pointer, output pointer, and
+    Credential getters start with `fatoora_compliance_csid_` or
+    `fatoora_production_csid_`, take `const` credential pointer, output pointer, and
     `FatooraError **error`. `env` writes `FatooraEnvironment`; `request_id`, `binary_security_token`,
     and `secret` write owned `char *`, with `NULL` for absent request ID.
 
@@ -658,8 +658,8 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
     Outputs and response children are independent owned copies. Release text with
     `fatoora_string_free`; release handles with their matching `_free` function, such
-    as `fatoora_zatca_client_free`, `fatoora_csid_compliance_free`,
-    `fatoora_csid_production_free`, `fatoora_validation_response_free`,
+    as `fatoora_zatca_client_free`, `fatoora_compliance_csid_free`,
+    `fatoora_production_csid_free`, `fatoora_validation_response_free`,
     `fatoora_validation_results_free`, `fatoora_validation_message_free`, or
     `fatoora_invoice_request_free`. See [C ownership and errors](bindings/c.md).
 
