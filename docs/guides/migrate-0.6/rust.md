@@ -3,15 +3,19 @@ title: Migrate a Rust Project from fatoora-core 0.5 to 0.6
 description: Every renamed, retyped, removed and deprecated fatoora-core item between 0.5 and 0.6, with before-and-after Rust code for the common migrations.
 ---
 
-# Migrate from 0.5 to 0.6 (Rust)
+# Migrate from 0.5 to 0.6: Rust
 
-This page covers the `fatoora-core` Rust crate. The generated language
-bindings (JavaScript/TypeScript, Kotlin/Java, C#/.NET and C/C++) have a shorter
-list of breaking changes, summarised in
-[Language bindings](#language-bindings). The Python `fatoora` package has its
-own [0.5 to 0.6 table](../reference/bindings/python.md#migrate-from-05): getters
-become properties as a hard break, and its renamed 0.5 names keep working, with
-a `DeprecationWarning`, until 0.7.
+This page covers the `fatoora-core` crate. The language packages have their own
+pages: [Python](python.md), [JavaScript/TypeScript](javascript.md),
+[Kotlin/Java](kotlin.md), [C#/.NET](csharp.md) and [C/C++](c.md). The
+[overview](index.md) lists what changed in every language.
+
+Update `Cargo.toml`:
+
+```toml
+[dependencies]
+fatoora-core = "0.6.0"
+```
 
 0.6 renames items for consistency, replaces strings and Booleans with typed
 values, and makes the fields of invoice value types private. Each change below
@@ -71,6 +75,10 @@ Boolean. The status enums keep any value they do not recognise in an
 `.map(ReportingStatus::as_str)` gives back the 0.5 `Option<&str>`. The
 `api::ComplianceCsid` and `api::ProductionCsid` aliases are new shorthands for
 `CsidCredentials<Compliance>` and `CsidCredentials<Production>`.
+
+`ZatcaClient::new` still applies no request timeout. To bound each request, use
+the new `ZatcaClient::with_timeout(config, Duration::from_secs(30))?`; a timeout
+surfaces as an `ErrorKind::Network` error.
 
 ### CSR
 
@@ -190,111 +198,6 @@ Set `previous_invoice_hash` from an `InvoiceHash`: the value returned by
 `text.parse()?`. Parsing trims surrounding whitespace and rejects blank text;
 `validate_zatca` still checks the digest format. Deserialized options (for
 example from JSON) go through the same parsing.
-
-## Language bindings
-
-The FFI bridge replaces raw integer codes and Booleans with enums. The Python
-`fatoora` package keeps its own `IntEnum`s and string statuses; its 0.6 changes
-are listed in the [Python reference](../reference/bindings/python.md#migrate-from-05).
-For the other bindings:
-
-| 0.5 | 0.6 | Status |
-| --- | --- | --- |
-| Environment `0`/`1`/`2` in `Config`, `CsidCompliance.create`, `CsidProduction.create`, `CsrProperties.build` | `Environment.NonProduction`/`Simulation`/`Production` (.NET: `ZatcaEnvironment`) | Breaking |
-| Invoice kind `0`–`3` and subtype `0`/`1` in `InvoiceBuilder.new`/`newWithReference` | `InvoiceTypeKind.Tax`/`Prepayment`/`CreditNote`/`DebitNote`, `InvoiceSubType.Standard`/`Simplified` | Breaking |
-| VAT category `0`–`3` (`setVatCategory`, `addLineItem`, `setTaxExemption`, `addDocumentAdjustment`, `InvoiceLineItem`, `VatBreakdown`, `AllowanceCharge` constructors) | `VatCategory.Exempt`/`Standard`/`Zero`/`OutOfScope` | Breaking |
-| `bool charge` in `addDocumentAdjustment` and `AllowanceCharge` constructor | `AdjustmentKind.Allowance`/`Charge` | Breaking |
-| `AllowanceCharge.isCharge()`, `InvoiceLineItem.adjustmentIsCharge(index)` | `kind()`, `adjustmentKind(index)` returning `AdjustmentKind` | Breaking |
-| `bool clearanceStatus` in `reportSimplifiedInvoice`, `clearStandardInvoice` and their `prepare*` forms | `ClearanceMode.Disabled`/`Enabled` | Breaking |
-| Integer getters `env()`, `vatCategory()`, `invoiceTypeKind()`, `invoiceSubType()`, `category()` | Return the enums above; `env()` can fail with code 9 if the native library knows an environment the binding does not | Breaking |
-| `reportingStatus()`, `clearanceStatus()`, `results.status()`, `message.messageType()`, `message.status()` returning optional `Text` | Optional `ReportingStatus`, `ClearanceStatus`, `ValidationStatus`, `MessageType`; `*Raw()` returns the old text | Breaking |
-
-The table uses JavaScript/Kotlin/Java names; C# uses PascalCase (`IsCharge()`
-becomes `Kind()`) and C++ uses snake_case (`is_charge()` becomes `kind()`).
-The first four enums keep the old numeric values. Status enums are null when the
-field is absent and `Unknown` when the gateway sends a value this binding version
-does not recognise; the matching `*Raw()` getter (`*_raw` in C/C++) returns the
-exact text. The invoice flag mask stays an integer; build it from
-`InvoiceFlag` bits (`InvoiceFlag.Export.bit()`, or `(byte)InvoiceFlag.Export` in
-C#, which does not emit enum methods). Optional text getters such as
-`requestId()` still return nullable `Text`.
-
-The JavaScript async `ZatcaClient.reportSimplifiedInvoice` and
-`clearStandardInvoice` still accept a Boolean (or a `ClearanceMode`). The
-Kotlin `reportSimplifiedInvoiceAsync`/`clearStandardInvoiceAsync` helpers take a
-`ClearanceMode`; their `Boolean` overloads are deprecated.
-
-The Kotlin/Java facade also changes shape. Value getters (text, amounts,
-numbers, enums, booleans) become Kotlin properties, seen from Java as `getX()`,
-`isX()` or `hasX()`, so `address.city()` becomes `address.city` in Kotlin and
-`address.getCity()` in Java. Optional text getters return `String?` instead of a
-closeable `Text`. Quantities, prices, rates and amounts are `java.math.BigDecimal`
-in both directions. Native failures throw a `BindingException` subclass per
-error code, such as `InvalidInputException` or `NetworkException`. The old getter
-functions and `String` amount overloads remain for one release as deprecated
-members with a suggested replacement; Kotlin `isX()`/`hasX()` calls and
-`PaymentMeans.instructionNoteAt`/`ZatcaStageReport.evaluatedAssertion` (now
-`String`) break without a deprecation path.
-
-The C facade (`fatoora.h`) uses typed enums (`FatooraEnvironment`,
-`FatooraInvoiceTypeKind`, `FatooraVatCategory`, `FatooraAdjustmentKind`,
-`FatooraClearanceMode`, ...). The existing constants (`FATOORA_NON_PRODUCTION`,
-`FATOORA_TAX`, `FATOORA_VAT_STANDARD`, `FATOORA_FLAG_EXPORT`, ...) keep their
-values, and passing `0`/`1` or `false`/`true` still compiles; any undeclared
-value returns `FATOORA_INVALID_INPUT`. Getters write typed outputs, such as
-`FatooraVatCategory *out` instead of `uint8_t *out`. Optional status getters
-take `out` plus `bool *has_value`, and the new `_raw` getters write `char **out`
-(`NULL` when absent). `fatoora_allowance_charge_is_charge` is renamed
-`fatoora_allowance_charge_kind`, and `fatoora_invoice_line_item_adjustment_is_charge`
-is renamed `fatoora_invoice_line_item_adjustment_kind`; both write a
-`FatooraAdjustmentKind`. `fatoora_zatca_client_report_simplified_invoice` and
-`fatoora_zatca_client_clear_standard_invoice` take `FatooraClearanceMode`. The raw
-Diplomat headers under `generated/` do not validate enum values: passing a value
-that is not a declared enumerator is undefined behaviour.
-
-### Names that mirror the core
-
-The bridge now uses the core names, without aliases. Builders use `set*` to
-replace a value and `add*` to append one; getters keep plain names. The table
-uses JavaScript/Kotlin/Java names; C# uses PascalCase and C/C++ snake_case
-(`fatoora_compliance_csid_create`, `fatoora_invoice_signer_sign`, ...).
-
-| 0.5 | 0.6 | Status |
-| --- | --- | --- |
-| `CsidCompliance`, `CsidProduction` | `ComplianceCsid`, `ProductionCsid` | Breaking |
-| `client.postCsrForCcsid`, `postCcsidForPcsid` (and `preparePost*`) | `requestComplianceCsid`, `requestProductionCsid` (and `prepareRequest*`); Kotlin `*Async` helpers follow | Breaking |
-| `Signer` | `InvoiceSigner` | Breaking |
-| `CsrProperties.fromPropertiesStr`, `parseCsrConfigFile` | `fromStr`, `fromFile` | Breaking |
-| `invoice.hashBase64()` | `invoice.hash()`; `SignedInvoice.invoiceHash()` still reads the stored digest | Breaking |
-| `builder.flags(mask)`, `data.flagsRaw()` | `builder.setFlags(mask)`, `data.flags()` | Breaking |
-| `builder.setTaxExemption(...)` | `builder.addTaxExemption(...)` | Breaking |
-| `builder.addDocumentAdjustment(kind, adjustment, category, rate, exemption)` | `builder.addAllowance(adjustment, category, rate, exemption)` or `addCharge(...)` | Breaking |
-| `builder.setNote(language, text)`, `setNoteWithoutLanguage(text)` | `builder.addNote(language, text)` with `null` for no language | Breaking |
-| `builder.setPaymentMeansCode(code)` | `builder.addPaymentMeans(PaymentMeans.new_(code, null))` (`create` in Kotlin/Java, `New` in C#) | Breaking |
-| `builder.setAllowance(reason, amount)`, `allowanceReason`, `invoiceLevelCharge`, `invoiceLevelDiscount` | `addAllowance`/`addCharge` with `Adjustment.amount(amount).withReason(reason, null)` | Breaking |
-| `Xml.validate(config, xml)` | `Xml.validate(xml)` | Breaking |
-| `Xml.validateZatca(config, xml, optionsJson)` returning JSON text | `Xml.validateZatca(xml, optionsJson)` returning `ZatcaValidationReport`; `report.toJson()` returns the old text | Breaking |
-
-Validation no longer takes a `Config` because the core `Validator` needs none.
-The report object exposes `isValid()`, `isComplete()`, `hasErrors()` and
-`stage(i)` with typed findings; see
-[invoice validation](../reference/invoice-validation.md#report-object-in-the-generated-bindings).
-Credential `requestId()` returns null when the credentials have no request ID.
-
-Python renames its API to match (`InvoiceSigner`, `ComplianceCsid`,
-`request_compliance_csid`, ...) and keeps the renamed 0.5 names as deprecated
-aliases until 0.7; its getters become properties as a hard break (drop the
-parentheses). Invoice data (`Party`, `Address`, `Adjustment`, `Identifier`, ...)
-becomes frozen dataclasses built with their constructors. See the
-[Python reference](../reference/bindings/python.md#migrate-from-05). Two
-behaviours of the deprecated names differ from 0.5: `set_payment_means_code`
-appends a payment means instead of changing the code of an existing one, and the
-aggregate setters (`set_allowance`, `invoice_level_discount`,
-`invoice_level_charge`, `allowance_reason`) are applied by `build()` as one
-allowance and one charge in the document VAT category. `build()` raises
-`ValueError` when lines in that category have more than one VAT rate or when the
-aggregate setters are combined with `add_allowance`, `add_charge` or
-`add_adjustment`.
 
 ## Behaviour and data format changes
 
