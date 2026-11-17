@@ -141,11 +141,30 @@ impl Adjustment {
 /// Read from [`LineItem::adjustments`]; add one with
 /// [`LineItemBuilder::allowance`] or [`LineItemBuilder::charge`].
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(try_from = "LineAdjustmentRepr")]
 pub struct LineAdjustment {
     /// A charge increases the line amount; an allowance decreases it (`cbc:ChargeIndicator`).
     kind: AdjustmentKind,
     /// The amount calculation and reason.
     adjustment: Adjustment,
+}
+/// Deserialization shape of [`LineAdjustment`]: accepts `kind`, or the 0.5 `charge` boolean.
+#[derive(Deserialize)]
+struct LineAdjustmentRepr {
+    #[serde(default)]
+    kind: Option<AdjustmentKind>,
+    #[serde(default)]
+    charge: Option<bool>,
+    adjustment: Adjustment,
+}
+impl TryFrom<LineAdjustmentRepr> for LineAdjustment {
+    type Error = &'static str;
+    fn try_from(repr: LineAdjustmentRepr) -> std::result::Result<Self, Self::Error> {
+        Ok(Self::new(
+            AdjustmentKind::from_serialized(repr.kind, repr.charge)?,
+            repr.adjustment,
+        ))
+    }
 }
 impl LineAdjustment {
     pub(crate) fn new(kind: AdjustmentKind, adjustment: Adjustment) -> Self {
