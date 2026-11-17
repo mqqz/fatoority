@@ -106,20 +106,20 @@ fn blocking_http_contract() {
 
 fn exercise_client() {
     let config = ok(Config::new(Environment::NonProduction));
-    let client = ok(ZatcaClient::create(&config));
+    let client = ok(ZatcaClient::new(&config));
     let mut simple = ok(SignedInvoice::from_xml(SIMPLE));
     let standard = ok(SignedInvoice::from_xml(STANDARD));
     // Also exercise the adapter from an already-entered Tokio runtime.
     let runtime = tokio::runtime::Runtime::new().unwrap();
     runtime.block_on(async {
         for token in ["accepted", "rejected", "unknown", "http-error"] {
-            let production = ok(ProductionCsid::create(
+            let production = ok(ProductionCsid::new(
                 Environment::NonProduction,
                 None,
                 token.as_bytes(),
                 b"secret",
             ));
-            let compliance = ok(ComplianceCsid::create(
+            let compliance = ok(ComplianceCsid::new(
                 Environment::NonProduction,
                 None,
                 token.as_bytes(),
@@ -170,13 +170,13 @@ fn exercise_client() {
             }
         }
     });
-    let production = ok(ProductionCsid::create(
+    let production = ok(ProductionCsid::new(
         Environment::NonProduction,
         None,
         b"accepted",
         b"secret",
     ));
-    let compliance = ok(ComplianceCsid::create(
+    let compliance = ok(ComplianceCsid::new(
         Environment::NonProduction,
         None,
         b"accepted",
@@ -193,7 +193,7 @@ fn exercise_client() {
             .report_simplified_invoice(&standard, &production, ClearanceMode::Disabled, None)
             .is_err()
     );
-    let wrong_env = ok(ProductionCsid::create(
+    let wrong_env = ok(ProductionCsid::new(
         Environment::Simulation,
         None,
         b"accepted",
@@ -244,8 +244,8 @@ fn exercise_client() {
 #[test]
 fn timeout_constructor_rejects_zero() {
     let config = ok(Config::new(Environment::NonProduction));
-    ok(ZatcaClient::create_with_timeout(&config, 30_000));
-    let err = ZatcaClient::create_with_timeout(&config, 0).err().unwrap();
+    ok(ZatcaClient::with_timeout(&config, 30_000));
+    let err = ZatcaClient::with_timeout(&config, 0).err().unwrap();
     assert_eq!(err.code(), fatoora_core::ErrorKind::Internal as i32);
     assert!(written(|out| err.message(out)).contains("timeout"));
 }

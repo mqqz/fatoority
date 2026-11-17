@@ -61,7 +61,7 @@ public partial class OriginalInvoiceRef: IDisposable
     /// <returns>
     /// A <c>OriginalInvoiceRef</c> allocated on Rust side.
     /// </returns>
-    public static OriginalInvoiceRef New(string id, string? uuid, string? date, string? time, string? typeCode)
+    public static OriginalInvoiceRef Create(string id, string? uuid, string? date, string? time, string? typeCode)
     {
         unsafe
         {
@@ -86,6 +86,9 @@ public partial class OriginalInvoiceRef: IDisposable
             }
         }
     }
+
+    [Obsolete("Use Create; New will be removed in 0.7.")]
+    public static OriginalInvoiceRef New(string id, string? uuid, string? date, string? time, string? typeCode) => Create(id, uuid, date, time, typeCode);
 
     /// <exception cref="FfiException"></exception>
     public string? IssueTime

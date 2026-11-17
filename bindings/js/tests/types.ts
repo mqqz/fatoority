@@ -1,5 +1,5 @@
 import {
-  Address, ClearanceMode, Config, Environment, FatooraError, InvalidInputError, InvoiceBuilder,
+  Address, Adjustment, ClearanceMode, Config, Environment, FatooraError, InvalidInputError, InvoiceBuilder,
   InvoiceSubType, InvoiceTypeKind, LineItemBuilder, PaymentMeans, Severity, TransportError, NetworkError,
   ZatcaClient, ComplianceCsid, Xml, errorClassForCode, ErrorCode, sendPrepared,
   type EnvironmentValue, type ErrorKind, type ProductionCsid, type SeverityValue, type SignedInvoice,
@@ -12,7 +12,7 @@ const rawConfig: Config = RawConfig.new_(Environment.NonProduction); // raw inst
 const credentials = ComplianceCsid.create(Environment.NonProduction, '1', 'token', 'secret');
 const client = new ZatcaClient(config, {fetch});
 const response: Promise<ProductionCsid> = client.requestProductionCsid(credentials, {signal: new AbortController().signal});
-const prepared = RawClient.create(rawConfig).prepareRequestProductionCsid(credentials);
+const prepared = RawClient.new_(rawConfig).prepareRequestProductionCsid(credentials);
 const sent: Promise<ProductionCsid> = sendPrepared(prepared);
 declare const invoice: SignedInvoice, production: ProductionCsid;
 const reported: Promise<ValidationResponse> = client.reportSimplifiedInvoice(invoice, production, ClearanceMode.Disabled);
@@ -23,6 +23,12 @@ const builder: InvoiceBuilder = InvoiceBuilder.create(InvoiceTypeKind.Tax, Invoi
 builder.addPaymentMeans(PaymentMeans.create('10', null));
 builder.setSeller('Seller', Address.create('SA', 'Riyadh', 'Street', '1234', '12222', null, null, null), '301121971500003', null, null);
 const line = LineItemBuilder.create();
+const rebate: Adjustment = Adjustment.percentOf('250', '10').suppliedAmount('25');
+const percentage: string | undefined = rebate.percentage()?.value();
+/** 0.5 names still type-check until 0.7. */
+const legacyRebate: Adjustment = Adjustment.percentage('250', '10').withSuppliedAmount('25');
+const legacyPercent: string | undefined = legacyRebate.percent()?.value();
+line.addAllowance(rebate);
 // @ts-expect-error generated constructors are not public
 new Config();
 

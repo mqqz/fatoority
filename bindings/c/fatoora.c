@@ -419,12 +419,12 @@ FatooraStatus fatoora_adjustment_amount(const char *value, FatooraAdjustment **o
     return FATOORA_OK;
 }
 
-FatooraStatus fatoora_adjustment_percentage(const char *base, const char *percent, FatooraAdjustment **out, FatooraError **error) {
+FatooraStatus fatoora_adjustment_percent_of(const char *base, const char *percent, FatooraAdjustment **out, FatooraError **error) {
     if (error) *error = NULL;
     if (out) *out = 0;
     if (!base || !percent || !out)
         return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
-    fatoora_Adjustment_percentage_result result = fatoora_Adjustment_percentage(fatoora_private_string(base), fatoora_private_string(percent));
+    fatoora_Adjustment_percent_of_result result = fatoora_Adjustment_percent_of(fatoora_private_string(base), fatoora_private_string(percent));
     if (!result.is_ok) {
         return fatoora_private_error(result.err, error);
     }
@@ -432,12 +432,12 @@ FatooraStatus fatoora_adjustment_percentage(const char *base, const char *percen
     return FATOORA_OK;
 }
 
-FatooraStatus fatoora_adjustment_with_supplied_amount(const FatooraAdjustment *self, const char *value, FatooraAdjustment **out, FatooraError **error) {
+FatooraStatus fatoora_adjustment_supplied_amount(const FatooraAdjustment *self, const char *value, FatooraAdjustment **out, FatooraError **error) {
     if (error) *error = NULL;
     if (out) *out = 0;
     if (!self || !value || !out)
         return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
-    fatoora_Adjustment_with_supplied_amount_result result = fatoora_Adjustment_with_supplied_amount(self, fatoora_private_string(value));
+    fatoora_Adjustment_supplied_amount_result result = fatoora_Adjustment_supplied_amount(self, fatoora_private_string(value));
     if (!result.is_ok) {
         return fatoora_private_error(result.err, error);
     }
@@ -486,12 +486,12 @@ FatooraStatus fatoora_adjustment_base_amount(const FatooraAdjustment *self, char
     return fatoora_private_text(result.ok, out, error);
 }
 
-FatooraStatus fatoora_adjustment_percent(const FatooraAdjustment *self, char **out, FatooraError **error) {
+FatooraStatus fatoora_adjustment_percentage(const FatooraAdjustment *self, char **out, FatooraError **error) {
     if (error) *error = NULL;
     if (out) *out = 0;
     if (!self || !out)
         return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
-    fatoora_Adjustment_percent_result result = fatoora_Adjustment_percent(self);
+    fatoora_Adjustment_percentage_result result = fatoora_Adjustment_percentage(self);
     if (!result.is_ok) {
         return fatoora_private_error(result.err, error);
     }
@@ -536,12 +536,12 @@ FatooraStatus fatoora_allowance_charge_has_vat_rate(const FatooraAllowanceCharge
     return FATOORA_OK;
 }
 
-FatooraStatus fatoora_allowance_charge_without_vat_rate(const FatooraAllowanceCharge *self, FatooraAllowanceCharge **out, FatooraError **error) {
+FatooraStatus fatoora_allowance_charge_omit_vat_rate(const FatooraAllowanceCharge *self, FatooraAllowanceCharge **out, FatooraError **error) {
     if (error) *error = NULL;
     if (out) *out = 0;
     if (!self || !out)
         return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
-    fatoora_AllowanceCharge_without_vat_rate_result result = fatoora_AllowanceCharge_without_vat_rate(self);
+    fatoora_AllowanceCharge_omit_vat_rate_result result = fatoora_AllowanceCharge_omit_vat_rate(self);
     if (!result.is_ok) {
         return fatoora_private_error(result.err, error);
     }
@@ -767,12 +767,12 @@ void fatoora_bytes_list_free(FatooraBytesList *self) {
     if (self) fatoora_BytesList_destroy(self);
 }
 
-FatooraStatus fatoora_compliance_csid_create(FatooraEnvironment environment, const char *request_id, const char *token, const char *secret, FatooraComplianceCsid **out, FatooraError **error) {
+FatooraStatus fatoora_compliance_csid_new(FatooraEnvironment environment, const char *request_id, const char *token, const char *secret, FatooraComplianceCsid **out, FatooraError **error) {
     if (error) *error = NULL;
     if (out) *out = 0;
     if ((environment != FATOORA_NON_PRODUCTION && environment != FATOORA_SIMULATION && environment != FATOORA_PRODUCTION) || !token || !secret || !out)
         return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
-    fatoora_ComplianceCsid_create_result result = fatoora_ComplianceCsid_create((Environment)environment, fatoora_private_optional(request_id), fatoora_private_string(token), fatoora_private_string(secret));
+    fatoora_ComplianceCsid_new_result result = fatoora_ComplianceCsid_new((Environment)environment, fatoora_private_optional(request_id), fatoora_private_string(token), fatoora_private_string(secret));
     if (!result.is_ok) {
         return fatoora_private_error(result.err, error);
     }
@@ -3503,12 +3503,12 @@ void fatoora_payment_means_free(FatooraPaymentMeans *self) {
     if (self) fatoora_PaymentMeans_destroy(self);
 }
 
-FatooraStatus fatoora_production_csid_create(FatooraEnvironment environment, const char *request_id, const char *token, const char *secret, FatooraProductionCsid **out, FatooraError **error) {
+FatooraStatus fatoora_production_csid_new(FatooraEnvironment environment, const char *request_id, const char *token, const char *secret, FatooraProductionCsid **out, FatooraError **error) {
     if (error) *error = NULL;
     if (out) *out = 0;
     if ((environment != FATOORA_NON_PRODUCTION && environment != FATOORA_SIMULATION && environment != FATOORA_PRODUCTION) || !token || !secret || !out)
         return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
-    fatoora_ProductionCsid_create_result result = fatoora_ProductionCsid_create((Environment)environment, fatoora_private_optional(request_id), fatoora_private_string(token), fatoora_private_string(secret));
+    fatoora_ProductionCsid_new_result result = fatoora_ProductionCsid_new((Environment)environment, fatoora_private_optional(request_id), fatoora_private_string(token), fatoora_private_string(secret));
     if (!result.is_ok) {
         return fatoora_private_error(result.err, error);
     }
@@ -4385,12 +4385,12 @@ FatooraStatus fatoora_vat_breakdown_has_vat_rate(const FatooraVatBreakdown *self
     return FATOORA_OK;
 }
 
-FatooraStatus fatoora_vat_breakdown_without_vat_rate(const FatooraVatBreakdown *self, FatooraVatBreakdown **out, FatooraError **error) {
+FatooraStatus fatoora_vat_breakdown_omit_vat_rate(const FatooraVatBreakdown *self, FatooraVatBreakdown **out, FatooraError **error) {
     if (error) *error = NULL;
     if (out) *out = 0;
     if (!self || !out)
         return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
-    fatoora_VatBreakdown_without_vat_rate_result result = fatoora_VatBreakdown_without_vat_rate(self);
+    fatoora_VatBreakdown_omit_vat_rate_result result = fatoora_VatBreakdown_omit_vat_rate(self);
     if (!result.is_ok) {
         return fatoora_private_error(result.err, error);
     }
@@ -4548,12 +4548,12 @@ FatooraStatus fatoora_xml_hash(const char *xml, char **out, FatooraError **error
     return fatoora_private_finish(&write, out, error);
 }
 
-FatooraStatus fatoora_zatca_client_create(const FatooraConfig *config, FatooraZatcaClient **out, FatooraError **error) {
+FatooraStatus fatoora_zatca_client_new(const FatooraConfig *config, FatooraZatcaClient **out, FatooraError **error) {
     if (error) *error = NULL;
     if (out) *out = 0;
     if (!config || !out)
         return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
-    fatoora_ZatcaClient_create_result result = fatoora_ZatcaClient_create(config);
+    fatoora_ZatcaClient_new_result result = fatoora_ZatcaClient_new(config);
     if (!result.is_ok) {
         return fatoora_private_error(result.err, error);
     }
@@ -4561,12 +4561,12 @@ FatooraStatus fatoora_zatca_client_create(const FatooraConfig *config, FatooraZa
     return FATOORA_OK;
 }
 
-FatooraStatus fatoora_zatca_client_create_with_timeout(const FatooraConfig *config, uint32_t timeout_ms, FatooraZatcaClient **out, FatooraError **error) {
+FatooraStatus fatoora_zatca_client_with_timeout(const FatooraConfig *config, uint32_t timeout_ms, FatooraZatcaClient **out, FatooraError **error) {
     if (error) *error = NULL;
     if (out) *out = 0;
     if (!config || !out)
         return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
-    fatoora_ZatcaClient_create_with_timeout_result result = fatoora_ZatcaClient_create_with_timeout(config, timeout_ms);
+    fatoora_ZatcaClient_with_timeout_result result = fatoora_ZatcaClient_with_timeout(config, timeout_ms);
     if (!result.is_ok) {
         return fatoora_private_error(result.err, error);
     }

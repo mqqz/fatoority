@@ -80,7 +80,7 @@ Clients reject credentials issued for a different environment before sending a r
 
     | Operation | Returns | Behavior |
     | --- | --- | --- |
-    | `Config.New(ZatcaEnvironment env)` | `Config` | Stores the selected environment. |
+    | `Config.Create(ZatcaEnvironment env)` | `Config` | Stores the selected environment. |
     | `config.Env` | `ZatcaEnvironment` | Property returning the stored environment. |
 
     Pass `ZatcaEnvironment.NonProduction`, `ZatcaEnvironment.Simulation`, or

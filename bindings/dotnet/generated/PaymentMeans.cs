@@ -135,7 +135,7 @@ public partial class PaymentMeans: IDisposable
     /// <returns>
     /// A <c>PaymentMeans</c> allocated on Rust side.
     /// </returns>
-    public static PaymentMeans New(string code, string? instruction)
+    public static PaymentMeans Create(string code, string? instruction)
     {
         unsafe
         {
@@ -154,6 +154,9 @@ public partial class PaymentMeans: IDisposable
             }
         }
     }
+
+    [Obsolete("Use Create; New will be removed in 0.7.")]
+    public static PaymentMeans New(string code, string? instruction) => Create(code, instruction);
 
     /// <exception cref="FfiException"></exception>
     /// <returns>

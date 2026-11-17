@@ -21,15 +21,30 @@ class Adjustment internal constructor(internal val raw: com.fatoora.raw.Adjustme
             Adjustment(unwrap(com.fatoora.raw.Adjustment.amount(checkedText(value))))
         }
 
+        /**
+         * Create an adjustment of `percent` percent of `base`.
+         */
         @JvmStatic
-        fun percentage(base: java.math.BigDecimal, percent: java.math.BigDecimal): Adjustment = nativeCall(listOfNotNull()) {
-            Adjustment(unwrap(com.fatoora.raw.Adjustment.percentage(decimalText(base), decimalText(percent))))
+        fun percentOf(base: java.math.BigDecimal, percent: java.math.BigDecimal): Adjustment = nativeCall(listOfNotNull()) {
+            Adjustment(unwrap(com.fatoora.raw.Adjustment.percentOf(decimalText(base), decimalText(percent))))
         }
 
-        @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("percentage(BigDecimal(base), BigDecimal(percent))", "java.math.BigDecimal"))
+        @Deprecated("Use percentOf.", ReplaceWith("percentOf(base, percent)"))
+        @JvmStatic
+        fun percentage(base: java.math.BigDecimal, percent: java.math.BigDecimal): Adjustment = nativeCall(listOfNotNull()) {
+            Adjustment(unwrap(com.fatoora.raw.Adjustment.percentOf(decimalText(base), decimalText(percent))))
+        }
+
+        @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("percentOf(BigDecimal(base), BigDecimal(percent))", "java.math.BigDecimal"))
+        @JvmStatic
+        fun percentOf(base: String, percent: String): Adjustment = nativeCall(listOfNotNull()) {
+            Adjustment(unwrap(com.fatoora.raw.Adjustment.percentOf(checkedText(base), checkedText(percent))))
+        }
+
+        @Deprecated("Use percentOf with java.math.BigDecimal amounts.", ReplaceWith("percentOf(BigDecimal(base), BigDecimal(percent))", "java.math.BigDecimal"))
         @JvmStatic
         fun percentage(base: String, percent: String): Adjustment = nativeCall(listOfNotNull()) {
-            Adjustment(unwrap(com.fatoora.raw.Adjustment.percentage(checkedText(base), checkedText(percent))))
+            Adjustment(unwrap(com.fatoora.raw.Adjustment.percentOf(checkedText(base), checkedText(percent))))
         }
     }
 
@@ -43,10 +58,14 @@ class Adjustment internal constructor(internal val raw: com.fatoora.raw.Adjustme
             unwrap(raw.baseAmount())?.let(::readText)?.let(::decimalOf)
         }
 
-    val percent: java.math.BigDecimal?
+    val percentage: java.math.BigDecimal?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.percent())?.let(::readText)?.let(::decimalOf)
+            unwrap(raw.percentage())?.let(::readText)?.let(::decimalOf)
         }
+
+    @Deprecated("Use the percentage property.", ReplaceWith("percentage"))
+    val percent: java.math.BigDecimal?
+        get() = percentage
 
     val reason: String?
         get() = nativeCall(listOfNotNull(this)) {
@@ -58,13 +77,26 @@ class Adjustment internal constructor(internal val raw: com.fatoora.raw.Adjustme
             unwrap(raw.reasonCode())?.let(::readText)
         }
 
-    fun withSuppliedAmount(value: java.math.BigDecimal): Adjustment = nativeCall(listOfNotNull(this)) {
-        Adjustment(unwrap(raw.withSuppliedAmount(decimalText(value))))
+    /**
+     * Return a copy with an explicit amount, checked against the percentage calculation.
+     */
+    fun suppliedAmount(value: java.math.BigDecimal): Adjustment = nativeCall(listOfNotNull(this)) {
+        Adjustment(unwrap(raw.suppliedAmount(decimalText(value))))
     }
 
-    @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("withSuppliedAmount(BigDecimal(value))", "java.math.BigDecimal"))
+    @Deprecated("Use suppliedAmount.", ReplaceWith("suppliedAmount(value)"))
+    fun withSuppliedAmount(value: java.math.BigDecimal): Adjustment = nativeCall(listOfNotNull(this)) {
+        Adjustment(unwrap(raw.suppliedAmount(decimalText(value))))
+    }
+
+    @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("suppliedAmount(BigDecimal(value))", "java.math.BigDecimal"))
+    fun suppliedAmount(value: String): Adjustment = nativeCall(listOfNotNull(this)) {
+        Adjustment(unwrap(raw.suppliedAmount(checkedText(value))))
+    }
+
+    @Deprecated("Use suppliedAmount with java.math.BigDecimal amounts.", ReplaceWith("suppliedAmount(BigDecimal(value))", "java.math.BigDecimal"))
     fun withSuppliedAmount(value: String): Adjustment = nativeCall(listOfNotNull(this)) {
-        Adjustment(unwrap(raw.withSuppliedAmount(checkedText(value))))
+        Adjustment(unwrap(raw.suppliedAmount(checkedText(value))))
     }
 
     @JvmOverloads
@@ -82,9 +114,9 @@ class Adjustment internal constructor(internal val raw: com.fatoora.raw.Adjustme
         unwrap(raw.baseAmount())?.let(::Text)
     }
 
-    @Deprecated("Use the percent property.", ReplaceWith("percent"))
+    @Deprecated("Use the percentage property.", ReplaceWith("percentage"))
     fun percent(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.percent())?.let(::Text)
+        unwrap(raw.percentage())?.let(::Text)
     }
 
     @Deprecated("Use the reason property.", ReplaceWith("reason"))

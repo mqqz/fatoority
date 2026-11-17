@@ -9,8 +9,8 @@ namespace Fatoora.Raw;
 internal partial struct ProductionCsid
 {
 
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ProductionCsid_create", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultProductionCsidBindingError Create(ZatcaEnvironment environment, DiplomatOptionSliceU8 requestId, DiplomatSliceU8 token, DiplomatSliceU8 secret);
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ProductionCsid_new", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultProductionCsidBindingError New(ZatcaEnvironment environment, DiplomatOptionSliceU8 requestId, DiplomatSliceU8 token, DiplomatSliceU8 secret);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ProductionCsid_env", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultZatcaEnvironmentBindingError Env(ProductionCsid* handle);

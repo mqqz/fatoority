@@ -12,7 +12,7 @@ class ProductionCsid internal constructor(internal val raw: com.fatoora.raw.Prod
     companion object {
         @JvmStatic
         fun create(environment: Environment, requestId: String?, token: String, secret: String): ProductionCsid = nativeCall(listOfNotNull()) {
-            ProductionCsid(unwrap(com.fatoora.raw.ProductionCsid.create(com.fatoora.raw.Environment.valueOf(environment.name), requestId?.let(::checkedText), checkedText(token), checkedText(secret))))
+            ProductionCsid(unwrap(com.fatoora.raw.ProductionCsid.new_(com.fatoora.raw.Environment.valueOf(environment.name), requestId?.let(::checkedText), checkedText(token), checkedText(secret))))
         }
     }
 

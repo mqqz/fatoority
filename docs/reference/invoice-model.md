@@ -79,7 +79,7 @@ the line, then append it with the invoice builder's `add_item` equivalent.
 
 | Operation | Python | JavaScript / TypeScript | C# | Kotlin / Java |
 | --- | --- | --- | --- | --- |
-| Create a line builder | `LineItemBuilder()` | `LineItemBuilder.create()` | `LineItemBuilder.New()` | `LineItemBuilder.create()` |
+| Create a line builder | `LineItemBuilder()` | `LineItemBuilder.create()` | `LineItemBuilder.Create()` | `LineItemBuilder.create()` |
 | Set price base | `set_item_price_base_quantity(value)` | `setItemPriceBaseQuantity(value)` | `SetItemPriceBaseQuantity(value)` | `setItemPriceBaseQuantity(value)` |
 | Add line allowance | `add_allowance(adjustment)` | `addAllowance(adjustment)` | `AddAllowance(adjustment)` | `addAllowance(adjustment)` |
 | Add line charge | `add_charge(adjustment)` | `addCharge(adjustment)` | `AddCharge(adjustment)` | `addCharge(adjustment)` |

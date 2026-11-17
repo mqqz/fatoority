@@ -50,7 +50,7 @@ public static class SdkExamples
     // --8<-- [start:api]
     public static void ReportInvoice(string signedXml, string token, string secret)
     {
-        using var config = Config.New(ZatcaEnvironment.Production);
+        using var config = Config.Create(ZatcaEnvironment.Production);
         using var client = ZatcaClient.Create(config);
         using var credentials = ProductionCsid.Create(ZatcaEnvironment.Production, null, token, secret);
         using var invoice = SignedInvoice.FromXml(signedXml);

@@ -12,7 +12,7 @@ class ComplianceCsid internal constructor(internal val raw: com.fatoora.raw.Comp
     companion object {
         @JvmStatic
         fun create(environment: Environment, requestId: String?, token: String, secret: String): ComplianceCsid = nativeCall(listOfNotNull()) {
-            ComplianceCsid(unwrap(com.fatoora.raw.ComplianceCsid.create(com.fatoora.raw.Environment.valueOf(environment.name), requestId?.let(::checkedText), checkedText(token), checkedText(secret))))
+            ComplianceCsid(unwrap(com.fatoora.raw.ComplianceCsid.new_(com.fatoora.raw.Environment.valueOf(environment.name), requestId?.let(::checkedText), checkedText(token), checkedText(secret))))
         }
     }
 

@@ -18,8 +18,8 @@
 
 
 
-typedef struct fatoora_ComplianceCsid_create_result {union {ComplianceCsid* ok; BindingError* err;}; bool is_ok;} fatoora_ComplianceCsid_create_result;
-fatoora_ComplianceCsid_create_result fatoora_ComplianceCsid_create(Environment environment, OptionStringView request_id, DiplomatStringView token, DiplomatStringView secret);
+typedef struct fatoora_ComplianceCsid_new_result {union {ComplianceCsid* ok; BindingError* err;}; bool is_ok;} fatoora_ComplianceCsid_new_result;
+fatoora_ComplianceCsid_new_result fatoora_ComplianceCsid_new(Environment environment, OptionStringView request_id, DiplomatStringView token, DiplomatStringView secret);
 
 typedef struct fatoora_ComplianceCsid_env_result {union {Environment ok; BindingError* err;}; bool is_ok;} fatoora_ComplianceCsid_env_result;
 fatoora_ComplianceCsid_env_result fatoora_ComplianceCsid_env(const ComplianceCsid* self);

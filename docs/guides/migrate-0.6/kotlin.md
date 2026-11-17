@@ -9,9 +9,10 @@ The `com.fatoora` API changes in four ways in 0.6: integer codes and Booleans
 become enums, class and method names follow the Rust core, value getters
 become Kotlin properties with `BigDecimal` amounts, and native failures throw
 one `BindingException` subclass per error code. The 0.5 getter functions,
-`String` amount overloads and `Boolean` coroutine overloads remain as
-`@Deprecated` members with `ReplaceWith` hints until 0.7. Renamed classes and
-methods do not, so the compiler reports each one.
+`String` amount overloads, `Boolean` coroutine overloads and the
+[renamed adjustment members](#renamed-members-with-deprecated-aliases) remain
+as `@Deprecated` members with `ReplaceWith` hints until 0.7. Other renamed
+classes and methods do not, so the compiler reports each one.
 
 === "Gradle (Kotlin DSL)"
 
@@ -173,7 +174,7 @@ Returned amounts are normalized (`10.50` reads back as `10.5`); compare
     ```
 
 To bound each request, create the client with
-`ZatcaClient.createWithTimeout(config, 30_000)` (milliseconds); a timeout
+`ZatcaClient.withTimeout(config, 30_000)` (milliseconds); a timeout
 throws `NetworkException`. The coroutine helpers are renamed with the blocking
 methods (`requestComplianceCsidAsync`, `requestProductionCsidAsync`), and
 `reportSimplifiedInvoiceAsync`/`clearStandardInvoiceAsync` take a
@@ -224,6 +225,18 @@ throw the subclass for their code: `InvalidInputException`,
 `InternalException` or `ApiException`. Existing `catch (BindingException)`
 blocks keep catching everything; add narrower `catch` clauses before it where
 you handle a specific failure.
+
+## Renamed members with deprecated aliases
+
+These members are renamed to the Rust core names. The 0.5 names still compile
+with a deprecation warning and are removed in 0.7.
+
+| 0.5 | 0.6 |
+| --- | --- |
+| `Adjustment.percentage(base, percent)` | `Adjustment.percentOf(base, percent)` |
+| `adjustment.withSuppliedAmount(amount)` | `adjustment.suppliedAmount(amount)` |
+| `adjustment.percent()` | `adjustment.percentage` |
+| `allowanceCharge.withoutVatRate()`, `vatBreakdown.withoutVatRate()` | `omitVatRate()` |
 
 ## Renamed names
 

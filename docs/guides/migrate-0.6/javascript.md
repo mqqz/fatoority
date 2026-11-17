@@ -9,8 +9,9 @@ The `fatoority` npm package keeps its shape in 0.6: getters are still methods,
 amounts are still decimal strings, and optional text is still a `Text` object
 or `null`. What changes is that integer codes become enums, class and method
 names follow the Rust core, failures throw typed errors, and local validation
-returns a plain report object. Except for `new_`, the renamed 0.5 names are
-removed, not deprecated, so TypeScript reports each one.
+returns a plain report object. Except for `new_` and the
+[renamed adjustment members](#renamed-members-with-deprecated-aliases), the
+renamed 0.5 names are removed, not deprecated, so TypeScript reports each one.
 
 ```sh
 npm install fatoority@0.6.0
@@ -189,6 +190,18 @@ Every library failure throws a `FatooraError` subclass chosen by error code:
 (parsed JSON). `error.cause` is still the `BindingError`, so
 `error.cause.code()` keeps working. `TransportError`, thrown for network and
 abort failures, now extends `NetworkError`.
+
+## Renamed members with deprecated aliases
+
+These members are renamed to the Rust core names. The 0.5 names still work, are
+marked `@deprecated` in the TypeScript declarations and are removed in 0.7.
+
+| 0.5 | 0.6 |
+| --- | --- |
+| `Adjustment.percentage(base, percent)` | `Adjustment.percentOf(base, percent)` |
+| `adjustment.withSuppliedAmount(amount)` | `adjustment.suppliedAmount(amount)` |
+| `adjustment.percent()` | `adjustment.percentage()` |
+| `allowanceCharge.withoutVatRate()`, `vatBreakdown.withoutVatRate()` | `omitVatRate()` |
 
 ## Renamed names
 

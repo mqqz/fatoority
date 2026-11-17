@@ -73,8 +73,13 @@ class AllowanceCharge internal constructor(internal val raw: com.fatoora.raw.All
             unwrap(raw.reasonCode())?.let(::readText)
         }
 
+    fun omitVatRate(): AllowanceCharge = nativeCall(listOfNotNull(this)) {
+        AllowanceCharge(unwrap(raw.omitVatRate()))
+    }
+
+    @Deprecated("Use omitVatRate.", ReplaceWith("omitVatRate()"))
     fun withoutVatRate(): AllowanceCharge = nativeCall(listOfNotNull(this)) {
-        AllowanceCharge(unwrap(raw.withoutVatRate()))
+        AllowanceCharge(unwrap(raw.omitVatRate()))
     }
 
     /**

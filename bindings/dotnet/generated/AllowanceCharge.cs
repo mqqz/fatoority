@@ -81,7 +81,7 @@ public partial class AllowanceCharge: IDisposable
     /// <returns>
     /// A <c>AllowanceCharge</c> allocated on Rust side.
     /// </returns>
-    public AllowanceCharge WithoutVatRate()
+    public AllowanceCharge OmitVatRate()
     {
         unsafe
         {
@@ -89,7 +89,7 @@ public partial class AllowanceCharge: IDisposable
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.AllowanceCharge.WithoutVatRate(selfLease!.Ptr);
+                var result = Raw.AllowanceCharge.OmitVatRate(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
                     throw FfiException.FromNative(new BindingError(result.Err));
@@ -102,6 +102,9 @@ public partial class AllowanceCharge: IDisposable
             }
         }
     }
+
+    [Obsolete("Use OmitVatRate; WithoutVatRate will be removed in 0.7.")]
+    public AllowanceCharge WithoutVatRate() => OmitVatRate();
 
     /// <exception cref="FfiException"></exception>
     /// <returns>
@@ -191,7 +194,7 @@ public partial class AllowanceCharge: IDisposable
     /// <returns>
     /// A <c>AllowanceCharge</c> allocated on Rust side.
     /// </returns>
-    public static AllowanceCharge New(AdjustmentKind kind, decimal amount, string? reason, string? reasonCode, VatCategory category, decimal rate, TaxExemption exemption)
+    public static AllowanceCharge Create(AdjustmentKind kind, decimal amount, string? reason, string? reasonCode, VatCategory category, decimal rate, TaxExemption exemption)
     {
         unsafe
         {
@@ -223,6 +226,9 @@ public partial class AllowanceCharge: IDisposable
             }
         }
     }
+
+    [Obsolete("Use Create; New will be removed in 0.7.")]
+    public static AllowanceCharge New(AdjustmentKind kind, decimal amount, string? reason, string? reasonCode, VatCategory category, decimal rate, TaxExemption exemption) => Create(kind, amount, reason, reasonCode, category, rate, exemption);
 
     public AdjustmentKind Kind
     {

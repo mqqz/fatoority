@@ -50,13 +50,13 @@ namespace fatoora {
 class ZatcaClient {
 public:
 
-  inline static diplomat::result<std::unique_ptr<fatoora::ZatcaClient>, std::unique_ptr<fatoora::BindingError>> create(const fatoora::Config& config);
+  inline static diplomat::result<std::unique_ptr<fatoora::ZatcaClient>, std::unique_ptr<fatoora::BindingError>> new_(const fatoora::Config& config);
 
   /**
-   * Like `create`, but each request fails with a network error after
+   * Create a client whose requests fail with a network error after
    * the given number of milliseconds. Zero is rejected.
    */
-  inline static diplomat::result<std::unique_ptr<fatoora::ZatcaClient>, std::unique_ptr<fatoora::BindingError>> create_with_timeout(const fatoora::Config& config, uint32_t timeout_ms);
+  inline static diplomat::result<std::unique_ptr<fatoora::ZatcaClient>, std::unique_ptr<fatoora::BindingError>> with_timeout(const fatoora::Config& config, uint32_t timeout_ms);
 
   inline diplomat::result<std::unique_ptr<fatoora::ComplianceCsid>, std::unique_ptr<fatoora::BindingError>> request_compliance_csid(const fatoora::Csr& csr, std::string_view otp) const;
 

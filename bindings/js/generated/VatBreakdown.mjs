@@ -51,11 +51,11 @@ export class VatBreakdown {
         }
     }
 
-    withoutVatRate() {
+    omitVatRate() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
 
-        const result = wasm.fatoora_VatBreakdown_without_vat_rate(diplomatReceive.buffer, this.ffiValue);
+        const result = wasm.fatoora_VatBreakdown_omit_vat_rate(diplomatReceive.buffer, this.ffiValue);
 
         try {
             if (!diplomatReceive.resultFlag) {

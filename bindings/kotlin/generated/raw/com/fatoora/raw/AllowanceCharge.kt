@@ -8,7 +8,7 @@ import com.sun.jna.Structure
 internal interface AllowanceChargeLib: Library {
     fun fatoora_AllowanceCharge_destroy(handle: Pointer)
     fun fatoora_AllowanceCharge_has_vat_rate(handle: Pointer): Byte
-    fun fatoora_AllowanceCharge_without_vat_rate(handle: Pointer): ResultPointerPointer
+    fun fatoora_AllowanceCharge_omit_vat_rate(handle: Pointer): ResultPointerPointer
     fun fatoora_AllowanceCharge_with_percentage(handle: Pointer, base: Slice, percent: Slice): ResultPointerPointer
     fun fatoora_AllowanceCharge_base_amount(handle: Pointer): ResultPointerPointer
     fun fatoora_AllowanceCharge_percentage(handle: Pointer): ResultPointerPointer
@@ -89,9 +89,9 @@ class AllowanceCharge internal constructor (
         return (returnVal > 0)
     }
 
-    fun withoutVatRate(): Result<AllowanceCharge> {
+    fun omitVatRate(): Result<AllowanceCharge> {
 
-        val returnVal = lib.fatoora_AllowanceCharge_without_vat_rate(handle);
+        val returnVal = lib.fatoora_AllowanceCharge_omit_vat_rate(handle);
         val nativeOkVal = returnVal.getNativeOk();
         if (nativeOkVal != null) {
             val selfEdges: List<Any> = listOf()

@@ -20,8 +20,8 @@
 
 bool fatoora_VatBreakdown_has_vat_rate(const VatBreakdown* self);
 
-typedef struct fatoora_VatBreakdown_without_vat_rate_result {union {VatBreakdown* ok; BindingError* err;}; bool is_ok;} fatoora_VatBreakdown_without_vat_rate_result;
-fatoora_VatBreakdown_without_vat_rate_result fatoora_VatBreakdown_without_vat_rate(const VatBreakdown* self);
+typedef struct fatoora_VatBreakdown_omit_vat_rate_result {union {VatBreakdown* ok; BindingError* err;}; bool is_ok;} fatoora_VatBreakdown_omit_vat_rate_result;
+fatoora_VatBreakdown_omit_vat_rate_result fatoora_VatBreakdown_omit_vat_rate(const VatBreakdown* self);
 
 typedef struct fatoora_VatBreakdown_new_result {union {VatBreakdown* ok; BindingError* err;}; bool is_ok;} fatoora_VatBreakdown_new_result;
 fatoora_VatBreakdown_new_result fatoora_VatBreakdown_new(VatCategory category, DiplomatStringView rate, DiplomatStringView taxable_amount, DiplomatStringView tax_amount, const TaxExemption* exemption);

@@ -53,11 +53,11 @@ export class AllowanceCharge {
         }
     }
 
-    withoutVatRate() {
+    omitVatRate() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
 
-        const result = wasm.fatoora_AllowanceCharge_without_vat_rate(diplomatReceive.buffer, this.ffiValue);
+        const result = wasm.fatoora_AllowanceCharge_omit_vat_rate(diplomatReceive.buffer, this.ffiValue);
 
         try {
             if (!diplomatReceive.resultFlag) {

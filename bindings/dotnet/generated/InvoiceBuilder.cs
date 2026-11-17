@@ -567,7 +567,7 @@ public partial class InvoiceBuilder: IDisposable
     /// <returns>
     /// A <c>InvoiceBuilder</c> allocated on Rust side.
     /// </returns>
-    public static InvoiceBuilder New(InvoiceTypeKind kind, InvoiceSubType subtype, string? originalId, string? originalUuid, string? originalDate, string? reason)
+    public static InvoiceBuilder Create(InvoiceTypeKind kind, InvoiceSubType subtype, string? originalId, string? originalUuid, string? originalDate, string? reason)
     {
         unsafe
         {
@@ -589,6 +589,9 @@ public partial class InvoiceBuilder: IDisposable
             }
         }
     }
+
+    [Obsolete("Use Create; New will be removed in 0.7.")]
+    public static InvoiceBuilder New(InvoiceTypeKind kind, InvoiceSubType subtype, string? originalId, string? originalUuid, string? originalDate, string? reason) => Create(kind, subtype, originalId, originalUuid, originalDate, reason);
 
     /// <exception cref="FfiException"></exception>
     public void AddBillingReference(OriginalInvoiceRef value)

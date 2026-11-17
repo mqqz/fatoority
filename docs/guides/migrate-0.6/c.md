@@ -78,7 +78,7 @@ The report also has `_is_complete`, `_has_errors`, `_stages_len` and
 +bool has_status = false;
 +TRY(fatoora_invoice_signer_from_pem(cert, key, &signer, &error));
 +TRY(fatoora_invoice_signer_sign(signer, invoice, &signed_invoice, &error));
-+TRY(fatoora_production_csid_create(FATOORA_NON_PRODUCTION, NULL,
++TRY(fatoora_production_csid_new(FATOORA_NON_PRODUCTION, NULL,
 +    token, secret, &credentials, &error));
 +TRY(fatoora_zatca_client_report_simplified_invoice(client, signed_invoice,
 +    credentials, FATOORA_CLEARANCE_DISABLED, "en", &response, &error));
@@ -88,9 +88,9 @@ The report also has `_is_complete`, `_has_errors`, `_stages_len` and
 +fatoora_invoice_signer_free(signer);
 ```
 
-`fatoora_zatca_client_create_with_timeout(config, timeout_ms, &client, &error)`
+`fatoora_zatca_client_with_timeout(config, timeout_ms, &client, &error)`
 is new: it creates a client whose requests fail with a network error after
-`timeout_ms` milliseconds. `fatoora_zatca_client_create` still applies no
+`timeout_ms` milliseconds. `fatoora_zatca_client_new` still applies no
 timeout.
 
 ## Document allowances and payment means
@@ -121,6 +121,11 @@ with their `_free` functions when done.
 | `FatooraCsidCompliance`, `fatoora_csid_compliance_*` | `FatooraComplianceCsid`, `fatoora_compliance_csid_*` |
 | `FatooraCsidProduction`, `fatoora_csid_production_*` | `FatooraProductionCsid`, `fatoora_production_csid_*` |
 | `FatooraSigner`, `fatoora_signer_*` | `FatooraInvoiceSigner`, `fatoora_invoice_signer_*` |
+| `fatoora_zatca_client_create`, `fatoora_csid_compliance_create`, `fatoora_csid_production_create` | `fatoora_zatca_client_new`, `fatoora_compliance_csid_new`, `fatoora_production_csid_new` (every constructor is `_new`) |
+| `fatoora_adjustment_percentage(base, percent, ...)` | `fatoora_adjustment_percent_of(base, percent, ...)`; `fatoora_adjustment_percentage` now reads the percentage |
+| `fatoora_adjustment_percent` | `fatoora_adjustment_percentage` |
+| `fatoora_adjustment_with_supplied_amount` | `fatoora_adjustment_supplied_amount` |
+| `fatoora_allowance_charge_without_vat_rate`, `fatoora_vat_breakdown_without_vat_rate` | `fatoora_allowance_charge_omit_vat_rate`, `fatoora_vat_breakdown_omit_vat_rate` |
 | `fatoora_zatca_client_post_csr_for_ccsid`, `_post_ccsid_for_pcsid` | `fatoora_zatca_client_request_compliance_csid`, `_request_production_csid` |
 | `fatoora_zatca_client_prepare_post_csr_for_ccsid`, `_prepare_post_ccsid_for_pcsid` | `fatoora_zatca_client_prepare_request_compliance_csid`, `_prepare_request_production_csid` |
 | `fatoora_csr_properties_from_properties_str`, `_parse_csr_config_file` | `fatoora_csr_properties_from_str`, `_from_file` |
@@ -148,7 +153,8 @@ follow the same renames in snake_case: `fatoora::InvoiceSigner`,
 `fatoora::ComplianceCsid`, `fatoora::ProductionCsid`,
 `ZatcaClient::request_compliance_csid`, `CsrProperties::from_str`,
 `FinalizedInvoice::hash`, `InvoiceBuilder::set_flags`, `add_allowance` and
-`add_charge`. Enum parameters take `fatoora::Environment`,
+`add_charge`, `ZatcaClient::new_` (formerly `create`), `Adjustment::percent_of`,
+`supplied_amount` and `percentage`, and `omit_vat_rate`. Enum parameters take `fatoora::Environment`,
 `fatoora::VatCategory`, `fatoora::ClearanceMode` and the other enum classes
 instead of integers. `fatoora::Xml::validate(xml)` and
 `fatoora::Xml::validate_zatca(xml, options_json)` take no `Config`, and the

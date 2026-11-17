@@ -74,7 +74,7 @@ public partial class ComplianceCsid: IDisposable
             fixed (byte* tokenPtr = tokenBytes)
             fixed (byte* secretPtr = secretBytes)
             {
-                var result = Raw.ComplianceCsid.Create(environment, requestId == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = requestIdPtr, Len = (nuint)requestIdBytes!.Length }), new DiplomatSliceU8 { Ptr = tokenPtr, Len = (nuint)tokenBytes.Length }, new DiplomatSliceU8 { Ptr = secretPtr, Len = (nuint)secretBytes.Length });
+                var result = Raw.ComplianceCsid.New(environment, requestId == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = requestIdPtr, Len = (nuint)requestIdBytes!.Length }), new DiplomatSliceU8 { Ptr = tokenPtr, Len = (nuint)tokenBytes.Length }, new DiplomatSliceU8 { Ptr = secretPtr, Len = (nuint)secretBytes.Length });
                 if (!result.IsOk)
                 {
                     throw FfiException.FromNative(new BindingError(result.Err));

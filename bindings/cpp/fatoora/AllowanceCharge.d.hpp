@@ -39,7 +39,7 @@ public:
 
   inline bool has_vat_rate() const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::AllowanceCharge>, std::unique_ptr<fatoora::BindingError>> without_vat_rate() const;
+  inline diplomat::result<std::unique_ptr<fatoora::AllowanceCharge>, std::unique_ptr<fatoora::BindingError>> omit_vat_rate() const;
 
   /**
    * Retain this adjustment's metadata and check its percentage calculation.

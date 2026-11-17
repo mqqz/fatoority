@@ -23,8 +23,8 @@ namespace capi {
 
     bool fatoora_VatBreakdown_has_vat_rate(const fatoora::capi::VatBreakdown* self);
 
-    typedef struct fatoora_VatBreakdown_without_vat_rate_result {union {fatoora::capi::VatBreakdown* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_VatBreakdown_without_vat_rate_result;
-    fatoora_VatBreakdown_without_vat_rate_result fatoora_VatBreakdown_without_vat_rate(const fatoora::capi::VatBreakdown* self);
+    typedef struct fatoora_VatBreakdown_omit_vat_rate_result {union {fatoora::capi::VatBreakdown* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_VatBreakdown_omit_vat_rate_result;
+    fatoora_VatBreakdown_omit_vat_rate_result fatoora_VatBreakdown_omit_vat_rate(const fatoora::capi::VatBreakdown* self);
 
     typedef struct fatoora_VatBreakdown_new_result {union {fatoora::capi::VatBreakdown* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_VatBreakdown_new_result;
     fatoora_VatBreakdown_new_result fatoora_VatBreakdown_new(fatoora::capi::VatCategory category, diplomat::capi::DiplomatStringView rate, diplomat::capi::DiplomatStringView taxable_amount, diplomat::capi::DiplomatStringView tax_amount, const fatoora::capi::TaxExemption* exemption);
@@ -54,8 +54,8 @@ inline bool fatoora::VatBreakdown::has_vat_rate() const {
     return result;
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>> fatoora::VatBreakdown::without_vat_rate() const {
-    auto result = fatoora::capi::fatoora_VatBreakdown_without_vat_rate(this->AsFFI());
+inline diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>> fatoora::VatBreakdown::omit_vat_rate() const {
+    auto result = fatoora::capi::fatoora_VatBreakdown_omit_vat_rate(this->AsFFI());
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::VatBreakdown>>(std::unique_ptr<fatoora::VatBreakdown>(fatoora::VatBreakdown::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::VatBreakdown>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 

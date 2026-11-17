@@ -70,7 +70,7 @@ public partial class ZatcaClient: IDisposable
             try
             {
                 configLease = config._diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ZatcaClient.Create(configLease!.Ptr);
+                var result = Raw.ZatcaClient.New(configLease!.Ptr);
                 if (!result.IsOk)
                 {
                     throw FfiException.FromNative(new BindingError(result.Err));
@@ -88,7 +88,7 @@ public partial class ZatcaClient: IDisposable
     /// <returns>
     /// A <c>ZatcaClient</c> allocated on Rust side.
     /// </returns>
-    public static ZatcaClient CreateWithTimeout(Config config, uint timeoutMs)
+    public static ZatcaClient WithTimeout(Config config, uint timeoutMs)
     {
         unsafe
         {
@@ -97,7 +97,7 @@ public partial class ZatcaClient: IDisposable
             try
             {
                 configLease = config._diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ZatcaClient.CreateWithTimeout(configLease!.Ptr, timeoutMs);
+                var result = Raw.ZatcaClient.WithTimeout(configLease!.Ptr, timeoutMs);
                 if (!result.IsOk)
                 {
                     throw FfiException.FromNative(new BindingError(result.Err));

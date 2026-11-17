@@ -7,7 +7,7 @@ import com.sun.jna.Structure
 
 internal interface ProductionCsidLib: Library {
     fun fatoora_ProductionCsid_destroy(handle: Pointer)
-    fun fatoora_ProductionCsid_create(environment: Int, requestId: OptionSlice, token: Slice, secret: Slice): ResultPointerPointer
+    fun fatoora_ProductionCsid_new(environment: Int, requestId: OptionSlice, token: Slice, secret: Slice): ResultPointerPointer
     fun fatoora_ProductionCsid_env(handle: Pointer): ResultIntPointer
     fun fatoora_ProductionCsid_request_id(handle: Pointer): ResultPointerPointer
     fun fatoora_ProductionCsid_binary_security_token(handle: Pointer, write: Pointer): ResultUnitPointer
@@ -44,12 +44,12 @@ class ProductionCsid internal constructor (
         internal val lib: ProductionCsidLib = Native.load("fatoora_ffi", libClass)
         @JvmStatic
 
-        fun create(environment: Environment, requestId: String?, token: String, secret: String): Result<ProductionCsid> {
+        fun new_(environment: Environment, requestId: String?, token: String, secret: String): Result<ProductionCsid> {
             val requestIdSliceMemory = requestId?.let { PrimitiveArrayTools.borrowUtf8(it) }
             val tokenSliceMemory = PrimitiveArrayTools.borrowUtf8(token)
             val secretSliceMemory = PrimitiveArrayTools.borrowUtf8(secret)
 
-            val returnVal = lib.fatoora_ProductionCsid_create(environment.toNative(), requestIdSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none(), tokenSliceMemory.slice, secretSliceMemory.slice);
+            val returnVal = lib.fatoora_ProductionCsid_new(environment.toNative(), requestIdSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none(), tokenSliceMemory.slice, secretSliceMemory.slice);
             try {
                 val nativeOkVal = returnVal.getNativeOk();
                 if (nativeOkVal != null) {

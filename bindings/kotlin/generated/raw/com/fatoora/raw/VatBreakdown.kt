@@ -8,7 +8,7 @@ import com.sun.jna.Structure
 internal interface VatBreakdownLib: Library {
     fun fatoora_VatBreakdown_destroy(handle: Pointer)
     fun fatoora_VatBreakdown_has_vat_rate(handle: Pointer): Byte
-    fun fatoora_VatBreakdown_without_vat_rate(handle: Pointer): ResultPointerPointer
+    fun fatoora_VatBreakdown_omit_vat_rate(handle: Pointer): ResultPointerPointer
     fun fatoora_VatBreakdown_new(category: Int, rate: Slice, taxableAmount: Slice, taxAmount: Slice, exemption: Pointer): ResultPointerPointer
     fun fatoora_VatBreakdown_category(handle: Pointer): Int
     fun fatoora_VatBreakdown_rate(handle: Pointer, write: Pointer): ResultUnitPointer
@@ -80,9 +80,9 @@ class VatBreakdown internal constructor (
         return (returnVal > 0)
     }
 
-    fun withoutVatRate(): Result<VatBreakdown> {
+    fun omitVatRate(): Result<VatBreakdown> {
 
-        val returnVal = lib.fatoora_VatBreakdown_without_vat_rate(handle);
+        val returnVal = lib.fatoora_VatBreakdown_omit_vat_rate(handle);
         val nativeOkVal = returnVal.getNativeOk();
         if (nativeOkVal != null) {
             val selfEdges: List<Any> = listOf()

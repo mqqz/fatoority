@@ -33,9 +33,15 @@ public:
 
   inline static _native::diplomat::result<std::unique_ptr<_native::Adjustment>, std::unique_ptr<_native::BindingError>> amount(std::string_view value);
 
-  inline static _native::diplomat::result<std::unique_ptr<_native::Adjustment>, std::unique_ptr<_native::BindingError>> percentage(std::string_view base, std::string_view percent);
+  /**
+   * Create an adjustment of `percent` percent of `base`.
+   */
+  inline static _native::diplomat::result<std::unique_ptr<_native::Adjustment>, std::unique_ptr<_native::BindingError>> percent_of(std::string_view base, std::string_view percent);
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Adjustment>, std::unique_ptr<_native::BindingError>> with_supplied_amount(std::string_view value) const;
+  /**
+   * Return a copy with an explicit amount, checked against the percentage calculation.
+   */
+  inline _native::diplomat::result<std::unique_ptr<_native::Adjustment>, std::unique_ptr<_native::BindingError>> supplied_amount(std::string_view value) const;
 
   inline _native::diplomat::result<std::unique_ptr<_native::Adjustment>, std::unique_ptr<_native::BindingError>> with_reason(std::optional<std::string_view> reason, std::optional<std::string_view> code) const;
 
@@ -45,7 +51,7 @@ public:
 
   inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> base_amount() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> percent() const;
+  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> percentage() const;
 
   inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> reason() const;
 

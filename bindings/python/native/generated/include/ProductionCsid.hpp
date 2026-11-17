@@ -21,8 +21,8 @@ namespace _native {
 namespace capi {
     extern "C" {
 
-    typedef struct fatoora_ProductionCsid_create_result {union {_native::capi::ProductionCsid* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ProductionCsid_create_result;
-    fatoora_ProductionCsid_create_result fatoora_ProductionCsid_create(_native::capi::Environment environment, _native::diplomat::capi::OptionStringView request_id, _native::diplomat::capi::DiplomatStringView token, _native::diplomat::capi::DiplomatStringView secret);
+    typedef struct fatoora_ProductionCsid_new_result {union {_native::capi::ProductionCsid* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ProductionCsid_new_result;
+    fatoora_ProductionCsid_new_result fatoora_ProductionCsid_new(_native::capi::Environment environment, _native::diplomat::capi::OptionStringView request_id, _native::diplomat::capi::DiplomatStringView token, _native::diplomat::capi::DiplomatStringView secret);
 
     typedef struct fatoora_ProductionCsid_env_result {union {_native::capi::Environment ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ProductionCsid_env_result;
     fatoora_ProductionCsid_env_result fatoora_ProductionCsid_env(const _native::capi::ProductionCsid* self);
@@ -42,8 +42,8 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline _native::diplomat::result<std::unique_ptr<_native::ProductionCsid>, std::unique_ptr<_native::BindingError>> _native::ProductionCsid::create(_native::Environment environment, std::optional<std::string_view> request_id, std::string_view token, std::string_view secret) {
-    auto result = _native::capi::fatoora_ProductionCsid_create(environment.AsFFI(),
+inline _native::diplomat::result<std::unique_ptr<_native::ProductionCsid>, std::unique_ptr<_native::BindingError>> _native::ProductionCsid::new_(_native::Environment environment, std::optional<std::string_view> request_id, std::string_view token, std::string_view secret) {
+    auto result = _native::capi::fatoora_ProductionCsid_new(environment.AsFFI(),
         request_id.has_value() ? (_native::diplomat::capi::OptionStringView{ { {request_id.value().data(), request_id.value().size()} }, true }) : (_native::diplomat::capi::OptionStringView{ {}, false }),
         {token.data(), token.size()},
         {secret.data(), secret.size()});

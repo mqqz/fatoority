@@ -37,7 +37,7 @@ public:
 
   inline bool has_vat_rate() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::AllowanceCharge>, std::unique_ptr<_native::BindingError>> without_vat_rate() const;
+  inline _native::diplomat::result<std::unique_ptr<_native::AllowanceCharge>, std::unique_ptr<_native::BindingError>> omit_vat_rate() const;
 
   /**
    * Retain this adjustment's metadata and check its percentage calculation.

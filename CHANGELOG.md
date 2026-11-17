@@ -24,8 +24,12 @@ until 0.7 (see "Deprecated"); items whose type, signature or fields changed in
 place have no deprecation period (see "Changed (breaking)"). The Python package
 keeps its renamed 0.5 names as deprecated aliases until 0.7, and the Kotlin/Java
 facade keeps its 0.5 getter functions and `String` amount overloads, and the
-JavaScript package keeps `new_` as an alias of `create`. The other bindings
-change without aliases.
+JavaScript package keeps `new_` as an alias of `create`. The JavaScript,
+Kotlin/Java and C# packages also keep deprecated aliases for the bridge members
+renamed to the core names (`percentage` → `percent_of`,
+`with_supplied_amount` → `supplied_amount`, `percent` → `percentage`,
+`without_vat_rate` → `omit_vat_rate`), and C# keeps `New` as an alias of
+`Create`. The C facade changes without aliases.
 
 ### Rust (`fatoora-core`)
 
@@ -229,7 +233,7 @@ or invalid). Every wrapper has `as_str()` and `Display`.
   `reason_code()`, `base_amount()` and `exemption()` are now getters.
 - `Adjustment::percentage(base, percent)` is renamed
   `Adjustment::percent_of(base, percent)`; `percentage()` is now the getter.
-  The FFI `Adjustment.percentage` constructor is unchanged.
+  The FFI follows (see "Bindings").
 - `PaymentMeans::payee_financial_account(account)` is renamed
   `with_payee_financial_account(account)`; `payee_financial_account()` is now
   the getter.
@@ -277,8 +281,7 @@ replacement, and will be removed in 0.7.
 - `PaymentMeans::instruction_note(text)`: renamed
   `with_instruction_note(text)`.
 
-The `fatoora-ffi` `AllowanceCharge::without_vat_rate` and
-`VatBreakdown::without_vat_rate` keep their 0.5 names. The FFI builder setters
+The FFI builder setters
 `set_payment_means_code`, `invoice_level_charge`, `invoice_level_discount`,
 `allowance_reason` and `set_allowance` are replaced without aliases (see
 "Bindings").
@@ -324,10 +327,10 @@ sections below list what each package adds on top.
   `FATOORA_VALIDATION_LAYER_*`, `FATOORA_SEVERITY_*` and `FATOORA_LOCATION_*`
   constants.
 
-- `ZatcaClient.create_with_timeout(config, timeout_ms: u32)` in the
-  FFI (`createWithTimeout` in Kotlin/Java, `CreateWithTimeout` in C#,
-  `fatoora_zatca_client_create_with_timeout` in C). Not exposed to
-  JavaScript, whose client sends through the caller's `fetch`.
+- `ZatcaClient.with_timeout(config, timeout_ms: u32)` in the
+  FFI, named like the core `ZatcaClient::with_timeout` (`withTimeout` in
+  Kotlin/Java, `WithTimeout` in C#, `fatoora_zatca_client_with_timeout` in C).
+  Not exposed to JavaScript, whose client sends through the caller's `fetch`.
 
 #### Changed (breaking)
 
@@ -388,6 +391,12 @@ old integer codes.
   | `InvoiceBuilder::{set_allowance, allowance_reason, invoice_level_charge, invoice_level_discount}` | `add_allowance`/`add_charge` with an `Adjustment` carrying the reason |
   | `Xml::validate(config, xml)` | `Xml::validate(xml)` |
   | `Xml::validate_zatca(config, xml, options_json)` returning JSON text | `Xml::validate_zatca(xml, options_json)` returning `ZatcaValidationReport` (`to_json()` gives the old text) |
+
+  | `ZatcaClient::create`, `CsidCompliance::create`, `CsidProduction::create` | `ZatcaClient::new`, `ComplianceCsid::new`, `ProductionCsid::new`, so every constructor is `new` like the core (C: `fatoora_zatca_client_new`, `fatoora_compliance_csid_new`, `fatoora_production_csid_new`) |
+  | `Adjustment::percentage(base, percent)` | `percent_of(base, percent)` |
+  | `Adjustment::with_supplied_amount(value)` | `supplied_amount(value)` |
+  | `Adjustment::percent()` | `percentage()` (the old constructor name is now the getter) |
+  | `AllowanceCharge::without_vat_rate`, `VatBreakdown::without_vat_rate` | `omit_vat_rate` |
 
   Validation drops the `Config` argument because the core `Validator` is
   stateless. The bridge no longer calls deprecated core APIs. The credential
@@ -589,6 +598,13 @@ Deprecated:
 
 - `new_` on the classes above: use `create`. It is marked `@deprecated` in
   the TypeScript declarations and still works without a runtime warning.
+  `ComplianceCsid`, `ProductionCsid` and `fatoority/raw`'s `ZatcaClient` keep
+  `create` and gain `new_` too, as the bridge now names every constructor
+  `new`.
+- `Adjustment.percentage(base, percent)`, `adjustment.withSuppliedAmount`,
+  `adjustment.percent()` and `withoutVatRate()` on `AllowanceCharge` and
+  `VatBreakdown`, renamed in the bridge: use `Adjustment.percentOf`,
+  `suppliedAmount`, `percentage()` and `omitVatRate()`. Removed in 0.7.
 
 ### Kotlin / Java (`com.fatoora`)
 
@@ -635,6 +651,12 @@ Deprecated, removed in 0.7:
   the 0.5 native parsing; use the `BigDecimal` overloads.
 - The `Boolean` overloads of `reportSimplifiedInvoiceAsync` and
   `clearStandardInvoiceAsync`.
+- The members renamed in the bridge to the core names:
+  `Adjustment.percentage(base, percent)` (use `percentOf`),
+  `withSuppliedAmount` (use `suppliedAmount`), `percent` (use the `percentage`
+  property) and `withoutVatRate()` on `AllowanceCharge` and `VatBreakdown` (use
+  `omitVatRate()`). `ZatcaClient.withTimeout` replaces
+  `createWithTimeout`, which was never released.
 
 ### .NET (`Fatoority` NuGet package)
 
@@ -670,6 +692,21 @@ method with a property or by return type:
 | `address.City()` | `address.City` |
 | `using var id = credentials.RequestId(); id?.Value()` | `credentials.RequestId` |
 | `catch (BindingErrorException e) { using var inner = e.Inner; inner.Code(); }` | `catch (FfiException e) { e.Code; e.Kind; e.DetailsJson; }` |
+
+- Constructors are `Create` factory methods, matching Kotlin's and
+  JavaScript's `create`: `Config.Create`, `Address.Create`,
+  `InvoiceBuilder.Create`, and so on (`ZatcaClient.Create` and the credential
+  `Create` methods are unchanged). `Adjustment.Percentage(base, percent)` is
+  renamed `PercentOf`, because `Percentage` is now the property that reads the
+  percentage. `ZatcaClient.WithTimeout` replaces `CreateWithTimeout`, which was
+  never released.
+
+Deprecated with `[Obsolete]`, removed in 0.7:
+
+- `New` on the classes above: use `Create`.
+- `adjustment.WithSuppliedAmount` (use `SuppliedAmount`), the `Percent`
+  property (use `Percentage`) and `WithoutVatRate()` on `AllowanceCharge` and
+  `VatBreakdown` (use `OmitVatRate()`).
 
 ## [0.5.1] - 2026-11-17
 

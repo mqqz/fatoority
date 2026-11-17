@@ -15,7 +15,10 @@ them a second time this script rewrites the generated wrappers in place:
   (a ``fatoora_core`` getter typed ``Decimal``) is ``decimal`` in C#,
   converted with the invariant culture (never through ``double``);
 * native errors are thrown as ``FfiException`` subclasses (see
-  ``bindings/dotnet/src/Errors.cs``) and ``BindingError`` becomes internal.
+  ``bindings/dotnet/src/Errors.cs``) and ``BindingError`` becomes internal;
+* the Rust ``new`` constructors become ``Create`` factory methods, matching
+  the Kotlin and JavaScript packages; ``New`` and the members in ``RENAMED``
+  keep ``[Obsolete]`` aliases until 0.7.
 
 Decimal members are derived from the Rust sources, so new FFI members are
 picked up without editing this script.
@@ -36,6 +39,17 @@ METHOD_PREFIXES = ("To", "Into", "As")
 SIGNATURE = re.compile(
     r"^    public (?P<static>static )?(?P<ret>[\w<>\[\]?]+) (?P<name>\w+)\((?P<params>.*)\)$")
 THROW = "throw new BindingErrorException(new BindingError(result.Err));"
+# FFI members renamed in 0.6 to match the core: (class, new member) -> old name.
+# Adjustment.Percentage (the 0.5 factory, now PercentOf) cannot keep an alias
+# because the Percentage property now uses that name.
+RENAMED = {
+    ("Adjustment", "SuppliedAmount"): "WithSuppliedAmount",
+    ("Adjustment", "Percentage"): "Percent",
+    ("AllowanceCharge", "OmitVatRate"): "WithoutVatRate",
+    ("VatBreakdown", "OmitVatRate"): "WithoutVatRate",
+}
+# Classes whose constructor was already called Create in 0.5, so get no New alias.
+CREATED = {"ComplianceCsid", "ProductionCsid", "ZatcaClient"}
 
 
 def pascal(snake):
@@ -112,7 +126,7 @@ def split_params(params):
     return [p.strip() for p in params.split(",")] if params.strip() else []
 
 
-def transform_class(name, text, inputs, outputs, enums):
+def transform_class(name, text, inputs, outputs, enums, renamed):
     lines = text.split("\n")
     result = []
     index = 0
@@ -164,6 +178,11 @@ def transform_class(name, text, inputs, outputs, enums):
         if is_decimal and not any("FatooraDecimal.Parse(" in b or ".TakeDecimal" in b for b in body):
             raise SystemExit(f"{name}.{method}: unexpected decimal result conversion")
 
+        exposed, old = method, RENAMED.get((name, method))
+        if old:
+            renamed.add((name, method))
+        if match["static"] and method == "New":
+            exposed, old = "Create", None if name in CREATED else "New"
         base = ret.rstrip("?")
         is_property = (not match["static"] and not params and ret != "void"
                        and not any(method.startswith(p) and method[len(p):][:1].isupper()
@@ -172,18 +191,27 @@ def transform_class(name, text, inputs, outputs, enums):
         if is_property:
             if method == name:
                 raise SystemExit(f"{name}.{method}: property would share its class name")
-            result.append(f"    public {ret} {method}")
+            result.append(f"    public {ret} {exposed}")
             result.append("    {")
             result.append("        get")
             result.append("        {")
             result.extend(("    " + b) if b else b for b in body)
             result.append("        }")
             result.append("    }")
+            if old:
+                result.append("")
+                result.append(f'    [Obsolete("Use {exposed}; {old} will be removed in 0.7.")]')
+                result.append(f"    public {ret} {old} => {exposed};")
         else:
-            result.append(f"    public {match['static'] or ''}{ret} {method}({', '.join(params)})")
+            result.append(f"    public {match['static'] or ''}{ret} {exposed}({', '.join(params)})")
             result.append("    {")
             result.extend(body)
             result.append("    }")
+            if old:
+                names = ", ".join(p.split()[-1] for p in params)
+                result.append("")
+                result.append(f'    [Obsolete("Use {exposed}; {old} will be removed in 0.7.")]')
+                result.append(f"    public {match['static'] or ''}{ret} {old}({', '.join(params)}) => {exposed}({names});")
         index = end + 1
     text = "\n".join(result)
     text = text.replace(THROW, "throw FfiException.FromNative(new BindingError(result.Err));")
@@ -199,11 +227,12 @@ def transform(sources):
     sources = dict(sources)
     del sources["BindingErrorException.cs"]
     seen = set()
+    renamed = set()
     for file, text in sources.items():
         if file.startswith(("Raw", "Diplomat")) or "\npublic partial class " not in text:
             continue
         name = file[:-3]
-        text, members = transform_class(name, text, inputs, outputs, enums)
+        text, members = transform_class(name, text, inputs, outputs, enums, renamed)
         seen |= members
         if name == "BindingError":
             text = text.replace("public partial class BindingError", "internal partial class BindingError")
@@ -211,6 +240,8 @@ def transform(sources):
     missing = (set(inputs) | outputs) - seen
     if missing:
         raise SystemExit(f"Decimal members missing from C# output: {sorted(missing)}")
+    if set(RENAMED) - renamed:
+        raise SystemExit(f"Renamed members missing from C# output: {sorted(set(RENAMED) - renamed)}")
     if any("BindingErrorException" in t for t in sources.values()):
         raise SystemExit("Unrewritten BindingErrorException reference")
     return {name: text.encode() for name, text in sources.items()}

@@ -48,8 +48,13 @@ class VatBreakdown internal constructor(internal val raw: com.fatoora.raw.VatBre
             decimalOf(unwrap(raw.taxAmount()))
         }
 
+    fun omitVatRate(): VatBreakdown = nativeCall(listOfNotNull(this)) {
+        VatBreakdown(unwrap(raw.omitVatRate()))
+    }
+
+    @Deprecated("Use omitVatRate.", ReplaceWith("omitVatRate()"))
     fun withoutVatRate(): VatBreakdown = nativeCall(listOfNotNull(this)) {
-        VatBreakdown(unwrap(raw.withoutVatRate()))
+        VatBreakdown(unwrap(raw.omitVatRate()))
     }
 
     @Deprecated("Use the category property.", ReplaceWith("category"))

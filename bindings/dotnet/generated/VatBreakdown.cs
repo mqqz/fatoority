@@ -81,7 +81,7 @@ public partial class VatBreakdown: IDisposable
     /// <returns>
     /// A <c>VatBreakdown</c> allocated on Rust side.
     /// </returns>
-    public VatBreakdown WithoutVatRate()
+    public VatBreakdown OmitVatRate()
     {
         unsafe
         {
@@ -89,7 +89,7 @@ public partial class VatBreakdown: IDisposable
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.VatBreakdown.WithoutVatRate(selfLease!.Ptr);
+                var result = Raw.VatBreakdown.OmitVatRate(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
                     throw FfiException.FromNative(new BindingError(result.Err));
@@ -103,11 +103,14 @@ public partial class VatBreakdown: IDisposable
         }
     }
 
+    [Obsolete("Use OmitVatRate; WithoutVatRate will be removed in 0.7.")]
+    public VatBreakdown WithoutVatRate() => OmitVatRate();
+
     /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>VatBreakdown</c> allocated on Rust side.
     /// </returns>
-    public static VatBreakdown New(VatCategory category, decimal rate, decimal taxableAmount, decimal taxAmount, TaxExemption exemption)
+    public static VatBreakdown Create(VatCategory category, decimal rate, decimal taxableAmount, decimal taxAmount, TaxExemption exemption)
     {
         unsafe
         {
@@ -137,6 +140,9 @@ public partial class VatBreakdown: IDisposable
             }
         }
     }
+
+    [Obsolete("Use Create; New will be removed in 0.7.")]
+    public static VatBreakdown New(VatCategory category, decimal rate, decimal taxableAmount, decimal taxAmount, TaxExemption exemption) => Create(category, rate, taxableAmount, taxAmount, exemption);
 
     public VatCategory Category
     {

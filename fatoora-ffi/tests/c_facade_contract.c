@@ -134,11 +134,11 @@ static void optionals_and_arguments(void) {
     FatooraError *error = NULL;
     FatooraComplianceCsid *credentials = NULL;
     char *request = NULL;
-    assert(fatoora_compliance_csid_create(FATOORA_SIMULATION, NULL, "token", "secret", &credentials, &error) == FATOORA_OK);
+    assert(fatoora_compliance_csid_new(FATOORA_SIMULATION, NULL, "token", "secret", &credentials, &error) == FATOORA_OK);
     assert(fatoora_compliance_csid_request_id(credentials, &request, &error) == FATOORA_OK);
     assert(!request);
     fatoora_compliance_csid_free(credentials);
-    assert(fatoora_compliance_csid_create(FATOORA_SIMULATION, "", "token", "secret", &credentials, &error) == FATOORA_OK);
+    assert(fatoora_compliance_csid_new(FATOORA_SIMULATION, "", "token", "secret", &credentials, &error) == FATOORA_OK);
     assert(fatoora_compliance_csid_request_id(credentials, &request, &error) == FATOORA_OK);
     assert(request && !*request);
     fatoora_compliance_csid_free(credentials);
@@ -206,8 +206,8 @@ static void statuses(const char *fixture) {
     assert(fatoora_config_new(FATOORA_NON_PRODUCTION, &config, &error) == FATOORA_OK);
     FatooraEnvironment env = FATOORA_PRODUCTION;
     assert(fatoora_config_env(config, &env, &error) == FATOORA_OK && env == FATOORA_NON_PRODUCTION);
-    assert(fatoora_zatca_client_create(config, &client, &error) == FATOORA_OK);
-    assert(fatoora_production_csid_create(FATOORA_NON_PRODUCTION, NULL, "token", "secret", &credentials, &error) == FATOORA_OK);
+    assert(fatoora_zatca_client_new(config, &client, &error) == FATOORA_OK);
+    assert(fatoora_production_csid_new(FATOORA_NON_PRODUCTION, NULL, "token", "secret", &credentials, &error) == FATOORA_OK);
     assert(fatoora_signed_invoice_from_file(fixture, &invoice, &error) == FATOORA_OK);
     failure(fatoora_zatca_client_prepare_clear_standard_invoice(client, invoice, credentials,
         (FatooraClearanceMode)7, NULL, &request, &error), &error);

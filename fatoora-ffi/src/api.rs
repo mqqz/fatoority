@@ -298,7 +298,7 @@ pub mod ffi {
         }
     }
     impl ComplianceCsid {
-        pub fn create(
+        pub fn new(
             environment: Environment,
             request_id: Option<&DiplomatStr>,
             token: &DiplomatStr,
@@ -333,7 +333,7 @@ pub mod ffi {
     }
 
     impl ProductionCsid {
-        pub fn create(
+        pub fn new(
             environment: Environment,
             request_id: Option<&DiplomatStr>,
             token: &DiplomatStr,
@@ -368,17 +368,17 @@ pub mod ffi {
     }
 
     impl ZatcaClient {
-        pub fn create(config: &Config) -> Result<Box<Self>, Box<BindingError>> {
+        pub fn new(config: &Config) -> Result<Box<Self>, Box<BindingError>> {
             boundary(|| {
                 fatoora_core::api::ZatcaClient::new(config.0.clone())
                     .map(|value| Box::new(Self(value)))
                     .map_err(core_error)
             })
         }
-        /// Like `create`, but each request fails with a network error after
+        /// Create a client whose requests fail with a network error after
         /// the given number of milliseconds. Zero is rejected.
         #[diplomat::attr(js, disable)]
-        pub fn create_with_timeout(
+        pub fn with_timeout(
             config: &Config,
             timeout_ms: u32,
         ) -> Result<Box<Self>, Box<BindingError>> {
@@ -766,11 +766,9 @@ mod tests {
 
     #[test]
     fn credentials_validate_environment_utf8_nul_and_optional_id() {
+        assert!(ProductionCsid::new(Environment::NonProduction, None, b"\xff", b"secret").is_err());
         assert!(
-            ProductionCsid::create(Environment::NonProduction, None, b"\xff", b"secret").is_err()
-        );
-        assert!(
-            ComplianceCsid::create(
+            ComplianceCsid::new(
                 Environment::NonProduction,
                 Some(b"id\0bad"),
                 b"token",
@@ -778,10 +776,10 @@ mod tests {
             )
             .is_err()
         );
-        let absent = ComplianceCsid::create(Environment::Simulation, None, b"token", b"secret")
+        let absent = ComplianceCsid::new(Environment::Simulation, None, b"token", b"secret")
             .ok()
             .unwrap();
-        let empty = ProductionCsid::create(Environment::Production, Some(b""), b"token", b"secret")
+        let empty = ProductionCsid::new(Environment::Production, Some(b""), b"token", b"secret")
             .ok()
             .unwrap();
         assert_eq!(absent.env().ok(), Some(Environment::Simulation));

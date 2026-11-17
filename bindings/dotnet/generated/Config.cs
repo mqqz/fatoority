@@ -61,7 +61,7 @@ public partial class Config: IDisposable
     /// <returns>
     /// A <c>Config</c> allocated on Rust side.
     /// </returns>
-    public static Config New(ZatcaEnvironment env)
+    public static Config Create(ZatcaEnvironment env)
     {
         unsafe
         {
@@ -73,6 +73,9 @@ public partial class Config: IDisposable
             return new Config(result.Ok);
         }
     }
+
+    [Obsolete("Use Create; New will be removed in 0.7.")]
+    public static Config New(ZatcaEnvironment env) => Create(env);
 
     /// <exception cref="FfiException"></exception>
     public ZatcaEnvironment Env

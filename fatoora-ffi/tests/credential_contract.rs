@@ -104,7 +104,7 @@ fn credentials_issue_renew_and_recover_from_gateway_errors() {
 
 fn exercise_client() {
     let config = ok(Config::new(Environment::Simulation));
-    let client = ok(ZatcaClient::create(&config));
+    let client = ok(ZatcaClient::new(&config));
     let csr = csr();
     let compliance = ok(client.request_compliance_csid(&csr, b"123456"));
     assert_eq!(compliance.env().ok(), Some(Environment::Simulation));
@@ -198,7 +198,7 @@ fn exercise_client() {
             1
         );
     }
-    let wrong_env = ok(ProductionCsid::create(
+    let wrong_env = ok(ProductionCsid::new(
         Environment::Production,
         None,
         b"ptoken",

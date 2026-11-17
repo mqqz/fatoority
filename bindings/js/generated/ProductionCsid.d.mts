@@ -13,7 +13,7 @@ export class ProductionCsid {
     constructor();
 
 
-    static create(environment: Environment, requestId: string | null, token: string, secret: string): ProductionCsid;
+    static new_(environment: Environment, requestId: string | null, token: string, secret: string): ProductionCsid;
 
     env(): Environment;
 

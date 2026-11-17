@@ -23,8 +23,8 @@ namespace capi {
 
     bool fatoora_VatBreakdown_has_vat_rate(const _native::capi::VatBreakdown* self);
 
-    typedef struct fatoora_VatBreakdown_without_vat_rate_result {union {_native::capi::VatBreakdown* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_VatBreakdown_without_vat_rate_result;
-    fatoora_VatBreakdown_without_vat_rate_result fatoora_VatBreakdown_without_vat_rate(const _native::capi::VatBreakdown* self);
+    typedef struct fatoora_VatBreakdown_omit_vat_rate_result {union {_native::capi::VatBreakdown* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_VatBreakdown_omit_vat_rate_result;
+    fatoora_VatBreakdown_omit_vat_rate_result fatoora_VatBreakdown_omit_vat_rate(const _native::capi::VatBreakdown* self);
 
     typedef struct fatoora_VatBreakdown_new_result {union {_native::capi::VatBreakdown* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_VatBreakdown_new_result;
     fatoora_VatBreakdown_new_result fatoora_VatBreakdown_new(_native::capi::VatCategory category, _native::diplomat::capi::DiplomatStringView rate, _native::diplomat::capi::DiplomatStringView taxable_amount, _native::diplomat::capi::DiplomatStringView tax_amount, const _native::capi::TaxExemption* exemption);
@@ -54,8 +54,8 @@ inline bool _native::VatBreakdown::has_vat_rate() const {
     return result;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>> _native::VatBreakdown::without_vat_rate() const {
-    auto result = _native::capi::fatoora_VatBreakdown_without_vat_rate(this->AsFFI());
+inline _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>> _native::VatBreakdown::omit_vat_rate() const {
+    auto result = _native::capi::fatoora_VatBreakdown_omit_vat_rate(this->AsFFI());
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::VatBreakdown>>(std::unique_ptr<_native::VatBreakdown>(_native::VatBreakdown::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::VatBreakdown>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 

@@ -47,14 +47,14 @@ fn header(values: &[(String, String)], name: &str, expected: &str) {
 #[test]
 fn prepared_invoices_own_wire_data_and_decode_operation_specific_outcomes() {
     let config = ok(Config::new(Environment::NonProduction));
-    let client = ok(ZatcaClient::create(&config));
-    let production = ok(ProductionCsid::create(
+    let client = ok(ZatcaClient::new(&config));
+    let production = ok(ProductionCsid::new(
         Environment::NonProduction,
         None,
         b"token",
         b"secret",
     ));
-    let compliance = ok(ComplianceCsid::create(
+    let compliance = ok(ComplianceCsid::new(
         Environment::NonProduction,
         None,
         b"token",
@@ -170,21 +170,16 @@ fn prepared_credentials_retain_environment_payload_and_renewal_semantics() {
         Environment::Production,
     ] {
         let config = ok(Config::new(environment));
-        let client = ok(ZatcaClient::create(&config));
+        let client = ok(ZatcaClient::new(&config));
         let csr = csr();
         let expected_csr = Base64::encode_string(written(|out| ok(csr.to_pem(out))).as_bytes());
-        let compliance = ok(ComplianceCsid::create(
+        let compliance = ok(ComplianceCsid::new(
             environment,
             Some(b"456"),
             b"token",
             b"secret",
         ));
-        let production = ok(ProductionCsid::create(
-            environment,
-            None,
-            b"token",
-            b"secret",
-        ));
+        let production = ok(ProductionCsid::new(environment, None, b"token", b"secret"));
         let issuance = ok(client.prepare_request_compliance_csid(&csr, b"123456"));
         let promotion = ok(client.prepare_request_production_csid(&compliance));
         let renewal = ok(client.prepare_renew_csid(&production, &csr, b"654321", Some(b"ar")));
@@ -273,17 +268,17 @@ fn prepared_credentials_retain_environment_payload_and_renewal_semantics() {
 #[test]
 fn prepare_rejects_bad_inputs_and_consumed_owners_without_transport() {
     let config = ok(Config::new(Environment::NonProduction));
-    let client = ok(ZatcaClient::create(&config));
+    let client = ok(ZatcaClient::new(&config));
     let csr = csr();
     let mut simple = ok(SignedInvoice::from_xml(SIMPLE));
     let standard = ok(SignedInvoice::from_xml(STANDARD));
-    let compliance = ok(ComplianceCsid::create(
+    let compliance = ok(ComplianceCsid::new(
         Environment::NonProduction,
         None,
         b"token",
         b"secret",
     ));
-    let production = ok(ProductionCsid::create(
+    let production = ok(ProductionCsid::new(
         Environment::NonProduction,
         None,
         b"token",
@@ -344,13 +339,13 @@ fn prepare_rejects_bad_inputs_and_consumed_owners_without_transport() {
             .prepare_clear_standard_invoice(&simple, &production, ClearanceMode::Disabled, None)
             .is_err()
     );
-    let foreign = ok(ProductionCsid::create(
+    let foreign = ok(ProductionCsid::new(
         Environment::Simulation,
         None,
         b"token",
         b"secret",
     ));
-    let foreign_compliance = ok(ComplianceCsid::create(
+    let foreign_compliance = ok(ComplianceCsid::new(
         Environment::Simulation,
         Some(b"id"),
         b"token",

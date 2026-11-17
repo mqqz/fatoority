@@ -7,8 +7,8 @@ import com.sun.jna.Structure
 
 internal interface ZatcaClientLib: Library {
     fun fatoora_ZatcaClient_destroy(handle: Pointer)
-    fun fatoora_ZatcaClient_create(config: Pointer): ResultPointerPointer
-    fun fatoora_ZatcaClient_create_with_timeout(config: Pointer, timeoutMs: FFIUint32): ResultPointerPointer
+    fun fatoora_ZatcaClient_new(config: Pointer): ResultPointerPointer
+    fun fatoora_ZatcaClient_with_timeout(config: Pointer, timeoutMs: FFIUint32): ResultPointerPointer
     fun fatoora_ZatcaClient_request_compliance_csid(handle: Pointer, csr: Pointer, otp: Slice): ResultPointerPointer
     fun fatoora_ZatcaClient_request_production_csid(handle: Pointer, credentials: Pointer): ResultPointerPointer
     fun fatoora_ZatcaClient_renew_csid(handle: Pointer, credentials: Pointer, csr: Pointer, otp: Slice, acceptLanguage: OptionSlice): ResultPointerPointer
@@ -53,9 +53,9 @@ class ZatcaClient internal constructor (
         internal val lib: ZatcaClientLib = Native.load("fatoora_ffi", libClass)
         @JvmStatic
 
-        fun create(config: Config): Result<ZatcaClient> {
+        fun new_(config: Config): Result<ZatcaClient> {
 
-            val returnVal = lib.fatoora_ZatcaClient_create(config.handle);
+            val returnVal = lib.fatoora_ZatcaClient_new(config.handle);
             val nativeOkVal = returnVal.getNativeOk();
             if (nativeOkVal != null) {
                 val selfEdges: List<Any> = listOf()
@@ -72,12 +72,12 @@ class ZatcaClient internal constructor (
         @JvmStatic
 
         /**
-         * Like `create`, but each request fails with a network error after
+         * Create a client whose requests fail with a network error after
          * the given number of milliseconds. Zero is rejected.
          */
-        fun createWithTimeout(config: Config, timeoutMs: UInt): Result<ZatcaClient> {
+        fun withTimeout(config: Config, timeoutMs: UInt): Result<ZatcaClient> {
 
-            val returnVal = lib.fatoora_ZatcaClient_create_with_timeout(config.handle, FFIUint32(timeoutMs));
+            val returnVal = lib.fatoora_ZatcaClient_with_timeout(config.handle, FFIUint32(timeoutMs));
             val nativeOkVal = returnVal.getNativeOk();
             if (nativeOkVal != null) {
                 val selfEdges: List<Any> = listOf()
