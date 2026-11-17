@@ -243,7 +243,7 @@ test('optional line fields and repeated identifiers survive WASM import', () => 
   const line = sdk.LineItemBuilder.create();
   line.setItemName('case'); line.setInvoicedQuantity('30'); line.setItemNetPrice('100');
   line.setItemPriceBaseQuantity('12'); line.setVatRate('15'); line.setVatCategory(sdk.VatCategory.Standard);
-  line.addAllowance(sdk.Adjustment.percentage('250', '10').withReason('rebate', '95'));
+  line.addAllowance(sdk.Adjustment.percentOf('250', '10').withReason('rebate', '95'));
   b.addItem(line.build());
   b.addPaymentMeans(sdk.PaymentMeans.create('30', 'one').withInstructionNote('two').withAccount('bank', 'net 30'));
   const invoice = b.build();
@@ -315,10 +315,10 @@ test('library failures throw one error class per code', () => {
 
 test('create replaces new_ and the package root exports a deliberate API', () => {
   const withNew = Object.entries(generated).filter(([, value]) => typeof value?.new_ === 'function').map(([name]) => name);
-  assert.equal(withNew.length, 11);
+  assert.equal(withNew.length, 14);
   for (const name of withNew) {
-    assert.equal(sdk[name], generated[name]);
-    assert.equal(typeof sdk[name].create, 'function', name);
+    assert.equal(typeof generated[name].create, 'function', name);
+    if (name !== 'ZatcaClient') assert.equal(sdk[name], generated[name]);
   }
   assert.ok(sdk.Config.create(sdk.Environment.Simulation) instanceof sdk.Config);
   assert.equal(sdk.Config.create('Production').env(), sdk.Environment.Production);
@@ -358,4 +358,15 @@ test('generated boolean getters return booleans', () => {
   assert.equal(typeof report.isValid(), 'boolean');
   assert.equal(sdk.PaymentMeans.create('10', null).hasAccount(), false);
   assert.equal(sdk.Xml.validate(loadFixture('sdk-parity/cases/simplified-invoice/sdk-signed.xml')), true);
+});
+
+test('0.5 names of renamed members forward to the core names', () => {
+  const rebate = sdk.Adjustment.percentage('250', '10'); // deprecated
+  assert.equal(rebate.value(), '25');
+  assert.equal(rebate.percent().value(), rebate.percentage().value());
+  assert.equal(rebate.withSuppliedAmount('25').value(), rebate.suppliedAmount('25').value());
+  assert.throws(() => rebate.withSuppliedAmount('24').value(), sdk.ValidationError);
+  const subtotal = sdk.VatBreakdown.create(sdk.VatCategory.OutOfScope, '0', '10', '0', sdk.TaxExemption.create('VATEX-SA-OOS', 'reason'));
+  assert.equal(subtotal.withoutVatRate().hasVatRate(), subtotal.omitVatRate().hasVatRate());
+  assert.equal(subtotal.omitVatRate().hasVatRate(), false);
 });

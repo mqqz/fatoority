@@ -59,6 +59,26 @@ for (const value of Object.values(generated)) {
   wrapMethods(value.prototype, prototypeSkip);
 }
 
+// 0.5 names of members renamed in 0.6 to match the Rust core. Each forwards
+// to its new name (already wrapped above) and is removed in 0.7.
+// `Adjustment.percentage(base, percent)` is static, so it does not clash with
+// the new `percentage()` getter on instances.
+export const renamedMembers = {
+  Adjustment: { static: { percentage: 'percentOf' }, prototype: { withSuppliedAmount: 'suppliedAmount', percent: 'percentage' } },
+  AllowanceCharge: { prototype: { withoutVatRate: 'omitVatRate' } },
+  VatBreakdown: { prototype: { withoutVatRate: 'omitVatRate' } },
+};
+for (const [name, members] of Object.entries(renamedMembers)) {
+  for (const [side, aliases] of Object.entries(members)) {
+    const target = side === 'static' ? generated[name] : generated[name].prototype;
+    for (const [old, current] of Object.entries(aliases)) {
+      if (typeof target[current] !== 'function') throw new Error(`${name}.${current} is missing`);
+      const alias = { [old](...args) { return this[current](...args); } }[old];
+      Object.defineProperty(target, old, { value: alias, writable: true, configurable: true });
+    }
+  }
+}
+
 // Diplomat 0.16's JS backend returns plain `bool` results as the WASM integer
 // 0/1 although the declarations say `boolean`. tests/runtime.test.mjs checks
 // this list against every `(): boolean` instance method in the declarations.

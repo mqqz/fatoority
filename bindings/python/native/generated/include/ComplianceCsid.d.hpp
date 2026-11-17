@@ -32,7 +32,7 @@ namespace _native {
 class ComplianceCsid {
 public:
 
-  inline static _native::diplomat::result<std::unique_ptr<_native::ComplianceCsid>, std::unique_ptr<_native::BindingError>> create(_native::Environment environment, std::optional<std::string_view> request_id, std::string_view token, std::string_view secret);
+  inline static _native::diplomat::result<std::unique_ptr<_native::ComplianceCsid>, std::unique_ptr<_native::BindingError>> new_(_native::Environment environment, std::optional<std::string_view> request_id, std::string_view token, std::string_view secret);
 
   inline _native::diplomat::result<_native::Environment, std::unique_ptr<_native::BindingError>> env() const;
 

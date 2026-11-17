@@ -20,11 +20,11 @@
 typedef struct fatoora_Adjustment_amount_result {union {Adjustment* ok; BindingError* err;}; bool is_ok;} fatoora_Adjustment_amount_result;
 fatoora_Adjustment_amount_result fatoora_Adjustment_amount(DiplomatStringView value);
 
-typedef struct fatoora_Adjustment_percentage_result {union {Adjustment* ok; BindingError* err;}; bool is_ok;} fatoora_Adjustment_percentage_result;
-fatoora_Adjustment_percentage_result fatoora_Adjustment_percentage(DiplomatStringView base, DiplomatStringView percent);
+typedef struct fatoora_Adjustment_percent_of_result {union {Adjustment* ok; BindingError* err;}; bool is_ok;} fatoora_Adjustment_percent_of_result;
+fatoora_Adjustment_percent_of_result fatoora_Adjustment_percent_of(DiplomatStringView base, DiplomatStringView percent);
 
-typedef struct fatoora_Adjustment_with_supplied_amount_result {union {Adjustment* ok; BindingError* err;}; bool is_ok;} fatoora_Adjustment_with_supplied_amount_result;
-fatoora_Adjustment_with_supplied_amount_result fatoora_Adjustment_with_supplied_amount(const Adjustment* self, DiplomatStringView value);
+typedef struct fatoora_Adjustment_supplied_amount_result {union {Adjustment* ok; BindingError* err;}; bool is_ok;} fatoora_Adjustment_supplied_amount_result;
+fatoora_Adjustment_supplied_amount_result fatoora_Adjustment_supplied_amount(const Adjustment* self, DiplomatStringView value);
 
 typedef struct fatoora_Adjustment_with_reason_result {union {Adjustment* ok; BindingError* err;}; bool is_ok;} fatoora_Adjustment_with_reason_result;
 fatoora_Adjustment_with_reason_result fatoora_Adjustment_with_reason(const Adjustment* self, OptionStringView reason, OptionStringView code);
@@ -35,8 +35,8 @@ fatoora_Adjustment_value_result fatoora_Adjustment_value(const Adjustment* self,
 typedef struct fatoora_Adjustment_base_amount_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_Adjustment_base_amount_result;
 fatoora_Adjustment_base_amount_result fatoora_Adjustment_base_amount(const Adjustment* self);
 
-typedef struct fatoora_Adjustment_percent_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_Adjustment_percent_result;
-fatoora_Adjustment_percent_result fatoora_Adjustment_percent(const Adjustment* self);
+typedef struct fatoora_Adjustment_percentage_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_Adjustment_percentage_result;
+fatoora_Adjustment_percentage_result fatoora_Adjustment_percentage(const Adjustment* self);
 
 typedef struct fatoora_Adjustment_reason_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_Adjustment_reason_result;
 fatoora_Adjustment_reason_result fatoora_Adjustment_reason(const Adjustment* self);

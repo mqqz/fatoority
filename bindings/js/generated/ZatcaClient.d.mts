@@ -20,7 +20,7 @@ export class ZatcaClient {
     constructor();
 
 
-    static create(config: Config): ZatcaClient;
+    static new_(config: Config): ZatcaClient;
 
     prepareRequestComplianceCsid(csr: Csr, otp: string): ComplianceRequest;
 

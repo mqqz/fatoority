@@ -34,7 +34,7 @@ namespace fatoora {
 class ComplianceCsid {
 public:
 
-  inline static diplomat::result<std::unique_ptr<fatoora::ComplianceCsid>, std::unique_ptr<fatoora::BindingError>> create(fatoora::Environment environment, std::optional<std::string_view> request_id, std::string_view token, std::string_view secret);
+  inline static diplomat::result<std::unique_ptr<fatoora::ComplianceCsid>, std::unique_ptr<fatoora::BindingError>> new_(fatoora::Environment environment, std::optional<std::string_view> request_id, std::string_view token, std::string_view secret);
 
   inline diplomat::result<fatoora::Environment, std::unique_ptr<fatoora::BindingError>> env() const;
 

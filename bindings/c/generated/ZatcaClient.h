@@ -26,11 +26,11 @@
 
 
 
-typedef struct fatoora_ZatcaClient_create_result {union {ZatcaClient* ok; BindingError* err;}; bool is_ok;} fatoora_ZatcaClient_create_result;
-fatoora_ZatcaClient_create_result fatoora_ZatcaClient_create(const Config* config);
+typedef struct fatoora_ZatcaClient_new_result {union {ZatcaClient* ok; BindingError* err;}; bool is_ok;} fatoora_ZatcaClient_new_result;
+fatoora_ZatcaClient_new_result fatoora_ZatcaClient_new(const Config* config);
 
-typedef struct fatoora_ZatcaClient_create_with_timeout_result {union {ZatcaClient* ok; BindingError* err;}; bool is_ok;} fatoora_ZatcaClient_create_with_timeout_result;
-fatoora_ZatcaClient_create_with_timeout_result fatoora_ZatcaClient_create_with_timeout(const Config* config, uint32_t timeout_ms);
+typedef struct fatoora_ZatcaClient_with_timeout_result {union {ZatcaClient* ok; BindingError* err;}; bool is_ok;} fatoora_ZatcaClient_with_timeout_result;
+fatoora_ZatcaClient_with_timeout_result fatoora_ZatcaClient_with_timeout(const Config* config, uint32_t timeout_ms);
 
 typedef struct fatoora_ZatcaClient_request_compliance_csid_result {union {ComplianceCsid* ok; BindingError* err;}; bool is_ok;} fatoora_ZatcaClient_request_compliance_csid_result;
 fatoora_ZatcaClient_request_compliance_csid_result fatoora_ZatcaClient_request_compliance_csid(const ZatcaClient* self, const Csr* csr, DiplomatStringView otp);

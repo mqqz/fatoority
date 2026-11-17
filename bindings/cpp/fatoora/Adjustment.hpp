@@ -23,11 +23,11 @@ namespace capi {
     typedef struct fatoora_Adjustment_amount_result {union {fatoora::capi::Adjustment* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Adjustment_amount_result;
     fatoora_Adjustment_amount_result fatoora_Adjustment_amount(diplomat::capi::DiplomatStringView value);
 
-    typedef struct fatoora_Adjustment_percentage_result {union {fatoora::capi::Adjustment* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Adjustment_percentage_result;
-    fatoora_Adjustment_percentage_result fatoora_Adjustment_percentage(diplomat::capi::DiplomatStringView base, diplomat::capi::DiplomatStringView percent);
+    typedef struct fatoora_Adjustment_percent_of_result {union {fatoora::capi::Adjustment* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Adjustment_percent_of_result;
+    fatoora_Adjustment_percent_of_result fatoora_Adjustment_percent_of(diplomat::capi::DiplomatStringView base, diplomat::capi::DiplomatStringView percent);
 
-    typedef struct fatoora_Adjustment_with_supplied_amount_result {union {fatoora::capi::Adjustment* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Adjustment_with_supplied_amount_result;
-    fatoora_Adjustment_with_supplied_amount_result fatoora_Adjustment_with_supplied_amount(const fatoora::capi::Adjustment* self, diplomat::capi::DiplomatStringView value);
+    typedef struct fatoora_Adjustment_supplied_amount_result {union {fatoora::capi::Adjustment* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Adjustment_supplied_amount_result;
+    fatoora_Adjustment_supplied_amount_result fatoora_Adjustment_supplied_amount(const fatoora::capi::Adjustment* self, diplomat::capi::DiplomatStringView value);
 
     typedef struct fatoora_Adjustment_with_reason_result {union {fatoora::capi::Adjustment* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Adjustment_with_reason_result;
     fatoora_Adjustment_with_reason_result fatoora_Adjustment_with_reason(const fatoora::capi::Adjustment* self, diplomat::capi::OptionStringView reason, diplomat::capi::OptionStringView code);
@@ -38,8 +38,8 @@ namespace capi {
     typedef struct fatoora_Adjustment_base_amount_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Adjustment_base_amount_result;
     fatoora_Adjustment_base_amount_result fatoora_Adjustment_base_amount(const fatoora::capi::Adjustment* self);
 
-    typedef struct fatoora_Adjustment_percent_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Adjustment_percent_result;
-    fatoora_Adjustment_percent_result fatoora_Adjustment_percent(const fatoora::capi::Adjustment* self);
+    typedef struct fatoora_Adjustment_percentage_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Adjustment_percentage_result;
+    fatoora_Adjustment_percentage_result fatoora_Adjustment_percentage(const fatoora::capi::Adjustment* self);
 
     typedef struct fatoora_Adjustment_reason_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Adjustment_reason_result;
     fatoora_Adjustment_reason_result fatoora_Adjustment_reason(const fatoora::capi::Adjustment* self);
@@ -58,14 +58,14 @@ inline diplomat::result<std::unique_ptr<fatoora::Adjustment>, std::unique_ptr<fa
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Adjustment>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Adjustment>>(std::unique_ptr<fatoora::Adjustment>(fatoora::Adjustment::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Adjustment>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::Adjustment>, std::unique_ptr<fatoora::BindingError>> fatoora::Adjustment::percentage(std::string_view base, std::string_view percent) {
-    auto result = fatoora::capi::fatoora_Adjustment_percentage({base.data(), base.size()},
+inline diplomat::result<std::unique_ptr<fatoora::Adjustment>, std::unique_ptr<fatoora::BindingError>> fatoora::Adjustment::percent_of(std::string_view base, std::string_view percent) {
+    auto result = fatoora::capi::fatoora_Adjustment_percent_of({base.data(), base.size()},
         {percent.data(), percent.size()});
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Adjustment>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Adjustment>>(std::unique_ptr<fatoora::Adjustment>(fatoora::Adjustment::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Adjustment>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::Adjustment>, std::unique_ptr<fatoora::BindingError>> fatoora::Adjustment::with_supplied_amount(std::string_view value) const {
-    auto result = fatoora::capi::fatoora_Adjustment_with_supplied_amount(this->AsFFI(),
+inline diplomat::result<std::unique_ptr<fatoora::Adjustment>, std::unique_ptr<fatoora::BindingError>> fatoora::Adjustment::supplied_amount(std::string_view value) const {
+    auto result = fatoora::capi::fatoora_Adjustment_supplied_amount(this->AsFFI(),
         {value.data(), value.size()});
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Adjustment>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Adjustment>>(std::unique_ptr<fatoora::Adjustment>(fatoora::Adjustment::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Adjustment>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
@@ -97,8 +97,8 @@ inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora:
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::Adjustment::percent() const {
-    auto result = fatoora::capi::fatoora_Adjustment_percent(this->AsFFI());
+inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::Adjustment::percentage() const {
+    auto result = fatoora::capi::fatoora_Adjustment_percentage(this->AsFFI());
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 

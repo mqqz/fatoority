@@ -75,9 +75,9 @@ class ContractsTest {
         }
         Adjustment.amount(BigDecimal("12.50")).use { assertEquals(0, BigDecimal("12.5").compareTo(it.value)) }
         Adjustment.amount(BigDecimal("1E+3")).use { assertEquals(0, BigDecimal("1000").compareTo(it.value)) }
-        Adjustment.percentage(BigDecimal("200"), BigDecimal("10")).use { adjustment ->
+        Adjustment.percentOf(BigDecimal("200"), BigDecimal("10")).use { adjustment ->
             assertEquals(0, BigDecimal("200").compareTo(adjustment.baseAmount))
-            assertEquals(0, BigDecimal("10").compareTo(adjustment.percent))
+            assertEquals(0, BigDecimal("10").compareTo(adjustment.percentage))
             assertNull(adjustment.reason)
         }
         assertFailsWith<InvalidInputException> { Adjustment.amount(BigDecimal("1E+40")) }
@@ -90,6 +90,11 @@ class ContractsTest {
             a.district()!!.use { assertEquals("Olaya", it.value()) }
         }
         Adjustment.amount("12.50").use { assertEquals("12.5", it.value()) }
+        Adjustment.percentage(BigDecimal("200"), BigDecimal("10")).use { a ->
+            assertEquals(0, BigDecimal("10").compareTo(a.percent))
+            a.percent()!!.use { assertEquals("10", it.value()) }
+            a.withSuppliedAmount(BigDecimal("20")).use { assertEquals(0, BigDecimal("20").compareTo(it.value)) }
+        }
         assertEquals(InvoiceFlag.Export.bit, InvoiceFlag.Export.bit())
     }
 

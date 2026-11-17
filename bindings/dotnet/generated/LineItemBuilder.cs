@@ -106,7 +106,7 @@ public partial class LineItemBuilder: IDisposable
     /// <returns>
     /// A <c>LineItemBuilder</c> allocated on Rust side.
     /// </returns>
-    public static LineItemBuilder New()
+    public static LineItemBuilder Create()
     {
         unsafe
         {
@@ -114,6 +114,9 @@ public partial class LineItemBuilder: IDisposable
             return new LineItemBuilder(result);
         }
     }
+
+    [Obsolete("Use Create; New will be removed in 0.7.")]
+    public static LineItemBuilder New() => Create();
 
     /// <exception cref="FfiException"></exception>
     /// <returns>

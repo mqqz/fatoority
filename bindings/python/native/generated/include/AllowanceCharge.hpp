@@ -25,8 +25,8 @@ namespace capi {
 
     bool fatoora_AllowanceCharge_has_vat_rate(const _native::capi::AllowanceCharge* self);
 
-    typedef struct fatoora_AllowanceCharge_without_vat_rate_result {union {_native::capi::AllowanceCharge* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_without_vat_rate_result;
-    fatoora_AllowanceCharge_without_vat_rate_result fatoora_AllowanceCharge_without_vat_rate(const _native::capi::AllowanceCharge* self);
+    typedef struct fatoora_AllowanceCharge_omit_vat_rate_result {union {_native::capi::AllowanceCharge* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_omit_vat_rate_result;
+    fatoora_AllowanceCharge_omit_vat_rate_result fatoora_AllowanceCharge_omit_vat_rate(const _native::capi::AllowanceCharge* self);
 
     typedef struct fatoora_AllowanceCharge_with_percentage_result {union {_native::capi::AllowanceCharge* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_with_percentage_result;
     fatoora_AllowanceCharge_with_percentage_result fatoora_AllowanceCharge_with_percentage(const _native::capi::AllowanceCharge* self, _native::diplomat::capi::DiplomatStringView base, _native::diplomat::capi::DiplomatStringView percent);
@@ -75,8 +75,8 @@ inline bool _native::AllowanceCharge::has_vat_rate() const {
     return result;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::AllowanceCharge>, std::unique_ptr<_native::BindingError>> _native::AllowanceCharge::without_vat_rate() const {
-    auto result = _native::capi::fatoora_AllowanceCharge_without_vat_rate(this->AsFFI());
+inline _native::diplomat::result<std::unique_ptr<_native::AllowanceCharge>, std::unique_ptr<_native::BindingError>> _native::AllowanceCharge::omit_vat_rate() const {
+    auto result = _native::capi::fatoora_AllowanceCharge_omit_vat_rate(this->AsFFI());
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::AllowanceCharge>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::AllowanceCharge>>(std::unique_ptr<_native::AllowanceCharge>(_native::AllowanceCharge::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::AllowanceCharge>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 

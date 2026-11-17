@@ -245,10 +245,10 @@ fn rejected_setters_leave_previous_values_and_totals_intact() {
         b.add_charge(&value, VatCategory::Standard, b"Infinity", &exemption)
             .is_err()
     );
-    let invalid = ok(fatoora_ffi::invoice::ffi::Adjustment::percentage(
+    let invalid = ok(fatoora_ffi::invoice::ffi::Adjustment::percent_of(
         b"10", b"10",
     ))
-    .with_supplied_amount(b"5");
+    .supplied_amount(b"5");
     let invalid = ok(invalid);
     assert!(
         b.add_allowance(&invalid, VatCategory::Standard, b"15", &exemption)
@@ -1056,13 +1056,13 @@ fn optional_builder_fields_survive_binding_snapshots_and_xml() {
         Adjustment, LineItemBuilder, OriginalInvoiceRef, PaymentMeans, TaxExemption, VatBreakdown,
     };
     let exemption = ok(TaxExemption::new(None, None));
-    let rebate = ok(Adjustment::percentage(b"250", b"10"));
+    let rebate = ok(Adjustment::percent_of(b"250", b"10"));
     assert!(rebate.with_reason(Some(&[0xff]), None).is_err());
     assert!(rebate.with_reason(None, Some(&[0xff])).is_err());
     let unchanged = ok(rebate.with_reason(None, None));
     assert!(ok(unchanged.reason()).is_none());
     assert!(ok(unchanged.reason_code()).is_none());
-    let rebate = ok(rebate.with_supplied_amount(b"25"));
+    let rebate = ok(rebate.supplied_amount(b"25"));
     let rebate = ok(rebate.with_reason(Some(b"rebate"), Some(b"95")));
     let freight = ok(Adjustment::amount(b"5"));
     let reference = ok(OriginalInvoiceRef::new(
@@ -1108,7 +1108,7 @@ fn optional_builder_fields_survive_binding_snapshots_and_xml() {
     assert!(line.set_item_name(b"used").is_err());
     let mut b = builder();
     ok(b.add_item(&item));
-    let allowance = ok(Adjustment::percentage(b"230", b"10"));
+    let allowance = ok(Adjustment::percent_of(b"230", b"10"));
     let charge = ok(Adjustment::amount(b"2"));
     let breakdown = ok(VatBreakdown::new(
         VatCategory::Standard,
@@ -1222,14 +1222,14 @@ fn optional_builder_fields_survive_binding_snapshots_and_xml() {
     let a = ok(item.adjustment(0));
     assert_eq!(written(|out| ok(a.value(out))), "25");
     assert_eq!(optional_string(a.base_amount()).as_deref(), Some("250"));
-    assert_eq!(optional_string(a.percent()).as_deref(), Some("10"));
+    assert_eq!(optional_string(a.percentage()).as_deref(), Some("10"));
     assert_eq!(optional_string(a.reason()).as_deref(), Some("rebate"));
     assert_eq!(optional_string(a.reason_code()).as_deref(), Some("95"));
     let a = ok(data.adjustment(0));
     assert_eq!(optional_string(a.base_amount()).as_deref(), Some("230"));
     assert_eq!(optional_string(a.percentage()).as_deref(), Some("10"));
     assert!(a.has_vat_rate());
-    assert!(a.without_vat_rate().is_err());
+    assert!(a.omit_vat_rate().is_err());
     let copy = ok(a.with_tax_category_count(3));
     let copy = ok(copy.with_percentage(b"230", b"10"));
     assert_eq!(copy.tax_category_count(), 3);
@@ -1254,7 +1254,7 @@ fn optional_adjustments_and_party_metadata_preserve_absence() {
     ));
     let a = ok(a.with_percentage(b"100", b"10"));
     let a = ok(a.with_tax_category_count(2));
-    let a = ok(a.without_vat_rate());
+    let a = ok(a.omit_vat_rate());
     assert!(!a.has_vat_rate());
     let mut b = builder();
     let address = ok(Address::new(
@@ -1295,7 +1295,7 @@ fn optional_adjustments_and_party_metadata_preserve_absence() {
     );
     let flat = ok(Adjustment::amount(b"1"));
     assert!(optional_string(flat.base_amount()).is_none());
-    assert!(optional_string(flat.percent()).is_none());
+    assert!(optional_string(flat.percentage()).is_none());
     assert!(optional_string(flat.reason()).is_none());
     assert!(optional_string(flat.reason_code()).is_none());
     assert!(Adjustment::amount(b"NaN").is_err());
@@ -1317,7 +1317,7 @@ fn tax_presence_crosses_binding_snapshots_without_hiding_amounts() {
         &exemption,
     ));
     assert!(subtotal.has_vat_rate());
-    let subtotal = ok(subtotal.without_vat_rate());
+    let subtotal = ok(subtotal.omit_vat_rate());
     assert!(!subtotal.has_vat_rate());
     let standard = ok(VatBreakdown::new(
         VatCategory::Standard,
@@ -1326,7 +1326,7 @@ fn tax_presence_crosses_binding_snapshots_without_hiding_amounts() {
         b"15",
         &exemption,
     ));
-    assert!(standard.without_vat_rate().is_err());
+    assert!(standard.omit_vat_rate().is_err());
     for (tax, gross) in [(false, false), (true, false), (true, true)] {
         let mut line = LineItemBuilder::new();
         ok(line.set_item_name(b"item"));

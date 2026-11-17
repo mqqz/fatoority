@@ -82,7 +82,7 @@ public partial class Adjustment: IDisposable
     /// <returns>
     /// A <c>Adjustment</c> allocated on Rust side.
     /// </returns>
-    public static Adjustment Percentage(decimal @base, decimal percent)
+    public static Adjustment PercentOf(decimal @base, decimal percent)
     {
         unsafe
         {
@@ -91,7 +91,7 @@ public partial class Adjustment: IDisposable
             fixed (byte* basePtr = baseBytes)
             fixed (byte* percentPtr = percentBytes)
             {
-                var result = Raw.Adjustment.Percentage(new DiplomatSliceU8 { Ptr = basePtr, Len = (nuint)baseBytes.Length }, new DiplomatSliceU8 { Ptr = percentPtr, Len = (nuint)percentBytes.Length });
+                var result = Raw.Adjustment.PercentOf(new DiplomatSliceU8 { Ptr = basePtr, Len = (nuint)baseBytes.Length }, new DiplomatSliceU8 { Ptr = percentPtr, Len = (nuint)percentBytes.Length });
                 if (!result.IsOk)
                 {
                     throw FfiException.FromNative(new BindingError(result.Err));
@@ -105,7 +105,7 @@ public partial class Adjustment: IDisposable
     /// <returns>
     /// A <c>Adjustment</c> allocated on Rust side.
     /// </returns>
-    public Adjustment WithSuppliedAmount(decimal value)
+    public Adjustment SuppliedAmount(decimal value)
     {
         unsafe
         {
@@ -116,7 +116,7 @@ public partial class Adjustment: IDisposable
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 fixed (byte* valuePtr = valueBytes)
                 {
-                    var result = Raw.Adjustment.WithSuppliedAmount(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
+                    var result = Raw.Adjustment.SuppliedAmount(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
                         throw FfiException.FromNative(new BindingError(result.Err));
@@ -130,6 +130,9 @@ public partial class Adjustment: IDisposable
             }
         }
     }
+
+    [Obsolete("Use SuppliedAmount; WithSuppliedAmount will be removed in 0.7.")]
+    public Adjustment WithSuppliedAmount(decimal value) => SuppliedAmount(value);
 
     /// <exception cref="FfiException"></exception>
     /// <returns>
@@ -224,7 +227,7 @@ public partial class Adjustment: IDisposable
     }
 
     /// <exception cref="FfiException"></exception>
-    public decimal? Percent
+    public decimal? Percentage
     {
         get
         {
@@ -234,7 +237,7 @@ public partial class Adjustment: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.Adjustment.Percent(selfLease!.Ptr);
+                    var result = Raw.Adjustment.Percentage(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
                         throw FfiException.FromNative(new BindingError(result.Err));
@@ -248,6 +251,9 @@ public partial class Adjustment: IDisposable
             }
         }
     }
+
+    [Obsolete("Use Percentage; Percent will be removed in 0.7.")]
+    public decimal? Percent => Percentage;
 
     /// <exception cref="FfiException"></exception>
     public string? Reason

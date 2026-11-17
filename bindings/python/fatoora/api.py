@@ -145,7 +145,7 @@ class VatBreakdown:
 
     def _native_value(self):
         value = _call(_native.VatBreakdown.new, int(self.category), _decimal(self.rate), _decimal(self.taxable_amount), _decimal(self.tax_amount), self.exemption._native_value())
-        return _call(value.without_vat_rate) if self.omitted_rate else value
+        return _call(value.omit_vat_rate) if self.omitted_rate else value
 
 @dataclass(frozen=True)
 class InvoiceTotals:
@@ -534,7 +534,7 @@ class _Csid(_Owned):
     def __init__(self, env: Environment, *, token: str, secret: str, request_id: Optional[str] = None) -> None:
         """Credentials from stored values: the ``binary_security_token`` and ``secret``
         ZATCA issued, and its optional request ID."""
-        self._attach(_call(self._native_type.create, int(env), request_id, token, secret))
+        self._attach(_call(self._native_type.new, int(env), request_id, token, secret))
 
     @property
     def request_id(self) -> Optional[str]:
@@ -970,7 +970,7 @@ class Adjustment(ValueCompat):
         """
         base_text, percent_text = _decimal(base), _decimal(percent)
         if fields.get("amount") is None:
-            native = _call(_native.Adjustment.percentage, base_text, percent_text)
+            native = _call(_native.Adjustment.percent_of, base_text, percent_text)
             fields["amount"] = _call(native.value)
         return cls(base_amount=Decimal(base_text), percentage=Decimal(percent_text), **fields)
 
@@ -989,8 +989,8 @@ class Adjustment(ValueCompat):
         if base is None or percentage is None:
             native = _call(_native.Adjustment.amount, _decimal(self.amount))
         else:
-            native = _call(_native.Adjustment.percentage, _decimal(base), _decimal(percentage))
-            native = _call(native.with_supplied_amount, _decimal(self.amount))
+            native = _call(_native.Adjustment.percent_of, _decimal(base), _decimal(percentage))
+            native = _call(native.supplied_amount, _decimal(self.amount))
         if self.reason is not None or self.reason_code is not None:
             native = _call(native.with_reason, self.reason, self.reason_code)
         return native
@@ -1003,7 +1003,7 @@ class Adjustment(ValueCompat):
         if self.base_amount is not None and self.percentage is not None:
             native = _call(native.with_percentage, _decimal(self.base_amount), _decimal(self.percentage))
         if self.omitted_rate:
-            native = _call(native.without_vat_rate)
+            native = _call(native.omit_vat_rate)
         return native
 
     @classmethod
@@ -1021,7 +1021,7 @@ class Adjustment(ValueCompat):
         return _frozen(
             cls, amount=Decimal(_call(native.value)), reason=_call(native.reason),
             reason_code=_call(native.reason_code), base_amount=_optional_decimal(_call(native.base_amount)),
-            percentage=_optional_decimal(_call(native.percent)), charge=charge, category=category, rate=rate,
+            percentage=_optional_decimal(_call(native.percentage)), charge=charge, category=category, rate=rate,
             exemption=TaxExemption(), tax_category_count=1, omitted_rate=False)
 
 
@@ -1146,9 +1146,9 @@ class ZatcaClient(_Owned):
 
     def __init__(self, config: Config, *, timeout: Optional[Union[float, timedelta]] = None):
         if timeout is None:
-            handle = _call(_native.ZatcaClient.create, config)
+            handle = _call(_native.ZatcaClient.new, config)
         else:
-            handle = _call(_native.ZatcaClient.create_with_timeout, config, _timeout_ms(timeout))
+            handle = _call(_native.ZatcaClient.with_timeout, config, _timeout_ms(timeout))
         self._attach(handle)
 
     def request_compliance_csid(self, csr: Csr, otp: str) -> ComplianceCsid:

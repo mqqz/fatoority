@@ -45,11 +45,11 @@ export class ZatcaClient {
     }
 
 
-    static create(config) {
+    static new_(config) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
 
-        const result = wasm.fatoora_ZatcaClient_create(diplomatReceive.buffer, config instanceof Config ? config.ffiValue : typeError('config', 'Config'));
+        const result = wasm.fatoora_ZatcaClient_new(diplomatReceive.buffer, config instanceof Config ? config.ffiValue : typeError('config', 'Config'));
 
         try {
             if (!diplomatReceive.resultFlag) {

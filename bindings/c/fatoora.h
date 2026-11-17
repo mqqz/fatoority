@@ -258,11 +258,11 @@ void fatoora_address_free(FatooraAddress *self);
 FatooraStatus fatoora_adjustment_amount(const char *value,
     FatooraAdjustment **out,
     FatooraError **error);
-FatooraStatus fatoora_adjustment_percentage(const char *base,
+FatooraStatus fatoora_adjustment_percent_of(const char *base,
     const char *percent,
     FatooraAdjustment **out,
     FatooraError **error);
-FatooraStatus fatoora_adjustment_with_supplied_amount(const FatooraAdjustment *self,
+FatooraStatus fatoora_adjustment_supplied_amount(const FatooraAdjustment *self,
     const char *value,
     FatooraAdjustment **out,
     FatooraError **error);
@@ -277,7 +277,7 @@ FatooraStatus fatoora_adjustment_value(const FatooraAdjustment *self,
 FatooraStatus fatoora_adjustment_base_amount(const FatooraAdjustment *self,
     char **out,
     FatooraError **error);
-FatooraStatus fatoora_adjustment_percent(const FatooraAdjustment *self,
+FatooraStatus fatoora_adjustment_percentage(const FatooraAdjustment *self,
     char **out,
     FatooraError **error);
 FatooraStatus fatoora_adjustment_reason(const FatooraAdjustment *self,
@@ -290,7 +290,7 @@ void fatoora_adjustment_free(FatooraAdjustment *self);
 FatooraStatus fatoora_allowance_charge_has_vat_rate(const FatooraAllowanceCharge *self,
     bool *out,
     FatooraError **error);
-FatooraStatus fatoora_allowance_charge_without_vat_rate(const FatooraAllowanceCharge *self,
+FatooraStatus fatoora_allowance_charge_omit_vat_rate(const FatooraAllowanceCharge *self,
     FatooraAllowanceCharge **out,
     FatooraError **error);
 FatooraStatus fatoora_allowance_charge_with_percentage(const FatooraAllowanceCharge *self,
@@ -357,7 +357,7 @@ FatooraStatus fatoora_bytes_list_get(const FatooraBytesList *self,
     FatooraBytes **out,
     FatooraError **error);
 void fatoora_bytes_list_free(FatooraBytesList *self);
-FatooraStatus fatoora_compliance_csid_create(FatooraEnvironment environment,
+FatooraStatus fatoora_compliance_csid_new(FatooraEnvironment environment,
     const char *request_id,
     const char *token,
     const char *secret,
@@ -1061,7 +1061,7 @@ FatooraStatus fatoora_payment_means_payment_terms(const FatooraPaymentMeans *sel
     char **out,
     FatooraError **error);
 void fatoora_payment_means_free(FatooraPaymentMeans *self);
-FatooraStatus fatoora_production_csid_create(FatooraEnvironment environment,
+FatooraStatus fatoora_production_csid_new(FatooraEnvironment environment,
     const char *request_id,
     const char *token,
     const char *secret,
@@ -1276,7 +1276,7 @@ void fatoora_validation_results_free(FatooraValidationResults *self);
 FatooraStatus fatoora_vat_breakdown_has_vat_rate(const FatooraVatBreakdown *self,
     bool *out,
     FatooraError **error);
-FatooraStatus fatoora_vat_breakdown_without_vat_rate(const FatooraVatBreakdown *self,
+FatooraStatus fatoora_vat_breakdown_omit_vat_rate(const FatooraVatBreakdown *self,
     FatooraVatBreakdown **out,
     FatooraError **error);
 FatooraStatus fatoora_vat_breakdown_new(FatooraVatCategory category,
@@ -1316,10 +1316,10 @@ FatooraStatus fatoora_xml_validate(const char *xml,
 FatooraStatus fatoora_xml_hash(const char *xml,
     char **out,
     FatooraError **error);
-FatooraStatus fatoora_zatca_client_create(const FatooraConfig *config,
+FatooraStatus fatoora_zatca_client_new(const FatooraConfig *config,
     FatooraZatcaClient **out,
     FatooraError **error);
-FatooraStatus fatoora_zatca_client_create_with_timeout(const FatooraConfig *config,
+FatooraStatus fatoora_zatca_client_with_timeout(const FatooraConfig *config,
     uint32_t timeout_ms,
     FatooraZatcaClient **out,
     FatooraError **error);

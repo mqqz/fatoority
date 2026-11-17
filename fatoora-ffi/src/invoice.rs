@@ -341,7 +341,7 @@ pub mod ffi {
             self.0.has_vat_rate()
         }
 
-        pub fn without_vat_rate(&self) -> Result<Box<AllowanceCharge>, Box<BindingError>> {
+        pub fn omit_vat_rate(&self) -> Result<Box<AllowanceCharge>, Box<BindingError>> {
             boundary(|| {
                 if self.0.category() != inv_core::VatCategory::OutOfScope
                     || self.0.rate() != fatoora_core::Decimal::ZERO
@@ -465,7 +465,7 @@ pub mod ffi {
         pub fn has_vat_rate(&self) -> bool {
             self.0.has_vat_rate()
         }
-        pub fn without_vat_rate(&self) -> Result<Box<VatBreakdown>, Box<BindingError>> {
+        pub fn omit_vat_rate(&self) -> Result<Box<VatBreakdown>, Box<BindingError>> {
             boundary(|| {
                 Ok(Box::new(Self(
                     self.0.clone().omit_vat_rate().map_err(core_error)?,
@@ -520,7 +520,8 @@ pub mod ffi {
                 )?))))
             })
         }
-        pub fn percentage(
+        /// Create an adjustment of `percent` percent of `base`.
+        pub fn percent_of(
             base: &DiplomatStr,
             percent: &DiplomatStr,
         ) -> Result<Box<Adjustment>, Box<BindingError>> {
@@ -531,7 +532,8 @@ pub mod ffi {
                 ))))
             })
         }
-        pub fn with_supplied_amount(
+        /// Return a copy with an explicit amount, checked against the percentage calculation.
+        pub fn supplied_amount(
             &self,
             value: &DiplomatStr,
         ) -> Result<Box<Adjustment>, Box<BindingError>> {
@@ -563,7 +565,7 @@ pub mod ffi {
         pub fn base_amount(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
             boundary(|| Ok(self.0.base_amount().map(|v| Box::new(Text(v.to_string())))))
         }
-        pub fn percent(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
+        pub fn percentage(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
             boundary(|| Ok(self.0.percentage().map(|v| Box::new(Text(v.to_string())))))
         }
         pub fn reason(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {

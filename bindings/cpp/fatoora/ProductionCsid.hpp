@@ -21,8 +21,8 @@ namespace fatoora {
 namespace capi {
     extern "C" {
 
-    typedef struct fatoora_ProductionCsid_create_result {union {fatoora::capi::ProductionCsid* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ProductionCsid_create_result;
-    fatoora_ProductionCsid_create_result fatoora_ProductionCsid_create(fatoora::capi::Environment environment, diplomat::capi::OptionStringView request_id, diplomat::capi::DiplomatStringView token, diplomat::capi::DiplomatStringView secret);
+    typedef struct fatoora_ProductionCsid_new_result {union {fatoora::capi::ProductionCsid* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ProductionCsid_new_result;
+    fatoora_ProductionCsid_new_result fatoora_ProductionCsid_new(fatoora::capi::Environment environment, diplomat::capi::OptionStringView request_id, diplomat::capi::DiplomatStringView token, diplomat::capi::DiplomatStringView secret);
 
     typedef struct fatoora_ProductionCsid_env_result {union {fatoora::capi::Environment ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ProductionCsid_env_result;
     fatoora_ProductionCsid_env_result fatoora_ProductionCsid_env(const fatoora::capi::ProductionCsid* self);
@@ -42,8 +42,8 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline diplomat::result<std::unique_ptr<fatoora::ProductionCsid>, std::unique_ptr<fatoora::BindingError>> fatoora::ProductionCsid::create(fatoora::Environment environment, std::optional<std::string_view> request_id, std::string_view token, std::string_view secret) {
-    auto result = fatoora::capi::fatoora_ProductionCsid_create(environment.AsFFI(),
+inline diplomat::result<std::unique_ptr<fatoora::ProductionCsid>, std::unique_ptr<fatoora::BindingError>> fatoora::ProductionCsid::new_(fatoora::Environment environment, std::optional<std::string_view> request_id, std::string_view token, std::string_view secret) {
+    auto result = fatoora::capi::fatoora_ProductionCsid_new(environment.AsFFI(),
         request_id.has_value() ? (diplomat::capi::OptionStringView{ { {request_id.value().data(), request_id.value().size()} }, true }) : (diplomat::capi::OptionStringView{ {}, false }),
         {token.data(), token.size()},
         {secret.data(), secret.size()});

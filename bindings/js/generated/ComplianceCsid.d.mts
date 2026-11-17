@@ -13,7 +13,7 @@ export class ComplianceCsid {
     constructor();
 
 
-    static create(environment: Environment, requestId: string | null, token: string, secret: string): ComplianceCsid;
+    static new_(environment: Environment, requestId: string | null, token: string, secret: string): ComplianceCsid;
 
     env(): Environment;
 

@@ -14,8 +14,8 @@ void add_ComplianceCsid_binding(nb::module_ mod) {
     nb::class_<_native::ComplianceCsid> opaque(mod, "ComplianceCsid", nb::type_slots(_native_ComplianceCsid_slots));
     opaque
         .def("binary_security_token", std::move(maybe_op_unwrap(&_native::ComplianceCsid::binary_security_token)))
-        .def_static("create", std::move(maybe_op_unwrap(&_native::ComplianceCsid::create)), "environment"_a, "request_id"_a= nb::none(), "token"_a, "secret"_a)
         .def("env", std::move(maybe_op_unwrap(&_native::ComplianceCsid::env)))
+        .def_static("new", std::move(maybe_op_unwrap(&_native::ComplianceCsid::new_)), "environment"_a, "request_id"_a= nb::none(), "token"_a, "secret"_a)
         .def("request_id", std::move(maybe_op_unwrap(&_native::ComplianceCsid::request_id)))
         .def("secret", std::move(maybe_op_unwrap(&_native::ComplianceCsid::secret)));
 }

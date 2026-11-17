@@ -118,7 +118,7 @@ public partial class Address: IDisposable
     /// <returns>
     /// A <c>Address</c> allocated on Rust side.
     /// </returns>
-    public static Address New(string countryCode, string city, string street, string buildingNumber, string postalCode, string? additionalStreet, string? additionalNumber, string? district)
+    public static Address Create(string countryCode, string city, string street, string buildingNumber, string postalCode, string? additionalStreet, string? additionalNumber, string? district)
     {
         unsafe
         {
@@ -153,6 +153,9 @@ public partial class Address: IDisposable
             }
         }
     }
+
+    [Obsolete("Use Create; New will be removed in 0.7.")]
+    public static Address New(string countryCode, string city, string street, string buildingNumber, string postalCode, string? additionalStreet, string? additionalNumber, string? district) => Create(countryCode, city, street, buildingNumber, postalCode, additionalStreet, additionalNumber, district);
 
     /// <exception cref="FfiException"></exception>
     public string City

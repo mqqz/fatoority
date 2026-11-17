@@ -39,18 +39,18 @@ static byte[] Copy(Bytes bytes)
     using (var span = bytes.AsSlice()) return span.Clone();
 }
 var root = args[0];
-using var absent = Address.New("SA", "الرياض", "Street", "1234", "12345", null, null, null);
+using var absent = Address.Create("SA", "الرياض", "Street", "1234", "12345", null, null, null);
 Check(absent.City == "الرياض", "UTF-8 round trip");
 Check(absent.AdditionalStreet is null, "Null optional string");
-using var present = Address.New("SA", "Riyadh", "Street", "1234", "12345", "", null, "حي العليا");
+using var present = Address.Create("SA", "Riyadh", "Street", "1234", "12345", "", null, "حي العليا");
 Check(present.AdditionalStreet == "" && present.District == "حي العليا", "Optional string round trip");
 foreach (var invalid in new[] { "\uD800", "\uDC00" })
 {
-    Throws<EncoderFallbackException>(() => Address.New("SA", invalid, "s", "1234", "12345", null, null, null));
-    Throws<EncoderFallbackException>(() => Address.New("SA", "c", "s", "1234", "12345", invalid, null, null));
+    Throws<EncoderFallbackException>(() => Address.Create("SA", invalid, "s", "1234", "12345", null, null, null));
+    Throws<EncoderFallbackException>(() => Address.Create("SA", "c", "s", "1234", "12345", invalid, null, null));
 }
-NativeError(() => Address.New("XX", "a", "b", "1", "1", null, null, null), 1, "Invalid country code");
-NativeError(() => Address.New("SA", "bad\0city", "s", "1234", "12345", null, null, null), 1, "NUL");
+NativeError(() => Address.Create("XX", "a", "b", "1", "1", null, null, null), 1, "Invalid country code");
+NativeError(() => Address.Create("SA", "bad\0city", "s", "1234", "12345", null, null, null), 1, "NUL");
 absent.Dispose(); absent.Dispose();
 Throws<ObjectDisposedException>(() => _ = absent.City);
 
@@ -79,23 +79,29 @@ NativeError(() => SigningKey.FromPem("invalid key"), 1); // Matches the errors e
 // Decimals cross the boundary exactly and independent of the current culture.
 var culture = System.Globalization.CultureInfo.CurrentCulture;
 System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
-using (var line = InvoiceLineItem.New("item", 1.50m, "PCE", 0.0000000000000000000000000001m, 15m, VatCategory.Standard))
+using (var line = InvoiceLineItem.Create("item", 1.50m, "PCE", 0.0000000000000000000000000001m, 15m, VatCategory.Standard))
 {
     Check(line.Quantity == 1.5m && line.UnitPrice == 0.0000000000000000000000000001m && line.VatRate == 15m, "Decimal round trip");
     Check(line.ItemGrossPrice is null && line.VatCategory == VatCategory.Standard, "Optional decimal and enum properties");
 }
-using (var percent = Adjustment.Percentage(-1234567890.123456789m, 12.5m))
-    Check(percent.BaseAmount == -1234567890.123456789m && percent.Percent == 12.5m, "Optional decimal round trip");
+using (var percent = Adjustment.PercentOf(-1234567890.123456789m, 12.5m))
+    Check(percent.BaseAmount == -1234567890.123456789m && percent.Percentage == 12.5m, "Optional decimal round trip");
+#pragma warning disable CS0618 // 0.5 names kept as [Obsolete] aliases until 0.7
+using (var rebate = Adjustment.PercentOf(250m, 10m))
+using (var supplied = rebate.WithSuppliedAmount(25m))
+using (var legacyConfig = Config.New(ZatcaEnvironment.Simulation))
+    Check(rebate.Percent == rebate.Percentage && supplied.Value == 25m && legacyConfig.Env == ZatcaEnvironment.Simulation, "Obsolete aliases");
+#pragma warning restore CS0618
 System.Globalization.CultureInfo.CurrentCulture = culture;
 
-using var builder = InvoiceBuilder.New(InvoiceTypeKind.Tax, InvoiceSubType.Standard, null, null, null, null);
+using var builder = InvoiceBuilder.Create(InvoiceTypeKind.Tax, InvoiceSubType.Standard, null, null, null, null);
 NativeError(() => builder.Build(), 2);
 NativeError(() => builder.SetId("again"), 1, "consumed");
 
 var corpus = Path.Combine(root, "fatoora-core/tests/fixtures/sdk-parity");
 using var signer = InvoiceSigner.FromDer(File.ReadAllBytes(Path.Combine(corpus, "credentials/certificate.der")), File.ReadAllBytes(Path.Combine(corpus, "credentials/private-key.der")));
 Check(Copy(signer.CertificateDer()).SequenceEqual(File.ReadAllBytes(Path.Combine(corpus, "credentials/certificate.der"))), "Certificate fixture");
-using var config = Config.New(ZatcaEnvironment.NonProduction);
+using var config = Config.Create(ZatcaEnvironment.NonProduction);
 Check(config.Env == ZatcaEnvironment.NonProduction, "Environment round trip");
 using var client = ZatcaClient.Create(config);
 using var credentials = ProductionCsid.Create(ZatcaEnvironment.NonProduction, null, "token", "secret");

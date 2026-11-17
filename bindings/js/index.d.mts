@@ -1,12 +1,14 @@
 export * from './generated/index.mjs';
 export * from './errors.mjs';
 import type {
-  AdjustmentKind, ClearanceMode, ComplianceCsid, ComplianceRequest, Csr, Environment,
-  InvoiceRequest, InvoiceSubType, InvoiceTypeKind, ProductionCsid, ProductionRequest,
-  SignedInvoice, ValidationResponse, VatCategory,
+  AdjustmentKind, ClearanceMode, ComplianceRequest, Csr, Environment,
+  InvoiceRequest, InvoiceSubType, InvoiceTypeKind, ProductionRequest,
+  SignedInvoice, Text, ValidationResponse, VatCategory,
 } from './generated/index.mjs';
 import {
-  Address as NativeAddress, AllowanceCharge as NativeAllowanceCharge, Config as NativeConfig,
+  Address as NativeAddress, Adjustment as NativeAdjustment,
+  AllowanceCharge as NativeAllowanceCharge, ComplianceCsid as NativeComplianceCsid,
+  Config as NativeConfig, ProductionCsid as NativeProductionCsid,
   CsrProperties as NativeCsrProperties, InvoiceBuilder as NativeInvoiceBuilder,
   InvoiceLineItem as NativeInvoiceLineItem, LineItemBuilder as NativeLineItemBuilder,
   OriginalInvoiceRef as NativeOriginalInvoiceRef, PaymentMeans as NativePaymentMeans,
@@ -50,6 +52,12 @@ export declare class AllowanceCharge extends NativeAllowanceCharge {
   /** @deprecated Use `AllowanceCharge.create`; `new_` will be removed from the package root. */
   static new_(kind: AdjustmentKind, amount: string, reason: string | null, reasonCode: string | null, category: VatCategory, rate: string, exemption: TaxExemption): AllowanceCharge;
 }
+export declare class ComplianceCsid extends NativeComplianceCsid {
+  private constructor();
+  static create(environment: Environment, requestId: string | null, token: string, secret: string): ComplianceCsid;
+  /** @deprecated Use `ComplianceCsid.create`; `new_` will be removed from the package root. */
+  static new_(environment: Environment, requestId: string | null, token: string, secret: string): ComplianceCsid;
+}
 export declare class Config extends NativeConfig {
   private constructor();
   static create(env: Environment): Config;
@@ -86,6 +94,12 @@ export declare class OriginalInvoiceRef extends NativeOriginalInvoiceRef {
   /** @deprecated Use `OriginalInvoiceRef.create`; `new_` will be removed from the package root. */
   static new_(id: string, uuid: string | null, date: string | null, time: string | null, typeCode: string | null): OriginalInvoiceRef;
 }
+export declare class ProductionCsid extends NativeProductionCsid {
+  private constructor();
+  static create(environment: Environment, requestId: string | null, token: string, secret: string): ProductionCsid;
+  /** @deprecated Use `ProductionCsid.create`; `new_` will be removed from the package root. */
+  static new_(environment: Environment, requestId: string | null, token: string, secret: string): ProductionCsid;
+}
 export declare class PaymentMeans extends NativePaymentMeans {
   private constructor();
   static create(code: string, instruction: string | null): PaymentMeans;
@@ -103,6 +117,37 @@ export declare class VatBreakdown extends NativeVatBreakdown {
   static create(category: VatCategory, rate: string, taxableAmount: string, taxAmount: string, exemption: TaxExemption): VatBreakdown;
   /** @deprecated Use `VatBreakdown.create`; `new_` will be removed from the package root. */
   static new_(category: VatCategory, rate: string, taxableAmount: string, taxAmount: string, exemption: TaxExemption): VatBreakdown;
+}
+
+// ---------------------------------------------------------------------------
+// 0.5 names of members renamed to match the Rust core; removed in 0.7.
+
+export declare class Adjustment extends NativeAdjustment {
+  private constructor();
+  /** @deprecated Use `Adjustment.percentOf`; removed in 0.7. */
+  static percentage(base: string, percent: string): NativeAdjustment;
+}
+// Instance aliases merge into the generated classes, so values returned by
+// any method keep them.
+declare module './generated/Adjustment.mjs' {
+  interface Adjustment {
+    /** @deprecated Use `suppliedAmount`; removed in 0.7. */
+    withSuppliedAmount(value: string): Adjustment;
+    /** @deprecated Use `percentage`; removed in 0.7. */
+    percent(): Text | null;
+  }
+}
+declare module './generated/AllowanceCharge.mjs' {
+  interface AllowanceCharge {
+    /** @deprecated Use `omitVatRate`; removed in 0.7. */
+    withoutVatRate(): AllowanceCharge;
+  }
+}
+declare module './generated/VatBreakdown.mjs' {
+  interface VatBreakdown {
+    /** @deprecated Use `omitVatRate`; removed in 0.7. */
+    withoutVatRate(): VatBreakdown;
+  }
 }
 
 // ---------------------------------------------------------------------------

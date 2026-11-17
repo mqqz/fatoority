@@ -235,8 +235,8 @@ def test_client_timeout_accepts_seconds_and_timedelta(monkeypatch, timeout, expe
     from fatoora import api, _native
 
     seen = []
-    real = _native.ZatcaClient.create_with_timeout
-    monkeypatch.setattr(_native.ZatcaClient, "create_with_timeout",
+    real = _native.ZatcaClient.with_timeout
+    monkeypatch.setattr(_native.ZatcaClient, "with_timeout",
                         lambda config, ms: seen.append(ms) or real(config, ms))
     with ZatcaClient(Config(Environment.NON_PRODUCTION), timeout=timeout) as client:
         assert isinstance(client, api.ZatcaClient)

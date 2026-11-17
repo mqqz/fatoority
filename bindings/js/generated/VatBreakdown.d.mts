@@ -15,7 +15,7 @@ export class VatBreakdown {
 
     hasVatRate(): boolean;
 
-    withoutVatRate(): VatBreakdown;
+    omitVatRate(): VatBreakdown;
 
     static new_(category: VatCategory, rate: string, taxableAmount: string, taxAmount: string, exemption: TaxExemption): VatBreakdown;
 

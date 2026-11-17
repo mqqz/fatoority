@@ -14,13 +14,13 @@ void add_Adjustment_binding(nb::module_ mod) {
     opaque
         .def_static("amount", std::move(maybe_op_unwrap(&_native::Adjustment::amount)), "value"_a)
         .def("base_amount", std::move(maybe_op_unwrap(&_native::Adjustment::base_amount)))
-        .def("percent", std::move(maybe_op_unwrap(&_native::Adjustment::percent)))
-        .def_static("percentage", std::move(maybe_op_unwrap(&_native::Adjustment::percentage)), "base"_a, "percent"_a)
+        .def_static("percent_of", std::move(maybe_op_unwrap(&_native::Adjustment::percent_of)), "base"_a, "percent"_a, "Create an adjustment of `percent` percent of `base`.")
+        .def("percentage", std::move(maybe_op_unwrap(&_native::Adjustment::percentage)))
         .def("reason", std::move(maybe_op_unwrap(&_native::Adjustment::reason)))
         .def("reason_code", std::move(maybe_op_unwrap(&_native::Adjustment::reason_code)))
+        .def("supplied_amount", std::move(maybe_op_unwrap(&_native::Adjustment::supplied_amount)), "value"_a, "Return a copy with an explicit amount, checked against the percentage calculation.")
         .def("value", std::move(maybe_op_unwrap(&_native::Adjustment::value)))
-        .def("with_reason", std::move(maybe_op_unwrap(&_native::Adjustment::with_reason)), "reason"_a= nb::none(), "code"_a= nb::none())
-        .def("with_supplied_amount", std::move(maybe_op_unwrap(&_native::Adjustment::with_supplied_amount)), "value"_a);
+        .def("with_reason", std::move(maybe_op_unwrap(&_native::Adjustment::with_reason)), "reason"_a= nb::none(), "code"_a= nb::none());
 }
 
 } 

@@ -17,7 +17,7 @@ export class AllowanceCharge {
 
     hasVatRate(): boolean;
 
-    withoutVatRate(): AllowanceCharge;
+    omitVatRate(): AllowanceCharge;
 
     /**
      * Retain this adjustment's metadata and check its percentage calculation.

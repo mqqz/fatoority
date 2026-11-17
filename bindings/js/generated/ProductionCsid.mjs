@@ -38,7 +38,7 @@ export class ProductionCsid {
     }
 
 
-    static create(environment, requestId, token, secret) {
+    static new_(environment, requestId, token, secret) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
         const tokenSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, token)));
@@ -46,7 +46,7 @@ export class ProductionCsid {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
 
-        const result = wasm.fatoora_ProductionCsid_create(diplomatReceive.buffer, new Environment(environment).ffiValue, diplomatRuntime.optionToBufferForCalling(wasm, requestId, 8, 4, functionCleanupArena, (arrayBuffer, offset, jsValue) => [functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, jsValue)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0)]), tokenSlice.ptr, secretSlice.ptr);
+        const result = wasm.fatoora_ProductionCsid_new(diplomatReceive.buffer, new Environment(environment).ffiValue, diplomatRuntime.optionToBufferForCalling(wasm, requestId, 8, 4, functionCleanupArena, (arrayBuffer, offset, jsValue) => [functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, jsValue)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0)]), tokenSlice.ptr, secretSlice.ptr);
 
         try {
             if (!diplomatReceive.resultFlag) {

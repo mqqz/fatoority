@@ -43,7 +43,7 @@ static void test_free(void *p) {
 
 int main(void) {
     FatooraComplianceCsid *credentials = NULL;
-    assert(fatoora_compliance_csid_create(FATOORA_SIMULATION, "", "a long token", "secret", &credentials, NULL) == FATOORA_OK);
+    assert(fatoora_compliance_csid_new(FATOORA_SIMULATION, "", "a long token", "secret", &credentials, NULL) == FATOORA_OK);
     for (int allocation = 0; allocation < 9; ++allocation) {
         fail_at = allocation;
         calls = 0;

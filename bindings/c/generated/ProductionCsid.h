@@ -18,8 +18,8 @@
 
 
 
-typedef struct fatoora_ProductionCsid_create_result {union {ProductionCsid* ok; BindingError* err;}; bool is_ok;} fatoora_ProductionCsid_create_result;
-fatoora_ProductionCsid_create_result fatoora_ProductionCsid_create(Environment environment, OptionStringView request_id, DiplomatStringView token, DiplomatStringView secret);
+typedef struct fatoora_ProductionCsid_new_result {union {ProductionCsid* ok; BindingError* err;}; bool is_ok;} fatoora_ProductionCsid_new_result;
+fatoora_ProductionCsid_new_result fatoora_ProductionCsid_new(Environment environment, OptionStringView request_id, DiplomatStringView token, DiplomatStringView secret);
 
 typedef struct fatoora_ProductionCsid_env_result {union {Environment ok; BindingError* err;}; bool is_ok;} fatoora_ProductionCsid_env_result;
 fatoora_ProductionCsid_env_result fatoora_ProductionCsid_env(const ProductionCsid* self);

@@ -22,8 +22,8 @@
 
 bool fatoora_AllowanceCharge_has_vat_rate(const AllowanceCharge* self);
 
-typedef struct fatoora_AllowanceCharge_without_vat_rate_result {union {AllowanceCharge* ok; BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_without_vat_rate_result;
-fatoora_AllowanceCharge_without_vat_rate_result fatoora_AllowanceCharge_without_vat_rate(const AllowanceCharge* self);
+typedef struct fatoora_AllowanceCharge_omit_vat_rate_result {union {AllowanceCharge* ok; BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_omit_vat_rate_result;
+fatoora_AllowanceCharge_omit_vat_rate_result fatoora_AllowanceCharge_omit_vat_rate(const AllowanceCharge* self);
 
 typedef struct fatoora_AllowanceCharge_with_percentage_result {union {AllowanceCharge* ok; BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_with_percentage_result;
 fatoora_AllowanceCharge_with_percentage_result fatoora_AllowanceCharge_with_percentage(const AllowanceCharge* self, DiplomatStringView base, DiplomatStringView percent);

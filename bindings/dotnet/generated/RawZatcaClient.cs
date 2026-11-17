@@ -9,11 +9,11 @@ namespace Fatoora.Raw;
 internal partial struct ZatcaClient
 {
 
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_create", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultZatcaClientBindingError Create(Config* config);
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_new", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultZatcaClientBindingError New(Config* config);
 
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_create_with_timeout", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultZatcaClientBindingError CreateWithTimeout(Config* config, uint timeoutMs);
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_with_timeout", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultZatcaClientBindingError WithTimeout(Config* config, uint timeoutMs);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_request_compliance_csid", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultComplianceCsidBindingError RequestComplianceCsid(ZatcaClient* handle, Csr* csr, DiplomatSliceU8 otp);
