@@ -5,10 +5,11 @@ description: Every renamed, retyped, removed and deprecated fatoora-core item be
 
 # Migrate from 0.5 to 0.6 (Rust)
 
-This page covers the `fatoora-core` Rust crate only. The language bindings
-(Python, JavaScript/TypeScript, Kotlin/Java, C#/.NET and C/C++) keep their 0.5
-API until the Phase 2 FFI release, which will come with its own migration
-guides.
+This page covers the `fatoora-core` Rust crate. The generated language
+bindings (JavaScript/TypeScript, Kotlin/Java, C#/.NET and C/C++) have a shorter
+list of breaking changes, summarised in
+[Language bindings](#language-bindings); the Python `fatoora` package API is
+unchanged.
 
 0.6 renames items for consistency, replaces strings and Booleans with typed
 values, and makes the fields of invoice value types private. Each change below
@@ -187,6 +188,54 @@ Set `previous_invoice_hash` from an `InvoiceHash`: the value returned by
 `text.parse()?`. Parsing trims surrounding whitespace and rejects blank text;
 `validate_zatca` still checks the digest format. Deserialized options (for
 example from JSON) go through the same parsing.
+
+## Language bindings
+
+The FFI bridge replaces raw integer codes and Booleans with enums. The Python
+`fatoora` package keeps its own `IntEnum`s and string statuses, so Python code
+needs no change. For the other bindings:
+
+| 0.5 | 0.6 | Status |
+| --- | --- | --- |
+| Environment `0`/`1`/`2` in `Config`, `CsidCompliance.create`, `CsidProduction.create`, `CsrProperties.build` | `Environment.NonProduction`/`Simulation`/`Production` (.NET: `ZatcaEnvironment`) | Breaking |
+| Invoice kind `0`–`3` and subtype `0`/`1` in `InvoiceBuilder.new`/`newWithReference` | `InvoiceTypeKind.Tax`/`Prepayment`/`CreditNote`/`DebitNote`, `InvoiceSubType.Standard`/`Simplified` | Breaking |
+| VAT category `0`–`3` (`setVatCategory`, `addLineItem`, `setTaxExemption`, `addDocumentAdjustment`, `InvoiceLineItem`, `VatBreakdown`, `AllowanceCharge` constructors) | `VatCategory.Exempt`/`Standard`/`Zero`/`OutOfScope` | Breaking |
+| `bool charge` in `addDocumentAdjustment` and `AllowanceCharge` constructor | `AdjustmentKind.Allowance`/`Charge` | Breaking |
+| `AllowanceCharge.isCharge()`, `InvoiceLineItem.adjustmentIsCharge(index)` | `kind()`, `adjustmentKind(index)` returning `AdjustmentKind` | Breaking |
+| `bool clearanceStatus` in `reportSimplifiedInvoice`, `clearStandardInvoice` and their `prepare*` forms | `ClearanceMode.Disabled`/`Enabled` | Breaking |
+| Integer getters `env()`, `vatCategory()`, `invoiceTypeKind()`, `invoiceSubType()`, `category()` | Return the enums above; `env()` can fail with code 9 if the native library knows an environment the binding does not | Breaking |
+| `reportingStatus()`, `clearanceStatus()`, `results.status()`, `message.messageType()`, `message.status()` returning optional `Text` | Optional `ReportingStatus`, `ClearanceStatus`, `ValidationStatus`, `MessageType`; `*Raw()` returns the old text | Breaking |
+
+The table uses JavaScript/Kotlin/Java names; C# uses PascalCase (`IsCharge()`
+becomes `Kind()`) and C++ uses snake_case (`is_charge()` becomes `kind()`).
+The first four enums keep the old numeric values. Status enums are null when the
+field is absent and `Unknown` when the gateway sends a value this binding version
+does not recognise; the matching `*Raw()` getter (`*_raw` in C/C++) returns the
+exact text. The invoice flag mask stays an integer; build it from
+`InvoiceFlag` bits (`InvoiceFlag.Export.bit()`, or `(byte)InvoiceFlag.Export` in
+C#, which does not emit enum methods). Optional text getters such as
+`requestId()` still return nullable `Text`.
+
+The JavaScript async `ZatcaClient.reportSimplifiedInvoice` and
+`clearStandardInvoice` still accept a Boolean (or a `ClearanceMode`), and the
+Kotlin `reportSimplifiedInvoiceAsync`/`clearStandardInvoiceAsync` helpers still
+take a `Boolean`.
+
+The C facade (`fatoora.h`) uses typed enums (`FatooraEnvironment`,
+`FatooraInvoiceTypeKind`, `FatooraVatCategory`, `FatooraAdjustmentKind`,
+`FatooraClearanceMode`, ...). The existing constants (`FATOORA_NON_PRODUCTION`,
+`FATOORA_TAX`, `FATOORA_VAT_STANDARD`, `FATOORA_FLAG_EXPORT`, ...) keep their
+values, and passing `0`/`1` or `false`/`true` still compiles; any undeclared
+value returns `FATOORA_INVALID_INPUT`. Getters write typed outputs, such as
+`FatooraVatCategory *out` instead of `uint8_t *out`. Optional status getters
+take `out` plus `bool *has_value`, and the new `_raw` getters write `char **out`
+(`NULL` when absent). `fatoora_allowance_charge_is_charge` is renamed
+`fatoora_allowance_charge_kind`, and `fatoora_invoice_line_item_adjustment_is_charge`
+is renamed `fatoora_invoice_line_item_adjustment_kind`; both write a
+`FatooraAdjustmentKind`. `fatoora_zatca_client_report_simplified_invoice` and
+`fatoora_zatca_client_clear_standard_invoice` take `FatooraClearanceMode`. The raw
+Diplomat headers under `generated/` do not validate enum values: passing a value
+that is not a declared enumerator is undefined behaviour.
 
 ## Behaviour and data format changes
 

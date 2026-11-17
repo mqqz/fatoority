@@ -184,7 +184,7 @@ Constructors that take individual fields use the order in the property table abo
     | Call | Returns |
     | --- | --- |
     | `CsrProperties.fromPropertiesStr(text)` | `CsrProperties`; `text` is a string. |
-    | `properties.build(key, env)` | `Csr`; `key` is a `SigningKey`, `env` is `0`, `1`, or `2`. |
+    | `properties.build(key, env)` | `Csr`; `key` is a `SigningKey`, `env` is an `Environment`. |
     | `SigningKey.generate()` | `SigningKey` |
     | `SigningKey.fromPem(pem)` / `SigningKey.fromDer(der)` | `SigningKey`; pass PEM string / array of byte numbers. |
     | `key.toPem()` / `key.toDer()` | String / `Bytes` |
@@ -196,8 +196,8 @@ Constructors that take individual fields use the order in the property table abo
 
     These operations are synchronous and throw an `Error` with a `BindingError` cause on failure. Read files
     with your application's file APIs, then call `fromPropertiesStr`; no file-path
-    constructor is exposed. Environment numbers are `0` non-production, `1` simulation,
-    `2` production. Copy returned bytes with `Uint8Array.from(bytes.asSlice())` before
+    constructor is exposed. Environment values are `Environment.NonProduction`,
+    `Environment.Simulation`, and `Environment.Production`. Copy returned bytes with `Uint8Array.from(bytes.asSlice())` before
     retaining them across later calls. See [JavaScript resource handling](bindings/javascript.md).
 
 === "C#"
@@ -213,7 +213,7 @@ Constructors that take individual fields use the order in the property table abo
     | --- | --- | --- |
     | `CsrProperties.FromPropertiesStr(text)` | `string` properties text | `CsrProperties` |
     | `CsrProperties.ParseCsrConfigFile(path)` | `string` file path | `CsrProperties` |
-    | `properties.Build(key, env)` | `SigningKey`, `byte` environment | `Csr` |
+    | `properties.Build(key, env)` | `SigningKey`, `ZatcaEnvironment` | `Csr` |
     | `SigningKey.Generate()` | None | `SigningKey` |
     | `SigningKey.FromPem(pem)` | `string` PKCS#8 PEM | `SigningKey` |
     | `SigningKey.FromDer(der)` | `byte[]` PKCS#8 DER | `SigningKey` |
@@ -224,8 +224,8 @@ Constructors that take individual fields use the order in the property table abo
     | `csr.SubjectString()` | None | `string` |
     | `csr.ExtensionValuesDer()` | None | `BytesList` |
 
-    Environment values are `0` non-production, `1` simulation, `2` production.
-    Building and serializing do not consume the properties, key, or CSR.
+    Environment values are `ZatcaEnvironment.NonProduction`, `.Simulation`, and
+    `.Production`. Building and serializing do not consume the properties, key, or CSR.
 
 === "Kotlin"
     Import types from `com.fatoora`. Use `.use { ... }` or `close()` for returned objects, including `Bytes` and `BytesList`. Errors raise exceptions. Read a copied byte array with `bytes.asSlice()`. See [Kotlin resource handling](bindings/kotlin.md).
@@ -240,7 +240,7 @@ Constructors that take individual fields use the order in the property table abo
     | --- | --- | --- |
     | `CsrProperties.fromPropertiesStr(text)` | `String` properties text | `CsrProperties` |
     | `CsrProperties.parseCsrConfigFile(path)` | `String` file path | `CsrProperties` |
-    | `properties.build(key, env)` | `SigningKey`, `Int` environment | `Csr` |
+    | `properties.build(key, env)` | `SigningKey`, `Environment` | `Csr` |
     | `SigningKey.generate()` | None | `SigningKey` |
     | `SigningKey.fromPem(pem)` | `String` PKCS#8 PEM | `SigningKey` |
     | `SigningKey.fromDer(der)` | `ByteArray` PKCS#8 DER | `SigningKey` |
@@ -251,8 +251,8 @@ Constructors that take individual fields use the order in the property table abo
     | `csr.subjectString()` | None | `String` |
     | `csr.extensionValuesDer()` | None | `BytesList` |
 
-    Environment values are `0` non-production, `1` simulation, `2` production.
-    Building and serializing do not consume the properties, key, or CSR.
+    Environment values are `Environment.NonProduction`, `.Simulation`, and
+    `.Production`. Building and serializing do not consume the properties, key, or CSR.
 
 === "Java"
     Import types from `com.fatoora`. Use try-with-resources or `close()` for returned objects, including `Bytes` and `BytesList`. Errors raise exceptions. Read a copied byte array with `bytes.asSlice()`. See [Java resource handling](bindings/kotlin.md).
@@ -267,7 +267,7 @@ Constructors that take individual fields use the order in the property table abo
     | --- | --- | --- |
     | `CsrProperties.fromPropertiesStr(text)` | `String` properties text | `CsrProperties` |
     | `CsrProperties.parseCsrConfigFile(path)` | `String` file path | `CsrProperties` |
-    | `properties.build(key, env)` | `SigningKey`, `int` environment | `Csr` |
+    | `properties.build(key, env)` | `SigningKey`, `Environment` | `Csr` |
     | `SigningKey.generate()` | None | `SigningKey` |
     | `SigningKey.fromPem(pem)` | `String` PKCS#8 PEM | `SigningKey` |
     | `SigningKey.fromDer(der)` | `byte[]` PKCS#8 DER | `SigningKey` |
@@ -278,12 +278,13 @@ Constructors that take individual fields use the order in the property table abo
     | `csr.subjectString()` | None | `String` |
     | `csr.extensionValuesDer()` | None | `BytesList` |
 
-    Environment values are `0` non-production, `1` simulation, `2` production.
-    Building and serializing do not consume the properties, key, or CSR.
+    Environment values are `Environment.NonProduction`, `.Simulation`, and
+    `.Production`. Building and serializing do not consume the properties, key, or CSR.
 
 === "C"
     Include `fatoora.h`. All options fields are required UTF-8 strings. Pass environment
-    `0` (non-production), `1` (simulation), or `2` (production).
+    `FATOORA_NON_PRODUCTION`, `FATOORA_SIMULATION`, or `FATOORA_PRODUCTION`; other
+    values return `FATOORA_INVALID_INPUT`.
 
     **Properties and operations**
 
@@ -311,7 +312,7 @@ Constructors that take individual fields use the order in the property table abo
         FatooraError **error);
     FatooraStatus fatoora_csr_properties_build(const FatooraCsrProperties *self,
         const FatooraSigningKey *key,
-        int32_t env,
+        FatooraEnvironment env,
         FatooraCsr **out,
         FatooraError **error);
     FatooraStatus fatoora_signing_key_generate(FatooraSigningKey **out,

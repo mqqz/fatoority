@@ -87,9 +87,10 @@ the line, then append it with the invoice builder's `add_item` equivalent.
 | Append billing reference | `add_billing_reference(reference)` | `addBillingReference(reference)` | `AddBillingReference(reference)` | `addBillingReference(reference)` |
 | Append payment entry | `add_payment_means(payment)` | `addPaymentMeans(payment)` | `AddPaymentMeans(payment)` | `addPaymentMeans(payment)` |
 
-Document-adjustment arguments are `(charge, adjustment, category, rate, exemption)`.
-Use `false` for an allowance and `true` for a charge (`False`/`True` in Python).
-Python defaults the exemption to empty metadata; the other bindings require a
+Document-adjustment arguments are `(kind, adjustment, category, rate, exemption)`.
+Pass `AdjustmentKind.Allowance` or `AdjustmentKind.Charge` as the kind in
+JavaScript, C#, Kotlin, and Java. Python keeps a Boolean first argument, `charge`:
+`False` for an allowance and `True` for a charge. Python defaults the exemption to empty metadata; the other bindings require a
 `TaxExemption` object. Category values and decimal representations follow the
 language reference below.
 
@@ -106,8 +107,9 @@ For C, use `fatoora_line_item_builder_new(&line, &error)` and
 `fatoora_line_item_builder_` prefix with snake_case names. Invoice operations use
 `fatoora_invoice_builder_`, including `add_item`, `add_document_adjustment`, and
 `set_prepaid_amount`. Each accepts the builder first and `FatooraError **` last,
-and returns a status. Document adjustments take a `bool charge`, adjustment handle,
-category code, decimal rate text, and exemption handle. Free owned handles after
+and returns a status. Document adjustments take a `FatooraAdjustmentKind kind`
+(`FATOORA_ADJUSTMENT_ALLOWANCE` or `FATOORA_ADJUSTMENT_CHARGE`), adjustment handle,
+`FatooraVatCategory category`, decimal rate text, and exemption handle. Free owned handles after
 use, including consumed builders. See [C ownership](bindings/c.md).
 
 ### Python line discount example
@@ -290,15 +292,15 @@ correspond to the fields above.
 
 === "JavaScript"
 
-    Import from `fatoority`. All decimal arguments and amounts are strings; counters use `bigint`, indexes use `number`, and other numeric arguments use `number`. Pass `null` for absent optional arguments. Operations are synchronous and throw an `Error` with a `BindingError` cause on failure. Returned `Text` objects expose `.value()`.
+    Import from `fatoority`. All decimal arguments and amounts are strings; counters use `bigint`, indexes and the flag mask use `number`, and codes are enum classes. Pass `null` for absent optional arguments. Operations are synchronous and throw an `Error` with a `BindingError` cause on failure. Returned `Text` objects expose `.value()`.
 
-    Invoice kind codes: `0` tax, `1` prepayment, `2` credit note, `3` debit note. Subtype: `0` standard, `1` simplified. VAT category: `0` exempt, `1` standard, `2` zero-rated, `3` out of scope. Flags are a bitmask: `1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed. Use zero for no flags.
+    Enums: `InvoiceTypeKind` (`Tax`, `Prepayment`, `CreditNote`, `DebitNote`), `InvoiceSubType` (`Standard`, `Simplified`), and `VatCategory` (`Exempt`, `Standard`, `Zero`, `OutOfScope`); pass them as `InvoiceTypeKind.Tax`, `VatCategory.Standard`, and so on. A returned enum's `.value` is the variant name, such as `'Standard'`. Flags remain a `number` bitmask; build it from `InvoiceFlag` bits, for example `InvoiceFlag.Export.bit() | InvoiceFlag.Summary.bit()` (`1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed). Use zero for no flags.
 
     **Create and configure**
 
     | Call | Returns |
     | --- | --- |
-    | `new_(kind, subtype, originalId, originalUuid, originalDate, reason)` | `InvoiceBuilder` |
+    | `new_(kind: InvoiceTypeKind, subtype: InvoiceSubType, originalId, originalUuid, originalDate, reason)` | `InvoiceBuilder` |
     | `setId(value)` | `void` |
     | `setUuid(value)` | `void` |
     | `setIssueDatetime(value)` | `void` |
@@ -309,13 +311,13 @@ correspond to the fields above.
     | `invoiceLevelCharge(value)` | `void` |
     | `invoiceLevelDiscount(value)` | `void` |
     | `setInvoiceCounter(value)` | `void` |
-    | `setVatCategory(value)` | `void` |
+    | `setVatCategory(value: VatCategory)` | `void` |
     | `flags(value)` | `void` |
     | `setNote(language, value)` | `void` |
     | `setAllowance(reason, amount)` | `void` |
     | `setSeller(name, address, vatId, otherId, scheme)` | `void` |
     | `setBuyer(name, address, vatId, otherId, scheme)` | `void` |
-    | `addLineItem(description, quantity, unitCode, unitPrice, vatRate, category)` | `void` |
+    | `addLineItem(description, quantity, unitCode, unitPrice, vatRate, category: VatCategory)` | `void` |
     | `build()` | `FinalizedInvoice` |
 
     **Address inputs**
@@ -342,10 +344,10 @@ correspond to the fields above.
     | `invoiceLevelDiscount()` | `string` |
     | `allowanceReason()` | `Text \| null` |
     | `invoiceCounter()` | `bigint` |
-    | `vatCategory()` | `number` |
+    | `vatCategory()` | `VatCategory` |
     | `flagsRaw()` | `number` |
-    | `invoiceTypeKind()` | `number` |
-    | `invoiceSubType()` | `number` |
+    | `invoiceTypeKind()` | `InvoiceTypeKind` |
+    | `invoiceSubType()` | `InvoiceSubType` |
     | `seller()` | `Party` |
     | `buyer()` | `Party \| null` |
     | `note()` | `InvoiceNote \| null` |
@@ -372,15 +374,15 @@ correspond to the fields above.
 
 === "C#"
 
-    Use the `Fatoora` namespace. Decimal arguments and amounts are strings; counters use `ulong`, indexes use `nuint`, and enum codes/flags use `byte`. Pass `null` for absent optional arguments. Methods throw on failure. Dispose each owned object with `using`; returned `Text` exposes `Value()`.
+    Use the `Fatoora` namespace. Decimal arguments and amounts are strings; counters use `ulong`, indexes use `nuint`, codes use C# enums, and the flag mask uses `byte`. Pass `null` for absent optional arguments. Methods throw on failure. Dispose each owned object with `using`; returned `Text` exposes `Value()`.
 
-    Invoice kind codes: `0` tax, `1` prepayment, `2` credit note, `3` debit note. Subtype: `0` standard, `1` simplified. VAT category: `0` exempt, `1` standard, `2` zero-rated, `3` out of scope. Flags are a bitmask: `1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed. Use zero for no flags.
+    Enums: `InvoiceTypeKind` (`Tax`, `Prepayment`, `CreditNote`, `DebitNote`), `InvoiceSubType` (`Standard`, `Simplified`), and `VatCategory` (`Exempt`, `Standard`, `Zero`, `OutOfScope`); pass them as `InvoiceTypeKind.Tax`, `VatCategory.Standard`, and so on. Flags remain a `byte` bitmask; build it by casting `InvoiceFlag` values, for example `(byte)(InvoiceFlag.Export | InvoiceFlag.Summary)` (`1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed). Use zero for no flags.
 
     **Create and configure**
 
     | Call | Returns |
     | --- | --- |
-    | `New(byte kind, byte subtype, string? originalId, string? originalUuid, string? originalDate, string? reason)` | `InvoiceBuilder` |
+    | `New(InvoiceTypeKind kind, InvoiceSubType subtype, string? originalId, string? originalUuid, string? originalDate, string? reason)` | `InvoiceBuilder` |
     | `SetId(string value)` | `void` |
     | `SetUuid(string value)` | `void` |
     | `SetIssueDatetime(string value)` | `void` |
@@ -391,13 +393,13 @@ correspond to the fields above.
     | `InvoiceLevelCharge(string value)` | `void` |
     | `InvoiceLevelDiscount(string value)` | `void` |
     | `SetInvoiceCounter(ulong value)` | `void` |
-    | `SetVatCategory(byte value)` | `void` |
+    | `SetVatCategory(VatCategory value)` | `void` |
     | `Flags(byte value)` | `void` |
     | `SetNote(string language, string value)` | `void` |
     | `SetAllowance(string reason, string amount)` | `void` |
     | `SetSeller(string name, Address address, string vatId, string? otherId, string? scheme)` | `void` |
     | `SetBuyer(string name, Address address, string? vatId, string? otherId, string? scheme)` | `void` |
-    | `AddLineItem(string description, string quantity, string unitCode, string unitPrice, string vatRate, byte category)` | `void` |
+    | `AddLineItem(string description, string quantity, string unitCode, string unitPrice, string vatRate, VatCategory category)` | `void` |
     | `Build()` | `FinalizedInvoice` |
 
     **Address inputs**
@@ -424,10 +426,10 @@ correspond to the fields above.
     | `InvoiceLevelDiscount()` | `string` |
     | `AllowanceReason()` | `Text?` |
     | `InvoiceCounter()` | `ulong` |
-    | `VatCategory()` | `byte` |
+    | `VatCategory()` | `VatCategory` |
     | `FlagsRaw()` | `byte` |
-    | `InvoiceTypeKind()` | `byte` |
-    | `InvoiceSubType()` | `byte` |
+    | `InvoiceTypeKind()` | `InvoiceTypeKind` |
+    | `InvoiceSubType()` | `InvoiceSubType` |
     | `Seller()` | `Party` |
     | `Buyer()` | `Party?` |
     | `Note()` | `InvoiceNote?` |
@@ -454,15 +456,15 @@ correspond to the fields above.
 
 === "Kotlin"
 
-    Use `com.fatoora`. Decimal arguments and amounts are strings; counters and indexes use `java.math.BigInteger`, enum codes/flags use `Int`. Optional values are nullable. Methods throw on failure. Close owned objects with `use`; returned `Text` exposes `value()`.
+    Use `com.fatoora`. Decimal arguments and amounts are strings; counters and indexes use `java.math.BigInteger`, codes use `com.fatoora` enums, and the flag mask uses `Int`. Optional values are nullable. Methods throw on failure. Close owned objects with `use`; returned `Text` exposes `value()`.
 
-    Invoice kind codes: `0` tax, `1` prepayment, `2` credit note, `3` debit note. Subtype: `0` standard, `1` simplified. VAT category: `0` exempt, `1` standard, `2` zero-rated, `3` out of scope. Flags are a bitmask: `1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed. Use zero for no flags.
+    Enums: `InvoiceTypeKind` (`Tax`, `Prepayment`, `CreditNote`, `DebitNote`), `InvoiceSubType` (`Standard`, `Simplified`), and `VatCategory` (`Exempt`, `Standard`, `Zero`, `OutOfScope`) in `com.fatoora`; pass them as `InvoiceTypeKind.Tax`, `VatCategory.Standard`, and so on. Flags remain an `Int` bitmask; build it from `InvoiceFlag` bits, for example `InvoiceFlag.Export.bit() or InvoiceFlag.Summary.bit()` (`1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed). Use zero for no flags.
 
     **Create and configure**
 
     | Call | Returns |
     | --- | --- |
-    | `create(kind: Int, subtype: Int, originalId: String? = null, originalUuid: String? = null, originalDate: String? = null, reason: String? = null)` | `InvoiceBuilder` |
+    | `create(kind: InvoiceTypeKind, subtype: InvoiceSubType, originalId: String? = null, originalUuid: String? = null, originalDate: String? = null, reason: String? = null)` | `InvoiceBuilder` |
     | `setId(value: String)` | `Unit` |
     | `setUuid(value: String)` | `Unit` |
     | `setIssueDatetime(value: String)` | `Unit` |
@@ -473,13 +475,13 @@ correspond to the fields above.
     | `invoiceLevelCharge(value: String)` | `Unit` |
     | `invoiceLevelDiscount(value: String)` | `Unit` |
     | `setInvoiceCounter(value: java.math.BigInteger)` | `Unit` |
-    | `setVatCategory(value: Int)` | `Unit` |
+    | `setVatCategory(value: VatCategory)` | `Unit` |
     | `flags(value: Int)` | `Unit` |
     | `setNote(language: String, value: String)` | `Unit` |
     | `setAllowance(reason: String, amount: String)` | `Unit` |
     | `setSeller(name: String, address: Address, vatId: String, otherId: String? = null, scheme: String? = null)` | `Unit` |
     | `setBuyer(name: String, address: Address, vatId: String? = null, otherId: String? = null, scheme: String? = null)` | `Unit` |
-    | `addLineItem(description: String, quantity: String, unitCode: String, unitPrice: String, vatRate: String, category: Int)` | `Unit` |
+    | `addLineItem(description: String, quantity: String, unitCode: String, unitPrice: String, vatRate: String, category: VatCategory)` | `Unit` |
     | `build()` | `FinalizedInvoice` |
 
     **Address inputs**
@@ -506,10 +508,10 @@ correspond to the fields above.
     | `invoiceLevelDiscount()` | `String` |
     | `allowanceReason()` | `Text?` |
     | `invoiceCounter()` | `java.math.BigInteger` |
-    | `vatCategory()` | `Int` |
+    | `vatCategory()` | `VatCategory` |
     | `flagsRaw()` | `Int` |
-    | `invoiceTypeKind()` | `Int` |
-    | `invoiceSubType()` | `Int` |
+    | `invoiceTypeKind()` | `InvoiceTypeKind` |
+    | `invoiceSubType()` | `InvoiceSubType` |
     | `seller()` | `Party` |
     | `buyer()` | `Party?` |
     | `note()` | `InvoiceNote?` |
@@ -536,15 +538,15 @@ correspond to the fields above.
 
 === "Java"
 
-    Import `com.fatoora.*`. Decimal arguments and amounts use `String`; counters and indexes use `BigInteger`, enum codes/flags use `int`. Optional values accept `null`. Call static `InvoiceBuilder.create(...)` and `Address.create(...)` with all arguments, including optional nulls. Close owned objects with try-with-resources. Returned `Text` exposes `value()`. The signatures below use Java parameter and return types.
+    Import `com.fatoora.*`. Decimal arguments and amounts use `String`; counters and indexes use `BigInteger`, codes use `com.fatoora` enums, and the flag mask uses `int`. Optional values accept `null`. Call static `InvoiceBuilder.create(...)` and `Address.create(...)` with all arguments, including optional nulls. Close owned objects with try-with-resources. Returned `Text` exposes `value()`. The signatures below use Java parameter and return types.
 
-    Invoice kind codes: `0` tax, `1` prepayment, `2` credit note, `3` debit note. Subtype: `0` standard, `1` simplified. VAT category: `0` exempt, `1` standard, `2` zero-rated, `3` out of scope. Flags are a bitmask: `1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed. Use zero for no flags.
+    Enums: `InvoiceTypeKind` (`Tax`, `Prepayment`, `CreditNote`, `DebitNote`), `InvoiceSubType` (`Standard`, `Simplified`), and `VatCategory` (`Exempt`, `Standard`, `Zero`, `OutOfScope`) in `com.fatoora`; pass them as `InvoiceTypeKind.Tax`, `VatCategory.Standard`, and so on. Flags remain an `int` bitmask; build it from `InvoiceFlag` bits, for example `InvoiceFlag.Export.bit() | InvoiceFlag.Summary.bit()` (`1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed). Use zero for no flags.
 
     **Create and configure**
 
     | Call | Returns |
     | --- | --- |
-    | `create(int kind, int subtype, String originalId, String originalUuid, String originalDate, String reason)` | `InvoiceBuilder` |
+    | `create(InvoiceTypeKind kind, InvoiceSubType subtype, String originalId, String originalUuid, String originalDate, String reason)` | `InvoiceBuilder` |
     | `setId(String value)` | `void` |
     | `setUuid(String value)` | `void` |
     | `setIssueDatetime(String value)` | `void` |
@@ -555,13 +557,13 @@ correspond to the fields above.
     | `invoiceLevelCharge(String value)` | `void` |
     | `invoiceLevelDiscount(String value)` | `void` |
     | `setInvoiceCounter(BigInteger value)` | `void` |
-    | `setVatCategory(int value)` | `void` |
+    | `setVatCategory(VatCategory value)` | `void` |
     | `flags(int value)` | `void` |
     | `setNote(String language, String value)` | `void` |
     | `setAllowance(String reason, String amount)` | `void` |
     | `setSeller(String name, Address address, String vatId, String otherId, String scheme)` | `void` |
     | `setBuyer(String name, Address address, String vatId, String otherId, String scheme)` | `void` |
-    | `addLineItem(String description, String quantity, String unitCode, String unitPrice, String vatRate, int category)` | `void` |
+    | `addLineItem(String description, String quantity, String unitCode, String unitPrice, String vatRate, VatCategory category)` | `void` |
     | `build()` | `FinalizedInvoice` |
 
     **Address inputs**
@@ -588,10 +590,10 @@ correspond to the fields above.
     | `invoiceLevelDiscount()` | `String` |
     | `allowanceReason()` | `Text` |
     | `invoiceCounter()` | `BigInteger` |
-    | `vatCategory()` | `int` |
+    | `vatCategory()` | `VatCategory` |
     | `flagsRaw()` | `int` |
-    | `invoiceTypeKind()` | `int` |
-    | `invoiceSubType()` | `int` |
+    | `invoiceTypeKind()` | `InvoiceTypeKind` |
+    | `invoiceSubType()` | `InvoiceSubType` |
     | `seller()` | `Party` |
     | `buyer()` | `Party` |
     | `note()` | `InvoiceNote` |
@@ -620,7 +622,7 @@ correspond to the fields above.
 
     Include `fatoora.h`. Functions return `FatooraStatus`; read output pointers only after success. On failure, inspect and free `FatooraError`. Release returned strings with `fatoora_string_free()` and objects with their matching `_free()` function. Optional input strings use `NULL`, not empty strings.
 
-    Invoice kind codes: `0` tax, `1` prepayment, `2` credit note, `3` debit note. Subtype: `0` standard, `1` simplified. VAT category: `0` exempt, `1` standard, `2` zero-rated, `3` out of scope. Flags are a bitmask: `1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed. Use zero for no flags.
+    Enums: `FatooraInvoiceTypeKind` (`FATOORA_TAX`, `FATOORA_PREPAYMENT`, `FATOORA_CREDIT_NOTE`, `FATOORA_DEBIT_NOTE`), `FatooraInvoiceSubType` (`FATOORA_STANDARD`, `FATOORA_SIMPLIFIED`), and `FatooraVatCategory` (`FATOORA_VAT_EXEMPT`, `FATOORA_VAT_STANDARD`, `FATOORA_VAT_ZERO`, `FATOORA_VAT_OUT_OF_SCOPE`). The numeric values match the earlier codes (`0` tax, `1` prepayment, ...); a value that is not a declared enumerator returns `FATOORA_INVALID_INPUT`. Flags remain an integer bitmask; combine `FatooraInvoiceFlag` constants `FATOORA_FLAG_THIRD_PARTY` (`1`), `FATOORA_FLAG_NOMINAL` (`2`), `FATOORA_FLAG_EXPORT` (`4`), `FATOORA_FLAG_SUMMARY` (`8`), and `FATOORA_FLAG_SELF_BILLED` (`16`). Use zero for no flags.
 
     **Create and configure**
 
@@ -633,7 +635,7 @@ correspond to the fields above.
         FatooraFinalizedInvoice **out, FatooraError **error);
     ```
 
-    `FatooraInvoiceOptions` contains `int32_t kind`, `int32_t subtype`, and optional `const char *original_id`, `original_uuid`, `original_date`, `reason`. Credit/debit notes require original ID and reason. Set unused optional pointers to `NULL`.
+    `FatooraInvoiceOptions` contains `FatooraInvoiceTypeKind kind`, `FatooraInvoiceSubType subtype`, and optional `const char *original_id`, `original_uuid`, `original_date`, `reason`. Credit/debit notes require original ID and reason. Set unused optional pointers to `NULL`.
 
     All setter functions take builder first and `FatooraError **error` last, return status, and have no output argument:
 
@@ -642,7 +644,8 @@ correspond to the fields above.
     | `set_id`, `set_uuid`, `set_issue_datetime`, `set_currency`, `set_previous_invoice_hash`, `set_payment_means_code`, `allowance_reason` | `const char *value` |
     | `invoice_level_charge`, `invoice_level_discount` | `const char *value` containing decimal text |
     | `set_invoice_counter` | `uint64_t value` |
-    | `set_vat_category`, `flags` | `int32_t value` |
+    | `set_vat_category` | `FatooraVatCategory value` |
+    | `flags` | `int32_t value` (bitmask of `FATOORA_FLAG_*`) |
     | `set_note` | `const char *language, const char *value` |
     | `set_allowance` | `const char *reason, const char *amount` |
     | `set_seller`, `set_buyer` | `const FatooraPartyOptions *options` |
@@ -650,7 +653,7 @@ correspond to the fields above.
 
     `FatooraPartyOptions` contains `name`, borrowed `const FatooraAddress *address`, `vat_id`, `other_id`, and `scheme`; text fields are `const char *`. Seller VAT is required; buyer needs VAT or an other ID. Create the address with `fatoora_address_new(&options, &address, &error)` using `FatooraAddressOptions`: country_code, city, street, building_number, postal_code, and optional additional_street/additional_number/district. Setters copy the address data.
 
-    `FatooraLineItemOptions` contains text fields `description`, `quantity`, `unit_code`, `unit_price`, `vat_rate`, and `int32_t category`. Numbers are decimal strings.
+    `FatooraLineItemOptions` contains text fields `description`, `quantity`, `unit_code`, `unit_price`, `vat_rate`, and `FatooraVatCategory category`. Numbers are decimal strings.
 
     Building consumes builder state on success or failure. Rejected setter inputs leave the builder available for correction. Always call `fatoora_invoice_builder_free()` afterward, including after consumption.
 
@@ -666,7 +669,10 @@ correspond to the fields above.
     | `invoice_level_charge`, `invoice_level_discount` | Owned decimal text through `char **out` |
     | `allowance_reason`, `original_invoice_reason` | Optional owned text through `char **out`; `NULL` when absent |
     | `invoice_counter` | `uint64_t *out` |
-    | `vat_category`, `flags_raw`, `invoice_type_kind`, `invoice_sub_type` | `uint8_t *out` |
+    | `vat_category` | `FatooraVatCategory *out` |
+    | `invoice_type_kind` | `FatooraInvoiceTypeKind *out` |
+    | `invoice_sub_type` | `FatooraInvoiceSubType *out` |
+    | `flags_raw` | `uint8_t *out` bitmask of `FATOORA_FLAG_*` |
     | `seller`, `buyer` | Owned `FatooraParty **out`; buyer may be `NULL` |
     | `note` | Optional owned `FatooraInvoiceNote **out` |
     | `original_invoice_ref` | Optional owned `FatooraOriginalInvoiceRef **out` |

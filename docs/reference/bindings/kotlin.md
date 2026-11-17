@@ -81,9 +81,10 @@ Select your language for resource handling and examples.
     Optional text getters return nullable `Text`; check for null, read `value()`,
     and close the owner when finished.
 
-Use environment `0` for nonproduction, `1` for simulation, `2` for production.
-Configuration, CSR and credentials must agree on the environment. Factory names use `create`, such as `Config.create(0)`; other method names use
-camel case.
+Use `Environment.NonProduction`, `Environment.Simulation`, or
+`Environment.Production`. Configuration, CSR and credentials must agree on the
+environment. Factory names use `create`, such as
+`Config.create(Environment.NonProduction)`; other method names use camel case.
 
 ## Ownership and values
 
@@ -94,6 +95,9 @@ camel case.
 | Optional text output | Nullable `Text`; read `value()` and close it |
 | Decimal | Invariant decimal string |
 | Unsigned byte / short / int | Checked JVM integer / integer / long |
+| Enumerated code | `com.fatoora` enum with the native variant names: `Environment`, `InvoiceTypeKind`, `InvoiceSubType`, `VatCategory`, `AdjustmentKind`, `ClearanceMode`, `InvoiceOutcome` |
+| Response status | Nullable `ReportingStatus`, `ClearanceStatus`, `ValidationStatus`, or `MessageType`; `null` when absent, `Unknown` when present but not recognized by this version. The `*Raw()` getter returns the exact text as nullable `Text` |
+| Invoice flags | `Int` bitmask taken by `InvoiceBuilder.flags` and returned by `flagsRaw()`; combine `InvoiceFlag` bits from `bit()` (`ThirdParty`, `Nominal`, `Export`, `Summary`, `SelfBilled`) |
 | Unsigned 64-bit counter | `BigInteger`, range 0 through 2^64−1 |
 | Binary input / copied output | JVM byte array; copies survive closing their owner |
 | Native failure | `BindingException(code, message, detailsJson)` |
@@ -123,7 +127,7 @@ input, cryptography, and gateway failures.
 
     ```kotlin
     try {
-        Config.create(99).use { }
+        Address.create("XX", "Riyadh", "King Fahd Road", "1234", "12345").use { }
     } catch (error: BindingException) {
         println("${error.code}: ${error.message}")
         println(error.detailsJson)
@@ -133,8 +137,8 @@ input, cryptography, and gateway failures.
 === "Java"
 
     ```java
-    try (Config config = Config.create(99)) {
-        // An invalid environment throws before this block.
+    try (Address address = Address.create("XX", "Riyadh", "King Fahd Road", "1234", "12345", null, null, null)) {
+        // An unrecognized country code throws before this block.
     } catch (BindingException error) {
         System.err.println(error.getCode() + ": " + error.getMessage());
         System.err.println(error.getDetailsJson());
@@ -170,13 +174,14 @@ calling thread and return objects that must be closed:
 | `postCcsidForPcsid(credentials)` | `CsidCompliance` | `CsidProduction` |
 | `renewCsid(credentials, csr, otp, acceptLanguage)` | `CsidProduction`, `Csr`, OTP, nullable language | `CsidProduction` |
 | `checkInvoiceCompliance(invoice, credentials)` | `SignedInvoice`, `CsidCompliance` | `ValidationResponse` |
-| `reportSimplifiedInvoice(invoice, credentials, clearanceStatus, acceptLanguage)` | `SignedInvoice`, `CsidProduction`, Boolean, nullable language | `ValidationResponse` |
-| `clearStandardInvoice(invoice, credentials, clearanceStatus, acceptLanguage)` | `SignedInvoice`, `CsidProduction`, Boolean, nullable language | `ValidationResponse` |
+| `reportSimplifiedInvoice(invoice, credentials, clearanceMode, acceptLanguage)` | `SignedInvoice`, `CsidProduction`, `ClearanceMode`, nullable language | `ValidationResponse` |
+| `clearStandardInvoice(invoice, credentials, clearanceMode, acceptLanguage)` | `SignedInvoice`, `CsidProduction`, `ClearanceMode`, nullable language | `ValidationResponse` |
 
 The final `acceptLanguage` argument can be omitted; its default is `null`.
 
-`clearanceStatus` controls the request header; use `false` for ordinary reporting
-and `true` for clearance. `acceptLanguage` controls the language header; pass
+`clearanceMode` controls the request header; use `ClearanceMode.Disabled` for
+ordinary reporting and `ClearanceMode.Enabled` for clearance. The coroutine
+`*Async` helpers below still take a `Boolean` `clearanceStatus`. `acceptLanguage` controls the language header; pass
 `null` for no override. It does not describe the response outcome.
 
 A returned response is not necessarily accepted. Call `outcome()` or

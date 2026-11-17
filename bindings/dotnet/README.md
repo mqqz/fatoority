@@ -27,6 +27,11 @@ leave its outer owner disposable, but subsequent operations fail with
 
 String inputs reject invalid UTF-16 and embedded NUL. Optional strings preserve
 null versus empty. Decimal arguments and outputs use invariant decimal strings.
+Enumerated codes are C# enums such as `ZatcaEnvironment.NonProduction` (renamed so
+it does not clash with `System.Environment`), `VatCategory.Standard` and
+`ClearanceMode.Disabled`. Response statuses return a nullable enum (`Unknown` for
+unrecognized values), and `*Raw()` getters return the exact text. Build the
+invoice flag mask by casting, such as `(byte)InvoiceFlag.Export`.
 Native errors throw `BindingErrorException` with the native message; `Inner`
 exposes `Code()`, `Message()`, and `DetailsJson()` and is itself disposable.
 Releasing native memory does not guarantee erasure of secrets or managed copies.
