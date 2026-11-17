@@ -1,4 +1,4 @@
-use fatoora_core::api::{CsidCredentials, Production, ZatcaClient};
+use fatoora_core::api::{ClearanceMode, CsidCredentials, Production, ZatcaClient};
 use fatoora_core::config::{Config, Environment};
 use fatoora_core::invoice::xml::parse::parse_signed_invoice_xml;
 
@@ -11,7 +11,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let credentials = CsidCredentials::<Production>::new(environment, None, token, secret);
     let xml = std::fs::read_to_string("signed.xml")?;
     let invoice = parse_signed_invoice_xml(&xml)?;
-    let response = client.report_simplified_invoice(&invoice, &credentials, false, Some("en")).await?;
+    let response = client.report_simplified_invoice(&invoice, &credentials, ClearanceMode::Disabled, Some("en")).await?;
     response.ensure_accepted()?;
     println!("Invoice reporting accepted");
     Ok(())

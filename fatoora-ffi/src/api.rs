@@ -348,7 +348,7 @@ pub mod ffi {
                 run(self.0.report_simplified_invoice(
                     invoice,
                     &credentials.0,
-                    clearance_status,
+                    fatoora_core::api::ClearanceMode::from(clearance_status),
                     optional_input(accept_language)?,
                 ))
                 .map(|value| Box::new(ValidationResponse(value)))
@@ -371,7 +371,7 @@ pub mod ffi {
                 run(self.0.clear_standard_invoice(
                     invoice,
                     &credentials.0,
-                    clearance_status,
+                    fatoora_core::api::ClearanceMode::from(clearance_status),
                     optional_input(accept_language)?,
                 ))
                 .map(|value| Box::new(ValidationResponse(value)))
@@ -453,7 +453,7 @@ pub mod ffi {
                     .prepare_report_simplified_invoice(
                         invoice,
                         &credentials.0,
-                        clearance_status,
+                        fatoora_core::api::ClearanceMode::from(clearance_status),
                         optional_input(accept_language)?,
                     )
                     .map(|value| Box::new(InvoiceRequest(value)))
@@ -476,7 +476,7 @@ pub mod ffi {
                     .prepare_clear_standard_invoice(
                         invoice,
                         &credentials.0,
-                        clearance_status,
+                        fatoora_core::api::ClearanceMode::from(clearance_status),
                         optional_input(accept_language)?,
                     )
                     .map(|value| Box::new(InvoiceRequest(value)))

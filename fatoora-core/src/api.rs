@@ -119,6 +119,49 @@ pub struct Compliance;
 /// Production (PCSID) token scope.
 pub struct Production;
 
+/// Value of the `Clearance-Status` request header sent with reporting and
+/// clearance submissions.
+///
+/// [`Enabled`](Self::Enabled) sends `Clearance-Status: 1` and
+/// [`Disabled`](Self::Disabled) sends `Clearance-Status: 0`. ZATCA uses this
+/// header to tell whether the taxpayer's clearance flow is switched on.
+///
+/// # Examples
+/// ```rust
+/// use fatoora_core::api::ClearanceMode;
+///
+/// assert_eq!(ClearanceMode::from(true), ClearanceMode::Enabled);
+/// assert_eq!(ClearanceMode::from(false), ClearanceMode::Disabled);
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ClearanceMode {
+    /// Clearance is enabled; sends `Clearance-Status: 1`.
+    Enabled,
+    /// Clearance is disabled; sends `Clearance-Status: 0`.
+    Disabled,
+}
+
+impl ClearanceMode {
+    /// The `Clearance-Status` header value for this mode.
+    pub(crate) const fn header_value(self) -> &'static str {
+        match self {
+            Self::Enabled => "1",
+            Self::Disabled => "0",
+        }
+    }
+}
+
+impl From<bool> for ClearanceMode {
+    /// Maps `true` to [`ClearanceMode::Enabled`] and `false` to [`ClearanceMode::Disabled`].
+    fn from(enabled: bool) -> Self {
+        if enabled {
+            Self::Enabled
+        } else {
+            Self::Disabled
+        }
+    }
+}
+
 /// ZATCA API client.
 ///
 /// # Examples
@@ -535,7 +578,7 @@ impl ZatcaClient {
         &self,
         invoice: &SignedInvoice,
         credentials: &CsidCredentials<Production>,
-        clearance_status: bool,
+        clearance_mode: ClearanceMode,
         accept_language: Option<&str>,
     ) -> Result<InvoiceRequest, ZatcaError> {
         self.ensure_env(credentials)?;
@@ -555,7 +598,7 @@ impl ZatcaClient {
             .header("Accept", "application/json")
             .header("Accept-Version", "V2")
             .header("Content-Type", "application/json")
-            .header("Clearance-Status", if clearance_status { "1" } else { "0" })
+            .header("Clearance-Status", clearance_mode.header_value())
             .basic_auth(
                 credentials.binary_security_token().to_string(),
                 Some(credentials.secret().to_string()),
@@ -584,7 +627,7 @@ impl ZatcaClient {
         &self,
         invoice: &SignedInvoice,
         credentials: &CsidCredentials<Production>,
-        clearance_status: bool,
+        clearance_mode: ClearanceMode,
         accept_language: Option<&str>,
     ) -> Result<InvoiceRequest, ZatcaError> {
         self.ensure_env(credentials)?;
@@ -604,7 +647,7 @@ impl ZatcaClient {
             .header("Accept", "application/json")
             .header("Accept-Version", "V2")
             .header("Content-Type", "application/json")
-            .header("Clearance-Status", if clearance_status { "1" } else { "0" })
+            .header("Clearance-Status", clearance_mode.header_value())
             .basic_auth(
                 credentials.binary_security_token().to_string(),
                 Some(credentials.secret().to_string()),
@@ -860,13 +903,13 @@ impl ZatcaClient {
         &self,
         invoice: &SignedInvoice,
         credentials: &CsidCredentials<Production>,
-        clearance_status: bool,
+        clearance_mode: ClearanceMode,
         accept_language: Option<&str>,
     ) -> Result<ValidationResponse, ZatcaError> {
         let prepared = self.prepare_report_simplified_invoice(
             invoice,
             credentials,
-            clearance_status,
+            clearance_mode,
             accept_language,
         )?;
         let (status, body) = self
@@ -894,13 +937,13 @@ impl ZatcaClient {
         &self,
         invoice: &SignedInvoice,
         credentials: &CsidCredentials<Production>,
-        clearance_status: bool,
+        clearance_mode: ClearanceMode,
         accept_language: Option<&str>,
     ) -> Result<ValidationResponse, ZatcaError> {
         let prepared = self.prepare_clear_standard_invoice(
             invoice,
             credentials,
-            clearance_status,
+            clearance_mode,
             accept_language,
         )?;
         let (status, body) = self
@@ -1361,7 +1404,7 @@ mod tests {
         let client = ZatcaClient::new(Config::default()).expect("client");
 
         let result = client
-            .report_simplified_invoice(&signed_invoice, &creds, false, None)
+            .report_simplified_invoice(&signed_invoice, &creds, ClearanceMode::Disabled, None)
             .await;
         assert!(matches!(result, Err(ZatcaError::ClientState(_))));
     }
@@ -1374,7 +1417,7 @@ mod tests {
         let client = ZatcaClient::new(Config::default()).expect("client");
 
         let result = client
-            .clear_standard_invoice(&signed_invoice, &creds, true, None)
+            .clear_standard_invoice(&signed_invoice, &creds, ClearanceMode::Enabled, None)
             .await;
         assert!(matches!(result, Err(ZatcaError::ClientState(_))));
     }
@@ -1499,11 +1542,11 @@ mod tests {
             let ccsid = CsidCredentials::new(Environment::NonProduction, None, "token", "secret");
 
             let report = client
-                .report_simplified_invoice(&simplified, &pcsid, false, Some("ar"))
+                .report_simplified_invoice(&simplified, &pcsid, ClearanceMode::Disabled, Some("ar"))
                 .await;
             assert!(report.is_ok());
             let clear = client
-                .clear_standard_invoice(&standard, &pcsid, true, None)
+                .clear_standard_invoice(&standard, &pcsid, ClearanceMode::Enabled, None)
                 .await;
             assert!(clear.is_ok());
             let compliance = client.check_invoice_compliance(&simplified, &ccsid).await;
@@ -1616,14 +1659,14 @@ mod tests {
             let creds = CsidCredentials::new(Environment::NonProduction, None, "token", "secret");
 
             let result = client
-                .report_simplified_invoice(&invoice, &creds, false, None)
+                .report_simplified_invoice(&invoice, &creds, ClearanceMode::Disabled, None)
                 .await;
             assert!(matches!(result, Err(ZatcaError::Response(ref e)) if e.http_status() == 401));
 
             unauthorized_mock.delete();
 
             let result = client
-                .report_simplified_invoice(&invoice, &creds, false, None)
+                .report_simplified_invoice(&invoice, &creds, ClearanceMode::Disabled, None)
                 .await;
             assert!(matches!(result, Err(ZatcaError::Response(ref e)) if e.http_status() == 406));
 
@@ -1661,12 +1704,12 @@ mod tests {
             let pcsid = CsidCredentials::new(Environment::NonProduction, None, "token", "secret");
 
             let result = client
-                .report_simplified_invoice(&simplified, &pcsid, false, None)
+                .report_simplified_invoice(&simplified, &pcsid, ClearanceMode::Disabled, None)
                 .await;
             assert!(matches!(result, Err(ZatcaError::Response(ref e)) if e.http_status() == 500));
 
             let result = client
-                .clear_standard_invoice(&standard, &pcsid, true, None)
+                .clear_standard_invoice(&standard, &pcsid, ClearanceMode::Enabled, None)
                 .await;
             assert!(matches!(result, Err(ZatcaError::Response(ref e)) if e.http_status() == 401));
 
@@ -1704,7 +1747,7 @@ mod tests {
             let ccsid = CsidCredentials::new(Environment::NonProduction, None, "token", "secret");
 
             let result = client
-                .clear_standard_invoice(&standard, &pcsid, true, None)
+                .clear_standard_invoice(&standard, &pcsid, ClearanceMode::Enabled, None)
                 .await;
             assert!(matches!(result, Err(ZatcaError::ResponseDecode { .. })));
 
@@ -1750,7 +1793,7 @@ mod tests {
             let pcsid = CsidCredentials::new(Environment::NonProduction, None, "token", "secret");
 
             let result = client
-                .report_simplified_invoice(&invoice, &pcsid, false, None)
+                .report_simplified_invoice(&invoice, &pcsid, ClearanceMode::Disabled, None)
                 .await;
             assert_eq!(result.unwrap_err().http_status(), Some(409));
 
@@ -1780,7 +1823,7 @@ mod tests {
             let pcsid = CsidCredentials::new(Environment::NonProduction, None, "token", "secret");
 
             let result = client
-                .clear_standard_invoice(&invoice, &pcsid, true, None)
+                .clear_standard_invoice(&invoice, &pcsid, ClearanceMode::Enabled, None)
                 .await;
             assert!(matches!(result, Err(ZatcaError::Response(ref e)) if e.http_status() == 500));
 
