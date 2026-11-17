@@ -206,11 +206,7 @@ pub mod ffi {
             })
         }
         pub fn env(&self) -> u8 {
-            match self.0.env() {
-                fatoora_core::config::Environment::NonProduction => 0,
-                fatoora_core::config::Environment::Simulation => 1,
-                fatoora_core::config::Environment::Production => 2,
-            }
+            crate::common::environment_code(self.0.env())
         }
         pub fn request_id(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
             boundary(|| optional(self.0.request_id()))
@@ -245,11 +241,7 @@ pub mod ffi {
             })
         }
         pub fn env(&self) -> u8 {
-            match self.0.env() {
-                fatoora_core::config::Environment::NonProduction => 0,
-                fatoora_core::config::Environment::Simulation => 1,
-                fatoora_core::config::Environment::Production => 2,
-            }
+            crate::common::environment_code(self.0.env())
         }
         pub fn request_id(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
             boundary(|| optional(self.0.request_id()))

@@ -67,6 +67,18 @@ pub(crate) fn environment(
         _ => Err(local_error(1, "invalid environment")),
     }
 }
+/// Maps an [`Environment`](fatoora_core::config::Environment) to its FFI code,
+/// the inverse of [`environment`]. `Environment` is non-exhaustive; an
+/// environment without an FFI code yet maps to `u8::MAX`.
+pub(crate) fn environment_code(value: fatoora_core::config::Environment) -> u8 {
+    use fatoora_core::config::Environment::*;
+    match value {
+        NonProduction => 0,
+        Simulation => 1,
+        Production => 2,
+        _ => u8::MAX,
+    }
+}
 pub(crate) fn boundary<T>(
     f: impl FnOnce() -> Result<T, Box<ffi::BindingError>>,
 ) -> Result<T, Box<ffi::BindingError>> {
@@ -85,7 +97,15 @@ pub(crate) fn boundary<T>(
 
 #[cfg(test)]
 mod tests {
-    use super::boundary;
+    use super::{boundary, environment, environment_code};
+
+    #[test]
+    fn environment_codes_round_trip() {
+        for code in 0..=2 {
+            let env = environment(code).ok().unwrap();
+            assert_eq!(environment_code(env), code);
+        }
+    }
 
     #[test]
     fn panic_after_consumption_returns_internal_error() {

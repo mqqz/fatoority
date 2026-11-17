@@ -20,7 +20,11 @@ use thiserror::Error;
 /// use fatoora_core::config::EnvironmentParseError;
 /// # Ok::<(), EnvironmentParseError>(())
 /// ```
+///
+/// The enum is `#[non_exhaustive]`: ZATCA may add environments, so matches
+/// outside this crate need a wildcard arm.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum Environment {
     /// ZATCA "Integration Sandbox" (developer portal); parsed from `"non_production"`.
     NonProduction,
