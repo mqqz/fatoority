@@ -285,7 +285,7 @@ async fn response_contract_all_invoice_endpoints_reject_http_400() {
     let ccsid = CsidCredentials::new(Environment::NonProduction, None, "token", "secret");
     assert_eq!(
         client
-            .report_simplified_invoice(&simplified, &pcsid, false, None)
+            .report_simplified_invoice(&simplified, &pcsid, ClearanceMode::Disabled, None)
             .await
             .unwrap_err()
             .http_status(),
@@ -293,7 +293,7 @@ async fn response_contract_all_invoice_endpoints_reject_http_400() {
     );
     assert_eq!(
         client
-            .clear_standard_invoice(&standard, &pcsid, true, None)
+            .clear_standard_invoice(&standard, &pcsid, ClearanceMode::Enabled, None)
             .await
             .unwrap_err()
             .http_status(),

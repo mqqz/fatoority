@@ -240,7 +240,12 @@ mod tests {
         let credentials =
             CsidCredentials::<Production>::new(Environment::NonProduction, None, "token", "secret");
         let prepared = client
-            .prepare_report_simplified_invoice(&invoice, &credentials, true, Some("ar"))
+            .prepare_report_simplified_invoice(
+                &invoice,
+                &credentials,
+                ClearanceMode::Enabled,
+                Some("ar"),
+            )
             .unwrap();
         let expected = serde_json::json!({"invoiceHash": invoice.invoice_hash(), "uuid": invoice.uuid(), "invoice": invoice.to_xml_base64()});
         drop(invoice);
@@ -292,7 +297,12 @@ mod tests {
         let credentials =
             CsidCredentials::<Production>::new(Environment::NonProduction, None, TOKEN, SECRET);
         let invoice_request = client
-            .prepare_report_simplified_invoice(&invoice, &credentials, false, None)
+            .prepare_report_simplified_invoice(
+                &invoice,
+                &credentials,
+                ClearanceMode::Disabled,
+                None,
+            )
             .unwrap();
         let (_, authorization) = invoice_request
             .request()
@@ -332,14 +342,24 @@ mod tests {
             CsidCredentials::<Production>::new(Environment::NonProduction, None, "token", "secret");
         assert!(
             client
-                .prepare_report_simplified_invoice(&invoice, &credentials, false, None)
+                .prepare_report_simplified_invoice(
+                    &invoice,
+                    &credentials,
+                    ClearanceMode::Disabled,
+                    None
+                )
                 .is_err()
         );
         let credentials =
             CsidCredentials::<Production>::new(Environment::Production, None, "token", "secret");
         assert!(
             client
-                .prepare_clear_standard_invoice(&invoice, &credentials, true, None)
+                .prepare_clear_standard_invoice(
+                    &invoice,
+                    &credentials,
+                    ClearanceMode::Enabled,
+                    None
+                )
                 .is_err()
         );
         assert!(
@@ -348,6 +368,43 @@ mod tests {
                 .finish()
                 .is_err()
         );
+    }
+
+    #[test]
+    fn clearance_mode_sets_clearance_status_header() {
+        let client = ZatcaClient::new(Config::default()).unwrap();
+        let simplified =
+            super::super::tests::build_signed_invoice(InvoiceType::Tax(InvoiceSubType::Simplified));
+        let standard =
+            super::super::tests::build_signed_invoice(InvoiceType::Tax(InvoiceSubType::Standard));
+        let credentials =
+            CsidCredentials::<Production>::new(Environment::NonProduction, None, "token", "secret");
+        for (mode, expected) in [
+            (ClearanceMode::Enabled, "1"),
+            (ClearanceMode::Disabled, "0"),
+        ] {
+            assert_eq!(mode.header_value(), expected);
+            let requests = [
+                client
+                    .prepare_report_simplified_invoice(&simplified, &credentials, mode, None)
+                    .unwrap(),
+                client
+                    .prepare_clear_standard_invoice(&standard, &credentials, mode, None)
+                    .unwrap(),
+            ];
+            for prepared in requests {
+                let values: Vec<_> = prepared
+                    .request()
+                    .headers()
+                    .iter()
+                    .filter(|(name, _)| name == "Clearance-Status")
+                    .map(|(_, value)| value.as_str())
+                    .collect();
+                assert_eq!(values, [expected], "{mode:?}");
+            }
+        }
+        assert_eq!(ClearanceMode::from(true), ClearanceMode::Enabled);
+        assert_eq!(ClearanceMode::from(false), ClearanceMode::Disabled);
     }
 
     #[test]

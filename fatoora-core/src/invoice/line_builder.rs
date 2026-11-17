@@ -119,8 +119,8 @@ impl Adjustment {
 /// One finalized line allowance or charge, in insertion order.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LineAdjustment {
-    /// `true` for a charge (increases the line amount), `false` for an allowance (decreases it).
-    pub charge: bool,
+    /// A charge increases the line amount; an allowance decreases it (`cbc:ChargeIndicator`).
+    pub kind: AdjustmentKind,
     /// The amount calculation and reason.
     pub adjustment: Adjustment,
 }
@@ -138,11 +138,11 @@ pub struct DocumentAdjustment {
     pub exemption: TaxExemption,
 }
 impl DocumentAdjustment {
-    pub(crate) fn into_entry(self, charge: bool) -> Result<AllowanceCharge> {
+    pub(crate) fn into_entry(self, kind: AdjustmentKind) -> Result<AllowanceCharge> {
         Ok(AllowanceCharge {
             omitted_rate: false,
             tax_category_count: 1,
-            charge,
+            kind,
             amount: self.adjustment.value()?,
             base_amount: self.adjustment.base_amount,
             percentage: self.adjustment.percentage,
@@ -290,7 +290,7 @@ impl LineItemBuilder {
     /// Appends a line-level allowance, which reduces the line net amount.
     pub fn allowance(mut self, adjustment: Adjustment) -> Self {
         self.adjustments.push(LineAdjustment {
-            charge: false,
+            kind: AdjustmentKind::Allowance,
             adjustment,
         });
         self
@@ -298,7 +298,7 @@ impl LineItemBuilder {
     /// Appends a line-level charge, which increases the line net amount.
     pub fn charge(mut self, adjustment: Adjustment) -> Self {
         self.adjustments.push(LineAdjustment {
-            charge: true,
+            kind: AdjustmentKind::Charge,
             adjustment,
         });
         self
@@ -421,7 +421,7 @@ impl LineItemBuilder {
             .into_iter()
             .map(|a| {
                 Ok(LineAdjustment {
-                    charge: a.charge,
+                    kind: a.kind,
                     adjustment: a.adjustment.finalize()?,
                 })
             })
@@ -577,7 +577,7 @@ impl LineItem {
             self.price_base_quantity.unwrap_or(Decimal::from(1)),
         )?;
         for a in &self.adjustments {
-            amount = if a.charge {
+            amount = if a.kind.is_charge() {
                 amount.add(a.adjustment.value()?)?
             } else {
                 amount.sub(a.adjustment.value()?)?

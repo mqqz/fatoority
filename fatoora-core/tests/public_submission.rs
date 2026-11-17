@@ -1,7 +1,7 @@
 //! Submission through the public client against a local HTTP server.
 //! A child process isolates the base-URL environment variable from other tests.
 use fatoora_core::api::{
-    Compliance, CsidCredentials, InvoiceOutcome, Production, ZatcaClient, ZatcaError,
+    ClearanceMode, Compliance, CsidCredentials, InvoiceOutcome, Production, ZatcaClient, ZatcaError,
 };
 use fatoora_core::config::{Config, Environment};
 use fatoora_core::invoice::xml::parse::parse_signed_invoice_xml;
@@ -99,7 +99,12 @@ fn submission_worker() {
         let result = match case.as_str() {
             "clearance" => {
                 client
-                    .clear_standard_invoice(&invoice, &credentials, true, Some("en"))
+                    .clear_standard_invoice(
+                        &invoice,
+                        &credentials,
+                        ClearanceMode::Enabled,
+                        Some("en"),
+                    )
                     .await
             }
             "compliance" => {
@@ -112,7 +117,12 @@ fn submission_worker() {
             }
             _ => {
                 client
-                    .report_simplified_invoice(&invoice, &credentials, false, Some("en"))
+                    .report_simplified_invoice(
+                        &invoice,
+                        &credentials,
+                        ClearanceMode::Disabled,
+                        Some("en"),
+                    )
                     .await
             }
         };

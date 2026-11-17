@@ -154,7 +154,7 @@ fn mixed_exemptions_and_repeated_adjustments_preserve_independent_metadata() {
                 base_amount: None,
                 percentage: None,
                 tax_category_count: 1,
-                charge,
+                kind: AdjustmentKind::from_charge_indicator(charge),
                 amount: d("1"),
                 reason: Some(format!("reason-{i}-{charge}")),
                 reason_code: Some("95".into()),
@@ -417,7 +417,7 @@ fn balance_adjustment(charge: bool, amount: &str, category: VatCategory) -> Allo
         base_amount: None,
         percentage: None,
         tax_category_count: 1,
-        charge,
+        kind: AdjustmentKind::from_charge_indicator(charge),
         amount: d(amount),
         reason: Some(if charge { "charge" } else { "allowance" }.into()),
         reason_code: None,
@@ -471,7 +471,10 @@ fn adjustment_balances_in_import_do_not_depend_on_xml_order() {
     allowance_first.replace_range(ranges[1].clone(), &xml[ranges[0].clone()]);
     allowance_first.replace_range(ranges[0].clone(), &xml[ranges[1].clone()]);
     let parsed = roundtrip(&allowance_first);
-    assert!(!parsed.data().adjustments()[0].charge);
+    assert_eq!(
+        parsed.data().adjustments()[0].kind,
+        AdjustmentKind::Allowance
+    );
     assert_eq!(parsed.totals(), invoice.totals());
 }
 
@@ -512,7 +515,7 @@ fn builder_rejects_invalid_adjustments_and_inconsistent_accounting_metadata() {
         base_amount: None,
         percentage: None,
         tax_category_count: 1,
-        charge: true,
+        kind: AdjustmentKind::Charge,
         amount: d("1"),
         reason: None,
         reason_code: None,
@@ -627,7 +630,7 @@ fn serialized_adjustments_default_the_legacy_tax_category_count() {
         base_amount: None,
         percentage: None,
         tax_category_count: 2,
-        charge: true,
+        kind: AdjustmentKind::Charge,
         amount: d("1"),
         reason: None,
         reason_code: None,
@@ -801,7 +804,7 @@ fn document_adjustments_do_not_replace_the_line_derived_vat_category() {
                     base_amount: None,
                     percentage: None,
                     tax_category_count: 1,
-                    charge,
+                    kind: AdjustmentKind::from_charge_indicator(charge),
                     amount: d("1"),
                     reason: Some("Adjustment".into()),
                     reason_code: None,
@@ -1254,4 +1257,64 @@ fn adjustment_count_limit_accepts_boundary_and_rejects_oversized_imports() {
     let mut oversized = xml.clone();
     oversized.insert_str(category.range().end, &xml[category.range()]);
     assert!(parse(&oversized).is_err());
+}
+
+#[test]
+fn adjustment_kinds_round_trip_through_charge_indicator() {
+    for kind in [AdjustmentKind::Allowance, AdjustmentKind::Charge] {
+        let item = LineItem::builder()
+            .item_name("item")
+            .invoiced_quantity(d("2"))
+            .invoiced_quantity_unit_code("PCE")
+            .item_net_price(d("50"))
+            .vat_category(VatCategory::Standard)
+            .vat_rate(d("15"));
+        let item = match kind {
+            AdjustmentKind::Allowance => item.allowance(Adjustment::amount(d("3"))),
+            AdjustmentKind::Charge => item.charge(Adjustment::amount(d("3"))),
+        }
+        .build()
+        .unwrap();
+        let document = balance_adjustment(kind.is_charge(), "5", VatCategory::Standard);
+        assert_eq!(document.kind, kind);
+        let invoice = builder()
+            .line_item(item)
+            .adjustment(document)
+            .build()
+            .unwrap();
+        let xml = invoice.to_xml().unwrap();
+        let indicator = format!(
+            "<cbc:ChargeIndicator>{}</cbc:ChargeIndicator>",
+            kind.charge_indicator()
+        );
+        assert_eq!(xml.matches(&indicator).count(), 2, "{kind:?}");
+        let parsed = roundtrip(&xml);
+        assert_eq!(parsed.data().adjustments()[0].kind, kind);
+        assert_eq!(parsed.data().line_items()[0].adjustments()[0].kind, kind);
+        assert_eq!(parsed.data().adjustments(), invoice.data().adjustments());
+        assert_eq!(parsed.data().line_items(), invoice.data().line_items());
+    }
+}
+
+#[test]
+fn adjustment_kind_helpers_agree_with_charge_indicator() {
+    use fatoora_core::invoice::AdjustmentKind;
+
+    for (kind, charge) in [
+        (AdjustmentKind::Allowance, false),
+        (AdjustmentKind::Charge, true),
+    ] {
+        assert_eq!(AdjustmentKind::from_charge_indicator(charge), kind);
+        assert_eq!(kind.charge_indicator(), charge);
+        assert_eq!(kind.is_charge(), charge);
+        assert_eq!(kind.is_allowance(), !charge);
+    }
+    assert_eq!(
+        serde_json::to_string(&AdjustmentKind::Allowance).unwrap(),
+        "\"allowance\""
+    );
+    assert_eq!(
+        serde_json::from_str::<AdjustmentKind>("\"charge\"").unwrap(),
+        AdjustmentKind::Charge
+    );
 }

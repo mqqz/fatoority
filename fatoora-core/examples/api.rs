@@ -3,7 +3,7 @@ const EXAMPLE_BST: &str = "TUlJRDNqQ0NBNFNnQXdJQkFnSVRFUUFBT0FQRjkwQWpzL3hjWHdBQ
 const EXAMPLE_SECRET: &str = "CkYsEXfV8c1gFHAtFWoZv73pGMvh/Qyo4LzKM2h/8Hg=";
 
 // --8<-- [start:example]
-use fatoora_core::api::{CsidCredentials, Production, ZatcaClient};
+use fatoora_core::api::{ClearanceMode, CsidCredentials, Production, ZatcaClient};
 use fatoora_core::config::{Config, Environment};
 use fatoora_core::invoice::xml::parse::parse_signed_invoice_xml;
 
@@ -29,7 +29,7 @@ pub async fn main() {
     );
 
     let response = client
-        .report_simplified_invoice(&signed, &pcsid, false, Some("en"))
+        .report_simplified_invoice(&signed, &pcsid, ClearanceMode::Disabled, Some("en"))
         .await
         .unwrap();
 

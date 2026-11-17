@@ -1,7 +1,7 @@
 mod common;
 
 use base64ct::{Base64, Encoding};
-use fatoora_core::api::{ClearanceStatus, ReportingStatus, ZatcaClient};
+use fatoora_core::api::{ClearanceMode, ClearanceStatus, ReportingStatus, ZatcaClient};
 use fatoora_core::config::{Config, Environment};
 use fatoora_core::csr::Csr;
 use fatoora_core::csr::{CsrProperties, SigningKey};
@@ -166,7 +166,12 @@ async fn report_invoice_with_live_pcsid() {
         .expect("sign invoice with live csid");
 
     let reporting_response = client
-        .report_simplified_invoice(&signed_invoice, &pcsid_response, false, None)
+        .report_simplified_invoice(
+            &signed_invoice,
+            &pcsid_response,
+            ClearanceMode::Disabled,
+            None,
+        )
         .await
         .expect("report signed invoice");
     println!(
@@ -306,7 +311,12 @@ async fn clear_invoice_with_live_pcsid() {
     let signed_invoice = invoice.sign(&signer).expect("sign invoice with live pcsid");
 
     let clearance_response = client
-        .clear_standard_invoice(&signed_invoice, &pcsid_response, true, None)
+        .clear_standard_invoice(
+            &signed_invoice,
+            &pcsid_response,
+            ClearanceMode::Enabled,
+            None,
+        )
         .await
         .expect("clear signed invoice");
     println!(
