@@ -27,14 +27,33 @@ class ContractsTest {
 
     @Test fun unsignedBoundariesRemainJavaCallable() {
         InvoiceBuilder.create(InvoiceTypeKind.Tax, InvoiceSubType.Standard).use { builder ->
-            assertFailsWith<IllegalArgumentException> { builder.flags(-1) }
-            assertFailsWith<IllegalArgumentException> { builder.flags(256) }
-            builder.flags(InvoiceFlag.ThirdParty.bit() or InvoiceFlag.Export.bit())
+            assertFailsWith<IllegalArgumentException> { builder.setFlags(-1) }
+            assertFailsWith<IllegalArgumentException> { builder.setFlags(256) }
+            builder.setFlags(InvoiceFlag.ThirdParty.bit() or InvoiceFlag.Export.bit())
             val maximum = java.math.BigInteger("18446744073709551615")
             builder.setInvoiceCounter(maximum)
             assertFailsWith<IllegalArgumentException> { builder.setInvoiceCounter(maximum.add(java.math.BigInteger.ONE)) }
             assertFailsWith<IllegalArgumentException> { builder.setInvoiceCounter(java.math.BigInteger.valueOf(-1)) }
         }
+    }
+
+    @Test fun zatcaValidationReturnsTypedReport() {
+        Xml.validateZatca("<wrong/>", """{"evaluated_at":"2026-09-23T12:00:00+03:00"}""").use { report ->
+            assertFalse(report.isValid())
+            assertTrue(report.hasErrors())
+            assertEquals("2026-09-23T12:00:00+03:00", report.evaluatedAt())
+            assertEquals(java.math.BigInteger.valueOf(6), report.stagesLen())
+            report.stage(java.math.BigInteger.ZERO).use { stage ->
+                assertEquals(ZatcaStage.Xsd, stage.stage())
+                assertEquals(ZatcaStageStatus.Completed, stage.status())
+                stage.finding(java.math.BigInteger.ZERO).use { finding ->
+                    assertEquals("XSD_INVALID", finding.code())
+                    assertEquals(Severity.Error, finding.severity())
+                }
+            }
+            assertTrue(report.toJson().contains("\"is_valid\":false"))
+        }
+        ComplianceCsid.create(Environment.Simulation, null, "token", "secret").use { assertNull(it.requestId()) }
     }
 
     @Test fun keyBytesAndClose() {
@@ -106,13 +125,13 @@ class ContractsTest {
         val root = File(System.getProperty("fatoora.fixtures"))
         val xml = File(root, "cases/simplified-invoice/input.xml").readText()
         assertEquals("aqY8frWKpauDQqXCsdne5hYwMQCo1DUUNKLfSAtT2mg=", Xml.hash(xml))
-        Signer.fromDer(File(root,"credentials/certificate.der").readBytes(), File(root,"credentials/private-key.der").readBytes()).use { signer ->
+        InvoiceSigner.fromDer(File(root,"credentials/certificate.der").readBytes(), File(root,"credentials/private-key.der").readBytes()).use { signer ->
             val signed = signer.signXml(xml)
             Config.create(Environment.NonProduction).use { config -> ZatcaClient.create(config).use { client ->
                 assertEquals(Environment.NonProduction, config.env())
-                val credentials = CsidProduction.create(Environment.NonProduction, null, "token", "secret")
+                val credentials = ProductionCsid.create(Environment.NonProduction, null, "token", "secret")
                 val invoice = SignedInvoice.fromXml(signed)
-                assertEquals(Xml.hash(signed), invoice.hashBase64())
+                assertEquals(Xml.hash(signed), invoice.hash())
                 val request = client.prepareReportSimplifiedInvoice(invoice, credentials, ClearanceMode.Disabled)
                 credentials.close(); invoice.close()
                 request.use {
