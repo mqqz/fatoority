@@ -2,9 +2,9 @@
 //!
 //! # Examples
 //! ```rust
-//! use fatoora_core::config::{Config, EnvironmentType};
+//! use fatoora_core::config::{Config, Environment};
 //!
-//! let config = Config::new(EnvironmentType::NonProduction);
+//! let config = Config::new(Environment::NonProduction);
 //! # let _ = config;
 //! ```
 #![warn(missing_docs)]

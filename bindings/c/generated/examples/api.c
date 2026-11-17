@@ -1,7 +1,7 @@
 /* --8<-- [start:example] */
 #include "BindingError.h"
 #include "Config.h"
-#include "CsidProduction.h"
+#include "ProductionCsid.h"
 #include "SignedInvoice.h"
 #include "ValidationResponse.h"
 #include "ZatcaClient.h"
@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
   int status = EXIT_FAILURE;
   Config *config = NULL;
   SignedInvoice *invoice = NULL;
-  CsidProduction *credentials = NULL;
+  ProductionCsid *credentials = NULL;
   ZatcaClient *client = NULL;
   ValidationResponse *response = NULL;
 
@@ -54,8 +54,8 @@ int main(int argc, char **argv) {
   client = created.ok;
 
   OptionStringView no_request_id = {.is_ok = false};
-  fatoora_CsidProduction_create_result authenticated =
-      fatoora_CsidProduction_create(0, no_request_id, s(argv[2]), s(argv[3]));
+  fatoora_ProductionCsid_create_result authenticated =
+      fatoora_ProductionCsid_create(0, no_request_id, s(argv[2]), s(argv[3]));
   if (!authenticated.is_ok) { report_error(authenticated.err); goto cleanup; }
   credentials = authenticated.ok;
 
@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
 cleanup:
   if (response) fatoora_ValidationResponse_destroy(response);
   if (client) fatoora_ZatcaClient_destroy(client);
-  if (credentials) fatoora_CsidProduction_destroy(credentials);
+  if (credentials) fatoora_ProductionCsid_destroy(credentials);
   if (invoice) fatoora_SignedInvoice_destroy(invoice);
   if (config) fatoora_Config_destroy(config);
   return status;

@@ -16,15 +16,106 @@ enum {
     FATOORA_NETWORK = 7, FATOORA_UNAUTHORIZED = 8, FATOORA_INTERNAL = 9,
     FATOORA_API = 10
 };
-enum { FATOORA_NON_PRODUCTION = 0, FATOORA_SIMULATION = 1, FATOORA_PRODUCTION = 2 };
-enum { FATOORA_TAX = 0, FATOORA_PREPAYMENT = 1, FATOORA_CREDIT_NOTE = 2, FATOORA_DEBIT_NOTE = 3 };
-enum { FATOORA_STANDARD = 0, FATOORA_SIMPLIFIED = 1 };
-enum { FATOORA_VAT_EXEMPT = 0, FATOORA_VAT_STANDARD = 1, FATOORA_VAT_ZERO = 2, FATOORA_VAT_OUT_OF_SCOPE = 3 };
-enum { FATOORA_FLAG_THIRD_PARTY = 1, FATOORA_FLAG_NOMINAL = 2, FATOORA_FLAG_EXPORT = 4,
-       FATOORA_FLAG_SUMMARY = 8, FATOORA_FLAG_SELF_BILLED = 16 };
+
+typedef enum FatooraAdjustmentKind {
+    FATOORA_ADJUSTMENT_ALLOWANCE = 0,
+    FATOORA_ADJUSTMENT_CHARGE = 1
+} FatooraAdjustmentKind;
+typedef enum FatooraClearanceMode {
+    FATOORA_CLEARANCE_DISABLED = 0,
+    FATOORA_CLEARANCE_ENABLED = 1
+} FatooraClearanceMode;
+typedef enum FatooraClearanceStatus {
+    FATOORA_CLEARANCE_STATUS_UNKNOWN = 0,
+    FATOORA_CLEARANCE_STATUS_CLEARED = 1,
+    FATOORA_CLEARANCE_STATUS_NOT_CLEARED = 2
+} FatooraClearanceStatus;
+typedef enum FatooraEnvironment {
+    FATOORA_NON_PRODUCTION = 0,
+    FATOORA_SIMULATION = 1,
+    FATOORA_PRODUCTION = 2
+} FatooraEnvironment;
+typedef enum FatooraInvoiceFlag {
+    FATOORA_FLAG_THIRD_PARTY = 1,
+    FATOORA_FLAG_NOMINAL = 2,
+    FATOORA_FLAG_EXPORT = 4,
+    FATOORA_FLAG_SUMMARY = 8,
+    FATOORA_FLAG_SELF_BILLED = 16
+} FatooraInvoiceFlag;
 typedef enum FatooraInvoiceOutcome {
-    FATOORA_OUTCOME_UNKNOWN = 0, FATOORA_OUTCOME_ACCEPTED = 1, FATOORA_OUTCOME_REJECTED = 2
+    FATOORA_OUTCOME_UNKNOWN = 0,
+    FATOORA_OUTCOME_ACCEPTED = 1,
+    FATOORA_OUTCOME_REJECTED = 2
 } FatooraInvoiceOutcome;
+typedef enum FatooraInvoiceSubType {
+    FATOORA_STANDARD = 0,
+    FATOORA_SIMPLIFIED = 1
+} FatooraInvoiceSubType;
+typedef enum FatooraInvoiceTypeKind {
+    FATOORA_TAX = 0,
+    FATOORA_PREPAYMENT = 1,
+    FATOORA_CREDIT_NOTE = 2,
+    FATOORA_DEBIT_NOTE = 3
+} FatooraInvoiceTypeKind;
+typedef enum FatooraMessageType {
+    FATOORA_MESSAGE_TYPE_UNKNOWN = 0,
+    FATOORA_MESSAGE_TYPE_INFO = 1,
+    FATOORA_MESSAGE_TYPE_WARNING = 2,
+    FATOORA_MESSAGE_TYPE_ERROR = 3
+} FatooraMessageType;
+typedef enum FatooraReportingStatus {
+    FATOORA_REPORTING_STATUS_UNKNOWN = 0,
+    FATOORA_REPORTING_STATUS_REPORTED = 1,
+    FATOORA_REPORTING_STATUS_NOT_REPORTED = 2
+} FatooraReportingStatus;
+typedef enum FatooraSeverity {
+    FATOORA_SEVERITY_WARNING = 0,
+    FATOORA_SEVERITY_ERROR = 1
+} FatooraSeverity;
+typedef enum FatooraValidationLayer {
+    FATOORA_VALIDATION_LAYER_UNKNOWN = 0,
+    FATOORA_VALIDATION_LAYER_FIELD_CHECKS = 1,
+    FATOORA_VALIDATION_LAYER_XSD = 2,
+    FATOORA_VALIDATION_LAYER_BUSINESS_RULES = 3,
+    FATOORA_VALIDATION_LAYER_SIGNATURE = 4,
+    FATOORA_VALIDATION_LAYER_QR = 5,
+    FATOORA_VALIDATION_LAYER_PREVIOUS_INVOICE_HASH = 6
+} FatooraValidationLayer;
+typedef enum FatooraValidationLocationKind {
+    FATOORA_LOCATION_UNKNOWN = 0,
+    FATOORA_LOCATION_FIELD = 1,
+    FATOORA_LOCATION_X_PATH = 2,
+    FATOORA_LOCATION_XML = 3
+} FatooraValidationLocationKind;
+typedef enum FatooraValidationStatus {
+    FATOORA_VALIDATION_STATUS_UNKNOWN = 0,
+    FATOORA_VALIDATION_STATUS_PASS = 1,
+    FATOORA_VALIDATION_STATUS_WARNING = 2,
+    FATOORA_VALIDATION_STATUS_ERROR = 3
+} FatooraValidationStatus;
+typedef enum FatooraVatCategory {
+    FATOORA_VAT_EXEMPT = 0,
+    FATOORA_VAT_STANDARD = 1,
+    FATOORA_VAT_ZERO = 2,
+    FATOORA_VAT_OUT_OF_SCOPE = 3
+} FatooraVatCategory;
+typedef enum FatooraZatcaStage {
+    FATOORA_ZATCA_STAGE_UNKNOWN = 0,
+    FATOORA_ZATCA_STAGE_XSD = 1,
+    FATOORA_ZATCA_STAGE_CEN = 2,
+    FATOORA_ZATCA_STAGE_KSA = 3,
+    FATOORA_ZATCA_STAGE_SIGNATURE = 4,
+    FATOORA_ZATCA_STAGE_QR = 5,
+    FATOORA_ZATCA_STAGE_PREVIOUS_INVOICE_HASH = 6
+} FatooraZatcaStage;
+typedef enum FatooraZatcaStageStatus {
+    FATOORA_ZATCA_STAGE_STATUS_UNKNOWN = 0,
+    FATOORA_ZATCA_STAGE_STATUS_NOT_RUN = 1,
+    FATOORA_ZATCA_STAGE_STATUS_COMPLETED = 2,
+    FATOORA_ZATCA_STAGE_STATUS_NOT_APPLICABLE = 3,
+    FATOORA_ZATCA_STAGE_STATUS_CONTEXT_REQUIRED = 4,
+    FATOORA_ZATCA_STAGE_STATUS_EVALUATION_FAILED = 5
+} FatooraZatcaStageStatus;
 typedef struct FatooraBytesView { const uint8_t *data; size_t len; } FatooraBytesView;
 typedef struct FatooraError FatooraError;
 void fatoora_string_free(char *value);
@@ -47,10 +138,9 @@ typedef struct Adjustment FatooraAdjustment;
 typedef struct AllowanceCharge FatooraAllowanceCharge;
 typedef struct Bytes FatooraBytes;
 typedef struct BytesList FatooraBytesList;
+typedef struct ComplianceCsid FatooraComplianceCsid;
 typedef struct ComplianceRequest FatooraComplianceRequest;
 typedef struct Config FatooraConfig;
-typedef struct CsidCompliance FatooraCsidCompliance;
-typedef struct CsidProduction FatooraCsidProduction;
 typedef struct Csr FatooraCsr;
 typedef struct CsrProperties FatooraCsrProperties;
 typedef struct FinalizedInvoice FatooraFinalizedInvoice;
@@ -59,15 +149,16 @@ typedef struct InvoiceData FatooraInvoiceData;
 typedef struct InvoiceLineItem FatooraInvoiceLineItem;
 typedef struct InvoiceNote FatooraInvoiceNote;
 typedef struct InvoiceRequest FatooraInvoiceRequest;
+typedef struct InvoiceSigner FatooraInvoiceSigner;
 typedef struct InvoiceTotals FatooraInvoiceTotals;
 typedef struct LineItemBuilder FatooraLineItemBuilder;
 typedef struct OriginalInvoiceRef FatooraOriginalInvoiceRef;
 typedef struct OtherId FatooraOtherId;
 typedef struct Party FatooraParty;
 typedef struct PaymentMeans FatooraPaymentMeans;
+typedef struct ProductionCsid FatooraProductionCsid;
 typedef struct ProductionRequest FatooraProductionRequest;
 typedef struct SignedInvoice FatooraSignedInvoice;
-typedef struct Signer FatooraSigner;
 typedef struct SigningKey FatooraSigningKey;
 typedef struct TaxExemption FatooraTaxExemption;
 typedef struct ValidationMessage FatooraValidationMessage;
@@ -76,6 +167,10 @@ typedef struct ValidationResults FatooraValidationResults;
 typedef struct VatBreakdown FatooraVatBreakdown;
 typedef struct VatId FatooraVatId;
 typedef struct ZatcaClient FatooraZatcaClient;
+typedef struct ZatcaFinding FatooraZatcaFinding;
+typedef struct ZatcaRuleSource FatooraZatcaRuleSource;
+typedef struct ZatcaStageReport FatooraZatcaStageReport;
+typedef struct ZatcaValidationReport FatooraZatcaValidationReport;
 typedef struct FatooraAddressOptions {
     const char *country_code;
     const char *city;
@@ -100,8 +195,8 @@ typedef struct FatooraCsrOptions {
 } FatooraCsrOptions;
 
 typedef struct FatooraInvoiceOptions {
-    int32_t kind;
-    int32_t subtype;
+    FatooraInvoiceTypeKind kind;
+    FatooraInvoiceSubType subtype;
     const char *original_id;
     const char *original_uuid;
     const char *original_date;
@@ -122,7 +217,7 @@ typedef struct FatooraLineItemOptions {
     const char *unit_code;
     const char *unit_price;
     const char *vat_rate;
-    int32_t category;
+    FatooraVatCategory category;
 } FatooraLineItemOptions;
 
 FatooraStatus fatoora_address_with_province(const FatooraAddress *self,
@@ -163,11 +258,11 @@ void fatoora_address_free(FatooraAddress *self);
 FatooraStatus fatoora_adjustment_amount(const char *value,
     FatooraAdjustment **out,
     FatooraError **error);
-FatooraStatus fatoora_adjustment_percentage(const char *base,
+FatooraStatus fatoora_adjustment_percent_of(const char *base,
     const char *percent,
     FatooraAdjustment **out,
     FatooraError **error);
-FatooraStatus fatoora_adjustment_with_supplied_amount(const FatooraAdjustment *self,
+FatooraStatus fatoora_adjustment_supplied_amount(const FatooraAdjustment *self,
     const char *value,
     FatooraAdjustment **out,
     FatooraError **error);
@@ -182,7 +277,7 @@ FatooraStatus fatoora_adjustment_value(const FatooraAdjustment *self,
 FatooraStatus fatoora_adjustment_base_amount(const FatooraAdjustment *self,
     char **out,
     FatooraError **error);
-FatooraStatus fatoora_adjustment_percent(const FatooraAdjustment *self,
+FatooraStatus fatoora_adjustment_percentage(const FatooraAdjustment *self,
     char **out,
     FatooraError **error);
 FatooraStatus fatoora_adjustment_reason(const FatooraAdjustment *self,
@@ -195,7 +290,7 @@ void fatoora_adjustment_free(FatooraAdjustment *self);
 FatooraStatus fatoora_allowance_charge_has_vat_rate(const FatooraAllowanceCharge *self,
     bool *out,
     FatooraError **error);
-FatooraStatus fatoora_allowance_charge_without_vat_rate(const FatooraAllowanceCharge *self,
+FatooraStatus fatoora_allowance_charge_omit_vat_rate(const FatooraAllowanceCharge *self,
     FatooraAllowanceCharge **out,
     FatooraError **error);
 FatooraStatus fatoora_allowance_charge_with_percentage(const FatooraAllowanceCharge *self,
@@ -209,17 +304,17 @@ FatooraStatus fatoora_allowance_charge_base_amount(const FatooraAllowanceCharge 
 FatooraStatus fatoora_allowance_charge_percentage(const FatooraAllowanceCharge *self,
     char **out,
     FatooraError **error);
-FatooraStatus fatoora_allowance_charge_new(bool charge,
+FatooraStatus fatoora_allowance_charge_new(FatooraAdjustmentKind kind,
     const char *amount,
     const char *reason,
     const char *reason_code,
-    int32_t category,
+    FatooraVatCategory category,
     const char *rate,
     const FatooraTaxExemption *exemption,
     FatooraAllowanceCharge **out,
     FatooraError **error);
-FatooraStatus fatoora_allowance_charge_is_charge(const FatooraAllowanceCharge *self,
-    bool *out,
+FatooraStatus fatoora_allowance_charge_kind(const FatooraAllowanceCharge *self,
+    FatooraAdjustmentKind *out,
     FatooraError **error);
 FatooraStatus fatoora_allowance_charge_amount(const FatooraAllowanceCharge *self,
     char **out,
@@ -228,7 +323,7 @@ FatooraStatus fatoora_allowance_charge_rate(const FatooraAllowanceCharge *self,
     char **out,
     FatooraError **error);
 FatooraStatus fatoora_allowance_charge_category(const FatooraAllowanceCharge *self,
-    uint8_t *out,
+    FatooraVatCategory *out,
     FatooraError **error);
 FatooraStatus fatoora_allowance_charge_with_tax_category_count(const FatooraAllowanceCharge *self,
     size_t count,
@@ -262,6 +357,25 @@ FatooraStatus fatoora_bytes_list_get(const FatooraBytesList *self,
     FatooraBytes **out,
     FatooraError **error);
 void fatoora_bytes_list_free(FatooraBytesList *self);
+FatooraStatus fatoora_compliance_csid_new(FatooraEnvironment environment,
+    const char *request_id,
+    const char *token,
+    const char *secret,
+    FatooraComplianceCsid **out,
+    FatooraError **error);
+FatooraStatus fatoora_compliance_csid_env(const FatooraComplianceCsid *self,
+    FatooraEnvironment *out,
+    FatooraError **error);
+FatooraStatus fatoora_compliance_csid_request_id(const FatooraComplianceCsid *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_compliance_csid_binary_security_token(const FatooraComplianceCsid *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_compliance_csid_secret(const FatooraComplianceCsid *self,
+    char **out,
+    FatooraError **error);
+void fatoora_compliance_csid_free(FatooraComplianceCsid *self);
 FatooraStatus fatoora_compliance_request_method(const FatooraComplianceRequest *self,
     char **out,
     FatooraError **error);
@@ -278,54 +392,16 @@ FatooraStatus fatoora_compliance_request_decode(const FatooraComplianceRequest *
     uint16_t status,
     const uint8_t *body,
     size_t body_len,
-    FatooraCsidCompliance **out,
+    FatooraComplianceCsid **out,
     FatooraError **error);
 void fatoora_compliance_request_free(FatooraComplianceRequest *self);
-FatooraStatus fatoora_config_new(int32_t env,
+FatooraStatus fatoora_config_new(FatooraEnvironment env,
     FatooraConfig **out,
     FatooraError **error);
 FatooraStatus fatoora_config_env(const FatooraConfig *self,
-    uint8_t *out,
+    FatooraEnvironment *out,
     FatooraError **error);
 void fatoora_config_free(FatooraConfig *self);
-FatooraStatus fatoora_csid_compliance_create(int32_t environment,
-    const char *request_id,
-    const char *token,
-    const char *secret,
-    FatooraCsidCompliance **out,
-    FatooraError **error);
-FatooraStatus fatoora_csid_compliance_env(const FatooraCsidCompliance *self,
-    uint8_t *out,
-    FatooraError **error);
-FatooraStatus fatoora_csid_compliance_request_id(const FatooraCsidCompliance *self,
-    char **out,
-    FatooraError **error);
-FatooraStatus fatoora_csid_compliance_binary_security_token(const FatooraCsidCompliance *self,
-    char **out,
-    FatooraError **error);
-FatooraStatus fatoora_csid_compliance_secret(const FatooraCsidCompliance *self,
-    char **out,
-    FatooraError **error);
-void fatoora_csid_compliance_free(FatooraCsidCompliance *self);
-FatooraStatus fatoora_csid_production_create(int32_t environment,
-    const char *request_id,
-    const char *token,
-    const char *secret,
-    FatooraCsidProduction **out,
-    FatooraError **error);
-FatooraStatus fatoora_csid_production_env(const FatooraCsidProduction *self,
-    uint8_t *out,
-    FatooraError **error);
-FatooraStatus fatoora_csid_production_request_id(const FatooraCsidProduction *self,
-    char **out,
-    FatooraError **error);
-FatooraStatus fatoora_csid_production_binary_security_token(const FatooraCsidProduction *self,
-    char **out,
-    FatooraError **error);
-FatooraStatus fatoora_csid_production_secret(const FatooraCsidProduction *self,
-    char **out,
-    FatooraError **error);
-void fatoora_csid_production_free(FatooraCsidProduction *self);
 FatooraStatus fatoora_csr_from_der(const uint8_t *der,
     size_t der_len,
     FatooraCsr **out,
@@ -352,15 +428,15 @@ void fatoora_csr_free(FatooraCsr *self);
 FatooraStatus fatoora_csr_properties_new(const FatooraCsrOptions *options,
     FatooraCsrProperties **out,
     FatooraError **error);
-FatooraStatus fatoora_csr_properties_from_properties_str(const char *properties,
+FatooraStatus fatoora_csr_properties_from_str(const char *properties,
     FatooraCsrProperties **out,
     FatooraError **error);
-FatooraStatus fatoora_csr_properties_parse_csr_config_file(const char *path,
+FatooraStatus fatoora_csr_properties_from_file(const char *path,
     FatooraCsrProperties **out,
     FatooraError **error);
 FatooraStatus fatoora_csr_properties_build(const FatooraCsrProperties *self,
     const FatooraSigningKey *key,
-    int32_t env,
+    FatooraEnvironment env,
     FatooraCsr **out,
     FatooraError **error);
 void fatoora_csr_properties_free(FatooraCsrProperties *self);
@@ -376,7 +452,7 @@ FatooraStatus fatoora_finalized_invoice_data(const FatooraFinalizedInvoice *self
 FatooraStatus fatoora_finalized_invoice_totals(const FatooraFinalizedInvoice *self,
     FatooraInvoiceTotals **out,
     FatooraError **error);
-FatooraStatus fatoora_finalized_invoice_hash_base64(const FatooraFinalizedInvoice *self,
+FatooraStatus fatoora_finalized_invoice_hash(const FatooraFinalizedInvoice *self,
     char **out,
     FatooraError **error);
 FatooraStatus fatoora_finalized_invoice_xml(const FatooraFinalizedInvoice *self,
@@ -401,10 +477,15 @@ FatooraStatus fatoora_invoice_builder_add_note(FatooraInvoiceBuilder *self,
     const char *language,
     const char *value,
     FatooraError **error);
-FatooraStatus fatoora_invoice_builder_add_document_adjustment(FatooraInvoiceBuilder *self,
-    bool charge,
+FatooraStatus fatoora_invoice_builder_add_allowance(FatooraInvoiceBuilder *self,
     const FatooraAdjustment *value,
-    int32_t category,
+    FatooraVatCategory category,
+    const char *rate,
+    const FatooraTaxExemption *exemption,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_builder_add_charge(FatooraInvoiceBuilder *self,
+    const FatooraAdjustment *value,
+    FatooraVatCategory category,
     const char *rate,
     const FatooraTaxExemption *exemption,
     FatooraError **error);
@@ -414,14 +495,11 @@ FatooraStatus fatoora_invoice_builder_set_buyer_without_address(FatooraInvoiceBu
     const char *other_id,
     const char *scheme,
     FatooraError **error);
-FatooraStatus fatoora_invoice_builder_new_with_reference(int32_t kind,
-    int32_t subtype,
+FatooraStatus fatoora_invoice_builder_new_with_reference(FatooraInvoiceTypeKind kind,
+    FatooraInvoiceSubType subtype,
     const FatooraOriginalInvoiceRef *reference,
     const char *reason,
     FatooraInvoiceBuilder **out,
-    FatooraError **error);
-FatooraStatus fatoora_invoice_builder_set_note_without_language(FatooraInvoiceBuilder *self,
-    const char *value,
     FatooraError **error);
 FatooraStatus fatoora_invoice_builder_set_payment_instruction(FatooraInvoiceBuilder *self,
     const char *instruction,
@@ -440,8 +518,8 @@ FatooraStatus fatoora_invoice_builder_set_tax_currency(FatooraInvoiceBuilder *se
     const char *currency,
     const char *amount,
     FatooraError **error);
-FatooraStatus fatoora_invoice_builder_set_tax_exemption(FatooraInvoiceBuilder *self,
-    int32_t category,
+FatooraStatus fatoora_invoice_builder_add_tax_exemption(FatooraInvoiceBuilder *self,
+    FatooraVatCategory category,
     const char *rate,
     const FatooraTaxExemption *exemption,
     FatooraError **error);
@@ -478,34 +556,14 @@ FatooraStatus fatoora_invoice_builder_set_currency(FatooraInvoiceBuilder *self,
 FatooraStatus fatoora_invoice_builder_set_previous_invoice_hash(FatooraInvoiceBuilder *self,
     const char *value,
     FatooraError **error);
-FatooraStatus fatoora_invoice_builder_set_payment_means_code(FatooraInvoiceBuilder *self,
-    const char *value,
-    FatooraError **error);
-FatooraStatus fatoora_invoice_builder_allowance_reason(FatooraInvoiceBuilder *self,
-    const char *value,
-    FatooraError **error);
-FatooraStatus fatoora_invoice_builder_invoice_level_charge(FatooraInvoiceBuilder *self,
-    const char *value,
-    FatooraError **error);
-FatooraStatus fatoora_invoice_builder_invoice_level_discount(FatooraInvoiceBuilder *self,
-    const char *value,
-    FatooraError **error);
 FatooraStatus fatoora_invoice_builder_set_invoice_counter(FatooraInvoiceBuilder *self,
     uint64_t value,
     FatooraError **error);
 FatooraStatus fatoora_invoice_builder_set_vat_category(FatooraInvoiceBuilder *self,
+    FatooraVatCategory value,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_builder_set_flags(FatooraInvoiceBuilder *self,
     int32_t value,
-    FatooraError **error);
-FatooraStatus fatoora_invoice_builder_flags(FatooraInvoiceBuilder *self,
-    int32_t value,
-    FatooraError **error);
-FatooraStatus fatoora_invoice_builder_set_note(FatooraInvoiceBuilder *self,
-    const char *language,
-    const char *value,
-    FatooraError **error);
-FatooraStatus fatoora_invoice_builder_set_allowance(FatooraInvoiceBuilder *self,
-    const char *reason,
-    const char *amount,
     FatooraError **error);
 FatooraStatus fatoora_invoice_builder_set_seller(FatooraInvoiceBuilder *self,
     const FatooraPartyOptions *options,
@@ -592,16 +650,16 @@ FatooraStatus fatoora_invoice_data_invoice_counter(const FatooraInvoiceData *sel
     uint64_t *out,
     FatooraError **error);
 FatooraStatus fatoora_invoice_data_vat_category(const FatooraInvoiceData *self,
-    uint8_t *out,
+    FatooraVatCategory *out,
     FatooraError **error);
-FatooraStatus fatoora_invoice_data_flags_raw(const FatooraInvoiceData *self,
+FatooraStatus fatoora_invoice_data_flags(const FatooraInvoiceData *self,
     uint8_t *out,
     FatooraError **error);
 FatooraStatus fatoora_invoice_data_invoice_type_kind(const FatooraInvoiceData *self,
-    uint8_t *out,
+    FatooraInvoiceTypeKind *out,
     FatooraError **error);
 FatooraStatus fatoora_invoice_data_invoice_sub_type(const FatooraInvoiceData *self,
-    uint8_t *out,
+    FatooraInvoiceSubType *out,
     FatooraError **error);
 FatooraStatus fatoora_invoice_data_seller(const FatooraInvoiceData *self,
     FatooraParty **out,
@@ -659,9 +717,9 @@ FatooraStatus fatoora_invoice_line_item_adjustment(const FatooraInvoiceLineItem 
     size_t index,
     FatooraAdjustment **out,
     FatooraError **error);
-FatooraStatus fatoora_invoice_line_item_adjustment_is_charge(const FatooraInvoiceLineItem *self,
+FatooraStatus fatoora_invoice_line_item_adjustment_kind(const FatooraInvoiceLineItem *self,
     size_t index,
-    bool *out,
+    FatooraAdjustmentKind *out,
     FatooraError **error);
 FatooraStatus fatoora_invoice_line_item_item_seller_identifier(const FatooraInvoiceLineItem *self,
     FatooraOtherId **out,
@@ -699,7 +757,7 @@ FatooraStatus fatoora_invoice_line_item_new(const char *description,
     const char *unit_code,
     const char *unit_price,
     const char *rate,
-    int32_t category,
+    FatooraVatCategory category,
     FatooraInvoiceLineItem **out,
     FatooraError **error);
 FatooraStatus fatoora_invoice_line_item_with_metadata(const FatooraInvoiceLineItem *self,
@@ -744,7 +802,7 @@ FatooraStatus fatoora_invoice_line_item_has_gross_amount(const FatooraInvoiceLin
     bool *out,
     FatooraError **error);
 FatooraStatus fatoora_invoice_line_item_vat_category(const FatooraInvoiceLineItem *self,
-    uint8_t *out,
+    FatooraVatCategory *out,
     FatooraError **error);
 void fatoora_invoice_line_item_free(FatooraInvoiceLineItem *self);
 FatooraStatus fatoora_invoice_note_language_id(const FatooraInvoiceNote *self,
@@ -776,6 +834,31 @@ FatooraStatus fatoora_invoice_request_decode(const FatooraInvoiceRequest *self,
     FatooraValidationResponse **out,
     FatooraError **error);
 void fatoora_invoice_request_free(FatooraInvoiceRequest *self);
+FatooraStatus fatoora_invoice_signer_from_pem(const char *cert_pem,
+    const char *key_pem,
+    FatooraInvoiceSigner **out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_signer_from_der(const uint8_t *cert_der,
+    size_t cert_der_len,
+    const uint8_t *key_der,
+    size_t key_der_len,
+    FatooraInvoiceSigner **out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_signer_certificate_der(const FatooraInvoiceSigner *self,
+    FatooraBytes **out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_signer_certificate_pem(const FatooraInvoiceSigner *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_signer_sign(const FatooraInvoiceSigner *self,
+    FatooraFinalizedInvoice *invoice,
+    FatooraSignedInvoice **out,
+    FatooraError **error);
+FatooraStatus fatoora_invoice_signer_sign_xml(const FatooraInvoiceSigner *self,
+    const char *xml,
+    char **out,
+    FatooraError **error);
+void fatoora_invoice_signer_free(FatooraInvoiceSigner *self);
 FatooraStatus fatoora_invoice_totals_vat_breakdown_len(const FatooraInvoiceTotals *self,
     size_t *out,
     FatooraError **error);
@@ -862,7 +945,7 @@ FatooraStatus fatoora_line_item_builder_set_vat_rate(FatooraLineItemBuilder *sel
     const char *value,
     FatooraError **error);
 FatooraStatus fatoora_line_item_builder_set_vat_category(FatooraLineItemBuilder *self,
-    int32_t value,
+    FatooraVatCategory value,
     FatooraError **error);
 FatooraStatus fatoora_line_item_builder_set_exemption(FatooraLineItemBuilder *self,
     const FatooraTaxExemption *value,
@@ -978,6 +1061,25 @@ FatooraStatus fatoora_payment_means_payment_terms(const FatooraPaymentMeans *sel
     char **out,
     FatooraError **error);
 void fatoora_payment_means_free(FatooraPaymentMeans *self);
+FatooraStatus fatoora_production_csid_new(FatooraEnvironment environment,
+    const char *request_id,
+    const char *token,
+    const char *secret,
+    FatooraProductionCsid **out,
+    FatooraError **error);
+FatooraStatus fatoora_production_csid_env(const FatooraProductionCsid *self,
+    FatooraEnvironment *out,
+    FatooraError **error);
+FatooraStatus fatoora_production_csid_request_id(const FatooraProductionCsid *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_production_csid_binary_security_token(const FatooraProductionCsid *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_production_csid_secret(const FatooraProductionCsid *self,
+    char **out,
+    FatooraError **error);
+void fatoora_production_csid_free(FatooraProductionCsid *self);
 FatooraStatus fatoora_production_request_method(const FatooraProductionRequest *self,
     char **out,
     FatooraError **error);
@@ -994,7 +1096,7 @@ FatooraStatus fatoora_production_request_decode(const FatooraProductionRequest *
     uint16_t status,
     const uint8_t *body,
     size_t body_len,
-    FatooraCsidProduction **out,
+    FatooraProductionCsid **out,
     FatooraError **error);
 void fatoora_production_request_free(FatooraProductionRequest *self);
 FatooraStatus fatoora_signed_invoice_from_xml(const char *value,
@@ -1009,7 +1111,7 @@ FatooraStatus fatoora_signed_invoice_data(const FatooraSignedInvoice *self,
 FatooraStatus fatoora_signed_invoice_totals(const FatooraSignedInvoice *self,
     FatooraInvoiceTotals **out,
     FatooraError **error);
-FatooraStatus fatoora_signed_invoice_hash_base64(const FatooraSignedInvoice *self,
+FatooraStatus fatoora_signed_invoice_hash(const FatooraSignedInvoice *self,
     char **out,
     FatooraError **error);
 FatooraStatus fatoora_signed_invoice_xml(const FatooraSignedInvoice *self,
@@ -1052,31 +1154,6 @@ FatooraStatus fatoora_signed_invoice_into_xml(FatooraSignedInvoice *self,
     char **out,
     FatooraError **error);
 void fatoora_signed_invoice_free(FatooraSignedInvoice *self);
-FatooraStatus fatoora_signer_from_pem(const char *cert_pem,
-    const char *key_pem,
-    FatooraSigner **out,
-    FatooraError **error);
-FatooraStatus fatoora_signer_from_der(const uint8_t *cert_der,
-    size_t cert_der_len,
-    const uint8_t *key_der,
-    size_t key_der_len,
-    FatooraSigner **out,
-    FatooraError **error);
-FatooraStatus fatoora_signer_certificate_der(const FatooraSigner *self,
-    FatooraBytes **out,
-    FatooraError **error);
-FatooraStatus fatoora_signer_certificate_pem(const FatooraSigner *self,
-    char **out,
-    FatooraError **error);
-FatooraStatus fatoora_signer_sign(const FatooraSigner *self,
-    FatooraFinalizedInvoice *invoice,
-    FatooraSignedInvoice **out,
-    FatooraError **error);
-FatooraStatus fatoora_signer_sign_xml(const FatooraSigner *self,
-    const char *xml,
-    char **out,
-    FatooraError **error);
-void fatoora_signer_free(FatooraSigner *self);
 FatooraStatus fatoora_signing_key_generate(FatooraSigningKey **out,
     FatooraError **error);
 FatooraStatus fatoora_signing_key_from_pem(const char *pem,
@@ -1105,6 +1182,10 @@ FatooraStatus fatoora_tax_exemption_reason(const FatooraTaxExemption *self,
     FatooraError **error);
 void fatoora_tax_exemption_free(FatooraTaxExemption *self);
 FatooraStatus fatoora_validation_message_message_type(const FatooraValidationMessage *self,
+    FatooraMessageType *out,
+    bool *has_value,
+    FatooraError **error);
+FatooraStatus fatoora_validation_message_message_type_raw(const FatooraValidationMessage *self,
     char **out,
     FatooraError **error);
 FatooraStatus fatoora_validation_message_code(const FatooraValidationMessage *self,
@@ -1117,6 +1198,10 @@ FatooraStatus fatoora_validation_message_message(const FatooraValidationMessage 
     char **out,
     FatooraError **error);
 FatooraStatus fatoora_validation_message_status(const FatooraValidationMessage *self,
+    FatooraValidationStatus *out,
+    bool *has_value,
+    FatooraError **error);
+FatooraStatus fatoora_validation_message_status_raw(const FatooraValidationMessage *self,
     char **out,
     FatooraError **error);
 void fatoora_validation_message_free(FatooraValidationMessage *self);
@@ -1139,9 +1224,17 @@ FatooraStatus fatoora_validation_response_cleared_invoice_base64(const FatooraVa
     char **out,
     FatooraError **error);
 FatooraStatus fatoora_validation_response_reporting_status(const FatooraValidationResponse *self,
+    FatooraReportingStatus *out,
+    bool *has_value,
+    FatooraError **error);
+FatooraStatus fatoora_validation_response_reporting_status_raw(const FatooraValidationResponse *self,
     char **out,
     FatooraError **error);
 FatooraStatus fatoora_validation_response_clearance_status(const FatooraValidationResponse *self,
+    FatooraClearanceStatus *out,
+    bool *has_value,
+    FatooraError **error);
+FatooraStatus fatoora_validation_response_clearance_status_raw(const FatooraValidationResponse *self,
     char **out,
     FatooraError **error);
 FatooraStatus fatoora_validation_response_qr_seller_status(const FatooraValidationResponse *self,
@@ -1152,6 +1245,10 @@ FatooraStatus fatoora_validation_response_qr_buyer_status(const FatooraValidatio
     FatooraError **error);
 void fatoora_validation_response_free(FatooraValidationResponse *self);
 FatooraStatus fatoora_validation_results_status(const FatooraValidationResults *self,
+    FatooraValidationStatus *out,
+    bool *has_value,
+    FatooraError **error);
+FatooraStatus fatoora_validation_results_status_raw(const FatooraValidationResults *self,
     char **out,
     FatooraError **error);
 FatooraStatus fatoora_validation_results_info_len(const FatooraValidationResults *self,
@@ -1179,10 +1276,10 @@ void fatoora_validation_results_free(FatooraValidationResults *self);
 FatooraStatus fatoora_vat_breakdown_has_vat_rate(const FatooraVatBreakdown *self,
     bool *out,
     FatooraError **error);
-FatooraStatus fatoora_vat_breakdown_without_vat_rate(const FatooraVatBreakdown *self,
+FatooraStatus fatoora_vat_breakdown_omit_vat_rate(const FatooraVatBreakdown *self,
     FatooraVatBreakdown **out,
     FatooraError **error);
-FatooraStatus fatoora_vat_breakdown_new(int32_t category,
+FatooraStatus fatoora_vat_breakdown_new(FatooraVatCategory category,
     const char *rate,
     const char *taxable_amount,
     const char *tax_amount,
@@ -1190,7 +1287,7 @@ FatooraStatus fatoora_vat_breakdown_new(int32_t category,
     FatooraVatBreakdown **out,
     FatooraError **error);
 FatooraStatus fatoora_vat_breakdown_category(const FatooraVatBreakdown *self,
-    uint8_t *out,
+    FatooraVatCategory *out,
     FatooraError **error);
 FatooraStatus fatoora_vat_breakdown_rate(const FatooraVatBreakdown *self,
     char **out,
@@ -1209,67 +1306,69 @@ FatooraStatus fatoora_vat_id_value(const FatooraVatId *self,
     char **out,
     FatooraError **error);
 void fatoora_vat_id_free(FatooraVatId *self);
-FatooraStatus fatoora_xml_validate_zatca(const FatooraConfig *config,
-    const char *xml,
+FatooraStatus fatoora_xml_validate_zatca(const char *xml,
     const char *options_json,
-    char **out,
+    FatooraZatcaValidationReport **out,
     FatooraError **error);
-FatooraStatus fatoora_xml_validate(const FatooraConfig *config,
-    const char *xml,
+FatooraStatus fatoora_xml_validate(const char *xml,
     bool *out,
     FatooraError **error);
 FatooraStatus fatoora_xml_hash(const char *xml,
     char **out,
     FatooraError **error);
-FatooraStatus fatoora_zatca_client_create(const FatooraConfig *config,
+FatooraStatus fatoora_zatca_client_new(const FatooraConfig *config,
     FatooraZatcaClient **out,
     FatooraError **error);
-FatooraStatus fatoora_zatca_client_post_csr_for_ccsid(const FatooraZatcaClient *self,
+FatooraStatus fatoora_zatca_client_with_timeout(const FatooraConfig *config,
+    uint32_t timeout_ms,
+    FatooraZatcaClient **out,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_client_request_compliance_csid(const FatooraZatcaClient *self,
     const FatooraCsr *csr,
     const char *otp,
-    FatooraCsidCompliance **out,
+    FatooraComplianceCsid **out,
     FatooraError **error);
-FatooraStatus fatoora_zatca_client_post_ccsid_for_pcsid(const FatooraZatcaClient *self,
-    const FatooraCsidCompliance *credentials,
-    FatooraCsidProduction **out,
+FatooraStatus fatoora_zatca_client_request_production_csid(const FatooraZatcaClient *self,
+    const FatooraComplianceCsid *credentials,
+    FatooraProductionCsid **out,
     FatooraError **error);
 FatooraStatus fatoora_zatca_client_renew_csid(const FatooraZatcaClient *self,
-    const FatooraCsidProduction *credentials,
+    const FatooraProductionCsid *credentials,
     const FatooraCsr *csr,
     const char *otp,
     const char *accept_language,
-    FatooraCsidProduction **out,
+    FatooraProductionCsid **out,
     FatooraError **error);
 FatooraStatus fatoora_zatca_client_check_invoice_compliance(const FatooraZatcaClient *self,
     const FatooraSignedInvoice *invoice,
-    const FatooraCsidCompliance *credentials,
+    const FatooraComplianceCsid *credentials,
     FatooraValidationResponse **out,
     FatooraError **error);
 FatooraStatus fatoora_zatca_client_report_simplified_invoice(const FatooraZatcaClient *self,
     const FatooraSignedInvoice *invoice,
-    const FatooraCsidProduction *credentials,
-    bool clearance_status,
+    const FatooraProductionCsid *credentials,
+    FatooraClearanceMode clearance_mode,
     const char *accept_language,
     FatooraValidationResponse **out,
     FatooraError **error);
 FatooraStatus fatoora_zatca_client_clear_standard_invoice(const FatooraZatcaClient *self,
     const FatooraSignedInvoice *invoice,
-    const FatooraCsidProduction *credentials,
-    bool clearance_status,
+    const FatooraProductionCsid *credentials,
+    FatooraClearanceMode clearance_mode,
     const char *accept_language,
     FatooraValidationResponse **out,
     FatooraError **error);
-FatooraStatus fatoora_zatca_client_prepare_post_csr_for_ccsid(const FatooraZatcaClient *self,
+FatooraStatus fatoora_zatca_client_prepare_request_compliance_csid(const FatooraZatcaClient *self,
     const FatooraCsr *csr,
     const char *otp,
     FatooraComplianceRequest **out,
     FatooraError **error);
-FatooraStatus fatoora_zatca_client_prepare_post_ccsid_for_pcsid(const FatooraZatcaClient *self,
-    const FatooraCsidCompliance *credentials,
+FatooraStatus fatoora_zatca_client_prepare_request_production_csid(const FatooraZatcaClient *self,
+    const FatooraComplianceCsid *credentials,
     FatooraProductionRequest **out,
     FatooraError **error);
 FatooraStatus fatoora_zatca_client_prepare_renew_csid(const FatooraZatcaClient *self,
-    const FatooraCsidProduction *credentials,
+    const FatooraProductionCsid *credentials,
     const FatooraCsr *csr,
     const char *otp,
     const char *accept_language,
@@ -1277,24 +1376,115 @@ FatooraStatus fatoora_zatca_client_prepare_renew_csid(const FatooraZatcaClient *
     FatooraError **error);
 FatooraStatus fatoora_zatca_client_prepare_check_invoice_compliance(const FatooraZatcaClient *self,
     const FatooraSignedInvoice *invoice,
-    const FatooraCsidCompliance *credentials,
+    const FatooraComplianceCsid *credentials,
     FatooraInvoiceRequest **out,
     FatooraError **error);
 FatooraStatus fatoora_zatca_client_prepare_report_simplified_invoice(const FatooraZatcaClient *self,
     const FatooraSignedInvoice *invoice,
-    const FatooraCsidProduction *credentials,
-    bool clearance_status,
+    const FatooraProductionCsid *credentials,
+    FatooraClearanceMode clearance_mode,
     const char *accept_language,
     FatooraInvoiceRequest **out,
     FatooraError **error);
 FatooraStatus fatoora_zatca_client_prepare_clear_standard_invoice(const FatooraZatcaClient *self,
     const FatooraSignedInvoice *invoice,
-    const FatooraCsidProduction *credentials,
-    bool clearance_status,
+    const FatooraProductionCsid *credentials,
+    FatooraClearanceMode clearance_mode,
     const char *accept_language,
     FatooraInvoiceRequest **out,
     FatooraError **error);
 void fatoora_zatca_client_free(FatooraZatcaClient *self);
+FatooraStatus fatoora_zatca_finding_assertion_site(const FatooraZatcaFinding *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_finding_layer(const FatooraZatcaFinding *self,
+    FatooraValidationLayer *out,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_finding_code(const FatooraZatcaFinding *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_finding_severity(const FatooraZatcaFinding *self,
+    FatooraSeverity *out,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_finding_message(const FatooraZatcaFinding *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_finding_location_kind(const FatooraZatcaFinding *self,
+    FatooraValidationLocationKind *out,
+    bool *has_value,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_finding_location_path(const FatooraZatcaFinding *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_finding_location_line(const FatooraZatcaFinding *self,
+    uint32_t *out,
+    bool *has_value,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_finding_location_column(const FatooraZatcaFinding *self,
+    uint32_t *out,
+    bool *has_value,
+    FatooraError **error);
+void fatoora_zatca_finding_free(FatooraZatcaFinding *self);
+FatooraStatus fatoora_zatca_rule_source_stylesheet(const FatooraZatcaRuleSource *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_rule_source_sha256(const FatooraZatcaRuleSource *self,
+    char **out,
+    FatooraError **error);
+void fatoora_zatca_rule_source_free(FatooraZatcaRuleSource *self);
+FatooraStatus fatoora_zatca_stage_report_stage(const FatooraZatcaStageReport *self,
+    FatooraZatcaStage *out,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_stage_report_status(const FatooraZatcaStageReport *self,
+    FatooraZatcaStageStatus *out,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_stage_report_provenance(const FatooraZatcaStageReport *self,
+    FatooraZatcaRuleSource **out,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_stage_report_evaluated_assertions_len(const FatooraZatcaStageReport *self,
+    size_t *out,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_stage_report_evaluated_assertion(const FatooraZatcaStageReport *self,
+    size_t index,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_stage_report_findings_len(const FatooraZatcaStageReport *self,
+    size_t *out,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_stage_report_finding(const FatooraZatcaStageReport *self,
+    size_t index,
+    FatooraZatcaFinding **out,
+    FatooraError **error);
+void fatoora_zatca_stage_report_free(FatooraZatcaStageReport *self);
+FatooraStatus fatoora_zatca_validation_report_schema_version(const FatooraZatcaValidationReport *self,
+    uint32_t *out,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_validation_report_profile(const FatooraZatcaValidationReport *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_validation_report_evaluated_at(const FatooraZatcaValidationReport *self,
+    char **out,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_validation_report_is_complete(const FatooraZatcaValidationReport *self,
+    bool *out,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_validation_report_has_errors(const FatooraZatcaValidationReport *self,
+    bool *out,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_validation_report_is_valid(const FatooraZatcaValidationReport *self,
+    bool *out,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_validation_report_stages_len(const FatooraZatcaValidationReport *self,
+    size_t *out,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_validation_report_stage(const FatooraZatcaValidationReport *self,
+    size_t index,
+    FatooraZatcaStageReport **out,
+    FatooraError **error);
+FatooraStatus fatoora_zatca_validation_report_to_json(const FatooraZatcaValidationReport *self,
+    char **out,
+    FatooraError **error);
+void fatoora_zatca_validation_report_free(FatooraZatcaValidationReport *self);
 #ifdef __cplusplus
 }
 #endif

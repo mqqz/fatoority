@@ -29,7 +29,6 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Usage: %s invoice.xml\n", argv[0]);
         return 1;
     }
-    FatooraConfig *config = NULL;
     FatooraError *error = NULL;
     char *xml = read_xml(argv[1]);
     if (!xml) {
@@ -39,15 +38,13 @@ int main(int argc, char **argv) {
     bool valid = false;
     FatooraStatus status = FATOORA_OK;
 #define TRY(call) do { status = (call); if (status != FATOORA_OK) goto cleanup; } while (0)
-    TRY(fatoora_config_new(FATOORA_NON_PRODUCTION, &config, &error));
     /* Validate original XML; parsing/reserializing would change the input. */
-    TRY(fatoora_xml_validate(config, xml, &valid, &error));
+    TRY(fatoora_xml_validate(xml, &valid, &error));
     printf("XSD valid: %s\n", valid ? "true" : "false");
 cleanup:
     if (status != FATOORA_OK)
         fprintf(stderr, "Error %d: %s\n", (int)status, fatoora_error_message(error));
     free(xml);
-    fatoora_config_free(config);
     fatoora_error_free(error);
     return status == FATOORA_OK && valid ? 0 : 1;
 }

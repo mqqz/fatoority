@@ -46,7 +46,7 @@ most two decimal places. Negative line quantities, prices, discounts, and charge
 are rejected; credit notes use positive amounts with the appropriate document
 type. Payable rounding can be signed. Price bases must be positive.
 
-Use `Adjustment::amount` or `Adjustment::percentage` for line adjustments, and
+Use `Adjustment::amount` or `Adjustment::percent_of` for line adjustments, and
 `DocumentAdjustment` for invoice adjustments with independent VAT categories and
 rates. Scalar invoice discount/charge setters require an unambiguous VAT group;
 combining them with independent adjustment entries is rejected. See
@@ -107,15 +107,15 @@ rules. Run [local validation](../guides/validation.md) for that rule profile.
 
 === "C#"
 
-    Pass quantities, prices, rates and amounts as invariant decimal strings, such as `"0.3333"`. Numeric getters return `string`. If formatting a `decimal`, use `CultureInfo.InvariantCulture`.
+    Pass quantities, prices, rates and amounts as `decimal`, such as `0.3333m`; numeric getters return `decimal` (or `decimal?` when optional). The binding converts with the invariant culture, never through `double`, so values cross the boundary exactly. Returned values are normalized: `1.50m` comes back as `1.5m`, which compares equal.
 
 === "Kotlin"
 
-    Pass quantities, prices, rates and amounts as decimal strings. Numeric getters return `String`. Use `BigDecimal.toPlainString()` when converting a value; scientific notation is not accepted.
+    Pass quantities, prices, rates and amounts as `java.math.BigDecimal`; amount getters return `BigDecimal`. Conversion is exact: the binding sends `toPlainString()` and parses results with `BigDecimal(String)`, so no digits are lost. Compare values with `compareTo`, since returned values are normalized (`10.50` reads back as `10.5`).
 
 === "Java"
 
-    Pass quantities, prices, rates and amounts as decimal strings. Numeric getters return `String`. Use `BigDecimal.toPlainString()` when converting a value; scientific notation is not accepted.
+    Pass quantities, prices, rates and amounts as `java.math.BigDecimal`; amount getters return `BigDecimal`. Conversion is exact: the binding sends `toPlainString()` and parses results with `BigDecimal(String)`, so no digits are lost. Compare values with `compareTo`, since returned values are normalized (`10.50` reads back as `10.5`).
 
 === "C"
 

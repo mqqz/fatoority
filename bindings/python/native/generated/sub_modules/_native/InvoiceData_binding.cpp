@@ -21,7 +21,7 @@ void add_InvoiceData_binding(nb::module_ mod) {
         .def("buyer", std::move(maybe_op_unwrap(&_native::InvoiceData::buyer)))
         .def("contract_id", std::move(maybe_op_unwrap(&_native::InvoiceData::contract_id)))
         .def("currency", std::move(maybe_op_unwrap(&_native::InvoiceData::currency)))
-        .def("flags_raw", &_native::InvoiceData::flags_raw)
+        .def("flags", &_native::InvoiceData::flags)
         .def("id", std::move(maybe_op_unwrap(&_native::InvoiceData::id)))
         .def("invoice_counter", &_native::InvoiceData::invoice_counter)
         .def("invoice_level_charge", std::move(maybe_op_unwrap(&_native::InvoiceData::invoice_level_charge)))

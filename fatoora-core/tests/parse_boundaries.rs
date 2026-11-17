@@ -271,12 +271,15 @@ fn imported_note_preserves_language_text_and_default_language() {
         (xml.replace(" languageID=\"ar\"", ""), "en"),
     ] {
         let invoice = parse_finalized_invoice_xml(&xml).unwrap();
-        let note = invoice.data().note().unwrap();
+        let note = invoice.data().notes().first().unwrap();
         assert_eq!(note.text(), text);
         assert_eq!(note.language(), language);
         let serialized = invoice.to_xml().unwrap();
         let reparsed = parse_finalized_invoice_xml(&serialized).unwrap();
-        assert_eq!(reparsed.data().note(), invoice.data().note());
+        assert_eq!(
+            reparsed.data().notes().first(),
+            invoice.data().notes().first()
+        );
     }
 }
 
@@ -312,7 +315,7 @@ fn adjustment_vat_groups_cannot_be_merged_or_reassigned() {
     let parsed = parse_finalized_invoice_xml(&xml).unwrap();
     assert_eq!(parsed.data().adjustments().len(), 2);
     assert_eq!(
-        parsed.data().adjustments()[1].rate,
+        parsed.data().adjustments()[1].rate(),
         fatoora_core::Decimal::from(5)
     );
 }
@@ -360,15 +363,13 @@ fn complete_document_limit_is_shared_by_import_hashing_and_validation() {
     input.insert_str(input.find("</Invoice>").unwrap(), &comment);
     assert_eq!(input.len(), limit + 1);
     let imported = parse_finalized_invoice_xml(&input).unwrap_err().to_string();
-    let hashed = fatoora_core::invoice::sign::invoice_hash_base64_from_xml_str(&input)
+    let hashed = fatoora_core::invoice::hash_xml(&input)
         .unwrap_err()
         .to_string();
-    let validated = fatoora_core::invoice::validation::validate_xml_invoice_from_str(
-        &input,
-        &fatoora_core::config::Config::default(),
-    )
-    .unwrap_err()
-    .to_string();
+    let validated = fatoora_core::invoice::validation::Validator::new()
+        .validate_xml(&input)
+        .unwrap_err()
+        .to_string();
     for error in [imported, hashed, validated] {
         assert!(error.contains("XML input bytes"), "{error}");
     }
@@ -403,10 +404,7 @@ fn blank_required_scalars_report_their_own_field_and_leave_next_parse_usable() {
         ("cac:InvoiceLine[1]/cbc:LineExtensionAmount".to_owned(), "LineExtensionAmount"),
         ("cac:InvoiceLine[1]/cac:Price/cbc:PriceAmount".to_owned(), "PriceAmount"),
     ];
-    let expected = parse_finalized_invoice_xml(XML)
-        .unwrap()
-        .hash_base64()
-        .unwrap();
+    let expected = parse_finalized_invoice_xml(XML).unwrap().hash().unwrap();
     for (path, field) in paths {
         let xml = change(XML, &format!("{ROOT}/{path}"), " \t\n");
         let error = parse_finalized_invoice_xml(&xml).unwrap_err();
@@ -423,10 +421,7 @@ fn blank_required_scalars_report_their_own_field_and_leave_next_parse_usable() {
         );
     }
     assert_eq!(
-        parse_finalized_invoice_xml(XML)
-            .unwrap()
-            .hash_base64()
-            .unwrap(),
+        parse_finalized_invoice_xml(XML).unwrap().hash().unwrap(),
         expected
     );
 }

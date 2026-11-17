@@ -16,7 +16,7 @@ void add_SignedInvoice_binding(nb::module_ mod) {
         .def("data", std::move(maybe_op_unwrap(&_native::SignedInvoice::data)))
         .def_static("from_file", std::move(maybe_op_unwrap(&_native::SignedInvoice::from_file)), "value"_a)
         .def_static("from_xml", std::move(maybe_op_unwrap(&_native::SignedInvoice::from_xml)), "value"_a)
-        .def("hash_base64", std::move(maybe_op_unwrap(&_native::SignedInvoice::hash_base64)))
+        .def("hash", std::move(maybe_op_unwrap(&_native::SignedInvoice::hash)))
         .def("into_xml", std::move(maybe_op_unwrap(&_native::SignedInvoice::into_xml)))
         .def("invoice_hash", std::move(maybe_op_unwrap(&_native::SignedInvoice::invoice_hash)))
         .def("issuer", std::move(maybe_op_unwrap(&_native::SignedInvoice::issuer)))

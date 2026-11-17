@@ -63,12 +63,8 @@ fn compare(
     // Issue #4 assigns document well-formedness to roxmltree. Keep raw results
     // visible so parser gaps are not mistaken for schema correctness.
     let well_formed = roxmltree::Document::parse(xml).is_ok();
-    let production = bundled.then(|| {
-        fatoora_core::invoice::validation::validate_xml_invoice_from_str(
-            xml,
-            &fatoora_core::config::Config::default(),
-        )
-    });
+    let production =
+        bundled.then(|| fatoora_core::invoice::validation::Validator::new().validate_xml(xml));
     let new = production
         .as_ref()
         .map_or(well_formed && raw, Result::is_ok);

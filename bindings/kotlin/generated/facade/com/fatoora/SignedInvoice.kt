@@ -20,6 +20,67 @@ class SignedInvoice internal constructor(internal val raw: com.fatoora.raw.Signe
             SignedInvoice(unwrap(com.fatoora.raw.SignedInvoice.fromFile(checkedText(value))))
         }
     }
+
+    val hash: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.hash())
+        }
+
+    val xml: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.xml())
+        }
+
+    val qrCode: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.qrCode())
+        }
+
+    val signature: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.signature())
+        }
+
+    val publicKey: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.publicKey())
+        }
+
+    val invoiceHash: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.invoiceHash())
+        }
+
+    val issuer: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.issuer())
+        }
+
+    val serial: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.serial())
+        }
+
+    val certHash: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.certHash())
+        }
+
+    val signedPropsHash: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.signedPropsHash())
+        }
+
+    val signingTime: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.signingTime())
+        }
+
+    val zatcaKeySignature: String?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.zatcaKeySignature())?.let(::readText)
+        }
+
     fun data(): InvoiceData = nativeCall(listOfNotNull(this)) {
         InvoiceData(unwrap(raw.data()))
     }
@@ -28,26 +89,32 @@ class SignedInvoice internal constructor(internal val raw: com.fatoora.raw.Signe
         InvoiceTotals(unwrap(raw.totals()))
     }
 
-    fun hashBase64(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.hashBase64())
+    @Deprecated("Use the hash property.", ReplaceWith("hash"))
+    fun hash(): String = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.hash())
     }
 
+    @Deprecated("Use the xml property.", ReplaceWith("xml"))
     fun xml(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.xml())
     }
 
+    @Deprecated("Use the qrCode property.", ReplaceWith("qrCode"))
     fun qrCode(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.qrCode())
     }
 
+    @Deprecated("Use the signature property.", ReplaceWith("signature"))
     fun signature(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.signature())
     }
 
+    @Deprecated("Use the publicKey property.", ReplaceWith("publicKey"))
     fun publicKey(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.publicKey())
     }
 
+    @Deprecated("Use the invoiceHash property.", ReplaceWith("invoiceHash"))
     fun invoiceHash(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.invoiceHash())
     }
@@ -56,26 +123,32 @@ class SignedInvoice internal constructor(internal val raw: com.fatoora.raw.Signe
         unwrap(raw.toXmlBase64())
     }
 
+    @Deprecated("Use the issuer property.", ReplaceWith("issuer"))
     fun issuer(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.issuer())
     }
 
+    @Deprecated("Use the serial property.", ReplaceWith("serial"))
     fun serial(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.serial())
     }
 
+    @Deprecated("Use the certHash property.", ReplaceWith("certHash"))
     fun certHash(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.certHash())
     }
 
+    @Deprecated("Use the signedPropsHash property.", ReplaceWith("signedPropsHash"))
     fun signedPropsHash(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.signedPropsHash())
     }
 
+    @Deprecated("Use the signingTime property.", ReplaceWith("signingTime"))
     fun signingTime(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.signingTime())
     }
 
+    @Deprecated("Use the zatcaKeySignature property.", ReplaceWith("zatcaKeySignature"))
     fun zatcaKeySignature(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.zatcaKeySignature())?.let(::Text)
     }

@@ -446,6 +446,30 @@ impl InvoiceTimestamp {
     pub(crate) fn date_str(&self) -> &str {
         &self.0[..10]
     }
+
+    /// Returns the `HH:MM:SSZ` clock part.
+    pub(crate) fn time_str(&self) -> &str {
+        &self.0[11..]
+    }
+
+    /// Returns the timestamp without the trailing `Z` (`YYYY-MM-DDTHH:MM:SS`),
+    /// the form used by the XAdES `SigningTime` element.
+    pub(crate) fn xades_str(&self) -> &str {
+        &self.0[..19]
+    }
+
+    /// Parses a XAdES `SigningTime` value (`YYYY-MM-DDTHH:MM:SS`, no zone suffix).
+    pub(crate) fn parse_xades(value: &str) -> Result<Self> {
+        let value = value.trim();
+        let parsed = NaiveDateTime::parse_from_str(value, XADES_FORMAT)
+            .map_err(|_| InvoiceError::InvalidTimestamp(value.to_owned()))?;
+        Ok(Self::from_naive_utc(parsed))
+    }
+
+    /// Wraps a UTC wall-clock value, truncating sub-second precision.
+    pub(crate) fn from_naive_utc(value: NaiveDateTime) -> Self {
+        Self(value.format(TIMESTAMP_FORMAT).to_string())
+    }
 }
 
 impl AsRef<str> for InvoiceTimestamp {
@@ -574,8 +598,37 @@ impl std::fmt::Display for InvoiceTime {
     }
 }
 
+impl AsRef<str> for InvoiceTime {
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl FromStr for InvoiceTime {
+    type Err = InvoiceError;
+    fn from_str(s: &str) -> Result<Self> {
+        InvoiceTime::parse(s)
+    }
+}
+
+impl TryFrom<String> for InvoiceTime {
+    type Error = InvoiceError;
+    fn try_from(value: String) -> Result<Self> {
+        InvoiceTime::parse(value)
+    }
+}
+
+impl TryFrom<&str> for InvoiceTime {
+    type Error = InvoiceError;
+    fn try_from(value: &str) -> Result<Self> {
+        InvoiceTime::parse(value)
+    }
+}
+
 /// Format used by [`InvoiceTimestamp::parse`] and its chrono conversion.
 const TIMESTAMP_FORMAT: &str = "%Y-%m-%dT%H:%M:%SZ";
+/// Format of the XAdES `SigningTime` element (no zone suffix).
+const XADES_FORMAT: &str = "%Y-%m-%dT%H:%M:%S";
 /// Format used by [`InvoiceDate::parse`] and its chrono conversion.
 const DATE_FORMAT: &str = "%Y-%m-%d";
 
@@ -583,7 +636,7 @@ const DATE_FORMAT: &str = "%Y-%m-%d";
 impl From<chrono::DateTime<chrono::Utc>> for InvoiceTimestamp {
     /// Format as `YYYY-MM-DDTHH:MM:SSZ`, truncating sub-second precision.
     fn from(value: chrono::DateTime<chrono::Utc>) -> Self {
-        Self(value.naive_utc().format(TIMESTAMP_FORMAT).to_string())
+        Self::from_naive_utc(value.naive_utc())
     }
 }
 
@@ -595,7 +648,7 @@ impl From<NaiveDate> for InvoiceDate {
     }
 }
 
-/// Builds the error reported for an empty identifier, matching `InvoiceBuilder::build`.
+/// Builds the validation error reported for a blank identifier.
 fn empty_field_error(field: InvoiceField) -> InvoiceError {
     InvoiceError::Validation(ValidationError::new(vec![ValidationIssue::new(
         field,
@@ -606,9 +659,9 @@ fn empty_field_error(field: InvoiceField) -> InvoiceError {
 
 /// Invoice UUID (`cbc:UUID`).
 ///
-/// Accepts any input that is non-empty after trimming surrounding whitespace,
-/// the same rule `InvoiceBuilder::build` applies to `uuid`. The stored value is
-/// trimmed.
+/// Accepts any input that is non-empty after trimming surrounding whitespace;
+/// the stored value is trimmed. Pass it to [`InvoiceBuilder::uuid`] and
+/// [`OriginalInvoiceRef::with_uuid`].
 ///
 /// # Examples
 /// ```rust
@@ -689,9 +742,8 @@ impl From<uuid::Uuid> for InvoiceUuid {
 
 /// Previous invoice hash (the `PIH` additional document reference).
 ///
-/// Accepts any input that is non-empty after trimming surrounding whitespace,
-/// the same rule `InvoiceBuilder::build` applies to `previous_invoice_hash`.
-/// The stored value is trimmed.
+/// Accepts any input that is non-empty after trimming surrounding whitespace;
+/// the stored value is trimmed. Pass it to [`InvoiceBuilder::previous_invoice_hash`].
 ///
 /// # Examples
 /// ```rust
@@ -763,31 +815,119 @@ impl TryFrom<&str> for InvoiceHash {
     }
 }
 
+/// Compute the ZATCA invoice hash of an XML invoice.
+///
+/// The hash is the base64-encoded SHA-256 digest of the invoice after ZATCA
+/// canonicalisation (the `UBLExtensions`, `cac:Signature` and QR document
+/// reference removed, then canonicalised). It is the value signed into the invoice and the value the
+/// next invoice in the chain carries as its previous invoice hash (`PIH`).
+///
+/// # Examples
+/// ```rust
+/// use fatoora_core::invoice::hash_xml;
+///
+/// let xml = include_str!("../tests/fixtures/invoices/sample-simplified-invoice.xml");
+/// let hash = hash_xml(xml)?;
+/// assert_eq!(hash.as_str().len(), 44);
+/// # Ok::<(), fatoora_core::invoice::sign::SigningError>(())
+/// ```
+///
+/// # Errors
+/// Returns [`sign::SigningError::Xml`] if the XML cannot be parsed or
+/// canonicalised.
+pub fn hash_xml(xml: &str) -> std::result::Result<InvoiceHash, sign::SigningError> {
+    sign::invoice_hash_base64_from_xml(xml).map(InvoiceHash)
+}
+
 /// Postal address for parties.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Address {
     /// Province or region, serialized as UBL `cbc:CountrySubentity`.
     #[serde(default)]
-    pub province: Option<String>,
+    province: Option<String>,
     /// Country; serialized as its ISO alpha-2 code in `cac:Country/cbc:IdentificationCode`.
-    pub country_code: CountryCode,
+    country_code: CountryCode,
     /// City name (`cbc:CityName`); omitted from XML when empty.
-    pub city: String,
+    city: String,
     /// Street name (`cbc:StreetName`); omitted from XML when empty.
-    pub street: String,
+    street: String,
     /// Additional street name (`cbc:AdditionalStreetName`).
-    pub additional_street: Option<String>,
+    additional_street: Option<String>,
     /// Building number (`cbc:BuildingNumber`); omitted from XML when empty.
-    pub building_number: String,
+    building_number: String,
     /// Additional (plot) number, serialized as `cbc:PlotIdentification`.
-    pub additional_number: Option<String>,
+    additional_number: Option<String>,
     /// Postal code (`cbc:PostalZone`); omitted from XML when empty.
-    pub postal_code: String, //fix 5 digits if country is KSA
+    postal_code: String, //fix 5 digits if country is KSA
     /// City district, serialized as UBL `cbc:CitySubdivisionName`.
-    pub district: Option<String>,
+    district: Option<String>,
 }
 
 impl Address {
+    /// Creates an address from its required parts: country, city, street,
+    /// building number and postal code.
+    ///
+    /// Set the optional parts with [`with_province`](Self::with_province),
+    /// [`with_additional_street`](Self::with_additional_street),
+    /// [`with_additional_number`](Self::with_additional_number) and
+    /// [`with_district`](Self::with_district). Content is checked when the
+    /// invoice is built, not here.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use fatoora_core::invoice::{Address, CountryCode};
+    ///
+    /// let address = Address::new(CountryCode::parse("SA")?, "Riyadh", "King Fahd", "1234", "12222")
+    ///     .with_additional_number("5678")
+    ///     .with_district("Al Olaya");
+    /// assert_eq!(address.city(), "Riyadh");
+    /// assert_eq!(address.district(), Some("Al Olaya"));
+    /// # Ok::<(), fatoora_core::invoice::InvoiceError>(())
+    /// ```
+    pub fn new(
+        country_code: CountryCode,
+        city: impl Into<String>,
+        street: impl Into<String>,
+        building_number: impl Into<String>,
+        postal_code: impl Into<String>,
+    ) -> Self {
+        Self {
+            province: None,
+            country_code,
+            city: city.into(),
+            street: street.into(),
+            additional_street: None,
+            building_number: building_number.into(),
+            additional_number: None,
+            postal_code: postal_code.into(),
+            district: None,
+        }
+    }
+
+    /// Sets the province or region (`cbc:CountrySubentity`).
+    pub fn with_province(mut self, value: impl Into<String>) -> Self {
+        self.province = Some(value.into());
+        self
+    }
+
+    /// Sets the additional street name (`cbc:AdditionalStreetName`).
+    pub fn with_additional_street(mut self, value: impl Into<String>) -> Self {
+        self.additional_street = Some(value.into());
+        self
+    }
+
+    /// Sets the additional (plot) number (`cbc:PlotIdentification`).
+    pub fn with_additional_number(mut self, value: impl Into<String>) -> Self {
+        self.additional_number = Some(value.into());
+        self
+    }
+
+    /// Sets the city district (`cbc:CitySubdivisionName`).
+    pub fn with_district(mut self, value: impl Into<String>) -> Self {
+        self.district = Some(value.into());
+        self
+    }
+
     /// Returns the province or region, if set.
     pub fn province(&self) -> Option<&str> {
         self.province.as_deref()
@@ -1031,26 +1171,17 @@ impl PartyRole for BuyerRole {}
 ///
 /// # Examples
 /// ```rust
-/// use fatoora_core::invoice::{Party, SellerRole, Address, OtherId};
+/// use fatoora_core::invoice::{Party, SellerRole, Address, OtherId, VatId};
 /// use fatoora_core::invoice::CountryCode;
 ///
 /// let seller = Party::<SellerRole>::new(
-///     "Acme Inc".into(),
-///     Address {
-///         province: None,
-///         country_code: CountryCode::parse("SAU")?,
-///         city: "Riyadh".into(),
-///         street: "King Fahd".into(),
-///         additional_street: None,
-///         building_number: "1234".into(),
-///         additional_number: Some("5678".into()),
-///         postal_code: "12222".into(),
-///         district: None,
-///     },
-///     "399999999900003",
+///     "Acme Inc",
+///     Address::new(CountryCode::parse("SAU")?, "Riyadh", "King Fahd", "1234", "12222")
+///         .with_additional_number("5678"),
+///     VatId::parse("399999999900003")?,
 ///     Some(OtherId::with_scheme("7003339333", "CRN")),
-/// )?;
-/// # let _ = seller;
+/// );
+/// assert_eq!(seller.vat_id().map(VatId::as_str), Some("399999999900003"));
 /// use fatoora_core::invoice::InvoiceError;
 /// # Ok::<(), InvoiceError>(())
 /// ```
@@ -1071,50 +1202,43 @@ pub type Seller = Party<SellerRole>;
 pub type Buyer = Party<BuyerRole>;
 
 impl Party<SellerRole> {
-    /// Create a seller party from validated inputs.
+    /// Create a seller party; the address and VAT ID are required.
     ///
-    /// # Errors
-    /// Returns [`InvoiceError::InvalidVatFormat`] if the VAT ID is blank.
+    /// Parse the VAT ID with [`VatId::parse`] (or `str::parse`) first.
     pub fn new(
-        name: String,
+        name: impl Into<String>,
         address: Address,
-        vat_id: impl Into<String>, // required
-        other_id: Option<OtherId>, // optional
-    ) -> Result<Self> {
-        let vat = VatId::parse(vat_id.into())?;
-        Ok(Party {
+        vat_id: VatId,
+        other_id: Option<OtherId>,
+    ) -> Self {
+        Party {
             _marker: PhantomData,
-            name,
+            name: name.into(),
             address: Some(address),
-            vat_id: Some(vat),
+            vat_id: Some(vat_id),
             identifiers: other_id.into_iter().collect(),
-        })
+        }
     }
 }
 
 impl Party<BuyerRole> {
-    /// Create a buyer party from validated inputs.
+    /// Create a buyer party; the address, VAT ID and other identifier are optional.
     ///
-    /// # Errors
-    /// Returns [`InvoiceError::InvalidVatFormat`] if a supplied VAT ID is blank. Identification requirements
-    /// depend on invoice type and are checked by XML business-rule validation.
+    /// Identification requirements depend on the invoice type and are checked by
+    /// XML business-rule validation, not here.
     pub fn new(
-        name: String,
+        name: impl Into<String>,
         address: impl Into<Option<Address>>,
-        vat_id: Option<String>,    // optional
-        other_id: Option<OtherId>, // required if vat_id is None
-    ) -> Result<Self> {
-        let vat = match vat_id {
-            Some(v) => Some(VatId::parse(v)?),
-            None => None,
-        };
-        Ok(Party {
+        vat_id: Option<VatId>,
+        other_id: Option<OtherId>,
+    ) -> Self {
+        Party {
             _marker: PhantomData,
-            name,
+            name: name.into(),
             address: address.into(),
-            vat_id: vat,
+            vat_id,
             identifiers: other_id.into_iter().collect(),
-        })
+        }
     }
 }
 
@@ -1170,17 +1294,20 @@ pub enum InvoiceSubType {
 ///
 /// # Examples
 /// ```rust
-/// use fatoora_core::invoice::OriginalInvoiceRef;
+/// use fatoora_core::invoice::{InvoiceDate, InvoiceUuid, OriginalInvoiceRef};
 ///
 /// let original = OriginalInvoiceRef::new("INV-ORIG")
-///     .with_uuid("uuid-orig");
+///     .with_uuid(InvoiceUuid::parse("uuid-orig")?)
+///     .with_issue_date("2024-01-01".parse()?);
 /// assert_eq!(original.id(), "INV-ORIG");
-/// assert_eq!(original.uuid(), Some("uuid-orig"));
+/// assert_eq!(original.uuid().map(InvoiceUuid::as_str), Some("uuid-orig"));
+/// assert_eq!(original.issue_date().map(InvoiceDate::as_str), Some("2024-01-01"));
+/// # Ok::<(), fatoora_core::invoice::InvoiceError>(())
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct OriginalInvoiceRef {
     id: String,
-    uuid: Option<String>,
+    uuid: Option<InvoiceUuid>,
     issue_date: Option<InvoiceDate>,
     #[serde(default)]
     issue_time: Option<InvoiceTime>,
@@ -1220,25 +1347,18 @@ impl OriginalInvoiceRef {
     }
 
     /// Sets the referenced document's UUID (`cbc:UUID`).
-    pub fn with_uuid(mut self, uuid: impl Into<String>) -> Self {
-        self.uuid = Some(uuid.into());
+    pub fn with_uuid(mut self, uuid: InvoiceUuid) -> Self {
+        self.uuid = Some(uuid);
         self
     }
 
     /// Sets the referenced document's issue date (`cbc:IssueDate`).
+    ///
+    /// Parse a `YYYY-MM-DD` string with [`InvoiceDate::parse`], `str::parse` or
+    /// `InvoiceDate::try_from`.
     pub fn with_issue_date(mut self, issue_date: InvoiceDate) -> Self {
         self.issue_date = Some(issue_date);
         self
-    }
-
-    /// Parses and sets the referenced document's issue date from a `YYYY-MM-DD` string.
-    ///
-    /// # Errors
-    /// Returns [`InvoiceError::InvalidIssueDate`] if the string is not a valid date
-    /// (see [`InvoiceDate::parse`]).
-    pub fn with_issue_date_str(mut self, issue_date: impl Into<String>) -> Result<Self> {
-        self.issue_date = Some(InvoiceDate::parse(issue_date)?);
-        Ok(self)
     }
 
     /// Returns the referenced document's ID.
@@ -1247,8 +1367,8 @@ impl OriginalInvoiceRef {
     }
 
     /// Returns the referenced document's UUID, if set.
-    pub fn uuid(&self) -> Option<&str> {
-        self.uuid.as_deref()
+    pub fn uuid(&self) -> Option<&InvoiceUuid> {
+        self.uuid.as_ref()
     }
 
     /// Returns the referenced document's issue date, if set.
@@ -1312,26 +1432,71 @@ pub enum VatCategory {
     OutOfScope,
 }
 /// Independent optional exemption code and description for a tax category.
+///
+/// # Examples
+/// ```rust
+/// use fatoora_core::invoice::TaxExemption;
+///
+/// let exemption = TaxExemption::default()
+///     .with_reason_code("VATEX-SA-29")
+///     .with_reason("Financial services");
+/// assert_eq!(exemption.reason_code(), Some("VATEX-SA-29"));
+/// assert_eq!(exemption.reason(), Some("Financial services"));
+/// ```
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TaxExemption {
     /// Exemption reason code (`cbc:TaxExemptionReasonCode`), for example `VATEX-SA-29`.
-    pub reason_code: Option<String>,
+    reason_code: Option<String>,
     /// Free-text exemption reason (`cbc:TaxExemptionReason`).
-    pub reason: Option<String>,
+    reason: Option<String>,
+}
+impl TaxExemption {
+    /// Sets the exemption reason code (`cbc:TaxExemptionReasonCode`), for example `VATEX-SA-29`.
+    pub fn with_reason_code(mut self, value: impl Into<String>) -> Self {
+        self.reason_code = Some(value.into());
+        self
+    }
+    /// Sets the free-text exemption reason (`cbc:TaxExemptionReason`).
+    pub fn with_reason(mut self, value: impl Into<String>) -> Self {
+        self.reason = Some(value.into());
+        self
+    }
+    /// Returns the exemption reason code, if set.
+    pub fn reason_code(&self) -> Option<&str> {
+        self.reason_code.as_deref()
+    }
+    /// Returns the free-text exemption reason, if set.
+    pub fn reason(&self) -> Option<&str> {
+        self.reason.as_deref()
+    }
 }
 
 /// A payment instruction. Absence of the collection is distinct from an invalid empty code.
+///
+/// # Examples
+/// ```rust
+/// use fatoora_core::invoice::{PaymentAccount, PaymentMeans};
+///
+/// let means = PaymentMeans::new("30")
+///     .with_instruction_note("Returned goods")
+///     .with_payee_financial_account(
+///         PaymentAccount::default().with_payment_account_identifier("SA0380000000608010167519"),
+///     );
+/// assert_eq!(means.code(), "30");
+/// assert_eq!(means.instruction_notes(), ["Returned goods"]);
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PaymentMeans {
     /// UNTDID 4461 payment means code (`cbc:PaymentMeansCode`), for example `10` for cash.
-    pub payment_means_type_code: String,
+    payment_means_type_code: String,
     /// Instruction notes (`cbc:InstructionNote`), such as the reason for a credit or debit note.
-    pub instruction_notes: Vec<String>,
+    instruction_notes: Vec<String>,
     /// Payee account details (`cac:PayeeFinancialAccount`).
-    pub payee_financial_account: Option<PaymentAccount>,
+    payee_financial_account: Option<PaymentAccount>,
 }
 impl PaymentMeans {
-    /// Creates payment means with the given code and no notes or account.
+    /// Creates payment means with the given UNTDID 4461 code (`cbc:PaymentMeansCode`)
+    /// and no notes or account.
     pub fn new(code: impl Into<String>) -> Self {
         Self {
             payment_means_type_code: code.into(),
@@ -1339,75 +1504,477 @@ impl PaymentMeans {
             payee_financial_account: None,
         }
     }
-    /// Appends an instruction note.
-    pub fn instruction_note(mut self, value: impl Into<String>) -> Self {
+    /// Appends an instruction note (`cbc:InstructionNote`).
+    pub fn with_instruction_note(mut self, value: impl Into<String>) -> Self {
         self.instruction_notes.push(value.into());
         self
     }
-    /// Sets the payee financial account.
-    pub fn payee_financial_account(mut self, value: PaymentAccount) -> Self {
+    /// Appends an instruction note.
+    #[deprecated(since = "0.6.0", note = "use `with_instruction_note` instead")]
+    pub fn instruction_note(self, value: impl Into<String>) -> Self {
+        self.with_instruction_note(value)
+    }
+    /// Sets the payee financial account (`cac:PayeeFinancialAccount`).
+    pub fn with_payee_financial_account(mut self, value: PaymentAccount) -> Self {
         self.payee_financial_account = Some(value);
         self
     }
+    /// Returns the UNTDID 4461 payment means code.
+    pub fn code(&self) -> &str {
+        &self.payment_means_type_code
+    }
+    /// Returns the instruction notes in insertion order.
+    pub fn instruction_notes(&self) -> &[String] {
+        &self.instruction_notes
+    }
+    /// Returns the payee financial account, if set.
+    pub fn payee_financial_account(&self) -> Option<&PaymentAccount> {
+        self.payee_financial_account.as_ref()
+    }
 }
 /// Payee financial account (`cac:PayeeFinancialAccount`) of a [`PaymentMeans`].
+///
+/// # Examples
+/// ```rust
+/// use fatoora_core::invoice::PaymentAccount;
+///
+/// let account = PaymentAccount::default()
+///     .with_payment_account_identifier("SA0380000000608010167519")
+///     .with_payment_terms("Net 30");
+/// assert_eq!(account.payment_terms(), Some("Net 30"));
+/// ```
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PaymentAccount {
     /// Account identifier such as an IBAN (`cbc:ID`).
-    pub payment_account_identifier: Option<String>,
+    payment_account_identifier: Option<String>,
     /// Payment terms, serialized as `cbc:PaymentNote`.
-    pub payment_terms: Option<String>,
+    payment_terms: Option<String>,
+}
+impl PaymentAccount {
+    /// Sets the account identifier, such as an IBAN (`cbc:ID`).
+    pub fn with_payment_account_identifier(mut self, value: impl Into<String>) -> Self {
+        self.payment_account_identifier = Some(value.into());
+        self
+    }
+    /// Sets the payment terms, serialized as `cbc:PaymentNote`.
+    pub fn with_payment_terms(mut self, value: impl Into<String>) -> Self {
+        self.payment_terms = Some(value.into());
+        self
+    }
+    /// Returns the account identifier, if set.
+    pub fn payment_account_identifier(&self) -> Option<&str> {
+        self.payment_account_identifier.as_deref()
+    }
+    /// Returns the payment terms, if set.
+    pub fn payment_terms(&self) -> Option<&str> {
+        self.payment_terms.as_deref()
+    }
 }
 
 /// Supply date or supply period. Business-rule validation checks date ordering.
+///
+/// # Examples
+/// ```rust
+/// use fatoora_core::invoice::Delivery;
+///
+/// let delivery = Delivery::default()
+///     .with_actual_date("2024-01-01".parse()?)
+///     .with_latest_date("2024-01-31".parse()?);
+/// assert_eq!(delivery.actual_date().map(|d| d.as_str()), Some("2024-01-01"));
+/// # Ok::<(), fatoora_core::invoice::InvoiceError>(())
+/// ```
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Delivery {
     /// Supply date, or start of the supply period (`cbc:ActualDeliveryDate`).
-    pub actual_date: Option<InvoiceDate>,
+    actual_date: Option<InvoiceDate>,
     /// End of the supply period (`cbc:LatestDeliveryDate`).
-    pub latest_date: Option<InvoiceDate>,
+    latest_date: Option<InvoiceDate>,
+}
+impl Delivery {
+    /// Sets the supply date, or start of the supply period (`cbc:ActualDeliveryDate`).
+    pub fn with_actual_date(mut self, value: InvoiceDate) -> Self {
+        self.actual_date = Some(value);
+        self
+    }
+    /// Sets the end of the supply period (`cbc:LatestDeliveryDate`).
+    pub fn with_latest_date(mut self, value: InvoiceDate) -> Self {
+        self.latest_date = Some(value);
+        self
+    }
+    /// Returns the supply date or start of the supply period, if set.
+    pub fn actual_date(&self) -> Option<&InvoiceDate> {
+        self.actual_date.as_ref()
+    }
+    /// Returns the end of the supply period, if set.
+    pub fn latest_date(&self) -> Option<&InvoiceDate> {
+        self.latest_date.as_ref()
+    }
 }
 
 fn one_tax_category() -> usize {
     1
 }
 
+/// Whether an adjustment is an allowance (discount) or a charge (surcharge).
+///
+/// Maps to the UBL `cbc:ChargeIndicator` element: `false` for
+/// [`Allowance`](Self::Allowance), `true` for [`Charge`](Self::Charge).
+///
+/// # Examples
+/// ```rust
+/// use fatoora_core::invoice::AdjustmentKind;
+///
+/// let kind = AdjustmentKind::from_charge_indicator(true);
+/// assert_eq!(kind, AdjustmentKind::Charge);
+/// assert!(kind.is_charge());
+/// assert!(!AdjustmentKind::Allowance.charge_indicator());
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AdjustmentKind {
+    /// An allowance, which reduces the amount it applies to (`cbc:ChargeIndicator` `false`).
+    Allowance,
+    /// A charge, which increases the amount it applies to (`cbc:ChargeIndicator` `true`).
+    Charge,
+}
+
+impl AdjustmentKind {
+    /// Converts a UBL `cbc:ChargeIndicator` value: `true` is a charge, `false` an allowance.
+    pub const fn from_charge_indicator(charge: bool) -> Self {
+        if charge {
+            Self::Charge
+        } else {
+            Self::Allowance
+        }
+    }
+
+    /// Returns the UBL `cbc:ChargeIndicator` value: `true` for a charge, `false` for an allowance.
+    pub const fn charge_indicator(self) -> bool {
+        matches!(self, Self::Charge)
+    }
+
+    /// Returns `true` for [`AdjustmentKind::Charge`].
+    pub const fn is_charge(self) -> bool {
+        matches!(self, Self::Charge)
+    }
+
+    /// Returns `true` for [`AdjustmentKind::Allowance`].
+    pub const fn is_allowance(self) -> bool {
+        matches!(self, Self::Allowance)
+    }
+
+    /// Resolves a serialized adjustment's kind from the 0.6 `kind` field and/or
+    /// the 0.5 `charge` boolean, which must agree when both are present.
+    pub(crate) fn from_serialized(
+        kind: Option<Self>,
+        charge: Option<bool>,
+    ) -> std::result::Result<Self, &'static str> {
+        match (kind, charge.map(Self::from_charge_indicator)) {
+            (Some(kind), Some(legacy)) if kind != legacy => {
+                Err("conflicting adjustment `kind` and legacy `charge` fields")
+            }
+            (Some(kind), _) | (None, Some(kind)) => Ok(kind),
+            (None, None) => Err("missing field `kind`"),
+        }
+    }
+}
+
+/// Deserializes a field that is serialized bare (not as an `Option`) into
+/// `Some`, so formats with explicit options (such as RON) still round-trip.
+/// An absent field falls back to `None` through `#[serde(default)]`.
+pub(crate) fn deserialize_present<'de, D, T>(
+    deserializer: D,
+) -> std::result::Result<Option<T>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    T::deserialize(deserializer).map(Some)
+}
+
 /// One document allowance or charge, retaining its own VAT category and reason.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+///
+/// Entries are read back from [`InvoiceData::adjustments`]. To add one to
+/// an invoice, pass a [`DocumentAdjustment`] to
+/// [`InvoiceBuilder::allowance`] or [`InvoiceBuilder::charge`]
+/// (`DocumentAdjustment::from(entry)` converts an existing entry).
+///
+/// # Examples
+/// ```rust
+/// use fatoora_core::Decimal;
+/// use fatoora_core::invoice::{AdjustmentKind, AllowanceCharge, VatCategory};
+///
+/// let entry = AllowanceCharge::new(
+///     AdjustmentKind::Charge,
+///     Decimal::parse("10.00")?,
+///     VatCategory::Standard,
+///     Decimal::parse("15")?,
+/// )
+/// .with_reason("Freight")
+/// .with_reason_code("FC");
+/// assert!(entry.kind().is_charge());
+/// assert_eq!(entry.reason(), Some("Freight"));
+/// # Ok::<(), fatoora_core::invoice::InvoiceError>(())
+/// ```
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct AllowanceCharge {
     /// Preserve an absent VAT rate for an out-of-scope adjustment.
     #[serde(default)]
-    pub omitted_rate: bool,
+    omitted_rate: bool,
     /// Base amount the percentage applies to (`cbc:BaseAmount`).
     #[serde(default)]
-    pub base_amount: Option<Decimal>,
+    base_amount: Option<Decimal>,
     /// Percentage applied to the base amount (`cbc:MultiplierFactorNumeric`).
     #[serde(default)]
-    pub percentage: Option<Decimal>,
+    percentage: Option<Decimal>,
     /// Identical repeated VAT classifications, as used by the bundled SDK fixtures.
     /// Must be in `1..=Self::MAX_TAX_CATEGORY_COUNT` (an implementation resource limit).
     #[serde(default = "one_tax_category")]
-    pub tax_category_count: usize,
-    /// `true` for a charge, `false` for an allowance (`cbc:ChargeIndicator`).
-    pub charge: bool,
+    tax_category_count: usize,
+    /// Whether this is an allowance or a charge (`cbc:ChargeIndicator`).
+    kind: AdjustmentKind,
     /// Allowance or charge amount, excluding VAT (`cbc:Amount`).
-    pub amount: Decimal,
+    amount: Decimal,
     /// Free-text reason (`cbc:AllowanceChargeReason`).
-    pub reason: Option<String>,
+    reason: Option<String>,
     /// Reason code (`cbc:AllowanceChargeReasonCode`).
-    pub reason_code: Option<String>,
+    reason_code: Option<String>,
     /// VAT category of the allowance or charge.
-    pub category: VatCategory,
+    category: VatCategory,
     /// VAT rate percentage for the category.
-    pub rate: Decimal,
+    rate: Decimal,
     /// Exemption code and reason for exempt, zero-rated or out-of-scope categories.
     #[serde(default)]
-    pub exemption: TaxExemption,
+    exemption: TaxExemption,
+}
+
+/// Deserialization shape of [`AllowanceCharge`]: accepts `kind`, or the 0.5
+/// `charge` boolean, and otherwise mirrors the struct's field attributes.
+#[derive(Deserialize)]
+#[serde(rename = "AllowanceCharge")]
+struct AllowanceChargeRepr {
+    #[serde(default)]
+    omitted_rate: bool,
+    #[serde(default)]
+    base_amount: Option<Decimal>,
+    #[serde(default)]
+    percentage: Option<Decimal>,
+    #[serde(default = "one_tax_category")]
+    tax_category_count: usize,
+    #[serde(default, deserialize_with = "deserialize_present")]
+    kind: Option<AdjustmentKind>,
+    #[serde(default, deserialize_with = "deserialize_present")]
+    charge: Option<bool>,
+    amount: Decimal,
+    reason: Option<String>,
+    reason_code: Option<String>,
+    category: VatCategory,
+    rate: Decimal,
+    #[serde(default)]
+    exemption: TaxExemption,
+}
+
+/// Exact serialized shape of [`AllowanceCharge`], used by compact formats
+/// (such as bincode) that read fields by position and can't skip a legacy one.
+#[derive(Deserialize)]
+#[serde(rename = "AllowanceCharge")]
+struct AllowanceChargeCompact {
+    #[serde(default)]
+    omitted_rate: bool,
+    #[serde(default)]
+    base_amount: Option<Decimal>,
+    #[serde(default)]
+    percentage: Option<Decimal>,
+    #[serde(default = "one_tax_category")]
+    tax_category_count: usize,
+    kind: AdjustmentKind,
+    amount: Decimal,
+    reason: Option<String>,
+    reason_code: Option<String>,
+    category: VatCategory,
+    rate: Decimal,
+    #[serde(default)]
+    exemption: TaxExemption,
+}
+
+impl<'de> Deserialize<'de> for AllowanceCharge {
+    fn deserialize<D: serde::Deserializer<'de>>(
+        deserializer: D,
+    ) -> std::result::Result<Self, D::Error> {
+        if !deserializer.is_human_readable() {
+            let c = AllowanceChargeCompact::deserialize(deserializer)?;
+            return Ok(Self {
+                omitted_rate: c.omitted_rate,
+                base_amount: c.base_amount,
+                percentage: c.percentage,
+                tax_category_count: c.tax_category_count,
+                kind: c.kind,
+                amount: c.amount,
+                reason: c.reason,
+                reason_code: c.reason_code,
+                category: c.category,
+                rate: c.rate,
+                exemption: c.exemption,
+            });
+        }
+        AllowanceChargeRepr::deserialize(deserializer)?
+            .try_into()
+            .map_err(serde::de::Error::custom)
+    }
+}
+
+impl TryFrom<AllowanceChargeRepr> for AllowanceCharge {
+    type Error = &'static str;
+
+    fn try_from(repr: AllowanceChargeRepr) -> std::result::Result<Self, Self::Error> {
+        Ok(Self {
+            omitted_rate: repr.omitted_rate,
+            base_amount: repr.base_amount,
+            percentage: repr.percentage,
+            tax_category_count: repr.tax_category_count,
+            kind: AdjustmentKind::from_serialized(repr.kind, repr.charge)?,
+            amount: repr.amount,
+            reason: repr.reason,
+            reason_code: repr.reason_code,
+            category: repr.category,
+            rate: repr.rate,
+            exemption: repr.exemption,
+        })
+    }
 }
 
 impl AllowanceCharge {
     /// Resource limit for repeated identical classifications, not a UBL or ZATCA rule.
     pub const MAX_TAX_CATEGORY_COUNT: usize = 1024;
+
+    /// Creates an allowance or charge with its amount (excluding VAT), VAT
+    /// category and rate, no reason, base amount, percentage or exemption, and
+    /// one tax category.
+    ///
+    /// Nothing is checked here; [`InvoiceBuilder::build`] validates the entry.
+    pub fn new(
+        kind: AdjustmentKind,
+        amount: Decimal,
+        category: VatCategory,
+        rate: Decimal,
+    ) -> Self {
+        Self {
+            omitted_rate: false,
+            base_amount: None,
+            percentage: None,
+            tax_category_count: 1,
+            kind,
+            amount,
+            reason: None,
+            reason_code: None,
+            category,
+            rate,
+            exemption: TaxExemption::default(),
+        }
+    }
+
+    /// Sets the base amount the percentage applies to (`cbc:BaseAmount`).
+    pub fn with_base_amount(mut self, value: Decimal) -> Self {
+        self.base_amount = Some(value);
+        self
+    }
+
+    /// Sets the percentage applied to the base amount (`cbc:MultiplierFactorNumeric`).
+    pub fn with_percentage(mut self, value: Decimal) -> Self {
+        self.percentage = Some(value);
+        self
+    }
+
+    /// Sets the free-text reason (`cbc:AllowanceChargeReason`).
+    pub fn with_reason(mut self, value: impl Into<String>) -> Self {
+        self.reason = Some(value.into());
+        self
+    }
+
+    /// Sets the reason code (`cbc:AllowanceChargeReasonCode`).
+    pub fn with_reason_code(mut self, value: impl Into<String>) -> Self {
+        self.reason_code = Some(value.into());
+        self
+    }
+
+    /// Sets the VAT exemption code and reason.
+    pub fn with_exemption(mut self, value: TaxExemption) -> Self {
+        self.exemption = value;
+        self
+    }
+
+    /// Sets how many identical `cac:TaxCategory` elements are emitted (default `1`).
+    ///
+    /// [`InvoiceBuilder::build`] rejects a count outside
+    /// `1..=`[`MAX_TAX_CATEGORY_COUNT`](Self::MAX_TAX_CATEGORY_COUNT).
+    pub fn with_tax_category_count(mut self, count: usize) -> Self {
+        self.tax_category_count = count;
+        self
+    }
+
+    /// Omits the VAT rate (`cbc:Percent`) from XML.
+    ///
+    /// Only an out-of-scope adjustment with a zero rate may omit its rate;
+    /// [`InvoiceBuilder::build`] rejects any other combination.
+    pub fn omit_vat_rate(mut self) -> Self {
+        self.omitted_rate = true;
+        self
+    }
+
+    /// Returns `false` if the VAT rate (`cbc:Percent`) is omitted from XML.
+    pub fn has_vat_rate(&self) -> bool {
+        !self.omitted_rate
+    }
+
+    /// Returns whether this is an allowance or a charge.
+    pub fn kind(&self) -> AdjustmentKind {
+        self.kind
+    }
+
+    /// Returns the allowance or charge amount, excluding VAT.
+    pub fn amount(&self) -> Decimal {
+        self.amount
+    }
+
+    /// Returns the base amount the percentage applies to, if set.
+    pub fn base_amount(&self) -> Option<Decimal> {
+        self.base_amount
+    }
+
+    /// Returns the percentage applied to the base amount, if set.
+    pub fn percentage(&self) -> Option<Decimal> {
+        self.percentage
+    }
+
+    /// Returns the free-text reason, if set.
+    pub fn reason(&self) -> Option<&str> {
+        self.reason.as_deref()
+    }
+
+    /// Returns the reason code, if set.
+    pub fn reason_code(&self) -> Option<&str> {
+        self.reason_code.as_deref()
+    }
+
+    /// Returns the VAT category.
+    pub fn category(&self) -> VatCategory {
+        self.category
+    }
+
+    /// Returns the VAT rate percentage.
+    pub fn rate(&self) -> Decimal {
+        self.rate
+    }
+
+    /// Returns the VAT exemption code and reason.
+    pub fn exemption(&self) -> &TaxExemption {
+        &self.exemption
+    }
+
+    /// Returns how many identical `cac:TaxCategory` elements are emitted.
+    pub fn tax_category_count(&self) -> usize {
+        self.tax_category_count
+    }
 }
 
 /// Single invoice line item.
@@ -1467,6 +2034,27 @@ impl LineItem {
     /// (out-of-scope lines), in which case no `cbc:Percent` is emitted.
     pub fn has_vat_rate(&self) -> bool {
         !self.omitted_vat_rate
+    }
+    /// Omits the line VAT rate (`cbc:Percent`) from XML.
+    ///
+    /// [`LineItemBuilder`] omits the rate when [`LineItemBuilder::vat_rate`] is not called
+    /// for an out-of-scope line; this marks an already built line the same way.
+    ///
+    /// # Errors
+    /// Returns [`InvoiceError::Validation`] with an [`InvoiceField::LineItemVatRate`] /
+    /// [`ValidationKind::OutOfRange`] issue unless the category is
+    /// [`VatCategory::OutOfScope`] and the rate is zero.
+    pub fn omit_vat_rate(mut self) -> Result<Self> {
+        if self.vat_category != VatCategory::OutOfScope || self.vat_rate != Decimal::ZERO {
+            return Err(ValidationError::new(vec![ValidationIssue::new(
+                InvoiceField::LineItemVatRate,
+                ValidationKind::OutOfRange,
+                None,
+            )])
+            .into());
+        }
+        self.omitted_vat_rate = true;
+        Ok(self)
     }
     /// Returns `false` if the line-level `cac:TaxTotal` is omitted from XML.
     pub fn has_tax_total(&self) -> bool {
@@ -1637,24 +2225,6 @@ impl LineItem {
     }
 }
 
-/// Collection of line items.
-///
-/// # Examples
-/// ```rust
-/// use fatoora_core::invoice::{LineItem, LineItems, VatCategory};
-///
-/// let items: LineItems = vec![LineItem::new(
-///     "Item",
-///     fatoora_core::Decimal::parse("1.0").unwrap(),
-///     "PCE",
-///     fatoora_core::Decimal::parse("100.0").unwrap(),
-///     fatoora_core::Decimal::parse("15.0").unwrap(),
-///     VatCategory::Standard,
-/// ).unwrap()];
-/// assert_eq!(items.len(), 1);
-/// ```
-pub type LineItems = Vec<LineItem>;
-
 /// Core invoice data model.
 ///
 /// Instances are produced by the builder and exposed via views.
@@ -1676,14 +2246,14 @@ pub struct InvoiceData {
     document_tax_first: bool,
     invoice_type: InvoiceType,
     id: String,
-    uuid: String,
+    uuid: InvoiceUuid,
     issue_datetime: InvoiceTimestamp,
     currency: CurrencyCode,
     #[serde(default)]
     tax_currency: Option<CurrencyCode>,
     #[serde(default)]
     tax_currency_amount: Option<Decimal>,
-    previous_invoice_hash: String,
+    previous_invoice_hash: InvoiceHash,
     invoice_counter: u64,
     notes: Vec<InvoiceNote>,
     billing_references: Vec<OriginalInvoiceRef>,
@@ -1695,7 +2265,7 @@ pub struct InvoiceData {
     buyer: Option<Buyer>,
     #[serde(default)]
     delivery: Option<Delivery>,
-    line_items: LineItems,
+    line_items: Vec<LineItem>,
     payment_means: Vec<PaymentMeans>,
     vat_category: VatCategory,
 
@@ -1765,21 +2335,25 @@ impl InvoiceData {
     }
 
     /// Returns the invoice UUID (`cbc:UUID`).
-    pub fn uuid(&self) -> &str {
+    pub fn uuid(&self) -> &InvoiceUuid {
         &self.uuid
     }
 
-    /// Original clock representation; a missing suffix denotes AST, `Z` denotes UTC.
-    pub fn issue_time(&self) -> &str {
+    /// Returns the issue time (`cbc:IssueTime`) in its original clock representation;
+    /// a missing suffix denotes AST, `Z` denotes UTC.
+    ///
+    /// Built invoices report the clock part of [`issue_datetime`](Self::issue_datetime);
+    /// parsed invoices keep the value from the XML.
+    pub fn issue_time(&self) -> InvoiceTime {
         self.issue_time_override
-            .as_ref()
-            .map_or(&self.issue_datetime.as_str()[11..], InvoiceTime::as_str)
+            .clone()
+            .unwrap_or_else(|| InvoiceTime(self.issue_datetime.time_str().to_owned()))
     }
-    /// Returns the issue date as `YYYY-MM-DD`, preserving the original value for imported documents.
-    pub fn issue_date(&self) -> &str {
+    /// Returns the issue date (`cbc:IssueDate`), preserving the original value for imported documents.
+    pub fn issue_date(&self) -> InvoiceDate {
         self.issue_date_override
-            .as_ref()
-            .map_or(self.issue_datetime.date_str(), InvoiceDate::as_str)
+            .clone()
+            .unwrap_or_else(|| InvoiceDate(self.issue_datetime.date_str().to_owned()))
     }
 
     /// Returns the issue timestamp in UTC `YYYY-MM-DDTHH:MM:SSZ` form.
@@ -1793,18 +2367,13 @@ impl InvoiceData {
     }
 
     /// Returns the previous invoice hash (PIH), Base64-encoded.
-    pub fn previous_invoice_hash(&self) -> &str {
+    pub fn previous_invoice_hash(&self) -> &InvoiceHash {
         &self.previous_invoice_hash
     }
 
     /// Returns the invoice counter value (ICV).
     pub fn invoice_counter(&self) -> u64 {
         self.invoice_counter
-    }
-
-    /// Returns the first note, if any.
-    pub fn note(&self) -> Option<&InvoiceNote> {
-        self.notes.first()
     }
 
     /// Returns the seller party.
@@ -1888,17 +2457,21 @@ impl InvoiceData {
         })
     }
 }
+/// Former name of [`InvoiceTotals`].
+#[deprecated(since = "0.6.0", note = "use `InvoiceTotals` instead")]
+pub type InvoiceTotalsData = InvoiceTotals;
+
 /// Computed invoice totals.
 ///
 /// # Examples
 /// ```rust,ignore
-/// use fatoora_core::invoice::InvoiceTotalsData;
+/// use fatoora_core::invoice::InvoiceTotals;
 ///
-/// let totals: InvoiceTotalsData = unimplemented!();
+/// let totals: InvoiceTotals = unimplemented!();
 /// let _ = totals.tax_inclusive_amount();
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct InvoiceTotalsData {
+pub struct InvoiceTotals {
     #[serde(default)]
     pub(crate) omitted_optional_amounts: [bool; 4],
     line_extension: Decimal,
@@ -1932,10 +2505,18 @@ impl VatBreakdown {
     /// Marks the subtotal so its VAT rate is omitted from XML.
     ///
     /// # Errors
+    /// Returns the errors of [`VatBreakdown::omit_vat_rate`].
+    #[deprecated(since = "0.6.0", note = "use `VatBreakdown::omit_vat_rate` instead")]
+    pub fn without_vat_rate(self) -> Result<Self> {
+        self.omit_vat_rate()
+    }
+    /// Marks the subtotal so its VAT rate (`cbc:Percent`) is omitted from XML.
+    ///
+    /// # Errors
     /// Returns [`InvoiceError::Validation`] with an [`InvoiceField::VatCategory`] /
     /// [`ValidationKind::OutOfRange`] issue unless the category is
     /// [`VatCategory::OutOfScope`] and the rate is zero.
-    pub fn without_vat_rate(mut self) -> Result<Self> {
+    pub fn omit_vat_rate(mut self) -> Result<Self> {
         if self.category != VatCategory::OutOfScope || self.rate != Decimal::ZERO {
             return Err(ValidationError::new(vec![ValidationIssue::new(
                 InvoiceField::VatCategory,
@@ -2038,7 +2619,7 @@ impl VatBreakdown {
         self.tax_amount
     }
 }
-impl InvoiceTotalsData {
+impl InvoiceTotals {
     pub(crate) fn from_data(data: &InvoiceData) -> Result<Self> {
         let mut line_extension = Decimal::ZERO;
         let mut groups: Vec<VatBreakdown> = Vec::new();
@@ -2104,7 +2685,7 @@ impl InvoiceTotalsData {
                 groups.len() - 1
             });
             let group = &mut groups[index];
-            group.taxable_amount = if adjustment.charge {
+            group.taxable_amount = if adjustment.kind.is_charge() {
                 group.taxable_amount.add(adjustment.amount)?
             } else {
                 group.taxable_amount.sub(adjustment.amount)?

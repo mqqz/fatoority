@@ -5,10 +5,13 @@ import { AllowanceCharge } from "./AllowanceCharge.mjs"
 import { BindingError } from "./BindingError.mjs"
 import { FinalizedInvoice } from "./FinalizedInvoice.mjs"
 import { InvoiceLineItem } from "./InvoiceLineItem.mjs"
+import { InvoiceSubType } from "./InvoiceSubType.mjs"
+import { InvoiceTypeKind } from "./InvoiceTypeKind.mjs"
 import { OriginalInvoiceRef } from "./OriginalInvoiceRef.mjs"
 import { PaymentMeans } from "./PaymentMeans.mjs"
 import { TaxExemption } from "./TaxExemption.mjs"
 import { VatBreakdown } from "./VatBreakdown.mjs"
+import { VatCategory } from "./VatCategory.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
@@ -155,14 +158,44 @@ export class InvoiceBuilder {
         }
     }
 
-    addDocumentAdjustment(charge, value, category, rate, exemption) {
+    /**
+     * Append a document-level allowance (discount), mirroring core `InvoiceBuilder::allowance`.
+     */
+    addAllowance(value, category, rate, exemption) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
         const rateSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, rate)));
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
 
-        const result = wasm.fatoora_InvoiceBuilder_add_document_adjustment(diplomatReceive.buffer, this.ffiValue, charge, value instanceof Adjustment ? value.ffiValue : typeError('value', 'Adjustment'), category, rateSlice.ptr, exemption instanceof TaxExemption ? exemption.ffiValue : typeError('exemption', 'TaxExemption'));
+        const result = wasm.fatoora_InvoiceBuilder_add_allowance(diplomatReceive.buffer, this.ffiValue, value instanceof Adjustment ? value.ffiValue : typeError('value', 'Adjustment'), new VatCategory(category).ffiValue, rateSlice.ptr, exemption instanceof TaxExemption ? exemption.ffiValue : typeError('exemption', 'TaxExemption'));
+
+        try {
+            if (!diplomatReceive.resultFlag) {
+                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
+            }
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+            functionCleanupArena.free();
+
+            diplomatReceive.free();
+        }
+    }
+
+    /**
+     * Append a document-level charge, mirroring core `InvoiceBuilder::charge`.
+     */
+    addCharge(value, category, rate, exemption) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+
+        const rateSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, rate)));
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
+
+        const result = wasm.fatoora_InvoiceBuilder_add_charge(diplomatReceive.buffer, this.ffiValue, value instanceof Adjustment ? value.ffiValue : typeError('value', 'Adjustment'), new VatCategory(category).ffiValue, rateSlice.ptr, exemption instanceof TaxExemption ? exemption.ffiValue : typeError('exemption', 'TaxExemption'));
 
         try {
             if (!diplomatReceive.resultFlag) {
@@ -213,7 +246,7 @@ export class InvoiceBuilder {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
 
-        const result = wasm.fatoora_InvoiceBuilder_new_with_reference(diplomatReceive.buffer, kind, subtype, reference instanceof OriginalInvoiceRef ? reference.ffiValue : typeError('reference', 'OriginalInvoiceRef'), reasonSlice.ptr);
+        const result = wasm.fatoora_InvoiceBuilder_new_with_reference(diplomatReceive.buffer, new InvoiceTypeKind(kind).ffiValue, new InvoiceSubType(subtype).ffiValue, reference instanceof OriginalInvoiceRef ? reference.ffiValue : typeError('reference', 'OriginalInvoiceRef'), reasonSlice.ptr);
 
         try {
             if (!diplomatReceive.resultFlag) {
@@ -221,30 +254,6 @@ export class InvoiceBuilder {
                 throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
             }
             return new InvoiceBuilder(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-        }
-
-        finally {
-            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
-            functionCleanupArena.free();
-
-            diplomatReceive.free();
-        }
-    }
-
-    setNoteWithoutLanguage(value) {
-        let functionCleanupArena = new diplomatRuntime.CleanupArena();
-
-        const valueSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, value)));
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
-
-
-        const result = wasm.fatoora_InvoiceBuilder_set_note_without_language(diplomatReceive.buffer, this.ffiValue, valueSlice.ptr);
-
-        try {
-            if (!diplomatReceive.resultFlag) {
-                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
-            }
         }
 
         finally {
@@ -375,14 +384,14 @@ export class InvoiceBuilder {
         }
     }
 
-    setTaxExemption(category, rate, exemption) {
+    addTaxExemption(category, rate, exemption) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
         const rateSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, rate)));
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
 
-        const result = wasm.fatoora_InvoiceBuilder_set_tax_exemption(diplomatReceive.buffer, this.ffiValue, category, rateSlice.ptr, exemption instanceof TaxExemption ? exemption.ffiValue : typeError('exemption', 'TaxExemption'));
+        const result = wasm.fatoora_InvoiceBuilder_add_tax_exemption(diplomatReceive.buffer, this.ffiValue, new VatCategory(category).ffiValue, rateSlice.ptr, exemption instanceof TaxExemption ? exemption.ffiValue : typeError('exemption', 'TaxExemption'));
 
         try {
             if (!diplomatReceive.resultFlag) {
@@ -443,7 +452,7 @@ export class InvoiceBuilder {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
 
-        const result = wasm.fatoora_InvoiceBuilder_new(diplomatReceive.buffer, kind, subtype, diplomatRuntime.optionToBufferForCalling(wasm, originalId, 8, 4, functionCleanupArena, (arrayBuffer, offset, jsValue) => [functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, jsValue)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0)]), diplomatRuntime.optionToBufferForCalling(wasm, originalUuid, 8, 4, functionCleanupArena, (arrayBuffer, offset, jsValue) => [functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, jsValue)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0)]), diplomatRuntime.optionToBufferForCalling(wasm, originalDate, 8, 4, functionCleanupArena, (arrayBuffer, offset, jsValue) => [functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, jsValue)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0)]), diplomatRuntime.optionToBufferForCalling(wasm, reason, 8, 4, functionCleanupArena, (arrayBuffer, offset, jsValue) => [functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, jsValue)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0)]));
+        const result = wasm.fatoora_InvoiceBuilder_new(diplomatReceive.buffer, new InvoiceTypeKind(kind).ffiValue, new InvoiceSubType(subtype).ffiValue, diplomatRuntime.optionToBufferForCalling(wasm, originalId, 8, 4, functionCleanupArena, (arrayBuffer, offset, jsValue) => [functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, jsValue)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0)]), diplomatRuntime.optionToBufferForCalling(wasm, originalUuid, 8, 4, functionCleanupArena, (arrayBuffer, offset, jsValue) => [functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, jsValue)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0)]), diplomatRuntime.optionToBufferForCalling(wasm, originalDate, 8, 4, functionCleanupArena, (arrayBuffer, offset, jsValue) => [functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, jsValue)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0)]), diplomatRuntime.optionToBufferForCalling(wasm, reason, 8, 4, functionCleanupArena, (arrayBuffer, offset, jsValue) => [functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, jsValue)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0)]));
 
         try {
             if (!diplomatReceive.resultFlag) {
@@ -648,102 +657,6 @@ export class InvoiceBuilder {
         }
     }
 
-    setPaymentMeansCode(value) {
-        let functionCleanupArena = new diplomatRuntime.CleanupArena();
-
-        const valueSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, value)));
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
-
-
-        const result = wasm.fatoora_InvoiceBuilder_set_payment_means_code(diplomatReceive.buffer, this.ffiValue, valueSlice.ptr);
-
-        try {
-            if (!diplomatReceive.resultFlag) {
-                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
-            }
-        }
-
-        finally {
-            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
-            functionCleanupArena.free();
-
-            diplomatReceive.free();
-        }
-    }
-
-    allowanceReason(value) {
-        let functionCleanupArena = new diplomatRuntime.CleanupArena();
-
-        const valueSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, value)));
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
-
-
-        const result = wasm.fatoora_InvoiceBuilder_allowance_reason(diplomatReceive.buffer, this.ffiValue, valueSlice.ptr);
-
-        try {
-            if (!diplomatReceive.resultFlag) {
-                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
-            }
-        }
-
-        finally {
-            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
-            functionCleanupArena.free();
-
-            diplomatReceive.free();
-        }
-    }
-
-    invoiceLevelCharge(value) {
-        let functionCleanupArena = new diplomatRuntime.CleanupArena();
-
-        const valueSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, value)));
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
-
-
-        const result = wasm.fatoora_InvoiceBuilder_invoice_level_charge(diplomatReceive.buffer, this.ffiValue, valueSlice.ptr);
-
-        try {
-            if (!diplomatReceive.resultFlag) {
-                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
-            }
-        }
-
-        finally {
-            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
-            functionCleanupArena.free();
-
-            diplomatReceive.free();
-        }
-    }
-
-    invoiceLevelDiscount(value) {
-        let functionCleanupArena = new diplomatRuntime.CleanupArena();
-
-        const valueSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, value)));
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
-
-
-        const result = wasm.fatoora_InvoiceBuilder_invoice_level_discount(diplomatReceive.buffer, this.ffiValue, valueSlice.ptr);
-
-        try {
-            if (!diplomatReceive.resultFlag) {
-                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
-            }
-        }
-
-        finally {
-            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
-            functionCleanupArena.free();
-
-            diplomatReceive.free();
-        }
-    }
-
     setInvoiceCounter(value) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
@@ -767,7 +680,7 @@ export class InvoiceBuilder {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
 
-        const result = wasm.fatoora_InvoiceBuilder_set_vat_category(diplomatReceive.buffer, this.ffiValue, value);
+        const result = wasm.fatoora_InvoiceBuilder_set_vat_category(diplomatReceive.buffer, this.ffiValue, new VatCategory(value).ffiValue);
 
         try {
             if (!diplomatReceive.resultFlag) {
@@ -782,11 +695,11 @@ export class InvoiceBuilder {
         }
     }
 
-    flags(value) {
+    setFlags(value) {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
 
-        const result = wasm.fatoora_InvoiceBuilder_flags(diplomatReceive.buffer, this.ffiValue, value);
+        const result = wasm.fatoora_InvoiceBuilder_set_flags(diplomatReceive.buffer, this.ffiValue, value);
 
         try {
             if (!diplomatReceive.resultFlag) {
@@ -797,56 +710,6 @@ export class InvoiceBuilder {
 
         finally {
             diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
-            diplomatReceive.free();
-        }
-    }
-
-    setNote(language, value) {
-        let functionCleanupArena = new diplomatRuntime.CleanupArena();
-
-        const languageSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, language)));
-        const valueSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, value)));
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
-
-
-        const result = wasm.fatoora_InvoiceBuilder_set_note(diplomatReceive.buffer, this.ffiValue, languageSlice.ptr, valueSlice.ptr);
-
-        try {
-            if (!diplomatReceive.resultFlag) {
-                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
-            }
-        }
-
-        finally {
-            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
-            functionCleanupArena.free();
-
-            diplomatReceive.free();
-        }
-    }
-
-    setAllowance(reason, amount) {
-        let functionCleanupArena = new diplomatRuntime.CleanupArena();
-
-        const reasonSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, reason)));
-        const amountSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, amount)));
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
-
-
-        const result = wasm.fatoora_InvoiceBuilder_set_allowance(diplomatReceive.buffer, this.ffiValue, reasonSlice.ptr, amountSlice.ptr);
-
-        try {
-            if (!diplomatReceive.resultFlag) {
-                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
-            }
-        }
-
-        finally {
-            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
-            functionCleanupArena.free();
-
             diplomatReceive.free();
         }
     }
@@ -911,7 +774,7 @@ export class InvoiceBuilder {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
 
-        const result = wasm.fatoora_InvoiceBuilder_add_line_item(diplomatReceive.buffer, this.ffiValue, descriptionSlice.ptr, quantitySlice.ptr, unitCodeSlice.ptr, unitPriceSlice.ptr, vatRateSlice.ptr, category);
+        const result = wasm.fatoora_InvoiceBuilder_add_line_item(diplomatReceive.buffer, this.ffiValue, descriptionSlice.ptr, quantitySlice.ptr, unitCodeSlice.ptr, unitPriceSlice.ptr, vatRateSlice.ptr, new VatCategory(category).ffiValue);
 
         try {
             if (!diplomatReceive.resultFlag) {

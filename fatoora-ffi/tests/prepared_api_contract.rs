@@ -1,6 +1,8 @@
 //! Portable binding contracts run natively so LLVM coverage includes the JS API.
 mod support;
 use base64ct::{Base64, Encoding};
+use fatoora_ffi::api::ffi::ClearanceMode;
+use fatoora_ffi::common::ffi::Environment;
 use fatoora_ffi::{
     api::ffi::*,
     common::ffi::BindingError,
@@ -21,13 +23,13 @@ fn ok<T>(result: Result<T, Box<BindingError>>) -> T {
     result.unwrap_or_else(|e| panic!("{}: {}", e.code(), written(|out| e.message(out))))
 }
 fn csr() -> Box<Csr> {
-    let props = ok(CsrProperties::from_properties_str(include_bytes!(
+    let props = ok(CsrProperties::from_str(include_bytes!(
         "../../fatoora-core/tests/fixtures/csr-configs/csr-config-example-EN.properties"
     )));
     let key = ok(SigningKey::from_der(include_bytes!(
         "../../fatoora-core/tests/fixtures/sdk-parity/credentials/private-key.der"
     )));
-    ok(props.build(&key, 1))
+    ok(props.build(&key, Environment::Simulation))
 }
 fn headers(value: String) -> Vec<(String, String)> {
     serde_json::from_str(&value).unwrap()
@@ -44,15 +46,30 @@ fn header(values: &[(String, String)], name: &str, expected: &str) {
 
 #[test]
 fn prepared_invoices_own_wire_data_and_decode_operation_specific_outcomes() {
-    let config = ok(Config::new(0));
-    let client = ok(ZatcaClient::create(&config));
-    let production = ok(CsidProduction::create(0, None, b"token", b"secret"));
-    let compliance = ok(CsidCompliance::create(0, None, b"token", b"secret"));
+    let config = ok(Config::new(Environment::NonProduction));
+    let client = ok(ZatcaClient::new(&config));
+    let production = ok(ProductionCsid::new(
+        Environment::NonProduction,
+        None,
+        b"token",
+        b"secret",
+    ));
+    let compliance = ok(ComplianceCsid::new(
+        Environment::NonProduction,
+        None,
+        b"token",
+        b"secret",
+    ));
     let simple = ok(SignedInvoice::from_xml(SIMPLE));
     let standard = ok(SignedInvoice::from_xml(STANDARD));
     let requests = [
         (
-            ok(client.prepare_report_simplified_invoice(&simple, &production, false, Some(b"ar"))),
+            ok(client.prepare_report_simplified_invoice(
+                &simple,
+                &production,
+                ClearanceMode::Disabled,
+                Some(b"ar"),
+            )),
             SIMPLE,
             "/invoices/reporting/single",
             "ar",
@@ -62,7 +79,12 @@ fn prepared_invoices_own_wire_data_and_decode_operation_specific_outcomes() {
             "NOT_REPORTED",
         ),
         (
-            ok(client.prepare_clear_standard_invoice(&standard, &production, true, None)),
+            ok(client.prepare_clear_standard_invoice(
+                &standard,
+                &production,
+                ClearanceMode::Enabled,
+                None,
+            )),
             STANDARD,
             "/invoices/clearance/single",
             "en",
@@ -142,25 +164,24 @@ fn prepared_invoices_own_wire_data_and_decode_operation_specific_outcomes() {
 
 #[test]
 fn prepared_credentials_retain_environment_payload_and_renewal_semantics() {
-    for environment in 0..=2 {
+    for environment in [
+        Environment::NonProduction,
+        Environment::Simulation,
+        Environment::Production,
+    ] {
         let config = ok(Config::new(environment));
-        let client = ok(ZatcaClient::create(&config));
+        let client = ok(ZatcaClient::new(&config));
         let csr = csr();
         let expected_csr = Base64::encode_string(written(|out| ok(csr.to_pem(out))).as_bytes());
-        let compliance = ok(CsidCompliance::create(
+        let compliance = ok(ComplianceCsid::new(
             environment,
             Some(b"456"),
             b"token",
             b"secret",
         ));
-        let production = ok(CsidProduction::create(
-            environment,
-            None,
-            b"token",
-            b"secret",
-        ));
-        let issuance = ok(client.prepare_post_csr_for_ccsid(&csr, b"123456"));
-        let promotion = ok(client.prepare_post_ccsid_for_pcsid(&compliance));
+        let production = ok(ProductionCsid::new(environment, None, b"token", b"secret"));
+        let issuance = ok(client.prepare_request_compliance_csid(&csr, b"123456"));
+        let promotion = ok(client.prepare_request_production_csid(&compliance));
         let renewal = ok(client.prepare_renew_csid(&production, &csr, b"654321", Some(b"ar")));
         drop((client, csr, compliance, production));
         assert_eq!(written(|out| ok(issuance.method(out))), "POST");
@@ -178,7 +199,7 @@ fn prepared_credentials_retain_environment_payload_and_renewal_semantics() {
             json!({"csr":expected_csr})
         );
         let decoded = ok(issuance.decode(201, CREDENTIALS));
-        assert_eq!(decoded.env(), environment);
+        assert_eq!(decoded.env().ok(), Some(environment));
         assert_eq!(
             written(|out| ok(ok(decoded.request_id()).unwrap().value(out))),
             "123"
@@ -209,7 +230,7 @@ fn prepared_credentials_retain_environment_payload_and_renewal_semantics() {
                 expected
             );
             let decoded = ok(request.decode(200, CREDENTIALS));
-            assert_eq!(decoded.env(), environment);
+            assert_eq!(decoded.env().ok(), Some(environment));
             assert_eq!(
                 written(|out| ok(ok(decoded.request_id()).unwrap().value(out))),
                 "123"
@@ -235,7 +256,10 @@ fn prepared_credentials_retain_environment_payload_and_renewal_semantics() {
             &json!({"value":serde_json::from_slice::<Value>(CREDENTIALS).unwrap()}),
         )
         .unwrap();
-        assert_eq!(ok(renewal.decode(428, &wrapped)).env(), environment);
+        assert_eq!(
+            ok(renewal.decode(428, &wrapped)).env().ok(),
+            Some(environment)
+        );
         assert!(promotion.decode(428, &wrapped).is_err());
         assert!(issuance.decode(428, &wrapped).is_err());
     }
@@ -243,16 +267,30 @@ fn prepared_credentials_retain_environment_payload_and_renewal_semantics() {
 
 #[test]
 fn prepare_rejects_bad_inputs_and_consumed_owners_without_transport() {
-    let config = ok(Config::new(0));
-    let client = ok(ZatcaClient::create(&config));
+    let config = ok(Config::new(Environment::NonProduction));
+    let client = ok(ZatcaClient::new(&config));
     let csr = csr();
     let mut simple = ok(SignedInvoice::from_xml(SIMPLE));
     let standard = ok(SignedInvoice::from_xml(STANDARD));
-    let compliance = ok(CsidCompliance::create(0, None, b"token", b"secret"));
-    let production = ok(CsidProduction::create(0, None, b"token", b"secret"));
-    assert!(client.prepare_post_ccsid_for_pcsid(&compliance).is_err());
+    let compliance = ok(ComplianceCsid::new(
+        Environment::NonProduction,
+        None,
+        b"token",
+        b"secret",
+    ));
+    let production = ok(ProductionCsid::new(
+        Environment::NonProduction,
+        None,
+        b"token",
+        b"secret",
+    ));
+    assert!(client.prepare_request_production_csid(&compliance).is_err());
     for invalid in [b"\xff".as_slice(), b"a\0b", b"a\r\nb"] {
-        assert!(client.prepare_post_csr_for_ccsid(&csr, invalid).is_err());
+        assert!(
+            client
+                .prepare_request_compliance_csid(&csr, invalid)
+                .is_err()
+        );
         assert!(
             client
                 .prepare_renew_csid(&production, &csr, invalid, None)
@@ -262,12 +300,22 @@ fn prepare_rejects_bad_inputs_and_consumed_owners_without_transport() {
     for invalid in [b"\xff".as_slice(), b"a\0b"] {
         assert!(
             client
-                .prepare_report_simplified_invoice(&simple, &production, false, Some(invalid))
+                .prepare_report_simplified_invoice(
+                    &simple,
+                    &production,
+                    ClearanceMode::Disabled,
+                    Some(invalid)
+                )
                 .is_err()
         );
         assert!(
             client
-                .prepare_clear_standard_invoice(&standard, &production, false, Some(invalid))
+                .prepare_clear_standard_invoice(
+                    &standard,
+                    &production,
+                    ClearanceMode::Disabled,
+                    Some(invalid)
+                )
                 .is_err()
         );
         assert!(
@@ -278,24 +326,39 @@ fn prepare_rejects_bad_inputs_and_consumed_owners_without_transport() {
     }
     assert!(
         client
-            .prepare_report_simplified_invoice(&standard, &production, false, None)
+            .prepare_report_simplified_invoice(
+                &standard,
+                &production,
+                ClearanceMode::Disabled,
+                None
+            )
             .is_err()
     );
     assert!(
         client
-            .prepare_clear_standard_invoice(&simple, &production, false, None)
+            .prepare_clear_standard_invoice(&simple, &production, ClearanceMode::Disabled, None)
             .is_err()
     );
-    let foreign = ok(CsidProduction::create(1, None, b"token", b"secret"));
-    let foreign_compliance = ok(CsidCompliance::create(1, Some(b"id"), b"token", b"secret"));
+    let foreign = ok(ProductionCsid::new(
+        Environment::Simulation,
+        None,
+        b"token",
+        b"secret",
+    ));
+    let foreign_compliance = ok(ComplianceCsid::new(
+        Environment::Simulation,
+        Some(b"id"),
+        b"token",
+        b"secret",
+    ));
     assert!(
         client
-            .prepare_report_simplified_invoice(&simple, &foreign, false, None)
+            .prepare_report_simplified_invoice(&simple, &foreign, ClearanceMode::Disabled, None)
             .is_err()
     );
     assert!(
         client
-            .prepare_clear_standard_invoice(&standard, &foreign, false, None)
+            .prepare_clear_standard_invoice(&standard, &foreign, ClearanceMode::Disabled, None)
             .is_err()
     );
     assert!(
@@ -310,10 +373,15 @@ fn prepare_rejects_bad_inputs_and_consumed_owners_without_transport() {
     );
     assert!(
         client
-            .prepare_post_ccsid_for_pcsid(&foreign_compliance)
+            .prepare_request_production_csid(&foreign_compliance)
             .is_err()
     );
-    let prepared = ok(client.prepare_report_simplified_invoice(&simple, &production, false, None));
+    let prepared = ok(client.prepare_report_simplified_invoice(
+        &simple,
+        &production,
+        ClearanceMode::Disabled,
+        None,
+    ));
     written(|out| ok(simple.into_xml(out)));
     assert!(
         client
@@ -322,12 +390,12 @@ fn prepare_rejects_bad_inputs_and_consumed_owners_without_transport() {
     );
     assert!(
         client
-            .prepare_report_simplified_invoice(&simple, &production, false, None)
+            .prepare_report_simplified_invoice(&simple, &production, ClearanceMode::Disabled, None)
             .is_err()
     );
     assert!(
         client
-            .prepare_clear_standard_invoice(&simple, &production, false, None)
+            .prepare_clear_standard_invoice(&simple, &production, ClearanceMode::Disabled, None)
             .is_err()
     );
     assert!(!ok(prepared.body()).as_slice().is_empty());

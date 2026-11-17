@@ -8,8 +8,8 @@ use crate::invoice::sign::SignedProperties;
 use crate::invoice::xml::constants::{DS_NS, XADES_NS};
 use crate::invoice::{
     Address, CountryCode, CurrencyCode, FinalizedInvoice, InvoiceBuilder, InvoiceDate,
-    InvoiceFlags, InvoiceSubType, InvoiceTimestamp, InvoiceType, LineItem, OriginalInvoiceRef,
-    OtherId, Party, SellerRole, SignedInvoice, VatCategory,
+    InvoiceFlags, InvoiceHash, InvoiceSubType, InvoiceTimestamp, InvoiceType, InvoiceUuid,
+    LineItem, OriginalInvoiceRef, OtherId, Party, SellerRole, SignedInvoice, VatCategory, VatId,
 };
 use base64ct::{Base64, Encoding};
 use chrono::{NaiveDateTime, NaiveTime};
@@ -195,10 +195,10 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
     let mut builder = InvoiceBuilder::new(invoice_type);
     builder = builder
         .id(id)
-        .uuid(uuid)
-        .issue_datetime(issue_datetime)
-        .currency(currency_code.as_str())
-        .previous_invoice_hash(previous_invoice_hash)
+        .uuid(InvoiceUuid::parse(uuid)?)
+        .issue_datetime(InvoiceTimestamp::parse(issue_datetime)?)
+        .currency(currency_code.clone())
+        .previous_invoice_hash(InvoiceHash::parse(previous_invoice_hash)?)
         .invoice_counter(invoice_counter)
         .seller(seller)
         .vat_category(vat_category)
@@ -351,7 +351,7 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
                 value: amount.to_string(),
             });
         }
-        builder = builder.adjustment(crate::invoice::AllowanceCharge {
+        let entry = crate::invoice::AllowanceCharge {
             omitted_rate: rate_text.is_none(),
             base_amount: adjustment
                 .basic("BaseAmount")
@@ -366,14 +366,21 @@ fn parse_finalized_invoice_doc(doc: &Document<'_>) -> Result<FinalizedInvoice, P
             tax_category_count: adjustment
                 .children(super::constants::CAC_NS, "TaxCategory")
                 .count(),
-            charge: matches!(is_charge.as_str(), "true" | "1"),
+            kind: crate::invoice::AdjustmentKind::from_charge_indicator(matches!(
+                is_charge.as_str(),
+                "true" | "1"
+            )),
             amount,
             reason: adjustment.basic("AllowanceChargeReason").content(),
             reason_code: adjustment.basic("AllowanceChargeReasonCode").content(),
             category,
             rate,
             exemption: parse_exemption(adjustment.aggregate("TaxCategory")),
-        });
+        };
+        builder = match entry.kind {
+            crate::invoice::AdjustmentKind::Allowance => builder.allowance(entry.into()),
+            crate::invoice::AdjustmentKind::Charge => builder.charge(entry.into()),
+        };
     }
     if let Some(code) = ctx.basic("TaxCurrencyCode").content() {
         let tax_currency = CurrencyCode::parse(code)?;
@@ -953,7 +960,7 @@ fn parse_signed_properties(doc: &Document<'_>) -> Result<SignedProperties, Parse
             field: "SigningTime",
             value: format!("{signing_time} ({e:?})"),
         })?;
-    let signing_time = signing_time.format("%Y-%m-%dT%H:%M:%S").to_string();
+    let signing_time = InvoiceTimestamp::from_naive_utc(signing_time);
 
     let cert_hash = text_required(
         nav::signed_properties(ctx)
@@ -999,7 +1006,7 @@ fn parse_signed_properties(doc: &Document<'_>) -> Result<SignedProperties, Parse
     )?;
 
     Ok(SignedProperties {
-        invoice_hash,
+        invoice_hash: InvoiceHash::parse(invoice_hash)?,
         signature,
         public_key,
         issuer,
@@ -1040,7 +1047,7 @@ fn parse_reference(node: Element<'_, '_>) -> Result<OriginalInvoiceRef, ParseErr
         "BillingReferenceID",
     )?);
     if let Some(uuid) = node.basic("UUID").content() {
-        reference = reference.with_uuid(uuid);
+        reference = reference.with_uuid(InvoiceUuid::parse(uuid)?);
     }
     if let Some(date) = node.basic("IssueDate").content() {
         reference = reference.with_issue_date(InvoiceDate::parse(&date).map_err(|_| {
@@ -1076,7 +1083,7 @@ fn parse_seller(ctx: &Element<'_, '_>) -> Result<Party<SellerRole>, ParseError> 
         "SellerVAT",
     )?;
     let address = parse_address(seller, false)?;
-    let mut result = Party::<SellerRole>::new(name, address, vat, None)?;
+    let mut result = Party::<SellerRole>::new(name, address, VatId::parse(vat)?, None);
     for id in parse_party_identifiers(seller, "SellerID")? {
         result = result.identifier(id);
     }
@@ -1123,9 +1130,9 @@ fn parse_buyer(ctx: Element<'_, '_>) -> Result<Option<crate::invoice::Buyer>, Pa
         } else {
             None
         },
-        vat,
+        vat.map(VatId::parse).transpose()?,
         None,
-    )?;
+    );
     for id in parse_party_identifiers(party, "BuyerID")? {
         result = result.identifier(id);
     }
@@ -1477,14 +1484,14 @@ fn parse_line_items(ctx: &Element<'_, '_>) -> Result<Vec<LineItem>, ParseError> 
         }
         let mut adjustments = Vec::new();
         for node in line.children(super::constants::CAC_NS, "AllowanceCharge") {
-            let charge = match node
+            let kind = match node
                 .basic("ChargeIndicator")
                 .content()
                 .as_deref()
                 .map(str::trim)
             {
-                Some("true" | "1") => true,
-                Some("false" | "0") => false,
+                Some("true" | "1") => crate::invoice::AdjustmentKind::Charge,
+                Some("false" | "0") => crate::invoice::AdjustmentKind::Allowance,
                 _ => return Err(ParseError::MissingField("ChargeIndicator")),
             };
             let adjustment = crate::invoice::Adjustment {
@@ -1498,7 +1505,7 @@ fn parse_line_items(ctx: &Element<'_, '_>) -> Result<Vec<LineItem>, ParseError> 
                 reason_code: node.basic("AllowanceChargeReasonCode").content(),
             }
             .finalize()?;
-            adjustments.push(crate::invoice::LineAdjustment { charge, adjustment });
+            adjustments.push(crate::invoice::LineAdjustment::new(kind, adjustment));
         }
         let item_id = |name| -> Result<Option<OtherId>, ParseError> {
             let node = line.aggregate("Item").aggregate(name);

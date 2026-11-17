@@ -5,6 +5,7 @@
 #include "OriginalInvoiceRef.hpp"
 #include "TaxExemption.hpp"
 #include "VatBreakdown.hpp"
+#include "VatCategory.hpp"
 
 namespace _native {
 void add_InvoiceLineItem_binding(nb::module_ mod) {
@@ -16,7 +17,7 @@ void add_InvoiceLineItem_binding(nb::module_ mod) {
     nb::class_<_native::InvoiceLineItem> opaque(mod, "InvoiceLineItem", nb::type_slots(_native_InvoiceLineItem_slots));
     opaque
         .def("adjustment", std::move(maybe_op_unwrap(&_native::InvoiceLineItem::adjustment)), "index"_a)
-        .def("adjustment_is_charge", std::move(maybe_op_unwrap(&_native::InvoiceLineItem::adjustment_is_charge)), "index"_a)
+        .def("adjustment_kind", std::move(maybe_op_unwrap(&_native::InvoiceLineItem::adjustment_kind)), "index"_a)
         .def("adjustments_len", &_native::InvoiceLineItem::adjustments_len)
         .def("description", std::move(maybe_op_unwrap(&_native::InvoiceLineItem::description)))
         .def("document_reference", std::move(maybe_op_unwrap(&_native::InvoiceLineItem::document_reference)), "index"_a)

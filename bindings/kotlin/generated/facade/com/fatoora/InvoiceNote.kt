@@ -9,14 +9,33 @@ class InvoiceNote internal constructor(internal val raw: com.fatoora.raw.Invoice
         val handle = raw.handle
         attach { com.fatoora.raw.InvoiceNote.lib.fatoora_InvoiceNote_destroy(handle) }
     }
+
+    val languageId: String?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.languageId())?.let(::readText)
+        }
+
+    val language: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.language())
+        }
+
+    val text: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.text())
+        }
+
+    @Deprecated("Use the languageId property.", ReplaceWith("languageId"))
     fun languageId(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.languageId())?.let(::Text)
     }
 
+    @Deprecated("Use the language property.", ReplaceWith("language"))
     fun language(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.language())
     }
 
+    @Deprecated("Use the text property.", ReplaceWith("text"))
     fun text(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.text())
     }

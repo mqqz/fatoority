@@ -17,18 +17,32 @@ internal suspend fun <T : NativeResource> nativeIO(block: () -> T): T {
     }
 }
 
-suspend fun ZatcaClient.postCsrForCcsidAsync(csr: Csr, otp: String): CsidCompliance =
-    nativeIO { postCsrForCcsid(csr, otp) }
-suspend fun ZatcaClient.postCcsidForPcsidAsync(credentials: CsidCompliance): CsidProduction =
-    nativeIO { postCcsidForPcsid(credentials) }
-suspend fun ZatcaClient.renewCsidAsync(credentials: CsidProduction, csr: Csr, otp: String,
-                                     acceptLanguage: String? = null): CsidProduction =
+private fun clearanceMode(enabled: Boolean): ClearanceMode =
+    if (enabled) ClearanceMode.Enabled else ClearanceMode.Disabled
+
+suspend fun ZatcaClient.requestComplianceCsidAsync(csr: Csr, otp: String): ComplianceCsid =
+    nativeIO { requestComplianceCsid(csr, otp) }
+suspend fun ZatcaClient.requestProductionCsidAsync(credentials: ComplianceCsid): ProductionCsid =
+    nativeIO { requestProductionCsid(credentials) }
+suspend fun ZatcaClient.renewCsidAsync(credentials: ProductionCsid, csr: Csr, otp: String,
+                                     acceptLanguage: String? = null): ProductionCsid =
     nativeIO { renewCsid(credentials, csr, otp, acceptLanguage) }
-suspend fun ZatcaClient.checkInvoiceComplianceAsync(invoice: SignedInvoice, credentials: CsidCompliance): ValidationResponse =
+suspend fun ZatcaClient.checkInvoiceComplianceAsync(invoice: SignedInvoice, credentials: ComplianceCsid): ValidationResponse =
     nativeIO { checkInvoiceCompliance(invoice, credentials) }
-suspend fun ZatcaClient.reportSimplifiedInvoiceAsync(invoice: SignedInvoice, credentials: CsidProduction,
+suspend fun ZatcaClient.reportSimplifiedInvoiceAsync(invoice: SignedInvoice, credentials: ProductionCsid,
+                                                    clearanceMode: ClearanceMode, acceptLanguage: String? = null): ValidationResponse =
+    nativeIO { reportSimplifiedInvoice(invoice, credentials, clearanceMode, acceptLanguage) }
+suspend fun ZatcaClient.clearStandardInvoiceAsync(invoice: SignedInvoice, credentials: ProductionCsid,
+                                                clearanceMode: ClearanceMode, acceptLanguage: String? = null): ValidationResponse =
+    nativeIO { clearStandardInvoice(invoice, credentials, clearanceMode, acceptLanguage) }
+
+@Deprecated("Pass a ClearanceMode, as the blocking method does.",
+    ReplaceWith("reportSimplifiedInvoiceAsync(invoice, credentials, if (clearanceStatus) ClearanceMode.Enabled else ClearanceMode.Disabled, acceptLanguage)"))
+suspend fun ZatcaClient.reportSimplifiedInvoiceAsync(invoice: SignedInvoice, credentials: ProductionCsid,
                                                     clearanceStatus: Boolean, acceptLanguage: String? = null): ValidationResponse =
-    nativeIO { reportSimplifiedInvoice(invoice, credentials, clearanceStatus, acceptLanguage) }
-suspend fun ZatcaClient.clearStandardInvoiceAsync(invoice: SignedInvoice, credentials: CsidProduction,
+    reportSimplifiedInvoiceAsync(invoice, credentials, clearanceMode(clearanceStatus), acceptLanguage)
+@Deprecated("Pass a ClearanceMode, as the blocking method does.",
+    ReplaceWith("clearStandardInvoiceAsync(invoice, credentials, if (clearanceStatus) ClearanceMode.Enabled else ClearanceMode.Disabled, acceptLanguage)"))
+suspend fun ZatcaClient.clearStandardInvoiceAsync(invoice: SignedInvoice, credentials: ProductionCsid,
                                                 clearanceStatus: Boolean, acceptLanguage: String? = null): ValidationResponse =
-    nativeIO { clearStandardInvoice(invoice, credentials, clearanceStatus, acceptLanguage) }
+    clearStandardInvoiceAsync(invoice, credentials, clearanceMode(clearanceStatus), acceptLanguage)

@@ -70,39 +70,35 @@ Choose your language for imports, exact calls, returns, and ownership behavior.
     **Parse XML**
 
     ```python
-    parse_finalized_invoice_xml(xml: str) -> FinalizedInvoice
-    parse_finalized_invoice_xml_file(path: str) -> FinalizedInvoice
-    parse_signed_invoice_xml(xml: str) -> SignedInvoice
-    parse_signed_invoice_xml_file(path: str) -> SignedInvoice
+    FinalizedInvoice.from_xml(xml: str) -> FinalizedInvoice
+    FinalizedInvoice.from_file(path: str | os.PathLike) -> FinalizedInvoice
+    SignedInvoice.from_xml(xml: str) -> SignedInvoice
+    SignedInvoice.from_file(path: str | os.PathLike) -> SignedInvoice
     ```
 
     **Read XML**
 
     ```python
-    FinalizedInvoice.xml() -> str
-    FinalizedInvoice.to_xml() -> str
-    SignedInvoice.xml() -> str
-    SignedInvoice.to_xml() -> str
-    SignedInvoice.into_xml() -> str
-    SignedInvoice.to_xml_base64() -> str
+    invoice.xml                       # property: str
+    signed.to_xml_base64() -> str
     ```
 
-    `to_xml()` is an alias for `xml()`. Finalized output uses the default formatting; signed output preserves stored text. String results are independent Python strings. `into_xml()` consumes signed invoice state; later reads fail, but `close()` remains safe. Other methods leave state available. Use context managers or `close()` for owned objects. Errors raise exceptions; see [errors](errors.md).
+    Finalized output uses the default formatting; signed output preserves stored text. String results are independent Python strings and reading them leaves state available. Use context managers or `close()` for owned objects. Errors raise exceptions; see [errors](errors.md). The 0.5 functions `parse_finalized_invoice_xml`, `parse_finalized_invoice_xml_file`, `parse_signed_invoice_xml` and `parse_signed_invoice_xml_file`, and the methods `to_xml()` and `into_xml()` (which consumes the signed invoice), still work until 0.7, with a `DeprecationWarning`.
 
 === "JavaScript"
 
-    Import `FinalizedInvoice` and `SignedInvoice` from `fatoority`. These operations are synchronous and throw an `Error` with a `BindingError` cause on failure.
+    Import `FinalizedInvoice` and `SignedInvoice` from `fatoority`. These operations are synchronous and throw a `FatooraError` subclass on failure.
 
     ```javascript
     const finalized = FinalizedInvoice.fromXml(xml);
     const signed = SignedInvoice.fromXml(signedXml);
-    const unsignedText = finalized.xml();
-    const signedText = signed.xml();
+    const unsignedText = finalized.xml;
+    const signedText = signed.xml;
     const encoded = signed.toXmlBase64();
     const takenText = signed.intoXml();
     ```
 
-    Both `fromXml` methods expect a string and return their named invoice object. Every XML accessor returns a string. `intoXml()` consumes the signed invoice state; subsequent access fails. `xml()` and `toXmlBase64()` leave it available. Read a file using your host environment before passing its text to `fromXml`; filesystem parsing methods are not exposed in this binding. Finalized formatting is fixed to the default; signed output is exact stored text.
+    Both `fromXml` methods expect a string and return their named invoice object. The `xml` property and the XML methods are strings. `intoXml()` consumes the signed invoice state; subsequent access fails. Reading `xml` or calling `toXmlBase64()` leaves it available. Read a file using your host environment before passing its text to `fromXml`; filesystem parsing methods are not exposed in this binding. Finalized formatting is fixed to the default; signed output is exact stored text.
 
 === "C#"
 
@@ -113,8 +109,8 @@ Choose your language for imports, exact calls, returns, and ownership behavior.
     FinalizedInvoice FinalizedInvoice.FromFile(string value)
     SignedInvoice SignedInvoice.FromXml(string value)
     SignedInvoice SignedInvoice.FromFile(string value)
-    string FinalizedInvoice.Xml()
-    string SignedInvoice.Xml()
+    string FinalizedInvoice.Xml { get; }
+    string SignedInvoice.Xml { get; }
     string SignedInvoice.IntoXml()
     string SignedInvoice.ToXmlBase64()
     ```
@@ -130,13 +126,13 @@ Choose your language for imports, exact calls, returns, and ownership behavior.
     FinalizedInvoice.fromFile(value: String): FinalizedInvoice
     SignedInvoice.fromXml(value: String): SignedInvoice
     SignedInvoice.fromFile(value: String): SignedInvoice
-    FinalizedInvoice.xml(): String
-    SignedInvoice.xml(): String
+    FinalizedInvoice.xml: String
+    SignedInvoice.xml: String
     SignedInvoice.intoXml(): String
     SignedInvoice.toXmlBase64(): String
     ```
 
-    `fromFile` takes a local path. XML results are independent strings. `intoXml()` consumes invoice state; later access fails and `close()` remains safe. Reading `xml()` or `toXmlBase64()` leaves the invoice available. Finalized output uses default two-space indentation; signed output is exact stored text.
+    `fromFile` takes a local path. XML results are independent strings. `intoXml()` consumes invoice state; later access fails and `close()` remains safe. Reading `xml` or `toXmlBase64()` leaves the invoice available. Finalized output uses default two-space indentation; signed output is exact stored text.
 
 === "Java"
 
@@ -147,8 +143,8 @@ Choose your language for imports, exact calls, returns, and ownership behavior.
     FinalizedInvoice FinalizedInvoice.fromFile(String value)
     SignedInvoice SignedInvoice.fromXml(String value)
     SignedInvoice SignedInvoice.fromFile(String value)
-    String FinalizedInvoice.xml()
-    String SignedInvoice.xml()
+    String FinalizedInvoice.getXml()
+    String SignedInvoice.getXml()
     String SignedInvoice.intoXml()
     String SignedInvoice.toXmlBase64()
     ```

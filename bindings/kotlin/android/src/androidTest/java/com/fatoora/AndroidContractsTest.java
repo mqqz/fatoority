@@ -4,6 +4,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,16 +17,20 @@ public class AndroidContractsTest {
              SigningKey restored = SigningKey.fromPem(key.toPem());
              Address address = Address.create("SA", "الرياض", "Street", "1234", "12345")) {
             assertEquals(key.toPem(), restored.toPem());
-            assertEquals("الرياض", address.city());
-            assertNull(address.additionalStreet());
+            assertEquals("الرياض", address.getCity());
+            assertNull(address.getAdditionalStreet());
         }
-        try { Config.create(99); fail("invalid environment accepted"); }
-        catch (BindingException expected) { assertEquals(1, expected.getCode()); }
+        try { Address.create("XX", "a", "b", "1", "1"); fail("invalid country accepted"); }
+        catch (InvalidInputException expected) { assertEquals(ErrorKind.InvalidInput, expected.getKind()); }
+        try (InvoiceLineItem item = InvoiceLineItem.create("Item", new BigDecimal("2"), "PCE",
+                 new BigDecimal("10.50"), new BigDecimal("15"), VatCategory.Standard)) {
+            assertEquals(0, new BigDecimal("21").compareTo(item.getTotalAmount()));
+        }
     }
     @Test public void clientInitializesTlsAndPreparesRequests() {
-        try (Config config = Config.create(0);
+        try (Config config = Config.create(Environment.NonProduction);
              ZatcaClient client = ZatcaClient.create(config);
-             CsidProduction credentials = CsidProduction.create(0, null, "token", "secret")) {
+             ProductionCsid credentials = ProductionCsid.create(Environment.NonProduction, null, "token", "secret")) {
             assertNotNull(client);
             assertNotNull(credentials);
         }

@@ -1,39 +1,40 @@
 // --8<-- [start:csr]
-import { CsrProperties, SigningKey } from 'fatoority';
+import { CsrProperties, Environment, SigningKey } from 'fatoority';
 
 export function generateCsr(propertiesText) {
   const key = SigningKey.generate();
-  const csr = CsrProperties.fromPropertiesStr(propertiesText).build(key, 0);
+  const csr = CsrProperties.fromStr(propertiesText).build(key, Environment.NonProduction);
   return { csrPem: csr.toPem(), keyPem: key.toPem() };
 }
 // --8<-- [end:csr]
 
 // --8<-- [start:signing]
-import { Signer } from 'fatoority';
+import { InvoiceSigner } from 'fatoority';
 
 export function signInvoice(xml, certificatePem, keyPem) {
-  return Signer.fromPem(certificatePem, keyPem).signXml(xml);
+  return InvoiceSigner.fromPem(certificatePem, keyPem).signXml(xml);
 }
 // --8<-- [end:signing]
 
 // --8<-- [start:validation]
-import { Config, Xml } from 'fatoority';
+import { Xml } from 'fatoority';
 
 export function validateInvoice(xml, previousHash, evaluatedAt) {
-  return JSON.parse(Xml.validateZatca(Config.new_(0), xml, JSON.stringify({
-    previous_invoice_hash: previousHash,
-    evaluated_at: evaluatedAt, // Omit to use the JavaScript host clock.
-  })));
+  return Xml.validateZatca(xml, {
+    previousInvoiceHash: previousHash,
+    evaluatedAt, // Omit to use the JavaScript host clock.
+  });
 }
-// Inspect report.is_valid and report.stages before accepting an invoice.
+// The report is plain data: check report.isValid before accepting an invoice,
+// and read report.stages[i].findings for severity, layer, code and location.
 // --8<-- [end:validation]
 
 // --8<-- [start:api]
-import { Config as ApiConfig, CsidProduction, SignedInvoice, ZatcaClient } from 'fatoority';
+import { Config as ApiConfig, ProductionCsid, Environment as ApiEnvironment, SignedInvoice, ZatcaClient } from 'fatoority';
 
 export async function reportInvoice(signedXml, token, secret, { signal, fetch: transport = globalThis.fetch } = {}) {
-  const client = new ZatcaClient(ApiConfig.new_(2), { fetch: transport });
-  const credentials = CsidProduction.create(2, null, token, secret);
+  const client = new ZatcaClient(ApiConfig.create(ApiEnvironment.Production), { fetch: transport });
+  const credentials = ProductionCsid.create(ApiEnvironment.Production, null, token, secret);
   const invoice = SignedInvoice.fromXml(signedXml);
   const response = await client.reportSimplifiedInvoice(invoice, credentials, false, 'en', { signal });
   response.ensureAccepted();

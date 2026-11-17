@@ -13,6 +13,7 @@
 #include "OriginalInvoiceRef.d.h"
 #include "TaxExemption.d.h"
 #include "VatBreakdown.d.h"
+#include "VatCategory.d.h"
 
 #include "LineItemBuilder.d.h"
 
@@ -72,7 +73,7 @@ typedef struct fatoora_LineItemBuilder_set_vat_rate_result {union { BindingError
 fatoora_LineItemBuilder_set_vat_rate_result fatoora_LineItemBuilder_set_vat_rate(LineItemBuilder* self, DiplomatStringView value);
 
 typedef struct fatoora_LineItemBuilder_set_vat_category_result {union { BindingError* err;}; bool is_ok;} fatoora_LineItemBuilder_set_vat_category_result;
-fatoora_LineItemBuilder_set_vat_category_result fatoora_LineItemBuilder_set_vat_category(LineItemBuilder* self, uint8_t value);
+fatoora_LineItemBuilder_set_vat_category_result fatoora_LineItemBuilder_set_vat_category(LineItemBuilder* self, VatCategory value);
 
 typedef struct fatoora_LineItemBuilder_set_exemption_result {union { BindingError* err;}; bool is_ok;} fatoora_LineItemBuilder_set_exemption_result;
 fatoora_LineItemBuilder_set_exemption_result fatoora_LineItemBuilder_set_exemption(LineItemBuilder* self, const TaxExemption* value);

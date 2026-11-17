@@ -3,8 +3,8 @@ mod common;
 use fatoora_core::Decimal;
 use fatoora_core::invoice::xml::parse::parse_finalized_invoice_xml;
 use fatoora_core::invoice::{
-    FinalizedInvoice, InvoiceBuilder, InvoiceFlags, InvoiceNote, InvoiceSubType, InvoiceType,
-    LineItem, OriginalInvoiceRef, VatCategory,
+    Adjustment, DocumentAdjustment, FinalizedInvoice, InvoiceBuilder, InvoiceFlags, InvoiceNote,
+    InvoiceSubType, InvoiceType, LineItem, OriginalInvoiceRef, VatCategory,
 };
 use proptest::prelude::*;
 use std::collections::BTreeMap;
@@ -105,31 +105,57 @@ fn build(
     flags: u8,
 ) -> FinalizedInvoice {
     let template = common::dummy_finalized_invoice();
-    let mut address = template.data().seller().address().unwrap().clone();
-    address.street = text.to_owned();
-    address.city = text.to_owned();
-    address.district = Some(text.to_owned());
-    address.additional_street = Some(text.to_owned());
-    let seller =
-        fatoora_core::invoice::Seller::new(text.to_owned(), address, "399999999900003", None)
-            .unwrap();
+    let original = template.data().seller().address().unwrap();
+    let mut address = fatoora_core::invoice::Address::new(
+        original.country_code().clone(),
+        text,
+        text,
+        original.building_number(),
+        original.postal_code(),
+    )
+    .with_district(text)
+    .with_additional_street(text);
+    if let Some(province) = original.province() {
+        address = address.with_province(province);
+    }
+    if let Some(number) = original.additional_number() {
+        address = address.with_additional_number(number);
+    }
+    let seller = fatoora_core::invoice::Seller::new(
+        text.to_owned(),
+        address,
+        "399999999900003".parse().unwrap(),
+        None,
+    );
     let mut builder = InvoiceBuilder::new(kind)
         .id("PROPERTY-1")
-        .uuid("property-uuid")
-        .issue_datetime("2024-01-01T12:30:00Z")
-        .currency("SAR")
-        .previous_invoice_hash("hash")
+        .uuid("property-uuid".parse().unwrap())
+        .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+        .currency("SAR".parse().unwrap())
+        .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(42)
         .seller(seller)
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .payment_instruction(text)
         .billing_reference(OriginalInvoiceRef::new("ORIGINAL"))
         .vat_category(category(selected))
         .flags(InvoiceFlags::from_bits(flags).unwrap())
-        .note(InvoiceNote::new("ar", text))
-        .invoice_level_discount(decimal(discount, 2))
-        .invoice_level_charge(decimal(charge, 2))
-        .allowance_reason(text);
+        .note(InvoiceNote::new("ar", text));
+    let vat_rate = Decimal::from(rate(selected) as i64);
+    let entry = |amount| {
+        DocumentAdjustment::new(
+            Adjustment::amount(decimal(amount, 2)),
+            category(selected),
+            vat_rate,
+        )
+        .with_reason(text)
+    };
+    // The reason is always present, so an allowance is always emitted, as the
+    // former aggregate setters did.
+    builder = builder.allowance(entry(discount));
+    if charge != 0 {
+        builder = builder.charge(entry(charge));
+    }
     for line in lines {
         builder = builder.line_item(
             LineItem::new(
@@ -205,7 +231,7 @@ proptest! {
         prop_assert_eq!(a.flags(), b.flags());
         prop_assert_eq!(a.seller(), b.seller());
         prop_assert_eq!(a.buyer(), b.buyer());
-        prop_assert_eq!(a.note(), b.note());
+        prop_assert_eq!(a.notes(), b.notes());
         prop_assert_eq!(a.allowance_reason(), b.allowance_reason());
         prop_assert_eq!(a.line_items(), b.line_items());
         prop_assert_eq!(a.previous_invoice_hash(), b.previous_invoice_hash());
@@ -310,13 +336,13 @@ fn free_text_survives_xml_serialization_and_signing() {
         ] {
             let xml = invoice.to_xml_with_format(format).unwrap();
             let parsed = parse_finalized_invoice_xml(&xml).unwrap();
-            assert_eq!(parsed.data().note().unwrap().text(), text);
+            assert_eq!(parsed.data().notes().first().unwrap().text(), text);
             assert_eq!(parsed.data().line_items()[0].description(), text);
         }
         let signed = invoice.sign(&signer).unwrap();
         let parsed = parse_signed_invoice_xml(signed.xml()).unwrap();
-        assert_eq!(parsed.data().note().unwrap().text(), text);
+        assert_eq!(parsed.data().notes().first().unwrap().text(), text);
         assert_eq!(parsed.data().line_items()[0].description(), text);
-        assert_eq!(parsed.hash_base64().unwrap(), signed.invoice_hash());
+        assert_eq!(&parsed.hash().unwrap(), signed.invoice_hash());
     }
 }

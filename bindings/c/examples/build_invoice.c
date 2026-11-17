@@ -5,6 +5,7 @@
 int main(void) {
     FatooraError *error = NULL;
     FatooraInvoiceBuilder *builder = NULL;
+    FatooraPaymentMeans *means = NULL;
     FatooraAddress *address = NULL;
     FatooraFinalizedInvoice *invoice = NULL;
     char *xml = NULL;
@@ -24,7 +25,8 @@ int main(void) {
     CHECK(fatoora_invoice_builder_set_currency(builder, "SAR", &error));
     CHECK(fatoora_invoice_builder_set_previous_invoice_hash(builder, "hash", &error));
     CHECK(fatoora_invoice_builder_set_invoice_counter(builder, 1, &error));
-    CHECK(fatoora_invoice_builder_set_payment_means_code(builder, "10", &error));
+    CHECK(fatoora_payment_means_new("10", NULL, &means, &error));
+    CHECK(fatoora_invoice_builder_add_payment_means(builder, means, &error));
     CHECK(fatoora_invoice_builder_set_vat_category(builder, FATOORA_VAT_STANDARD, &error));
 
     FatooraAddressOptions address_options = {
@@ -53,6 +55,7 @@ cleanup:
     fatoora_string_free(xml);
     fatoora_finalized_invoice_free(invoice);
     fatoora_address_free(address);
+    fatoora_payment_means_free(means);
     fatoora_invoice_builder_free(builder);
     fatoora_error_free(error);
     return exit_code;

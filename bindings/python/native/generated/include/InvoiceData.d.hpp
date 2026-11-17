@@ -27,6 +27,9 @@ namespace capi { struct PaymentMeans; }
 class PaymentMeans;
 namespace capi { struct Text; }
 class Text;
+class InvoiceSubType;
+class InvoiceTypeKind;
+class VatCategory;
 } // namespace _native
 
 
@@ -107,13 +110,13 @@ public:
 
   inline uint64_t invoice_counter() const;
 
-  inline uint8_t vat_category() const;
+  inline _native::VatCategory vat_category() const;
 
-  inline uint8_t flags_raw() const;
+  inline uint8_t flags() const;
 
-  inline uint8_t invoice_type_kind() const;
+  inline _native::InvoiceTypeKind invoice_type_kind() const;
 
-  inline uint8_t invoice_sub_type() const;
+  inline _native::InvoiceSubType invoice_sub_type() const;
 
   inline _native::diplomat::result<std::unique_ptr<_native::Party>, std::unique_ptr<_native::BindingError>> seller() const;
 

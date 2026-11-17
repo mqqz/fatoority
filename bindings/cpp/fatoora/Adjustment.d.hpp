@@ -35,9 +35,15 @@ public:
 
   inline static diplomat::result<std::unique_ptr<fatoora::Adjustment>, std::unique_ptr<fatoora::BindingError>> amount(std::string_view value);
 
-  inline static diplomat::result<std::unique_ptr<fatoora::Adjustment>, std::unique_ptr<fatoora::BindingError>> percentage(std::string_view base, std::string_view percent);
+  /**
+   * Create an adjustment of `percent` percent of `base`.
+   */
+  inline static diplomat::result<std::unique_ptr<fatoora::Adjustment>, std::unique_ptr<fatoora::BindingError>> percent_of(std::string_view base, std::string_view percent);
 
-  inline diplomat::result<std::unique_ptr<fatoora::Adjustment>, std::unique_ptr<fatoora::BindingError>> with_supplied_amount(std::string_view value) const;
+  /**
+   * Return a copy with an explicit amount, checked against the percentage calculation.
+   */
+  inline diplomat::result<std::unique_ptr<fatoora::Adjustment>, std::unique_ptr<fatoora::BindingError>> supplied_amount(std::string_view value) const;
 
   inline diplomat::result<std::unique_ptr<fatoora::Adjustment>, std::unique_ptr<fatoora::BindingError>> with_reason(std::optional<std::string_view> reason, std::optional<std::string_view> code) const;
 
@@ -47,7 +53,7 @@ public:
 
   inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> base_amount() const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> percent() const;
+  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> percentage() const;
 
   inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> reason() const;
 

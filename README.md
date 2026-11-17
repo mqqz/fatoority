@@ -126,7 +126,7 @@ Install a published release from Maven Central.
 ```kotlin
 repositories { mavenCentral() }
 dependencies {
-    implementation("com.fatoority:fatoority:0.5.1")
+    implementation("com.fatoority:fatoority:0.6.0")
 }
 ```
 
@@ -136,11 +136,11 @@ dependencies {
 <dependency>
   <groupId>com.fatoority</groupId>
   <artifactId>fatoority</artifactId>
-  <version>0.5.1</version>
+  <version>0.6.0</version>
 </dependency>
 ```
 
-For Android, use `com.fatoority:fatoority-android:0.5.1` instead of the desktop
+For Android, use `com.fatoority:fatoority-android:0.6.0` instead of the desktop
 artifact. Java/Kotlin imports remain `com.fatoora`.
 
 </details>
@@ -208,34 +208,37 @@ for your integration. Running it replaces `invoice.xml` in the working folder.
 Install with `pip install fatoority`, save as `creation.py`, and run `python creation.py`.
 
 ```python
+from datetime import datetime, timezone
 from pathlib import Path
-from fatoora import InvoiceBuilder, InvoiceSubType, InvoiceTypeKind, VatCategory
+from uuid import UUID
+from fatoora import (Address, InvoiceBuilder, InvoiceSubType, InvoiceTypeKind,
+                     PaymentMeans, VatCategory)
 
-builder = InvoiceBuilder.new(InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED)
-builder.set_id("INV-1001")
-builder.set_uuid("8e6000cf-1a98-4174-b3e7-b5d5954bc10d")
-builder.set_issue_datetime("2026-10-26T09:00:00Z")
-builder.set_currency("SAR")
-# Demonstration predecessor; use your own invoice history in production.
-builder.set_previous_invoice_hash(
-    "NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ=="
+seller_address = Address(
+    "SA", "Riyadh", "King Fahd Road", "1234", "12222",
+    additional_number="5678", district="Olaya",
 )
-builder.set_invoice_counter(1)
-builder.set_payment_means_code("10")
-builder.set_vat_category(VatCategory.STANDARD)
-builder.set_seller(
-    name="Example Store", country_code="SA", city="Riyadh",
-    street="King Fahd Road", building_number="1234", postal_code="12222",
-    district="Olaya", additional_number="5678", vat_id="399999999900003",
-    other_id="7003339333", other_id_scheme="CRN",
+invoice = (
+    InvoiceBuilder(
+        InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED,
+        id="INV-1001",
+        uuid=UUID("8e6000cf-1a98-4174-b3e7-b5d5954bc10d"),
+        issue_datetime=datetime(2026, 10, 26, 9, 0, tzinfo=timezone.utc),
+        currency="SAR",
+        # Demonstration predecessor; use your own invoice history in production.
+        previous_invoice_hash="NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ==",
+        invoice_counter=1,
+        vat_category=VatCategory.STANDARD,
+    )
+    .set_seller("Example Store", address=seller_address, vat_id="399999999900003",
+                other_id="7003339333", other_id_scheme="CRN")
+    .add_payment_means(PaymentMeans("10"))
+    .add_line_item(description="Notebook", quantity="2", unit_code="PCE", unit_price="50",
+                   vat_rate="15", vat_category=VatCategory.STANDARD)
+    .build()
 )
-builder.add_line_item(
-    description="Notebook", quantity="2", unit_code="PCE", unit_price="50",
-    vat_rate="15", vat_category=VatCategory.STANDARD,
-)
-invoice = builder.build()
-Path("invoice.xml").write_text(invoice.to_xml(), encoding="utf-8")
-totals = invoice.totals()
+Path("invoice.xml").write_text(invoice.xml, encoding="utf-8")
+totals = invoice.totals
 print(f"VAT: {totals.tax_amount} SAR")
 print(f"Payable: {totals.payable_amount} SAR")
 print("Saved invoice.xml")
@@ -251,23 +254,21 @@ local validation separately before submission.
 
 Rust
 ```rust
-use fatoora_core::config::EnvironmentType;
+use fatoora_core::config::Environment;
 use fatoora_core::csr::{CsrProperties, SigningKey};
 
-let props_text = std::fs::read_to_string("csr.properties")?;
-let props = CsrProperties::from_properties_str(&props_text)?;
+let props = CsrProperties::from_file("csr.properties")?;
 let key = SigningKey::generate();
-let csr = props.build(&key, EnvironmentType::NonProduction)?;
+let csr = props.build(&key, Environment::NonProduction)?;
 let csr_pem = csr.to_pem()?;
 let key_pem = key.to_pem()?;
 ```
 
 Python
 ```python
-from fatoora.config import Environment
-from fatoora.csr import CsrProperties, SigningKey
+from fatoora import CsrProperties, Environment, SigningKey
 
-props = CsrProperties.parse_csr_config_file("csr.properties")
+props = CsrProperties.from_file("csr.properties")
 key = SigningKey.generate()
 csr = props.build(key, Environment.NON_PRODUCTION)
 csr_pem = csr.to_pem_base64()
@@ -276,10 +277,10 @@ key_pem = key.to_pem()
 
 JavaScript
 ```js
-import { CsrProperties, SigningKey } from 'fatoority';
+import { CsrProperties, Environment, SigningKey } from 'fatoority';
 
 const key = SigningKey.generate();
-const csr = CsrProperties.fromPropertiesStr(propertiesText).build(key, 0);
+const csr = CsrProperties.fromStr(propertiesText).build(key, Environment.NonProduction);
 const csrPem = csr.toPem();
 ```
 
@@ -314,18 +315,14 @@ fatoora sign --invoice invoice.xml --cert cert.pem --key key.pem --signed-invoic
 
 Rust
 ```rust
-use fatoora_core::config::Config;
-use fatoora_core::invoice::validation::{
-    validate_zatca_invoice_from_str, ZatcaValidationOptions,
-};
+use fatoora_core::invoice::validation::{Validator, ZatcaValidationOptions};
 
-let config = Config::new(fatoora_core::config::EnvironmentType::NonProduction);
 let xml = std::fs::read_to_string("invoice.xml")?;
 let options = ZatcaValidationOptions {
     previous_invoice_hash: Some(previous_hash_from_history),
     ..Default::default()
 };
-let report = validate_zatca_invoice_from_str(&xml, &config, &options)?;
+let report = Validator::new().validate_zatca(&xml, &options)?;
 if !report.is_valid() {
     // Inspect stages and findings; missing predecessor context is incomplete.
 }
@@ -341,7 +338,7 @@ The local profile implements all 257 business-rule assertions from SDK
 `238-R3.4.8`, plus applicable signature, QR and predecessor checks. It preserves
 warnings and partial reports. Standard invoices skip signature/QR checks under
 this SDK profile. Local validation does not establish issuer trust or remote
-acceptance. Existing `validate_xml_invoice_from_str` and the default CLI profile
+acceptance. `Validator::validate_xml` and the default CLI profile
 continue to check XSD only.
 </details>
 
@@ -375,7 +372,7 @@ use fatoora_core::invoice::xml::parse::parse_finalized_invoice_xml;
 
 let xml = std::fs::read_to_string("invoice.xml")?;
 let invoice = parse_finalized_invoice_xml(&xml)?;
-let hash = invoice.hash_base64()?;
+let hash = invoice.hash()?;
 ```
 
 CLI

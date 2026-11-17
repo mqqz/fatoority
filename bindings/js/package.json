@@ -1,6 +1,6 @@
 {
   "name": "fatoority",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "ZATCA invoice SDK with Diplomat WebAssembly bindings",
   "type": "module",
   "license": "SEE LICENSE IN THIRD_PARTY_NOTICES.md",
@@ -14,14 +14,20 @@
       "default": "./index.mjs"
     },
     "./raw": {
-      "types": "./generated/index.d.mts",
-      "import": "./generated/index.mjs",
-      "default": "./generated/index.mjs"
+      "types": "./raw.d.mts",
+      "import": "./raw.mjs",
+      "default": "./raw.mjs"
     }
   },
   "files": [
     "index.mjs",
     "index.d.mts",
+    "errors.mjs",
+    "errors.d.mts",
+    "patch.mjs",
+    "raw.mjs",
+    "raw.d.mts",
+    "members.mjs",
     "generated",
     "licenses",
     "fatoora_ffi.wasm",

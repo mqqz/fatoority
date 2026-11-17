@@ -19,6 +19,8 @@ namespace capi { struct TaxExemption; }
 class TaxExemption;
 namespace capi { struct Text; }
 class Text;
+class AdjustmentKind;
+class VatCategory;
 } // namespace _native
 
 
@@ -35,7 +37,7 @@ public:
 
   inline bool has_vat_rate() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::AllowanceCharge>, std::unique_ptr<_native::BindingError>> without_vat_rate() const;
+  inline _native::diplomat::result<std::unique_ptr<_native::AllowanceCharge>, std::unique_ptr<_native::BindingError>> omit_vat_rate() const;
 
   /**
    * Retain this adjustment's metadata and check its percentage calculation.
@@ -46,9 +48,9 @@ public:
 
   inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> percentage() const;
 
-  inline static _native::diplomat::result<std::unique_ptr<_native::AllowanceCharge>, std::unique_ptr<_native::BindingError>> new_(bool charge, std::string_view amount, std::optional<std::string_view> reason, std::optional<std::string_view> reason_code, uint8_t category, std::string_view rate, const _native::TaxExemption& exemption);
+  inline static _native::diplomat::result<std::unique_ptr<_native::AllowanceCharge>, std::unique_ptr<_native::BindingError>> new_(_native::AdjustmentKind kind, std::string_view amount, std::optional<std::string_view> reason, std::optional<std::string_view> reason_code, _native::VatCategory category, std::string_view rate, const _native::TaxExemption& exemption);
 
-  inline bool is_charge() const;
+  inline _native::AdjustmentKind kind() const;
 
   inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> amount() const;
   template<typename W>
@@ -58,7 +60,7 @@ public:
   template<typename W>
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> rate_write(W& writeable_output) const;
 
-  inline uint8_t category() const;
+  inline _native::VatCategory category() const;
 
   /**
    * Return an independent adjustment with the given number of identical tax classifications.

@@ -30,10 +30,10 @@ internal interface InvoiceDataLib: Library {
     fun fatoora_InvoiceData_invoice_level_discount(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_InvoiceData_allowance_reason(handle: Pointer): ResultPointerPointer
     fun fatoora_InvoiceData_invoice_counter(handle: Pointer): FFIUint64
-    fun fatoora_InvoiceData_vat_category(handle: Pointer): FFIUint8
-    fun fatoora_InvoiceData_flags_raw(handle: Pointer): FFIUint8
-    fun fatoora_InvoiceData_invoice_type_kind(handle: Pointer): FFIUint8
-    fun fatoora_InvoiceData_invoice_sub_type(handle: Pointer): FFIUint8
+    fun fatoora_InvoiceData_vat_category(handle: Pointer): Int
+    fun fatoora_InvoiceData_flags(handle: Pointer): FFIUint8
+    fun fatoora_InvoiceData_invoice_type_kind(handle: Pointer): Int
+    fun fatoora_InvoiceData_invoice_sub_type(handle: Pointer): Int
     fun fatoora_InvoiceData_seller(handle: Pointer): ResultPointerPointer
     fun fatoora_InvoiceData_buyer(handle: Pointer): ResultPointerPointer
     fun fatoora_InvoiceData_note(handle: Pointer): ResultPointerPointer
@@ -435,28 +435,28 @@ class InvoiceData internal constructor (
         return (returnVal.toULong())
     }
 
-    fun vatCategory(): UByte {
+    fun vatCategory(): VatCategory {
 
         val returnVal = lib.fatoora_InvoiceData_vat_category(handle);
+        return (VatCategory.fromNative(returnVal))
+    }
+
+    fun flags(): UByte {
+
+        val returnVal = lib.fatoora_InvoiceData_flags(handle);
         return (returnVal.toUByte())
     }
 
-    fun flagsRaw(): UByte {
-
-        val returnVal = lib.fatoora_InvoiceData_flags_raw(handle);
-        return (returnVal.toUByte())
-    }
-
-    fun invoiceTypeKind(): UByte {
+    fun invoiceTypeKind(): InvoiceTypeKind {
 
         val returnVal = lib.fatoora_InvoiceData_invoice_type_kind(handle);
-        return (returnVal.toUByte())
+        return (InvoiceTypeKind.fromNative(returnVal))
     }
 
-    fun invoiceSubType(): UByte {
+    fun invoiceSubType(): InvoiceSubType {
 
         val returnVal = lib.fatoora_InvoiceData_invoice_sub_type(handle);
-        return (returnVal.toUByte())
+        return (InvoiceSubType.fromNative(returnVal))
     }
 
     fun seller(): Result<Party> {

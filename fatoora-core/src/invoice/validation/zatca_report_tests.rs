@@ -165,7 +165,7 @@ fn options_default_and_json_report_roundtrip_preserve_context_and_provenance() {
     );
     let options = ZatcaValidationOptions {
         evaluated_at: Some(report().evaluated_at),
-        previous_invoice_hash: Some("previous-hash".to_owned()),
+        previous_invoice_hash: Some("previous-hash".parse().unwrap()),
     };
     assert_eq!(
         serde_json::from_str::<ZatcaValidationOptions>(&serde_json::to_string(&options).unwrap())

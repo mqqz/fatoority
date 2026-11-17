@@ -16,6 +16,8 @@ namespace capi { struct BindingError; }
 class BindingError;
 namespace capi { struct Text; }
 class Text;
+class MessageType;
+class ValidationStatus;
 } // namespace fatoora
 
 
@@ -31,7 +33,15 @@ namespace fatoora {
 class ValidationMessage {
 public:
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> message_type() const;
+  /**
+   * The parsed message `type`, or null when the message has none.
+   */
+  inline std::optional<fatoora::MessageType> message_type() const;
+
+  /**
+   * The message `type` exactly as ZATCA sent it, or null when absent.
+   */
+  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> message_type_raw() const;
 
   inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> code() const;
 
@@ -39,7 +49,15 @@ public:
 
   inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> message() const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> status() const;
+  /**
+   * The parsed message `status`, or null when the message has none.
+   */
+  inline std::optional<fatoora::ValidationStatus> status() const;
+
+  /**
+   * The message `status` exactly as ZATCA sent it, or null when absent.
+   */
+  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> status_raw() const;
 
     inline const fatoora::capi::ValidationMessage* AsFFI() const;
     inline fatoora::capi::ValidationMessage* AsFFI();

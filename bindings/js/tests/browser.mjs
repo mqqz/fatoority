@@ -24,32 +24,35 @@ try {
   await page.goto(`http://127.0.0.1:${server.address().port}/`);
   const result = await page.evaluate(async () => {
     const sdk = await import('/index.mjs');
-    const raw = await import('/generated/index.mjs');
+    const raw = await import('/raw.mjs');
     const key = sdk.SigningKey.generate();
-    const config = sdk.Config.new_(0);
-    const credentials = sdk.CsidCompliance.create(0, '123', 'token', 'secret');
-    const prepared = raw.ZatcaClient.create(config).preparePostCcsidForPcsid(credentials);
+    const config = sdk.Config.create(sdk.Environment.NonProduction);
+    const credentials = sdk.ComplianceCsid.create(sdk.Environment.NonProduction, '123', 'token', 'secret');
+    const prepared = raw.ZatcaClient.create(config).prepareRequestProductionCsid(credentials);
     const response = await sdk.sendPrepared(prepared, {fetch: async (_url, init) => {
       if (new Headers(init.headers).get('authorization') !== 'Basic dG9rZW46c2VjcmV0') throw new Error('bad auth');
       return new Response(JSON.stringify({requestID: 2, binarySecurityToken: 'new', secret: 'secret'}));
     }});
     const client = new sdk.ZatcaClient(config, {fetch: (_url, init) => fetch('/redirect', init)});
     let redirectBlocked = false;
-    try { await client.postCcsidForPcsid(credentials); } catch (e) { redirectBlocked = e instanceof sdk.TransportError; }
+    try { await client.requestProductionCsid(credentials); } catch (e) { redirectBlocked = e instanceof sdk.TransportError; }
     const controller = new AbortController();
     const slow = new sdk.ZatcaClient(config, {fetch: (_url, init) => fetch('/slow', init)});
-    const pending = slow.postCcsidForPcsid(credentials, {signal: controller.signal});
+    const pending = slow.requestProductionCsid(credentials, {signal: controller.signal});
     controller.abort();
     let aborted = false;
     try { await pending; } catch (e) { aborted = e instanceof sdk.TransportError && e.cause.name === 'AbortError'; }
-    return {pem: key.toPem(), token: response.binarySecurityToken(), redirectBlocked, aborted};
+    let typedError = false;
+    try { sdk.Address.create('SAU', '\0', '', '', '', null, null, null); } catch (e) { typedError = e instanceof sdk.InvalidInputError && e.code === 1; }
+    return {pem: key.toPem(), token: response.binarySecurityToken, redirectBlocked, aborted, typedError};
   });
   assert.match(result.pem, /BEGIN PRIVATE KEY/);
   assert.equal(result.token, 'new');
   assert.equal(result.redirectBlocked, true);
   assert.equal(result.aborted, true);
+  assert.equal(result.typedError, true);
   assert.equal(redirected, 0);
-  console.log('Chromium: WASM loading, randomness, prepared requests, redirect refusal and cancellation passed');
+  console.log('Chromium: WASM loading, randomness, prepared requests, redirect refusal, cancellation and typed errors passed');
 } finally {
   await browser.close();
   server.closeAllConnections();

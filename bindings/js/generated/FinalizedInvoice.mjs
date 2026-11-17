@@ -103,13 +103,13 @@ export class FinalizedInvoice {
         }
     }
 
-    hashBase64() {
+    hash() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
 
-        const result = wasm.fatoora_FinalizedInvoice_hash_base64(diplomatReceive.buffer, this.ffiValue, write.buffer);
+        const result = wasm.fatoora_FinalizedInvoice_hash(diplomatReceive.buffer, this.ffiValue, write.buffer);
 
         try {
             if (!diplomatReceive.resultFlag) {

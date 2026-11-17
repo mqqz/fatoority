@@ -8,15 +8,13 @@ use anyhow::{Context, Result, bail};
 use base64ct::{Base64, Encoding};
 use clap::{Parser, Subcommand, ValueEnum};
 use fatoora_core::{
-    config::EnvironmentType,
+    config::Environment,
     csr::CsrProperties,
     invoice::{
-        FinalizedInvoice, SignedInvoice,
-        sign::invoice_hash_base64_from_xml_str,
+        FinalizedInvoice, InvoiceHash, SignedInvoice, hash_xml,
         validation::{
-            Severity, ValidationFinding, ValidationLocation, ZatcaStage, ZatcaStageStatus,
-            ZatcaValidationOptions, ZatcaValidationReport, validate_xml_invoice_from_str,
-            validate_xml_invoice_report_from_str, validate_zatca_invoice_from_str,
+            Severity, ValidationFinding, ValidationLocation, Validator, ZatcaStage,
+            ZatcaStageStatus, ZatcaValidationOptions, ZatcaValidationReport,
         },
         xml::parse::{parse_finalized_invoice_xml, parse_signed_invoice_xml},
     },
@@ -129,11 +127,12 @@ fn main() -> Result<ExitCode> {
         } => {
             let csr_contents = std::fs::read_to_string(&csr_config)
                 .with_context(|| format!("failed to read CSR config from {csr_config}"))?;
-            let csr_config = CsrProperties::from_properties_str(&csr_contents)
+            let csr_config = csr_contents
+                .parse::<CsrProperties>()
                 .context("failed to parse CSR config")?;
             let signer = fatoora_core::csr::SigningKey::generate();
             let csr = csr_config
-                .build(&signer, EnvironmentType::NonProduction)
+                .build(&signer, Environment::NonProduction)
                 .context("failed to generate CSR")?;
 
             let csr_output = if pem {
@@ -282,7 +281,7 @@ fn main() -> Result<ExitCode> {
         Commands::GenerateHash { invoice } => {
             let xml = std::fs::read_to_string(&invoice)
                 .with_context(|| format!("failed to read invoice file {invoice}"))?;
-            let hash = invoice_hash_base64_from_xml_str(&xml)
+            let hash = hash_xml(&xml)
                 .with_context(|| format!("failed to hash invoice XML from {invoice}"))?;
             println!("{hash}");
         }
@@ -321,7 +320,7 @@ fn validate_command(
     previous_invoice_hash: Option<String>,
     evaluated_at: Option<String>,
 ) -> Result<ExitCode> {
-    let config = fatoora_core::config::Config::new(EnvironmentType::NonProduction);
+    let validator = Validator::new();
     if profile == ValidationProfile::Xsd {
         if previous_invoice_hash.is_some() || evaluated_at.is_some() {
             return Ok(validation_input_failure(
@@ -334,7 +333,8 @@ fn validate_command(
             // Keep the existing default command's output and failure behavior.
             let xml = std::fs::read_to_string(invoice)
                 .with_context(|| format!("failed to read invoice file {invoice}"))?;
-            validate_xml_invoice_from_str(&xml, &config)
+            validator
+                .validate_xml(&xml)
                 .map_err(|error| anyhow::anyhow!("XML validation failed: {error}"))?;
             println!("OK");
             return Ok(ExitCode::SUCCESS);
@@ -349,7 +349,7 @@ fn validate_command(
                 ));
             }
         };
-        return Ok(match validate_xml_invoice_report_from_str(&xml, &config) {
+        return Ok(match validator.validate_xml_report(&xml) {
             Ok(report) => {
                 let code = if report.has_errors() { 2 } else { 0 };
                 println!("{}", json!(report));
@@ -362,9 +362,18 @@ fn validate_command(
         });
     }
 
-    let options: ZatcaValidationOptions = match serde_json::from_value(json!({
+    let previous_invoice_hash = match previous_invoice_hash.map(InvoiceHash::parse).transpose() {
+        Ok(hash) => hash,
+        Err(error) => {
+            return Ok(validation_input_failure(
+                format,
+                "invalid_options",
+                &format!("invalid validation context: previous_invoice_hash: {error}"),
+            ));
+        }
+    };
+    let mut options: ZatcaValidationOptions = match serde_json::from_value(json!({
         "evaluated_at": evaluated_at,
-        "previous_invoice_hash": previous_invoice_hash,
     })) {
         Ok(options) => options,
         Err(error) => {
@@ -375,6 +384,7 @@ fn validate_command(
             ));
         }
     };
+    options.previous_invoice_hash = previous_invoice_hash;
     let xml = match read_zatca_xml(invoice) {
         Ok(xml) => xml,
         Err(error) => {
@@ -385,46 +395,44 @@ fn validate_command(
             ));
         }
     };
-    Ok(
-        match validate_zatca_invoice_from_str(&xml, &config, &options) {
-            Ok(report) => {
-                // A rejected stage can leave later stages unrun. Preserve rejection
-                // as the primary outcome instead of reporting mere incompleteness.
-                let (code, outcome) = if report.has_errors() {
-                    (2, "rejected")
-                } else if !report.is_complete() {
-                    (4, "incomplete")
-                } else {
-                    (0, "valid")
-                };
-                match format {
-                    ValidationFormat::Json => println!("{}", json!(report)),
-                    ValidationFormat::Text => {
-                        println!("Validation: {outcome}");
-                        print_zatca_report(&report);
+    Ok(match validator.validate_zatca(&xml, &options) {
+        Ok(report) => {
+            // A rejected stage can leave later stages unrun. Preserve rejection
+            // as the primary outcome instead of reporting mere incompleteness.
+            let (code, outcome) = if report.has_errors() {
+                (2, "rejected")
+            } else if !report.is_complete() {
+                (4, "incomplete")
+            } else {
+                (0, "valid")
+            };
+            match format {
+                ValidationFormat::Json => println!("{}", json!(report)),
+                ValidationFormat::Text => {
+                    println!("Validation: {outcome}");
+                    print_zatca_report(&report);
+                }
+            }
+            ExitCode::from(code)
+        }
+        Err(error) => {
+            match format {
+                ValidationFormat::Json => println!("{}", json!(error)),
+                ValidationFormat::Text => {
+                    println!("Validation: execution_failed");
+                    print_zatca_report(&error.report);
+                    eprintln!("{}", error.message);
+                    if let Some(site) = &error.assertion_site {
+                        eprintln!("Assertion: {site}");
+                    }
+                    if let Some(location) = &error.location {
+                        eprintln!("Location: {}", validation_location(location));
                     }
                 }
-                ExitCode::from(code)
             }
-            Err(error) => {
-                match format {
-                    ValidationFormat::Json => println!("{}", json!(error)),
-                    ValidationFormat::Text => {
-                        println!("Validation: execution_failed");
-                        print_zatca_report(&error.report);
-                        eprintln!("{}", error.message);
-                        if let Some(site) = &error.assertion_site {
-                            eprintln!("Assertion: {site}");
-                        }
-                        if let Some(location) = &error.location {
-                            eprintln!("Location: {}", validation_location(location));
-                        }
-                    }
-                }
-                ExitCode::from(3)
-            }
-        },
-    )
+            ExitCode::from(3)
+        }
+    })
 }
 
 fn read_zatca_xml(path: &str) -> std::io::Result<String> {

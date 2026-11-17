@@ -11,6 +11,7 @@
 #include "fatoora/InvoiceData.hpp"
 #include "fatoora/InvoiceLineItem.hpp"
 #include "fatoora/Party.hpp"
+#include "fatoora/PaymentMeans.hpp"
 #include "fatoora/SignedInvoice.hpp"
 #include "fatoora/SigningKey.hpp"
 #include <algorithm>
@@ -22,7 +23,8 @@
 #include <vector>
 
 static auto builder() {
-    auto b = fatoora::InvoiceBuilder::new_(0, 1, std::nullopt, std::nullopt,
+    auto b = fatoora::InvoiceBuilder::new_(fatoora::InvoiceTypeKind::Tax,
+        fatoora::InvoiceSubType::Simplified, std::nullopt, std::nullopt,
         std::nullopt, std::nullopt).ok().value();
     assert(b->set_id("INV-1").is_ok());
     assert(b->set_uuid("8e6000cf-1a98-4174-b3e7-b5d5954bc10d").is_ok());
@@ -30,8 +32,9 @@ static auto builder() {
     assert(b->set_currency("SAR").is_ok());
     assert(b->set_previous_invoice_hash("hash").is_ok());
     assert(b->set_invoice_counter(1).is_ok());
-    assert(b->set_payment_means_code("10").is_ok());
-    assert(b->set_vat_category(1).is_ok());
+    auto means = fatoora::PaymentMeans::new_("10", std::nullopt).ok().value();
+    assert(b->add_payment_means(*means).is_ok());
+    assert(b->set_vat_category(fatoora::VatCategory::Standard).is_ok());
     auto address = fatoora::Address::new_("SA", "Riyadh", "King Fahd", "1234", "12222",
         std::nullopt, std::nullopt, "Olaya").ok().value();
     assert(b->set_seller("Seller", *address, "399999999900003", "7003339333", "CRN").is_ok());
@@ -39,24 +42,18 @@ static auto builder() {
 }
 
 static void invoice_contract() {
-    assert(fatoora::Config::new_(255).err().value()->code() == 1);
-    assert(fatoora::InvoiceBuilder::new_(255, 1, std::nullopt, std::nullopt,
-        std::nullopt, std::nullopt).err().value()->code() == 1);
-    assert(fatoora::InvoiceBuilder::new_(0, 255, std::nullopt, std::nullopt,
-        std::nullopt, std::nullopt).err().value()->code() == 1);
+    const auto standard = fatoora::VatCategory::Standard;
     auto b = builder();
-    assert(b->set_vat_category(255).err().value()->code() == 1);
-    assert(b->add_line_item(std::string(1, static_cast<char>(0xff)), "3", "PCE", "1", "15", 1)
+    assert(b->add_line_item(std::string(1, static_cast<char>(0xff)), "3", "PCE", "1", "15", standard)
         .err().value()->code() == 1);
-    assert(b->add_line_item(std::string("a\0b", 3), "3", "PCE", "1", "15", 1)
+    assert(b->add_line_item(std::string("a\0b", 3), "3", "PCE", "1", "15", standard)
         .err().value()->code() == 1);
-    assert(b->add_line_item("Item", "3", "PCE", "1", "15", 255).err().value()->code() == 1);
-    auto error = b->add_line_item("Item", "3", "PCE", "invalid", "15", 1).err().value();
+    auto error = b->add_line_item("Item", "3", "PCE", "invalid", "15", standard).err().value();
     assert(error->code() == 1);
     auto details = error->details_json();
     error.reset();
     assert(details.find("invalid_decimal") != std::string::npos);
-    assert(b->add_line_item("Item", "3", "PCE", "0.3333", "15", 1).is_ok());
+    assert(b->add_line_item("Item", "3", "PCE", "0.3333", "15", standard).is_ok());
     auto invoice = b->build().ok().value();
     auto xml = invoice->xml().ok().value();
     auto data = invoice->data().ok().value();
@@ -83,7 +80,7 @@ static void signed_contract(const char *path) {
     assert(input);
     std::string xml((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
     auto invoice = fatoora::SignedInvoice::from_xml(xml).ok().value();
-    assert(invoice->hash_base64().ok().value() == fatoora::Xml::hash(xml).ok().value());
+    assert(invoice->hash().ok().value() == fatoora::Xml::hash(xml).ok().value());
     auto copied = invoice->xml().ok().value();
     auto data = invoice->data().ok().value();
     auto owned = invoice->into_xml().ok().value();
@@ -113,8 +110,7 @@ static void crypto_contract() {
         "1-TST|2-TST|3-ed22f1d8-e6a2-1118-9b58-d9a8f11e445f", "399999999900003",
         "Riyadh Branch", "Maximum Speed Tech Supply LTD", "SA", "1100", "RRRD2929",
         "Supply activities").ok().value();
-    assert(props->build(*parsed_key, 255).err().value()->code() == 1);
-    auto csr = props->build(*parsed_key, 0).ok().value();
+    auto csr = props->build(*parsed_key, fatoora::Environment::NonProduction).ok().value();
     props.reset();
     parsed_key.reset();
     auto csr_der = csr->to_der().ok().value();

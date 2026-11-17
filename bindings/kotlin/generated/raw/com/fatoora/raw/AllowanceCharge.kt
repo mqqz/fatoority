@@ -8,15 +8,15 @@ import com.sun.jna.Structure
 internal interface AllowanceChargeLib: Library {
     fun fatoora_AllowanceCharge_destroy(handle: Pointer)
     fun fatoora_AllowanceCharge_has_vat_rate(handle: Pointer): Byte
-    fun fatoora_AllowanceCharge_without_vat_rate(handle: Pointer): ResultPointerPointer
+    fun fatoora_AllowanceCharge_omit_vat_rate(handle: Pointer): ResultPointerPointer
     fun fatoora_AllowanceCharge_with_percentage(handle: Pointer, base: Slice, percent: Slice): ResultPointerPointer
     fun fatoora_AllowanceCharge_base_amount(handle: Pointer): ResultPointerPointer
     fun fatoora_AllowanceCharge_percentage(handle: Pointer): ResultPointerPointer
-    fun fatoora_AllowanceCharge_new(charge: Boolean, amount: Slice, reason: OptionSlice, reasonCode: OptionSlice, category: FFIUint8, rate: Slice, exemption: Pointer): ResultPointerPointer
-    fun fatoora_AllowanceCharge_is_charge(handle: Pointer): Byte
+    fun fatoora_AllowanceCharge_new(kind: Int, amount: Slice, reason: OptionSlice, reasonCode: OptionSlice, category: Int, rate: Slice, exemption: Pointer): ResultPointerPointer
+    fun fatoora_AllowanceCharge_kind(handle: Pointer): Int
     fun fatoora_AllowanceCharge_amount(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_AllowanceCharge_rate(handle: Pointer, write: Pointer): ResultUnitPointer
-    fun fatoora_AllowanceCharge_category(handle: Pointer): FFIUint8
+    fun fatoora_AllowanceCharge_category(handle: Pointer): Int
     fun fatoora_AllowanceCharge_with_tax_category_count(handle: Pointer, count: FFISizet): ResultPointerPointer
     fun fatoora_AllowanceCharge_tax_category_count(handle: Pointer): FFISizet
     fun fatoora_AllowanceCharge_reason(handle: Pointer): ResultPointerPointer
@@ -54,13 +54,13 @@ class AllowanceCharge internal constructor (
         internal val lib: AllowanceChargeLib = Native.load("fatoora_ffi", libClass)
         @JvmStatic
 
-        fun new_(charge: Boolean, amount: String, reason: String?, reasonCode: String?, category: UByte, rate: String, exemption: TaxExemption): Result<AllowanceCharge> {
+        fun new_(kind: AdjustmentKind, amount: String, reason: String?, reasonCode: String?, category: VatCategory, rate: String, exemption: TaxExemption): Result<AllowanceCharge> {
             val amountSliceMemory = PrimitiveArrayTools.borrowUtf8(amount)
             val reasonSliceMemory = reason?.let { PrimitiveArrayTools.borrowUtf8(it) }
             val reasonCodeSliceMemory = reasonCode?.let { PrimitiveArrayTools.borrowUtf8(it) }
             val rateSliceMemory = PrimitiveArrayTools.borrowUtf8(rate)
 
-            val returnVal = lib.fatoora_AllowanceCharge_new(charge, amountSliceMemory.slice, reasonSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none(), reasonCodeSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none(), FFIUint8(category), rateSliceMemory.slice, exemption.handle);
+            val returnVal = lib.fatoora_AllowanceCharge_new(kind.toNative(), amountSliceMemory.slice, reasonSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none(), reasonCodeSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none(), category.toNative(), rateSliceMemory.slice, exemption.handle);
             try {
                 val nativeOkVal = returnVal.getNativeOk();
                 if (nativeOkVal != null) {
@@ -89,9 +89,9 @@ class AllowanceCharge internal constructor (
         return (returnVal > 0)
     }
 
-    fun withoutVatRate(): Result<AllowanceCharge> {
+    fun omitVatRate(): Result<AllowanceCharge> {
 
-        val returnVal = lib.fatoora_AllowanceCharge_without_vat_rate(handle);
+        val returnVal = lib.fatoora_AllowanceCharge_omit_vat_rate(handle);
         val nativeOkVal = returnVal.getNativeOk();
         if (nativeOkVal != null) {
             val selfEdges: List<Any> = listOf()
@@ -167,10 +167,10 @@ class AllowanceCharge internal constructor (
         }
     }
 
-    fun isCharge(): Boolean {
+    fun kind(): AdjustmentKind {
 
-        val returnVal = lib.fatoora_AllowanceCharge_is_charge(handle);
-        return (returnVal > 0)
+        val returnVal = lib.fatoora_AllowanceCharge_kind(handle);
+        return (AdjustmentKind.fromNative(returnVal))
     }
 
     fun amount(): Result<String> {
@@ -207,10 +207,10 @@ class AllowanceCharge internal constructor (
         }
     }
 
-    fun category(): UByte {
+    fun category(): VatCategory {
 
         val returnVal = lib.fatoora_AllowanceCharge_category(handle);
-        return (returnVal.toUByte())
+        return (VatCategory.fromNative(returnVal))
     }
 
     /**

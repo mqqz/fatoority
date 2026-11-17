@@ -9,6 +9,13 @@ class VatId internal constructor(internal val raw: com.fatoora.raw.VatId) : Nati
         val handle = raw.handle
         attach { com.fatoora.raw.VatId.lib.fatoora_VatId_destroy(handle) }
     }
+
+    val value: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.value())
+        }
+
+    @Deprecated("Use the value property.", ReplaceWith("value"))
     fun value(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.value())
     }

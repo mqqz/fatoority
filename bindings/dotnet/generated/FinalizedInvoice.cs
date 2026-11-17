@@ -57,7 +57,7 @@ public partial class FinalizedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>FinalizedInvoice</c> allocated on Rust side.
     /// </returns>
@@ -72,14 +72,14 @@ public partial class FinalizedInvoice: IDisposable
                 var result = Raw.FinalizedInvoice.FromXml(new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new FinalizedInvoice(result.Ok);
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>FinalizedInvoice</c> allocated on Rust side.
     /// </returns>
@@ -94,14 +94,14 @@ public partial class FinalizedInvoice: IDisposable
                 var result = Raw.FinalizedInvoice.FromFile(new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new FinalizedInvoice(result.Ok);
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>InvoiceData</c> allocated on Rust side.
     /// </returns>
@@ -116,7 +116,7 @@ public partial class FinalizedInvoice: IDisposable
                 var result = Raw.FinalizedInvoice.Data(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new InvoiceData(result.Ok);
             }
@@ -127,7 +127,7 @@ public partial class FinalizedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>InvoiceTotals</c> allocated on Rust side.
     /// </returns>
@@ -142,7 +142,7 @@ public partial class FinalizedInvoice: IDisposable
                 var result = Raw.FinalizedInvoice.Totals(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new InvoiceTotals(result.Ok);
             }
@@ -153,64 +153,70 @@ public partial class FinalizedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string HashBase64()
+    /// <exception cref="FfiException"></exception>
+    public string Hash
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.FinalizedInvoice>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.FinalizedInvoice>? selfLease = null;
                 try
                 {
-                    var result = Raw.FinalizedInvoice.HashBase64(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.FinalizedInvoice.Hash(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string Xml()
+    /// <exception cref="FfiException"></exception>
+    public string Xml
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.FinalizedInvoice>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.FinalizedInvoice>? selfLease = null;
                 try
                 {
-                    var result = Raw.FinalizedInvoice.Xml(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.FinalizedInvoice.Xml(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }

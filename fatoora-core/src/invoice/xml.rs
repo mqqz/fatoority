@@ -221,14 +221,14 @@ pub(crate) mod lexical;
 pub(crate) mod nav;
 pub mod parse;
 
-struct InvoiceTotals<'a> {
+struct InvoiceTotalsXml<'a> {
     currency: &'a str,
     vat_percent: Decimal,
     vat_category: &'a VatCategory,
-    totals: &'a super::InvoiceTotalsData,
+    totals: &'a super::InvoiceTotals,
 }
 
-impl<'a> InvoiceTotals<'a> {
+impl<'a> InvoiceTotalsXml<'a> {
     fn new<T: InvoiceView + ?Sized>(inv: &'a T) -> Self {
         let data = inv.data();
         let vat_percent = data.adjustment_vat_rate.unwrap_or_else(|| {
@@ -478,7 +478,7 @@ impl<'a> Serialize for InvoiceDocumentReferenceXml<'a> {
         let mut st = s.serialize_struct("cac:InvoiceDocumentReference", 0)?;
         st.serialize_field("cbc:ID", self.0.id())?;
         if let Some(uuid) = self.0.uuid() {
-            st.serialize_field("cbc:UUID", uuid)?;
+            st.serialize_field("cbc:UUID", uuid.as_str())?;
         }
         if let Some(issue_date) = self.0.issue_date() {
             st.serialize_field("cbc:IssueDate", issue_date.as_str())?;
@@ -672,7 +672,7 @@ impl Serialize for AdjustmentXml<'_> {
             ));
         }
         let mut st = s.serialize_struct("cac:AllowanceCharge", 0)?;
-        st.serialize_field("cbc:ChargeIndicator", &a.charge)?;
+        st.serialize_field("cbc:ChargeIndicator", &a.kind.charge_indicator())?;
         if let Some(code) = &a.reason_code {
             st.serialize_field("cbc:AllowanceChargeReasonCode", code)?;
         }
@@ -776,7 +776,7 @@ fn tax_subtotal<'a>(data: TaxSubtotalData<'a>) -> impl Serialize + 'a {
 
 fn legal_monetary_total<'a>(
     currency: &'a str,
-    totals: &'a super::InvoiceTotalsData,
+    totals: &'a super::InvoiceTotals,
 ) -> impl Serialize + 'a {
     struct LegalMonetaryTotalSer<'a> {
         currency: &'a str,
@@ -997,9 +997,9 @@ struct BasisQuantity<'a> {
 struct LineAdjustmentXml<'a>(&'a super::LineAdjustment, &'a str);
 impl Serialize for LineAdjustmentXml<'_> {
     fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-        let a = &self.0.adjustment;
+        let a = self.0.adjustment();
         let mut st = s.serialize_struct("cac:AllowanceCharge", 0)?;
-        st.serialize_field("cbc:ChargeIndicator", &self.0.charge)?;
+        st.serialize_field("cbc:ChargeIndicator", &self.0.kind().charge_indicator())?;
         if let Some(code) = &a.reason_code {
             st.serialize_field("cbc:AllowanceChargeReasonCode", code)?;
         }
@@ -1337,7 +1337,7 @@ impl<'a, T: InvoiceView + ?Sized> Serialize for InvoiceXml<'a, T> {
     {
         let view = self.0;
         let data = view.data();
-        let totals = InvoiceTotals::new(view);
+        let totals = InvoiceTotalsXml::new(view);
         let currency_code = totals.currency();
 
         let mut root = serializer.serialize_struct("Invoice", 0)?;
@@ -1363,9 +1363,9 @@ impl<'a, T: InvoiceView + ?Sized> Serialize for InvoiceXml<'a, T> {
         // ---- identifiers & issue info ----
         root.serialize_field("cbc:ProfileID", "reporting:1.0")?;
         root.serialize_field("cbc:ID", &data.id)?;
-        root.serialize_field("cbc:UUID", &data.uuid)?;
-        root.serialize_field("cbc:IssueDate", data.issue_date())?;
-        root.serialize_field("cbc:IssueTime", data.issue_time())?;
+        root.serialize_field("cbc:UUID", data.uuid().as_str())?;
+        root.serialize_field("cbc:IssueDate", data.issue_date().as_str())?;
+        root.serialize_field("cbc:IssueTime", data.issue_time().as_str())?;
 
         // ---- invoice type ----
         root.serialize_field(
@@ -1403,7 +1403,9 @@ impl<'a, T: InvoiceView + ?Sized> Serialize for InvoiceXml<'a, T> {
         )?;
         root.serialize_field(
             "cac:AdditionalDocumentReference",
-            &AdditionalDocumentReferenceXml::PreviousInvoiceHash(&data.previous_invoice_hash),
+            &AdditionalDocumentReferenceXml::PreviousInvoiceHash(
+                data.previous_invoice_hash.as_str(),
+            ),
         )?;
         if let Some(qr) = view.qr_code() {
             root.serialize_field(
@@ -1541,7 +1543,7 @@ mod tests {
             base_amount: None,
             percentage: None,
             tax_category_count: 1,
-            charge: true,
+            kind: crate::invoice::AdjustmentKind::Charge,
             amount: Decimal::from(1),
             reason: None,
             reason_code: None,
@@ -1569,7 +1571,7 @@ mod tests {
     #[test]
     fn test_invoice_xml_serialization() {
         let seller = Party::<SellerRole>::new(
-            "Acme Inc".into(),
+            "Acme Inc",
             Address {
                 province: None,
                 country_code: CountryCode::parse("SAU").expect("country code"),
@@ -1581,10 +1583,9 @@ mod tests {
                 postal_code: "12222".into(),
                 district: None,
             },
-            "301121971500003",
+            "301121971500003".parse().unwrap(),
             None,
-        )
-        .expect("valid seller");
+        );
 
         let line_item = LineItem::new(
             "Item",
@@ -1599,13 +1600,13 @@ mod tests {
         let mut builder = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified));
         builder = builder
             .id("INV-1")
-            .uuid("uuid-123")
-            .issue_datetime("2024-01-01T12:30:00Z")
-            .currency("SAR")
-            .previous_invoice_hash("hash")
+            .uuid("uuid-123".parse().unwrap())
+            .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+            .currency("SAR".parse().unwrap())
+            .previous_invoice_hash("hash".parse().unwrap())
             .invoice_counter(0)
             .seller(seller)
-            .payment_means_code("10")
+            .payment_means(crate::invoice::PaymentMeans::new("10"))
             .vat_category(VatCategory::Standard)
             .line_item(line_item);
         let invoice = builder.build().expect("build invoice");
@@ -1654,7 +1655,7 @@ mod tests {
             base_amount: None,
             percentage: None,
             tax_category_count: 2,
-            charge: true,
+            kind: crate::invoice::AdjustmentKind::Charge,
             amount: Decimal::from(1),
             reason: Some("fee".into()),
             reason_code: Some("95".into()),
@@ -1676,17 +1677,17 @@ mod tests {
             );
         let invoice = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified))
             .id("writer-test")
-            .uuid("writer-test")
-            .issue_datetime("2024-01-01T12:30:00Z")
-            .currency("SAR")
-            .previous_invoice_hash("hash")
+            .uuid("writer-test".parse().unwrap())
+            .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+            .currency("SAR".parse().unwrap())
+            .previous_invoice_hash("hash".parse().unwrap())
             .invoice_counter(1)
             .seller(original.data().seller().clone())
-            .payment_means_code("10")
+            .payment_means(crate::invoice::PaymentMeans::new("10"))
             .vat_category(VatCategory::Standard)
             .line_item(line)
             .delivery(delivery)
-            .adjustment(adjustment)
+            .charge(adjustment.into())
             .build()
             .unwrap();
         fn fails(value: impl Serialize, field: &'static str) {
@@ -1741,13 +1742,10 @@ mod tests {
         for field in ["cbc:BaseQuantity", "cac:AllowanceCharge"] {
             fails(invoice_line_price("SAR", &priced_line), field);
         }
-        let line_adjustment = crate::invoice::LineAdjustment {
-            charge: false,
-            adjustment: crate::invoice::Adjustment::percentage(
-                Decimal::from(10),
-                Decimal::from(10),
-            ),
-        };
+        let line_adjustment = crate::invoice::LineAdjustment::new(
+            crate::invoice::AdjustmentKind::Allowance,
+            crate::invoice::Adjustment::percent_of(Decimal::from(10), Decimal::from(10)),
+        );
         for field in ["cbc:Amount", "cbc:BaseAmount"] {
             fails(LineAdjustmentXml(&line_adjustment, "SAR"), field);
         }
@@ -1755,7 +1753,7 @@ mod tests {
         for field in ["cac:AllowanceCharge", "cac:TaxTotal"] {
             fails(InvoiceLineXml(1, &priced_line, invoice.data()), field);
         }
-        let payment = crate::invoice::PaymentMeans::new("30").payee_financial_account(
+        let payment = crate::invoice::PaymentMeans::new("30").with_payee_financial_account(
             crate::invoice::PaymentAccount {
                 payment_account_identifier: Some("bank".into()),
                 payment_terms: None,

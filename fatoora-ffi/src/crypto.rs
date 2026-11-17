@@ -4,8 +4,8 @@
 #[diplomat::abi_rename = "fatoora_{0}"]
 #[diplomat::attr(cpp, namespace = "fatoora")]
 pub mod ffi {
-    use crate::common::ffi::BindingError;
-    use crate::common::{boundary, core_error, local_error, text, write};
+    use crate::common::ffi::{BindingError, Environment};
+    use crate::common::{boundary, core_error, environment_to_ffi, local_error, text, write};
     use crate::invoice::ffi::{FinalizedInvoice, SignedInvoice};
     use diplomat_runtime::{DiplomatStr, DiplomatWrite};
 
@@ -52,19 +52,15 @@ pub mod ffi {
     pub struct Config(pub(crate) fatoora_core::config::Config);
 
     impl Config {
-        pub fn new(env: u8) -> Result<Box<Config>, Box<BindingError>> {
+        pub fn new(env: Environment) -> Result<Box<Config>, Box<BindingError>> {
             boundary(|| {
                 Ok(Box::new(Self(fatoora_core::config::Config::new(
-                    crate::common::environment(env)?,
+                    env.into(),
                 ))))
             })
         }
-        pub fn env(&self) -> u8 {
-            match self.0.env() {
-                fatoora_core::config::EnvironmentType::NonProduction => 0,
-                fatoora_core::config::EnvironmentType::Simulation => 1,
-                fatoora_core::config::EnvironmentType::Production => 2,
-            }
+        pub fn env(&self) -> Result<Environment, Box<BindingError>> {
+            boundary(|| environment_to_ffi(self.0.env()))
         }
     }
 
@@ -132,32 +128,35 @@ pub mod ffi {
                 )))
             })
         }
-        pub fn from_properties_str(
-            properties: &DiplomatStr,
-        ) -> Result<Box<CsrProperties>, Box<BindingError>> {
+        /// Parse `csr.*` properties text, mirroring core `CsrProperties::from_str`.
+        #[allow(clippy::should_implement_trait)] // Diplomat exports inherent methods only.
+        pub fn from_str(properties: &DiplomatStr) -> Result<Box<CsrProperties>, Box<BindingError>> {
             boundary(|| {
                 Ok(Box::new(Self(
-                    fatoora_core::csr::CsrProperties::from_properties_str(text(properties)?)
+                    text(properties)?
+                        .parse::<fatoora_core::csr::CsrProperties>()
                         .map_err(core_error)?,
                 )))
             })
         }
+        /// Load a `csr.*` properties file, mirroring core `CsrProperties::from_file`.
         #[diplomat::attr(js, disable)]
-        pub fn parse_csr_config_file(
-            path: &DiplomatStr,
-        ) -> Result<Box<CsrProperties>, Box<BindingError>> {
+        pub fn from_file(path: &DiplomatStr) -> Result<Box<CsrProperties>, Box<BindingError>> {
             boundary(|| {
                 Ok(Box::new(Self(
-                    fatoora_core::csr::CsrProperties::parse_csr_config_file(text(path)?)
-                        .map_err(core_error)?,
+                    fatoora_core::csr::CsrProperties::from_file(text(path)?).map_err(core_error)?,
                 )))
             })
         }
-        pub fn build(&self, key: &SigningKey, env: u8) -> Result<Box<Csr>, Box<BindingError>> {
+        pub fn build(
+            &self,
+            key: &SigningKey,
+            env: Environment,
+        ) -> Result<Box<Csr>, Box<BindingError>> {
             boundary(|| {
                 Ok(Box::new(Csr(self
                     .0
-                    .build(&key.0, crate::common::environment(env)?)
+                    .build(&key.0, env.into())
                     .map_err(core_error)?)))
             })
         }
@@ -197,13 +196,13 @@ pub mod ffi {
 
     #[diplomat::opaque]
     #[diplomat::attr(dotnet, manually_disposable)]
-    pub struct Signer(pub(crate) fatoora_core::invoice::sign::InvoiceSigner);
+    pub struct InvoiceSigner(pub(crate) fatoora_core::invoice::sign::InvoiceSigner);
 
-    impl Signer {
+    impl InvoiceSigner {
         pub fn from_pem(
             cert_pem: &DiplomatStr,
             key_pem: &DiplomatStr,
-        ) -> Result<Box<Signer>, Box<BindingError>> {
+        ) -> Result<Box<InvoiceSigner>, Box<BindingError>> {
             boundary(|| {
                 Ok(Box::new(Self(
                     fatoora_core::invoice::sign::InvoiceSigner::from_pem(
@@ -214,7 +213,10 @@ pub mod ffi {
                 )))
             })
         }
-        pub fn from_der(cert_der: &[u8], key_der: &[u8]) -> Result<Box<Signer>, Box<BindingError>> {
+        pub fn from_der(
+            cert_der: &[u8],
+            key_der: &[u8],
+        ) -> Result<Box<InvoiceSigner>, Box<BindingError>> {
             boundary(|| {
                 Ok(Box::new(Self(
                     fatoora_core::invoice::sign::InvoiceSigner::from_der(cert_der, key_der)
@@ -259,20 +261,19 @@ pub mod ffi {
 
 #[cfg(test)]
 mod tests {
-    use super::ffi::{BytesList, Config, Csr, CsrProperties, Signer, SigningKey};
+    use super::ffi::{BytesList, Config, Csr, CsrProperties, InvoiceSigner, SigningKey};
+    use crate::common::ffi::Environment;
 
     #[test]
-    fn configuration_rejects_unknown_environment() {
-        for env in 0..=2 {
-            assert_eq!(
-                Config::new(env)
-                    .unwrap_or_else(|_| panic!("operation should succeed"))
-                    .env(),
-                env
-            );
+    fn configuration_round_trips_environment() {
+        for env in [
+            Environment::NonProduction,
+            Environment::Simulation,
+            Environment::Production,
+        ] {
+            let config = Config::new(env).unwrap_or_else(|_| panic!("operation should succeed"));
+            assert_eq!(config.env().ok(), Some(env));
         }
-        assert!(Config::new(3).is_err());
-        assert!(Config::new(u8::MAX).is_err());
     }
 
     #[test]
@@ -299,10 +300,10 @@ mod tests {
         assert!(SigningKey::from_pem(b"invalid\0pem").is_err());
         assert!(SigningKey::from_pem(&[0xff]).is_err());
         assert!(Csr::from_der(&[]).is_err());
-        assert!(Signer::from_der(&[], &[]).is_err());
-        assert!(Signer::from_pem(b"invalid", b"invalid").is_err());
-        assert!(CsrProperties::from_properties_str(b"bad=1").is_err());
-        assert!(CsrProperties::parse_csr_config_file(b"bad\0path").is_err());
+        assert!(InvoiceSigner::from_der(&[], &[]).is_err());
+        assert!(InvoiceSigner::from_pem(b"invalid", b"invalid").is_err());
+        assert!(CsrProperties::from_str(b"bad=1").is_err());
+        assert!(CsrProperties::from_file(b"bad\0path").is_err());
     }
 
     #[test]

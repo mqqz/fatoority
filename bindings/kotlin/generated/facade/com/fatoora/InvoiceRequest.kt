@@ -2,6 +2,9 @@
 @file:OptIn(ExperimentalUnsignedTypes::class)
 package com.fatoora
 
+/**
+ * Owned request and decoding context; contains credentials.
+ */
 class InvoiceRequest internal constructor(internal val raw: com.fatoora.raw.InvoiceRequest) : NativeResource() {
     init {
         check(raw.owned && raw.selfEdges.isEmpty()) { "Facade requires an independent owned handle" }
@@ -9,14 +12,33 @@ class InvoiceRequest internal constructor(internal val raw: com.fatoora.raw.Invo
         val handle = raw.handle
         attach { com.fatoora.raw.InvoiceRequest.lib.fatoora_InvoiceRequest_destroy(handle) }
     }
+
+    val method: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.method())
+        }
+
+    val url: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.url())
+        }
+
+    val headersJson: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.headersJson())
+        }
+
+    @Deprecated("Use the method property.", ReplaceWith("method"))
     fun method(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.method())
     }
 
+    @Deprecated("Use the url property.", ReplaceWith("url"))
     fun url(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.url())
     }
 
+    @Deprecated("Use the headersJson property.", ReplaceWith("headersJson"))
     fun headersJson(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.headersJson())
     }

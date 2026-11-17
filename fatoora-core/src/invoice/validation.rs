@@ -3,6 +3,8 @@
 //! XSD checks do not run builder field checks, business rules, or signature
 //! verification. Signed imports separately check local signature and QR integrity.
 mod decimal_lexical;
+#[cfg(test)]
+mod forwarder_tests;
 pub(crate) mod integrity;
 mod integrity_xml;
 #[cfg(test)]
@@ -12,6 +14,7 @@ mod schemas;
 mod zatca;
 #[cfg(test)]
 mod zatca_tests;
+#[allow(deprecated)]
 pub use zatca::validate_zatca_invoice_from_str;
 mod zatca_report;
 pub use zatca_report::{
@@ -71,32 +74,122 @@ impl XmlValidationError {
     }
 }
 
-/// Validate an XML invoice string against the UBL schema only.
+/// Entry point for local invoice validation.
 ///
-/// Success establishes XSD conformance, not business-rule compliance or signature
-/// authenticity. See [`validate_xml_invoice_report_from_str`] for explicit coverage.
+/// Validation needs no runtime state: the UBL schemas and the pinned ZATCA
+/// rule set are embedded in the crate, and the ZATCA environment does not
+/// affect the result. Construct one with [`Validator::new`] (or
+/// [`Validator::default`]) and reuse it freely; it is `Copy`.
+///
+/// | Method | Checks |
+/// | --- | --- |
+/// | [`validate_xml`](Self::validate_xml) | UBL XSD only, pass/fail |
+/// | [`validate_xml_report`](Self::validate_xml_report) | UBL XSD only, as a [`ValidationReport`] |
+/// | [`validate_zatca`](Self::validate_zatca) | full local ZATCA profile (XSD, CEN, KSA, signature, QR, PIH) |
+///
+/// # Examples
+/// ```rust
+/// use fatoora_core::invoice::validation::{Validator, ZatcaValidationOptions};
+///
+/// let xml = include_str!("../../tests/fixtures/sdk-parity/cases/standard-invoice/input.xml");
+/// let validator = Validator::new();
+/// validator.validate_xml(xml)?;
+///
+/// let options = ZatcaValidationOptions {
+///     evaluated_at: Some("2026-09-23T12:00:00+03:00".parse()?),
+///     previous_invoice_hash: Some("NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ==".parse()?),
+/// };
+/// let report = validator.validate_zatca(xml, &options)?;
+/// assert!(report.is_valid());
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
+pub struct Validator {
+    _private: (),
+}
+
+impl Validator {
+    /// Create a validator using the bundled UBL XSD and ZATCA rule set.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Validate an XML invoice string against the UBL schema only.
+    ///
+    /// Success establishes XSD conformance, not business-rule compliance or
+    /// signature authenticity. See [`Validator::validate_xml_report`] for
+    /// explicit coverage and [`Validator::validate_zatca`] for the full rule set.
+    ///
+    /// # Errors
+    /// Returns [`XmlValidationError`] if the XML is invalid or validation fails.
+    pub fn validate_xml(&self, xml: &str) -> ValidationResult {
+        schemas::validate(xml)
+    }
+
+    /// Check the bundled UBL XSD and return findings with explicit layer coverage.
+    ///
+    /// Schema violations return `Ok(report)` with error findings. Only the XSD
+    /// layer is marked checked, even when the input contains a signature. Source
+    /// locations are included only when supplied by the backend. Fatal
+    /// diagnostics are errors.
+    ///
+    /// # Errors
+    /// Returns [`XmlValidationError`] when the schema cannot be loaded or parsed,
+    /// or the input is not parseable XML. In those cases XSD validation did not
+    /// complete.
+    pub fn validate_xml_report(&self, xml: &str) -> Result<ValidationReport, XmlValidationError> {
+        schema_validation_report(self.validate_xml(xml))
+    }
+
+    /// Validate raw XML against the pinned ZATCA SDK profile using local checks.
+    ///
+    /// Schema and business-rule rejections return a report. Warnings remain
+    /// visible. Malformed input, resource exhaustion, or an interrupted
+    /// evaluation return an error carrying the partial report.
+    /// `report.is_valid()` requires every applicable stage to complete without
+    /// errors; an empty finding list alone never establishes success.
+    ///
+    /// The default clock is UTC, captured once. Supply `evaluated_at` to
+    /// reproduce a result or specify an implicit timezone. `previous_invoice_hash`
+    /// is required to verify chain continuity; omitting it leaves that stage
+    /// `context_required`. The SDK profile omits signature/QR checks for standard
+    /// invoices. Local signature checks establish content/key integrity, not
+    /// issuer trust, remote acceptance, certificate revocation, or invoice
+    /// history. On WASM, `evaluated_at` is required.
+    ///
+    /// # Errors
+    /// Returns [`ZatcaValidationError`] with completed and partial stage findings.
+    pub fn validate_zatca(
+        &self,
+        xml: &str,
+        options: &ZatcaValidationOptions,
+    ) -> Result<ZatcaValidationReport, ZatcaValidationError> {
+        zatca::validate_zatca(self, xml, options)
+    }
+}
+
+/// Validate an XML invoice string against the UBL schema only.
 ///
 /// # Errors
 /// Returns [`XmlValidationError`] if the XML is invalid or validation fails.
+#[deprecated(since = "0.6.0", note = "use `Validator::validate_xml` instead")]
 pub fn validate_xml_invoice_from_str(xml: &str, config: &Config) -> ValidationResult {
     let _ = config;
-    schemas::validate(xml)
+    Validator::new().validate_xml(xml)
 }
 
 /// Check the bundled UBL XSD and return findings with explicit layer coverage.
 ///
-/// Schema violations return `Ok(report)` with error findings. Only the XSD layer
-/// is marked checked, even when the input contains a signature. Source locations
-/// are included only when supplied by the backend. Fatal diagnostics are errors.
-///
 /// # Errors
 /// Returns [`XmlValidationError`] when the schema cannot be loaded or parsed, or
-/// the input is not parseable XML. In those cases XSD validation did not complete.
+/// the input is not parseable XML.
+#[deprecated(since = "0.6.0", note = "use `Validator::validate_xml_report` instead")]
 pub fn validate_xml_invoice_report_from_str(
     xml: &str,
     config: &Config,
 ) -> Result<ValidationReport, XmlValidationError> {
-    schema_validation_report(validate_xml_invoice_from_str(xml, config))
+    let _ = config;
+    Validator::new().validate_xml_report(xml)
 }
 
 fn schema_validation_report(
@@ -233,7 +326,7 @@ mod schema_report_tests {
             crate::ErrorKind::Validation
         );
         assert!(matches!(
-            validate_xml_invoice_report_from_str("<Invoice", &Config::default()),
+            Validator::new().validate_xml_report("<Invoice"),
             Err(XmlValidationError::XmlParse { .. })
         ));
     }

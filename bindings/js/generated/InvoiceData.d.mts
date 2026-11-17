@@ -3,10 +3,13 @@ import type { AllowanceCharge } from "./AllowanceCharge.mjs"
 import type { BindingError } from "./BindingError.mjs"
 import type { InvoiceLineItem } from "./InvoiceLineItem.mjs"
 import type { InvoiceNote } from "./InvoiceNote.mjs"
+import type { InvoiceSubType } from "./InvoiceSubType.mjs"
+import type { InvoiceTypeKind } from "./InvoiceTypeKind.mjs"
 import type { OriginalInvoiceRef } from "./OriginalInvoiceRef.mjs"
 import type { Party } from "./Party.mjs"
 import type { PaymentMeans } from "./PaymentMeans.mjs"
 import type { Text } from "./Text.mjs"
+import type { VatCategory } from "./VatCategory.mjs"
 import type { pointer, codepoint } from "./diplomat-runtime.mjs";
 
 
@@ -64,13 +67,13 @@ export class InvoiceData {
 
     invoiceCounter(): bigint;
 
-    vatCategory(): number;
+    vatCategory(): VatCategory;
 
-    flagsRaw(): number;
+    flags(): number;
 
-    invoiceTypeKind(): number;
+    invoiceTypeKind(): InvoiceTypeKind;
 
-    invoiceSubType(): number;
+    invoiceSubType(): InvoiceSubType;
 
     seller(): Party;
 

@@ -26,26 +26,26 @@ Build a local tarball with `npm pack` in `bindings/js`. Version tags publish the
 See the [JS/TS reference](https://docs.fatoority.com/reference/bindings/javascript/) for complete installation, browser deployment and API examples.
 
 ```js
-import { Config, SigningKey, CsidCompliance, ZatcaClient } from 'fatoority';
+import { Config, Environment, SigningKey, ComplianceCsid, ZatcaClient } from 'fatoority';
 
 const key = SigningKey.generate();
-const config = Config.new_(0); // 0: nonproduction, 1: simulation, 2: production
+const config = Config.create(Environment.NonProduction); // or Simulation, Production
 const client = new ZatcaClient(config);
-const compliance = CsidCompliance.create(0, 'request-id', 'token', 'secret');
-const production = await client.postCcsidForPcsid(compliance, {
+const compliance = ComplianceCsid.create(Environment.NonProduction, 'request-id', 'token', 'secret');
+const production = await client.requestProductionCsid(compliance, {
   signal: AbortSignal.timeout(30_000),
 });
 ```
 
-API methods prepare requests and decode responses in Rust; the facade calls `fetch`. Inject a fetch implementation with `new ZatcaClient(config, {fetch})`. Requests refuse redirects. HTTP errors go to Rust decoding, and a successful invoice HTTP response still requires `response.ensureAccepted()` or inspection of `response.outcome()`.
+API methods prepare requests and decode responses in Rust; the facade calls `fetch`. Inject a fetch implementation with `new ZatcaClient(config, {fetch})`. Requests refuse redirects. HTTP errors go to Rust decoding, and a successful invoice HTTP response still requires `response.ensureAccepted()` or inspection of `response.outcome`.
 
-For your own transport, import `ZatcaClient` from `fatoority/raw`, call a `prepare*` method, and read `method()`, `url()`, `headersJson()` (an array of header pairs), and `body().asSlice()`. Complete with `request.decode(status, bytes)`, or use `sendPrepared(request, {fetch, signal})`. The request owns its data and the operation/environment needed for decoding. It contains authorization headers and must not be logged.
+For your own transport, import `ZatcaClient` from `fatoority/raw`, call a `prepare*` method, and read `method`, `url`, `headersJson` (an array of header pairs), and `body().asSlice()`. Complete with `request.decode(status, bytes)`, or use `sendPrepared(request, {fetch, signal})`. The request owns its data and the operation/environment needed for decoding. It contains authorization headers and must not be logged.
 
-The generated API preserves Rust names in camelCase; a Rust `new` constructor is `new_`. Decimal arguments and outputs are strings, and invoice counters are `bigint`. Optional strings use `null`, distinct from `''`. Consuming operations such as `build()`, signing and `intoXml()` reject reuse. Generated owners are released by FinalizationRegistry; do not manually free pointers or share handles between workers. Byte slices returned by the generated JS are copies. The facade snapshots outgoing bytes before awaiting the network.
+The package root exposes the generated classes with Rust names in camelCase; a Rust `new` constructor is `create` (the generated `new_` remains as a deprecated alias). Value getters are read-only properties (`invoice.xml`, `address.city`, `totals.taxAmount`, `response.reportingStatus`); members that take arguments, return another native object (`invoice.data()`), convert or consume stay methods. Optional text is `string | null`. Decimal arguments and outputs are exact decimal strings (never `number`), and invoice counters are `bigint`. Enumerated codes are enum classes such as `Environment.NonProduction`, `VatCategory.Standard`, `AdjustmentKind.Charge` and `ClearanceMode.Disabled` (`.value` is the variant name); each enum has a string-literal union type such as `VatCategoryValue`. Response statuses such as `reportingStatus` are an enum (with `Unknown` for unrecognized values) or `null`; `reportingStatusRaw` and the other `*Raw` properties hold the exact text. The async `ZatcaClient` also accepts a boolean or variant name for `clearanceStatus`; the `fatoority/raw` `prepare*` methods take a `ClearanceMode`. Optional strings use `null`, distinct from `''`. Consuming operations such as `build()`, signing and `intoXml()` reject reuse. Generated owners are released by FinalizationRegistry; do not manually free pointers or share handles between workers. Byte slices returned by the generated JS are copies. The facade snapshots outgoing bytes before awaiting the network.
 
-Generated Rust errors are JavaScript `Error` objects whose `cause` is a `BindingError`. Inspect `error.cause.code()`, `.message()` and `.detailsJson()`. Network, cancellation and response-body read failures throw `TransportError`, retaining the original cause and, when available, `httpStatus`.
+Library failures throw one `FatooraError` subclass per error code (`InvalidInputError`, `ValidationError`, `ParseError`, `XmlError`, `CryptoError`, `IoError`, `NetworkError`, `UnauthorizedError`, `InternalError`, `ApiError`) with `code`, `kind`, `message`, parsed `details`, and the `BindingError` as `cause`. `fatoority/raw` throws the same classes. Network, cancellation and response-body read failures throw `TransportError`, a `NetworkError` retaining the original cause and, when available, `httpStatus`.
 
-`Xml.validateZatca(config, xml, optionsJson)` supplies the host clock when `evaluated_at` is absent. An explicit timestamp makes validation reproducible. The raw API requires `evaluated_at` on WASM. Filesystem helpers are excluded from JS; read files in the host and pass their contents.
+`Xml.validateZatca(xml, {previousInvoiceHash, evaluatedAt})` returns the `ZatcaValidationReport` as a plain, typed object (`isValid`, `stages[].findings[]` with `severity`, `layer`, `code`, `message`, `location`) and supplies the host clock when `evaluatedAt` is absent. An explicit timestamp makes validation reproducible. The raw API returns the native report and requires `evaluated_at` on WASM. Filesystem helpers are excluded from JS; read files in the host and pass their contents.
 
 The browser loader resolves `fatoora_ffi.wasm` relative to the package modules. Deploy the generated modules and WASM together, or configure the bundler to copy the WASM at that URL. Direct gateway requests depend on the gateway's CORS policy. Keep signing keys and credentials in the host environment appropriate to your application.
 

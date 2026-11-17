@@ -1,40 +1,133 @@
 {
-  "Environment": {},
-  "InvoiceOutcome": {},
-  "InvoiceTypeKind": {},
-  "InvoiceSubType": {},
-  "VatCategory": {},
-  "InvoiceFlag": {},
-  "InvoiceLineItem": {},
-  "InvoiceTotals": {},
+  "Address": {
+    "__init__": [
+      "country_code",
+      "city",
+      "street",
+      "building_number",
+      "postal_code",
+      "additional_street",
+      "additional_number",
+      "district",
+      "province"
+    ],
+    "additional_number": "field",
+    "additional_street": "field",
+    "building_number": "field",
+    "city": "field",
+    "close": [],
+    "country_code": "field",
+    "district": "field",
+    "new": [
+      "country_code",
+      "city",
+      "street",
+      "building_number",
+      "postal_code",
+      "additional_street",
+      "additional_number",
+      "district"
+    ],
+    "postal_code": "field",
+    "province": "field",
+    "street": "field",
+    "with_province": [
+      "province"
+    ]
+  },
+  "Adjustment": {
+    "__init__": [
+      "amount",
+      "reason",
+      "reason_code",
+      "base_amount",
+      "percentage",
+      "charge",
+      "category",
+      "rate",
+      "exemption",
+      "tax_category_count",
+      "omitted_rate"
+    ],
+    "amount": "field",
+    "base_amount": "field",
+    "category": "field",
+    "charge": "field",
+    "close": [],
+    "exemption": "field",
+    "omitted_rate": "field",
+    "percent": "property",
+    "percent_of": [
+      "base",
+      "percent",
+      "**fields"
+    ],
+    "percentage": "field",
+    "rate": "field",
+    "reason": "field",
+    "reason_code": "field",
+    "tax_category_count": "field",
+    "value": "property",
+    "with_reason": [
+      "reason",
+      "code"
+    ],
+    "with_supplied_amount": [
+      "value"
+    ]
+  },
+  "ApiError": {},
+  "ClearanceMode": {
+    "DISABLED": "member",
+    "ENABLED": "member"
+  },
+  "ClearanceStatus": {
+    "CLEARED": "member",
+    "NOT_CLEARED": "member"
+  },
+  "ComplianceCsid": {
+    "__init__": [
+      "env",
+      "*",
+      "token",
+      "secret",
+      "request_id"
+    ],
+    "binary_security_token": "property",
+    "close": [],
+    "env": "property",
+    "new": [
+      "env",
+      "token",
+      "secret",
+      "request_id"
+    ],
+    "request_id": "property",
+    "secret": "property"
+  },
   "Config": {
-    "env": []
+    "__init__": [
+      "env"
+    ],
+    "close": [],
+    "env": "property"
   },
-  "Signer": {
-    "from_pem": [
-      "cert_pem",
-      "key_pem"
-    ],
-    "from_der": [
-      "cert_der",
-      "key_der"
-    ],
-    "certificate_der": [],
-    "certificate_pem": []
-  },
-  "SigningKey": {
-    "from_pem": [
-      "pem"
-    ],
+  "CryptoError": {},
+  "Csr": {
+    "close": [],
+    "extension_values_der": "property",
     "from_der": [
       "der"
     ],
-    "generate": [],
+    "subject_string": "property",
+    "to_base64": [],
+    "to_der": [],
     "to_pem": [],
-    "to_der": []
+    "to_pem_base64": []
   },
   "CsrProperties": {
-    "new": [
+    "__init__": [
+      "*",
       "common_name",
       "serial_number",
       "organization_identifier",
@@ -45,241 +138,217 @@
       "location_address",
       "industry_business_category"
     ],
+    "build": [
+      "key",
+      "env"
+    ],
+    "close": [],
+    "from_file": [
+      "path"
+    ],
     "from_properties_str": [
       "properties"
+    ],
+    "from_str": [
+      "properties"
+    ],
+    "new": [
+      "*",
+      "common_name",
+      "serial_number",
+      "organization_identifier",
+      "organization_unit_name",
+      "organization_name",
+      "country_name",
+      "invoice_type",
+      "location_address",
+      "industry_business_category"
     ],
     "parse_csr_config": [
       "properties"
     ],
     "parse_csr_config_file": [
       "path"
-    ],
-    "build": [
-      "key",
-      "env"
     ]
   },
-  "Csr": {
-    "from_der": [
-      "der"
+  "Environment": {
+    "NON_PRODUCTION": "member",
+    "SIMULATION": "member",
+    "PRODUCTION": "member"
+  },
+  "FatooraError": {},
+  "FfiError": {},
+  "FfiErrorKind": {},
+  "FinalizedInvoice": {
+    "actual_delivery_date": "property",
+    "adjustments": "property",
+    "allowance_reason": "property",
+    "billing_references": "property",
+    "buyer": "property",
+    "close": [],
+    "contract_id": "property",
+    "currency": "property",
+    "flags": "property",
+    "flags_raw": "property",
+    "from_file": [
+      "path"
     ],
-    "to_base64": [],
-    "to_pem_base64": [],
-    "to_der": [],
-    "to_pem": [],
-    "subject_string": [],
-    "extension_values_der": []
-  },
-  "CsidCompliance": {
-    "new": [
-      "env",
-      "token",
-      "secret",
-      "request_id"
+    "from_xml": [
+      "xml"
     ],
-    "request_id": [],
-    "env": [],
-    "binary_security_token": [],
-    "secret": []
-  },
-  "CsidProduction": {
-    "new": [
-      "env",
-      "token",
-      "secret",
-      "request_id"
-    ],
-    "request_id": [],
-    "env": [],
-    "binary_security_token": [],
-    "secret": []
-  },
-  "ValidationMessage": {
-    "message_type": [],
-    "code": [],
-    "category": [],
-    "message": [],
-    "status": []
-  },
-  "ValidationResults": {
-    "status": [],
-    "info_messages": [],
-    "warning_messages": [],
-    "error_messages": []
-  },
-  "ValidationResponse": {
-    "http_status": [],
-    "outcome": [],
-    "ensure_accepted": [],
-    "cleared_invoice_base64": [],
-    "cleared_invoice_xml": [],
-    "reporting_status": [],
-    "clearance_status": [],
-    "qr_seller_status": [],
-    "qr_buyer_status": [],
-    "validation_results": []
-  },
-  "VatId": {
-    "value": []
-  },
-  "OtherId": {
-    "value": [],
-    "scheme": []
-  },
-  "Address": {
-    "new": [
-      "country_code",
-      "city",
-      "street",
-      "building_number",
-      "postal_code",
-      "additional_street",
-      "additional_number",
-      "district"
-    ],
-    "country_code": [],
-    "city": [],
-    "street": [],
-    "additional_street": [],
-    "building_number": [],
-    "additional_number": [],
-    "postal_code": [],
-    "district": []
-  },
-  "Party": {
-    "name": [],
-    "address": [],
-    "vat_id": [],
-    "other_id": []
-  },
-  "InvoiceNote": {
-    "language": [],
-    "text": []
-  },
-  "OriginalInvoiceRef": {
-    "id": [],
-    "uuid": [],
-    "issue_date": []
-  },
-  "ZatcaClient": {
-    "post_csr_for_ccsid": [
-      "csr",
-      "otp"
-    ],
-    "post_ccsid_for_pcsid": [
-      "ccsid"
-    ],
-    "renew_csid": [
-      "pcsid",
-      "csr",
-      "otp",
-      "accept_language"
-    ],
-    "check_invoice_compliance": [
-      "invoice",
-      "ccsid"
-    ],
-    "report_simplified_invoice": [
-      "invoice",
-      "pcsid",
-      "clearance_status",
-      "accept_language"
-    ],
-    "clear_standard_invoice": [
-      "invoice",
-      "pcsid",
-      "clearance_status",
-      "accept_language"
-    ]
-  },
-  "SignedInvoice": {
-    "id": [],
-    "xml": [],
-    "into_xml": [],
-    "to_xml_base64": [],
-    "qr_code": [],
-    "uuid": [],
-    "issue_datetime": [],
-    "currency": [],
-    "previous_invoice_hash": [],
-    "invoice_counter": [],
-    "payment_means_code": [],
-    "vat_category": [],
-    "invoice_level_charge": [],
-    "invoice_level_discount": [],
-    "allowance_reason": [],
-    "invoice_hash": [],
+    "hash": [],
     "hash_base64": [],
-    "signature": [],
-    "public_key": [],
-    "zatca_key_signature": [],
-    "cert_hash": [],
-    "signed_props_hash": [],
-    "signing_time": [],
-    "issuer": [],
-    "serial": [],
-    "seller": [],
-    "buyer": [],
-    "note": [],
-    "invoice_type_kind": [],
-    "invoice_sub_type": [],
-    "original_invoice_ref": [],
-    "original_invoice_reason": [],
-    "line_item_count": [],
+    "id": "property",
+    "invoice_counter": "property",
+    "invoice_level_charge": "property",
+    "invoice_level_discount": "property",
+    "invoice_sub_type": "property",
+    "invoice_type_kind": "property",
+    "is_export": [],
+    "is_nominal": [],
+    "is_self_billed": [],
+    "is_simplified": [],
+    "is_summary": [],
+    "is_third_party": [],
+    "issue_date": "property",
+    "issue_datetime": "property",
+    "issue_time": "property",
+    "latest_delivery_date": "property",
     "line_item": [
       "index"
     ],
-    "line_items": [],
-    "totals": [],
-    "flags_raw": [],
-    "flags": [],
-    "is_third_party": [],
-    "is_nominal": [],
-    "is_export": [],
-    "is_summary": [],
-    "is_self_billed": [],
-    "is_simplified": []
-  },
-  "FinalizedInvoice": {
-    "id": [],
-    "uuid": [],
-    "issue_datetime": [],
-    "currency": [],
-    "previous_invoice_hash": [],
-    "invoice_counter": [],
-    "payment_means_code": [],
-    "vat_category": [],
-    "invoice_level_charge": [],
-    "invoice_level_discount": [],
-    "allowance_reason": [],
-    "xml": [],
-    "hash_base64": [],
-    "seller": [],
-    "buyer": [],
-    "note": [],
-    "invoice_type_kind": [],
-    "invoice_sub_type": [],
-    "original_invoice_ref": [],
-    "original_invoice_reason": [],
+    "line_item_count": "property",
+    "line_items": "property",
+    "note": "property",
+    "notes": "property",
+    "original_invoice_reason": "property",
+    "original_invoice_ref": "property",
+    "payment_instruction": "property",
+    "payment_means": "property",
+    "payment_means_code": "property",
+    "previous_invoice_hash": "property",
+    "purchase_order_id": "property",
+    "seller": "property",
     "sign": [
       "signer"
     ],
-    "line_item_count": [],
-    "line_item": [
-      "index"
-    ],
-    "line_items": [],
-    "totals": [],
-    "flags_raw": [],
-    "flags": [],
-    "is_third_party": [],
-    "is_nominal": [],
-    "is_export": [],
-    "is_summary": [],
-    "is_self_billed": [],
-    "is_simplified": []
+    "tax_currency": "property",
+    "tax_currency_amount": "property",
+    "to_xml": [],
+    "totals": "property",
+    "uuid": "property",
+    "vat_breakdown": "property",
+    "vat_category": "property",
+    "xml": "property"
   },
+  "Identifier": {
+    "__init__": [
+      "value",
+      "scheme"
+    ],
+    "close": [],
+    "scheme": "field",
+    "value": "field"
+  },
+  "InternalError": {},
+  "InvalidInputError": {},
   "InvoiceBuilder": {
+    "__init__": [
+      "invoice_type",
+      "invoice_subtype",
+      "*",
+      "id",
+      "uuid",
+      "issue_datetime",
+      "currency",
+      "previous_invoice_hash",
+      "invoice_counter",
+      "vat_category",
+      "flags",
+      "original_invoice",
+      "original_invoice_reason",
+      "seller",
+      "buyer"
+    ],
+    "add_adjustment": [
+      "adjustment"
+    ],
+    "add_allowance": [
+      "value",
+      "category",
+      "rate",
+      "exemption"
+    ],
+    "add_billing_reference": [
+      "value"
+    ],
+    "add_buyer_identifier": [
+      "value",
+      "scheme"
+    ],
+    "add_charge": [
+      "value",
+      "category",
+      "rate",
+      "exemption"
+    ],
+    "add_document_adjustment": [
+      "charge",
+      "value",
+      "category",
+      "rate",
+      "exemption"
+    ],
+    "add_item": [
+      "item"
+    ],
+    "add_line_item": [
+      "description",
+      "quantity",
+      "unit_code",
+      "unit_price",
+      "vat_rate",
+      "vat_category",
+      "*",
+      "id",
+      "exemption",
+      "document_references",
+      "tax_subtotals"
+    ],
+    "add_note": [
+      "text",
+      "*",
+      "language"
+    ],
+    "add_payment_means": [
+      "value"
+    ],
+    "add_seller_identifier": [
+      "value",
+      "scheme"
+    ],
+    "add_tax_exemption": [
+      "category",
+      "rate",
+      "exemption"
+    ],
+    "add_vat_breakdown": [
+      "value"
+    ],
+    "allowance_reason": [
+      "reason"
+    ],
+    "build": [],
+    "close": [],
+    "flags": [
+      "flags"
+    ],
+    "invoice_level_charge": [
+      "charge"
+    ],
+    "invoice_level_discount": [
+      "discount"
+    ],
     "new": [
       "invoice_type",
       "invoice_subtype",
@@ -288,54 +357,20 @@
       "original_invoice_issue_date",
       "original_invoice_reason"
     ],
-    "set_id": [
-      "invoice_id"
+    "new_with_reference": [
+      "invoice_type",
+      "invoice_subtype",
+      "reference",
+      "reason"
     ],
-    "set_uuid": [
-      "uuid"
-    ],
-    "set_issue_datetime": [
-      "issue_datetime"
-    ],
-    "set_currency": [
-      "currency_code"
-    ],
-    "set_previous_invoice_hash": [
-      "previous_invoice_hash"
-    ],
-    "set_invoice_counter": [
-      "invoice_counter"
-    ],
-    "set_payment_means_code": [
-      "payment_means_code"
-    ],
-    "set_vat_category": [
-      "vat_category"
-    ],
-    "set_seller": [
-      "name",
-      "country_code",
-      "city",
-      "street",
-      "building_number",
-      "postal_code",
-      "vat_id",
-      "additional_street",
-      "additional_number",
-      "district",
-      "other_id",
-      "other_id_scheme"
-    ],
-    "add_line_item": [
-      "description",
-      "quantity",
-      "unit_code",
-      "unit_price",
-      "vat_rate",
-      "vat_category"
+    "set_allowance": [
+      "reason",
+      "amount"
     ],
     "set_buyer": [
       "name",
+      "*",
+      "address",
       "country_code",
       "city",
       "street",
@@ -346,28 +381,793 @@
       "other_id_scheme",
       "additional_street",
       "additional_number",
-      "district"
+      "district",
+      "province"
+    ],
+    "set_buyer_without_address": [
+      "name",
+      "vat_id",
+      "other_id",
+      "scheme"
+    ],
+    "set_contract_id": [
+      "value"
+    ],
+    "set_currency": [
+      "currency_code"
+    ],
+    "set_delivery": [
+      "actual",
+      "latest"
+    ],
+    "set_flags": [
+      "flags"
+    ],
+    "set_id": [
+      "invoice_id"
+    ],
+    "set_invoice_counter": [
+      "invoice_counter"
+    ],
+    "set_issue_datetime": [
+      "issue_datetime"
     ],
     "set_note": [
       "language",
       "text"
     ],
-    "set_allowance": [
-      "reason",
+    "set_note_without_language": [
+      "text"
+    ],
+    "set_payable_rounding_amount": [
       "amount"
     ],
-    "invoice_level_charge": [
-      "charge"
+    "set_payment_instruction": [
+      "instruction"
     ],
-    "invoice_level_discount": [
-      "discount"
+    "set_payment_means_code": [
+      "payment_means_code"
     ],
-    "allowance_reason": [
+    "set_prepaid_amount": [
+      "amount"
+    ],
+    "set_previous_invoice_hash": [
+      "previous_invoice_hash"
+    ],
+    "set_purchase_order_id": [
+      "value"
+    ],
+    "set_seller": [
+      "name",
+      "*",
+      "vat_id",
+      "address",
+      "country_code",
+      "city",
+      "street",
+      "building_number",
+      "postal_code",
+      "additional_street",
+      "additional_number",
+      "district",
+      "province",
+      "other_id",
+      "other_id_scheme"
+    ],
+    "set_tax_currency": [
+      "currency",
+      "amount"
+    ],
+    "set_tax_exemption": [
+      "category",
+      "rate",
+      "exemption"
+    ],
+    "set_uuid": [
+      "uuid"
+    ],
+    "set_vat_category": [
+      "vat_category"
+    ]
+  },
+  "InvoiceFlag": {
+    "THIRD_PARTY": "member",
+    "NOMINAL": "member",
+    "EXPORT": "member",
+    "SUMMARY": "member",
+    "SELF_BILLED": "member"
+  },
+  "InvoiceLineItem": {
+    "__init__": [
+      "description",
+      "unit_code",
+      "quantity",
+      "unit_price",
+      "total_amount",
+      "vat_rate",
+      "vat_amount",
+      "vat_category",
+      "id",
+      "exemption",
+      "document_references",
+      "tax_subtotals",
+      "item_price_base_quantity",
+      "item_price_base_quantity_unit_code",
+      "item_gross_price",
+      "item_price_discount",
+      "adjustments",
+      "item_seller_identifier",
+      "item_buyer_identifier",
+      "item_standard_identifier",
+      "omitted_vat_rate",
+      "omitted_tax_amount",
+      "omitted_gross_amount"
+    ],
+    "adjustments": "field",
+    "description": "field",
+    "document_references": "field",
+    "exemption": "field",
+    "id": "field",
+    "item_buyer_identifier": "field",
+    "item_gross_price": "field",
+    "item_price_base_quantity": "field",
+    "item_price_base_quantity_unit_code": "field",
+    "item_price_discount": "field",
+    "item_seller_identifier": "field",
+    "item_standard_identifier": "field",
+    "omitted_gross_amount": "field",
+    "omitted_tax_amount": "field",
+    "omitted_vat_rate": "field",
+    "quantity": "field",
+    "tax_subtotals": "field",
+    "total_amount": "field",
+    "unit_code": "field",
+    "unit_price": "field",
+    "vat_amount": "field",
+    "vat_category": "field",
+    "vat_rate": "field"
+  },
+  "InvoiceNote": {
+    "__init__": [
+      "text",
+      "language_id"
+    ],
+    "close": [],
+    "language": "property",
+    "language_id": "field",
+    "text": "field"
+  },
+  "InvoiceOutcome": {
+    "UNKNOWN": "member",
+    "ACCEPTED": "member",
+    "REJECTED": "member"
+  },
+  "InvoiceSigner": {
+    "certificate_der": "property",
+    "certificate_pem": "property",
+    "close": [],
+    "from_der": [
+      "cert_der",
+      "key_der"
+    ],
+    "from_pem": [
+      "cert_pem",
+      "key_pem"
+    ],
+    "sign_xml": [
+      "xml"
+    ]
+  },
+  "InvoiceSubType": {
+    "STANDARD": "member",
+    "SIMPLIFIED": "member"
+  },
+  "InvoiceTotals": {
+    "__init__": [
+      "tax_inclusive",
+      "tax_amount",
+      "line_extension",
+      "allowance_total",
+      "charge_total",
+      "taxable_amount",
+      "prepaid_amount",
+      "payable_rounding_amount",
+      "payable_amount"
+    ],
+    "allowance_total": "field",
+    "charge_total": "field",
+    "line_extension": "field",
+    "payable_amount": "field",
+    "payable_rounding_amount": "field",
+    "prepaid_amount": "field",
+    "tax_amount": "field",
+    "tax_inclusive": "field",
+    "taxable_amount": "field"
+  },
+  "InvoiceTypeKind": {
+    "TAX": "member",
+    "PREPAYMENT": "member",
+    "CREDIT_NOTE": "member",
+    "DEBIT_NOTE": "member"
+  },
+  "IoError": {},
+  "LineItemBuilder": {
+    "__init__": [],
+    "add_allowance": [
+      "value"
+    ],
+    "add_charge": [
+      "value"
+    ],
+    "add_document_reference": [
+      "value"
+    ],
+    "add_tax_subtotal": [
+      "value"
+    ],
+    "build": [],
+    "close": [],
+    "new": [],
+    "set_exemption": [
+      "value"
+    ],
+    "set_gross_amount_present": [
+      "present"
+    ],
+    "set_id": [
+      "value"
+    ],
+    "set_invoiced_quantity": [
+      "value"
+    ],
+    "set_invoiced_quantity_unit_code": [
+      "value"
+    ],
+    "set_item_buyer_identifier": [
+      "value",
+      "scheme"
+    ],
+    "set_item_gross_price": [
+      "value"
+    ],
+    "set_item_name": [
+      "value"
+    ],
+    "set_item_net_price": [
+      "value"
+    ],
+    "set_item_price_base_quantity": [
+      "value"
+    ],
+    "set_item_price_base_quantity_unit_code": [
+      "value"
+    ],
+    "set_item_price_discount": [
+      "value"
+    ],
+    "set_item_seller_identifier": [
+      "value",
+      "scheme"
+    ],
+    "set_item_standard_identifier": [
+      "value",
+      "scheme"
+    ],
+    "set_line_amount_with_vat": [
+      "value"
+    ],
+    "set_line_net_amount": [
+      "value"
+    ],
+    "set_line_vat_amount": [
+      "value"
+    ],
+    "set_tax_total_present": [
+      "present"
+    ],
+    "set_vat_category": [
+      "value"
+    ],
+    "set_vat_rate": [
+      "value"
+    ]
+  },
+  "MessageType": {
+    "INFO": "member",
+    "WARNING": "member",
+    "ERROR": "member"
+  },
+  "NetworkError": {},
+  "OriginalInvoiceRef": {
+    "__init__": [
+      "id",
+      "uuid",
+      "issue_date",
+      "issue_time",
+      "document_type_code"
+    ],
+    "close": [],
+    "document_type_code": "field",
+    "id": "field",
+    "issue_date": "field",
+    "issue_time": "field",
+    "new": [
+      "id",
+      "uuid",
+      "date",
+      "time",
+      "type_code"
+    ],
+    "uuid": "field"
+  },
+  "ParseError": {},
+  "Party": {
+    "__init__": [
+      "name",
+      "address",
+      "vat_id",
+      "identifiers"
+    ],
+    "address": "field",
+    "close": [],
+    "identifiers": "field",
+    "name": "field",
+    "other_id": "property",
+    "vat_id": "field"
+  },
+  "PaymentMeans": {
+    "__init__": [
+      "code",
+      "instruction_notes",
+      "account_identifier",
+      "payment_terms"
+    ],
+    "account_identifier": "field",
+    "close": [],
+    "code": "field",
+    "has_account": [],
+    "instruction_note": "property",
+    "instruction_notes": "field",
+    "new": [
+      "code",
+      "instruction"
+    ],
+    "payment_terms": "field",
+    "with_account": [
+      "id",
+      "terms"
+    ],
+    "with_instruction_note": [
+      "value"
+    ]
+  },
+  "ProductionCsid": {
+    "__init__": [
+      "env",
+      "*",
+      "token",
+      "secret",
+      "request_id"
+    ],
+    "binary_security_token": "property",
+    "close": [],
+    "env": "property",
+    "new": [
+      "env",
+      "token",
+      "secret",
+      "request_id"
+    ],
+    "request_id": "property",
+    "secret": "property"
+  },
+  "ReportingStatus": {
+    "REPORTED": "member",
+    "NOT_REPORTED": "member"
+  },
+  "Severity": {
+    "WARNING": "member",
+    "ERROR": "member"
+  },
+  "SignedInvoice": {
+    "actual_delivery_date": "property",
+    "adjustments": "property",
+    "allowance_reason": "property",
+    "billing_references": "property",
+    "buyer": "property",
+    "cert_hash": "property",
+    "close": [],
+    "contract_id": "property",
+    "currency": "property",
+    "flags": "property",
+    "flags_raw": "property",
+    "from_file": [
+      "path"
+    ],
+    "from_xml": [
+      "xml"
+    ],
+    "hash": [],
+    "hash_base64": [],
+    "id": "property",
+    "into_xml": [],
+    "invoice_counter": "property",
+    "invoice_hash": "property",
+    "invoice_level_charge": "property",
+    "invoice_level_discount": "property",
+    "invoice_sub_type": "property",
+    "invoice_type_kind": "property",
+    "is_export": [],
+    "is_nominal": [],
+    "is_self_billed": [],
+    "is_simplified": [],
+    "is_summary": [],
+    "is_third_party": [],
+    "issue_date": "property",
+    "issue_datetime": "property",
+    "issue_time": "property",
+    "issuer": "property",
+    "latest_delivery_date": "property",
+    "line_item": [
+      "index"
+    ],
+    "line_item_count": "property",
+    "line_items": "property",
+    "note": "property",
+    "notes": "property",
+    "original_invoice_reason": "property",
+    "original_invoice_ref": "property",
+    "payment_instruction": "property",
+    "payment_means": "property",
+    "payment_means_code": "property",
+    "previous_invoice_hash": "property",
+    "public_key": "property",
+    "purchase_order_id": "property",
+    "qr_code": "property",
+    "seller": "property",
+    "serial": "property",
+    "signature": "property",
+    "signed_props_hash": "property",
+    "signing_time": "property",
+    "tax_currency": "property",
+    "tax_currency_amount": "property",
+    "to_xml": [],
+    "to_xml_base64": [],
+    "totals": "property",
+    "uuid": "property",
+    "vat_breakdown": "property",
+    "vat_category": "property",
+    "xml": "property",
+    "zatca_key_signature": "property"
+  },
+  "SigningKey": {
+    "close": [],
+    "from_der": [
+      "der"
+    ],
+    "from_pem": [
+      "pem"
+    ],
+    "generate": [],
+    "to_der": [],
+    "to_pem": []
+  },
+  "TaxExemption": {
+    "__init__": [
+      "reason_code",
       "reason"
     ],
-    "flags": [
-      "flags"
+    "reason": "field",
+    "reason_code": "field"
+  },
+  "UnauthorizedError": {},
+  "ValidationError": {},
+  "ValidationLayer": {
+    "UNKNOWN": "member",
+    "FIELD_CHECKS": "member",
+    "XSD": "member",
+    "BUSINESS_RULES": "member",
+    "SIGNATURE": "member",
+    "QR": "member",
+    "PREVIOUS_INVOICE_HASH": "member"
+  },
+  "ValidationLocation": {
+    "__init__": [
+      "kind",
+      "path",
+      "line",
+      "column"
     ],
-    "build": []
-  }
+    "column": "field",
+    "kind": "field",
+    "line": "field",
+    "path": "field"
+  },
+  "ValidationLocationKind": {
+    "UNKNOWN": "member",
+    "FIELD": "member",
+    "X_PATH": "member",
+    "XML": "member"
+  },
+  "ValidationMessage": {
+    "category": "property",
+    "close": [],
+    "code": "property",
+    "message": "property",
+    "message_type": "property",
+    "status": "property"
+  },
+  "ValidationResponse": {
+    "clearance_status": "property",
+    "cleared_invoice_base64": "property",
+    "cleared_invoice_xml": "property",
+    "close": [],
+    "ensure_accepted": [],
+    "http_status": "property",
+    "outcome": "property",
+    "qr_buyer_status": "property",
+    "qr_seller_status": "property",
+    "reporting_status": "property",
+    "validation_results": "property"
+  },
+  "ValidationResults": {
+    "close": [],
+    "error_messages": "property",
+    "info_messages": "property",
+    "status": "property",
+    "warning_messages": "property"
+  },
+  "ValidationStatus": {
+    "PASS": "member",
+    "WARNING": "member",
+    "ERROR": "member"
+  },
+  "VatBreakdown": {
+    "__init__": [
+      "category",
+      "rate",
+      "taxable_amount",
+      "tax_amount",
+      "exemption",
+      "omitted_rate"
+    ],
+    "category": "field",
+    "exemption": "field",
+    "omitted_rate": "field",
+    "rate": "field",
+    "tax_amount": "field",
+    "taxable_amount": "field"
+  },
+  "VatCategory": {
+    "EXEMPT": "member",
+    "STANDARD": "member",
+    "ZERO": "member",
+    "OUT_OF_SCOPE": "member"
+  },
+  "XmlError": {},
+  "ZatcaClient": {
+    "__init__": [
+      "config",
+      "*",
+      "timeout"
+    ],
+    "check_invoice_compliance": [
+      "invoice",
+      "ccsid"
+    ],
+    "clear_standard_invoice": [
+      "invoice",
+      "pcsid",
+      "*",
+      "clearance",
+      "accept_language",
+      "clearance_status"
+    ],
+    "close": [],
+    "post_ccsid_for_pcsid": [
+      "ccsid"
+    ],
+    "post_csr_for_ccsid": [
+      "csr",
+      "otp"
+    ],
+    "renew_csid": [
+      "pcsid",
+      "csr",
+      "otp",
+      "accept_language"
+    ],
+    "report_simplified_invoice": [
+      "invoice",
+      "pcsid",
+      "*",
+      "clearance",
+      "accept_language",
+      "clearance_status"
+    ],
+    "request_compliance_csid": [
+      "csr",
+      "otp"
+    ],
+    "request_production_csid": [
+      "ccsid"
+    ]
+  },
+  "ZatcaFinding": {
+    "__init__": [
+      "severity",
+      "layer",
+      "code",
+      "message",
+      "location",
+      "assertion_site"
+    ],
+    "assertion_site": "field",
+    "code": "field",
+    "layer": "field",
+    "location": "field",
+    "message": "field",
+    "severity": "field"
+  },
+  "ZatcaReport": {
+    "__init__": [
+      "is_valid",
+      "is_complete",
+      "has_errors",
+      "stages",
+      "evaluated_at",
+      "profile",
+      "schema_version",
+      "_json"
+    ],
+    "errors": "property",
+    "evaluated_at": "field",
+    "findings": "property",
+    "has_errors": "field",
+    "is_complete": "field",
+    "is_valid": "field",
+    "profile": "field",
+    "schema_version": "field",
+    "stage": [
+      "stage"
+    ],
+    "stages": "field",
+    "to_dict": [],
+    "to_json": [],
+    "warnings": "property"
+  },
+  "ZatcaRuleSource": {
+    "__init__": [
+      "stylesheet",
+      "sha256"
+    ],
+    "sha256": "field",
+    "stylesheet": "field"
+  },
+  "ZatcaStage": {
+    "UNKNOWN": "member",
+    "XSD": "member",
+    "CEN": "member",
+    "KSA": "member",
+    "SIGNATURE": "member",
+    "QR": "member",
+    "PREVIOUS_INVOICE_HASH": "member"
+  },
+  "ZatcaStageReport": {
+    "__init__": [
+      "stage",
+      "status",
+      "findings",
+      "evaluated_assertions",
+      "provenance"
+    ],
+    "evaluated_assertions": "field",
+    "findings": "field",
+    "provenance": "field",
+    "stage": "field",
+    "status": "field"
+  },
+  "ZatcaStageStatus": {
+    "UNKNOWN": "member",
+    "NOT_RUN": "member",
+    "COMPLETED": "member",
+    "NOT_APPLICABLE": "member",
+    "CONTEXT_REQUIRED": "member",
+    "EVALUATION_FAILED": "member"
+  },
+  "hash_xml": [
+    "xml"
+  ],
+  "invoice_hash_base64_from_xml_str": [
+    "xml"
+  ],
+  "parse_finalized_invoice_xml": [
+    "xml"
+  ],
+  "parse_finalized_invoice_xml_file": [
+    "path"
+  ],
+  "parse_signed_invoice_xml": [
+    "xml"
+  ],
+  "parse_signed_invoice_xml_file": [
+    "path"
+  ],
+  "validate_xml": [
+    "xml"
+  ],
+  "validate_xml_invoice_from_str": [
+    "config",
+    "xml"
+  ],
+  "validate_zatca": [
+    "xml",
+    "*",
+    "previous_invoice_hash",
+    "evaluated_at"
+  ],
+  "validate_zatca_invoice_from_str": [
+    "config",
+    "xml",
+    "*",
+    "previous_invoice_hash",
+    "evaluated_at"
+  ],
+  "__deprecated__": [
+    "Address.close",
+    "Address.new",
+    "Adjustment.amount",
+    "Adjustment.close",
+    "Adjustment.percent",
+    "Adjustment.percentage",
+    "Adjustment.value",
+    "Adjustment.with_supplied_amount",
+    "AllowanceCharge",
+    "ComplianceCsid.new",
+    "CsidCompliance",
+    "CsidProduction",
+    "CsrProperties.from_properties_str",
+    "CsrProperties.new",
+    "CsrProperties.parse_csr_config",
+    "CsrProperties.parse_csr_config_file",
+    "DocumentReference",
+    "FinalizedInvoice.hash_base64",
+    "FinalizedInvoice.to_xml",
+    "Identifier.close",
+    "InvoiceBuilder.add_document_adjustment",
+    "InvoiceBuilder.allowance_reason",
+    "InvoiceBuilder.flags",
+    "InvoiceBuilder.invoice_level_charge",
+    "InvoiceBuilder.invoice_level_discount",
+    "InvoiceBuilder.new",
+    "InvoiceBuilder.new_with_reference",
+    "InvoiceBuilder.set_allowance",
+    "InvoiceBuilder.set_note",
+    "InvoiceBuilder.set_note_without_language",
+    "InvoiceBuilder.set_payment_means_code",
+    "InvoiceBuilder.set_tax_exemption",
+    "InvoiceNote.close",
+    "LineItemBuilder.new",
+    "OriginalInvoiceRef.close",
+    "OriginalInvoiceRef.new",
+    "OtherId",
+    "Party.close",
+    "PaymentMeans.close",
+    "PaymentMeans.new",
+    "ProductionCsid.new",
+    "SignedInvoice.hash_base64",
+    "SignedInvoice.into_xml",
+    "SignedInvoice.to_xml",
+    "Signer",
+    "VatId",
+    "ZatcaClient.post_ccsid_for_pcsid",
+    "ZatcaClient.post_csr_for_ccsid",
+    "invoice_hash_base64_from_xml_str",
+    "parse_finalized_invoice_xml",
+    "parse_finalized_invoice_xml_file",
+    "parse_signed_invoice_xml",
+    "parse_signed_invoice_xml_file",
+    "validate_xml_invoice_from_str",
+    "validate_zatca_invoice_from_str"
+  ]
 }

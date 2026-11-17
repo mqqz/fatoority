@@ -3,10 +3,13 @@ import { AllowanceCharge } from "./AllowanceCharge.mjs"
 import { BindingError } from "./BindingError.mjs"
 import { InvoiceLineItem } from "./InvoiceLineItem.mjs"
 import { InvoiceNote } from "./InvoiceNote.mjs"
+import { InvoiceSubType } from "./InvoiceSubType.mjs"
+import { InvoiceTypeKind } from "./InvoiceTypeKind.mjs"
 import { OriginalInvoiceRef } from "./OriginalInvoiceRef.mjs"
 import { Party } from "./Party.mjs"
 import { PaymentMeans } from "./PaymentMeans.mjs"
 import { Text } from "./Text.mjs"
+import { VatCategory } from "./VatCategory.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
@@ -517,7 +520,7 @@ export class InvoiceData {
         const result = wasm.fatoora_InvoiceData_vat_category(this.ffiValue);
 
         try {
-            return result;
+            return new VatCategory(diplomatRuntime.internalConstructor, result);
         }
 
         finally {
@@ -525,9 +528,9 @@ export class InvoiceData {
         }
     }
 
-    flagsRaw() {
+    flags() {
 
-        const result = wasm.fatoora_InvoiceData_flags_raw(this.ffiValue);
+        const result = wasm.fatoora_InvoiceData_flags(this.ffiValue);
 
         try {
             return result;
@@ -543,7 +546,7 @@ export class InvoiceData {
         const result = wasm.fatoora_InvoiceData_invoice_type_kind(this.ffiValue);
 
         try {
-            return result;
+            return new InvoiceTypeKind(diplomatRuntime.internalConstructor, result);
         }
 
         finally {
@@ -556,7 +559,7 @@ export class InvoiceData {
         const result = wasm.fatoora_InvoiceData_invoice_sub_type(this.ffiValue);
 
         try {
-            return result;
+            return new InvoiceSubType(diplomatRuntime.internalConstructor, result);
         }
 
         finally {

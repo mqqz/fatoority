@@ -15,8 +15,12 @@ Create a builder, set the required fields, append one or more line items, then b
 
 Scalar setters replace their previous value. Lines, notes, billing references, and
 independent adjustments append in order. Rust `allowance(DocumentAdjustment)` and
-`charge(DocumentAdjustment)` append document adjustments; binding convenience
-methods such as `set_allowance(reason, amount)` set the scalar discount.
+`charge(DocumentAdjustment)` append document adjustments, and the generated
+bindings mirror them as `add_allowance` and `add_charge`. In the generated
+bindings, `set_*` methods replace a value and `add_*` methods append one.
+Python's deprecated `set_allowance(reason, amount)` and aggregate setters are
+applied as document adjustments when the invoice is built; use `add_allowance`
+and `add_charge` instead.
 Use collection getters to read every repeated entry.
 
 ## Fields and expected values
@@ -65,7 +69,7 @@ remain separate checks.
 | Invoice data | Identity, type/subtype, parties, notes, original invoice reference, flags, line items, and invoice adjustments. |
 | Line item | Description, quantity, unit code, unit price, line total, VAT rate, VAT amount, and category. Indexed access is zero-based and rejects out-of-range indexes. |
 | Totals | Line extension, allowance total, charge total, taxable amount, tax amount, tax inclusive total, prepaid amount, payable rounding amount, and payable amount. |
-| Computed hash | `hash_base64()` hashes emitted XML for a finalized model and stored XML for a signed invoice. Signed import rejects digest mismatches and retains the original XML. |
+| Computed hash | `hash()` hashes emitted XML for a finalized model and stored XML for a signed invoice. Signed import rejects digest mismatches and retains the original XML. |
 
 ## Advanced building in the bindings
 
@@ -75,73 +79,71 @@ the line, then append it with the invoice builder's `add_item` equivalent.
 
 | Operation | Python | JavaScript / TypeScript | C# | Kotlin / Java |
 | --- | --- | --- | --- | --- |
-| Create a line builder | `LineItemBuilder.new()` | `LineItemBuilder.new_()` | `LineItemBuilder.New()` | `LineItemBuilder.create()` |
+| Create a line builder | `LineItemBuilder()` | `LineItemBuilder.create()` | `LineItemBuilder.Create()` | `LineItemBuilder.create()` |
 | Set price base | `set_item_price_base_quantity(value)` | `setItemPriceBaseQuantity(value)` | `SetItemPriceBaseQuantity(value)` | `setItemPriceBaseQuantity(value)` |
 | Add line allowance | `add_allowance(adjustment)` | `addAllowance(adjustment)` | `AddAllowance(adjustment)` | `addAllowance(adjustment)` |
 | Add line charge | `add_charge(adjustment)` | `addCharge(adjustment)` | `AddCharge(adjustment)` | `addCharge(adjustment)` |
 | Finish line | `build()` | `build()` | `Build()` | `build()` |
 | Append built line to invoice | `add_item(item)` | `addItem(item)` | `AddItem(item)` | `addItem(item)` |
-| Append document adjustment | `add_document_adjustment(...)` | `addDocumentAdjustment(...)` | `AddDocumentAdjustment(...)` | `addDocumentAdjustment(...)` |
+| Append document allowance | `add_allowance(...)` | `addAllowance(...)` | `AddAllowance(...)` | `addAllowance(...)` |
+| Append document charge | `add_charge(...)` | `addCharge(...)` | `AddCharge(...)` | `addCharge(...)` |
 | Set prepaid amount | `set_prepaid_amount(value)` | `setPrepaidAmount(value)` | `SetPrepaidAmount(value)` | `setPrepaidAmount(value)` |
 | Set payable rounding | `set_payable_rounding_amount(value)` | `setPayableRoundingAmount(value)` | `SetPayableRoundingAmount(value)` | `setPayableRoundingAmount(value)` |
 | Append billing reference | `add_billing_reference(reference)` | `addBillingReference(reference)` | `AddBillingReference(reference)` | `addBillingReference(reference)` |
 | Append payment entry | `add_payment_means(payment)` | `addPaymentMeans(payment)` | `AddPaymentMeans(payment)` | `addPaymentMeans(payment)` |
 
-Document-adjustment arguments are `(charge, adjustment, category, rate, exemption)`.
-Use `false` for an allowance and `true` for a charge (`False`/`True` in Python).
-Python defaults the exemption to empty metadata; the other bindings require a
-`TaxExemption` object. Category values and decimal representations follow the
-language reference below.
+Document allowance and charge arguments are `(adjustment, category, rate, exemption)`,
+mirroring Rust `allowance` and `charge`. In Python the category, rate and exemption
+default to the fields of the `Adjustment` value, and the exemption to empty metadata;
+the other bindings require a `TaxExemption` object. Category values and decimal
+representations follow the language reference below.
 
 For a prepayment adjustment line, use `add_document_reference` and
 `add_tax_subtotal` on the Python line builder (`addDocumentReference` and
 `addTaxSubtotal` in JavaScript/Kotlin/Java; PascalCase in C#).
 `OriginalInvoiceRef` constructors accept ID, UUID, date, time, and document type
 code in that order. Set the last argument to `"386"`; in Python it is the optional
-`type_code` keyword. The [prepayment recipe](../guides/invoice-recipes.md#prepayments-and-final-payable-amounts)
+`document_type_code` keyword. The [prepayment recipe](../guides/invoice-recipes.md#prepayments-and-final-payable-amounts)
 shows which line amounts must be zero and how to supply the advance VAT subtotal.
 
 For C, use `fatoora_line_item_builder_new(&line, &error)` and
 `fatoora_line_item_builder_build(line, &item, &error)`. The setters above use the
 `fatoora_line_item_builder_` prefix with snake_case names. Invoice operations use
-`fatoora_invoice_builder_`, including `add_item`, `add_document_adjustment`, and
+`fatoora_invoice_builder_`, including `add_item`, `add_allowance`, `add_charge`, and
 `set_prepaid_amount`. Each accepts the builder first and `FatooraError **` last,
-and returns a status. Document adjustments take a `bool charge`, adjustment handle,
-category code, decimal rate text, and exemption handle. Free owned handles after
+and returns a status. Document allowances and charges take an adjustment handle,
+`FatooraVatCategory category`, decimal rate text, and exemption handle. Free owned handles after
 use, including consumed builders. See [C ownership](bindings/c.md).
 
 ### Python line discount example
 
-In the [Python creation example](../guides/invoice-creation.md), replace
-`builder.add_line_item(...)` with the following. It produces the same SAR 276
-payable amount as the Rust price-per-pack recipe:
+In the [Python creation example](../guides/invoice-creation.md), build this line
+first and replace the `.add_line_item(...)` call with `.add_item(line)`. It
+produces the same SAR 276 payable amount as the Rust price-per-pack recipe:
 
 ```python
 from fatoora import Adjustment, LineItemBuilder
 
-with LineItemBuilder.new() as line:
-    line.set_item_name("Notebook")
-    line.set_invoiced_quantity("25")
-    line.set_invoiced_quantity_unit_code("PCE")
-    line.set_item_net_price("100")
-    line.set_item_price_base_quantity("10")
-    line.set_vat_category(VatCategory.STANDARD)
-    line.set_vat_rate("15")
-    with Adjustment.amount("10") as amount:
-        with amount.with_reason("Volume discount") as discount:
-            line.add_allowance(discount)
-    builder.add_item(line.build())
+line = (
+    LineItemBuilder()
+    .set_item_name("Notebook")
+    .set_invoiced_quantity("25")
+    .set_invoiced_quantity_unit_code("PCE")
+    .set_item_net_price("100")
+    .set_item_price_base_quantity("10")
+    .set_vat_category(VatCategory.STANDARD)
+    .set_vat_rate("15")
+    .add_allowance(Adjustment("10", reason="Volume discount"))
+    .build()
+)
 ```
 
 For a document discount instead, keep the creation example's original line and
-insert this before `invoice = builder.build()`. The payable amount becomes SAR 103.50:
+add this call before `.build()`. The payable amount becomes SAR 103.50:
 
 ```python
-from fatoora import Adjustment
-
-with Adjustment.amount("10") as amount:
-    with amount.with_reason("Loyalty discount") as discount:
-        builder.add_document_adjustment(False, discount, VatCategory.STANDARD, "15")
+    .add_allowance(Adjustment("10", reason="Loyalty discount"),
+                   VatCategory.STANDARD, "15")
 ```
 
 ## Language reference
@@ -153,27 +155,23 @@ correspond to the fields above.
 
     **Create and configure**
 
-    Import model types from `fatoora_core::invoice`. `InvoiceBuilder::new(invoice_type: InvoiceType) -> InvoiceBuilder` accepts `InvoiceType::Tax(subtype)`, `Prepayment(subtype)`, `CreditNote(subtype)`, or `DebitNote(subtype)`. Subtype is `InvoiceSubType::Standard` or `Simplified`; add references with `.billing_reference(OriginalInvoiceRef::new(id))` and a reason with `.payment_instruction(reason)`. References support `OriginalInvoiceRef::new(id)` with optional `with_uuid(uuid)` and `with_issue_date_str(date)`.
+    Import model types from `fatoora_core::invoice`. `InvoiceBuilder::new(invoice_type: InvoiceType) -> InvoiceBuilder` accepts `InvoiceType::Tax(subtype)`, `Prepayment(subtype)`, `CreditNote(subtype)`, or `DebitNote(subtype)`. Subtype is `InvoiceSubType::Standard` or `Simplified`; add references with `.billing_reference(OriginalInvoiceRef::new(id))` and a reason with `.payment_instruction(reason)`. References support `OriginalInvoiceRef::new(id)` with optional `with_uuid(uuid: InvoiceUuid)`, `with_issue_date(date: InvoiceDate)` and `with_issue_time(time: InvoiceTime)`.
 
     Every setter consumes and returns `Self`: chain calls or reassign the result.
 
     | Call | Returns |
     | --- | --- |
     | `id(value: impl Into<String>)` | `Self` |
-    | `uuid(value: impl Into<String>)` | `Self` |
-    | `issue_datetime(value: impl Into<String>)` | `Self` |
-    | `currency(value: impl Into<String>)` | `Self` |
-    | `previous_invoice_hash(value: impl Into<String>)` | `Self` |
-    | `payment_means_code(value: impl Into<String>)` | `Self` |
-    | `allowance_reason(value: impl Into<String>)` | `Self` |
+    | `uuid(value: InvoiceUuid)` | `Self` |
+    | `issue_datetime(value: InvoiceTimestamp)` | `Self` |
+    | `currency(value: CurrencyCode)` | `Self` |
+    | `previous_invoice_hash(value: InvoiceHash)` | `Self` |
     | `invoice_counter(value: u64)` | `Self` |
     | `seller(value: Seller)` | `Self` |
     | `buyer(value: Buyer)` | `Self` |
     | `vat_category(value: VatCategory)` | `Self` |
     | `flags(value: InvoiceFlags)` | `Self` |
     | `note(value: InvoiceNote)` | `Self` |
-    | `invoice_level_charge(value: Decimal)` | `Self` |
-    | `invoice_level_discount(value: Decimal)` | `Self` |
     | `line_item(value: LineItem)` | `Self` |
     | `allowance(value: DocumentAdjustment)` | `Self` |
     | `charge(value: DocumentAdjustment)` | `Self` |
@@ -188,17 +186,23 @@ correspond to the fields above.
     | `vat_breakdown(value: VatBreakdown)` | `Self` |
     | `build(self)` | `Result<FinalizedInvoice, InvoiceError>` |
 
+    `payment_means` appends a payment means; use `.payment_means(PaymentMeans::new(code))` to set the payment means code. Add document-level allowances and charges with `.allowance(DocumentAdjustment)` and `.charge(DocumentAdjustment)`; `DocumentAdjustment` carries the amount or percentage calculation, `with_reason`, `with_reason_code`, VAT category and rate, `with_exemption`, and `omit_vat_rate()` for out-of-scope entries.
+
+    Deprecated since 0.6.0 and removed in 0.7: `payment_means_code` (changes the code of the first payment means), `invoice_level_charge`, `invoice_level_discount` and `allowance_reason` (one aggregate allowance and charge in the document VAT category), and `adjustment(AllowanceCharge)` (convert with `DocumentAdjustment::from`). `VatBreakdown::without_vat_rate` is replaced by `omit_vat_rate`; `LineItem`, `VatBreakdown`, `AllowanceCharge` and `DocumentAdjustment` all report an omitted rate through `has_vat_rate()`.
+
     `build(self)` consumes the builder on success or failure. `VatCategory` variants are `Standard`, `Zero`, `Exempt`, and `OutOfScope`. Combine `InvoiceFlags::THIRD_PARTY`, `NOMINAL`, `EXPORT`, `SUMMARY`, and `SELF_BILLED` with `\|`.
 
     **Supporting values**
 
     `LineItem::new(description, quantity, unit_code, unit_price, vat_rate, vat_category)` takes text values for description/unit code, `Decimal` for quantities/amounts/rate, and `VatCategory`; it returns `Result<LineItem, InvoiceError>`. `LineItem::from_totals(...)` adds an explicit `total_amount` after unit price; `try_from_parts(...)` also adds `vat_amount` after VAT rate and checks both supplied amounts.
 
-    Use `CountryCode::parse`, `CurrencyCode::parse`, `InvoiceTimestamp::parse`, `InvoiceDate::parse`, and `VatId::parse` for validated wrappers; each returns `Result<Wrapper, InvoiceError>`. `InvoiceNote::new(language, text)` returns a note. `OtherId::new(value)` creates an ID without a scheme; `OtherId::with_scheme(value, scheme_id)` supplies both.
+    Use `CountryCode::parse`, `CurrencyCode::parse`, `InvoiceTimestamp::parse`, `InvoiceDate::parse`, `InvoiceTime::parse`, `InvoiceUuid::parse`, `InvoiceHash::parse`, and `VatId::parse` for validated wrappers; each returns `Result<Wrapper, InvoiceError>`, and each wrapper also implements `FromStr` and `TryFrom<&str>`. With the `chrono` feature, `InvoiceTimestamp` and `InvoiceDate` convert from chrono values via `From`; with the `uuid` feature, `InvoiceUuid` converts from `uuid::Uuid`. `InvoiceNote::new(language, text)` returns a note. `OtherId::new(value)` creates an ID without a scheme; `OtherId::with_scheme(value, scheme_id)` supplies both.
 
-    Construct `Address` with its public fields: `country_code: CountryCode`, `city: String`, `street: String`, `building_number: String`, `postal_code: String`, and optional `additional_street`, `additional_number`, `district`, `province` (`Option<String>`).
+    Construct `Address` with `Address::new(country_code: CountryCode, city, street, building_number, postal_code)` (text as `impl Into<String>`) and add the optional parts with `with_additional_street`, `with_additional_number`, `with_district` and `with_province`; read them back with the getters of the same names.
 
-    `Seller::new(name: String, address: Address, vat_id: impl Into<String>, other_id: Option<OtherId>) -> Result<Seller, InvoiceError>` requires a VAT ID. `Buyer::new(name: String, address: impl Into<Option<Address>>, vat_id: Option<String>, other_id: Option<OtherId>) -> Result<Buyer, InvoiceError>` accepts an absent address and identifiers; business validation checks applicability.
+    `TaxExemption`, `PaymentAccount` and `Delivery` start from `Default` and take `with_*` setters (`with_reason_code`/`with_reason`, `with_payment_account_identifier`/`with_payment_terms`, `with_actual_date`/`with_latest_date`); `PaymentMeans::new(code)` takes `with_instruction_note` and `with_payee_financial_account`, and `code()` returns the code. Line and document adjustments use `Adjustment::amount(amount)` or `Adjustment::percent_of(base, percent)` with `with_reason`, `with_reason_code` and `with_base_amount`; `DocumentAdjustment::new(adjustment, category, rate)` adds `with_reason`, `with_reason_code`, `with_exemption` and `with_tax_category_count`. Fields are private; each has a getter without a `get_` prefix.
+
+    `Seller::new(name: impl Into<String>, address: Address, vat_id: VatId, other_id: Option<OtherId>) -> Seller` requires a VAT ID. `Buyer::new(name: impl Into<String>, address: impl Into<Option<Address>>, vat_id: Option<VatId>, other_id: Option<OtherId>) -> Buyer` accepts an absent address and identifiers; business validation checks applicability.
 
     `LineItem::builder()` adds price-base quantities, gross pricing, line allowances
     and charges. It also accepts supplied amounts and supports item identifiers
@@ -208,7 +212,7 @@ correspond to the fields above.
 
     **Read invoice data**
 
-    Both invoice types provide `data() -> &InvoiceData`, `totals() -> &InvoiceTotalsData`, and `hash_base64() -> Result<String, SigningError>`. Read fields through the returned data's accessor methods, including `id()`, `uuid()`, `seller()`, `buyer()`, `line_items()`, `flags()`, and `invoice_type()`. Decimal accessors return `Decimal`; optional fields return `Option`.
+    Both invoice types provide `data() -> &InvoiceData`, `totals() -> &InvoiceTotals`, and `hash() -> Result<InvoiceHash, SigningError>` (the deprecated `hash_base64()` returns the same value as `String`). Read fields through the returned data's accessor methods, including `id()`, `uuid() -> &InvoiceUuid`, `issue_date() -> InvoiceDate`, `issue_time() -> InvoiceTime`, `previous_invoice_hash() -> &InvoiceHash`, `seller()`, `buyer()`, `line_items()`, `flags()`, and `invoice_type()`. Decimal accessors return `Decimal`; optional fields return `Option`.
 
     `FinalizedInvoice::sign(self, signer: &InvoiceSigner) -> Result<SignedInvoice, SigningError>` consumes the finalized invoice even if signing fails. Signed metadata and XML access are described in [signing](invoice-signing.md) and [XML](xml.md).
 
@@ -216,111 +220,131 @@ correspond to the fields above.
 
     **Create and configure**
 
-    Import from `fatoora`. Enum values are `InvoiceTypeKind.TAX`, `PREPAYMENT`, `CREDIT_NOTE`, `DEBIT_NOTE`; `InvoiceSubType.STANDARD` / `SIMPLIFIED`; and `VatCategory.EXEMPT`, `STANDARD`, `ZERO`, `OUT_OF_SCOPE`. Decimal inputs accept `decimal.Decimal`, a decimal string, or an integer; binary floats are rejected.
+    Import from `fatoora`. Enum values are `InvoiceTypeKind.TAX`, `PREPAYMENT`, `CREDIT_NOTE`, `DEBIT_NOTE`; `InvoiceSubType.STANDARD` / `SIMPLIFIED`; and `VatCategory.EXEMPT`, `STANDARD`, `ZERO`, `OUT_OF_SCOPE`. Decimal inputs accept `decimal.Decimal`, a decimal string, or an integer; binary floats are rejected. Timestamps accept a timezone-aware `datetime` (converted to UTC) or `"YYYY-MM-DDTHH:MM:SSZ"` text; dates accept `datetime.date` or `"YYYY-MM-DD"`; UUIDs accept `uuid.UUID` or text.
 
-    | Call | Returns |
+    ```python
+    InvoiceBuilder(
+        invoice_type: InvoiceTypeKind, invoice_subtype: InvoiceSubType, *,
+        id: str | None = None, uuid: UUID | str | None = None,
+        issue_datetime: datetime | str | None = None, currency: str | None = None,
+        previous_invoice_hash: str | None = None, invoice_counter: int | None = None,
+        vat_category: VatCategory | None = None, flags: int | InvoiceFlag | None = None,
+        original_invoice: OriginalInvoiceRef | None = None,
+        original_invoice_reason: str | None = None,
+        seller: Party | None = None, buyer: Party | None = None,
+    )
+    ```
+
+    Pass the header fields as keyword arguments, call the setters, or mix both. Every setter returns the builder, so calls chain: `InvoiceBuilder(...).set_seller(...).add_line_item(...).build()`.
+
+    | Call | Notes |
     | --- | --- |
-    | `new(invoice_type: InvoiceTypeKind, invoice_subtype: InvoiceSubType, original_invoice_id: Optional[str]=None, original_invoice_uuid: Optional[str]=None, original_invoice_issue_date: Optional[str]=None, original_invoice_reason: Optional[str]=None)` | `InvoiceBuilder` |
-    | `set_id(invoice_id: str)` | `None` |
-    | `set_uuid(uuid: str)` | `None` |
-    | `set_issue_datetime(issue_datetime: str)` | `None` |
-    | `set_currency(currency_code: str)` | `None` |
-    | `set_previous_invoice_hash(previous_invoice_hash: str)` | `None` |
-    | `set_invoice_counter(invoice_counter: int)` | `None` |
-    | `set_payment_means_code(payment_means_code: str)` | `None` |
-    | `set_vat_category(vat_category: VatCategory)` | `None` |
-    | `set_seller(name: str, country_code: str, city: str, street: str, building_number: str, postal_code: str, vat_id: str, additional_street: Optional[str]=None, additional_number: Optional[str]=None, district: Optional[str]=None, other_id: Optional[str]=None, other_id_scheme: Optional[str]=None)` | `None` |
-    | `add_line_item(description: str, quantity: Decimal \| str \| int, unit_code: str, unit_price: Decimal \| str \| int, vat_rate: Decimal \| str \| int, vat_category: VatCategory)` | `None` |
-    | `set_buyer(name: str, country_code: str, city: str, street: str, building_number: str, postal_code: str, vat_id: Optional[str]=None, other_id: Optional[str]=None, other_id_scheme: Optional[str]=None, additional_street: Optional[str]=None, additional_number: Optional[str]=None, district: Optional[str]=None)` | `None` |
-    | `set_note(language: str, text: str)` | `None`. Deprecated: use `add_note(text, language=...)`. |
-    | `set_allowance(reason: str, amount: Decimal \| str \| int)` | `None` |
-    | `invoice_level_charge(charge: Decimal \| str \| int)` | `None` |
-    | `invoice_level_discount(discount: Decimal \| str \| int)` | `None` |
-    | `allowance_reason(reason: str)` | `None` |
-    | `flags(flags: int)` | `None` |
-    | `build()` | `FinalizedInvoice` |
+    | `set_id(invoice_id: str)` | |
+    | `set_uuid(uuid: UUID \| str)` | |
+    | `set_issue_datetime(issue_datetime: datetime \| str)` | Naive `datetime` raises `ValueError`. |
+    | `set_currency(currency_code: str)` | |
+    | `set_previous_invoice_hash(previous_invoice_hash: str)` | |
+    | `set_invoice_counter(invoice_counter: int)` | |
+    | `set_vat_category(vat_category: VatCategory)` | |
+    | `set_flags(flags: int \| InvoiceFlag)` | |
+    | `set_seller(party: Party)` | The seller needs an address and a VAT ID. The first of `party.identifiers` is the other ID; the rest are additional identifiers. |
+    | `set_seller(name: str, *, vat_id: str, address: Address \| None = None, country_code=..., city=..., street=..., building_number=..., postal_code=..., additional_street=None, additional_number=None, district=None, province=None, other_id=None, other_id_scheme=None)` | Pass `address=Address(...)` or the address fields, not both. |
+    | `set_buyer(party: Party)` | The buyer's address and VAT ID are optional. |
+    | `set_buyer(name: str, *, address: Address \| None = None, vat_id=None, other_id=None, other_id_scheme=None, ...address fields...)` | As `set_seller`; `vat_id` is optional. |
+    | `set_buyer_without_address(name: str, vat_id=None, other_id=None, scheme=None)` | |
+    | `add_line_item(description: str, quantity, unit_code: str, unit_price, vat_rate, vat_category: VatCategory, *, id=None, exemption=TaxExemption(), document_references=(), tax_subtotals=())` | `document_references` holds `OriginalInvoiceRef` values. |
+    | `add_item(item: InvoiceLineItem)` | `total_amount` and `vat_amount` are calculated when `None` and checked when given. |
+    | `add_note(text: str, *, language: str \| None = None)` | Appends a note. |
+    | `add_payment_means(value: PaymentMeans)` | Appends a payment means. |
+    | `add_allowance(value: Adjustment, category: VatCategory \| None = None, rate=None, exemption=None)` | Document-level allowance (discount). Omitted arguments come from the `Adjustment`. |
+    | `add_charge(value: Adjustment, category: VatCategory \| None = None, rate=None, exemption=None)` | Document-level charge. |
+    | `add_adjustment(value: Adjustment)` | Allowance or charge described entirely by the value (`charge`, `category`, `rate`, tax category count, omitted rate), such as one read from `invoice.adjustments`. |
+    | `add_tax_exemption(category: VatCategory, rate, exemption: TaxExemption)` | |
+    | `set_delivery(actual: date \| str \| None = None, latest: date \| str \| None = None)` | |
+    | `build()` | Returns `FinalizedInvoice`. |
 
-    Setters mutate the builder and return `None`. `build()` consumes its state on success or failure. Rejected setter inputs leave it available for correction. Close owned objects with `close()` or use a `with` block; closing a consumed builder is safe.
+    `build()` consumes the builder's state on success or failure. Rejected setter inputs leave it available for correction. Close owned objects with `close()` or use a `with` block; closing a consumed builder is safe.
 
     **Read invoice data**
 
-    The following methods are available on both `FinalizedInvoice` and `SignedInvoice`:
+    `FinalizedInvoice` and `SignedInvoice` expose the invoice data as read-only properties:
 
-    | Call | Returns |
+    | Property | Value |
     | --- | --- |
-    | `id()` | `str` |
-    | `uuid()` | `str` |
-    | `issue_datetime()` | `str` |
-    | `currency()` | `str` |
-    | `previous_invoice_hash()` | `str` |
-    | `invoice_counter()` | `int` |
-    | `payment_means_code()` | `str` |
-    | `vat_category()` | `VatCategory` |
-    | `invoice_level_charge()` | `Decimal` |
-    | `invoice_level_discount()` | `Decimal` |
-    | `allowance_reason()` | `Optional[str]` |
-    | `seller()` | `Party` |
-    | `buyer()` | `Optional[Party]` |
-    | `note()` | `Optional[InvoiceNote]` |
-    | `invoice_type_kind()` | `InvoiceTypeKind` |
-    | `invoice_sub_type()` | `InvoiceSubType` |
-    | `original_invoice_ref()` | `Optional[OriginalInvoiceRef]` |
-    | `original_invoice_reason()` | `Optional[str]` |
-    | `line_item_count()` | `int` |
-    | `line_item(index: int)` | `InvoiceLineItem` |
-    | `line_items()` | `list[InvoiceLineItem]` |
-    | `totals()` | `InvoiceTotals` |
-    | `flags_raw()` | `int` |
-    | `flags()` | `set[InvoiceFlag]` |
-    | `is_third_party()` | `bool` |
-    | `is_nominal()` | `bool` |
-    | `is_export()` | `bool` |
-    | `is_summary()` | `bool` |
-    | `is_self_billed()` | `bool` |
-    | `is_simplified()` | `bool` |
-    | `xml()` | `str` |
-    | `to_xml()` | `str` |
-    | `hash_base64()` | `str` |
+    | `id`, `currency`, `previous_invoice_hash`, `payment_means_code` | `str` |
+    | `uuid` | `str` (core keeps the UUID text verbatim) |
+    | `issue_datetime` | timezone-aware `datetime` (UTC) |
+    | `issue_date` | `date` |
+    | `issue_time` | `str`, `HH:MM:SS` (AST) or `HH:MM:SSZ` (UTC) as written |
+    | `invoice_counter`, `line_item_count`, `flags_raw` | `int` |
+    | `vat_category` | `VatCategory` |
+    | `invoice_type_kind` / `invoice_sub_type` | `InvoiceTypeKind` / `InvoiceSubType` |
+    | `seller` / `buyer` | `Party` / `Optional[Party]` |
+    | `notes`, `payment_means`, `billing_references` | lists of `InvoiceNote`, `PaymentMeans`, `OriginalInvoiceRef` |
+    | `original_invoice_ref` / `original_invoice_reason` | `Optional[OriginalInvoiceRef]` / `Optional[str]` |
+    | `actual_delivery_date` / `latest_delivery_date` | `Optional[date]` |
+    | `line_items` | `list[InvoiceLineItem]` |
+    | `adjustments` / `vat_breakdown` | `list[Adjustment]` / `list[VatBreakdown]` |
+    | `totals` | `InvoiceTotals` |
+    | `flags` | `set[InvoiceFlag]` |
+    | `xml` | `str` |
 
-    `totals()` returns an `InvoiceTotals` value with decimal amount fields. `line_items()` returns a list of `InvoiceLineItem` values. Party and address accessors return owned objects; optional fields return `None` when absent. `Address.new(country_code, city, street, building_number, postal_code, additional_street=None, additional_number=None, district=None)` returns an `Address`.
+    Methods: `line_item(index: int) -> InvoiceLineItem`, `hash() -> str` (recomputes the base64 invoice hash), and the queries `is_third_party()`, `is_nominal()`, `is_export()`, `is_summary()`, `is_self_billed()` and `is_simplified()`.
 
-    `FinalizedInvoice.sign(signer: Signer) -> SignedInvoice` consumes the finalized invoice on success or signing failure; the signer remains reusable. See [signing](invoice-signing.md) for metadata and [XML](xml.md) for serialization.
+    The invoice data is read from the native invoice once, on first access, and cached; invoices do not change after `build()` or parsing.
+
+    **Value models**
+
+    Everything read from an invoice is a frozen dataclass: compare values with `==`, copy them with `dataclasses.replace`, and pass them back to the builder. They need no `close()`. Optional fields are `None` when absent.
+
+    | Model | Fields |
+    | --- | --- |
+    | `Party(name, address=None, vat_id=None, identifiers=())` | `vat_id` and `identifiers` hold `Identifier` values (strings are accepted as input); `other_id` is the first identifier. |
+    | `Identifier(value, scheme=None)` | An identifier and its `schemeID`, such as `Identifier("7003339333", "CRN")`. |
+    | `Address(country_code, city, street, building_number, postal_code, additional_street=None, additional_number=None, district=None, province=None)` | Validated on construction; the country code becomes ISO alpha-3 (`"SA"` reads back as `"SAU"`). |
+    | `InvoiceNote(text, language_id=None)` | `language` is `language_id` or `"en"`. |
+    | `OriginalInvoiceRef(id, uuid=None, issue_date=None, issue_time=None, document_type_code=None)` | Billing references and line document references. `issue_date` is a `date`. |
+    | `PaymentMeans(code, instruction_notes=(), account_identifier=None, payment_terms=None)` | `with_instruction_note(note)` and `with_account(id, terms)` return copies. |
+    | `Adjustment(amount, reason=None, reason_code=None, base_amount=None, percentage=None, charge=False, category=None, rate=None, exemption=TaxExemption(), tax_category_count=1, omitted_rate=False)` | `Adjustment.percent_of(base, percent, **fields)` calculates `amount`. Line adjustments read back with their line's category and rate. |
+    | `InvoiceLineItem(description, unit_code, quantity, unit_price, total_amount=None, vat_rate, vat_amount=None, vat_category, ...)` | `vat_rate` and `vat_category` are required; pass them by keyword when you leave out `total_amount`. |
+
+    `FinalizedInvoice.sign(signer: InvoiceSigner) -> SignedInvoice` consumes the finalized invoice on success or signing failure; the signer remains reusable. See [signing](invoice-signing.md) for metadata and [XML](xml.md) for serialization.
+
+    **Deprecated in 0.6 (removed in 0.7)**
+
+    Getters became properties as a hard break in 0.6: drop the parentheses (`invoice.id()` becomes `invoice.id`). `InvoiceBuilder.new(...)` and `new_with_reference(...)` become the `InvoiceBuilder(...)` constructor; `set_note(language, text)` and `set_note_without_language(text)` become `add_note(text, language=...)`; `set_payment_means_code(code)` becomes `add_payment_means(PaymentMeans(code))`; `flags(value)` becomes `set_flags(value)`; `set_tax_exemption` becomes `add_tax_exemption`; `add_document_adjustment(charge, ...)` becomes `add_allowance(...)` / `add_charge(...)`. The aggregate setters `set_allowance`, `invoice_level_discount`, `invoice_level_charge` and `allowance_reason` keep their 0.5 behaviour (one allowance and one charge in the document VAT category, at the single VAT rate of that category's lines) but are deprecated in favour of `add_allowance` / `add_charge` with an explicit category and rate. The value models replace `Address.new`, `PaymentMeans.new` and `OriginalInvoiceRef.new` with their constructors, `AllowanceCharge` with `Adjustment` (`Adjustment.amount(value)` becomes `Adjustment(value)` and `Adjustment.percentage(base, percent)` becomes `Adjustment.percent_of(base, percent)`), `DocumentReference` with `OriginalInvoiceRef`, and `VatId`/`OtherId` and `(value, scheme)` tuples with `Identifier`. See the [Python migration table](bindings/python.md#migrate-from-05).
 
 === "JavaScript"
 
-    Import from `fatoority`. All decimal arguments and amounts are strings; counters use `bigint`, indexes use `number`, and other numeric arguments use `number`. Pass `null` for absent optional arguments. Operations are synchronous and throw an `Error` with a `BindingError` cause on failure. Returned `Text` objects expose `.value()`.
+    Import from `fatoority`. All decimal arguments and amounts are strings; counters use `bigint`, indexes and the flag mask use `number`, and codes are enum classes. Pass `null` for absent optional arguments. Operations are synchronous and throw a `FatooraError` subclass on failure. Value getters are read-only properties (`data.id`, `totals.taxAmount`) and optional text is `string | null`; getters returning native objects (`seller()`, `lineItem(index)`) stay methods.
 
-    Invoice kind codes: `0` tax, `1` prepayment, `2` credit note, `3` debit note. Subtype: `0` standard, `1` simplified. VAT category: `0` exempt, `1` standard, `2` zero-rated, `3` out of scope. Flags are a bitmask: `1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed. Use zero for no flags.
+    Enums: `InvoiceTypeKind` (`Tax`, `Prepayment`, `CreditNote`, `DebitNote`), `InvoiceSubType` (`Standard`, `Simplified`), and `VatCategory` (`Exempt`, `Standard`, `Zero`, `OutOfScope`); pass them as `InvoiceTypeKind.Tax`, `VatCategory.Standard`, and so on. A returned enum's `.value` is the variant name, such as `'Standard'`. Flags remain a `number` bitmask; build it from `InvoiceFlag` bits, for example `InvoiceFlag.Export.bit | InvoiceFlag.Summary.bit` (`1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed). Use zero for no flags.
 
     **Create and configure**
 
     | Call | Returns |
     | --- | --- |
-    | `new_(kind, subtype, originalId, originalUuid, originalDate, reason)` | `InvoiceBuilder` |
+    | `create(kind: InvoiceTypeKind, subtype: InvoiceSubType, originalId, originalUuid, originalDate, reason)` | `InvoiceBuilder` |
     | `setId(value)` | `void` |
     | `setUuid(value)` | `void` |
     | `setIssueDatetime(value)` | `void` |
     | `setCurrency(value)` | `void` |
     | `setPreviousInvoiceHash(value)` | `void` |
-    | `setPaymentMeansCode(value)` | `void` |
-    | `allowanceReason(value)` | `void` |
-    | `invoiceLevelCharge(value)` | `void` |
-    | `invoiceLevelDiscount(value)` | `void` |
+    | `addPaymentMeans(payment)` | `void` |
     | `setInvoiceCounter(value)` | `void` |
-    | `setVatCategory(value)` | `void` |
-    | `flags(value)` | `void` |
-    | `setNote(language, value)` | `void` |
-    | `setAllowance(reason, amount)` | `void` |
+    | `setVatCategory(value: VatCategory)` | `void` |
+    | `setFlags(value)` | `void` |
+    | `addNote(language, value)` | `void` |
     | `setSeller(name, address, vatId, otherId, scheme)` | `void` |
     | `setBuyer(name, address, vatId, otherId, scheme)` | `void` |
-    | `addLineItem(description, quantity, unitCode, unitPrice, vatRate, category)` | `void` |
+    | `addLineItem(description, quantity, unitCode, unitPrice, vatRate, category: VatCategory)` | `void` |
     | `build()` | `FinalizedInvoice` |
 
     **Address inputs**
 
     | Call | Returns |
     | --- | --- |
-    | `new_(countryCode, city, street, buildingNumber, postalCode, additionalStreet, additionalNumber, district)` | `Address` |
+    | `create(countryCode, city, street, buildingNumber, postalCode, additionalStreet, additionalNumber, district)` | `Address` |
 
     Setters replace values; line-item calls append. Building consumes builder state even on validation failure. Signing through the signer consumes finalized invoice state. Further calls on consumed state fail.
 
@@ -328,74 +352,70 @@ correspond to the fields above.
 
     `invoice.data()` returns an owned `InvoiceData` snapshot; `invoice.totals()` returns owned `InvoiceTotals`. Both are independent of invoice state.
 
-    | Call | Returns |
+    | Member | Value |
     | --- | --- |
-    | `id()` | `string` |
-    | `uuid()` | `string` |
-    | `previousInvoiceHash()` | `string` |
-    | `paymentMeansCode()` | `string` |
-    | `currency()` | `string` |
-    | `issueDatetime()` | `string` |
-    | `invoiceLevelCharge()` | `string` |
-    | `invoiceLevelDiscount()` | `string` |
-    | `allowanceReason()` | `Text \| null` |
-    | `invoiceCounter()` | `bigint` |
-    | `vatCategory()` | `number` |
-    | `flagsRaw()` | `number` |
-    | `invoiceTypeKind()` | `number` |
-    | `invoiceSubType()` | `number` |
+    | `id` | `string` |
+    | `uuid` | `string` |
+    | `previousInvoiceHash` | `string` |
+    | `paymentMeansCode` | `string` |
+    | `currency` | `string` |
+    | `issueDatetime` | `string` |
+    | `invoiceLevelCharge` | `string` |
+    | `invoiceLevelDiscount` | `string` |
+    | `allowanceReason` | `string \| null` |
+    | `invoiceCounter` | `bigint` |
+    | `vatCategory` | `VatCategory` |
+    | `flags` | `number` |
+    | `invoiceTypeKind` | `InvoiceTypeKind` |
+    | `invoiceSubType` | `InvoiceSubType` |
     | `seller()` | `Party` |
     | `buyer()` | `Party \| null` |
     | `note()` | `InvoiceNote \| null` |
-    | `lineItemsLen()` | `number` |
+    | `lineItemsLen` | `number` |
     | `lineItem(index)` | `InvoiceLineItem` |
     | `originalInvoiceRef()` | `OriginalInvoiceRef \| null` |
-    | `originalInvoiceReason()` | `Text \| null` |
+    | `originalInvoiceReason` | `string \| null` |
 
     **Totals**
 
-    | Call | Returns |
+    | Property | Value |
     | --- | --- |
-    | `taxInclusive()` | `string` |
-    | `taxAmount()` | `string` |
-    | `lineExtension()` | `string` |
-    | `allowanceTotal()` | `string` |
-    | `chargeTotal()` | `string` |
-    | `taxableAmount()` | `string` |
-    | `prepaidAmount()` | `string` |
-    | `payableRoundingAmount()` | `string` |
-    | `payableAmount()` | `string` |
+    | `taxInclusive` | `string` |
+    | `taxAmount` | `string` |
+    | `lineExtension` | `string` |
+    | `allowanceTotal` | `string` |
+    | `chargeTotal` | `string` |
+    | `taxableAmount` | `string` |
+    | `prepaidAmount` | `string` |
+    | `payableRoundingAmount` | `string` |
+    | `payableAmount` | `string` |
 
     Optional object accessors return null when absent. Line-item objects provide description, quantity, unit code, unit price, total amount, VAT rate, VAT amount, and category. See [XML](xml.md) and [signing](invoice-signing.md) for document and signature operations.
 
 === "C#"
 
-    Use the `Fatoora` namespace. Decimal arguments and amounts are strings; counters use `ulong`, indexes use `nuint`, and enum codes/flags use `byte`. Pass `null` for absent optional arguments. Methods throw on failure. Dispose each owned object with `using`; returned `Text` exposes `Value()`.
+    Use the `Fatoora` namespace. Quantities, prices, rates and amounts are `decimal` in both directions; counters use `ulong`, indexes use `nuint`, codes use C# enums, and the flag mask uses `byte`. Pass `null` for absent optional arguments. Members throw on failure. Scalar getters are read-only properties and optional text is `string?`; getters returning owned objects stay methods. Dispose each owned object with `using`.
 
-    Invoice kind codes: `0` tax, `1` prepayment, `2` credit note, `3` debit note. Subtype: `0` standard, `1` simplified. VAT category: `0` exempt, `1` standard, `2` zero-rated, `3` out of scope. Flags are a bitmask: `1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed. Use zero for no flags.
+    Enums: `InvoiceTypeKind` (`Tax`, `Prepayment`, `CreditNote`, `DebitNote`), `InvoiceSubType` (`Standard`, `Simplified`), and `VatCategory` (`Exempt`, `Standard`, `Zero`, `OutOfScope`); pass them as `InvoiceTypeKind.Tax`, `VatCategory.Standard`, and so on. Flags remain a `byte` bitmask; build it by casting `InvoiceFlag` values, for example `(byte)(InvoiceFlag.Export | InvoiceFlag.Summary)` (`1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed). Use zero for no flags.
 
     **Create and configure**
 
     | Call | Returns |
     | --- | --- |
-    | `New(byte kind, byte subtype, string? originalId, string? originalUuid, string? originalDate, string? reason)` | `InvoiceBuilder` |
+    | `New(InvoiceTypeKind kind, InvoiceSubType subtype, string? originalId, string? originalUuid, string? originalDate, string? reason)` | `InvoiceBuilder` |
     | `SetId(string value)` | `void` |
     | `SetUuid(string value)` | `void` |
     | `SetIssueDatetime(string value)` | `void` |
     | `SetCurrency(string value)` | `void` |
     | `SetPreviousInvoiceHash(string value)` | `void` |
-    | `SetPaymentMeansCode(string value)` | `void` |
-    | `AllowanceReason(string value)` | `void` |
-    | `InvoiceLevelCharge(string value)` | `void` |
-    | `InvoiceLevelDiscount(string value)` | `void` |
+    | `AddPaymentMeans(PaymentMeans payment)` | `void` |
     | `SetInvoiceCounter(ulong value)` | `void` |
-    | `SetVatCategory(byte value)` | `void` |
-    | `Flags(byte value)` | `void` |
-    | `SetNote(string language, string value)` | `void` |
-    | `SetAllowance(string reason, string amount)` | `void` |
+    | `SetVatCategory(VatCategory value)` | `void` |
+    | `SetFlags(byte value)` | `void` |
+    | `AddNote(string? language, string value)` | `void` |
     | `SetSeller(string name, Address address, string vatId, string? otherId, string? scheme)` | `void` |
     | `SetBuyer(string name, Address address, string? vatId, string? otherId, string? scheme)` | `void` |
-    | `AddLineItem(string description, string quantity, string unitCode, string unitPrice, string vatRate, byte category)` | `void` |
+    | `AddLineItem(string description, decimal quantity, string unitCode, decimal unitPrice, decimal vatRate, VatCategory category)` | `void` |
     | `Build()` | `FinalizedInvoice` |
 
     **Address inputs**
@@ -410,74 +430,62 @@ correspond to the fields above.
 
     `invoice.Data()` returns an owned `InvoiceData` snapshot; `invoice.Totals()` returns owned `InvoiceTotals`. Both survive disposal of the invoice.
 
-    | Call | Returns |
+    | Member | Returns |
     | --- | --- |
-    | `Id()` | `string` |
-    | `Uuid()` | `string` |
-    | `PreviousInvoiceHash()` | `string` |
-    | `PaymentMeansCode()` | `string` |
-    | `Currency()` | `string` |
-    | `IssueDatetime()` | `string` |
-    | `InvoiceLevelCharge()` | `string` |
-    | `InvoiceLevelDiscount()` | `string` |
-    | `AllowanceReason()` | `Text?` |
-    | `InvoiceCounter()` | `ulong` |
-    | `VatCategory()` | `byte` |
-    | `FlagsRaw()` | `byte` |
-    | `InvoiceTypeKind()` | `byte` |
-    | `InvoiceSubType()` | `byte` |
+    | `Id` | `string` |
+    | `Uuid` | `string` |
+    | `PreviousInvoiceHash` | `string` |
+    | `PaymentMeansCode` | `string` |
+    | `Currency` | `string` |
+    | `IssueDatetime` | `string` |
+    | `InvoiceLevelCharge` | `decimal` |
+    | `InvoiceLevelDiscount` | `decimal` |
+    | `AllowanceReason` | `string?` |
+    | `InvoiceCounter` | `ulong` |
+    | `VatCategory` | `VatCategory` |
+    | `Flags` | `byte` |
+    | `InvoiceTypeKind` | `InvoiceTypeKind` |
+    | `InvoiceSubType` | `InvoiceSubType` |
     | `Seller()` | `Party` |
     | `Buyer()` | `Party?` |
     | `Note()` | `InvoiceNote?` |
-    | `LineItemsLen()` | `nuint` |
+    | `LineItemsLen` | `nuint` |
     | `LineItem(nuint index)` | `InvoiceLineItem` |
     | `OriginalInvoiceRef()` | `OriginalInvoiceRef?` |
-    | `OriginalInvoiceReason()` | `Text?` |
+    | `OriginalInvoiceReason` | `string?` |
 
     **Totals**
 
-    | Call | Returns |
-    | --- | --- |
-    | `TaxInclusive()` | `string` |
-    | `TaxAmount()` | `string` |
-    | `LineExtension()` | `string` |
-    | `AllowanceTotal()` | `string` |
-    | `ChargeTotal()` | `string` |
-    | `TaxableAmount()` | `string` |
-    | `PrepaidAmount()` | `string` |
-    | `PayableRoundingAmount()` | `string` |
-    | `PayableAmount()` | `string` |
+    All totals are `decimal` properties: `TaxInclusive`, `TaxAmount`,
+    `LineExtension`, `AllowanceTotal`, `ChargeTotal`, `TaxableAmount`,
+    `PrepaidAmount`, `PayableRoundingAmount` and `PayableAmount`.
 
     Optional object accessors return null when absent. Line-item objects provide description, quantity, unit code, unit price, total amount, VAT rate, VAT amount, and category. See [XML](xml.md) and [signing](invoice-signing.md) for document and signature operations.
 
 === "Kotlin"
 
-    Use `com.fatoora`. Decimal arguments and amounts are strings; counters and indexes use `java.math.BigInteger`, enum codes/flags use `Int`. Optional values are nullable. Methods throw on failure. Close owned objects with `use`; returned `Text` exposes `value()`.
+    Use `com.fatoora`. Quantities, prices, rates and amounts are exact `java.math.BigDecimal` values; counters and indexes use `java.math.BigInteger`, codes use `com.fatoora` enums, and the flag mask uses `Int`. Optional values are nullable. Getters that return copied values are properties; getters that return native owners stay methods. Methods throw on failure. Close owned objects with `use`.
 
-    Invoice kind codes: `0` tax, `1` prepayment, `2` credit note, `3` debit note. Subtype: `0` standard, `1` simplified. VAT category: `0` exempt, `1` standard, `2` zero-rated, `3` out of scope. Flags are a bitmask: `1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed. Use zero for no flags.
+    Enums: `InvoiceTypeKind` (`Tax`, `Prepayment`, `CreditNote`, `DebitNote`), `InvoiceSubType` (`Standard`, `Simplified`), and `VatCategory` (`Exempt`, `Standard`, `Zero`, `OutOfScope`) in `com.fatoora`; pass them as `InvoiceTypeKind.Tax`, `VatCategory.Standard`, and so on. Flags remain an `Int` bitmask; build it from `InvoiceFlag` bits, for example `InvoiceFlag.Export.bit or InvoiceFlag.Summary.bit` (`1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed). Use zero for no flags.
 
     **Create and configure**
 
     | Call | Returns |
     | --- | --- |
-    | `create(kind: Int, subtype: Int, originalId: String? = null, originalUuid: String? = null, originalDate: String? = null, reason: String? = null)` | `InvoiceBuilder` |
+    | `create(kind: InvoiceTypeKind, subtype: InvoiceSubType, originalId: String? = null, originalUuid: String? = null, originalDate: String? = null, reason: String? = null)` | `InvoiceBuilder` |
     | `setId(value: String)` | `Unit` |
     | `setUuid(value: String)` | `Unit` |
     | `setIssueDatetime(value: String)` | `Unit` |
     | `setCurrency(value: String)` | `Unit` |
     | `setPreviousInvoiceHash(value: String)` | `Unit` |
-    | `setPaymentMeansCode(value: String)` | `Unit` |
-    | `allowanceReason(value: String)` | `Unit` |
-    | `invoiceLevelCharge(value: String)` | `Unit` |
-    | `invoiceLevelDiscount(value: String)` | `Unit` |
+    | `addPaymentMeans(payment: PaymentMeans)` | `Unit` |
     | `setInvoiceCounter(value: java.math.BigInteger)` | `Unit` |
-    | `setVatCategory(value: Int)` | `Unit` |
-    | `flags(value: Int)` | `Unit` |
-    | `setNote(language: String, value: String)` | `Unit` |
-    | `setAllowance(reason: String, amount: String)` | `Unit` |
+    | `setVatCategory(value: VatCategory)` | `Unit` |
+    | `setFlags(value: Int)` | `Unit` |
+    | `addNote(language: String?, value: String)` | `Unit` |
     | `setSeller(name: String, address: Address, vatId: String, otherId: String? = null, scheme: String? = null)` | `Unit` |
     | `setBuyer(name: String, address: Address, vatId: String? = null, otherId: String? = null, scheme: String? = null)` | `Unit` |
-    | `addLineItem(description: String, quantity: String, unitCode: String, unitPrice: String, vatRate: String, category: Int)` | `Unit` |
+    | `addLineItem(description: String, quantity: BigDecimal, unitCode: String, unitPrice: BigDecimal, vatRate: BigDecimal, category: VatCategory)` | `Unit` |
     | `build()` | `FinalizedInvoice` |
 
     **Address inputs**
@@ -494,72 +502,68 @@ correspond to the fields above.
 
     | Call | Returns |
     | --- | --- |
-    | `id()` | `String` |
-    | `uuid()` | `String` |
-    | `previousInvoiceHash()` | `String` |
-    | `paymentMeansCode()` | `String` |
-    | `currency()` | `String` |
-    | `issueDatetime()` | `String` |
-    | `invoiceLevelCharge()` | `String` |
-    | `invoiceLevelDiscount()` | `String` |
-    | `allowanceReason()` | `Text?` |
-    | `invoiceCounter()` | `java.math.BigInteger` |
-    | `vatCategory()` | `Int` |
-    | `flagsRaw()` | `Int` |
-    | `invoiceTypeKind()` | `Int` |
-    | `invoiceSubType()` | `Int` |
+    | `id` | `String` |
+    | `uuid` | `String` |
+    | `previousInvoiceHash` | `String` |
+    | `paymentMeansCode` | `String` |
+    | `currency` | `String` |
+    | `issueDatetime` | `String` |
+    | `invoiceLevelCharge` | `BigDecimal` |
+    | `invoiceLevelDiscount` | `BigDecimal` |
+    | `allowanceReason` | `String?` |
+    | `invoiceCounter` | `java.math.BigInteger` |
+    | `vatCategory` | `VatCategory` |
+    | `flags` | `Int` |
+    | `invoiceTypeKind` | `InvoiceTypeKind` |
+    | `invoiceSubType` | `InvoiceSubType` |
     | `seller()` | `Party` |
     | `buyer()` | `Party?` |
     | `note()` | `InvoiceNote?` |
-    | `lineItemsLen()` | `java.math.BigInteger` |
+    | `lineItemsLen` | `java.math.BigInteger` |
     | `lineItem(index: java.math.BigInteger)` | `InvoiceLineItem` |
     | `originalInvoiceRef()` | `OriginalInvoiceRef?` |
-    | `originalInvoiceReason()` | `Text?` |
+    | `originalInvoiceReason` | `String?` |
 
     **Totals**
 
     | Call | Returns |
     | --- | --- |
-    | `taxInclusive()` | `String` |
-    | `taxAmount()` | `String` |
-    | `lineExtension()` | `String` |
-    | `allowanceTotal()` | `String` |
-    | `chargeTotal()` | `String` |
-    | `taxableAmount()` | `String` |
-    | `prepaidAmount()` | `String` |
-    | `payableRoundingAmount()` | `String` |
-    | `payableAmount()` | `String` |
+    | `taxInclusive` | `BigDecimal` |
+    | `taxAmount` | `BigDecimal` |
+    | `lineExtension` | `BigDecimal` |
+    | `allowanceTotal` | `BigDecimal` |
+    | `chargeTotal` | `BigDecimal` |
+    | `taxableAmount` | `BigDecimal` |
+    | `prepaidAmount` | `BigDecimal` |
+    | `payableRoundingAmount` | `BigDecimal` |
+    | `payableAmount` | `BigDecimal` |
 
     Optional object accessors return null when absent. Line-item objects provide description, quantity, unit code, unit price, total amount, VAT rate, VAT amount, and category. See [XML](xml.md) and [signing](invoice-signing.md) for document and signature operations.
 
 === "Java"
 
-    Import `com.fatoora.*`. Decimal arguments and amounts use `String`; counters and indexes use `BigInteger`, enum codes/flags use `int`. Optional values accept `null`. Call static `InvoiceBuilder.create(...)` and `Address.create(...)` with all arguments, including optional nulls. Close owned objects with try-with-resources. Returned `Text` exposes `value()`. The signatures below use Java parameter and return types.
+    Import `com.fatoora.*`. Quantities, prices, rates and amounts use `java.math.BigDecimal`; counters and indexes use `BigInteger`, codes use `com.fatoora` enums, and the flag mask uses `int`. Optional values accept `null`. Call static `InvoiceBuilder.create(...)` and `Address.create(...)` with all arguments, including optional nulls. Close owned objects with try-with-resources. Value getters use `getX()`, `isX()` or `hasX()`. The signatures below use Java parameter and return types.
 
-    Invoice kind codes: `0` tax, `1` prepayment, `2` credit note, `3` debit note. Subtype: `0` standard, `1` simplified. VAT category: `0` exempt, `1` standard, `2` zero-rated, `3` out of scope. Flags are a bitmask: `1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed. Use zero for no flags.
+    Enums: `InvoiceTypeKind` (`Tax`, `Prepayment`, `CreditNote`, `DebitNote`), `InvoiceSubType` (`Standard`, `Simplified`), and `VatCategory` (`Exempt`, `Standard`, `Zero`, `OutOfScope`) in `com.fatoora`; pass them as `InvoiceTypeKind.Tax`, `VatCategory.Standard`, and so on. Flags remain an `int` bitmask; build it from `InvoiceFlag` bits, for example `InvoiceFlag.Export.getBit() | InvoiceFlag.Summary.getBit()` (`1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed). Use zero for no flags.
 
     **Create and configure**
 
     | Call | Returns |
     | --- | --- |
-    | `create(int kind, int subtype, String originalId, String originalUuid, String originalDate, String reason)` | `InvoiceBuilder` |
+    | `create(InvoiceTypeKind kind, InvoiceSubType subtype, String originalId, String originalUuid, String originalDate, String reason)` | `InvoiceBuilder` |
     | `setId(String value)` | `void` |
     | `setUuid(String value)` | `void` |
     | `setIssueDatetime(String value)` | `void` |
     | `setCurrency(String value)` | `void` |
     | `setPreviousInvoiceHash(String value)` | `void` |
-    | `setPaymentMeansCode(String value)` | `void` |
-    | `allowanceReason(String value)` | `void` |
-    | `invoiceLevelCharge(String value)` | `void` |
-    | `invoiceLevelDiscount(String value)` | `void` |
+    | `addPaymentMeans(PaymentMeans payment)` | `void` |
     | `setInvoiceCounter(BigInteger value)` | `void` |
-    | `setVatCategory(int value)` | `void` |
-    | `flags(int value)` | `void` |
-    | `setNote(String language, String value)` | `void` |
-    | `setAllowance(String reason, String amount)` | `void` |
+    | `setVatCategory(VatCategory value)` | `void` |
+    | `setFlags(int value)` | `void` |
+    | `addNote(String language, String value)` | `void` |
     | `setSeller(String name, Address address, String vatId, String otherId, String scheme)` | `void` |
     | `setBuyer(String name, Address address, String vatId, String otherId, String scheme)` | `void` |
-    | `addLineItem(String description, String quantity, String unitCode, String unitPrice, String vatRate, int category)` | `void` |
+    | `addLineItem(String description, BigDecimal quantity, String unitCode, BigDecimal unitPrice, BigDecimal vatRate, VatCategory category)` | `void` |
     | `build()` | `FinalizedInvoice` |
 
     **Address inputs**
@@ -576,41 +580,41 @@ correspond to the fields above.
 
     | Call | Returns |
     | --- | --- |
-    | `id()` | `String` |
-    | `uuid()` | `String` |
-    | `previousInvoiceHash()` | `String` |
-    | `paymentMeansCode()` | `String` |
-    | `currency()` | `String` |
-    | `issueDatetime()` | `String` |
-    | `invoiceLevelCharge()` | `String` |
-    | `invoiceLevelDiscount()` | `String` |
-    | `allowanceReason()` | `Text` |
-    | `invoiceCounter()` | `BigInteger` |
-    | `vatCategory()` | `int` |
-    | `flagsRaw()` | `int` |
-    | `invoiceTypeKind()` | `int` |
-    | `invoiceSubType()` | `int` |
+    | `getId()` | `String` |
+    | `getUuid()` | `String` |
+    | `getPreviousInvoiceHash()` | `String` |
+    | `getPaymentMeansCode()` | `String` |
+    | `getCurrency()` | `String` |
+    | `getIssueDatetime()` | `String` |
+    | `getInvoiceLevelCharge()` | `BigDecimal` |
+    | `getInvoiceLevelDiscount()` | `BigDecimal` |
+    | `getAllowanceReason()` | `String` |
+    | `getInvoiceCounter()` | `BigInteger` |
+    | `getVatCategory()` | `VatCategory` |
+    | `getFlags()` | `int` |
+    | `getInvoiceTypeKind()` | `InvoiceTypeKind` |
+    | `getInvoiceSubType()` | `InvoiceSubType` |
     | `seller()` | `Party` |
     | `buyer()` | `Party` |
     | `note()` | `InvoiceNote` |
-    | `lineItemsLen()` | `BigInteger` |
+    | `getLineItemsLen()` | `BigInteger` |
     | `lineItem(BigInteger index)` | `InvoiceLineItem` |
     | `originalInvoiceRef()` | `OriginalInvoiceRef` |
-    | `originalInvoiceReason()` | `Text` |
+    | `getOriginalInvoiceReason()` | `String` |
 
     **Totals**
 
     | Call | Returns |
     | --- | --- |
-    | `taxInclusive()` | `String` |
-    | `taxAmount()` | `String` |
-    | `lineExtension()` | `String` |
-    | `allowanceTotal()` | `String` |
-    | `chargeTotal()` | `String` |
-    | `taxableAmount()` | `String` |
-    | `prepaidAmount()` | `String` |
-    | `payableRoundingAmount()` | `String` |
-    | `payableAmount()` | `String` |
+    | `getTaxInclusive()` | `BigDecimal` |
+    | `getTaxAmount()` | `BigDecimal` |
+    | `getLineExtension()` | `BigDecimal` |
+    | `getAllowanceTotal()` | `BigDecimal` |
+    | `getChargeTotal()` | `BigDecimal` |
+    | `getTaxableAmount()` | `BigDecimal` |
+    | `getPrepaidAmount()` | `BigDecimal` |
+    | `getPayableRoundingAmount()` | `BigDecimal` |
+    | `getPayableAmount()` | `BigDecimal` |
 
     Optional object accessors return null when absent. Line-item objects provide description, quantity, unit code, unit price, total amount, VAT rate, VAT amount, and category. See [XML](xml.md) and [signing](invoice-signing.md) for document and signature operations.
 
@@ -618,7 +622,7 @@ correspond to the fields above.
 
     Include `fatoora.h`. Functions return `FatooraStatus`; read output pointers only after success. On failure, inspect and free `FatooraError`. Release returned strings with `fatoora_string_free()` and objects with their matching `_free()` function. Optional input strings use `NULL`, not empty strings.
 
-    Invoice kind codes: `0` tax, `1` prepayment, `2` credit note, `3` debit note. Subtype: `0` standard, `1` simplified. VAT category: `0` exempt, `1` standard, `2` zero-rated, `3` out of scope. Flags are a bitmask: `1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed. Use zero for no flags.
+    Enums: `FatooraInvoiceTypeKind` (`FATOORA_TAX`, `FATOORA_PREPAYMENT`, `FATOORA_CREDIT_NOTE`, `FATOORA_DEBIT_NOTE`), `FatooraInvoiceSubType` (`FATOORA_STANDARD`, `FATOORA_SIMPLIFIED`), and `FatooraVatCategory` (`FATOORA_VAT_EXEMPT`, `FATOORA_VAT_STANDARD`, `FATOORA_VAT_ZERO`, `FATOORA_VAT_OUT_OF_SCOPE`). The numeric values match the earlier codes (`0` tax, `1` prepayment, ...); a value that is not a declared enumerator returns `FATOORA_INVALID_INPUT`. Flags remain an integer bitmask; combine `FatooraInvoiceFlag` constants `FATOORA_FLAG_THIRD_PARTY` (`1`), `FATOORA_FLAG_NOMINAL` (`2`), `FATOORA_FLAG_EXPORT` (`4`), `FATOORA_FLAG_SUMMARY` (`8`), and `FATOORA_FLAG_SELF_BILLED` (`16`). Use zero for no flags.
 
     **Create and configure**
 
@@ -631,24 +635,24 @@ correspond to the fields above.
         FatooraFinalizedInvoice **out, FatooraError **error);
     ```
 
-    `FatooraInvoiceOptions` contains `int32_t kind`, `int32_t subtype`, and optional `const char *original_id`, `original_uuid`, `original_date`, `reason`. Credit/debit notes require original ID and reason. Set unused optional pointers to `NULL`.
+    `FatooraInvoiceOptions` contains `FatooraInvoiceTypeKind kind`, `FatooraInvoiceSubType subtype`, and optional `const char *original_id`, `original_uuid`, `original_date`, `reason`. Credit/debit notes require original ID and reason. Set unused optional pointers to `NULL`.
 
     All setter functions take builder first and `FatooraError **error` last, return status, and have no output argument:
 
     | Function suffix after `fatoora_invoice_builder_` | Value arguments |
     | --- | --- |
-    | `set_id`, `set_uuid`, `set_issue_datetime`, `set_currency`, `set_previous_invoice_hash`, `set_payment_means_code`, `allowance_reason` | `const char *value` |
-    | `invoice_level_charge`, `invoice_level_discount` | `const char *value` containing decimal text |
+    | `set_id`, `set_uuid`, `set_issue_datetime`, `set_currency`, `set_previous_invoice_hash` | `const char *value` |
+    | `add_payment_means` | `const FatooraPaymentMeans *value` from `fatoora_payment_means_new(code, instruction, &means, &error)` |
     | `set_invoice_counter` | `uint64_t value` |
-    | `set_vat_category`, `flags` | `int32_t value` |
-    | `set_note` | `const char *language, const char *value` |
-    | `set_allowance` | `const char *reason, const char *amount` |
+    | `set_vat_category` | `FatooraVatCategory value` |
+    | `set_flags` | `int32_t value` (bitmask of `FATOORA_FLAG_*`) |
+    | `add_note` | `const char *language` (`NULL` for none), `const char *value` |
     | `set_seller`, `set_buyer` | `const FatooraPartyOptions *options` |
     | `add_line_item` | `const FatooraLineItemOptions *options` |
 
     `FatooraPartyOptions` contains `name`, borrowed `const FatooraAddress *address`, `vat_id`, `other_id`, and `scheme`; text fields are `const char *`. Seller VAT is required; buyer needs VAT or an other ID. Create the address with `fatoora_address_new(&options, &address, &error)` using `FatooraAddressOptions`: country_code, city, street, building_number, postal_code, and optional additional_street/additional_number/district. Setters copy the address data.
 
-    `FatooraLineItemOptions` contains text fields `description`, `quantity`, `unit_code`, `unit_price`, `vat_rate`, and `int32_t category`. Numbers are decimal strings.
+    `FatooraLineItemOptions` contains text fields `description`, `quantity`, `unit_code`, `unit_price`, `vat_rate`, and `FatooraVatCategory category`. Numbers are decimal strings.
 
     Building consumes builder state on success or failure. Rejected setter inputs leave the builder available for correction. Always call `fatoora_invoice_builder_free()` afterward, including after consumption.
 
@@ -664,7 +668,10 @@ correspond to the fields above.
     | `invoice_level_charge`, `invoice_level_discount` | Owned decimal text through `char **out` |
     | `allowance_reason`, `original_invoice_reason` | Optional owned text through `char **out`; `NULL` when absent |
     | `invoice_counter` | `uint64_t *out` |
-    | `vat_category`, `flags_raw`, `invoice_type_kind`, `invoice_sub_type` | `uint8_t *out` |
+    | `vat_category` | `FatooraVatCategory *out` |
+    | `invoice_type_kind` | `FatooraInvoiceTypeKind *out` |
+    | `invoice_sub_type` | `FatooraInvoiceSubType *out` |
+    | `flags` | `uint8_t *out` bitmask of `FATOORA_FLAG_*` |
     | `seller`, `buyer` | Owned `FatooraParty **out`; buyer may be `NULL` |
     | `note` | Optional owned `FatooraInvoiceNote **out` |
     | `original_invoice_ref` | Optional owned `FatooraOriginalInvoiceRef **out` |

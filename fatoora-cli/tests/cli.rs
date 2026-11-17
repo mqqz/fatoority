@@ -422,7 +422,7 @@ fn generate_hash_outputs_expected() {
     let fixture = signed_invoice_fixture();
     let xml = std::fs::read_to_string(&fixture).expect("read fixture");
     let signed = parse_signed_invoice_xml(&xml).expect("parse signed invoice");
-    let expected = signed.hash_base64().expect("compute hash");
+    let expected = signed.hash().expect("compute hash");
 
     let output = Command::new(cli_exe())
         .args(["generate-hash", "--invoice"])
@@ -436,7 +436,7 @@ fn generate_hash_outputs_expected() {
         String::from_utf8_lossy(&output.stderr)
     );
     let actual = String::from_utf8_lossy(&output.stdout);
-    assert_eq!(actual.trim(), expected);
+    assert_eq!(actual.trim(), expected.as_str());
 }
 
 #[test]
@@ -460,11 +460,11 @@ fn invoice_request_emits_json_payload() {
         serde_json::from_slice::<serde_json::Value>(&output.stdout).expect("parse json output");
     assert_eq!(
         payload.get("invoiceHash").and_then(|v| v.as_str()),
-        Some(signed.invoice_hash())
+        Some(signed.invoice_hash().as_str())
     );
     assert_eq!(
         payload.get("uuid").and_then(|v| v.as_str()),
-        Some(signed.uuid())
+        Some(signed.uuid().as_str())
     );
     let expected_invoice = signed.to_xml_base64();
     assert_eq!(
@@ -629,6 +629,21 @@ fn zatca_cli_reports_file_and_option_errors_without_inventing_a_report() {
     );
     assert_eq!(invalid_hash["kind"], "invalid_context");
     assert!(invalid_hash.get("report").is_some());
+    let blank_hash = validation_json(
+        &validate_zatca(
+            &standard_invoice_fixture(),
+            &["--previous-invoice-hash", " "],
+        ),
+        3,
+    );
+    assert_eq!(blank_hash["kind"], "invalid_options");
+    assert!(
+        blank_hash["message"]
+            .as_str()
+            .unwrap()
+            .starts_with("invalid validation context: previous_invoice_hash")
+    );
+    assert!(blank_hash.get("report").is_none());
 }
 
 #[test]
@@ -791,8 +806,11 @@ fn sign_pem_stdout_preserves_invoice_hash_and_rejects_mixed_formats() {
         &std::fs::read(corpus.join("cases/simplified-invoice/expected.json")).unwrap(),
     )
     .unwrap();
-    assert_eq!(signed.invoice_hash(), expected["hash"].as_str().unwrap());
-    assert_eq!(signed.hash_base64().unwrap(), signed.invoice_hash());
+    assert_eq!(
+        signed.invoice_hash().as_str(),
+        expected["hash"].as_str().unwrap()
+    );
+    assert_eq!(&signed.hash().unwrap(), signed.invoice_hash());
     for (cert, key) in [("pem", "der"), ("der", "pem")] {
         let result = run(cert, key);
         assert!(!result.status.success());
@@ -958,12 +976,10 @@ fn zatca_text_failure_distinguishes_execution_from_rejection() {
 #[test]
 fn csr_stdout_contains_only_the_request_when_the_key_has_a_file() {
     use fatoora_core::{
-        config::EnvironmentType,
+        config::Environment,
         csr::{CsrProperties, SigningKey},
     };
-    let properties =
-        CsrProperties::from_properties_str(&std::fs::read_to_string(csr_config_fixture()).unwrap())
-            .unwrap();
+    let properties = CsrProperties::from_file(csr_config_fixture()).unwrap();
     let key_path = unique_temp_path("csr-key-only");
     for pem in [false, true] {
         let mut command = Command::new(cli_exe());
@@ -989,9 +1005,7 @@ fn csr_stdout_contains_only_the_request_when_the_key_has_a_file() {
         };
         // Compare against the core contract to check the CLI's encoding and
         // output routing. Core tests independently verify CSR signatures.
-        let expected = properties
-            .build(&key, EnvironmentType::NonProduction)
-            .unwrap();
+        let expected = properties.build(&key, Environment::NonProduction).unwrap();
         let expected = if pem {
             expected.to_pem().unwrap()
         } else {
@@ -1092,7 +1106,7 @@ fn malformed_xml_has_command_context_and_no_success_output() {
 
 #[test]
 fn generate_hash_preserves_input_representation() {
-    use fatoora_core::invoice::sign::invoice_hash_base64_from_xml_str;
+    use fatoora_core::invoice::hash_xml;
     let unsigned = unique_temp_path("unsigned-hash-input");
     let source = std::fs::read_to_string(signed_invoice_fixture()).unwrap();
     let finalized =
@@ -1116,7 +1130,7 @@ fn generate_hash_preserves_input_representation() {
         );
         assert_eq!(
             String::from_utf8(output.stdout).unwrap().trim(),
-            invoice_hash_base64_from_xml_str(&changed).unwrap()
+            hash_xml(&changed).unwrap().as_str()
         );
         std::fs::remove_file(path).unwrap();
     }
@@ -1164,4 +1178,43 @@ fn qr_command_rejects_a_stamp_with_its_signature_removed() {
     assert!(!result.status.success());
     assert!(result.stdout.is_empty());
     std::fs::remove_file(file).unwrap();
+}
+
+#[test]
+fn text_validation_reports_assertion_site_and_missing_xsd_input() {
+    let xml = std::fs::read_to_string(standard_invoice_fixture()).unwrap();
+    let changed = xml.replacen(
+        "<cbc:LineExtensionAmount currencyID=\"SAR\">300.00",
+        "<cbc:LineExtensionAmount currencyID=\"[\">300.00",
+        1,
+    );
+    assert_ne!(changed, xml);
+    let path = unique_temp_path("text-rule-execution-failure");
+    std::fs::write(&path, changed).unwrap();
+    let output = Command::new(cli_exe())
+        .args(["validate", "--profile=zatca", "--invoice"])
+        .arg(&path)
+        .output()
+        .unwrap();
+    std::fs::remove_file(&path).unwrap();
+    assert_eq!(output.status.code(), Some(3));
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains("Validation: execution_failed"), "{stdout}");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("Assertion: ksa:112:BR-KSA-CL-02"),
+        "{stderr}"
+    );
+    assert!(stderr.contains("Location: "), "{stderr}");
+
+    let missing = unique_temp_path("missing-xsd-invoice");
+    let output = Command::new(cli_exe())
+        .args(["validate", "--invoice"])
+        .arg(&missing)
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    assert!(output.stdout.is_empty());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("failed to read invoice file"), "{stderr}");
 }

@@ -8,12 +8,12 @@ import com.sun.jna.Structure
 internal interface AdjustmentLib: Library {
     fun fatoora_Adjustment_destroy(handle: Pointer)
     fun fatoora_Adjustment_amount(value: Slice): ResultPointerPointer
-    fun fatoora_Adjustment_percentage(base: Slice, percent: Slice): ResultPointerPointer
-    fun fatoora_Adjustment_with_supplied_amount(handle: Pointer, value: Slice): ResultPointerPointer
+    fun fatoora_Adjustment_percent_of(base: Slice, percent: Slice): ResultPointerPointer
+    fun fatoora_Adjustment_supplied_amount(handle: Pointer, value: Slice): ResultPointerPointer
     fun fatoora_Adjustment_with_reason(handle: Pointer, reason: OptionSlice, code: OptionSlice): ResultPointerPointer
     fun fatoora_Adjustment_value(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_Adjustment_base_amount(handle: Pointer): ResultPointerPointer
-    fun fatoora_Adjustment_percent(handle: Pointer): ResultPointerPointer
+    fun fatoora_Adjustment_percentage(handle: Pointer): ResultPointerPointer
     fun fatoora_Adjustment_reason(handle: Pointer): ResultPointerPointer
     fun fatoora_Adjustment_reason_code(handle: Pointer): ResultPointerPointer
 }
@@ -71,11 +71,14 @@ class Adjustment internal constructor (
         }
         @JvmStatic
 
-        fun percentage(base: String, percent: String): Result<Adjustment> {
+        /**
+         * Create an adjustment of `percent` percent of `base`.
+         */
+        fun percentOf(base: String, percent: String): Result<Adjustment> {
             val baseSliceMemory = PrimitiveArrayTools.borrowUtf8(base)
             val percentSliceMemory = PrimitiveArrayTools.borrowUtf8(percent)
 
-            val returnVal = lib.fatoora_Adjustment_percentage(baseSliceMemory.slice, percentSliceMemory.slice);
+            val returnVal = lib.fatoora_Adjustment_percent_of(baseSliceMemory.slice, percentSliceMemory.slice);
             try {
                 val nativeOkVal = returnVal.getNativeOk();
                 if (nativeOkVal != null) {
@@ -96,10 +99,13 @@ class Adjustment internal constructor (
         }
     }
 
-    fun withSuppliedAmount(value: String): Result<Adjustment> {
+    /**
+     * Return a copy with an explicit amount, checked against the percentage calculation.
+     */
+    fun suppliedAmount(value: String): Result<Adjustment> {
         val valueSliceMemory = PrimitiveArrayTools.borrowUtf8(value)
 
-        val returnVal = lib.fatoora_Adjustment_with_supplied_amount(handle, valueSliceMemory.slice);
+        val returnVal = lib.fatoora_Adjustment_supplied_amount(handle, valueSliceMemory.slice);
         try {
             val nativeOkVal = returnVal.getNativeOk();
             if (nativeOkVal != null) {
@@ -176,9 +182,9 @@ class Adjustment internal constructor (
         }
     }
 
-    fun percent(): Result<Text?> {
+    fun percentage(): Result<Text?> {
 
-        val returnVal = lib.fatoora_Adjustment_percent(handle);
+        val returnVal = lib.fatoora_Adjustment_percentage(handle);
         val nativeOkVal = returnVal.getNativeOk();
         if (returnVal.isOk == 1.toByte()) {
             val selfEdges: List<Any> = listOf()

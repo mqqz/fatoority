@@ -15,6 +15,7 @@ class LineItemBuilder internal constructor(internal val raw: com.fatoora.raw.Lin
             LineItemBuilder(com.fatoora.raw.LineItemBuilder.new_())
         }
     }
+
     fun setTaxTotalPresent(present: Boolean): Unit = nativeCall(listOfNotNull(this)) {
         unwrap(raw.setTaxTotalPresent(present))
     }
@@ -43,44 +44,89 @@ class LineItemBuilder internal constructor(internal val raw: com.fatoora.raw.Lin
         unwrap(raw.setId(checkedText(value)))
     }
 
+    fun setInvoicedQuantity(value: java.math.BigDecimal): Unit = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.setInvoicedQuantity(decimalText(value)))
+    }
+
+    @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("setInvoicedQuantity(BigDecimal(value))", "java.math.BigDecimal"))
     fun setInvoicedQuantity(value: String): Unit = nativeCall(listOfNotNull(this)) {
         unwrap(raw.setInvoicedQuantity(checkedText(value)))
     }
 
+    fun setItemNetPrice(value: java.math.BigDecimal): Unit = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.setItemNetPrice(decimalText(value)))
+    }
+
+    @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("setItemNetPrice(BigDecimal(value))", "java.math.BigDecimal"))
     fun setItemNetPrice(value: String): Unit = nativeCall(listOfNotNull(this)) {
         unwrap(raw.setItemNetPrice(checkedText(value)))
     }
 
+    fun setItemGrossPrice(value: java.math.BigDecimal): Unit = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.setItemGrossPrice(decimalText(value)))
+    }
+
+    @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("setItemGrossPrice(BigDecimal(value))", "java.math.BigDecimal"))
     fun setItemGrossPrice(value: String): Unit = nativeCall(listOfNotNull(this)) {
         unwrap(raw.setItemGrossPrice(checkedText(value)))
     }
 
+    fun setItemPriceDiscount(value: java.math.BigDecimal): Unit = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.setItemPriceDiscount(decimalText(value)))
+    }
+
+    @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("setItemPriceDiscount(BigDecimal(value))", "java.math.BigDecimal"))
     fun setItemPriceDiscount(value: String): Unit = nativeCall(listOfNotNull(this)) {
         unwrap(raw.setItemPriceDiscount(checkedText(value)))
     }
 
+    fun setItemPriceBaseQuantity(value: java.math.BigDecimal): Unit = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.setItemPriceBaseQuantity(decimalText(value)))
+    }
+
+    @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("setItemPriceBaseQuantity(BigDecimal(value))", "java.math.BigDecimal"))
     fun setItemPriceBaseQuantity(value: String): Unit = nativeCall(listOfNotNull(this)) {
         unwrap(raw.setItemPriceBaseQuantity(checkedText(value)))
     }
 
+    fun setLineNetAmount(value: java.math.BigDecimal): Unit = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.setLineNetAmount(decimalText(value)))
+    }
+
+    @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("setLineNetAmount(BigDecimal(value))", "java.math.BigDecimal"))
     fun setLineNetAmount(value: String): Unit = nativeCall(listOfNotNull(this)) {
         unwrap(raw.setLineNetAmount(checkedText(value)))
     }
 
+    fun setLineVatAmount(value: java.math.BigDecimal): Unit = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.setLineVatAmount(decimalText(value)))
+    }
+
+    @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("setLineVatAmount(BigDecimal(value))", "java.math.BigDecimal"))
     fun setLineVatAmount(value: String): Unit = nativeCall(listOfNotNull(this)) {
         unwrap(raw.setLineVatAmount(checkedText(value)))
     }
 
+    fun setLineAmountWithVat(value: java.math.BigDecimal): Unit = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.setLineAmountWithVat(decimalText(value)))
+    }
+
+    @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("setLineAmountWithVat(BigDecimal(value))", "java.math.BigDecimal"))
     fun setLineAmountWithVat(value: String): Unit = nativeCall(listOfNotNull(this)) {
         unwrap(raw.setLineAmountWithVat(checkedText(value)))
     }
 
+    fun setVatRate(value: java.math.BigDecimal): Unit = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.setVatRate(decimalText(value)))
+    }
+
+    @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("setVatRate(BigDecimal(value))", "java.math.BigDecimal"))
     fun setVatRate(value: String): Unit = nativeCall(listOfNotNull(this)) {
         unwrap(raw.setVatRate(checkedText(value)))
     }
 
-    fun setVatCategory(value: Int): Unit = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.setVatCategory(checkedUnsigned(value.toLong(), 255).toUByte()))
+    fun setVatCategory(value: VatCategory): Unit = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.setVatCategory(com.fatoora.raw.VatCategory.valueOf(value.name)))
     }
 
     fun setExemption(value: TaxExemption): Unit = nativeCall(listOfNotNull(this, value)) {

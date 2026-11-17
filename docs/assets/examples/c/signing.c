@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
         free(key);
         return 1;
     }
-    FatooraSigner *signer = NULL;
+    FatooraInvoiceSigner *signer = NULL;
     FatooraFinalizedInvoice *invoice = NULL;
     FatooraSignedInvoice *signed_invoice = NULL;
     FatooraError *error = NULL;
@@ -45,10 +45,10 @@ int main(int argc, char **argv) {
     FatooraStatus status = FATOORA_OK;
     int exit_code = 1;
 #define TRY(call) do { status = (call); if (status != FATOORA_OK) goto cleanup; } while (0)
-    TRY(fatoora_signer_from_pem(cert, key, &signer, &error));
+    TRY(fatoora_invoice_signer_from_pem(cert, key, &signer, &error));
     TRY(fatoora_finalized_invoice_from_file(argv[1], &invoice, &error));
     /* Signing consumes invoice's inner state; its outer handle still needs free. */
-    TRY(fatoora_signer_sign(signer, invoice, &signed_invoice, &error));
+    TRY(fatoora_invoice_signer_sign(signer, invoice, &signed_invoice, &error));
     TRY(fatoora_signed_invoice_into_xml(signed_invoice, &xml, &error));
     puts(xml);
     exit_code = 0;
@@ -57,7 +57,7 @@ cleanup:
     fatoora_string_free(xml);
     fatoora_signed_invoice_free(signed_invoice);
     fatoora_finalized_invoice_free(invoice);
-    fatoora_signer_free(signer);
+    fatoora_invoice_signer_free(signer);
     fatoora_error_free(error);
     free(cert);
     free(key);

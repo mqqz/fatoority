@@ -14,8 +14,8 @@
 namespace fatoora {
 namespace capi { struct BindingError; }
 class BindingError;
-namespace capi { struct Config; }
-class Config;
+namespace capi { struct ZatcaValidationReport; }
+class ZatcaValidationReport;
 } // namespace fatoora
 
 
@@ -32,14 +32,19 @@ class Xml {
 public:
 
   /**
-   * Produce an owned local ZATCA report as JSON. Inspect is_valid before acceptance.
-   * Options default when absent; JSON inputs are limited to 4 KiB.
+   * Run the local ZATCA validation profile and return its owned report.
+   *
+   * Inspect `is_valid` before acceptance. Options default when absent;
+   * `options_json` is limited to 4 KiB. Validation needs no configuration:
+   * it mirrors the stateless core `Validator::validate_zatca`.
    */
-  inline static diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> validate_zatca(const fatoora::Config& config, std::string_view xml, std::optional<std::string_view> options_json);
-  template<typename W>
-  inline static diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> validate_zatca_write(const fatoora::Config& config, std::string_view xml, std::optional<std::string_view> options_json, W& writeable_output);
+  inline static diplomat::result<std::unique_ptr<fatoora::ZatcaValidationReport>, std::unique_ptr<fatoora::BindingError>> validate_zatca(std::string_view xml, std::optional<std::string_view> options_json);
 
-  inline static diplomat::result<bool, std::unique_ptr<fatoora::BindingError>> validate(const fatoora::Config& config, std::string_view xml);
+  /**
+   * Check the XML against the UBL schema and business rules, mirroring core
+   * `Validator::validate_xml`. Returns true or a validation error.
+   */
+  inline static diplomat::result<bool, std::unique_ptr<fatoora::BindingError>> validate(std::string_view xml);
 
   inline static diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> hash(std::string_view xml);
   template<typename W>

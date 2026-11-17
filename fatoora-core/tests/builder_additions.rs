@@ -7,44 +7,40 @@ use fatoora_core::invoice::{
 };
 
 fn address() -> Address {
-    Address {
-        province: None,
-        country_code: CountryCode::parse("SAU").expect("country code"),
-        city: "Riyadh".into(),
-        street: "King Fahd".into(),
-        additional_street: None,
-        building_number: "1234".into(),
-        additional_number: Some("5678".into()),
-        postal_code: "12222".into(),
-        district: Some("Olaya".into()),
-    }
+    Address::new(
+        CountryCode::parse("SAU").expect("country code"),
+        "Riyadh",
+        "King Fahd",
+        "1234",
+        "12222",
+    )
+    .with_additional_number("5678")
+    .with_district("Olaya")
 }
 
 fn base() -> InvoiceBuilder {
     let seller = Party::<SellerRole>::new(
-        "Acme Inc".into(),
+        "Acme Inc",
         address(),
-        "399999999900003",
+        "399999999900003".parse().unwrap(),
         Some(OtherId::with_scheme("7003339333", "CRN")),
-    )
-    .expect("valid seller");
+    );
     let buyer = Party::<BuyerRole>::new(
-        "Blue Desert Retail LLC".into(),
+        "Blue Desert Retail LLC",
         address(),
-        Some("310122393500003".into()),
+        Some("310122393500003".parse().unwrap()),
         None,
-    )
-    .expect("valid buyer");
+    );
     InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Standard))
         .id("INV-1")
-        .uuid("8e6000cf-1a98-4174-b3e7-b5d5954bc10d")
-        .issue_datetime("2024-01-01T12:30:00Z")
-        .currency("SAR")
-        .previous_invoice_hash("hash")
+        .uuid("8e6000cf-1a98-4174-b3e7-b5d5954bc10d".parse().unwrap())
+        .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+        .currency("SAR".parse().unwrap())
+        .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(1)
         .seller(seller)
         .buyer(buyer)
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
 }
 
@@ -70,7 +66,7 @@ fn notes() -> Vec<InvoiceNote> {
 
 fn references() -> Vec<OriginalInvoiceRef> {
     vec![
-        OriginalInvoiceRef::new("ORIG-1").with_uuid("u1"),
+        OriginalInvoiceRef::new("ORIG-1").with_uuid("u1".parse().unwrap()),
         OriginalInvoiceRef::new("ORIG-2"),
     ]
 }
@@ -224,7 +220,6 @@ fn invoice_uuid_parses_like_builder() {
     );
     for blank in ["", "   ", "\t\n"] {
         assert_empty_issue(InvoiceUuid::parse(blank).unwrap_err(), InvoiceField::Uuid);
-        assert!(base().line_items(lines()).uuid(blank).build().is_err());
     }
 }
 
@@ -250,13 +245,6 @@ fn invoice_hash_parses_like_builder() {
         assert_empty_issue(
             InvoiceHash::parse(blank).unwrap_err(),
             InvoiceField::PreviousInvoiceHash,
-        );
-        assert!(
-            base()
-                .line_items(lines())
-                .previous_invoice_hash(blank)
-                .build()
-                .is_err()
         );
     }
 }

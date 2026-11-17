@@ -28,6 +28,9 @@ namespace capi { struct PaymentMeans; }
 class PaymentMeans;
 namespace capi { struct Text; }
 class Text;
+class InvoiceSubType;
+class InvoiceTypeKind;
+class VatCategory;
 } // namespace fatoora
 
 
@@ -109,13 +112,13 @@ public:
 
   inline uint64_t invoice_counter() const;
 
-  inline uint8_t vat_category() const;
+  inline fatoora::VatCategory vat_category() const;
 
-  inline uint8_t flags_raw() const;
+  inline uint8_t flags() const;
 
-  inline uint8_t invoice_type_kind() const;
+  inline fatoora::InvoiceTypeKind invoice_type_kind() const;
 
-  inline uint8_t invoice_sub_type() const;
+  inline fatoora::InvoiceSubType invoice_sub_type() const;
 
   inline diplomat::result<std::unique_ptr<fatoora::Party>, std::unique_ptr<fatoora::BindingError>> seller() const;
 

@@ -13,7 +13,7 @@
 #include <cstdlib>
 #include "BindingError.hpp"
 #include "Bytes.hpp"
-#include "CsidProduction.hpp"
+#include "ProductionCsid.hpp"
 #include "diplomat_runtime.hpp"
 
 
@@ -33,7 +33,7 @@ namespace capi {
     typedef struct fatoora_ProductionRequest_body_result {union {_native::capi::Bytes* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ProductionRequest_body_result;
     fatoora_ProductionRequest_body_result fatoora_ProductionRequest_body(const _native::capi::ProductionRequest* self);
 
-    typedef struct fatoora_ProductionRequest_decode_result {union {_native::capi::CsidProduction* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ProductionRequest_decode_result;
+    typedef struct fatoora_ProductionRequest_decode_result {union {_native::capi::ProductionCsid* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ProductionRequest_decode_result;
     fatoora_ProductionRequest_decode_result fatoora_ProductionRequest_decode(const _native::capi::ProductionRequest* self, uint16_t status, _native::diplomat::capi::DiplomatU8View body);
 
     void fatoora_ProductionRequest_destroy(ProductionRequest* self);
@@ -92,11 +92,11 @@ inline _native::diplomat::result<std::unique_ptr<_native::Bytes>, std::unique_pt
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Bytes>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Bytes>>(std::unique_ptr<_native::Bytes>(_native::Bytes::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Bytes>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::CsidProduction>, std::unique_ptr<_native::BindingError>> _native::ProductionRequest::decode(uint16_t status, _native::diplomat::span<const uint8_t> body) const {
+inline _native::diplomat::result<std::unique_ptr<_native::ProductionCsid>, std::unique_ptr<_native::BindingError>> _native::ProductionRequest::decode(uint16_t status, _native::diplomat::span<const uint8_t> body) const {
     auto result = _native::capi::fatoora_ProductionRequest_decode(this->AsFFI(),
         status,
         {body.data(), body.size()});
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::CsidProduction>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::CsidProduction>>(std::unique_ptr<_native::CsidProduction>(_native::CsidProduction::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::CsidProduction>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::ProductionCsid>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::ProductionCsid>>(std::unique_ptr<_native::ProductionCsid>(_native::ProductionCsid::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::ProductionCsid>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
 inline const _native::capi::ProductionRequest* _native::ProductionRequest::AsFFI() const {

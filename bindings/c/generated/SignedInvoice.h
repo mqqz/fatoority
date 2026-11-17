@@ -31,8 +31,8 @@ fatoora_SignedInvoice_data_result fatoora_SignedInvoice_data(const SignedInvoice
 typedef struct fatoora_SignedInvoice_totals_result {union {InvoiceTotals* ok; BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_totals_result;
 fatoora_SignedInvoice_totals_result fatoora_SignedInvoice_totals(const SignedInvoice* self);
 
-typedef struct fatoora_SignedInvoice_hash_base64_result {union { BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_hash_base64_result;
-fatoora_SignedInvoice_hash_base64_result fatoora_SignedInvoice_hash_base64(const SignedInvoice* self, DiplomatWrite* write);
+typedef struct fatoora_SignedInvoice_hash_result {union { BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_hash_result;
+fatoora_SignedInvoice_hash_result fatoora_SignedInvoice_hash(const SignedInvoice* self, DiplomatWrite* write);
 
 typedef struct fatoora_SignedInvoice_xml_result {union { BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_xml_result;
 fatoora_SignedInvoice_xml_result fatoora_SignedInvoice_xml(const SignedInvoice* self, DiplomatWrite* write);

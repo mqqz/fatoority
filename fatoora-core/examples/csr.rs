@@ -1,15 +1,15 @@
 // --8<-- [start:example]
 pub fn main() {
-    use fatoora_core::config::EnvironmentType;
+    use fatoora_core::config::Environment;
     use fatoora_core::csr::{CsrProperties, SigningKey};
 
     let csr_props_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures/csr-configs/csr-config-example-EN.properties");
     let csr_props = std::fs::read_to_string(&csr_props_path).expect("read csr props");
-    let props = CsrProperties::from_properties_str(&csr_props).expect("parse csr props");
+    let props = csr_props.parse::<CsrProperties>().expect("parse csr props");
     let key = SigningKey::generate();
     let csr = props
-        .build(&key, EnvironmentType::NonProduction)
+        .build(&key, Environment::NonProduction)
         .expect("build csr");
 
     let csr_pem = csr.to_pem().expect("csr pem");

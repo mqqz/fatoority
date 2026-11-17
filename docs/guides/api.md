@@ -34,7 +34,7 @@ environment does not convert credentials issued for another environment.
 4. Request production-type credentials for that environment, then retain the returned
    token and secret for reporting or clearance.
 
-See the [credential endpoint reference](../reference/api-client.md#post_csr_for_ccsid)
+See the [credential endpoint reference](../reference/api-client.md#request_compliance_csid)
 and [ZATCA developer portal](https://sandbox.zatca.gov.sa/IntegrationSandbox) for the
 request fields and environment-specific onboarding requirements. A successful
 compliance check alone is not reporting or clearance acceptance.

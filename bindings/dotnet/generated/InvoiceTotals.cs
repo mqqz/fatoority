@@ -57,24 +57,27 @@ public partial class InvoiceTotals: IDisposable
         }
     }
 
-    public nuint VatBreakdownLen()
+    public nuint VatBreakdownLen
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceTotals>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.InvoiceTotals.VatBreakdownLen(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.InvoiceTotals>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.InvoiceTotals.VatBreakdownLen(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>VatBreakdown</c> allocated on Rust side.
     /// </returns>
@@ -89,7 +92,7 @@ public partial class InvoiceTotals: IDisposable
                 var result = Raw.InvoiceTotals.VatBreakdown(selfLease!.Ptr, index);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new VatBreakdown(result.Ok);
             }
@@ -100,281 +103,308 @@ public partial class InvoiceTotals: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string TaxInclusive()
+    /// <exception cref="FfiException"></exception>
+    public decimal TaxInclusive
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceTotals>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.InvoiceTotals>? selfLease = null;
                 try
                 {
-                    var result = Raw.InvoiceTotals.TaxInclusive(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.InvoiceTotals.TaxInclusive(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string TaxAmount()
+    /// <exception cref="FfiException"></exception>
+    public decimal TaxAmount
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceTotals>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.InvoiceTotals>? selfLease = null;
                 try
                 {
-                    var result = Raw.InvoiceTotals.TaxAmount(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.InvoiceTotals.TaxAmount(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string LineExtension()
+    /// <exception cref="FfiException"></exception>
+    public decimal LineExtension
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceTotals>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.InvoiceTotals>? selfLease = null;
                 try
                 {
-                    var result = Raw.InvoiceTotals.LineExtension(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.InvoiceTotals.LineExtension(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string AllowanceTotal()
+    /// <exception cref="FfiException"></exception>
+    public decimal AllowanceTotal
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceTotals>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.InvoiceTotals>? selfLease = null;
                 try
                 {
-                    var result = Raw.InvoiceTotals.AllowanceTotal(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.InvoiceTotals.AllowanceTotal(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string ChargeTotal()
+    /// <exception cref="FfiException"></exception>
+    public decimal ChargeTotal
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceTotals>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.InvoiceTotals>? selfLease = null;
                 try
                 {
-                    var result = Raw.InvoiceTotals.ChargeTotal(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.InvoiceTotals.ChargeTotal(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string TaxableAmount()
+    /// <exception cref="FfiException"></exception>
+    public decimal TaxableAmount
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceTotals>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.InvoiceTotals>? selfLease = null;
                 try
                 {
-                    var result = Raw.InvoiceTotals.TaxableAmount(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.InvoiceTotals.TaxableAmount(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string PrepaidAmount()
+    /// <exception cref="FfiException"></exception>
+    public decimal PrepaidAmount
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceTotals>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.InvoiceTotals>? selfLease = null;
                 try
                 {
-                    var result = Raw.InvoiceTotals.PrepaidAmount(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.InvoiceTotals.PrepaidAmount(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string PayableRoundingAmount()
+    /// <exception cref="FfiException"></exception>
+    public decimal PayableRoundingAmount
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceTotals>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.InvoiceTotals>? selfLease = null;
                 try
                 {
-                    var result = Raw.InvoiceTotals.PayableRoundingAmount(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.InvoiceTotals.PayableRoundingAmount(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string PayableAmount()
+    /// <exception cref="FfiException"></exception>
+    public decimal PayableAmount
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceTotals>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.InvoiceTotals>? selfLease = null;
                 try
                 {
-                    var result = Raw.InvoiceTotals.PayableAmount(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.InvoiceTotals.PayableAmount(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }

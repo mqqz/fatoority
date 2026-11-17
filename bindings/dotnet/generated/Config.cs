@@ -57,36 +57,48 @@ public partial class Config: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>Config</c> allocated on Rust side.
     /// </returns>
-    public static Config New(byte env)
+    public static Config Create(ZatcaEnvironment env)
     {
         unsafe
         {
             var result = Raw.Config.New(env);
             if (!result.IsOk)
             {
-                throw new BindingErrorException(new BindingError(result.Err));
+                throw FfiException.FromNative(new BindingError(result.Err));
             }
             return new Config(result.Ok);
         }
     }
 
-    public byte Env()
+    [Obsolete("Use Create; New will be removed in 0.7.")]
+    public static Config New(ZatcaEnvironment env) => Create(env);
+
+    /// <exception cref="FfiException"></exception>
+    public ZatcaEnvironment Env
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.Config>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.Config.Env(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.Config>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.Config.Env(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return result.Ok;
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }

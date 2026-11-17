@@ -5,10 +5,13 @@ import type { AllowanceCharge } from "./AllowanceCharge.mjs"
 import type { BindingError } from "./BindingError.mjs"
 import type { FinalizedInvoice } from "./FinalizedInvoice.mjs"
 import type { InvoiceLineItem } from "./InvoiceLineItem.mjs"
+import type { InvoiceSubType } from "./InvoiceSubType.mjs"
+import type { InvoiceTypeKind } from "./InvoiceTypeKind.mjs"
 import type { OriginalInvoiceRef } from "./OriginalInvoiceRef.mjs"
 import type { PaymentMeans } from "./PaymentMeans.mjs"
 import type { TaxExemption } from "./TaxExemption.mjs"
 import type { VatBreakdown } from "./VatBreakdown.mjs"
+import type { VatCategory } from "./VatCategory.mjs"
 import type { pointer, codepoint } from "./diplomat-runtime.mjs";
 
 
@@ -30,16 +33,22 @@ export class InvoiceBuilder {
 
     addNote(language: string | null, value: string): void;
 
-    addDocumentAdjustment(charge: boolean, value: Adjustment, category: number, rate: string, exemption: TaxExemption): void;
+    /**
+     * Append a document-level allowance (discount), mirroring core `InvoiceBuilder::allowance`.
+     */
+    addAllowance(value: Adjustment, category: VatCategory, rate: string, exemption: TaxExemption): void;
+
+    /**
+     * Append a document-level charge, mirroring core `InvoiceBuilder::charge`.
+     */
+    addCharge(value: Adjustment, category: VatCategory, rate: string, exemption: TaxExemption): void;
 
     setBuyerWithoutAddress(name: string, vatId: string | null, otherId: string | null, scheme: string | null): void;
 
     /**
      * Construct a credit or debit note with a complete billing reference.
      */
-    static newWithReference(kind: number, subtype: number, reference: OriginalInvoiceRef, reason: string): InvoiceBuilder;
-
-    setNoteWithoutLanguage(value: string): void;
+    static newWithReference(kind: InvoiceTypeKind, subtype: InvoiceSubType, reference: OriginalInvoiceRef, reason: string): InvoiceBuilder;
 
     setPaymentInstruction(instruction: string): void;
 
@@ -51,13 +60,13 @@ export class InvoiceBuilder {
 
     setTaxCurrency(currency: string, amount: string): void;
 
-    setTaxExemption(category: number, rate: string, exemption: TaxExemption): void;
+    addTaxExemption(category: VatCategory, rate: string, exemption: TaxExemption): void;
 
     addAdjustment(adjustment: AllowanceCharge): void;
 
     addItem(item: InvoiceLineItem): void;
 
-    static new_(kind: number, subtype: number, originalId: string | null, originalUuid: string | null, originalDate: string | null, reason: string | null): InvoiceBuilder;
+    static new_(kind: InvoiceTypeKind, subtype: InvoiceSubType, originalId: string | null, originalUuid: string | null, originalDate: string | null, reason: string | null): InvoiceBuilder;
 
     addBillingReference(value: OriginalInvoiceRef): void;
 
@@ -75,29 +84,17 @@ export class InvoiceBuilder {
 
     setPreviousInvoiceHash(value: string): void;
 
-    setPaymentMeansCode(value: string): void;
-
-    allowanceReason(value: string): void;
-
-    invoiceLevelCharge(value: string): void;
-
-    invoiceLevelDiscount(value: string): void;
-
     setInvoiceCounter(value: bigint): void;
 
-    setVatCategory(value: number): void;
+    setVatCategory(value: VatCategory): void;
 
-    flags(value: number): void;
-
-    setNote(language: string, value: string): void;
-
-    setAllowance(reason: string, amount: string): void;
+    setFlags(value: number): void;
 
     setSeller(name: string, address: Address, vatId: string, otherId: string | null, scheme: string | null): void;
 
     setBuyer(name: string, address: Address, vatId: string | null, otherId: string | null, scheme: string | null): void;
 
-    addLineItem(description: string, quantity: string, unitCode: string, unitPrice: string, vatRate: string, category: number): void;
+    addLineItem(description: string, quantity: string, unitCode: string, unitPrice: string, vatRate: string, category: VatCategory): void;
 
     build(): FinalizedInvoice;
 }

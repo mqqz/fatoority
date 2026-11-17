@@ -32,14 +32,14 @@ Clients reject credentials issued for a different environment before sending a r
 ## Language reference
 
 === "Rust"
-    Import `Config` and `EnvironmentType` from `fatoora_core::config`.
+    Import `Config` and `Environment` from `fatoora_core::config`.
 
     | Operation | Returns | Behavior |
     | --- | --- | --- |
-    | `Config::new(env: EnvironmentType)` | `Config` | Stores the selected environment. |
-    | `Config::default()` | `Config` | Selects `EnvironmentType::NonProduction`. |
-    | `config.env()` | `EnvironmentType` | Returns the stored value. |
-    | `EnvironmentType::from_str(value: &str)` | `Result<EnvironmentType, EnvironmentParseError>` | Requires `std::str::FromStr` in scope. |
+    | `Config::new(env: Environment)` | `Config` | Stores the selected environment. |
+    | `Config::default()` | `Config` | Selects `Environment::NonProduction`. |
+    | `config.env()` | `Environment` | Returns the stored value. |
+    | `Environment::from_str(value: &str)` | `Result<Environment, EnvironmentParseError>` | Requires `std::str::FromStr` in scope. |
     | `env.as_str()` | `&'static str` | Returns the canonical string below. |
     | `env.endpoint_url()` | `&'static str` | Returns the base URL above. |
 
@@ -53,7 +53,7 @@ Clients reject credentials issued for a different environment before sending a r
     | Operation | Returns | Behavior |
     | --- | --- | --- |
     | `Config(env=Environment.NON_PRODUCTION)` | `Config` | Creates configuration; defaults to non-production. |
-    | `config.env()` | `Environment` | Returns the stored value. |
+    | `config.env` | `Environment` | Property; the stored value. |
     | `Environment(value)` | `Environment` | Converts integer `0`, `1`, or `2`; invalid values raise `ValueError`. |
     | `env.value` | `int` | Returns the numeric value. |
 
@@ -62,15 +62,17 @@ Clients reject credentials issued for a different environment before sending a r
     `with` and `close()`; see [Python resource handling](bindings/python.md).
 
 === "JavaScript"
-    Import `Config` from `fatoority`.
+    Import `Config` and `Environment` from `fatoority`.
 
     | Operation | Returns | Behavior |
     | --- | --- | --- |
-    | `Config.new_(env)` | `Config` | Pass integer `0`, `1`, or `2`. |
-    | `config.env()` | `number` | Returns the stored environment. |
+    | `Config.create(env: Environment)` | `Config` | Stores the selected environment. |
+    | `config.env` | `Environment` | Read-only property holding the stored environment. |
 
-    Use `0` for non-production, `1` for simulation, `2` for production. There is no
-    implicit default. Invalid environments throw an `Error` with a `BindingError` cause. See
+    Pass `Environment.NonProduction`, `Environment.Simulation`, or
+    `Environment.Production`. There is no implicit default. `env.value` is the variant
+    name, such as `'NonProduction'`. Reading `config.env` throws only if the native library
+    reports an environment this binding version does not know (code 9). See
     [JavaScript setup](bindings/javascript.md) for loading the package.
 
 === "C#"
@@ -78,51 +80,59 @@ Clients reject credentials issued for a different environment before sending a r
 
     | Operation | Returns | Behavior |
     | --- | --- | --- |
-    | `Config.New(byte env)` | `Config` | Pass `0`, `1`, or `2`. |
-    | `config.Env()` | `byte` | Returns the stored environment. |
+    | `Config.Create(ZatcaEnvironment env)` | `Config` | Stores the selected environment. |
+    | `config.Env` | `ZatcaEnvironment` | Property returning the stored environment. |
 
-    Use `0` for non-production, `1` for simulation, `2` for production. There is no
-    implicit default. Invalid environments throw `BindingErrorException`. Use `using` to
-    dispose configuration when finished. See [C# setup](bindings/csharp.md).
+    Pass `ZatcaEnvironment.NonProduction`, `ZatcaEnvironment.Simulation`, or
+    `ZatcaEnvironment.Production`. The enum is named `ZatcaEnvironment` so it does not
+    clash with `System.Environment`. There is no implicit default. `Env` throws
+    `InternalException` only if the native library reports an environment this
+    binding version does not know (code 9). Use `using` to dispose configuration when
+    finished. See [C# setup](bindings/csharp.md).
 
 === "Kotlin"
-    Import `com.fatoora.Config`.
+    Import `com.fatoora.Config` and `com.fatoora.Environment`.
 
     | Operation | Returns | Behavior |
     | --- | --- | --- |
-    | `Config.create(env: Int)` | `Config` | Pass `0`, `1`, or `2`. |
-    | `config.env()` | `Int` | Returns the stored environment. |
+    | `Config.create(env: Environment)` | `Config` | Stores the selected environment. |
+    | `config.env` | `Environment` | Returns the stored environment. |
 
-    Use `0` for non-production, `1` for simulation, `2` for production. There is no
-    implicit default. Invalid values raise an exception. Use `.use { ... }` or `close()`
-    for configuration objects. See [Kotlin setup](bindings/kotlin.md).
+    Pass `Environment.NonProduction`, `Environment.Simulation`, or
+    `Environment.Production`. There is no implicit default. `env` throws only if the
+    native library reports an environment this binding version does not know (code 9).
+    Use `.use { ... }` or `close()` for configuration objects. See
+    [Kotlin setup](bindings/kotlin.md).
 
 === "Java"
-    Import `com.fatoora.Config`.
+    Import `com.fatoora.Config` and `com.fatoora.Environment`.
 
     | Operation | Returns | Behavior |
     | --- | --- | --- |
-    | `Config.create(int env)` | `Config` | Pass `0`, `1`, or `2`. |
-    | `config.env()` | `int` | Returns the stored environment. |
+    | `Config.create(Environment env)` | `Config` | Stores the selected environment. |
+    | `config.getEnv()` | `Environment` | Returns the stored environment. |
 
-    Use `0` for non-production, `1` for simulation, `2` for production. There is no
-    implicit default. Invalid values raise an exception. Use try-with-resources or
-    `close()` for configuration objects. See [Java setup](bindings/kotlin.md).
+    Pass `Environment.NonProduction`, `Environment.Simulation`, or
+    `Environment.Production`. There is no implicit default. `getEnv()` throws only if the
+    native library reports an environment this binding version does not know (code 9).
+    Use try-with-resources or `close()` for configuration objects. See
+    [Java setup](bindings/kotlin.md).
 
 === "C"
-    Include `fatoora.h`. Pass `0` for non-production, `1` for simulation, or `2` for
-    production. There is no implicit default; other values return an error.
+    Include `fatoora.h`. Pass `FATOORA_NON_PRODUCTION`, `FATOORA_SIMULATION`, or
+    `FATOORA_PRODUCTION` (values `0`, `1`, and `2`). There is no implicit default; any
+    other value returns `FATOORA_INVALID_INPUT`.
 
     ```c
-    FatooraStatus fatoora_config_new(int32_t env,
+    FatooraStatus fatoora_config_new(FatooraEnvironment env,
         FatooraConfig **out, FatooraError **error);
     FatooraStatus fatoora_config_env(const FatooraConfig *self,
-        uint8_t *out, FatooraError **error);
+        FatooraEnvironment *out, FatooraError **error);
     void fatoora_config_free(FatooraConfig *self);
     ```
 
     On `FATOORA_OK`, the constructor writes an owned configuration to `out` and the
-    getter writes the environment number. Release configuration with
+    getter writes the environment. Release configuration with
     `fatoora_config_free`. See [C error and ownership conventions](bindings/c.md).
 
 ## Related reference

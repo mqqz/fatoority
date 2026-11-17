@@ -14,6 +14,7 @@
 #include "../diplomat_runtime.hpp"
 #include "BindingError.hpp"
 #include "Csr.hpp"
+#include "Environment.hpp"
 #include "SigningKey.hpp"
 
 
@@ -24,14 +25,14 @@ namespace capi {
     typedef struct fatoora_CsrProperties_new_result {union {fatoora::capi::CsrProperties* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_CsrProperties_new_result;
     fatoora_CsrProperties_new_result fatoora_CsrProperties_new(diplomat::capi::DiplomatStringView common_name, diplomat::capi::DiplomatStringView serial_number, diplomat::capi::DiplomatStringView organization_identifier, diplomat::capi::DiplomatStringView organization_unit_name, diplomat::capi::DiplomatStringView organization_name, diplomat::capi::DiplomatStringView country_name, diplomat::capi::DiplomatStringView invoice_type, diplomat::capi::DiplomatStringView location_address, diplomat::capi::DiplomatStringView industry_business_category);
 
-    typedef struct fatoora_CsrProperties_from_properties_str_result {union {fatoora::capi::CsrProperties* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_CsrProperties_from_properties_str_result;
-    fatoora_CsrProperties_from_properties_str_result fatoora_CsrProperties_from_properties_str(diplomat::capi::DiplomatStringView properties);
+    typedef struct fatoora_CsrProperties_from_str_result {union {fatoora::capi::CsrProperties* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_CsrProperties_from_str_result;
+    fatoora_CsrProperties_from_str_result fatoora_CsrProperties_from_str(diplomat::capi::DiplomatStringView properties);
 
-    typedef struct fatoora_CsrProperties_parse_csr_config_file_result {union {fatoora::capi::CsrProperties* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_CsrProperties_parse_csr_config_file_result;
-    fatoora_CsrProperties_parse_csr_config_file_result fatoora_CsrProperties_parse_csr_config_file(diplomat::capi::DiplomatStringView path);
+    typedef struct fatoora_CsrProperties_from_file_result {union {fatoora::capi::CsrProperties* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_CsrProperties_from_file_result;
+    fatoora_CsrProperties_from_file_result fatoora_CsrProperties_from_file(diplomat::capi::DiplomatStringView path);
 
     typedef struct fatoora_CsrProperties_build_result {union {fatoora::capi::Csr* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_CsrProperties_build_result;
-    fatoora_CsrProperties_build_result fatoora_CsrProperties_build(const fatoora::capi::CsrProperties* self, const fatoora::capi::SigningKey* key, uint8_t env);
+    fatoora_CsrProperties_build_result fatoora_CsrProperties_build(const fatoora::capi::CsrProperties* self, const fatoora::capi::SigningKey* key, fatoora::capi::Environment env);
 
     void fatoora_CsrProperties_destroy(CsrProperties* self);
 
@@ -52,20 +53,20 @@ inline diplomat::result<std::unique_ptr<fatoora::CsrProperties>, std::unique_ptr
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::CsrProperties>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::CsrProperties>>(std::unique_ptr<fatoora::CsrProperties>(fatoora::CsrProperties::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::CsrProperties>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::CsrProperties>, std::unique_ptr<fatoora::BindingError>> fatoora::CsrProperties::from_properties_str(std::string_view properties) {
-    auto result = fatoora::capi::fatoora_CsrProperties_from_properties_str({properties.data(), properties.size()});
+inline diplomat::result<std::unique_ptr<fatoora::CsrProperties>, std::unique_ptr<fatoora::BindingError>> fatoora::CsrProperties::from_str(std::string_view properties) {
+    auto result = fatoora::capi::fatoora_CsrProperties_from_str({properties.data(), properties.size()});
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::CsrProperties>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::CsrProperties>>(std::unique_ptr<fatoora::CsrProperties>(fatoora::CsrProperties::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::CsrProperties>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::CsrProperties>, std::unique_ptr<fatoora::BindingError>> fatoora::CsrProperties::parse_csr_config_file(std::string_view path) {
-    auto result = fatoora::capi::fatoora_CsrProperties_parse_csr_config_file({path.data(), path.size()});
+inline diplomat::result<std::unique_ptr<fatoora::CsrProperties>, std::unique_ptr<fatoora::BindingError>> fatoora::CsrProperties::from_file(std::string_view path) {
+    auto result = fatoora::capi::fatoora_CsrProperties_from_file({path.data(), path.size()});
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::CsrProperties>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::CsrProperties>>(std::unique_ptr<fatoora::CsrProperties>(fatoora::CsrProperties::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::CsrProperties>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::Csr>, std::unique_ptr<fatoora::BindingError>> fatoora::CsrProperties::build(const fatoora::SigningKey& key, uint8_t env) const {
+inline diplomat::result<std::unique_ptr<fatoora::Csr>, std::unique_ptr<fatoora::BindingError>> fatoora::CsrProperties::build(const fatoora::SigningKey& key, fatoora::Environment env) const {
     auto result = fatoora::capi::fatoora_CsrProperties_build(this->AsFFI(),
         key.AsFFI(),
-        env);
+        env.AsFFI());
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Csr>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Csr>>(std::unique_ptr<fatoora::Csr>(fatoora::Csr::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Csr>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 

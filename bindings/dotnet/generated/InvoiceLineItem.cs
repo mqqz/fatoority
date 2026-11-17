@@ -57,128 +57,131 @@ public partial class InvoiceLineItem: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? ItemGrossPrice()
+    /// <exception cref="FfiException"></exception>
+    public decimal? ItemGrossPrice
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.InvoiceLineItem.ItemGrossPrice(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.InvoiceLineItem.ItemGrossPrice(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeDecimalOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? ItemPriceDiscount()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.InvoiceLineItem.ItemPriceDiscount(selfLease!.Ptr);
-                if (!result.IsOk)
+                finally
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease?.Release();
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? ItemPriceBaseQuantity()
+    /// <exception cref="FfiException"></exception>
+    public decimal? ItemPriceDiscount
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.InvoiceLineItem.ItemPriceBaseQuantity(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.InvoiceLineItem.ItemPriceDiscount(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeDecimalOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? ItemPriceBaseQuantityUnitCode()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.InvoiceLineItem.ItemPriceBaseQuantityUnitCode(selfLease!.Ptr);
-                if (!result.IsOk)
+                finally
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease?.Release();
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    public nuint AdjustmentsLen()
+    /// <exception cref="FfiException"></exception>
+    public decimal? ItemPriceBaseQuantity
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.InvoiceLineItem.AdjustmentsLen(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.InvoiceLineItem.ItemPriceBaseQuantity(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeDecimalOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
+    public string? ItemPriceBaseQuantityUnitCode
+    {
+        get
+        {
+            unsafe
+            {
+                BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.InvoiceLineItem.ItemPriceBaseQuantityUnitCode(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
+            }
+        }
+    }
+
+    public nuint AdjustmentsLen
+    {
+        get
+        {
+            unsafe
+            {
+                BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.InvoiceLineItem.AdjustmentsLen(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
+            }
+        }
+    }
+
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>Adjustment</c> allocated on Rust side.
     /// </returns>
@@ -193,7 +196,7 @@ public partial class InvoiceLineItem: IDisposable
                 var result = Raw.InvoiceLineItem.Adjustment(selfLease!.Ptr, index);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new Adjustment(result.Ok);
             }
@@ -204,8 +207,8 @@ public partial class InvoiceLineItem: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public bool AdjustmentIsCharge(nuint index)
+    /// <exception cref="FfiException"></exception>
+    public AdjustmentKind AdjustmentKind(nuint index)
     {
         unsafe
         {
@@ -213,10 +216,10 @@ public partial class InvoiceLineItem: IDisposable
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.InvoiceLineItem.AdjustmentIsCharge(selfLease!.Ptr, index);
+                var result = Raw.InvoiceLineItem.AdjustmentKind(selfLease!.Ptr, index);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return result.Ok;
             }
@@ -227,7 +230,7 @@ public partial class InvoiceLineItem: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>OtherId</c> allocated on Rust side.
     /// </returns>
@@ -242,7 +245,7 @@ public partial class InvoiceLineItem: IDisposable
                 var result = Raw.InvoiceLineItem.ItemSellerIdentifier(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return result.Ok == null ? null : new OtherId(result.Ok);
             }
@@ -253,7 +256,7 @@ public partial class InvoiceLineItem: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>OtherId</c> allocated on Rust side.
     /// </returns>
@@ -268,7 +271,7 @@ public partial class InvoiceLineItem: IDisposable
                 var result = Raw.InvoiceLineItem.ItemBuyerIdentifier(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return result.Ok == null ? null : new OtherId(result.Ok);
             }
@@ -279,7 +282,7 @@ public partial class InvoiceLineItem: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>OtherId</c> allocated on Rust side.
     /// </returns>
@@ -294,7 +297,7 @@ public partial class InvoiceLineItem: IDisposable
                 var result = Raw.InvoiceLineItem.ItemStandardIdentifier(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return result.Ok == null ? null : new OtherId(result.Ok);
             }
@@ -305,7 +308,7 @@ public partial class InvoiceLineItem: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>InvoiceLineItem</c> allocated on Rust side.
     /// </returns>
@@ -323,7 +326,7 @@ public partial class InvoiceLineItem: IDisposable
                 var result = Raw.InvoiceLineItem.WithDocumentReference(selfLease!.Ptr, referenceLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new InvoiceLineItem(result.Ok);
             }
@@ -335,7 +338,7 @@ public partial class InvoiceLineItem: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>InvoiceLineItem</c> allocated on Rust side.
     /// </returns>
@@ -353,7 +356,7 @@ public partial class InvoiceLineItem: IDisposable
                 var result = Raw.InvoiceLineItem.WithTaxSubtotal(selfLease!.Ptr, subtotalLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new InvoiceLineItem(result.Ok);
             }
@@ -365,24 +368,27 @@ public partial class InvoiceLineItem: IDisposable
         }
     }
 
-    public nuint DocumentReferencesLen()
+    public nuint DocumentReferencesLen
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.InvoiceLineItem.DocumentReferencesLen(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.InvoiceLineItem.DocumentReferencesLen(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>OriginalInvoiceRef</c> allocated on Rust side.
     /// </returns>
@@ -397,7 +403,7 @@ public partial class InvoiceLineItem: IDisposable
                 var result = Raw.InvoiceLineItem.DocumentReference(selfLease!.Ptr, index);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new OriginalInvoiceRef(result.Ok);
             }
@@ -408,24 +414,27 @@ public partial class InvoiceLineItem: IDisposable
         }
     }
 
-    public nuint TaxSubtotalsLen()
+    public nuint TaxSubtotalsLen
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.InvoiceLineItem.TaxSubtotalsLen(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.InvoiceLineItem.TaxSubtotalsLen(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>VatBreakdown</c> allocated on Rust side.
     /// </returns>
@@ -440,7 +449,7 @@ public partial class InvoiceLineItem: IDisposable
                 var result = Raw.InvoiceLineItem.TaxSubtotal(selfLease!.Ptr, index);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new VatBreakdown(result.Ok);
             }
@@ -451,24 +460,21 @@ public partial class InvoiceLineItem: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>InvoiceLineItem</c> allocated on Rust side.
     /// </returns>
-    public static InvoiceLineItem New(string description, string quantity, string unitCode, string unitPrice, string rate, byte category)
+    public static InvoiceLineItem Create(string description, decimal quantity, string unitCode, decimal unitPrice, decimal rate, VatCategory category)
     {
         unsafe
         {
             if (description == null) throw new ArgumentNullException(nameof(description));
-            if (quantity == null) throw new ArgumentNullException(nameof(quantity));
             if (unitCode == null) throw new ArgumentNullException(nameof(unitCode));
-            if (unitPrice == null) throw new ArgumentNullException(nameof(unitPrice));
-            if (rate == null) throw new ArgumentNullException(nameof(rate));
             byte[] descriptionBytes = Diplomat.Utf8.Clone(description);
-            byte[] quantityBytes = Diplomat.Utf8.Clone(quantity);
+            byte[] quantityBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(quantity));
             byte[] unitCodeBytes = Diplomat.Utf8.Clone(unitCode);
-            byte[] unitPriceBytes = Diplomat.Utf8.Clone(unitPrice);
-            byte[] rateBytes = Diplomat.Utf8.Clone(rate);
+            byte[] unitPriceBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(unitPrice));
+            byte[] rateBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(rate));
             fixed (byte* descriptionPtr = descriptionBytes)
             fixed (byte* quantityPtr = quantityBytes)
             fixed (byte* unitCodePtr = unitCodeBytes)
@@ -478,14 +484,17 @@ public partial class InvoiceLineItem: IDisposable
                 var result = Raw.InvoiceLineItem.New(new DiplomatSliceU8 { Ptr = descriptionPtr, Len = (nuint)descriptionBytes.Length }, new DiplomatSliceU8 { Ptr = quantityPtr, Len = (nuint)quantityBytes.Length }, new DiplomatSliceU8 { Ptr = unitCodePtr, Len = (nuint)unitCodeBytes.Length }, new DiplomatSliceU8 { Ptr = unitPricePtr, Len = (nuint)unitPriceBytes.Length }, new DiplomatSliceU8 { Ptr = ratePtr, Len = (nuint)rateBytes.Length }, category);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new InvoiceLineItem(result.Ok);
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    [Obsolete("Use Create; New will be removed in 0.7.")]
+    public static InvoiceLineItem New(string description, decimal quantity, string unitCode, decimal unitPrice, decimal rate, VatCategory category) => Create(description, quantity, unitCode, unitPrice, rate, category);
+
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>InvoiceLineItem</c> allocated on Rust side.
     /// </returns>
@@ -506,7 +515,7 @@ public partial class InvoiceLineItem: IDisposable
                     var result = Raw.InvoiceLineItem.WithMetadata(selfLease!.Ptr, id == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = idPtr, Len = (nuint)idBytes!.Length }), exemptionLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return new InvoiceLineItem(result.Ok);
                 }
@@ -519,33 +528,33 @@ public partial class InvoiceLineItem: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? Id()
+    /// <exception cref="FfiException"></exception>
+    public string? Id
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.InvoiceLineItem.Id(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.InvoiceLineItem.Id(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>TaxExemption</c> allocated on Rust side.
     /// </returns>
@@ -560,7 +569,7 @@ public partial class InvoiceLineItem: IDisposable
                 var result = Raw.InvoiceLineItem.Exemption(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new TaxExemption(result.Ok);
             }
@@ -571,287 +580,320 @@ public partial class InvoiceLineItem: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string Description()
+    /// <exception cref="FfiException"></exception>
+    public string Description
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
                 try
                 {
-                    var result = Raw.InvoiceLineItem.Description(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.InvoiceLineItem.Description(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string UnitCode()
+    /// <exception cref="FfiException"></exception>
+    public string UnitCode
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
                 try
                 {
-                    var result = Raw.InvoiceLineItem.UnitCode(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.InvoiceLineItem.UnitCode(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string Quantity()
+    /// <exception cref="FfiException"></exception>
+    public decimal Quantity
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
                 try
                 {
-                    var result = Raw.InvoiceLineItem.Quantity(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.InvoiceLineItem.Quantity(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string UnitPrice()
+    /// <exception cref="FfiException"></exception>
+    public decimal UnitPrice
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
                 try
                 {
-                    var result = Raw.InvoiceLineItem.UnitPrice(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.InvoiceLineItem.UnitPrice(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string TotalAmount()
+    /// <exception cref="FfiException"></exception>
+    public decimal TotalAmount
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
                 try
                 {
-                    var result = Raw.InvoiceLineItem.TotalAmount(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.InvoiceLineItem.TotalAmount(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string VatRate()
+    /// <exception cref="FfiException"></exception>
+    public decimal VatRate
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
                 try
                 {
-                    var result = Raw.InvoiceLineItem.VatRate(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.InvoiceLineItem.VatRate(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string VatAmount()
+    /// <exception cref="FfiException"></exception>
+    public decimal VatAmount
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
                 try
                 {
-                    var result = Raw.InvoiceLineItem.VatAmount(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.InvoiceLineItem.VatAmount(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
             }
-            finally
+        }
+    }
+
+    public bool HasVatRate
+    {
+        get
+        {
+            unsafe
             {
-                selfLease?.Release();
+                BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.InvoiceLineItem.HasVatRate(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    public bool HasVatRate()
+    public bool HasTaxTotal
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.InvoiceLineItem.HasVatRate(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.InvoiceLineItem.HasTaxTotal(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    public bool HasTaxTotal()
+    public bool HasGrossAmount
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.InvoiceLineItem.HasTaxTotal(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.InvoiceLineItem.HasGrossAmount(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    public bool HasGrossAmount()
+    public VatCategory VatCategory
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.InvoiceLineItem.HasGrossAmount(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    public byte VatCategory()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.InvoiceLineItem.VatCategory(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.InvoiceLineItem>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.InvoiceLineItem.VatCategory(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }

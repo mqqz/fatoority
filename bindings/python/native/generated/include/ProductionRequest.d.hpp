@@ -15,8 +15,8 @@ namespace capi { struct BindingError; }
 class BindingError;
 namespace capi { struct Bytes; }
 class Bytes;
-namespace capi { struct CsidProduction; }
-class CsidProduction;
+namespace capi { struct ProductionCsid; }
+class ProductionCsid;
 } // namespace _native
 
 
@@ -48,7 +48,7 @@ public:
 
   inline _native::diplomat::result<std::unique_ptr<_native::Bytes>, std::unique_ptr<_native::BindingError>> body() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::CsidProduction>, std::unique_ptr<_native::BindingError>> decode(uint16_t status, _native::diplomat::span<const uint8_t> body) const;
+  inline _native::diplomat::result<std::unique_ptr<_native::ProductionCsid>, std::unique_ptr<_native::BindingError>> decode(uint16_t status, _native::diplomat::span<const uint8_t> body) const;
 
     inline const _native::capi::ProductionRequest* AsFFI() const;
     inline _native::capi::ProductionRequest* AsFFI();

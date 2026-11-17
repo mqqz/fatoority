@@ -1,6 +1,6 @@
 //! XML signing and signature helpers.
 use crate::invoice::QrPayload;
-use crate::invoice::{FinalizedInvoice, SignedInvoice};
+use crate::invoice::{FinalizedInvoice, InvoiceHash, InvoiceTimestamp, SignedInvoice};
 use base64ct::{Base64, Encoding};
 use k256::ecdsa::{Signature, SigningKey};
 #[cfg(test)]
@@ -56,20 +56,20 @@ impl SigningError {
 /// Signed properties extracted from or applied to an invoice.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SignedProperties {
-    pub(crate) invoice_hash: String,
+    pub(crate) invoice_hash: InvoiceHash,
     pub(crate) signature: String,
     pub(crate) public_key: String,
     pub(crate) issuer: String,
     pub(crate) serial: String,
     pub(crate) cert_hash: String,
     pub(crate) signed_props_hash: String,
-    pub(crate) signing_time: String,
+    pub(crate) signing_time: InvoiceTimestamp,
     pub(crate) zatca_key_signature: Option<String>,
 }
 
 impl SignedProperties {
     /// Base64 SHA-256 digest of the canonicalized invoice.
-    pub fn invoice_hash(&self) -> &str {
+    pub fn invoice_hash(&self) -> &InvoiceHash {
         &self.invoice_hash
     }
 
@@ -108,8 +108,12 @@ impl SignedProperties {
         &self.signed_props_hash
     }
 
-    /// XAdES signing time (`YYYY-MM-DDTHH:MM:SS`).
-    pub fn signing_time(&self) -> &str {
+    /// XAdES signing time (`xades:SigningTime`).
+    ///
+    /// The XML element carries no zone suffix (`YYYY-MM-DDTHH:MM:SS`); the returned
+    /// [`InvoiceTimestamp`] holds the same clock value in its canonical
+    /// `YYYY-MM-DDTHH:MM:SSZ` form.
+    pub fn signing_time(&self) -> &InvoiceTimestamp {
         &self.signing_time
     }
 
@@ -121,14 +125,17 @@ impl SignedProperties {
         zatca_key_signature: Option<&str>,
     ) -> Self {
         Self {
-            invoice_hash: invoice_hash.to_string(),
+            invoice_hash: InvoiceHash::parse(invoice_hash).expect("test invoice hash"),
             signature: signature.to_string(),
             public_key: public_key.to_string(),
             issuer: "test".to_string(),
             serial: "test".to_string(),
             cert_hash: "test".to_string(),
             signed_props_hash: "test".to_string(),
-            signing_time: chrono::Utc::now().format("%Y-%m-%dT%H:%M:%S").to_string(),
+            signing_time: InvoiceTimestamp::parse_xades(
+                &chrono::Utc::now().format("%Y-%m-%dT%H:%M:%S").to_string(),
+            )
+            .expect("formatted signing time"),
             zatca_key_signature: zatca_key_signature.map(|s| s.to_string()),
         }
     }
@@ -236,11 +243,14 @@ impl InvoiceSigner {
         }
         let signing_time = fragments::signing_time(xml, &certificate)
             .map_err(|e| SigningError::InvalidInput(crate::Diagnostic::new(e)))?;
+        let signing_time = InvoiceTimestamp::parse_xades(&signing_time)?;
         let invoice_hash = invoice_hash_base64_from_xml(xml)?;
         let signature = sign_hash(&self.private_key, &invoice_hash)?;
+        let invoice_hash = InvoiceHash::parse(invoice_hash)?;
         let cert_hash = certificate_hash_base64(&self.csid)?;
         let (issuer, serial) = issuer_and_serial(&self.csid)?;
-        let properties = signed_properties_xml(&signing_time, &cert_hash, &issuer, &serial);
+        let properties =
+            signed_properties_xml(signing_time.xades_str(), &cert_hash, &issuer, &serial);
         let signing = SignedProperties {
             invoice_hash,
             signature,
@@ -255,7 +265,7 @@ impl InvoiceSigner {
         let applicability = super::qr::QrApplicability::from_xml(xml)?;
         let qr = QrPayload::from_xml(xml)?
             .with_signing_parts(
-                Some(signing.invoice_hash()),
+                Some(signing.invoice_hash().as_str()),
                 Some(signing.signature()),
                 Some(signing.public_key()),
                 if applicability == super::qr::QrApplicability::Simplified {
@@ -267,7 +277,7 @@ impl InvoiceSigner {
             .encode()?;
         let fragments = fragments::render(
             &properties,
-            signing.invoice_hash(),
+            signing.invoice_hash().as_str(),
             signing.signature(),
             &signing.signed_props_hash,
             &Base64::encode_string(&certificate),
@@ -311,18 +321,12 @@ pub(crate) fn invoice_hash_base64_from_xml(xml: &str) -> Result<String, SigningE
 
 /// Compute the base64 invoice hash from an XML string.
 ///
-/// # Examples
-/// ```rust,no_run
-/// use fatoora_core::invoice::sign::invoice_hash_base64_from_xml_str;
-///
-/// let xml = std::fs::read_to_string("invoice.xml")?;
-/// let hash = invoice_hash_base64_from_xml_str(&xml)?;
-/// # let _ = hash;
-/// # Ok::<(), Box<dyn std::error::Error>>(())
-/// ```
-///
 /// # Errors
 /// Returns [`SigningError`] if parsing, canonicalization, or hashing fails.
+#[deprecated(
+    since = "0.6.0",
+    note = "use `fatoora_core::invoice::hash_xml` instead"
+)]
 pub fn invoice_hash_base64_from_xml_str(xml: &str) -> Result<String, SigningError> {
     invoice_hash_base64_from_xml(xml)
 }
@@ -546,14 +550,14 @@ mod tests {
             for changed in [
                 output.replace(signing.signature(), "AQ=="),
                 output.replace(signing.cert_hash(), "AQ=="),
-                output.replace(signing.signing_time(), "2000-01-01T00:00:00"),
+                output.replace(signing.signing_time().xades_str(), "2000-01-01T00:00:00"),
                 output.replace("URI=\"#xadesSignedProperties\"", "URI=\"#other\""),
                 output.replace(&qr, "AQFB"),
             ] {
                 assert_ne!(changed, output);
                 assert_eq!(
                     invoice_hash_base64_from_xml(&changed).unwrap(),
-                    signing.invoice_hash()
+                    signing.invoice_hash().as_str()
                 );
                 assert!(
                     super::super::validation::integrity::signing_postcondition(

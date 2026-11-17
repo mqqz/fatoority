@@ -4,10 +4,10 @@
 // Forward declarations for binding add functions
 namespace _native{
   
+void add_ComplianceCsid_binding(nb::module_);
 void add_ComplianceRequest_binding(nb::module_);
-void add_CsidCompliance_binding(nb::module_);
-void add_CsidProduction_binding(nb::module_);
 void add_InvoiceRequest_binding(nb::module_);
+void add_ProductionCsid_binding(nb::module_);
 void add_ProductionRequest_binding(nb::module_);
 void add_ValidationMessage_binding(nb::module_);
 void add_ValidationResponse_binding(nb::module_);
@@ -20,7 +20,7 @@ void add_BytesList_binding(nb::module_);
 void add_Config_binding(nb::module_);
 void add_Csr_binding(nb::module_);
 void add_CsrProperties_binding(nb::module_);
-void add_Signer_binding(nb::module_);
+void add_InvoiceSigner_binding(nb::module_);
 void add_SigningKey_binding(nb::module_);
 void add_Address_binding(nb::module_);
 void add_Adjustment_binding(nb::module_);
@@ -41,7 +41,27 @@ void add_TaxExemption_binding(nb::module_);
 void add_VatBreakdown_binding(nb::module_);
 void add_VatId_binding(nb::module_);
 void add_Xml_binding(nb::module_);
+void add_ZatcaFinding_binding(nb::module_);
+void add_ZatcaRuleSource_binding(nb::module_);
+void add_ZatcaStageReport_binding(nb::module_);
+void add_ZatcaValidationReport_binding(nb::module_);
+void add_ClearanceMode_binding(nb::module_);
+void add_ClearanceStatus_binding(nb::module_);
 void add_InvoiceOutcome_binding(nb::module_);
+void add_MessageType_binding(nb::module_);
+void add_ReportingStatus_binding(nb::module_);
+void add_ValidationStatus_binding(nb::module_);
+void add_Environment_binding(nb::module_);
+void add_AdjustmentKind_binding(nb::module_);
+void add_InvoiceFlag_binding(nb::module_);
+void add_InvoiceSubType_binding(nb::module_);
+void add_InvoiceTypeKind_binding(nb::module_);
+void add_VatCategory_binding(nb::module_);
+void add_Severity_binding(nb::module_);
+void add_ValidationLayer_binding(nb::module_);
+void add_ValidationLocationKind_binding(nb::module_);
+void add_ZatcaStage_binding(nb::module_);
+void add_ZatcaStageStatus_binding(nb::module_);
 }
 
 // Nanobind does not usually support custom deleters, so we're shimming some of the machinery to add that ability.
@@ -97,10 +117,10 @@ NB_MODULE(_native, mod)
         .def("__str__", [](const std::monostate &)
              { return ""; });// Module declarations
     // Add bindings
+    add_ComplianceCsid_binding(mod);
     add_ComplianceRequest_binding(mod);
-    add_CsidCompliance_binding(mod);
-    add_CsidProduction_binding(mod);
     add_InvoiceRequest_binding(mod);
+    add_ProductionCsid_binding(mod);
     add_ProductionRequest_binding(mod);
     add_ValidationMessage_binding(mod);
     add_ValidationResponse_binding(mod);
@@ -113,7 +133,7 @@ NB_MODULE(_native, mod)
     add_Config_binding(mod);
     add_Csr_binding(mod);
     add_CsrProperties_binding(mod);
-    add_Signer_binding(mod);
+    add_InvoiceSigner_binding(mod);
     add_SigningKey_binding(mod);
     add_Address_binding(mod);
     add_Adjustment_binding(mod);
@@ -134,7 +154,27 @@ NB_MODULE(_native, mod)
     add_VatBreakdown_binding(mod);
     add_VatId_binding(mod);
     add_Xml_binding(mod);
+    add_ZatcaFinding_binding(mod);
+    add_ZatcaRuleSource_binding(mod);
+    add_ZatcaStageReport_binding(mod);
+    add_ZatcaValidationReport_binding(mod);
+    add_ClearanceMode_binding(mod);
+    add_ClearanceStatus_binding(mod);
     add_InvoiceOutcome_binding(mod);
+    add_MessageType_binding(mod);
+    add_ReportingStatus_binding(mod);
+    add_ValidationStatus_binding(mod);
+    add_Environment_binding(mod);
+    add_AdjustmentKind_binding(mod);
+    add_InvoiceFlag_binding(mod);
+    add_InvoiceSubType_binding(mod);
+    add_InvoiceTypeKind_binding(mod);
+    add_VatCategory_binding(mod);
+    add_Severity_binding(mod);
+    add_ValidationLayer_binding(mod);
+    add_ValidationLocationKind_binding(mod);
+    add_ZatcaStage_binding(mod);
+    add_ZatcaStageStatus_binding(mod);
     
     
 }

@@ -24,17 +24,17 @@ internal partial struct InvoiceBuilder
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_add_note", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError AddNote(InvoiceBuilder* handle, DiplomatOptionSliceU8 language, DiplomatSliceU8 value);
 
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_add_document_adjustment", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultVoidBindingError AddDocumentAdjustment(InvoiceBuilder* handle, [MarshalAs(UnmanagedType.U1)] bool charge, Adjustment* value, byte category, DiplomatSliceU8 rate, TaxExemption* exemption);
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_add_allowance", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError AddAllowance(InvoiceBuilder* handle, Adjustment* value, VatCategory category, DiplomatSliceU8 rate, TaxExemption* exemption);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_add_charge", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError AddCharge(InvoiceBuilder* handle, Adjustment* value, VatCategory category, DiplomatSliceU8 rate, TaxExemption* exemption);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_buyer_without_address", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError SetBuyerWithoutAddress(InvoiceBuilder* handle, DiplomatSliceU8 name, DiplomatOptionSliceU8 vatId, DiplomatOptionSliceU8 otherId, DiplomatOptionSliceU8 scheme);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_new_with_reference", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultInvoiceBuilderBindingError NewWithReference(byte kind, byte subtype, OriginalInvoiceRef* reference, DiplomatSliceU8 reason);
-
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_note_without_language", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultVoidBindingError SetNoteWithoutLanguage(InvoiceBuilder* handle, DiplomatSliceU8 value);
+    internal static unsafe extern DiplomatResultInvoiceBuilderBindingError NewWithReference(InvoiceTypeKind kind, InvoiceSubType subtype, OriginalInvoiceRef* reference, DiplomatSliceU8 reason);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_payment_instruction", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError SetPaymentInstruction(InvoiceBuilder* handle, DiplomatSliceU8 instruction);
@@ -51,8 +51,8 @@ internal partial struct InvoiceBuilder
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_tax_currency", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError SetTaxCurrency(InvoiceBuilder* handle, DiplomatSliceU8 currency, DiplomatSliceU8 amount);
 
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_tax_exemption", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultVoidBindingError SetTaxExemption(InvoiceBuilder* handle, byte category, DiplomatSliceU8 rate, TaxExemption* exemption);
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_add_tax_exemption", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError AddTaxExemption(InvoiceBuilder* handle, VatCategory category, DiplomatSliceU8 rate, TaxExemption* exemption);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_add_adjustment", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError AddAdjustment(InvoiceBuilder* handle, AllowanceCharge* adjustment);
@@ -61,7 +61,7 @@ internal partial struct InvoiceBuilder
     internal static unsafe extern DiplomatResultVoidBindingError AddItem(InvoiceBuilder* handle, InvoiceLineItem* item);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_new", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultInvoiceBuilderBindingError New(byte kind, byte subtype, DiplomatOptionSliceU8 originalId, DiplomatOptionSliceU8 originalUuid, DiplomatOptionSliceU8 originalDate, DiplomatOptionSliceU8 reason);
+    internal static unsafe extern DiplomatResultInvoiceBuilderBindingError New(InvoiceTypeKind kind, InvoiceSubType subtype, DiplomatOptionSliceU8 originalId, DiplomatOptionSliceU8 originalUuid, DiplomatOptionSliceU8 originalDate, DiplomatOptionSliceU8 reason);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_add_billing_reference", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError AddBillingReference(InvoiceBuilder* handle, OriginalInvoiceRef* value);
@@ -87,32 +87,14 @@ internal partial struct InvoiceBuilder
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_previous_invoice_hash", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError SetPreviousInvoiceHash(InvoiceBuilder* handle, DiplomatSliceU8 value);
 
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_payment_means_code", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultVoidBindingError SetPaymentMeansCode(InvoiceBuilder* handle, DiplomatSliceU8 value);
-
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_allowance_reason", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultVoidBindingError AllowanceReason(InvoiceBuilder* handle, DiplomatSliceU8 value);
-
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_invoice_level_charge", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultVoidBindingError InvoiceLevelCharge(InvoiceBuilder* handle, DiplomatSliceU8 value);
-
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_invoice_level_discount", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultVoidBindingError InvoiceLevelDiscount(InvoiceBuilder* handle, DiplomatSliceU8 value);
-
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_invoice_counter", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError SetInvoiceCounter(InvoiceBuilder* handle, ulong value);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_vat_category", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultVoidBindingError SetVatCategory(InvoiceBuilder* handle, byte value);
+    internal static unsafe extern DiplomatResultVoidBindingError SetVatCategory(InvoiceBuilder* handle, VatCategory value);
 
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_flags", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultVoidBindingError Flags(InvoiceBuilder* handle, byte value);
-
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_note", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultVoidBindingError SetNote(InvoiceBuilder* handle, DiplomatSliceU8 language, DiplomatSliceU8 value);
-
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_allowance", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultVoidBindingError SetAllowance(InvoiceBuilder* handle, DiplomatSliceU8 reason, DiplomatSliceU8 amount);
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_flags", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError SetFlags(InvoiceBuilder* handle, byte value);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_set_seller", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError SetSeller(InvoiceBuilder* handle, DiplomatSliceU8 name, Address* address, DiplomatSliceU8 vatId, DiplomatOptionSliceU8 otherId, DiplomatOptionSliceU8 scheme);
@@ -121,7 +103,7 @@ internal partial struct InvoiceBuilder
     internal static unsafe extern DiplomatResultVoidBindingError SetBuyer(InvoiceBuilder* handle, DiplomatSliceU8 name, Address* address, DiplomatOptionSliceU8 vatId, DiplomatOptionSliceU8 otherId, DiplomatOptionSliceU8 scheme);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_add_line_item", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultVoidBindingError AddLineItem(InvoiceBuilder* handle, DiplomatSliceU8 description, DiplomatSliceU8 quantity, DiplomatSliceU8 unitCode, DiplomatSliceU8 unitPrice, DiplomatSliceU8 vatRate, byte category);
+    internal static unsafe extern DiplomatResultVoidBindingError AddLineItem(InvoiceBuilder* handle, DiplomatSliceU8 description, DiplomatSliceU8 quantity, DiplomatSliceU8 unitCode, DiplomatSliceU8 unitPrice, DiplomatSliceU8 vatRate, VatCategory category);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceBuilder_build", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultFinalizedInvoiceBindingError Build(InvoiceBuilder* handle);

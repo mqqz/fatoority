@@ -19,6 +19,7 @@ namespace capi { struct CsrProperties; }
 class CsrProperties;
 namespace capi { struct SigningKey; }
 class SigningKey;
+class Environment;
 } // namespace _native
 
 
@@ -35,11 +36,17 @@ public:
 
   inline static _native::diplomat::result<std::unique_ptr<_native::CsrProperties>, std::unique_ptr<_native::BindingError>> new_(std::string_view common_name, std::string_view serial_number, std::string_view organization_identifier, std::string_view organization_unit_name, std::string_view organization_name, std::string_view country_name, std::string_view invoice_type, std::string_view location_address, std::string_view industry_business_category);
 
-  inline static _native::diplomat::result<std::unique_ptr<_native::CsrProperties>, std::unique_ptr<_native::BindingError>> from_properties_str(std::string_view properties);
+  /**
+   * Parse `csr.*` properties text, mirroring core `CsrProperties::from_str`.
+   */
+  inline static _native::diplomat::result<std::unique_ptr<_native::CsrProperties>, std::unique_ptr<_native::BindingError>> from_str(std::string_view properties);
 
-  inline static _native::diplomat::result<std::unique_ptr<_native::CsrProperties>, std::unique_ptr<_native::BindingError>> parse_csr_config_file(std::string_view path);
+  /**
+   * Load a `csr.*` properties file, mirroring core `CsrProperties::from_file`.
+   */
+  inline static _native::diplomat::result<std::unique_ptr<_native::CsrProperties>, std::unique_ptr<_native::BindingError>> from_file(std::string_view path);
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Csr>, std::unique_ptr<_native::BindingError>> build(const _native::SigningKey& key, uint8_t env) const;
+  inline _native::diplomat::result<std::unique_ptr<_native::Csr>, std::unique_ptr<_native::BindingError>> build(const _native::SigningKey& key, _native::Environment env) const;
 
     inline const _native::capi::CsrProperties* AsFFI() const;
     inline _native::capi::CsrProperties* AsFFI();

@@ -21,7 +21,7 @@ with tempfile.TemporaryDirectory(prefix='fatoora-js-package-') as temporary:
     tarball = directory / package['filename']
     with tarfile.open(tarball) as archive:
         names = set(archive.getnames())
-        for required in ('fatoora_ffi.wasm', 'index.mjs', 'index.d.mts', 'generated/index.mjs', 'LICENSE-MIT', 'LICENSE-APACHE', 'THIRD_PARTY_NOTICES.md', 'licenses/zatca/LICENSE-LGPL-3.0.txt', 'licenses/zatca/LICENSE-GPL-3.0.txt', 'licenses/zatca/NOTICE.md'):
+        for required in ('fatoora_ffi.wasm', 'index.mjs', 'index.d.mts', 'errors.mjs', 'errors.d.mts', 'patch.mjs', 'members.mjs', 'raw.mjs', 'raw.d.mts', 'generated/index.mjs', 'generated/index.d.mts', 'LICENSE-MIT', 'LICENSE-APACHE', 'THIRD_PARTY_NOTICES.md', 'licenses/zatca/LICENSE-LGPL-3.0.txt', 'licenses/zatca/LICENSE-GPL-3.0.txt', 'licenses/zatca/NOTICE.md'):
             assert f'package/{required}' in names, required
         manifest = json.load(archive.extractfile('package/package.json'))
         assert manifest['license'] == 'SEE LICENSE IN THIRD_PARTY_NOTICES.md'
@@ -36,12 +36,16 @@ with tempfile.TemporaryDirectory(prefix='fatoora-js-package-') as temporary:
     subprocess.run(['npm', 'install', '--offline', '--ignore-scripts', '--no-audit', '--no-fund', str(tarball)], cwd=directory, check=True, env=env)
     subprocess.run(['node', '--input-type=module', '-e', '''
 import assert from 'node:assert/strict';
-import { SigningKey, Config, CsidCompliance, ZatcaClient } from 'fatoority';
+import { SigningKey, Config, ComplianceCsid, Environment, ZatcaClient, Address, InvalidInputError } from 'fatoority';
+import * as raw from 'fatoority/raw';
 assert.match(SigningKey.generate().toPem(), /BEGIN PRIVATE KEY/);
-const client = new ZatcaClient(Config.new_(0), {fetch: async () => new Response(JSON.stringify({requestID: 2, binarySecurityToken: 'new', secret: 'secret'}))});
-const response = await client.postCcsidForPcsid(CsidCompliance.create(0, '1', 'token', 'secret'));
-assert.equal(response.binarySecurityToken(), 'new');
-console.log('Installed npm package: WASM loading, key generation and API response decoding passed');
+assert.equal(raw.Config, Config);
+assert.throws(() => Address.create('SA', '\\0', '', '', '', null, null, null), InvalidInputError);
+assert.throws(() => raw.Address.new_('SA', '\\0', '', '', '', null, null, null), InvalidInputError);
+const client = new ZatcaClient(Config.create(Environment.NonProduction), {fetch: async () => new Response(JSON.stringify({requestID: 2, binarySecurityToken: 'new', secret: 'secret'}))});
+const response = await client.requestProductionCsid(ComplianceCsid.create(Environment.NonProduction, '1', 'token', 'secret'));
+assert.equal(response.binarySecurityToken, 'new');
+console.log('Installed npm package: WASM loading, key generation, typed errors and API response decoding passed');
 '''], cwd=directory, check=True, env=env)
     if args.output_dir is not None:
         args.output_dir.mkdir(parents=True, exist_ok=True)

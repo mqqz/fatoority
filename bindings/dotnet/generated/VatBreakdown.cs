@@ -57,28 +57,31 @@ public partial class VatBreakdown: IDisposable
         }
     }
 
-    public bool HasVatRate()
+    public bool HasVatRate
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.VatBreakdown>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.VatBreakdown.HasVatRate(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.VatBreakdown>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.VatBreakdown.HasVatRate(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>VatBreakdown</c> allocated on Rust side.
     /// </returns>
-    public VatBreakdown WithoutVatRate()
+    public VatBreakdown OmitVatRate()
     {
         unsafe
         {
@@ -86,10 +89,10 @@ public partial class VatBreakdown: IDisposable
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.VatBreakdown.WithoutVatRate(selfLease!.Ptr);
+                var result = Raw.VatBreakdown.OmitVatRate(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new VatBreakdown(result.Ok);
             }
@@ -100,21 +103,21 @@ public partial class VatBreakdown: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    [Obsolete("Use OmitVatRate; WithoutVatRate will be removed in 0.7.")]
+    public VatBreakdown WithoutVatRate() => OmitVatRate();
+
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>VatBreakdown</c> allocated on Rust side.
     /// </returns>
-    public static VatBreakdown New(byte category, string rate, string taxableAmount, string taxAmount, TaxExemption exemption)
+    public static VatBreakdown Create(VatCategory category, decimal rate, decimal taxableAmount, decimal taxAmount, TaxExemption exemption)
     {
         unsafe
         {
-            if (rate == null) throw new ArgumentNullException(nameof(rate));
-            if (taxableAmount == null) throw new ArgumentNullException(nameof(taxableAmount));
-            if (taxAmount == null) throw new ArgumentNullException(nameof(taxAmount));
             if (exemption == null) throw new ArgumentNullException(nameof(exemption));
-            byte[] rateBytes = Diplomat.Utf8.Clone(rate);
-            byte[] taxableAmountBytes = Diplomat.Utf8.Clone(taxableAmount);
-            byte[] taxAmountBytes = Diplomat.Utf8.Clone(taxAmount);
+            byte[] rateBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(rate));
+            byte[] taxableAmountBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(taxableAmount));
+            byte[] taxAmountBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(taxAmount));
             BorrowLease<Raw.TaxExemption>? exemptionLease = null;
             try
             {
@@ -126,7 +129,7 @@ public partial class VatBreakdown: IDisposable
                     var result = Raw.VatBreakdown.New(category, new DiplomatSliceU8 { Ptr = ratePtr, Len = (nuint)rateBytes.Length }, new DiplomatSliceU8 { Ptr = taxableAmountPtr, Len = (nuint)taxableAmountBytes.Length }, new DiplomatSliceU8 { Ptr = taxAmountPtr, Len = (nuint)taxAmountBytes.Length }, exemptionLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return new VatBreakdown(result.Ok);
                 }
@@ -138,117 +141,132 @@ public partial class VatBreakdown: IDisposable
         }
     }
 
-    public byte Category()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.VatBreakdown>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.VatBreakdown.Category(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
+    [Obsolete("Use Create; New will be removed in 0.7.")]
+    public static VatBreakdown New(VatCategory category, decimal rate, decimal taxableAmount, decimal taxAmount, TaxExemption exemption) => Create(category, rate, taxableAmount, taxAmount, exemption);
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string Rate()
+    public VatCategory Category
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.VatBreakdown>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.VatBreakdown>? selfLease = null;
                 try
                 {
-                    var result = Raw.VatBreakdown.Rate(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
-                    {
-                        throw new BindingErrorException(new BindingError(result.Err));
-                    }
-                    return writeable.ToUnicode();
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.VatBreakdown.Category(selfLease!.Ptr);
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string TaxableAmount()
+    /// <exception cref="FfiException"></exception>
+    public decimal Rate
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.VatBreakdown>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.VatBreakdown>? selfLease = null;
                 try
                 {
-                    var result = Raw.VatBreakdown.TaxableAmount(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.VatBreakdown.Rate(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string TaxAmount()
+    /// <exception cref="FfiException"></exception>
+    public decimal TaxableAmount
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.VatBreakdown>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.VatBreakdown>? selfLease = null;
                 try
                 {
-                    var result = Raw.VatBreakdown.TaxAmount(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.VatBreakdown.TaxableAmount(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
+    public decimal TaxAmount
+    {
+        get
+        {
+            unsafe
+            {
+                BorrowLease<Raw.VatBreakdown>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
+                    {
+                        var result = Raw.VatBreakdown.TaxAmount(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
+                    }
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
+            }
+        }
+    }
+
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>TaxExemption</c> allocated on Rust side.
     /// </returns>
@@ -263,7 +281,7 @@ public partial class VatBreakdown: IDisposable
                 var result = Raw.VatBreakdown.Exemption(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new TaxExemption(result.Ok);
             }

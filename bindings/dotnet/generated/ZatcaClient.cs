@@ -57,7 +57,7 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>ZatcaClient</c> allocated on Rust side.
     /// </returns>
@@ -70,10 +70,10 @@ public partial class ZatcaClient: IDisposable
             try
             {
                 configLease = config._diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ZatcaClient.Create(configLease!.Ptr);
+                var result = Raw.ZatcaClient.New(configLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new ZatcaClient(result.Ok);
             }
@@ -84,11 +84,38 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
-    /// A <c>CsidCompliance</c> allocated on Rust side.
+    /// A <c>ZatcaClient</c> allocated on Rust side.
     /// </returns>
-    public CsidCompliance PostCsrForCcsid(Csr csr, string otp)
+    public static ZatcaClient WithTimeout(Config config, uint timeoutMs)
+    {
+        unsafe
+        {
+            if (config == null) throw new ArgumentNullException(nameof(config));
+            BorrowLease<Raw.Config>? configLease = null;
+            try
+            {
+                configLease = config._diplomatHandle.Lease(BorrowKind.Shared);
+                var result = Raw.ZatcaClient.WithTimeout(configLease!.Ptr, timeoutMs);
+                if (!result.IsOk)
+                {
+                    throw FfiException.FromNative(new BindingError(result.Err));
+                }
+                return new ZatcaClient(result.Ok);
+            }
+            finally
+            {
+                configLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="FfiException"></exception>
+    /// <returns>
+    /// A <c>ComplianceCsid</c> allocated on Rust side.
+    /// </returns>
+    public ComplianceCsid RequestComplianceCsid(Csr csr, string otp)
     {
         unsafe
         {
@@ -103,12 +130,12 @@ public partial class ZatcaClient: IDisposable
                 csrLease = csr._diplomatHandle.Lease(BorrowKind.Shared);
                 fixed (byte* otpPtr = otpBytes)
                 {
-                    var result = Raw.ZatcaClient.PostCsrForCcsid(selfLease!.Ptr, csrLease!.Ptr, new DiplomatSliceU8 { Ptr = otpPtr, Len = (nuint)otpBytes.Length });
+                    var result = Raw.ZatcaClient.RequestComplianceCsid(selfLease!.Ptr, csrLease!.Ptr, new DiplomatSliceU8 { Ptr = otpPtr, Len = (nuint)otpBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
-                    return new CsidCompliance(result.Ok);
+                    return new ComplianceCsid(result.Ok);
                 }
             }
             finally
@@ -119,27 +146,27 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
-    /// A <c>CsidProduction</c> allocated on Rust side.
+    /// A <c>ProductionCsid</c> allocated on Rust side.
     /// </returns>
-    public CsidProduction PostCcsidForPcsid(CsidCompliance credentials)
+    public ProductionCsid RequestProductionCsid(ComplianceCsid credentials)
     {
         unsafe
         {
             if (credentials == null) throw new ArgumentNullException(nameof(credentials));
             BorrowLease<Raw.ZatcaClient>? selfLease = null;
-            BorrowLease<Raw.CsidCompliance>? credentialsLease = null;
+            BorrowLease<Raw.ComplianceCsid>? credentialsLease = null;
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 credentialsLease = credentials._diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ZatcaClient.PostCcsidForPcsid(selfLease!.Ptr, credentialsLease!.Ptr);
+                var result = Raw.ZatcaClient.RequestProductionCsid(selfLease!.Ptr, credentialsLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
-                return new CsidProduction(result.Ok);
+                return new ProductionCsid(result.Ok);
             }
             finally
             {
@@ -149,11 +176,11 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
-    /// A <c>CsidProduction</c> allocated on Rust side.
+    /// A <c>ProductionCsid</c> allocated on Rust side.
     /// </returns>
-    public CsidProduction RenewCsid(CsidProduction credentials, Csr csr, string otp, string? acceptLanguage)
+    public ProductionCsid RenewCsid(ProductionCsid credentials, Csr csr, string otp, string? acceptLanguage)
     {
         unsafe
         {
@@ -163,7 +190,7 @@ public partial class ZatcaClient: IDisposable
             byte[] otpBytes = Diplomat.Utf8.Clone(otp);
             byte[]? acceptLanguageBytes = acceptLanguage == null ? null : Diplomat.Utf8.Clone(acceptLanguage);
             BorrowLease<Raw.ZatcaClient>? selfLease = null;
-            BorrowLease<Raw.CsidProduction>? credentialsLease = null;
+            BorrowLease<Raw.ProductionCsid>? credentialsLease = null;
             BorrowLease<Raw.Csr>? csrLease = null;
             try
             {
@@ -176,9 +203,9 @@ public partial class ZatcaClient: IDisposable
                     var result = Raw.ZatcaClient.RenewCsid(selfLease!.Ptr, credentialsLease!.Ptr, csrLease!.Ptr, new DiplomatSliceU8 { Ptr = otpPtr, Len = (nuint)otpBytes.Length }, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
-                    return new CsidProduction(result.Ok);
+                    return new ProductionCsid(result.Ok);
                 }
             }
             finally
@@ -190,11 +217,11 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>ValidationResponse</c> allocated on Rust side.
     /// </returns>
-    public ValidationResponse CheckInvoiceCompliance(SignedInvoice invoice, CsidCompliance credentials)
+    public ValidationResponse CheckInvoiceCompliance(SignedInvoice invoice, ComplianceCsid credentials)
     {
         unsafe
         {
@@ -202,7 +229,7 @@ public partial class ZatcaClient: IDisposable
             if (credentials == null) throw new ArgumentNullException(nameof(credentials));
             BorrowLease<Raw.ZatcaClient>? selfLease = null;
             BorrowLease<Raw.SignedInvoice>? invoiceLease = null;
-            BorrowLease<Raw.CsidCompliance>? credentialsLease = null;
+            BorrowLease<Raw.ComplianceCsid>? credentialsLease = null;
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
@@ -211,7 +238,7 @@ public partial class ZatcaClient: IDisposable
                 var result = Raw.ZatcaClient.CheckInvoiceCompliance(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new ValidationResponse(result.Ok);
             }
@@ -224,11 +251,11 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>ValidationResponse</c> allocated on Rust side.
     /// </returns>
-    public ValidationResponse ReportSimplifiedInvoice(SignedInvoice invoice, CsidProduction credentials, bool clearanceStatus, string? acceptLanguage)
+    public ValidationResponse ReportSimplifiedInvoice(SignedInvoice invoice, ProductionCsid credentials, ClearanceMode clearanceMode, string? acceptLanguage)
     {
         unsafe
         {
@@ -237,7 +264,7 @@ public partial class ZatcaClient: IDisposable
             byte[]? acceptLanguageBytes = acceptLanguage == null ? null : Diplomat.Utf8.Clone(acceptLanguage);
             BorrowLease<Raw.ZatcaClient>? selfLease = null;
             BorrowLease<Raw.SignedInvoice>? invoiceLease = null;
-            BorrowLease<Raw.CsidProduction>? credentialsLease = null;
+            BorrowLease<Raw.ProductionCsid>? credentialsLease = null;
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
@@ -245,10 +272,10 @@ public partial class ZatcaClient: IDisposable
                 credentialsLease = credentials._diplomatHandle.Lease(BorrowKind.Shared);
                 fixed (byte* acceptLanguagePtr = acceptLanguageBytes)
                 {
-                    var result = Raw.ZatcaClient.ReportSimplifiedInvoice(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr, clearanceStatus, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
+                    var result = Raw.ZatcaClient.ReportSimplifiedInvoice(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr, clearanceMode, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return new ValidationResponse(result.Ok);
                 }
@@ -262,11 +289,11 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>ValidationResponse</c> allocated on Rust side.
     /// </returns>
-    public ValidationResponse ClearStandardInvoice(SignedInvoice invoice, CsidProduction credentials, bool clearanceStatus, string? acceptLanguage)
+    public ValidationResponse ClearStandardInvoice(SignedInvoice invoice, ProductionCsid credentials, ClearanceMode clearanceMode, string? acceptLanguage)
     {
         unsafe
         {
@@ -275,7 +302,7 @@ public partial class ZatcaClient: IDisposable
             byte[]? acceptLanguageBytes = acceptLanguage == null ? null : Diplomat.Utf8.Clone(acceptLanguage);
             BorrowLease<Raw.ZatcaClient>? selfLease = null;
             BorrowLease<Raw.SignedInvoice>? invoiceLease = null;
-            BorrowLease<Raw.CsidProduction>? credentialsLease = null;
+            BorrowLease<Raw.ProductionCsid>? credentialsLease = null;
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
@@ -283,10 +310,10 @@ public partial class ZatcaClient: IDisposable
                 credentialsLease = credentials._diplomatHandle.Lease(BorrowKind.Shared);
                 fixed (byte* acceptLanguagePtr = acceptLanguageBytes)
                 {
-                    var result = Raw.ZatcaClient.ClearStandardInvoice(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr, clearanceStatus, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
+                    var result = Raw.ZatcaClient.ClearStandardInvoice(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr, clearanceMode, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return new ValidationResponse(result.Ok);
                 }
@@ -300,11 +327,11 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>ComplianceRequest</c> allocated on Rust side.
     /// </returns>
-    public ComplianceRequest PreparePostCsrForCcsid(Csr csr, string otp)
+    public ComplianceRequest PrepareRequestComplianceCsid(Csr csr, string otp)
     {
         unsafe
         {
@@ -319,10 +346,10 @@ public partial class ZatcaClient: IDisposable
                 csrLease = csr._diplomatHandle.Lease(BorrowKind.Shared);
                 fixed (byte* otpPtr = otpBytes)
                 {
-                    var result = Raw.ZatcaClient.PreparePostCsrForCcsid(selfLease!.Ptr, csrLease!.Ptr, new DiplomatSliceU8 { Ptr = otpPtr, Len = (nuint)otpBytes.Length });
+                    var result = Raw.ZatcaClient.PrepareRequestComplianceCsid(selfLease!.Ptr, csrLease!.Ptr, new DiplomatSliceU8 { Ptr = otpPtr, Len = (nuint)otpBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return new ComplianceRequest(result.Ok);
                 }
@@ -335,25 +362,25 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>ProductionRequest</c> allocated on Rust side.
     /// </returns>
-    public ProductionRequest PreparePostCcsidForPcsid(CsidCompliance credentials)
+    public ProductionRequest PrepareRequestProductionCsid(ComplianceCsid credentials)
     {
         unsafe
         {
             if (credentials == null) throw new ArgumentNullException(nameof(credentials));
             BorrowLease<Raw.ZatcaClient>? selfLease = null;
-            BorrowLease<Raw.CsidCompliance>? credentialsLease = null;
+            BorrowLease<Raw.ComplianceCsid>? credentialsLease = null;
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 credentialsLease = credentials._diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ZatcaClient.PreparePostCcsidForPcsid(selfLease!.Ptr, credentialsLease!.Ptr);
+                var result = Raw.ZatcaClient.PrepareRequestProductionCsid(selfLease!.Ptr, credentialsLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new ProductionRequest(result.Ok);
             }
@@ -365,11 +392,11 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>ProductionRequest</c> allocated on Rust side.
     /// </returns>
-    public ProductionRequest PrepareRenewCsid(CsidProduction credentials, Csr csr, string otp, string? acceptLanguage)
+    public ProductionRequest PrepareRenewCsid(ProductionCsid credentials, Csr csr, string otp, string? acceptLanguage)
     {
         unsafe
         {
@@ -379,7 +406,7 @@ public partial class ZatcaClient: IDisposable
             byte[] otpBytes = Diplomat.Utf8.Clone(otp);
             byte[]? acceptLanguageBytes = acceptLanguage == null ? null : Diplomat.Utf8.Clone(acceptLanguage);
             BorrowLease<Raw.ZatcaClient>? selfLease = null;
-            BorrowLease<Raw.CsidProduction>? credentialsLease = null;
+            BorrowLease<Raw.ProductionCsid>? credentialsLease = null;
             BorrowLease<Raw.Csr>? csrLease = null;
             try
             {
@@ -392,7 +419,7 @@ public partial class ZatcaClient: IDisposable
                     var result = Raw.ZatcaClient.PrepareRenewCsid(selfLease!.Ptr, credentialsLease!.Ptr, csrLease!.Ptr, new DiplomatSliceU8 { Ptr = otpPtr, Len = (nuint)otpBytes.Length }, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return new ProductionRequest(result.Ok);
                 }
@@ -406,11 +433,11 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>InvoiceRequest</c> allocated on Rust side.
     /// </returns>
-    public InvoiceRequest PrepareCheckInvoiceCompliance(SignedInvoice invoice, CsidCompliance credentials)
+    public InvoiceRequest PrepareCheckInvoiceCompliance(SignedInvoice invoice, ComplianceCsid credentials)
     {
         unsafe
         {
@@ -418,7 +445,7 @@ public partial class ZatcaClient: IDisposable
             if (credentials == null) throw new ArgumentNullException(nameof(credentials));
             BorrowLease<Raw.ZatcaClient>? selfLease = null;
             BorrowLease<Raw.SignedInvoice>? invoiceLease = null;
-            BorrowLease<Raw.CsidCompliance>? credentialsLease = null;
+            BorrowLease<Raw.ComplianceCsid>? credentialsLease = null;
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
@@ -427,7 +454,7 @@ public partial class ZatcaClient: IDisposable
                 var result = Raw.ZatcaClient.PrepareCheckInvoiceCompliance(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new InvoiceRequest(result.Ok);
             }
@@ -440,11 +467,11 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>InvoiceRequest</c> allocated on Rust side.
     /// </returns>
-    public InvoiceRequest PrepareReportSimplifiedInvoice(SignedInvoice invoice, CsidProduction credentials, bool clearanceStatus, string? acceptLanguage)
+    public InvoiceRequest PrepareReportSimplifiedInvoice(SignedInvoice invoice, ProductionCsid credentials, ClearanceMode clearanceMode, string? acceptLanguage)
     {
         unsafe
         {
@@ -453,7 +480,7 @@ public partial class ZatcaClient: IDisposable
             byte[]? acceptLanguageBytes = acceptLanguage == null ? null : Diplomat.Utf8.Clone(acceptLanguage);
             BorrowLease<Raw.ZatcaClient>? selfLease = null;
             BorrowLease<Raw.SignedInvoice>? invoiceLease = null;
-            BorrowLease<Raw.CsidProduction>? credentialsLease = null;
+            BorrowLease<Raw.ProductionCsid>? credentialsLease = null;
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
@@ -461,10 +488,10 @@ public partial class ZatcaClient: IDisposable
                 credentialsLease = credentials._diplomatHandle.Lease(BorrowKind.Shared);
                 fixed (byte* acceptLanguagePtr = acceptLanguageBytes)
                 {
-                    var result = Raw.ZatcaClient.PrepareReportSimplifiedInvoice(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr, clearanceStatus, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
+                    var result = Raw.ZatcaClient.PrepareReportSimplifiedInvoice(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr, clearanceMode, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return new InvoiceRequest(result.Ok);
                 }
@@ -478,11 +505,11 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>InvoiceRequest</c> allocated on Rust side.
     /// </returns>
-    public InvoiceRequest PrepareClearStandardInvoice(SignedInvoice invoice, CsidProduction credentials, bool clearanceStatus, string? acceptLanguage)
+    public InvoiceRequest PrepareClearStandardInvoice(SignedInvoice invoice, ProductionCsid credentials, ClearanceMode clearanceMode, string? acceptLanguage)
     {
         unsafe
         {
@@ -491,7 +518,7 @@ public partial class ZatcaClient: IDisposable
             byte[]? acceptLanguageBytes = acceptLanguage == null ? null : Diplomat.Utf8.Clone(acceptLanguage);
             BorrowLease<Raw.ZatcaClient>? selfLease = null;
             BorrowLease<Raw.SignedInvoice>? invoiceLease = null;
-            BorrowLease<Raw.CsidProduction>? credentialsLease = null;
+            BorrowLease<Raw.ProductionCsid>? credentialsLease = null;
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
@@ -499,10 +526,10 @@ public partial class ZatcaClient: IDisposable
                 credentialsLease = credentials._diplomatHandle.Lease(BorrowKind.Shared);
                 fixed (byte* acceptLanguagePtr = acceptLanguageBytes)
                 {
-                    var result = Raw.ZatcaClient.PrepareClearStandardInvoice(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr, clearanceStatus, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
+                    var result = Raw.ZatcaClient.PrepareClearStandardInvoice(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr, clearanceMode, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return new InvoiceRequest(result.Ok);
                 }

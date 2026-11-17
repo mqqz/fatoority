@@ -1,6 +1,134 @@
 use super::{ValidationResponse, ZatcaError};
 use base64ct::{Base64, Encoding};
-use std::fmt;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::{convert::Infallible, fmt, str::FromStr};
+
+/// Defines a non-exhaustive wire-status enum with an `Other(String)` fallback.
+macro_rules! wire_enum {
+    (
+        $(#[$meta:meta])*
+        $name:ident {
+            $( $(#[$vmeta:meta])* $variant:ident => $wire:literal, )+
+        }
+    ) => {
+        $(#[$meta])*
+        ///
+        /// Parsing is infallible and exact (case-sensitive): an unrecognized value
+        /// becomes `Other` holding the raw text, so [`as_str`](Self::as_str),
+        /// [`Display`](std::fmt::Display) and serde serialization reproduce the
+        /// value exactly as ZATCA sent it. Parsing never puts a value that has a
+        /// named variant into `Other`.
+        #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+        #[non_exhaustive]
+        pub enum $name {
+            $(
+                $(#[$vmeta])*
+                ///
+                #[doc = concat!("Wire value `", $wire, "`.")]
+                $variant,
+            )+
+            /// A value not recognized by this version of the crate, preserved verbatim.
+            Other(String),
+        }
+
+        impl $name {
+            /// Returns the value as it appears on the wire.
+            pub fn as_str(&self) -> &str {
+                match self {
+                    $(Self::$variant => $wire,)+
+                    Self::Other(value) => value,
+                }
+            }
+        }
+
+        impl fmt::Display for $name {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                f.write_str(self.as_str())
+            }
+        }
+
+        impl From<&str> for $name {
+            fn from(value: &str) -> Self {
+                match value {
+                    $($wire => Self::$variant,)+
+                    other => Self::Other(other.to_owned()),
+                }
+            }
+        }
+
+        impl From<String> for $name {
+            fn from(value: String) -> Self {
+                match value.as_str() {
+                    $($wire => Self::$variant,)+
+                    _ => Self::Other(value),
+                }
+            }
+        }
+
+        impl FromStr for $name {
+            type Err = Infallible;
+            fn from_str(value: &str) -> Result<Self, Self::Err> {
+                Ok(Self::from(value))
+            }
+        }
+
+        impl Serialize for $name {
+            fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+                serializer.serialize_str(self.as_str())
+            }
+        }
+
+        impl<'de> Deserialize<'de> for $name {
+            fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+                String::deserialize(deserializer).map(Self::from)
+            }
+        }
+    };
+}
+
+wire_enum! {
+    /// `reportingStatus` of a reporting response.
+    ReportingStatus {
+        /// The simplified invoice was reported.
+        Reported => "REPORTED",
+        /// The simplified invoice was rejected and not reported.
+        NotReported => "NOT_REPORTED",
+    }
+}
+
+wire_enum! {
+    /// `clearanceStatus` of a clearance response.
+    ClearanceStatus {
+        /// The standard invoice was cleared.
+        Cleared => "CLEARED",
+        /// The standard invoice was rejected and not cleared.
+        NotCleared => "NOT_CLEARED",
+    }
+}
+
+wire_enum! {
+    /// Overall `validationResults.status`, or the `status` of one validation message.
+    ValidationStatus {
+        /// Validation passed.
+        Pass => "PASS",
+        /// Validation passed with warnings.
+        Warning => "WARNING",
+        /// Validation failed.
+        Error => "ERROR",
+    }
+}
+
+wire_enum! {
+    /// The `type` of a validation message.
+    MessageType {
+        /// An informational message.
+        Info => "INFO",
+        /// A warning message.
+        Warning => "WARNING",
+        /// An error message.
+        Error => "ERROR",
+    }
+}
 
 /// Outcome of the invoked operation. Compliance acceptance only means the check passed.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -61,25 +189,29 @@ impl ValidationResponse {
     /// Classify only the invoked endpoint; unfamiliar or contradictory evidence is unknown.
     /// Warnings alone do not prevent acceptance. A compliance pass is not production acceptance.
     pub fn outcome(&self) -> InvoiceOutcome {
-        let (value, accepted, rejected) = match self.operation {
-            Some(InvoiceOperation::Reporting) => {
-                (self.reporting_status(), "REPORTED", "NOT_REPORTED")
-            }
-            Some(InvoiceOperation::Clearance) => {
-                (self.clearance_status(), "CLEARED", "NOT_CLEARED")
-            }
-            Some(InvoiceOperation::Compliance) => {
-                (self.validation_results().status(), "PASS", "ERROR")
-            }
-            None => return InvoiceOutcome::Unknown,
+        let verdict = match self.operation {
+            Some(InvoiceOperation::Reporting) => match self.reporting_status() {
+                Some(ReportingStatus::Reported) => Some(true),
+                Some(ReportingStatus::NotReported) => Some(false),
+                _ => None,
+            },
+            Some(InvoiceOperation::Clearance) => match self.clearance_status() {
+                Some(ClearanceStatus::Cleared) => Some(true),
+                Some(ClearanceStatus::NotCleared) => Some(false),
+                _ => None,
+            },
+            Some(InvoiceOperation::Compliance) => match self.validation_results().status() {
+                Some(ValidationStatus::Pass | ValidationStatus::Warning) => Some(true),
+                Some(ValidationStatus::Error) => Some(false),
+                _ => None,
+            },
+            None => None,
         };
-        if value == Some(rejected) {
+        if verdict == Some(false) {
             return InvoiceOutcome::Rejected;
         }
-        let accepted = value == Some(accepted)
-            || (self.operation == Some(InvoiceOperation::Compliance) && value == Some("WARNING"));
-        if accepted {
-            if self.validation_results().status() == Some("ERROR")
+        if verdict == Some(true) {
+            if self.validation_results().status() == Some(&ValidationStatus::Error)
                 || !self.validation_results().error_messages().is_empty()
             {
                 return InvoiceOutcome::Unknown;

@@ -1,43 +1,37 @@
 use fatoora_core::invoice::CountryCode;
 use fatoora_core::invoice::{
-    Address, InvoiceBuilder, InvoiceError, InvoiceField, InvoiceSubType, InvoiceType, LineItem,
-    ValidationKind, VatCategory,
+    Address, CurrencyCode, InvoiceBuilder, InvoiceError, InvoiceField, InvoiceHash, InvoiceSubType,
+    InvoiceTimestamp, InvoiceType, InvoiceUuid, LineItem, ValidationKind, VatCategory, VatId,
 };
 use fatoora_core::invoice::{OtherId, Party, SellerRole};
 
 fn dummy_seller() -> Party<SellerRole> {
     Party::<SellerRole>::new(
-        "Acme Inc".into(),
-        Address {
-            province: None,
-            country_code: CountryCode::parse("SAU").expect("country code"),
-            city: "Riyadh".into(),
-            street: "King Fahd".into(),
-            additional_street: None,
-            building_number: "1234".into(),
-            additional_number: Some("5678".into()),
-            postal_code: "12222".into(),
-            district: Some("Olaya".into()),
-        },
-        "399999999900003",
+        "Acme Inc",
+        Address::new(
+            CountryCode::parse("SAU").expect("country code"),
+            "Riyadh",
+            "King Fahd",
+            "1234",
+            "12222",
+        )
+        .with_additional_number("5678")
+        .with_district("Olaya"),
+        "399999999900003".parse().unwrap(),
         Some(OtherId::with_scheme("7003339333", "CRN")),
     )
-    .expect("valid seller")
 }
 
 #[test]
 fn build_reports_missing_required_fields() {
-    let issue_datetime = "2024-01-01T12:30:00Z";
     let mut builder = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified));
     builder = builder
         .id("  ")
-        .uuid("")
-        .issue_datetime(issue_datetime)
-        .currency("SAR")
-        .previous_invoice_hash("")
+        .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+        .currency("SAR".parse().unwrap())
         .invoice_counter(0)
         .seller(dummy_seller())
-        .payment_means_code("   ")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("   "))
         .vat_category(VatCategory::Standard);
 
     let err = builder.build().expect_err("expected validation error");
@@ -51,6 +45,37 @@ fn build_reports_missing_required_fields() {
     assert!(fields.contains(&InvoiceField::PreviousInvoiceHash));
     assert!(fields.contains(&InvoiceField::PaymentMeansCode));
     assert!(fields.contains(&InvoiceField::LineItems));
+    assert!(validation.issues().iter().any(|issue| {
+        issue.field() == InvoiceField::Uuid && issue.kind() == ValidationKind::Missing
+    }));
+}
+
+#[test]
+fn typed_builder_inputs_reject_invalid_strings_at_parse_time() {
+    assert!(matches!(
+        InvoiceTimestamp::parse("2024-01-01 12:30:00"),
+        Err(InvoiceError::InvalidTimestamp(_))
+    ));
+    assert!(matches!(
+        "2024-02-30T00:00:00Z".parse::<InvoiceTimestamp>(),
+        Err(InvoiceError::InvalidTimestamp(_))
+    ));
+    assert!(matches!(
+        CurrencyCode::try_from("ZZZ"),
+        Err(InvoiceError::InvalidCurrencyCode(_))
+    ));
+    assert!(matches!(
+        InvoiceUuid::parse(" "),
+        Err(InvoiceError::Validation(_))
+    ));
+    assert!(matches!(
+        InvoiceHash::parse(""),
+        Err(InvoiceError::Validation(_))
+    ));
+    assert!(matches!(
+        VatId::parse("  "),
+        Err(InvoiceError::InvalidVatFormat)
+    ));
 }
 
 #[test]
@@ -64,13 +89,13 @@ fn build_reports_invalid_line_items() {
     let mut builder = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified));
     builder = builder
         .id("INV-1")
-        .uuid("uuid-1")
-        .issue_datetime(issue_datetime)
-        .currency("SAR")
-        .previous_invoice_hash("hash")
+        .uuid("uuid-1".parse().unwrap())
+        .issue_datetime(issue_datetime.parse().unwrap())
+        .currency("SAR".parse().unwrap())
+        .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(0)
         .seller(dummy_seller())
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
         .line_item(line_item);
 
@@ -151,11 +176,7 @@ fn credit_note_missing_required_fields_reports_issues() {
         .payment_instruction("reason");
     builder = builder
         .id(" ")
-        .uuid("")
-        .issue_datetime("")
-        .currency("")
-        .previous_invoice_hash("")
-        .payment_means_code(" ")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new(" "))
         .vat_category(VatCategory::Standard);
 
     let err = builder.build().expect_err("expected validation error");
@@ -189,13 +210,13 @@ fn credit_note_invalid_line_item_reports_issues() {
         .payment_instruction("reason");
     builder = builder
         .id("CR-1")
-        .uuid("uuid-cr-1")
-        .issue_datetime(issue_datetime)
-        .currency("SAR")
-        .previous_invoice_hash("hash")
+        .uuid("uuid-cr-1".parse().unwrap())
+        .issue_datetime(issue_datetime.parse().unwrap())
+        .currency("SAR".parse().unwrap())
+        .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(0)
         .seller(dummy_seller())
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
         .line_item(line_item);
 

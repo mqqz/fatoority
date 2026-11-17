@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include "BindingError.hpp"
 #include "Csr.hpp"
+#include "Environment.hpp"
 #include "SigningKey.hpp"
 #include "diplomat_runtime.hpp"
 
@@ -24,14 +25,14 @@ namespace capi {
     typedef struct fatoora_CsrProperties_new_result {union {_native::capi::CsrProperties* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_CsrProperties_new_result;
     fatoora_CsrProperties_new_result fatoora_CsrProperties_new(_native::diplomat::capi::DiplomatStringView common_name, _native::diplomat::capi::DiplomatStringView serial_number, _native::diplomat::capi::DiplomatStringView organization_identifier, _native::diplomat::capi::DiplomatStringView organization_unit_name, _native::diplomat::capi::DiplomatStringView organization_name, _native::diplomat::capi::DiplomatStringView country_name, _native::diplomat::capi::DiplomatStringView invoice_type, _native::diplomat::capi::DiplomatStringView location_address, _native::diplomat::capi::DiplomatStringView industry_business_category);
 
-    typedef struct fatoora_CsrProperties_from_properties_str_result {union {_native::capi::CsrProperties* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_CsrProperties_from_properties_str_result;
-    fatoora_CsrProperties_from_properties_str_result fatoora_CsrProperties_from_properties_str(_native::diplomat::capi::DiplomatStringView properties);
+    typedef struct fatoora_CsrProperties_from_str_result {union {_native::capi::CsrProperties* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_CsrProperties_from_str_result;
+    fatoora_CsrProperties_from_str_result fatoora_CsrProperties_from_str(_native::diplomat::capi::DiplomatStringView properties);
 
-    typedef struct fatoora_CsrProperties_parse_csr_config_file_result {union {_native::capi::CsrProperties* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_CsrProperties_parse_csr_config_file_result;
-    fatoora_CsrProperties_parse_csr_config_file_result fatoora_CsrProperties_parse_csr_config_file(_native::diplomat::capi::DiplomatStringView path);
+    typedef struct fatoora_CsrProperties_from_file_result {union {_native::capi::CsrProperties* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_CsrProperties_from_file_result;
+    fatoora_CsrProperties_from_file_result fatoora_CsrProperties_from_file(_native::diplomat::capi::DiplomatStringView path);
 
     typedef struct fatoora_CsrProperties_build_result {union {_native::capi::Csr* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_CsrProperties_build_result;
-    fatoora_CsrProperties_build_result fatoora_CsrProperties_build(const _native::capi::CsrProperties* self, const _native::capi::SigningKey* key, uint8_t env);
+    fatoora_CsrProperties_build_result fatoora_CsrProperties_build(const _native::capi::CsrProperties* self, const _native::capi::SigningKey* key, _native::capi::Environment env);
 
     void fatoora_CsrProperties_destroy(CsrProperties* self);
 
@@ -52,20 +53,20 @@ inline _native::diplomat::result<std::unique_ptr<_native::CsrProperties>, std::u
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::CsrProperties>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::CsrProperties>>(std::unique_ptr<_native::CsrProperties>(_native::CsrProperties::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::CsrProperties>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::CsrProperties>, std::unique_ptr<_native::BindingError>> _native::CsrProperties::from_properties_str(std::string_view properties) {
-    auto result = _native::capi::fatoora_CsrProperties_from_properties_str({properties.data(), properties.size()});
+inline _native::diplomat::result<std::unique_ptr<_native::CsrProperties>, std::unique_ptr<_native::BindingError>> _native::CsrProperties::from_str(std::string_view properties) {
+    auto result = _native::capi::fatoora_CsrProperties_from_str({properties.data(), properties.size()});
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::CsrProperties>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::CsrProperties>>(std::unique_ptr<_native::CsrProperties>(_native::CsrProperties::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::CsrProperties>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::CsrProperties>, std::unique_ptr<_native::BindingError>> _native::CsrProperties::parse_csr_config_file(std::string_view path) {
-    auto result = _native::capi::fatoora_CsrProperties_parse_csr_config_file({path.data(), path.size()});
+inline _native::diplomat::result<std::unique_ptr<_native::CsrProperties>, std::unique_ptr<_native::BindingError>> _native::CsrProperties::from_file(std::string_view path) {
+    auto result = _native::capi::fatoora_CsrProperties_from_file({path.data(), path.size()});
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::CsrProperties>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::CsrProperties>>(std::unique_ptr<_native::CsrProperties>(_native::CsrProperties::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::CsrProperties>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Csr>, std::unique_ptr<_native::BindingError>> _native::CsrProperties::build(const _native::SigningKey& key, uint8_t env) const {
+inline _native::diplomat::result<std::unique_ptr<_native::Csr>, std::unique_ptr<_native::BindingError>> _native::CsrProperties::build(const _native::SigningKey& key, _native::Environment env) const {
     auto result = _native::capi::fatoora_CsrProperties_build(this->AsFFI(),
         key.AsFFI(),
-        env);
+        env.AsFFI());
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Csr>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Csr>>(std::unique_ptr<_native::Csr>(_native::Csr::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Csr>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 

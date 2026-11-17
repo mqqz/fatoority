@@ -1,10 +1,9 @@
 use std::error::Error as StdError;
 
 use fatoora_core::api::{ServerErrorResponse, ZatcaError};
-use fatoora_core::config::Config;
 use fatoora_core::csr::{Csr, CsrError, CsrProperties};
 use fatoora_core::invoice::sign::SigningError;
-use fatoora_core::invoice::validation::{XmlValidationError, validate_xml_invoice_from_str};
+use fatoora_core::invoice::validation::{Validator, XmlValidationError};
 use fatoora_core::invoice::{InvoiceError, InvoiceField, LineItem, VatCategory};
 use fatoora_core::{Decimal, Diagnostic, Error, ErrorKind};
 use serde_json::{Value, json};
@@ -65,7 +64,8 @@ fn nested_signing_error_retains_validation_details() {
 
 #[test]
 fn schema_diagnostics_survive_conversion() {
-    let error: Error = validate_xml_invoice_from_str("<Invoice/>\n", &Config::default())
+    let error: Error = Validator::new()
+        .validate_xml("<Invoice/>\n")
         .unwrap_err()
         .into();
     assert_eq!(error.kind(), ErrorKind::Validation);
@@ -90,7 +90,7 @@ fn csr_backend_sources_are_owned_diagnostics() {
     assert!(!diagnostic.message().is_empty());
     assert!(diagnostic.source().is_none());
 
-    let error = CsrProperties::from_properties_str("name=\\uZZZZ").unwrap_err();
+    let error = "name=\\uZZZZ".parse::<CsrProperties>().unwrap_err();
     let CsrError::PropertiesRead { source, .. } = error else {
         panic!("expected properties parse failure");
     };
@@ -183,6 +183,7 @@ fn incomplete_builder_reports_every_missing_field_to_bindings() {
 }
 
 #[test]
+#[allow(deprecated)] // covers the deprecated aggregate setters' field checks
 fn invalid_imported_line_reports_zero_based_locations_and_numeric_ranges() {
     use fatoora_core::invoice::validation::{ValidationLocation, ValidationReport};
     use fatoora_core::invoice::{InvoiceBuilder, InvoiceSubType, InvoiceType};
@@ -201,8 +202,6 @@ fn invalid_imported_line_reports_zero_based_locations_and_numeric_ranges() {
     }))
     .unwrap();
     let original = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified))
-        .issue_datetime("not-a-date")
-        .currency("invalid")
         .invoice_level_discount(decimal("-1"))
         .invoice_level_charge(decimal("0.001"))
         .line_item(good)
@@ -222,8 +221,8 @@ fn invalid_imported_line_reports_zero_based_locations_and_numeric_ranges() {
         ("line_items[1].vat_amount", "FIELD_OUT_OF_RANGE"),
         ("invoice_level_discount", "FIELD_OUT_OF_RANGE"),
         ("invoice_level_charge", "FIELD_OUT_OF_RANGE"),
-        ("issue_datetime", "FIELD_INVALID_FORMAT"),
-        ("currency", "FIELD_INVALID_FORMAT"),
+        ("issue_datetime", "FIELD_REQUIRED"),
+        ("currency", "FIELD_REQUIRED"),
     ] {
         assert!(
             report.issues.iter().any(|finding| finding.code == code

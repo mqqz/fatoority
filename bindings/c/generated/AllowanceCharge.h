@@ -7,9 +7,11 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
+#include "AdjustmentKind.d.h"
 #include "BindingError.d.h"
 #include "TaxExemption.d.h"
 #include "Text.d.h"
+#include "VatCategory.d.h"
 
 #include "AllowanceCharge.d.h"
 
@@ -20,8 +22,8 @@
 
 bool fatoora_AllowanceCharge_has_vat_rate(const AllowanceCharge* self);
 
-typedef struct fatoora_AllowanceCharge_without_vat_rate_result {union {AllowanceCharge* ok; BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_without_vat_rate_result;
-fatoora_AllowanceCharge_without_vat_rate_result fatoora_AllowanceCharge_without_vat_rate(const AllowanceCharge* self);
+typedef struct fatoora_AllowanceCharge_omit_vat_rate_result {union {AllowanceCharge* ok; BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_omit_vat_rate_result;
+fatoora_AllowanceCharge_omit_vat_rate_result fatoora_AllowanceCharge_omit_vat_rate(const AllowanceCharge* self);
 
 typedef struct fatoora_AllowanceCharge_with_percentage_result {union {AllowanceCharge* ok; BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_with_percentage_result;
 fatoora_AllowanceCharge_with_percentage_result fatoora_AllowanceCharge_with_percentage(const AllowanceCharge* self, DiplomatStringView base, DiplomatStringView percent);
@@ -33,9 +35,9 @@ typedef struct fatoora_AllowanceCharge_percentage_result {union {Text* ok; Bindi
 fatoora_AllowanceCharge_percentage_result fatoora_AllowanceCharge_percentage(const AllowanceCharge* self);
 
 typedef struct fatoora_AllowanceCharge_new_result {union {AllowanceCharge* ok; BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_new_result;
-fatoora_AllowanceCharge_new_result fatoora_AllowanceCharge_new(bool charge, DiplomatStringView amount, OptionStringView reason, OptionStringView reason_code, uint8_t category, DiplomatStringView rate, const TaxExemption* exemption);
+fatoora_AllowanceCharge_new_result fatoora_AllowanceCharge_new(AdjustmentKind kind, DiplomatStringView amount, OptionStringView reason, OptionStringView reason_code, VatCategory category, DiplomatStringView rate, const TaxExemption* exemption);
 
-bool fatoora_AllowanceCharge_is_charge(const AllowanceCharge* self);
+AdjustmentKind fatoora_AllowanceCharge_kind(const AllowanceCharge* self);
 
 typedef struct fatoora_AllowanceCharge_amount_result {union { BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_amount_result;
 fatoora_AllowanceCharge_amount_result fatoora_AllowanceCharge_amount(const AllowanceCharge* self, DiplomatWrite* write);
@@ -43,7 +45,7 @@ fatoora_AllowanceCharge_amount_result fatoora_AllowanceCharge_amount(const Allow
 typedef struct fatoora_AllowanceCharge_rate_result {union { BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_rate_result;
 fatoora_AllowanceCharge_rate_result fatoora_AllowanceCharge_rate(const AllowanceCharge* self, DiplomatWrite* write);
 
-uint8_t fatoora_AllowanceCharge_category(const AllowanceCharge* self);
+VatCategory fatoora_AllowanceCharge_category(const AllowanceCharge* self);
 
 typedef struct fatoora_AllowanceCharge_with_tax_category_count_result {union {AllowanceCharge* ok; BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_with_tax_category_count_result;
 fatoora_AllowanceCharge_with_tax_category_count_result fatoora_AllowanceCharge_with_tax_category_count(const AllowanceCharge* self, size_t count);

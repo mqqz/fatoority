@@ -4,7 +4,7 @@ const SEED: &str =
 fn options() -> ZatcaValidationOptions {
     ZatcaValidationOptions {
         evaluated_at: Some("2026-09-23T12:00:00+03:00".parse().unwrap()),
-        previous_invoice_hash: Some(SEED.into()),
+        previous_invoice_hash: Some(SEED.parse().unwrap()),
     }
 }
 const STANDARD: &str =
@@ -17,7 +17,7 @@ fn complete_pipeline_returns_warnings_sources_sites_and_explicit_applicability()
         (STANDARD, ZatcaStageStatus::NotApplicable),
         (SIMPLIFIED, ZatcaStageStatus::Completed),
     ] {
-        let report = validate_zatca_invoice_from_str(xml, &Config::default(), &options()).unwrap();
+        let report = Validator::new().validate_zatca(xml, &options()).unwrap();
         assert!(report.is_valid(), "{report:#?}");
         assert_eq!(report.stages[1].evaluated_assertions.len(), 105);
         assert_eq!(report.stages[2].evaluated_assertions.len(), 152);
@@ -51,8 +51,9 @@ fn complete_pipeline_returns_warnings_sources_sites_and_explicit_applicability()
 }
 #[test]
 fn schema_rejection_stops_dependent_stages_but_legacy_contract_is_unchanged() {
-    let report =
-        validate_zatca_invoice_from_str("<wrong/>", &Config::default(), &options()).unwrap();
+    let report = Validator::new()
+        .validate_zatca("<wrong/>", &options())
+        .unwrap();
     assert!(report.has_errors());
     assert!(!report.is_complete());
     assert!(!report.is_valid());
@@ -62,7 +63,7 @@ fn schema_rejection_stops_dependent_stages_but_legacy_contract_is_unchanged() {
             .iter()
             .all(|s| s.status == ZatcaStageStatus::NotRun)
     );
-    let legacy = validate_xml_invoice_report_from_str(STANDARD, &Config::default()).unwrap();
+    let legacy = Validator::new().validate_xml_report(STANDARD).unwrap();
     assert_eq!(legacy.layers_checked, vec![ValidationLayer::Xsd]);
     assert!(!legacy.has_errors());
 }
@@ -70,13 +71,17 @@ fn schema_rejection_stops_dependent_stages_but_legacy_contract_is_unchanged() {
 fn missing_chain_context_is_explicit_and_wrong_context_rejects() {
     let mut opts = options();
     opts.previous_invoice_hash = None;
-    let report = validate_zatca_invoice_from_str(STANDARD, &Config::default(), &opts).unwrap();
+    let report = Validator::new().validate_zatca(STANDARD, &opts).unwrap();
     assert!(!report.is_complete());
     assert!(!report.is_valid());
     assert!(!report.has_errors());
     assert_eq!(report.stages[5].status, ZatcaStageStatus::ContextRequired);
-    opts.previous_invoice_hash = Some("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=".into());
-    let report = validate_zatca_invoice_from_str(STANDARD, &Config::default(), &opts).unwrap();
+    opts.previous_invoice_hash = Some(
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+            .parse()
+            .unwrap(),
+    );
+    let report = Validator::new().validate_zatca(STANDARD, &opts).unwrap();
     assert!(report.is_complete());
     assert!(report.has_errors());
     assert!(!report.is_valid());
@@ -90,8 +95,9 @@ fn malformed_unsupported_and_over_limit_xml_never_look_like_success() {
             ZatcaFailureKind::UnsupportedXml,
         ),
     ] {
-        let error =
-            validate_zatca_invoice_from_str(xml, &Config::default(), &options()).unwrap_err();
+        let error = Validator::new()
+            .validate_zatca(xml, &options())
+            .unwrap_err();
         assert_eq!(error.kind, kind);
         assert!(!error.report.is_valid());
         assert!(
@@ -103,7 +109,9 @@ fn malformed_unsupported_and_over_limit_xml_never_look_like_success() {
         );
     }
     let xml = "x".repeat(8 * 1024 * 1024 + 1);
-    let error = validate_zatca_invoice_from_str(&xml, &Config::default(), &options()).unwrap_err();
+    let error = Validator::new()
+        .validate_zatca(&xml, &options())
+        .unwrap_err();
     assert_eq!(error.kind, ZatcaFailureKind::CapacityExceeded);
 }
 #[test]
@@ -115,7 +123,9 @@ fn execution_failures_keep_completed_sources_and_original_locations() {
         1,
     );
     assert_ne!(xml, STANDARD);
-    let error = validate_zatca_invoice_from_str(&xml, &Config::default(), &options()).unwrap_err();
+    let error = Validator::new()
+        .validate_zatca(&xml, &options())
+        .unwrap_err();
     assert_eq!(error.kind, ZatcaFailureKind::RuleEvaluation);
     assert_eq!(error.stage, Some(ZatcaStage::Ksa));
     assert_eq!(
@@ -144,8 +154,10 @@ fn execution_failures_keep_completed_sources_and_original_locations() {
 #[test]
 fn invalid_context_is_reported_before_validation() {
     let mut opts = options();
-    opts.previous_invoice_hash = Some("bad".into());
-    let error = validate_zatca_invoice_from_str(STANDARD, &Config::default(), &opts).unwrap_err();
+    opts.previous_invoice_hash = Some("bad".parse().unwrap());
+    let error = Validator::new()
+        .validate_zatca(STANDARD, &opts)
+        .unwrap_err();
     assert_eq!(error.kind, ZatcaFailureKind::InvalidContext);
     assert!(
         error
@@ -163,7 +175,7 @@ fn schema_valid_business_rejection_returns_complete_report() {
         "",
     );
     assert_ne!(xml, STANDARD);
-    let report = validate_zatca_invoice_from_str(&xml, &Config::default(), &options()).unwrap();
+    let report = Validator::new().validate_zatca(&xml, &options()).unwrap();
     assert!(report.is_complete());
     assert!(report.has_errors());
     assert!(!report.is_valid());

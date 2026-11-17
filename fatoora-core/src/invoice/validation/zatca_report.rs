@@ -1,5 +1,6 @@
 //! Explicit coverage, findings, and failures for local ZATCA validation.
 use super::{Severity, ValidationFinding, ValidationLayer, ValidationLocation, ValidationReport};
+use crate::invoice::InvoiceHash;
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
@@ -11,7 +12,7 @@ pub struct ZatcaValidationOptions {
     /// Required on WASM, where the host supplies time.
     pub evaluated_at: Option<DateTime<FixedOffset>>,
     /// Expected predecessor invoice hash, when chain context is available.
-    pub previous_invoice_hash: Option<String>,
+    pub previous_invoice_hash: Option<InvoiceHash>,
 }
 
 /// Independently reported stages of the local validation profile.

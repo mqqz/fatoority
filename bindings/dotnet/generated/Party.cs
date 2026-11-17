@@ -57,24 +57,27 @@ public partial class Party: IDisposable
         }
     }
 
-    public nuint IdentifiersLen()
+    public nuint IdentifiersLen
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.Party>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.Party.IdentifiersLen(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.Party>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.Party.IdentifiersLen(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>OtherId</c> allocated on Rust side.
     /// </returns>
@@ -89,7 +92,7 @@ public partial class Party: IDisposable
                 var result = Raw.Party.Identifier(selfLease!.Ptr, index);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new OtherId(result.Ok);
             }
@@ -100,7 +103,7 @@ public partial class Party: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>Address</c> allocated on Rust side.
     /// </returns>
@@ -115,7 +118,7 @@ public partial class Party: IDisposable
                 var result = Raw.Party.Address(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return result.Ok == null ? null : new Address(result.Ok);
             }
@@ -126,7 +129,7 @@ public partial class Party: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>VatId</c> allocated on Rust side.
     /// </returns>
@@ -141,7 +144,7 @@ public partial class Party: IDisposable
                 var result = Raw.Party.VatId(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return result.Ok == null ? null : new VatId(result.Ok);
             }
@@ -152,7 +155,7 @@ public partial class Party: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>OtherId</c> allocated on Rust side.
     /// </returns>
@@ -167,7 +170,7 @@ public partial class Party: IDisposable
                 var result = Raw.Party.OtherId(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return result.Ok == null ? null : new OtherId(result.Ok);
             }
@@ -178,33 +181,36 @@ public partial class Party: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string Name()
+    /// <exception cref="FfiException"></exception>
+    public string Name
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.Party>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.Party>? selfLease = null;
                 try
                 {
-                    var result = Raw.Party.Name(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.Party.Name(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }

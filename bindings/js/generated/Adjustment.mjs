@@ -62,7 +62,10 @@ export class Adjustment {
         }
     }
 
-    static percentage(base, percent) {
+    /**
+     * Create an adjustment of `percent` percent of `base`.
+     */
+    static percentOf(base, percent) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
         const baseSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, base)));
@@ -70,7 +73,7 @@ export class Adjustment {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
 
-        const result = wasm.fatoora_Adjustment_percentage(diplomatReceive.buffer, baseSlice.ptr, percentSlice.ptr);
+        const result = wasm.fatoora_Adjustment_percent_of(diplomatReceive.buffer, baseSlice.ptr, percentSlice.ptr);
 
         try {
             if (!diplomatReceive.resultFlag) {
@@ -88,14 +91,17 @@ export class Adjustment {
         }
     }
 
-    withSuppliedAmount(value) {
+    /**
+     * Return a copy with an explicit amount, checked against the percentage calculation.
+     */
+    suppliedAmount(value) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
         const valueSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.str8(wasm, value)));
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
 
-        const result = wasm.fatoora_Adjustment_with_supplied_amount(diplomatReceive.buffer, this.ffiValue, valueSlice.ptr);
+        const result = wasm.fatoora_Adjustment_supplied_amount(diplomatReceive.buffer, this.ffiValue, valueSlice.ptr);
 
         try {
             if (!diplomatReceive.resultFlag) {
@@ -180,11 +186,11 @@ export class Adjustment {
         }
     }
 
-    percent() {
+    percentage() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
 
-        const result = wasm.fatoora_Adjustment_percent(diplomatReceive.buffer, this.ffiValue);
+        const result = wasm.fatoora_Adjustment_percentage(diplomatReceive.buffer, this.ffiValue);
 
         try {
             if (!diplomatReceive.resultFlag) {

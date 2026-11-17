@@ -69,6 +69,8 @@ for invoice signing. Serialization returns data and does not write files.
 <span id="from_properties_str"></span>
 <span id="parse_csr_config"></span>
 <span id="parse_csr_config_file"></span>
+<span id="from_str"></span>
+<span id="from_file"></span>
 <span id="build"></span>
 <span id="generate"></span>
 <span id="from_pem"></span>
@@ -93,7 +95,7 @@ Constructors that take individual fields use the order in the property table abo
 
 === "Rust"
     Import `CsrProperties`, `SigningKey`, and `Csr` from `fatoora_core::csr`, and
-    `EnvironmentType` from `fatoora_core::config`.
+    `Environment` from `fatoora_core::config`.
 
     **Properties**
 
@@ -109,10 +111,9 @@ Constructors that take individual fields use the order in the property table abo
 
     | Call | Returns |
     | --- | --- |
-    | `CsrProperties::from_properties_str(text: &str)` | `Result<CsrProperties, CsrError>` |
-    | `CsrProperties::parse_csr_config(text: &str)` | Same as `from_properties_str`. |
-    | `CsrProperties::parse_csr_config_file(path: impl AsRef<Path>)` | `Result<CsrProperties, CsrError>` |
-    | `properties.build(key: &SigningKey, env: EnvironmentType)` | `Result<Csr, CsrError>` |
+    | `text.parse::<CsrProperties>()` / `CsrProperties::from_str(text: &str)` | `Result<CsrProperties, CsrError>` |
+    | `CsrProperties::from_file(path: impl AsRef<Path>)` | `Result<CsrProperties, CsrError>` |
+    | `properties.build(key: &SigningKey, env: Environment)` | `Result<Csr, CsrError>` |
 
     **Private keys and CSRs**
 
@@ -137,20 +138,20 @@ Constructors that take individual fields use the order in the property table abo
     **Properties**
 
     ```python
-    CsrProperties.new(
-        common_name: str, serial_number: str, organization_identifier: str,
+    CsrProperties(
+        *, common_name: str, serial_number: str, organization_identifier: str,
         organization_unit_name: str, organization_name: str, country_name: str,
         invoice_type: str, location_address: str, industry_business_category: str,
     ) -> CsrProperties
     ```
 
-    Pass every field as a keyword argument. Positional calls raise a `DeprecationWarning` and stop working in 0.6.
+    Every field is keyword-only. The 0.5 `CsrProperties.new(*, ...)` still works
+    until 0.7, with a `DeprecationWarning`.
 
     | Call | Returns |
     | --- | --- |
-    | `CsrProperties.from_properties_str(text: str)` | `CsrProperties` |
-    | `CsrProperties.parse_csr_config(text: str)` | Alias of `from_properties_str`. |
-    | `CsrProperties.parse_csr_config_file(path: str \| os.PathLike)` | `CsrProperties` |
+    | `CsrProperties.from_str(text: str)` | `CsrProperties` |
+    | `CsrProperties.from_file(path: str \| os.PathLike)` | `CsrProperties` |
     | `properties.build(key: SigningKey, env: Environment)` | `Csr` |
     | `SigningKey.generate()` | `SigningKey` |
     | `SigningKey.from_pem(pem: str)` / `SigningKey.from_der(der: bytes)` | `SigningKey` |
@@ -158,12 +159,14 @@ Constructors that take individual fields use the order in the property table abo
     | `Csr.from_der(der: bytes)` | `Csr` |
     | `csr.to_pem()` / `csr.to_der()` | `str` / `bytes` |
     | `csr.to_base64()` / `csr.to_pem_base64()` | `str` |
-    | `csr.subject_string()` | `str` |
-    | `csr.extension_values_der()` | `list[bytes]` |
+    | `csr.subject_string` | `str` (property) |
+    | `csr.extension_values_der` | `list[bytes]` (property) |
 
     Use `Environment.NON_PRODUCTION`, `SIMULATION`, or `PRODUCTION`. Failures raise
     classified exceptions; see [Python errors](bindings/python.md). Properties, keys,
     and CSRs support `with` and `close()`. Building and serializing do not consume them.
+    The 0.5 names `from_properties_str`, `parse_csr_config` and `parse_csr_config_file`
+    still work until 0.7, with a `DeprecationWarning`.
 
 === "JavaScript"
     Import `CsrProperties`, `SigningKey`, and `Csr` from `fatoority`.
@@ -171,7 +174,7 @@ Constructors that take individual fields use the order in the property table abo
     **Properties**
 
     ```javascript
-    const properties = CsrProperties.new_(
+    const properties = CsrProperties.create(
       commonName, serialNumber, organizationIdentifier, organizationUnitName,
       organizationName, countryName, invoiceType, locationAddress,
       industryBusinessCategory,
@@ -182,37 +185,37 @@ Constructors that take individual fields use the order in the property table abo
 
     | Call | Returns |
     | --- | --- |
-    | `CsrProperties.fromPropertiesStr(text)` | `CsrProperties`; `text` is a string. |
-    | `properties.build(key, env)` | `Csr`; `key` is a `SigningKey`, `env` is `0`, `1`, or `2`. |
+    | `CsrProperties.fromStr(text)` | `CsrProperties`; `text` is a string. |
+    | `properties.build(key, env)` | `Csr`; `key` is a `SigningKey`, `env` is an `Environment`. |
     | `SigningKey.generate()` | `SigningKey` |
     | `SigningKey.fromPem(pem)` / `SigningKey.fromDer(der)` | `SigningKey`; pass PEM string / array of byte numbers. |
     | `key.toPem()` / `key.toDer()` | String / `Bytes` |
     | `Csr.fromDer(der)` | `Csr`; pass an array of byte numbers. |
     | `csr.toPem()` / `csr.toDer()` | String / `Bytes` |
     | `csr.toBase64()` / `csr.toPemBase64()` | String |
-    | `csr.subjectString()` | String |
+    | `csr.subjectString` | String (property) |
     | `csr.extensionValuesDer()` | `BytesList` |
 
-    These operations are synchronous and throw an `Error` with a `BindingError` cause on failure. Read files
-    with your application's file APIs, then call `fromPropertiesStr`; no file-path
-    constructor is exposed. Environment numbers are `0` non-production, `1` simulation,
-    `2` production. Copy returned bytes with `Uint8Array.from(bytes.asSlice())` before
+    These operations are synchronous and throw a `FatooraError` subclass on failure. Read files
+    with your application's file APIs, then call `fromStr`; no file-path
+    constructor is exposed. Environment values are `Environment.NonProduction`,
+    `Environment.Simulation`, and `Environment.Production`. Copy returned bytes with `Uint8Array.from(bytes.asSlice())` before
     retaining them across later calls. See [JavaScript resource handling](bindings/javascript.md).
 
 === "C#"
-    Use the `Fatoora` namespace. Use `using` for returned objects, including `Bytes` and `BytesList`. Errors throw `BindingErrorException`. Use `using var view = bytes.AsSlice();` and copy bytes with `view.Clone()`. See [C# resource handling](bindings/csharp.md).
+    Use the `Fatoora` namespace. Use `using` for returned objects, including `Bytes` and `BytesList`. Errors throw `FfiException` subclasses such as `InvalidInputException`. Use `using var view = bytes.AsSlice();` and copy bytes with `view.Clone()`. See [C# resource handling](bindings/csharp.md).
 
     **Properties**
 
-    `CsrProperties.New(commonName, serialNumber, organizationIdentifier,
+    `CsrProperties.Create(commonName, serialNumber, organizationIdentifier,
     organizationUnitName, organizationName, countryName, invoiceType, locationAddress,
     industryBusinessCategory)` takes nine `string` values and returns `CsrProperties`.
 
     | Call | Input | Returns |
     | --- | --- | --- |
-    | `CsrProperties.FromPropertiesStr(text)` | `string` properties text | `CsrProperties` |
-    | `CsrProperties.ParseCsrConfigFile(path)` | `string` file path | `CsrProperties` |
-    | `properties.Build(key, env)` | `SigningKey`, `byte` environment | `Csr` |
+    | `CsrProperties.FromStr(text)` | `string` properties text | `CsrProperties` |
+    | `CsrProperties.FromFile(path)` | `string` file path | `CsrProperties` |
+    | `properties.Build(key, env)` | `SigningKey`, `ZatcaEnvironment` | `Csr` |
     | `SigningKey.Generate()` | None | `SigningKey` |
     | `SigningKey.FromPem(pem)` | `string` PKCS#8 PEM | `SigningKey` |
     | `SigningKey.FromDer(der)` | `byte[]` PKCS#8 DER | `SigningKey` |
@@ -220,11 +223,11 @@ Constructors that take individual fields use the order in the property table abo
     | `Csr.FromDer(der)` | `byte[]` CSR DER | `Csr` |
     | `csr.ToPem()` / `csr.ToDer()` | None | `string` / `Bytes` |
     | `csr.ToBase64()` / `csr.ToPemBase64()` | None | `string` |
-    | `csr.SubjectString()` | None | `string` |
+    | `csr.SubjectString` | Property | `string` |
     | `csr.ExtensionValuesDer()` | None | `BytesList` |
 
-    Environment values are `0` non-production, `1` simulation, `2` production.
-    Building and serializing do not consume the properties, key, or CSR.
+    Environment values are `ZatcaEnvironment.NonProduction`, `.Simulation`, and
+    `.Production`. Building and serializing do not consume the properties, key, or CSR.
 
 === "Kotlin"
     Import types from `com.fatoora`. Use `.use { ... }` or `close()` for returned objects, including `Bytes` and `BytesList`. Errors raise exceptions. Read a copied byte array with `bytes.asSlice()`. See [Kotlin resource handling](bindings/kotlin.md).
@@ -237,9 +240,9 @@ Constructors that take individual fields use the order in the property table abo
 
     | Call | Input | Returns |
     | --- | --- | --- |
-    | `CsrProperties.fromPropertiesStr(text)` | `String` properties text | `CsrProperties` |
-    | `CsrProperties.parseCsrConfigFile(path)` | `String` file path | `CsrProperties` |
-    | `properties.build(key, env)` | `SigningKey`, `Int` environment | `Csr` |
+    | `CsrProperties.fromStr(text)` | `String` properties text | `CsrProperties` |
+    | `CsrProperties.fromFile(path)` | `String` file path | `CsrProperties` |
+    | `properties.build(key, env)` | `SigningKey`, `Environment` | `Csr` |
     | `SigningKey.generate()` | None | `SigningKey` |
     | `SigningKey.fromPem(pem)` | `String` PKCS#8 PEM | `SigningKey` |
     | `SigningKey.fromDer(der)` | `ByteArray` PKCS#8 DER | `SigningKey` |
@@ -247,11 +250,11 @@ Constructors that take individual fields use the order in the property table abo
     | `Csr.fromDer(der)` | `ByteArray` CSR DER | `Csr` |
     | `csr.toPem()` / `csr.toDer()` | None | `String` / `Bytes` |
     | `csr.toBase64()` / `csr.toPemBase64()` | None | `String` |
-    | `csr.subjectString()` | None | `String` |
+    | `csr.subjectString` | None | `String` |
     | `csr.extensionValuesDer()` | None | `BytesList` |
 
-    Environment values are `0` non-production, `1` simulation, `2` production.
-    Building and serializing do not consume the properties, key, or CSR.
+    Environment values are `Environment.NonProduction`, `.Simulation`, and
+    `.Production`. Building and serializing do not consume the properties, key, or CSR.
 
 === "Java"
     Import types from `com.fatoora`. Use try-with-resources or `close()` for returned objects, including `Bytes` and `BytesList`. Errors raise exceptions. Read a copied byte array with `bytes.asSlice()`. See [Java resource handling](bindings/kotlin.md).
@@ -264,9 +267,9 @@ Constructors that take individual fields use the order in the property table abo
 
     | Call | Input | Returns |
     | --- | --- | --- |
-    | `CsrProperties.fromPropertiesStr(text)` | `String` properties text | `CsrProperties` |
-    | `CsrProperties.parseCsrConfigFile(path)` | `String` file path | `CsrProperties` |
-    | `properties.build(key, env)` | `SigningKey`, `int` environment | `Csr` |
+    | `CsrProperties.fromStr(text)` | `String` properties text | `CsrProperties` |
+    | `CsrProperties.fromFile(path)` | `String` file path | `CsrProperties` |
+    | `properties.build(key, env)` | `SigningKey`, `Environment` | `Csr` |
     | `SigningKey.generate()` | None | `SigningKey` |
     | `SigningKey.fromPem(pem)` | `String` PKCS#8 PEM | `SigningKey` |
     | `SigningKey.fromDer(der)` | `byte[]` PKCS#8 DER | `SigningKey` |
@@ -274,15 +277,16 @@ Constructors that take individual fields use the order in the property table abo
     | `Csr.fromDer(der)` | `byte[]` CSR DER | `Csr` |
     | `csr.toPem()` / `csr.toDer()` | None | `String` / `Bytes` |
     | `csr.toBase64()` / `csr.toPemBase64()` | None | `String` |
-    | `csr.subjectString()` | None | `String` |
+    | `csr.getSubjectString()` | None | `String` |
     | `csr.extensionValuesDer()` | None | `BytesList` |
 
-    Environment values are `0` non-production, `1` simulation, `2` production.
-    Building and serializing do not consume the properties, key, or CSR.
+    Environment values are `Environment.NonProduction`, `.Simulation`, and
+    `.Production`. Building and serializing do not consume the properties, key, or CSR.
 
 === "C"
     Include `fatoora.h`. All options fields are required UTF-8 strings. Pass environment
-    `0` (non-production), `1` (simulation), or `2` (production).
+    `FATOORA_NON_PRODUCTION`, `FATOORA_SIMULATION`, or `FATOORA_PRODUCTION`; other
+    values return `FATOORA_INVALID_INPUT`.
 
     **Properties and operations**
 
@@ -302,15 +306,15 @@ Constructors that take individual fields use the order in the property table abo
     FatooraStatus fatoora_csr_properties_new(const FatooraCsrOptions *options,
         FatooraCsrProperties **out,
         FatooraError **error);
-    FatooraStatus fatoora_csr_properties_from_properties_str(const char *properties,
+    FatooraStatus fatoora_csr_properties_from_str(const char *properties,
         FatooraCsrProperties **out,
         FatooraError **error);
-    FatooraStatus fatoora_csr_properties_parse_csr_config_file(const char *path,
+    FatooraStatus fatoora_csr_properties_from_file(const char *path,
         FatooraCsrProperties **out,
         FatooraError **error);
     FatooraStatus fatoora_csr_properties_build(const FatooraCsrProperties *self,
         const FatooraSigningKey *key,
-        int32_t env,
+        FatooraEnvironment env,
         FatooraCsr **out,
         FatooraError **error);
     FatooraStatus fatoora_signing_key_generate(FatooraSigningKey **out,

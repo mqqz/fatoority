@@ -10,7 +10,7 @@ public class Guide {
         Files.write(Paths.get(path), text.getBytes(StandardCharsets.UTF_8));
     }
     public static void main(String[] args) throws Exception {
-        try (Signer signer = Signer.fromPem(read("certificate.pem"), read("private-key.pem"));
+        try (InvoiceSigner signer = InvoiceSigner.fromPem(read("certificate.pem"), read("private-key.pem"));
              FinalizedInvoice invoice = FinalizedInvoice.fromXml(read("invoice.xml"));
              SignedInvoice signed = signer.sign(invoice)) {
             write("signed.xml", signed.intoXml());

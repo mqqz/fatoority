@@ -2,6 +2,9 @@
 @file:OptIn(ExperimentalUnsignedTypes::class)
 package com.fatoora
 
+/**
+ * Owned request and decoding context; contains credentials.
+ */
 class ProductionRequest internal constructor(internal val raw: com.fatoora.raw.ProductionRequest) : NativeResource() {
     init {
         check(raw.owned && raw.selfEdges.isEmpty()) { "Facade requires an independent owned handle" }
@@ -9,14 +12,33 @@ class ProductionRequest internal constructor(internal val raw: com.fatoora.raw.P
         val handle = raw.handle
         attach { com.fatoora.raw.ProductionRequest.lib.fatoora_ProductionRequest_destroy(handle) }
     }
+
+    val method: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.method())
+        }
+
+    val url: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.url())
+        }
+
+    val headersJson: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.headersJson())
+        }
+
+    @Deprecated("Use the method property.", ReplaceWith("method"))
     fun method(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.method())
     }
 
+    @Deprecated("Use the url property.", ReplaceWith("url"))
     fun url(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.url())
     }
 
+    @Deprecated("Use the headersJson property.", ReplaceWith("headersJson"))
     fun headersJson(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.headersJson())
     }
@@ -25,7 +47,7 @@ class ProductionRequest internal constructor(internal val raw: com.fatoora.raw.P
         Bytes(unwrap(raw.body()))
     }
 
-    fun decode(status: Int, body: ByteArray): CsidProduction = nativeCall(listOfNotNull(this)) {
-        CsidProduction(unwrap(raw.decode(checkedUnsigned(status.toLong(), 65535).toUShort(), body.asUByteArray())))
+    fun decode(status: Int, body: ByteArray): ProductionCsid = nativeCall(listOfNotNull(this)) {
+        ProductionCsid(unwrap(raw.decode(checkedUnsigned(status.toLong(), 65535).toUShort(), body.asUByteArray())))
     }
 }

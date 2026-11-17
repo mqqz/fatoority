@@ -14,9 +14,15 @@ export class Adjustment {
 
     static amount(value: string): Adjustment;
 
-    static percentage(base: string, percent: string): Adjustment;
+    /**
+     * Create an adjustment of `percent` percent of `base`.
+     */
+    static percentOf(base: string, percent: string): Adjustment;
 
-    withSuppliedAmount(value: string): Adjustment;
+    /**
+     * Return a copy with an explicit amount, checked against the percentage calculation.
+     */
+    suppliedAmount(value: string): Adjustment;
 
     withReason(reason: string | null, code: string | null): Adjustment;
 
@@ -24,7 +30,7 @@ export class Adjustment {
 
     baseAmount(): Text | null;
 
-    percent(): Text | null;
+    percentage(): Text | null;
 
     reason(): Text | null;
 

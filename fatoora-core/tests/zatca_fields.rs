@@ -1,11 +1,7 @@
 mod common;
 use fatoora_core::{
     Decimal,
-    config::Config,
-    invoice::{
-        validation::validate_xml_invoice_from_str,
-        xml::parse::parse_finalized_invoice_xml as parse, *,
-    },
+    invoice::{validation::Validator, xml::parse::parse_finalized_invoice_xml as parse, *},
 };
 fn d(v: &str) -> Decimal {
     v.parse().unwrap()
@@ -14,10 +10,10 @@ fn builder() -> InvoiceBuilder {
     let source = common::dummy_finalized_invoice();
     InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified))
         .id("fields")
-        .uuid(source.data().uuid())
-        .issue_datetime("2024-01-01T12:30:00Z")
-        .currency("SAR")
-        .previous_invoice_hash(source.data().previous_invoice_hash())
+        .uuid(source.data().uuid().clone())
+        .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+        .currency("SAR".parse().unwrap())
+        .previous_invoice_hash(source.data().previous_invoice_hash().clone())
         .invoice_counter(1)
         .seller(source.data().seller().clone())
         .vat_category(VatCategory::Standard)
@@ -68,11 +64,11 @@ fn complete_line_and_metadata_preserve_source_fields_and_schema() {
         .item_buyer_identifier(OtherId::new("BUY-1"))
         .item_standard_identifier(OtherId::with_scheme("1234567890123", "0160"))
         .allowance(
-            Adjustment::percentage(d("250"), d("10"))
-                .reason("rebate")
-                .reason_code("95"),
+            Adjustment::percent_of(d("250"), d("10"))
+                .with_reason("rebate")
+                .with_reason_code("95"),
         )
-        .charge(Adjustment::amount(d("5")).reason("delivery"))
+        .charge(Adjustment::amount(d("5")).with_reason("delivery"))
         .build()
         .unwrap();
     assert_eq!(item.total_amount(), d("230"));
@@ -82,24 +78,26 @@ fn complete_line_and_metadata_preserve_source_fields_and_schema() {
         .note(InvoiceNote::without_language("second & note"))
         .purchase_order_id("PO-1")
         .contract_id("CON-1")
-        .delivery(Delivery {
-            actual_date: Some("2024-01-01".parse().unwrap()),
-            latest_date: Some("2024-01-02".parse().unwrap()),
-        })
+        .delivery(
+            Delivery::default()
+                .with_actual_date("2024-01-01".parse().unwrap())
+                .with_latest_date("2024-01-02".parse().unwrap()),
+        )
         .payment_means(
-            PaymentMeans::new("30").payee_financial_account(PaymentAccount {
-                payment_account_identifier: Some("ACCOUNT".into()),
-                payment_terms: Some("30 days".into()),
-            }),
+            PaymentMeans::new("30").with_payee_financial_account(
+                PaymentAccount::default()
+                    .with_payment_account_identifier("ACCOUNT")
+                    .with_payment_terms("30 days"),
+            ),
         )
         .payment_means(PaymentMeans::new("10"))
         .build()
         .unwrap();
     let xml = invoice.to_xml().unwrap();
-    validate_xml_invoice_from_str(&xml, &Config::default()).unwrap();
+    Validator::new().validate_xml(&xml).unwrap();
     let imported = parse(&xml).unwrap();
     let regenerated = imported.to_xml().unwrap();
-    validate_xml_invoice_from_str(&regenerated, &Config::default()).unwrap();
+    Validator::new().validate_xml(&regenerated).unwrap();
     assert_eq!(leaves(&xml), leaves(&regenerated));
     assert_eq!(invoice, imported);
 }
@@ -142,12 +140,12 @@ fn accepted_line_and_group_tax_values_drive_serialized_totals() {
 fn optional_containers_are_not_missing_required_children() {
     let invoice = builder()
         .line_item(line().build().unwrap())
-        .buyer(Buyer::new("Buyer".into(), None, None, None).unwrap())
+        .buyer(Buyer::new("Buyer", None, None, None))
         .delivery(Delivery::default())
         .build()
         .unwrap();
     let xml = invoice.to_xml().unwrap();
-    validate_xml_invoice_from_str(&xml, &Config::default()).unwrap();
+    Validator::new().validate_xml(&xml).unwrap();
     assert_eq!(
         leaves(&xml),
         leaves(&parse(&xml).unwrap().to_xml().unwrap())
@@ -163,18 +161,12 @@ fn duplicate_group_metadata_errors_and_line_metadata_stays_independent() {
         .tax_exemption(
             VatCategory::Standard,
             d("15"),
-            TaxExemption {
-                reason_code: None,
-                reason: Some("one".into()),
-            },
+            TaxExemption::default().with_reason("one"),
         )
         .tax_exemption(
             VatCategory::Standard,
             d("15"),
-            TaxExemption {
-                reason_code: None,
-                reason: Some("two".into()),
-            },
+            TaxExemption::default().with_reason("two"),
         );
     assert!(invoice.build().is_err());
 }
@@ -206,21 +198,20 @@ fn dictionary_source_to_output_coverage() {
         &std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/invoices"),
         &mut sources,
     );
-    let mut address = common::dummy_finalized_invoice()
+    let address = common::dummy_finalized_invoice()
         .data()
         .seller()
         .address()
         .unwrap()
-        .clone();
-    address.province = Some("Riyadh Province".into());
-    address.additional_street = Some("Second street".into());
+        .clone()
+        .with_province("Riyadh Province")
+        .with_additional_street("Second street");
     let seller = Seller::new(
-        "Seller".into(),
+        "Seller",
         address.clone(),
-        "399999999900003",
+        "399999999900003".parse().unwrap(),
         Some(OtherId::with_scheme("123", "CRN")),
-    )
-    .unwrap();
+    );
     let item = line()
         .item_price_base_quantity(d("12"))
         .item_price_base_quantity_unit_code("PCE")
@@ -230,28 +221,25 @@ fn dictionary_source_to_output_coverage() {
         .item_buyer_identifier(OtherId::new("buyer-sku"))
         .item_standard_identifier(OtherId::with_scheme("123", "0160"))
         .allowance(
-            Adjustment::percentage(d("250"), d("10"))
-                .reason("line allowance")
-                .reason_code("95"),
+            Adjustment::percent_of(d("250"), d("10"))
+                .with_reason("line allowance")
+                .with_reason_code("95"),
         )
         .charge(
-            Adjustment::percentage(d("250"), d("2"))
-                .reason("line charge")
-                .reason_code("AA"),
+            Adjustment::percent_of(d("250"), d("2"))
+                .with_reason("line charge")
+                .with_reason_code("AA"),
         )
         .build()
         .unwrap();
     let rich = builder()
         .seller(seller)
-        .buyer(
-            Buyer::new(
-                "Buyer".into(),
-                address,
-                Some("399999999900003".into()),
-                Some(OtherId::with_scheme("456", "CRN")),
-            )
-            .unwrap(),
-        )
+        .buyer(Buyer::new(
+            "Buyer",
+            address,
+            Some("399999999900003".parse().unwrap()),
+            Some(OtherId::with_scheme("456", "CRN")),
+        ))
         .line_item(item)
         .purchase_order_id("PO")
         .contract_id("CON")
@@ -259,23 +247,24 @@ fn dictionary_source_to_output_coverage() {
         .note(InvoiceNote::without_language("note two"))
         .payment_means(
             PaymentMeans::new("30")
-                .instruction_note("terms")
-                .payee_financial_account(PaymentAccount {
-                    payment_account_identifier: Some("bank".into()),
-                    payment_terms: Some("net 30".into()),
-                }),
+                .with_instruction_note("terms")
+                .with_payee_financial_account(
+                    PaymentAccount::default()
+                        .with_payment_account_identifier("bank")
+                        .with_payment_terms("net 30"),
+                ),
         )
         .allowance(DocumentAdjustment::new(
-            Adjustment::percentage(d("230"), d("10"))
-                .reason("allowance")
-                .reason_code("95"),
+            Adjustment::percent_of(d("230"), d("10"))
+                .with_reason("allowance")
+                .with_reason_code("95"),
             VatCategory::Standard,
             d("15"),
         ))
         .charge(DocumentAdjustment::new(
-            Adjustment::percentage(d("230"), d("2"))
-                .reason("charge")
-                .reason_code("AA"),
+            Adjustment::percent_of(d("230"), d("2"))
+                .with_reason("charge")
+                .with_reason_code("AA"),
             VatCategory::Standard,
             d("15"),
         ))
@@ -374,7 +363,7 @@ fn supported_container_shapes_have_distinct_validation_outcomes() {
         .unwrap();
     for container in ["<cac:PaymentMeans/>", "<cac:AllowanceCharge/>"] {
         let malformed = source.replacen("<cac:TaxTotal>", &format!("{container}<cac:TaxTotal>"), 1);
-        assert!(validate_xml_invoice_from_str(&malformed, &Config::default()).is_err());
+        assert!(Validator::new().validate_xml(&malformed).is_err());
         assert!(parse(&malformed).is_err());
     }
     let empty_totals = source_xml::select(
@@ -388,16 +377,13 @@ fn supported_container_shapes_have_distinct_validation_outcomes() {
     // A partial financial account is structurally permitted; it remains present.
     let invoice = builder()
         .line_item(line().build().unwrap())
-        .payment_means(
-            PaymentMeans::new("30").payee_financial_account(PaymentAccount {
-                payment_account_identifier: None,
-                payment_terms: Some("terms only".into()),
-            }),
-        )
+        .payment_means(PaymentMeans::new("30").with_payee_financial_account(
+            PaymentAccount::default().with_payment_terms("terms only"),
+        ))
         .build()
         .unwrap();
     let xml = invoice.to_xml().unwrap();
-    validate_xml_invoice_from_str(&xml, &Config::default()).unwrap();
+    Validator::new().validate_xml(&xml).unwrap();
     assert_eq!(
         leaves(&xml),
         leaves(&parse(&xml).unwrap().to_xml().unwrap())
@@ -490,12 +476,11 @@ fn prepayment_adjustments_are_not_sales_lines() {
 #[test]
 fn repeated_identifiers_and_payment_instructions_keep_order() {
     let buyer = Buyer::new(
-        "Buyer".into(),
+        "Buyer",
         None,
         None,
         Some(OtherId::with_scheme("one", "NAT")),
     )
-    .unwrap()
     .identifier(OtherId::with_scheme("two", "PAS"));
     let invoice = builder()
         .line_item(line().build().unwrap())
@@ -503,17 +488,17 @@ fn repeated_identifiers_and_payment_instructions_keep_order() {
         .seller_identifier(OtherId::with_scheme("second", "OTH"))
         .payment_means(
             PaymentMeans::new("10")
-                .instruction_note("first")
-                .instruction_note("second"),
+                .with_instruction_note("first")
+                .with_instruction_note("second"),
         )
         .build()
         .unwrap();
     let xml = invoice.to_xml().unwrap();
-    validate_xml_invoice_from_str(&xml, &Config::default()).unwrap();
+    Validator::new().validate_xml(&xml).unwrap();
     let parsed = parse(&xml).unwrap();
     assert_eq!(parsed.data().buyer().unwrap().identifiers().len(), 2);
     assert_eq!(
-        parsed.data().payment_means()[0].instruction_notes,
+        parsed.data().payment_means()[0].instruction_notes(),
         ["first", "second"]
     );
     assert_eq!(leaves(&xml), leaves(&parsed.to_xml().unwrap()));
@@ -531,13 +516,13 @@ fn absent_line_tax_container_remains_absent_and_empty_is_rejected() {
     let range = source_xml::select(&doc, "/ubl:Invoice/cac:InvoiceLine/cac:TaxTotal")[0].range();
     let mut absent = xml.clone();
     absent.replace_range(range.clone(), "");
-    validate_xml_invoice_from_str(&absent, &Config::default()).unwrap();
+    Validator::new().validate_xml(&absent).unwrap();
     let regenerated = parse(&absent).unwrap().to_xml().unwrap();
-    validate_xml_invoice_from_str(&regenerated, &Config::default()).unwrap();
+    Validator::new().validate_xml(&regenerated).unwrap();
     assert_eq!(leaves(&absent), leaves(&regenerated));
     let mut malformed = xml;
     malformed.replace_range(range, "<cac:TaxTotal/>");
-    assert!(validate_xml_invoice_from_str(&malformed, &Config::default()).is_err());
+    assert!(Validator::new().validate_xml(&malformed).is_err());
     assert!(parse(&malformed).is_err());
 }
 
@@ -563,16 +548,16 @@ fn document_tax_order_and_optional_accounting_total_are_preserved() {
     assert_eq!(leaves(&reordered), leaves(&output));
     let mut without_accounting = xml.clone();
     without_accounting.replace_range(first, "");
-    validate_xml_invoice_from_str(&without_accounting, &Config::default()).unwrap();
+    Validator::new().validate_xml(&without_accounting).unwrap();
     let output = parse(&without_accounting).unwrap().to_xml().unwrap();
     assert_eq!(leaves(&without_accounting), leaves(&output));
-    validate_xml_invoice_from_str(&output, &Config::default()).unwrap();
+    Validator::new().validate_xml(&output).unwrap();
 }
 
 #[test]
 fn utc_and_ast_clock_values_survive_import_including_midnight() {
     let xml = builder()
-        .issue_datetime("2024-01-01T01:30:00Z")
+        .issue_datetime("2024-01-01T01:30:00Z".parse().unwrap())
         .line_item(line().build().unwrap())
         .billing_reference(
             OriginalInvoiceRef::new("advance")
@@ -586,7 +571,7 @@ fn utc_and_ast_clock_values_survive_import_including_midnight() {
     let local = xml.replacen(">01:30:00Z</cbc:IssueTime>", ">01:30:00</cbc:IssueTime>", 1);
     for source in [&xml, &local] {
         let parsed = parse(source).unwrap();
-        validate_xml_invoice_from_str(source, &Config::default()).unwrap();
+        Validator::new().validate_xml(source).unwrap();
         assert_eq!(leaves(source), leaves(&parsed.to_xml().unwrap()));
         assert_eq!(
             parsed.data().billing_references()[0]
@@ -601,8 +586,8 @@ fn utc_and_ast_clock_values_survive_import_including_midnight() {
         parsed.data().issue_datetime().as_str(),
         "2023-12-31T22:30:00Z"
     );
-    assert_eq!(parsed.data().issue_date(), "2024-01-01");
-    assert_eq!(parsed.data().issue_time(), "01:30:00");
+    assert_eq!(parsed.data().issue_date().as_str(), "2024-01-01");
+    assert_eq!(parsed.data().issue_time().as_str(), "01:30:00");
     assert_eq!(
         InvoiceTime::parse("24:00:00Z").unwrap().as_str(),
         "24:00:00Z"
@@ -633,11 +618,11 @@ fn utc_and_ast_clock_values_survive_import_including_midnight() {
                 format!("{date}T21:00:00Z")
             };
             assert_eq!(parsed.data().issue_datetime().as_str(), expected);
-            assert_eq!(parsed.data().issue_date(), date);
-            assert_eq!(parsed.data().issue_time(), time);
+            assert_eq!(parsed.data().issue_date().as_str(), date);
+            assert_eq!(parsed.data().issue_time().as_str(), time);
             let output = parsed.to_xml().unwrap();
             assert_eq!(leaves(&source), leaves(&output));
-            validate_xml_invoice_from_str(&output, &Config::default()).unwrap();
+            Validator::new().validate_xml(&output).unwrap();
         }
     }
     for time in ["24:00:01", "24:01:00Z", "25:00:00Z"] {
@@ -679,11 +664,12 @@ fn vat_midpoint_tolerance_uses_the_pinned_rule_policy() {
 #[test]
 fn payment_instruction_placeholder_retains_notes_and_payment_metadata() {
     let payment = PaymentMeans::new("30")
-        .instruction_note("transfer")
-        .payee_financial_account(PaymentAccount {
-            payment_account_identifier: Some("bank".into()),
-            payment_terms: Some("net 30".into()),
-        });
+        .with_instruction_note("transfer")
+        .with_payee_financial_account(
+            PaymentAccount::default()
+                .with_payment_account_identifier("bank")
+                .with_payment_terms("net 30"),
+        );
     let invoice = builder()
         .line_item(line().build().unwrap())
         .payment_instruction("reason")
@@ -691,8 +677,14 @@ fn payment_instruction_placeholder_retains_notes_and_payment_metadata() {
         .payment_means(PaymentMeans::new("10"))
         .build()
         .unwrap();
-    let mut expected = payment;
-    expected.instruction_notes.insert(0, "reason".into());
+    let expected = PaymentMeans::new("30")
+        .with_instruction_note("reason")
+        .with_instruction_note("transfer")
+        .with_payee_financial_account(
+            PaymentAccount::default()
+                .with_payment_account_identifier("bank")
+                .with_payment_terms("net 30"),
+        );
     assert_eq!(
         invoice.data().payment_means(),
         &[expected, PaymentMeans::new("10")]
@@ -709,7 +701,7 @@ fn payment_instruction_placeholder_retains_notes_and_payment_metadata() {
             .payment_means(PaymentMeans::new("30")),
         builder()
             .payment_instruction("reason")
-            .payment_means_code("")
+            .payment_means(fatoora_core::invoice::PaymentMeans::new(""))
             .payment_means(PaymentMeans::new("30")),
     ] {
         assert!(b.line_item(line().build().unwrap()).build().is_err());
@@ -727,7 +719,12 @@ fn malformed_optional_prices_and_buyer_identity_are_rejected() {
                 .build()
                 .unwrap(),
         )
-        .buyer(Buyer::new("Buyer".into(), None, Some("301121971500003".into()), None).unwrap())
+        .buyer(Buyer::new(
+            "Buyer",
+            None,
+            Some("301121971500003".parse().unwrap()),
+            None,
+        ))
         .build()
         .unwrap()
         .to_xml()
@@ -866,9 +863,9 @@ fn out_of_scope_document_adjustments_preserve_absent_rates() {
         .unwrap();
     let source = xml.replace("<cbc:Percent>0</cbc:Percent>", "");
     assert_ne!(source, xml);
-    validate_xml_invoice_from_str(&source, &Config::default()).unwrap();
+    Validator::new().validate_xml(&source).unwrap();
     let imported = parse(&source).unwrap();
-    assert!(imported.data().adjustments()[0].omitted_rate);
+    assert!(!imported.data().adjustments()[0].has_vat_rate());
     assert_eq!(leaves(&source), leaves(&imported.to_xml().unwrap()));
 }
 
@@ -961,10 +958,10 @@ fn optional_line_inputs_reject_incomplete_and_inconsistent_prices() {
     for invalid in [
         Adjustment::amount(d("-1")),
         Adjustment::amount(d("1.001")),
-        Adjustment::amount(d("1")).base_amount(d("100")),
-        Adjustment::percentage(d("-1"), d("10")),
-        Adjustment::percentage(d("100"), d("-1")),
-        Adjustment::percentage(d("100"), d("10")).supplied_amount(d("9.99")),
+        Adjustment::amount(d("1")).with_base_amount(d("100")),
+        Adjustment::percent_of(d("-1"), d("10")),
+        Adjustment::percent_of(d("100"), d("-1")),
+        Adjustment::percent_of(d("100"), d("10")).supplied_amount(d("9.99")),
     ] {
         assert!(line().allowance(invalid).build().is_err());
     }
@@ -990,10 +987,7 @@ fn supplied_breakdowns_reject_ambiguous_ownership_and_invalid_amounts() {
             .build()
             .is_err()
     );
-    let reason = TaxExemption {
-        reason_code: None,
-        reason: Some("supplied".into()),
-    };
+    let reason = TaxExemption::default().with_reason("supplied");
     assert!(
         builder()
             .line_item(line().build().unwrap())
@@ -1041,22 +1035,16 @@ fn supplied_breakdowns_reject_ambiguous_ownership_and_invalid_amounts() {
     );
     let adjustment =
         DocumentAdjustment::new(Adjustment::amount(d("1")), VatCategory::Standard, d("15"))
-            .reason("rebate")
-            .reason_code("95")
-            .exemption(reason);
+            .with_reason("rebate")
+            .with_reason_code("95")
+            .with_exemption(reason);
     let invoice = builder()
         .line_item(line().build().unwrap())
         .allowance(adjustment)
         .build()
         .unwrap();
-    assert_eq!(
-        invoice.data().adjustments()[0].reason.as_deref(),
-        Some("rebate")
-    );
-    assert_eq!(
-        invoice.data().adjustments()[0].reason_code.as_deref(),
-        Some("95")
-    );
+    assert_eq!(invoice.data().adjustments()[0].reason(), Some("rebate"));
+    assert_eq!(invoice.data().adjustments()[0].reason_code(), Some("95"));
     assert_eq!(invoice.data().line_items()[0].item_name(), "سلعة & item");
     assert_eq!(invoice.data().line_items()[0].item_net_price(), d("100"));
     assert!(InvoiceTime::parse("1:02:03").is_err());

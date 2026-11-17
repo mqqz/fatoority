@@ -5,7 +5,7 @@ description: Python package reference for fatoority. Learn accepted values, retu
 
 # Python package reference
 
-The published 0.5.1 wheels support CPython 3.9–3.13. Use CPython 3.13 for the
+The published wheels support CPython 3.9–3.13. Use CPython 3.13 for the
 [complete sandbox walkthrough](../../guides/sandbox-walkthrough.md). Install
 `fatoority` and import `fatoora`; this page describes Python-specific values and behavior.
 
@@ -40,8 +40,13 @@ Configuration, CSR generation, and credentials must agree on the environment.
 | Decimal output | `decimal.Decimal` |
 | Binary input/output | `bytes` |
 | Invoice counter | `int` in the unsigned 64-bit range |
-| Local ZATCA report | `dict`, already decoded from JSON |
-| Line item / totals snapshot | `InvoiceLineItem` / `InvoiceTotals` dataclass |
+| Timestamp input | timezone-aware `datetime.datetime` (converted to UTC) or `"YYYY-MM-DDTHH:MM:SSZ"`; a naive `datetime` raises `ValueError` |
+| Timestamp output | timezone-aware `datetime.datetime` in UTC (`issue_datetime`, `signing_time`, `evaluated_at`) |
+| Date input / output | `datetime.date` or `"YYYY-MM-DD"` / `datetime.date` |
+| UUID input / output | `uuid.UUID` or `str` / `str` (core keeps the UUID text verbatim) |
+| Local ZATCA report | frozen `ZatcaReport` dataclass |
+| ZATCA response status | `str` enum (`ReportingStatus`, `ClearanceStatus`, `ValidationStatus`, `MessageType`) or `None` |
+| Invoice data (parties, addresses, notes, references, payment means, adjustments, line items, totals) | frozen dataclasses: `Party`, `Address`, `Identifier`, `InvoiceNote`, `OriginalInvoiceRef`, `PaymentMeans`, `Adjustment`, `InvoiceLineItem`, `InvoiceTotals`, `VatBreakdown`, `TaxExemption` |
 
 Use exact decimal text such as `"0.3333"`, rather than constructing a `Decimal`
 from a binary float. See [decimal numbers and rounding](../numbers.md).
@@ -56,27 +61,126 @@ Public choices use `IntEnum` members. Prefer their names to raw integers:
 | `VatCategory` | `EXEMPT`, `STANDARD`, `ZERO`, `OUT_OF_SCOPE` |
 | `InvoiceFlag` | `THIRD_PARTY`, `NOMINAL`, `EXPORT`, `SUMMARY`, `SELF_BILLED` |
 | `InvoiceOutcome` | `UNKNOWN`, `ACCEPTED`, `REJECTED` |
+| `ClearanceMode` | `DISABLED`, `ENABLED` |
 
-Invoice builder timestamps use UTC text such as `"2026-01-01T12:00:00Z"`.
+Statuses read from a ZATCA response are `str` enums whose values are the wire
+text, so `response.reporting_status == "REPORTED"`, `str()`, f-strings and
+`json.dumps` give the text ZATCA sent:
+
+| Enum | Members |
+| --- | --- |
+| `ReportingStatus` | `REPORTED`, `NOT_REPORTED` |
+| `ClearanceStatus` | `CLEARED`, `NOT_CLEARED` |
+| `ValidationStatus` | `PASS`, `WARNING`, `ERROR` |
+| `MessageType` | `INFO`, `WARNING`, `ERROR` |
+
+A status this version does not recognize is kept verbatim, as the core's
+`Other(String)` variant keeps it: it is still an instance of the enum, its
+`name` is `"OTHER"` and its `value` is the text ZATCA sent. Test
+`status.name == "OTHER"` to detect one.
+
 Country/currency values are strings; their constructors validate and normalize
 supported values. See the [invoice model](../invoice-model.md).
 
+## Properties, constructors and chaining
+
+Values you read are properties: `invoice.id`, `invoice.seller.address.city`,
+`response.reporting_status`, `config.env`. They are read-only; optional values
+are `None` when absent. Operations that compute, convert or consume stay methods:
+`hash()`, `to_xml_base64()`, `line_item(index)`, `is_simplified()`,
+`ensure_accepted()`, `build()`, `sign(signer)`.
+
+`InvoiceBuilder(invoice_type, invoice_subtype, *, id=..., uuid=..., ...)` takes the
+header fields as keyword arguments, and every setter returns the builder, so a
+whole invoice is one expression:
+
+```python
+from datetime import datetime, timezone
+from uuid import uuid4
+from fatoora import (Address, InvoiceBuilder, InvoiceSubType, InvoiceTypeKind, Party,
+                     PaymentMeans, VatCategory)
+
+seller = Party("Acme", Address("SA", "Riyadh", "King Fahd", "1234", "12222"),
+               vat_id="399999999900003")
+invoice = (
+    InvoiceBuilder(InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED,
+                   id="INV-1", uuid=uuid4(), issue_datetime=datetime.now(timezone.utc),
+                   currency="SAR", previous_invoice_hash=previous_hash,
+                   invoice_counter=1, vat_category=VatCategory.STANDARD, seller=seller)
+    .add_payment_means(PaymentMeans("10"))
+    .add_line_item("Item", 1, "PCE", "100", "15", VatCategory.STANDARD)
+    .build()
+)
+```
+
+Every type you create directly has a constructor: `Config(env)`,
+`ZatcaClient(config)`, `CsrProperties(*, ...)`,
+`ComplianceCsid(env, *, token, secret, request_id=None)`,
+`ProductionCsid(...)`, `InvoiceBuilder(...)`, `LineItemBuilder()` and the
+invoice dataclasses. Types you obtain from data or from another call use named
+factories (`InvoiceSigner.from_pem`, `SigningKey.generate`, `Csr.from_der`,
+`SignedInvoice.from_xml`, ...); calling such a class raises `TypeError` naming
+them. The 0.5 `.new(...)` classmethods still work until 0.7, with a
+`DeprecationWarning`.
+
+Arguments after the first are keyword-only for `set_seller`, `set_buyer`,
+`add_note(text, *, language=None)`, `CsrProperties(*, ...)`, the credentials
+after `env`, and the `clearance`/`accept_language` arguments of the report and
+clear methods.
+`set_seller` and `set_buyer` take a `Party`, or a name with either
+`address=Address(...)` or the address fields, not both. Parse invoices with `FinalizedInvoice.from_xml(xml)` /
+`from_file(path)` and `SignedInvoice.from_xml(xml)` / `from_file(path)`.
+
 ## Object lifetime
 
-Native owners support `with` and `close()`. Close objects returned by methods as
-well as ones you construct. Closing is idempotent; later calls on a closed owner
-raise `InvalidInputError`. Calls involving the same owners are synchronized.
+Native owners support `with` and `close()`. Close objects returned by methods and
+properties as well as ones you construct. Closing is idempotent; later calls on,
+or property reads from, a closed owner raise `InvalidInputError`. Calls involving the same owners are synchronized.
 Independent owners can be used independently.
 
 `InvoiceBuilder.build()` consumes the builder's inner state even when final
-validation fails. `FinalizedInvoice.sign(signer)` consumes the finalized invoice;
-`SignedInvoice.into_xml()` consumes the signed invoice. The wrapper remains safe
+validation fails. `FinalizedInvoice.sign(signer)` consumes the finalized invoice
+(as does the deprecated `SignedInvoice.into_xml()` for a signed one). The wrapper remains safe
 to close, but further use of consumed state fails. Create a new input object to
 retry after a consuming operation fails.
 
-Plain strings, bytes, decimal values, and dataclass snapshots do not need
-`close()`. Returned object snapshots are independent of their parent, but still
-need their own cleanup.
+Plain strings, bytes, decimal values, and the dataclass models do not need
+`close()`. Returned owners (such as a `ValidationResponse` and its
+`validation_results`) are independent of their parent, but still need their own
+cleanup.
+
+## Invoice data models
+
+Everything read from an invoice is a frozen dataclass. Values compare with `==`,
+copy with `dataclasses.replace`, and go straight back into a builder, so an
+invoice read from XML can be rebuilt from its parts. An invoice reads its data
+from the native object once, on first access, and caches it.
+
+| Model | Constructor and notes |
+| --- | --- |
+| `Party` | `Party(name, address=None, vat_id=None, identifiers=())`. `vat_id` and each identifier take an `Identifier` or a string. `other_id` is the first identifier. |
+| `Identifier` | `Identifier(value, scheme=None)`: replaces the `VatId`/`OtherId` handles and the `(value, scheme)` tuples of line item identifiers. |
+| `Address` | `Address(country_code, city, street, building_number, postal_code, additional_street=None, additional_number=None, district=None, province=None)`. Validated on construction; `"SA"` reads back as `"SAU"`. |
+| `InvoiceNote` | `InvoiceNote(text, language_id=None)`; `language` defaults to `"en"`. |
+| `OriginalInvoiceRef` | `OriginalInvoiceRef(id, uuid=None, issue_date=None, issue_time=None, document_type_code=None)`: billing references, the referenced original invoice, and line document references. |
+| `PaymentMeans` | `PaymentMeans(code, instruction_notes=(), account_identifier=None, payment_terms=None)`. |
+| `Adjustment` | `Adjustment(amount, reason=None, reason_code=None, ...)` or `Adjustment.percent_of(base, percent, ...)`: line and document allowances and charges. Document entries read back with `charge`, `category`, `rate`, `exemption`, `tax_category_count` and `omitted_rate`, and round-trip through `builder.add_adjustment(entry)`. |
+| `InvoiceLineItem` | As input to `add_item`, `total_amount` and `vat_amount` are optional: they are calculated when `None` and checked when given. |
+
+```python
+from fatoora import Adjustment, FinalizedInvoice, InvoiceBuilder, InvoiceLineItem, VatCategory
+
+parsed = FinalizedInvoice.from_file("invoice.xml")
+print(parsed.seller.name, parsed.seller.vat_id.value, parsed.seller.address.city)
+
+line = InvoiceLineItem("Notebook", "PCE", quantity=2, unit_price="50", vat_rate=15,
+                       vat_category=VatCategory.STANDARD,
+                       adjustments=(Adjustment(10, reason="Volume discount"),))
+builder = InvoiceBuilder(parsed.invoice_type_kind, parsed.invoice_sub_type,
+                         seller=parsed.seller, buyer=parsed.buyer)
+builder.add_item(line)
+builder.add_charge(Adjustment.percent_of(90, 5, reason="Delivery"), VatCategory.STANDARD, 15)
+```
 
 ## Errors
 
@@ -117,69 +221,156 @@ use [error codes and structured details](../errors.md).
 
 | Function | Inputs | Returns |
 | --- | --- | --- |
-| `validate_xml_invoice_from_str(config, xml)` | `Config`, XML `str` | `True` on schema success; raises on malformed XML or schema rejection |
-| `validate_zatca_invoice_from_str(config, xml, *, previous_invoice_hash=None, evaluated_at=None)` | `Config`, XML `str`, optional keyword-only context strings | Report `dict`, including rejection or incomplete coverage |
-| `invoice_hash_base64_from_xml_str(xml)` | XML `str` | Base64 invoice hash `str` |
+| `validate_xml(xml)` | XML `str` | `True` on schema success; raises on malformed XML or schema rejection |
+| `validate_zatca(xml, *, previous_invoice_hash=None, evaluated_at=None)` | XML `str`, optional keyword-only context | `ZatcaReport`, including rejection or incomplete coverage |
+| `hash_xml(xml)` | XML `str` | Base64 invoice hash `str` |
 
 ```python
 from pathlib import Path
-from fatoora import Config, validate_zatca_invoice_from_str
+from fatoora import Severity, validate_zatca
 
 xml = Path("invoice.xml").read_text(encoding="utf-8")
-with Config() as config:
-    report = validate_zatca_invoice_from_str(config, xml)
-print(report["is_valid"], report["is_complete"])
+report = validate_zatca(xml)
+print(report.is_valid, report.is_complete)
+for finding in report.findings:
+    if finding.severity is Severity.ERROR:
+        print(finding.code, finding.message, finding.location)
 ```
 
 `previous_invoice_hash` supplies trusted invoice-history context. `evaluated_at`
-accepts an RFC3339 timestamp; omission uses one UTC clock snapshot. Missing
-predecessor context makes coverage incomplete. A returned dictionary does not
-mean the invoice passed: inspect `is_valid` and the stage findings.
+accepts a timezone-aware `datetime` or RFC 3339 text; omission uses one UTC clock
+snapshot. Missing predecessor context makes coverage incomplete. A returned report
+does not mean the invoice passed: inspect `is_valid` and the stage findings.
 
-Execution failures raise an exception and may include a partial report at
-`error.details["report"]`. Argument failures can have no report. All schemas are
+`ZatcaReport` is a frozen dataclass with `is_valid`, `is_complete`, `has_errors`,
+`stages`, `evaluated_at` (`datetime`), `profile` and `schema_version`, plus
+`findings`, `errors` and `warnings` (all stages, in order), `stage(ZatcaStage.KSA)`,
+`to_json()` and `to_dict()`. Each `ZatcaStageReport` has `stage`, `status`,
+`findings`, `evaluated_assertions` and `provenance` (`ZatcaRuleSource` with
+`stylesheet` and `sha256`, or `None`). Each `ZatcaFinding` has `severity`, `layer`,
+`code`, `message`, `location` (`ValidationLocation` with `kind`, `path`, `line`,
+`column`, or `None`) and `assertion_site`. `ZatcaStage`, `ZatcaStageStatus`,
+`Severity`, `ValidationLayer` and `ValidationLocationKind` are string enums whose
+values are the JSON names, so `finding.severity == "error"` also holds.
+
+Execution failures raise an exception and may include a partial report, as a
+dictionary, at `error.details["report"]`. Argument failures can have no report. All schemas are
 bundled; validation needs no network or external SDK. It does not establish
 remote acceptance or certificate issuer trust. See the
 [validation reference](../invoice-validation.md).
 
 ## ZATCA API methods
 
-Create `ZatcaClient(config)` with a live `Config`. Client methods block the
-calling thread and return owned objects:
+Create `ZatcaClient(config, *, timeout=None)` with a live `Config`. Client
+methods block the calling thread and return owned objects.
+
+`timeout` bounds each request, from connecting until the response body is read.
+Pass seconds as an `int`/`float` or a `datetime.timedelta`; it is rounded up to
+whole milliseconds and must be positive and at most about 49.7 days (otherwise
+`ValueError`; a non-numeric value raises `TypeError`). A request that exceeds it
+raises `NetworkError`. The default `None` applies no client-side timeout.
+
+```python
+from datetime import timedelta
+from fatoora import Config, Environment, ZatcaClient
+
+client = ZatcaClient(Config(Environment.SIMULATION), timeout=30)
+client = ZatcaClient(Config(Environment.SIMULATION), timeout=timedelta(seconds=30))
+```
+
 
 | Method | Inputs | Returns |
 | --- | --- | --- |
-| `post_csr_for_ccsid(csr, otp)` | `Csr`, OTP `str` | `CsidCompliance` |
-| `post_ccsid_for_pcsid(ccsid)` | `CsidCompliance` | `CsidProduction` |
-| `renew_csid(pcsid, csr, otp, accept_language=None)` | `CsidProduction`, `Csr`, OTP, optional language | `CsidProduction` |
-| `check_invoice_compliance(invoice, ccsid)` | `SignedInvoice`, `CsidCompliance` | `ValidationResponse` |
-| `report_simplified_invoice(invoice, pcsid, clearance_status, accept_language=None)` | `SignedInvoice`, `CsidProduction`, Boolean, optional language | `ValidationResponse` |
-| `clear_standard_invoice(invoice, pcsid, clearance_status, accept_language=None)` | `SignedInvoice`, `CsidProduction`, Boolean, optional language | `ValidationResponse` |
+| `request_compliance_csid(csr, otp)` | `Csr`, OTP `str` | `ComplianceCsid` |
+| `request_production_csid(ccsid)` | `ComplianceCsid` | `ProductionCsid` |
+| `renew_csid(pcsid, csr, otp, accept_language=None)` | `ProductionCsid`, `Csr`, OTP, optional language | `ProductionCsid` |
+| `check_invoice_compliance(invoice, ccsid)` | `SignedInvoice`, `ComplianceCsid` | `ValidationResponse` |
+| `report_simplified_invoice(invoice, pcsid, *, clearance, accept_language=None)` | `SignedInvoice`, `ProductionCsid`, keyword-only `ClearanceMode` and optional language | `ValidationResponse` |
+| `clear_standard_invoice(invoice, pcsid, *, clearance, accept_language=None)` | `SignedInvoice`, `ProductionCsid`, keyword-only `ClearanceMode` and optional language | `ValidationResponse` |
 
-Pass `clearance_status` and `accept_language` as keyword arguments. Positional calls raise a `DeprecationWarning` and stop working in 0.6.
+`clearance` is a required `ClearanceMode` controlling the `Clearance-Status`
+request header: `ClearanceMode.DISABLED` sends `0`, `ClearanceMode.ENABLED`
+sends `1`. It does not describe the result. The 0.5 Boolean
+`clearance_status=False`/`True` still works until 0.7 with a
+`DeprecationWarning`; passing both raises `TypeError`. `accept_language` is a string or `None` controlling the language header.
+These methods do not expose an asynchronous or cancellation-token parameter;
+use `timeout` to bound how long a call can block.
 
-`clearance_status` is a required Boolean controlling the request header; use
-`False` for ordinary reporting and `True` for clearance. It does not describe the
-result. `accept_language` is a string or `None` controlling the language header.
-These methods do not expose an asynchronous or cancellation-token parameter.
-
-A successful HTTP request does not guarantee acceptance. Call `outcome()` to
-obtain `InvoiceOutcome`, or `ensure_accepted()` to raise for rejected/unknown
-outcomes. `cleared_invoice_xml()` returns `str | None`; save that XML for an
-accepted clearance when present. `reporting_status()` and `clearance_status()`
-also return optional strings. See [API request and response contracts](../api-client.md)
+A successful HTTP request does not guarantee acceptance. Read `outcome` for the
+`InvoiceOutcome`, or call `ensure_accepted()` to raise for rejected/unknown
+outcomes. `cleared_invoice_xml` is `str | None`; save that XML for an accepted
+clearance when present. `reporting_status` is an optional `ReportingStatus` and
+`clearance_status` an optional `ClearanceStatus`. See [API request and response contracts](../api-client.md)
 and the [API guide](../../guides/api.md).
 
 ## Signed invoice metadata
 
-| Method | Returns |
+| Property or method | Value |
 | --- | --- |
-| `signature()` | Encoded signature `str` |
-| `public_key()` | Encoded public key `str` |
-| `cert_hash()` | Encoded certificate hash `str` |
-| `signed_props_hash()` | Encoded signed-properties hash `str` |
-| `signing_time()` | UTC `str` formatted `YYYY-MM-DDTHH:MM:SS` |
+| `signature` | Encoded signature `str` |
+| `public_key` | Encoded public key `str` |
+| `cert_hash` | Encoded certificate hash `str` |
+| `signed_props_hash` | Encoded signed-properties hash `str` |
+| `signing_time` | Timezone-aware (UTC) `datetime` |
+| `invoice_hash` | The invoice hash stored in the signature, `str` |
+| `hash()` | The invoice hash recomputed from the XML, `str` |
 
 Parsing a signed invoice checks local signature, digest and QR integrity.
 Run explicit validation for schema and business-rule checks; issuer trust and clearance require separate evidence. See the
 [signing reference](../invoice-signing.md) for key/certificate formats and signing operations.
+
+## Migrate from 0.5
+
+The [Python migration guide](../../guides/migrate-0.6/python.md) walks through
+the common changes with before-and-after code; this table lists every name.
+
+Getters became read-only properties in 0.6. This is a hard break: drop the
+parentheses (`invoice.id()` becomes `invoice.id`); calling a property now fails
+like calling its value (`TypeError: 'str' object is not callable`). Rows marked
+"enforced" were warnings in 0.5.1 and are now `TypeError`s too. Every other 0.5
+name below still works in 0.6 and emits a `DeprecationWarning` that names its
+replacement; they are removed in 0.7. Run your tests with
+`python -W error::DeprecationWarning` (or pytest's
+`filterwarnings = ["error::DeprecationWarning"]`) to find the remaining uses.
+
+| 0.5 | 0.6 |
+| --- | --- |
+| Getter methods: `invoice.id()`, `address.city()`, `response.reporting_status()`, ... (hard break) | Properties: `invoice.id`, `address.city`, `response.reporting_status` |
+| `invoice.issue_datetime()`, `signed.signing_time()` return `str` (hard break) | `invoice.issue_datetime`, `signed.signing_time` are aware `datetime`s |
+| `issue_date()`, `actual_delivery_date()`, `latest_delivery_date()`, `OriginalInvoiceRef.issue_date()` return `str` (hard break) | Properties of type `datetime.date` |
+| `InvoiceBuilder.new(type, subtype, ...)` / `new_with_reference(type, subtype, ref, reason)` | `InvoiceBuilder(type, subtype, *, id=..., ..., original_invoice=ref, original_invoice_reason=reason)` |
+| Setters return `None` | Setters return the builder |
+| `set_seller(name, country_code, ...)` positional (enforced) | `set_seller(Party(...))`, or `set_seller(name, *, vat_id=..., address=Address(...))` or the address keywords |
+| `set_buyer(name, country_code, ...)` positional (enforced) | `set_buyer(name, *, address=..., ...)` |
+| `add_note(text, language)` positional (enforced) | `add_note(text, language=...)` |
+| `set_note(language, text)` / `set_note_without_language(text)` | `add_note(text, language=...)` / `add_note(text)` |
+| `set_payment_means_code(code)` | `add_payment_means(PaymentMeans(code))` |
+| `builder.flags(value)` | `builder.set_flags(value)` |
+| `set_tax_exemption(category, rate, exemption)` | `add_tax_exemption(category, rate, exemption)` |
+| `add_document_adjustment(charge, value, category, rate)` | `add_allowance(value, category, rate)` / `add_charge(value, category, rate)` |
+| `set_allowance`, `invoice_level_discount`, `invoice_level_charge`, `allowance_reason` | `add_allowance` / `add_charge` with an explicit category and rate, and `Adjustment(amount, reason=...)` |
+| `Address.new(...)`, `PaymentMeans.new(code, instruction)`, `OriginalInvoiceRef.new(id, uuid, date, time, type_code)` | `Address(...)`, `PaymentMeans(code, (instruction,))`, `OriginalInvoiceRef(id, uuid, issue_date, issue_time, document_type_code)` |
+| `Address`, `Party`, `InvoiceNote`, `OriginalInvoiceRef`, `PaymentMeans`, `Adjustment`, `VatId`, `OtherId` were native handles: `close()`, `with` | Frozen dataclasses; `close()` and `with` are no-ops that warn |
+| `AllowanceCharge(charge, amount, category, rate, ...)` and `Adjustment.amount(value)` / `Adjustment.percentage(base, percent)` | One `Adjustment` model: `Adjustment(amount, ..., charge=..., category=..., rate=...)` / `Adjustment.percent_of(base, percent)`; `invoice.adjustments` returns `Adjustment` values |
+| `adjustment.value`, `adjustment.percent`, `adjustment.with_supplied_amount(value)` | `adjustment.amount`, `adjustment.percentage`, `Adjustment.percent_of(base, percent, amount=value)` |
+| `DocumentReference(id, uuid, issue_date, issue_time, document_type_code)` | `OriginalInvoiceRef(...)` with the same arguments; line `document_references` hold `OriginalInvoiceRef` values and their `issue_date` is a `date` (hard break) |
+| `VatId`, `OtherId`, `item.item_seller_identifier` as a `(value, scheme)` tuple | `Identifier(value, scheme)`; unpacking or indexing an `Identifier` warns |
+| `party.identifiers`, `payment_means.instruction_notes` return lists (hard break) | Tuples |
+| `LineItemBuilder.new()` | `LineItemBuilder()` |
+| `CsrProperties.new(...)` positional (enforced) | `CsrProperties(*, ...)`; `CsrProperties.new(*, ...)` is deprecated |
+| `ComplianceCsid.new(env, token, secret, request_id=None)` / `ProductionCsid.new(...)` | `ComplianceCsid(env, *, token=..., secret=..., request_id=None)` / `ProductionCsid(...)` |
+| `CsrProperties.from_properties_str(text)` / `parse_csr_config(text)` | `CsrProperties.from_str(text)` |
+| `CsrProperties.parse_csr_config_file(path)` | `CsrProperties.from_file(path)` |
+| `Signer` | `InvoiceSigner` |
+| `CsidCompliance` / `CsidProduction` | `ComplianceCsid` / `ProductionCsid` |
+| `client.post_csr_for_ccsid(csr, otp)` / `post_ccsid_for_pcsid(ccsid)` | `client.request_compliance_csid(csr, otp)` / `request_production_csid(ccsid)` |
+| `report_simplified_invoice(invoice, pcsid, False)` positional flags (enforced) | `report_simplified_invoice(invoice, pcsid, clearance=ClearanceMode.DISABLED)` |
+| `clearance_status=False` / `True` on `report_simplified_invoice` and `clear_standard_invoice` | `clearance=ClearanceMode.DISABLED` / `ClearanceMode.ENABLED` |
+| `reporting_status`, `clearance_status`, `results.status`, `message.message_type`, `message.status` return `str` (no warning; `type(x) is str` no longer holds) | `str` enums `ReportingStatus`, `ClearanceStatus`, `ValidationStatus`, `MessageType`; comparisons with strings still hold |
+| `parse_finalized_invoice_xml(xml)` / `parse_finalized_invoice_xml_file(path)` | `FinalizedInvoice.from_xml(xml)` / `FinalizedInvoice.from_file(path)` |
+| `parse_signed_invoice_xml(xml)` / `parse_signed_invoice_xml_file(path)` | `SignedInvoice.from_xml(xml)` / `SignedInvoice.from_file(path)` |
+| `invoice.xml()` (hard break), `to_xml()`, `into_xml()` | `invoice.xml` |
+| `invoice.hash_base64()` | `invoice.hash()` |
+| `invoice_hash_base64_from_xml_str(xml)` | `hash_xml(xml)` |
+| `validate_xml_invoice_from_str(config, xml)` | `validate_xml(xml)` |
+| `validate_zatca_invoice_from_str(config, xml, ...)` returns a `dict` | `validate_zatca(xml, ...)` returns a `ZatcaReport`; `report.to_dict()` gives the 0.5 dictionary |

@@ -2,6 +2,8 @@
 //! only in a child process, avoiding process-global environment races in tests.
 mod support;
 use base64ct::{Base64, Encoding};
+use fatoora_ffi::api::ffi::ClearanceMode;
+use fatoora_ffi::common::ffi::Environment;
 use fatoora_ffi::{
     api::ffi::*, common::ffi::BindingError, crypto::ffi::Config, invoice::ffi::SignedInvoice,
 };
@@ -103,19 +105,34 @@ fn blocking_http_contract() {
 }
 
 fn exercise_client() {
-    let config = ok(Config::new(0));
-    let client = ok(ZatcaClient::create(&config));
+    let config = ok(Config::new(Environment::NonProduction));
+    let client = ok(ZatcaClient::new(&config));
     let mut simple = ok(SignedInvoice::from_xml(SIMPLE));
     let standard = ok(SignedInvoice::from_xml(STANDARD));
     // Also exercise the adapter from an already-entered Tokio runtime.
     let runtime = tokio::runtime::Runtime::new().unwrap();
     runtime.block_on(async {
         for token in ["accepted", "rejected", "unknown", "http-error"] {
-            let production = ok(CsidProduction::create(0, None, token.as_bytes(), b"secret"));
-            let compliance = ok(CsidCompliance::create(0, None, token.as_bytes(), b"secret"));
+            let production = ok(ProductionCsid::new(
+                Environment::NonProduction,
+                None,
+                token.as_bytes(),
+                b"secret",
+            ));
+            let compliance = ok(ComplianceCsid::new(
+                Environment::NonProduction,
+                None,
+                token.as_bytes(),
+                b"secret",
+            ));
             for result in [
-                client.report_simplified_invoice(&simple, &production, false, Some(b"ar")),
-                client.clear_standard_invoice(&standard, &production, true, None),
+                client.report_simplified_invoice(
+                    &simple,
+                    &production,
+                    ClearanceMode::Disabled,
+                    Some(b"ar"),
+                ),
+                client.clear_standard_invoice(&standard, &production, ClearanceMode::Enabled, None),
                 client.check_invoice_compliance(&simple, &compliance),
             ] {
                 if token == "http-error" {
@@ -153,28 +170,43 @@ fn exercise_client() {
             }
         }
     });
-    let production = ok(CsidProduction::create(0, None, b"accepted", b"secret"));
-    let compliance = ok(CsidCompliance::create(0, None, b"accepted", b"secret"));
+    let production = ok(ProductionCsid::new(
+        Environment::NonProduction,
+        None,
+        b"accepted",
+        b"secret",
+    ));
+    let compliance = ok(ComplianceCsid::new(
+        Environment::NonProduction,
+        None,
+        b"accepted",
+        b"secret",
+    ));
     // Rejected calls must not make additional requests or consume the invoice.
     assert!(
         client
-            .clear_standard_invoice(&simple, &production, false, None)
+            .clear_standard_invoice(&simple, &production, ClearanceMode::Disabled, None)
             .is_err()
     );
     assert!(
         client
-            .report_simplified_invoice(&standard, &production, false, None)
+            .report_simplified_invoice(&standard, &production, ClearanceMode::Disabled, None)
             .is_err()
     );
-    let wrong_env = ok(CsidProduction::create(1, None, b"accepted", b"secret"));
+    let wrong_env = ok(ProductionCsid::new(
+        Environment::Simulation,
+        None,
+        b"accepted",
+        b"secret",
+    ));
     assert!(
         client
-            .report_simplified_invoice(&simple, &wrong_env, false, None)
+            .report_simplified_invoice(&simple, &wrong_env, ClearanceMode::Disabled, None)
             .is_err()
     );
     assert_eq!(
         client
-            .report_simplified_invoice(&simple, &production, false, Some(b"ar\0"))
+            .report_simplified_invoice(&simple, &production, ClearanceMode::Disabled, Some(b"ar\0"))
             .err()
             .unwrap()
             .code(),
@@ -184,7 +216,7 @@ fn exercise_client() {
     written(|out| ok(simple.into_xml(out)));
     assert_eq!(
         client
-            .report_simplified_invoice(&simple, &production, false, None)
+            .report_simplified_invoice(&simple, &production, ClearanceMode::Disabled, None)
             .err()
             .unwrap()
             .code(),
@@ -192,7 +224,7 @@ fn exercise_client() {
     );
     assert_eq!(
         client
-            .clear_standard_invoice(&simple, &production, false, None)
+            .clear_standard_invoice(&simple, &production, ClearanceMode::Disabled, None)
             .err()
             .unwrap()
             .code(),
@@ -206,5 +238,14 @@ fn exercise_client() {
             .code(),
         1
     );
-    assert!(client.post_ccsid_for_pcsid(&compliance).is_err());
+    assert!(client.request_production_csid(&compliance).is_err());
+}
+
+#[test]
+fn timeout_constructor_rejects_zero() {
+    let config = ok(Config::new(Environment::NonProduction));
+    ok(ZatcaClient::with_timeout(&config, 30_000));
+    let err = ZatcaClient::with_timeout(&config, 0).err().unwrap();
+    assert_eq!(err.code(), fatoora_core::ErrorKind::Internal as i32);
+    assert!(written(|out| err.message(out)).contains("timeout"));
 }

@@ -21,8 +21,8 @@ internal partial struct FinalizedInvoice
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_FinalizedInvoice_totals", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultInvoiceTotalsBindingError Totals(FinalizedInvoice* handle);
 
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_FinalizedInvoice_hash_base64", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultVoidBindingError HashBase64(FinalizedInvoice* handle, DiplomatWrite* writeable);
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_FinalizedInvoice_hash", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultVoidBindingError Hash(FinalizedInvoice* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_FinalizedInvoice_xml", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError Xml(FinalizedInvoice* handle, DiplomatWrite* writeable);

@@ -1,5 +1,5 @@
 //! CSR generation and helpers.
-use crate::config::EnvironmentType;
+use crate::config::Environment;
 use base64ct::{Base64, Encoding};
 use ecdsa;
 use ecdsa::elliptic_curve::Generate;
@@ -173,12 +173,12 @@ impl Criticality for TemplateNameExtension {
     }
 }
 
-impl EnvironmentType {
+impl Environment {
     const fn as_template_bytes(&self) -> &'static [u8] {
         match self {
-            EnvironmentType::NonProduction => b"TSTZATCA-Code-Signing",
-            EnvironmentType::Simulation => b"PREZATCA-Code-Signing",
-            EnvironmentType::Production => b"ZATCA-Code-Signing",
+            Environment::NonProduction => b"TSTZATCA-Code-Signing",
+            Environment::Simulation => b"PREZATCA-Code-Signing",
+            Environment::Production => b"ZATCA-Code-Signing",
         }
     }
 
@@ -356,12 +356,12 @@ impl Csr {
 ///
 /// # Examples
 /// ```rust,no_run
-/// use fatoora_core::config::EnvironmentType;
+/// use fatoora_core::config::Environment;
 /// use fatoora_core::csr::CsrProperties;
 ///
-/// let props = CsrProperties::from_properties_str("csr.common.name=example")?;
+/// let props: CsrProperties = "csr.common.name=example".parse()?;
 /// let key = fatoora_core::csr::SigningKey::generate();
-/// let csr = props.build(&key, EnvironmentType::NonProduction)?;
+/// let csr = props.build(&key, Environment::NonProduction)?;
 /// # let _ = csr;
 /// use fatoora_core::csr::CsrError;
 /// # Ok::<(), CsrError>(())
@@ -411,7 +411,7 @@ impl CsrProperties {
 
     fn generate_template_name_extension(
         &self,
-        env: EnvironmentType,
+        env: Environment,
     ) -> Result<TemplateNameExtension, CsrError> {
         env.to_extension()
     }
@@ -436,7 +436,7 @@ impl CsrProperties {
     ///
     /// # Errors
     /// Returns [`CsrError`] when subject or extension generation fails.
-    pub fn build(&self, signer: &SigningKey, env: EnvironmentType) -> Result<Csr, CsrError> {
+    pub fn build(&self, signer: &SigningKey, env: Environment) -> Result<Csr, CsrError> {
         let subject = self.generate_subject()?;
         let asn1_extension = self.generate_template_name_extension(env)?;
         let san_extension = self.generate_san_extension()?;
@@ -464,11 +464,76 @@ impl CsrProperties {
             .map(|inner| Csr { inner })
     }
 
+    /// Parse a CSR properties file (the ZATCA SDK `csr-config` format).
+    ///
+    /// # Errors
+    /// Returns [`CsrError::Io`] when the file cannot be read, and otherwise the same
+    /// errors as [`str::parse`] (via [`FromStr`]), with their path set to `path`.
+    pub fn from_file(path: impl AsRef<path::Path>) -> Result<Self, CsrError> {
+        let path = path.as_ref();
+        let pathbuf = path.to_path_buf();
+        let contents = std::fs::read_to_string(path).map_err(|e| CsrError::Io {
+            path: pathbuf.clone(),
+            source: e,
+        })?;
+        contents.parse::<CsrProperties>().map_err(|mut error| {
+            match &mut error {
+                CsrError::PropertiesRead { path, .. } | CsrError::MissingProperty { path, .. } => {
+                    *path = pathbuf
+                }
+                _ => {}
+            }
+            error
+        })
+    }
+
     /// Parse a CSR properties string.
     ///
     /// # Errors
     /// Returns [`CsrError`] when the properties cannot be read or required fields are missing.
+    #[deprecated(
+        since = "0.6.0",
+        note = "use `str::parse` / `CsrProperties::from_str` instead"
+    )]
     pub fn from_properties_str(properties: &str) -> Result<CsrProperties, CsrError> {
+        properties.parse()
+    }
+
+    /// Parse a CSR properties string.
+    ///
+    /// # Errors
+    /// Returns [`CsrError`] when the properties cannot be read or required fields are missing.
+    #[deprecated(
+        since = "0.6.0",
+        note = "use `str::parse` / `CsrProperties::from_str` instead"
+    )]
+    pub fn parse_csr_config(properties: &str) -> Result<CsrProperties, CsrError> {
+        properties.parse()
+    }
+
+    /// Parse a CSR properties file.
+    ///
+    /// # Errors
+    /// Returns [`CsrError`] when the file cannot be read or required fields are missing.
+    #[deprecated(since = "0.6.0", note = "use `CsrProperties::from_file` instead")]
+    pub fn parse_csr_config_file(
+        csr_path: impl AsRef<path::Path>,
+    ) -> Result<CsrProperties, CsrError> {
+        Self::from_file(csr_path)
+    }
+}
+
+/// Parses CSR properties text (the ZATCA SDK `csr-config` format).
+///
+/// # Errors
+/// Returns [`CsrError::PropertiesRead`] when the text is not a valid properties
+/// document, [`CsrError::MissingProperty`] when a required `csr.*` key is absent,
+/// and [`CsrError::Validation`] when a value fails validation. Errors report the
+/// path as `<properties>`.
+impl FromStr for CsrProperties {
+    type Err = CsrError;
+
+    fn from_str(properties: &str) -> Result<Self, CsrError> {
         let pathbuf = path::PathBuf::from("<properties>");
         let cursor = Cursor::new(properties.as_bytes());
         let mut dst_map = std::collections::HashMap::new();
@@ -504,38 +569,6 @@ impl CsrProperties {
         )?;
 
         Ok(csr)
-    }
-
-    /// Parse a CSR properties string.
-    ///
-    /// # Errors
-    /// Returns [`CsrError`] when the properties cannot be read or required fields are missing.
-    pub fn parse_csr_config(properties: &str) -> Result<CsrProperties, CsrError> {
-        Self::from_properties_str(properties)
-    }
-
-    /// Parse a CSR properties file.
-    ///
-    /// # Errors
-    /// Returns [`CsrError`] when the file cannot be read or required fields are missing.
-    pub fn parse_csr_config_file(
-        csr_path: impl AsRef<path::Path>,
-    ) -> Result<CsrProperties, CsrError> {
-        let path = csr_path.as_ref();
-        let pathbuf = path.to_path_buf();
-        let contents = std::fs::read_to_string(path).map_err(|e| CsrError::Io {
-            path: pathbuf.clone(),
-            source: e,
-        })?;
-        CsrProperties::from_properties_str(&contents).map_err(|mut error| {
-            match &mut error {
-                CsrError::PropertiesRead { path, .. } | CsrError::MissingProperty { path, .. } => {
-                    *path = pathbuf
-                }
-                _ => {}
-            }
-            error
-        })
     }
 }
 

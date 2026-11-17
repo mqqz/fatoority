@@ -1,7 +1,7 @@
 mod common;
 
 use base64ct::{Base64, Encoding};
-use fatoora_core::config::EnvironmentType;
+use fatoora_core::config::Environment;
 use fatoora_core::csr::{CsrProperties, SigningKey as CoreSigningKey};
 use fatoora_core::invoice::sign::{InvoiceSigner, SigningError};
 use k256::ecdsa::SigningKey as K256SigningKey;
@@ -25,10 +25,10 @@ fn sign_invoice_emits_signature_and_qr() {
     let config_path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures/csr-configs/csr-config-example-EN.properties");
     let csr_props = std::fs::read_to_string(&config_path).expect("read csr config");
-    let csr_config = CsrProperties::from_properties_str(&csr_props).expect("csr config");
+    let csr_config = CsrProperties::from_str(&csr_props).expect("csr config");
     let signer_key = CoreSigningKey::generate();
     let _csr = csr_config
-        .build(&signer_key, EnvironmentType::NonProduction)
+        .build(&signer_key, Environment::NonProduction)
         .expect("csr build");
     let key_der = signer_key.to_der().expect("key der");
     let k256_key = K256SigningKey::from_pkcs8_der(&key_der).expect("key der");
@@ -127,20 +127,31 @@ fn sign_xml_emits_signature_and_signing_time() {
 }
 
 #[test]
-fn invoice_hash_base64_decodes_to_32_bytes() {
+fn invoice_hash_decodes_to_32_bytes() {
     let invoice = common::dummy_finalized_invoice();
-    let hash_b64 = invoice.hash_base64().expect("hash");
-    let decoded = Base64::decode_vec(&hash_b64).expect("decode b64");
+    let hash = invoice.hash().expect("hash");
+    let decoded = Base64::decode_vec(hash.as_str()).expect("decode b64");
     assert_eq!(decoded.len(), 32);
 }
 
 #[test]
-fn signed_invoice_hash_base64_matches_finalized_invoice() {
+#[allow(deprecated)]
+fn deprecated_hash_base64_matches_hash() {
     let (signer, _key) = build_test_signer();
     let invoice = common::dummy_finalized_invoice();
-    let expected = invoice.hash_base64().expect("hash");
+    let expected = invoice.hash().expect("hash");
+    assert_eq!(invoice.hash_base64().expect("hash"), expected.as_str());
     let signed = invoice.sign(&signer).expect("sign invoice");
-    let actual = signed.hash_base64().expect("hash");
+    assert_eq!(signed.hash_base64().expect("hash"), expected.as_str());
+}
+
+#[test]
+fn signed_invoice_hash_matches_finalized_invoice() {
+    let (signer, _key) = build_test_signer();
+    let invoice = common::dummy_finalized_invoice();
+    let expected = invoice.hash().expect("hash");
+    let signed = invoice.sign(&signer).expect("sign invoice");
+    let actual = signed.hash().expect("hash");
     assert_eq!(expected, actual);
 }
 
@@ -167,10 +178,10 @@ fn build_test_signing_material() -> (CoreSigningKey, Vec<u8>, Vec<u8>) {
     let config_path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures/csr-configs/csr-config-example-EN.properties");
     let csr_props = std::fs::read_to_string(&config_path).expect("read csr config");
-    let csr_config = CsrProperties::from_properties_str(&csr_props).expect("csr config");
+    let csr_config = CsrProperties::from_str(&csr_props).expect("csr config");
     let signer_key = CoreSigningKey::generate();
     let _csr = csr_config
-        .build(&signer_key, EnvironmentType::NonProduction)
+        .build(&signer_key, Environment::NonProduction)
         .expect("csr build");
     let key_der = signer_key.to_der().expect("key der");
     let k256_key = K256SigningKey::from_pkcs8_der(&key_der).expect("key der");
@@ -291,20 +302,17 @@ fn signing_qr_overflow_preserves_error_details_and_signer_reusability() {
     let signed = signer.sign_xml(&xml).unwrap();
     let parsed = fatoora_core::invoice::xml::parse::parse_signed_invoice_xml(&signed).unwrap();
     assert_eq!(
-        parsed.hash_base64().unwrap(),
-        common::dummy_finalized_invoice().hash_base64().unwrap()
+        parsed.hash().unwrap(),
+        common::dummy_finalized_invoice().hash().unwrap()
     );
 }
 
 #[test]
 fn hashing_rejects_relative_namespace_uris() {
-    use fatoora_core::invoice::sign::invoice_hash_base64_from_xml_str;
+    use fatoora_core::invoice::hash_xml;
     // Well-formed XML can still be impossible to canonicalize. Returning a hash
     // of an empty or partial canonicalization would sign different content.
-    let error = invoice_hash_base64_from_xml_str(
-        "<Invoice xmlns=\"relative\"><Amount>100</Amount></Invoice>",
-    )
-    .unwrap_err();
+    let error = hash_xml("<Invoice xmlns=\"relative\"><Amount>100</Amount></Invoice>").unwrap_err();
     assert!(matches!(error, SigningError::Xml(_)));
     assert_eq!(error.kind(), fatoora_core::ErrorKind::Xml);
 }
@@ -314,7 +322,7 @@ fn malformed_closing_tag_is_rejected_without_poisoning_the_signer() {
     let input = include_str!("fixtures/malformed/closing-tag.xml");
     let (signer, _) = build_test_signer();
     assert!(signer.sign_xml(input).is_err());
-    assert!(fatoora_core::invoice::sign::invoice_hash_base64_from_xml_str(input).is_err());
+    assert!(fatoora_core::invoice::hash_xml(input).is_err());
     assert!(
         signer
             .sign_xml(&common::dummy_finalized_invoice().to_xml().unwrap())
@@ -343,8 +351,8 @@ fn repeated_signing_preserves_bytes_and_unrelated_extension_trivia() {
     assert_ne!(hash_target, signed);
     assert_eq!(signer.sign_xml(&hash_target).unwrap(), signed);
     assert_eq!(
-        fatoora_core::invoice::sign::invoice_hash_base64_from_xml_str(&signed).unwrap(),
-        fatoora_core::invoice::sign::invoice_hash_base64_from_xml_str(&input).unwrap()
+        fatoora_core::invoice::hash_xml(&signed).unwrap(),
+        fatoora_core::invoice::hash_xml(&input).unwrap()
     );
 }
 
@@ -675,13 +683,13 @@ fn signing_document_limits_apply_before_parsing_and_after_generation() {
     let sample = common::dummy_finalized_invoice();
     let typed = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified))
         .id("INV-LARGE")
-        .uuid("8e6000cf-1a98-4174-b3e7-b5d5954bc10d")
-        .issue_datetime("2024-01-01T12:30:00Z")
-        .currency("SAR")
-        .previous_invoice_hash("hash")
+        .uuid("8e6000cf-1a98-4174-b3e7-b5d5954bc10d".parse().unwrap())
+        .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+        .currency("SAR".parse().unwrap())
+        .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(0)
         .seller(sample.data().seller().clone())
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
         .line_item(sample.data().line_items()[0].clone())
         .note(InvoiceNote::new("en", "x".repeat(limit)))
@@ -821,31 +829,25 @@ fn signing_preserves_whitespace_padded_qr_references() {
 #[test]
 fn signed_hash_uses_retained_xml_and_does_not_trust_embedded_digest() {
     use fatoora_core::invoice::{
-        sign::invoice_hash_base64_from_xml_str,
+        hash_xml,
         xml::parse::{parse_finalized_invoice_xml, parse_signed_invoice_xml},
     };
     let (signer, _) = build_test_signer();
     let finalized = common::dummy_finalized_invoice();
     let emitted = finalized.to_xml().unwrap();
-    assert_eq!(
-        finalized.hash_base64().unwrap(),
-        invoice_hash_base64_from_xml_str(&emitted).unwrap()
-    );
+    assert_eq!(finalized.hash().unwrap(), hash_xml(&emitted).unwrap());
     let signed = finalized.sign(&signer).unwrap();
-    assert_eq!(
-        signed.hash_base64().unwrap(),
-        invoice_hash_base64_from_xml_str(signed.xml()).unwrap()
-    );
-    assert_eq!(signed.hash_base64().unwrap(), signed.invoice_hash());
+    assert_eq!(signed.hash().unwrap(), hash_xml(signed.xml()).unwrap());
+    assert_eq!(&signed.hash().unwrap(), signed.invoice_hash());
 
     // A leading zero changes retained XML text without changing the numeric model.
     let changed = signed.xml().replacen("<cbc:Percent>", "<cbc:Percent>0", 1);
     assert_ne!(changed, signed.xml());
     assert!(parse_signed_invoice_xml(&changed).is_err());
     let model = parse_finalized_invoice_xml(&changed).unwrap();
-    let raw_hash = invoice_hash_base64_from_xml_str(&changed).unwrap();
-    assert_ne!(model.hash_base64().unwrap(), raw_hash);
-    assert_ne!(raw_hash, signed.invoice_hash());
+    let raw_hash = hash_xml(&changed).unwrap();
+    assert_ne!(model.hash().unwrap(), raw_hash);
+    assert_ne!(&raw_hash, signed.invoice_hash());
 }
 
 #[test]

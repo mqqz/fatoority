@@ -9,44 +9,47 @@ namespace Fatoora.Raw;
 internal partial struct ZatcaClient
 {
 
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_create", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultZatcaClientBindingError Create(Config* config);
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_new", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultZatcaClientBindingError New(Config* config);
 
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_post_csr_for_ccsid", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultCsidComplianceBindingError PostCsrForCcsid(ZatcaClient* handle, Csr* csr, DiplomatSliceU8 otp);
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_with_timeout", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultZatcaClientBindingError WithTimeout(Config* config, uint timeoutMs);
 
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_post_ccsid_for_pcsid", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultCsidProductionBindingError PostCcsidForPcsid(ZatcaClient* handle, CsidCompliance* credentials);
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_request_compliance_csid", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultComplianceCsidBindingError RequestComplianceCsid(ZatcaClient* handle, Csr* csr, DiplomatSliceU8 otp);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_request_production_csid", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultProductionCsidBindingError RequestProductionCsid(ZatcaClient* handle, ComplianceCsid* credentials);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_renew_csid", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultCsidProductionBindingError RenewCsid(ZatcaClient* handle, CsidProduction* credentials, Csr* csr, DiplomatSliceU8 otp, DiplomatOptionSliceU8 acceptLanguage);
+    internal static unsafe extern DiplomatResultProductionCsidBindingError RenewCsid(ZatcaClient* handle, ProductionCsid* credentials, Csr* csr, DiplomatSliceU8 otp, DiplomatOptionSliceU8 acceptLanguage);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_check_invoice_compliance", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultValidationResponseBindingError CheckInvoiceCompliance(ZatcaClient* handle, SignedInvoice* invoice, CsidCompliance* credentials);
+    internal static unsafe extern DiplomatResultValidationResponseBindingError CheckInvoiceCompliance(ZatcaClient* handle, SignedInvoice* invoice, ComplianceCsid* credentials);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_report_simplified_invoice", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultValidationResponseBindingError ReportSimplifiedInvoice(ZatcaClient* handle, SignedInvoice* invoice, CsidProduction* credentials, [MarshalAs(UnmanagedType.U1)] bool clearanceStatus, DiplomatOptionSliceU8 acceptLanguage);
+    internal static unsafe extern DiplomatResultValidationResponseBindingError ReportSimplifiedInvoice(ZatcaClient* handle, SignedInvoice* invoice, ProductionCsid* credentials, ClearanceMode clearanceMode, DiplomatOptionSliceU8 acceptLanguage);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_clear_standard_invoice", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultValidationResponseBindingError ClearStandardInvoice(ZatcaClient* handle, SignedInvoice* invoice, CsidProduction* credentials, [MarshalAs(UnmanagedType.U1)] bool clearanceStatus, DiplomatOptionSliceU8 acceptLanguage);
+    internal static unsafe extern DiplomatResultValidationResponseBindingError ClearStandardInvoice(ZatcaClient* handle, SignedInvoice* invoice, ProductionCsid* credentials, ClearanceMode clearanceMode, DiplomatOptionSliceU8 acceptLanguage);
 
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_prepare_post_csr_for_ccsid", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultComplianceRequestBindingError PreparePostCsrForCcsid(ZatcaClient* handle, Csr* csr, DiplomatSliceU8 otp);
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_prepare_request_compliance_csid", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultComplianceRequestBindingError PrepareRequestComplianceCsid(ZatcaClient* handle, Csr* csr, DiplomatSliceU8 otp);
 
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_prepare_post_ccsid_for_pcsid", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultProductionRequestBindingError PreparePostCcsidForPcsid(ZatcaClient* handle, CsidCompliance* credentials);
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_prepare_request_production_csid", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultProductionRequestBindingError PrepareRequestProductionCsid(ZatcaClient* handle, ComplianceCsid* credentials);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_prepare_renew_csid", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultProductionRequestBindingError PrepareRenewCsid(ZatcaClient* handle, CsidProduction* credentials, Csr* csr, DiplomatSliceU8 otp, DiplomatOptionSliceU8 acceptLanguage);
+    internal static unsafe extern DiplomatResultProductionRequestBindingError PrepareRenewCsid(ZatcaClient* handle, ProductionCsid* credentials, Csr* csr, DiplomatSliceU8 otp, DiplomatOptionSliceU8 acceptLanguage);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_prepare_check_invoice_compliance", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultInvoiceRequestBindingError PrepareCheckInvoiceCompliance(ZatcaClient* handle, SignedInvoice* invoice, CsidCompliance* credentials);
+    internal static unsafe extern DiplomatResultInvoiceRequestBindingError PrepareCheckInvoiceCompliance(ZatcaClient* handle, SignedInvoice* invoice, ComplianceCsid* credentials);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_prepare_report_simplified_invoice", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultInvoiceRequestBindingError PrepareReportSimplifiedInvoice(ZatcaClient* handle, SignedInvoice* invoice, CsidProduction* credentials, [MarshalAs(UnmanagedType.U1)] bool clearanceStatus, DiplomatOptionSliceU8 acceptLanguage);
+    internal static unsafe extern DiplomatResultInvoiceRequestBindingError PrepareReportSimplifiedInvoice(ZatcaClient* handle, SignedInvoice* invoice, ProductionCsid* credentials, ClearanceMode clearanceMode, DiplomatOptionSliceU8 acceptLanguage);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_prepare_clear_standard_invoice", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultInvoiceRequestBindingError PrepareClearStandardInvoice(ZatcaClient* handle, SignedInvoice* invoice, CsidProduction* credentials, [MarshalAs(UnmanagedType.U1)] bool clearanceStatus, DiplomatOptionSliceU8 acceptLanguage);
+    internal static unsafe extern DiplomatResultInvoiceRequestBindingError PrepareClearStandardInvoice(ZatcaClient* handle, SignedInvoice* invoice, ProductionCsid* credentials, ClearanceMode clearanceMode, DiplomatOptionSliceU8 acceptLanguage);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaClient_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(ZatcaClient* handle);

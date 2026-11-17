@@ -1,33 +1,32 @@
 //! Explicit pipeline for the pinned SDK's local validation stages.
 use super::{
-    ValidationLayer, ValidationLocation, ZatcaFailureKind, ZatcaFinding, ZatcaRuleSource,
-    ZatcaStage, ZatcaStageReport, ZatcaStageStatus, ZatcaValidationError, ZatcaValidationOptions,
-    ZatcaValidationReport,
+    ValidationLayer, ValidationLocation, Validator, ZatcaFailureKind, ZatcaFinding,
+    ZatcaRuleSource, ZatcaStage, ZatcaStageReport, ZatcaStageStatus, ZatcaValidationError,
+    ZatcaValidationOptions, ZatcaValidationReport,
     business_rules::{self, FailureKind, Source, StageStatus},
-    integrity, validate_xml_invoice_report_from_str,
+    integrity,
 };
 use crate::config::Config;
+use crate::invoice::InvoiceHash;
 
 /// Validate raw XML against the pinned ZATCA SDK profile using local checks.
 ///
-/// Schema and business-rule rejections return a report. Warnings remain visible.
-/// Malformed input, resource exhaustion, or an interrupted evaluation return an
-/// error carrying the partial report. `report.is_valid()` requires every
-/// applicable stage to complete without errors; an empty finding list alone
-/// never establishes success.
-///
-/// The default clock is UTC, captured once. Supply `evaluated_at` to reproduce
-/// a result or specify an implicit timezone. `previous_invoice_hash` is required
-/// to verify chain continuity; omitting it leaves that stage `context_required`.
-/// The SDK profile omits signature/QR checks for standard invoices. Local
-/// signature checks establish content/key integrity, not issuer trust, remote
-/// acceptance, certificate revocation, or invoice history.
-///
 /// # Errors
 /// Returns [`ZatcaValidationError`] with completed and partial stage findings.
+#[deprecated(since = "0.6.0", note = "use `Validator::validate_zatca` instead")]
 pub fn validate_zatca_invoice_from_str(
     xml: &str,
     config: &Config,
+    options: &ZatcaValidationOptions,
+) -> Result<ZatcaValidationReport, ZatcaValidationError> {
+    let _ = config;
+    Validator::new().validate_zatca(xml, options)
+}
+
+/// Implementation of [`Validator::validate_zatca`].
+pub(super) fn validate_zatca(
+    validator: &Validator,
+    xml: &str,
     options: &ZatcaValidationOptions,
 ) -> Result<ZatcaValidationReport, ZatcaValidationError> {
     #[cfg(not(target_arch = "wasm32"))]
@@ -71,15 +70,15 @@ pub fn validate_zatca_invoice_from_str(
     }
     if options
         .previous_invoice_hash
-        .as_deref()
-        .is_some_and(|hash| !integrity::valid_previous_hash(hash))
+        .as_ref()
+        .is_some_and(|hash| !integrity::valid_previous_hash(hash.as_str()))
     {
         return Err(failure(report, ZatcaFailureKind::InvalidContext,None,"previous_invoice_hash must be a canonical base64 SHA-256 digest or SDK hexadecimal digest".into()));
     }
     if let Err(kind) = business_rules::check_input(xml) {
         return Err(failure(report, failure_kind(&kind), None, kind.to_string()));
     }
-    let xsd = match validate_xml_invoice_report_from_str(xml, config) {
+    let xsd = match validator.validate_xml_report(xml) {
         Ok(xsd) => xsd,
         Err(error) => {
             return Err(failure(
@@ -163,9 +162,14 @@ pub fn validate_zatca_invoice_from_str(
         error.location = location.map(ValidationLocation::XPath);
         return Err(error);
     }
-    if let Err((stage, message)) =
-        integrity::apply(xml, options.previous_invoice_hash.as_deref(), &mut report)
-    {
+    if let Err((stage, message)) = integrity::apply(
+        xml,
+        options
+            .previous_invoice_hash
+            .as_ref()
+            .map(InvoiceHash::as_str),
+        &mut report,
+    ) {
         return Err(failure(
             report,
             ZatcaFailureKind::Integrity,

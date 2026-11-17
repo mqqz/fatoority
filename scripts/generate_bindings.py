@@ -57,6 +57,10 @@ def main():
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     destination.write_bytes(source.read_bytes())
     subprocess.run([
+        sys.executable, str(ROOT / "scripts/generate_js_facade.py"),
+        *(["--check"] if args.check else []),
+    ], cwd=ROOT, check=True)
+    subprocess.run([
         sys.executable, str(ROOT / "scripts/generate_c_facade.py"),
         *(["--check"] if args.check else []),
     ], cwd=ROOT, check=True)

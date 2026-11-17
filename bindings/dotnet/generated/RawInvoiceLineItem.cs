@@ -27,8 +27,8 @@ internal partial struct InvoiceLineItem
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_adjustment", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultAdjustmentBindingError Adjustment(InvoiceLineItem* handle, nuint index);
 
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_adjustment_is_charge", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultBoolBindingError AdjustmentIsCharge(InvoiceLineItem* handle, nuint index);
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_adjustment_kind", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultAdjustmentKindBindingError AdjustmentKind(InvoiceLineItem* handle, nuint index);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_item_seller_identifier", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultOtherIdBindingError ItemSellerIdentifier(InvoiceLineItem* handle);
@@ -58,7 +58,7 @@ internal partial struct InvoiceLineItem
     internal static unsafe extern DiplomatResultVatBreakdownBindingError TaxSubtotal(InvoiceLineItem* handle, nuint index);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_new", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultInvoiceLineItemBindingError New(DiplomatSliceU8 description, DiplomatSliceU8 quantity, DiplomatSliceU8 unitCode, DiplomatSliceU8 unitPrice, DiplomatSliceU8 rate, byte category);
+    internal static unsafe extern DiplomatResultInvoiceLineItemBindingError New(DiplomatSliceU8 description, DiplomatSliceU8 quantity, DiplomatSliceU8 unitCode, DiplomatSliceU8 unitPrice, DiplomatSliceU8 rate, VatCategory category);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_with_metadata", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultInvoiceLineItemBindingError WithMetadata(InvoiceLineItem* handle, DiplomatOptionSliceU8 id, TaxExemption* exemption);
@@ -103,7 +103,7 @@ internal partial struct InvoiceLineItem
     internal static unsafe extern bool HasGrossAmount(InvoiceLineItem* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_vat_category", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern byte VatCategory(InvoiceLineItem* handle);
+    internal static unsafe extern VatCategory VatCategory(InvoiceLineItem* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(InvoiceLineItem* handle);

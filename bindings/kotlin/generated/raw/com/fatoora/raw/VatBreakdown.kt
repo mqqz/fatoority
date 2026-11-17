@@ -8,9 +8,9 @@ import com.sun.jna.Structure
 internal interface VatBreakdownLib: Library {
     fun fatoora_VatBreakdown_destroy(handle: Pointer)
     fun fatoora_VatBreakdown_has_vat_rate(handle: Pointer): Byte
-    fun fatoora_VatBreakdown_without_vat_rate(handle: Pointer): ResultPointerPointer
-    fun fatoora_VatBreakdown_new(category: FFIUint8, rate: Slice, taxableAmount: Slice, taxAmount: Slice, exemption: Pointer): ResultPointerPointer
-    fun fatoora_VatBreakdown_category(handle: Pointer): FFIUint8
+    fun fatoora_VatBreakdown_omit_vat_rate(handle: Pointer): ResultPointerPointer
+    fun fatoora_VatBreakdown_new(category: Int, rate: Slice, taxableAmount: Slice, taxAmount: Slice, exemption: Pointer): ResultPointerPointer
+    fun fatoora_VatBreakdown_category(handle: Pointer): Int
     fun fatoora_VatBreakdown_rate(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_VatBreakdown_taxable_amount(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_VatBreakdown_tax_amount(handle: Pointer, write: Pointer): ResultUnitPointer
@@ -47,12 +47,12 @@ class VatBreakdown internal constructor (
         internal val lib: VatBreakdownLib = Native.load("fatoora_ffi", libClass)
         @JvmStatic
 
-        fun new_(category: UByte, rate: String, taxableAmount: String, taxAmount: String, exemption: TaxExemption): Result<VatBreakdown> {
+        fun new_(category: VatCategory, rate: String, taxableAmount: String, taxAmount: String, exemption: TaxExemption): Result<VatBreakdown> {
             val rateSliceMemory = PrimitiveArrayTools.borrowUtf8(rate)
             val taxableAmountSliceMemory = PrimitiveArrayTools.borrowUtf8(taxableAmount)
             val taxAmountSliceMemory = PrimitiveArrayTools.borrowUtf8(taxAmount)
 
-            val returnVal = lib.fatoora_VatBreakdown_new(FFIUint8(category), rateSliceMemory.slice, taxableAmountSliceMemory.slice, taxAmountSliceMemory.slice, exemption.handle);
+            val returnVal = lib.fatoora_VatBreakdown_new(category.toNative(), rateSliceMemory.slice, taxableAmountSliceMemory.slice, taxAmountSliceMemory.slice, exemption.handle);
             try {
                 val nativeOkVal = returnVal.getNativeOk();
                 if (nativeOkVal != null) {
@@ -80,9 +80,9 @@ class VatBreakdown internal constructor (
         return (returnVal > 0)
     }
 
-    fun withoutVatRate(): Result<VatBreakdown> {
+    fun omitVatRate(): Result<VatBreakdown> {
 
-        val returnVal = lib.fatoora_VatBreakdown_without_vat_rate(handle);
+        val returnVal = lib.fatoora_VatBreakdown_omit_vat_rate(handle);
         val nativeOkVal = returnVal.getNativeOk();
         if (nativeOkVal != null) {
             val selfEdges: List<Any> = listOf()
@@ -97,10 +97,10 @@ class VatBreakdown internal constructor (
         }
     }
 
-    fun category(): UByte {
+    fun category(): VatCategory {
 
         val returnVal = lib.fatoora_VatBreakdown_category(handle);
-        return (returnVal.toUByte())
+        return (VatCategory.fromNative(returnVal))
     }
 
     fun rate(): Result<String> {

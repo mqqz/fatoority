@@ -11,10 +11,13 @@
 #include "BindingError.d.h"
 #include "InvoiceLineItem.d.h"
 #include "InvoiceNote.d.h"
+#include "InvoiceSubType.d.h"
+#include "InvoiceTypeKind.d.h"
 #include "OriginalInvoiceRef.d.h"
 #include "Party.d.h"
 #include "PaymentMeans.d.h"
 #include "Text.d.h"
+#include "VatCategory.d.h"
 
 #include "InvoiceData.d.h"
 
@@ -89,13 +92,13 @@ fatoora_InvoiceData_allowance_reason_result fatoora_InvoiceData_allowance_reason
 
 uint64_t fatoora_InvoiceData_invoice_counter(const InvoiceData* self);
 
-uint8_t fatoora_InvoiceData_vat_category(const InvoiceData* self);
+VatCategory fatoora_InvoiceData_vat_category(const InvoiceData* self);
 
-uint8_t fatoora_InvoiceData_flags_raw(const InvoiceData* self);
+uint8_t fatoora_InvoiceData_flags(const InvoiceData* self);
 
-uint8_t fatoora_InvoiceData_invoice_type_kind(const InvoiceData* self);
+InvoiceTypeKind fatoora_InvoiceData_invoice_type_kind(const InvoiceData* self);
 
-uint8_t fatoora_InvoiceData_invoice_sub_type(const InvoiceData* self);
+InvoiceSubType fatoora_InvoiceData_invoice_sub_type(const InvoiceData* self);
 
 typedef struct fatoora_InvoiceData_seller_result {union {Party* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_seller_result;
 fatoora_InvoiceData_seller_result fatoora_InvoiceData_seller(const InvoiceData* self);

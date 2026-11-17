@@ -35,23 +35,23 @@ The getter takes no arguments and leaves the signed invoice usable.
 
 === "Python"
 
-    `SignedInvoice.qr_code() -> str` returns an independent string.
+    The `SignedInvoice.qr_code` property is an independent `str`.
 
 === "JavaScript"
 
-    `SignedInvoice.qrCode()` returns a string.
+    The `SignedInvoice.qrCode` property is a string.
 
 === "C#"
 
-    `SignedInvoice.QrCode()` returns a managed `string`.
+    The `SignedInvoice.QrCode` property returns a managed `string`.
 
 === "Kotlin"
 
-    `SignedInvoice.qrCode(): String` returns a managed string.
+    The `SignedInvoice.qrCode` property is a managed `String`.
 
 === "Java"
 
-    `SignedInvoice.qrCode()` returns a `String`.
+    `SignedInvoice.getQrCode()` returns a `String`.
 
 === "C"
 

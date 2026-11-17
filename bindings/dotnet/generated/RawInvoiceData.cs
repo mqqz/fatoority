@@ -79,16 +79,16 @@ internal partial struct InvoiceData
     internal static unsafe extern ulong InvoiceCounter(InvoiceData* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_vat_category", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern byte VatCategory(InvoiceData* handle);
+    internal static unsafe extern VatCategory VatCategory(InvoiceData* handle);
 
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_flags_raw", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern byte FlagsRaw(InvoiceData* handle);
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_flags", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern byte Flags(InvoiceData* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_invoice_type_kind", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern byte InvoiceTypeKind(InvoiceData* handle);
+    internal static unsafe extern InvoiceTypeKind InvoiceTypeKind(InvoiceData* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_invoice_sub_type", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern byte InvoiceSubType(InvoiceData* handle);
+    internal static unsafe extern InvoiceSubType InvoiceSubType(InvoiceData* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_seller", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultPartyBindingError Seller(InvoiceData* handle);

@@ -1,10 +1,7 @@
 //! Mandatory offline compatibility checks; maintenance capture lives in scripts/sdk_parity.py.
 mod common;
 use base64ct::{Base64, Encoding};
-use fatoora_core::{
-    config::Config,
-    invoice::{sign::invoice_hash_base64_from_xml_str, validation::validate_xml_invoice_from_str},
-};
+use fatoora_core::invoice::{hash_xml, validation::Validator};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{fs, path::PathBuf};
@@ -196,11 +193,7 @@ fn hashes_canonical_bytes_and_xsd_match_official_sdk() {
         let expected: Value =
             serde_json::from_slice(&fs::read(dir.join("expected.json")).unwrap()).unwrap();
         if let Some(hash) = expected["hash"].as_str() {
-            assert_eq!(
-                invoice_hash_base64_from_xml_str(&xml).unwrap(),
-                hash,
-                "hash {id}"
-            );
+            assert_eq!(hash_xml(&xml).unwrap().as_str(), hash, "hash {id}");
             let canonical = fs::read(dir.join("canonical.xml")).unwrap();
             assert_eq!(
                 Base64::encode_string(&Sha256::digest(canonical)),
@@ -208,7 +201,7 @@ fn hashes_canonical_bytes_and_xsd_match_official_sdk() {
                 "SDK canonical hash {id}"
             );
         }
-        let result = validate_xml_invoice_from_str(&xml, &Config::default());
+        let result = Validator::new().validate_xml(&xml);
         if c["kind"] == "malformed" {
             assert!(
                 matches!(
@@ -283,7 +276,7 @@ fn sdk_and_fresh_rust_signatures_and_qr_are_verified() {
 #[test]
 fn csr_characteristics_and_proof_of_possession_match_sdk() {
     use fatoora_core::{
-        config::EnvironmentType,
+        config::Environment,
         csr::{CsrProperties, SigningKey},
     };
     use k256::ecdsa::{Signature, VerifyingKey, signature::Verifier};
@@ -300,15 +293,12 @@ fn csr_characteristics_and_proof_of_possession_match_sdk() {
         let reference = CertReq::from_der(&fs::read(dir.join("sdk.csr.der")).unwrap()).unwrap();
         let key = SigningKey::from_der(&fs::read(dir.join("sdk-key.der")).unwrap()).unwrap();
         let environment = match case["environment"].as_str().unwrap() {
-            "production" => EnvironmentType::Production,
-            "simulation" => EnvironmentType::Simulation,
-            "nonproduction" => EnvironmentType::NonProduction,
+            "production" => Environment::Production,
+            "simulation" => Environment::Simulation,
+            "nonproduction" => Environment::NonProduction,
             _ => panic!("unknown environment"),
         };
-        let properties = CsrProperties::from_properties_str(
-            &fs::read_to_string(dir.join("csr.properties")).unwrap(),
-        )
-        .unwrap();
+        let properties = CsrProperties::from_file(dir.join("csr.properties")).unwrap();
         let actual = CertReq::from_der(
             &properties
                 .build(&key, environment)
@@ -532,7 +522,9 @@ fn csr_rejections_match_explicit_sdk_failures() {
         let dir = root().join("cases").join(id);
         let properties = fs::read_to_string(dir.join("csr.properties")).unwrap();
         assert!(
-            fatoora_core::csr::CsrProperties::from_properties_str(&properties).is_err(),
+            properties
+                .parse::<fatoora_core::csr::CsrProperties>()
+                .is_err(),
             "{id}"
         );
         let expected: Value =
@@ -553,7 +545,7 @@ fn excluded_subtree_content_does_not_change_hash() {
         let expected: Value =
             serde_json::from_slice(&fs::read(dir.join("expected.json")).unwrap()).unwrap();
         assert_eq!(
-            invoice_hash_base64_from_xml_str(&changed).unwrap(),
+            hash_xml(&changed).unwrap().as_str(),
             expected["hash"].as_str().unwrap()
         );
     }
@@ -562,7 +554,7 @@ fn excluded_subtree_content_does_not_change_hash() {
 #[test]
 fn serialized_export_self_billing_is_rejected_like_the_sdk() {
     use fatoora_core::invoice::validation::{
-        ZatcaStage, ZatcaStageStatus, ZatcaValidationOptions, validate_zatca_invoice_from_str,
+        Validator, ZatcaStage, ZatcaStageStatus, ZatcaValidationOptions,
     };
     let options = ZatcaValidationOptions {
         evaluated_at: Some("2026-09-24T12:00:00Z".parse().unwrap()),
@@ -579,12 +571,9 @@ fn serialized_export_self_billing_is_rejected_like_the_sdk() {
         )
         .unwrap();
         assert!(evidence.contains("CODE : BR-KSA-07,"));
-        let report = validate_zatca_invoice_from_str(
-            &invoice.to_xml().unwrap(),
-            &Config::default(),
-            &options,
-        )
-        .unwrap();
+        let report = Validator::new()
+            .validate_zatca(&invoice.to_xml().unwrap(), &options)
+            .unwrap();
         let ksa = report
             .stages
             .iter()

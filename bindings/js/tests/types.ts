@@ -1,10 +1,76 @@
-import { Config, ZatcaClient, CsidCompliance, Xml, type CsidProduction, sendPrepared } from 'fatoority';
-import { ZatcaClient as RawClient } from 'fatoority/raw';
-const config = Config.new_(0);
-const credentials = CsidCompliance.create(0, '1', 'token', 'secret');
+import {
+  Address, Adjustment, ClearanceMode, Config, Environment, FatooraError, InvalidInputError, InvoiceBuilder,
+  InvoiceSubType, InvoiceTypeKind, LineItemBuilder, PaymentMeans, ReportingStatus, Severity, TransportError, NetworkError,
+  ZatcaClient, ComplianceCsid, Xml, errorClassForCode, ErrorCode, sendPrepared,
+  type EnvironmentValue, type ErrorKind, type ProductionCsid, type SeverityValue, type SignedInvoice,
+  type ValidationResponse, type ZatcaFinding, type ZatcaStageReport, type ZatcaValidationReport,
+} from 'fatoority';
+import { ZatcaClient as RawClient, Config as RawConfig } from 'fatoority/raw';
+
+const config = Config.create(Environment.NonProduction);
+const rawConfig: Config = RawConfig.new_(Environment.NonProduction); // raw instances are root instances
+const credentials = ComplianceCsid.create(Environment.NonProduction, '1', 'token', 'secret');
 const client = new ZatcaClient(config, {fetch});
-const response: Promise<CsidProduction> = client.postCcsidForPcsid(credentials, {signal: new AbortController().signal});
-const prepared = RawClient.create(config).preparePostCcsidForPcsid(credentials);
-const sent: Promise<CsidProduction> = sendPrepared(prepared);
-const report: string = Xml.validateZatca(config, '<Invoice/>');
-void [response, sent, report];
+const response: Promise<ProductionCsid> = client.requestProductionCsid(credentials, {signal: new AbortController().signal});
+const prepared = RawClient.new_(rawConfig).prepareRequestProductionCsid(credentials);
+const sent: Promise<ProductionCsid> = sendPrepared(prepared);
+declare const invoice: SignedInvoice, production: ProductionCsid;
+const reported: Promise<ValidationResponse> = client.reportSimplifiedInvoice(invoice, production, ClearanceMode.Disabled);
+const cleared: Promise<ValidationResponse> = client.clearStandardInvoice(invoice, production, true);
+const named: Promise<ValidationResponse> = client.clearStandardInvoice(invoice, production, 'Enabled');
+
+const builder: InvoiceBuilder = InvoiceBuilder.create(InvoiceTypeKind.Tax, InvoiceSubType.Simplified, null, null, null, null);
+builder.addPaymentMeans(PaymentMeans.create('10', null));
+builder.setSeller('Seller', Address.create('SA', 'Riyadh', 'Street', '1234', '12222', null, null, null), '301121971500003', null, null);
+const line = LineItemBuilder.create();
+const rebate: Adjustment = Adjustment.percentOf('250', '10').suppliedAmount('25');
+const percentage: string | null = rebate.percentage; // value getters are properties
+const amount: string = rebate.value; // decimal amounts are strings
+// @ts-expect-error 0.5 getter calls are a compile error
+rebate.value();
+const city: string = Address.create('SA', 'Riyadh', 'Street', '1234', '12222', null, null, null).city;
+const district: string | null = Address.create('SA', 'Riyadh', 'Street', '1234', '12222', null, null, 'Olaya').district;
+const environmentProperty: Environment = rawConfig.env;
+// @ts-expect-error properties are read-only
+rawConfig.env = Environment.Production;
+/** 0.5 names still type-check until 0.7. */
+const legacyRebate: Adjustment = Adjustment.percentage('250', '10').withSuppliedAmount('25');
+const legacyPercent: string | undefined = legacyRebate.percent()?.value();
+line.addAllowance(rebate);
+// @ts-expect-error generated constructors are not public
+new Config();
+
+const report: ZatcaValidationReport = Xml.validateZatca('<Invoice/>', {previousInvoiceHash: 'hash', evaluatedAt: new Date()});
+const legacy: ZatcaValidationReport = Xml.validateZatca('<Invoice/>', '{"evaluated_at":"2025-01-01T00:00:00Z"}');
+const valid: boolean = report.isValid;
+const stages: readonly ZatcaStageReport[] = report.stages;
+const errors: ZatcaFinding[] = stages.flatMap(stage => stage.findings).filter(finding => finding.severity === 'Error');
+for (const finding of errors) {
+  const location = finding.location;
+  if (location?.kind === 'Xml') { const line: number | null = location.line; void line; }
+  else if (location?.kind === 'Field' || location?.kind === 'XPath') { const path: string | null = location.path; void path; }
+}
+// @ts-expect-error severities are a closed union
+const bogus: SeverityValue = 'Fatal';
+const severity: SeverityValue = Severity.Error.value as SeverityValue;
+const environment: EnvironmentValue = 'Simulation';
+
+try { Config.create(Environment.Production); }
+catch (error) {
+  if (error instanceof InvalidInputError) { const code: 1 = error.code; void code; }
+  if (error instanceof TransportError) { const status: number | undefined = error.httpStatus; const network: NetworkError = error; void [status, network]; }
+  if (error instanceof FatooraError) { const kind: ErrorKind | null = error.kind; const details: Record<string, unknown> = error.details; void [kind, details]; }
+}
+const ErrorClass: typeof FatooraError = errorClassForCode(ErrorCode.Crypto);
+
+declare const validation: ValidationResponse;
+const status: ReportingStatus | null = validation.reportingStatus;
+const statusText: string | null = validation.reportingStatusRaw;
+const httpStatus: number | null = validation.httpStatus;
+const results = validation.validationResults(); // native owners stay methods
+const xml: string = invoice.xml;
+const counter: bigint = invoice.data().invoiceCounter;
+const url: string = prepared.url;
+
+void [response, sent, reported, cleared, named, line, legacy, valid, bogus, severity, environment, ErrorClass,
+  percentage, amount, city, district, environmentProperty, status, statusText, httpStatus, results, xml, counter, url, legacyPercent];

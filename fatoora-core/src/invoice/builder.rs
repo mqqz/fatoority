@@ -1,14 +1,11 @@
 //! Invoice builder and view types.
 use super::{
-    Buyer, CurrencyCode, InvoiceData, InvoiceError, InvoiceField, InvoiceFlags, InvoiceNote,
-    InvoiceTimestamp, InvoiceTotalsData, InvoiceType, LineItems, QrCodeError, QrResult, Seller,
-    ValidationError, ValidationIssue, ValidationKind, VatCategory,
+    Buyer, CurrencyCode, InvoiceData, InvoiceError, InvoiceField, InvoiceFlags, InvoiceHash,
+    InvoiceNote, InvoiceTimestamp, InvoiceTotals, InvoiceType, InvoiceUuid, LineItem, QrCodeError,
+    QrResult, Seller, ValidationError, ValidationIssue, ValidationKind, VatCategory,
 };
 use crate::Decimal;
-use crate::invoice::sign::{
-    InvoiceSigner, SignedProperties, SigningError, invoice_hash_base64_from_xml,
-    invoice_hash_base64_from_xml_str,
-};
+use crate::invoice::sign::{InvoiceSigner, SignedProperties, SigningError};
 
 /// An invoice with computed totals and the implemented builder field checks.
 ///
@@ -18,7 +15,7 @@ use crate::invoice::sign::{
 #[derive(Debug, Clone, PartialEq)]
 pub struct FinalizedInvoice {
     data: InvoiceData,
-    pub(crate) totals: InvoiceTotalsData,
+    pub(crate) totals: InvoiceTotals,
 }
 
 /// An invoice carrying signature material, QR payload, and signed XML.
@@ -50,19 +47,19 @@ pub struct SignedInvoice {
 /// # Examples
 /// ```rust,no_run
 /// use fatoora_core::invoice::{
-///     InvoiceBuilder, InvoiceSubType, InvoiceType, LineItem, VatCategory, Seller,
+///     InvoiceBuilder, InvoiceSubType, InvoiceType, LineItem, PaymentMeans, VatCategory, Seller,
 /// };
 ///
 /// let seller: Seller = unimplemented!();
 /// let invoice = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified))
 ///     .id("INV-1")
-///     .uuid("uuid-1")
-///     .issue_datetime("2024-01-01T12:30:00Z")
-///     .currency("SAR")
-///     .previous_invoice_hash("hash")
+///     .uuid("uuid-1".parse()?)
+///     .issue_datetime("2024-01-01T12:30:00Z".parse()?)
+///     .currency("SAR".parse()?)
+///     .previous_invoice_hash("hash".parse()?)
 ///     .invoice_counter(1)
 ///     .seller(seller)
-///     .payment_means_code("10")
+///     .payment_means(PaymentMeans::new("10"))
 ///     .vat_category(VatCategory::Standard)
 ///     .line_item(LineItem::new("Item", fatoora_core::Decimal::parse("1.0").unwrap(), "PCE", fatoora_core::Decimal::parse("100.0").unwrap(), fatoora_core::Decimal::parse("15.0").unwrap(), VatCategory::Standard).unwrap())
 ///     .build()?;
@@ -83,12 +80,12 @@ pub struct SignedInvoice {
 pub struct InvoiceBuilder {
     invoice_type: InvoiceType,
     id: Option<String>,
-    uuid: Option<String>,
-    issue_datetime: Option<String>,
-    currency: Option<String>,
+    uuid: Option<InvoiceUuid>,
+    issue_datetime: Option<InvoiceTimestamp>,
+    currency: Option<CurrencyCode>,
     tax_currency: Option<super::CurrencyCode>,
     tax_currency_amount: Option<Decimal>,
-    previous_invoice_hash: Option<String>,
+    previous_invoice_hash: Option<InvoiceHash>,
     invoice_counter: Option<u64>,
     notes: Vec<InvoiceNote>,
     billing_references: Vec<super::OriginalInvoiceRef>,
@@ -97,7 +94,7 @@ pub struct InvoiceBuilder {
     seller: Option<Seller>,
     buyer: Option<Buyer>,
     delivery: Option<super::Delivery>,
-    line_items: LineItems,
+    line_items: Vec<LineItem>,
     payment_means: Vec<super::PaymentMeans>,
     payment_instruction_placeholder: bool,
     prepaid_amount: Decimal,
@@ -108,8 +105,7 @@ pub struct InvoiceBuilder {
     invoice_level_discount: Decimal,
     pub(crate) adjustment_vat_rate: Option<Decimal>,
     allowance_reason: Option<String>,
-    adjustments: Vec<super::AllowanceCharge>,
-    pending_adjustments: Vec<(usize, bool, super::DocumentAdjustment)>,
+    adjustments: Vec<(super::AdjustmentKind, super::DocumentAdjustment)>,
     exemptions: Vec<(VatCategory, Decimal, super::TaxExemption)>,
     supplied_breakdowns: Vec<super::VatBreakdown>,
     party_identifiers: Vec<(bool, super::OtherId)>,
@@ -157,26 +153,59 @@ impl InvoiceBuilder {
         self
     }
 
-    /// Append a document allowance; validation occurs in `build`.
+    /// Append a document-level allowance (`cac:AllowanceCharge` with
+    /// `cbc:ChargeIndicator` `false`); validation occurs in `build`.
+    ///
+    /// This is the way to add document-level allowances. Each entry carries its own
+    /// amount or percentage calculation, reason, reason code and VAT category and rate.
     ///
     /// Appends; allowances and charges keep their relative call order.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use fatoora_core::Decimal;
+    /// use fatoora_core::invoice::{
+    ///     Adjustment, DocumentAdjustment, InvoiceBuilder, InvoiceSubType, InvoiceType,
+    ///     VatCategory,
+    /// };
+    ///
+    /// let rate = Decimal::parse("15").unwrap();
+    /// let builder = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified))
+    ///     .allowance(
+    ///         DocumentAdjustment::new(
+    ///             Adjustment::amount(Decimal::parse("10").unwrap()),
+    ///             VatCategory::Standard,
+    ///             rate,
+    ///         )
+    ///         .with_reason("Loyalty discount"),
+    ///     )
+    ///     .charge(
+    ///         DocumentAdjustment::new(
+    ///             Adjustment::percent_of(
+    ///                 Decimal::parse("100").unwrap(),
+    ///                 Decimal::parse("5").unwrap(),
+    ///             ),
+    ///             VatCategory::Standard,
+    ///             rate,
+    ///         )
+    ///         .with_reason_code("FC"),
+    ///     );
+    /// # let _ = builder;
+    /// ```
     pub fn allowance(mut self, adjustment: super::DocumentAdjustment) -> Self {
-        self.pending_adjustments.push((
-            self.adjustments.len() + self.pending_adjustments.len(),
-            false,
-            adjustment,
-        ));
+        self.adjustments
+            .push((super::AdjustmentKind::Allowance, adjustment));
         self
     }
-    /// Append a document charge; validation occurs in `build`.
+    /// Append a document-level charge (`cac:AllowanceCharge` with
+    /// `cbc:ChargeIndicator` `true`); validation occurs in `build`.
+    ///
+    /// This is the way to add document-level charges; see [`allowance`](Self::allowance).
     ///
     /// Appends; allowances and charges keep their relative call order.
     pub fn charge(mut self, adjustment: super::DocumentAdjustment) -> Self {
-        self.pending_adjustments.push((
-            self.adjustments.len() + self.pending_adjustments.len(),
-            true,
-            adjustment,
-        ));
+        self.adjustments
+            .push((super::AdjustmentKind::Charge, adjustment));
         self
     }
     /// Append payment means, or fill the placeholder created by `payment_instruction`.
@@ -234,10 +263,21 @@ impl InvoiceBuilder {
 
     /// Add an individual document adjustment. Do not combine with legacy aggregate setters.
     ///
-    /// Appends; earlier adjustments are kept in call order.
-    pub fn adjustment(mut self, adjustment: super::AllowanceCharge) -> Self {
-        self.adjustments.push(adjustment);
-        self
+    /// Appends; earlier adjustments are kept in call order. Forwards to
+    /// [`allowance`](Self::allowance) or [`charge`](Self::charge) according to
+    /// `adjustment.kind`, converting with `DocumentAdjustment::from`.
+    #[deprecated(
+        since = "0.6.0",
+        note = "use `allowance(DocumentAdjustment)` or `charge(DocumentAdjustment)` instead; \
+                `DocumentAdjustment::from(AllowanceCharge)` converts an existing entry"
+    )]
+    pub fn adjustment(self, adjustment: super::AllowanceCharge) -> Self {
+        let kind = adjustment.kind;
+        let adjustment = super::DocumentAdjustment::from(adjustment);
+        match kind {
+            super::AdjustmentKind::Allowance => self.allowance(adjustment),
+            super::AdjustmentKind::Charge => self.charge(adjustment),
+        }
     }
 
     /// Append a VAT exemption reason for a category and rate.
@@ -293,7 +333,6 @@ impl InvoiceBuilder {
             adjustment_vat_rate: None,
             allowance_reason: None,
             adjustments: Vec::new(),
-            pending_adjustments: Vec::new(),
             exemptions: Vec::new(),
             supplied_breakdowns: Vec::new(),
             party_identifiers: Vec::new(),
@@ -308,35 +347,38 @@ impl InvoiceBuilder {
         self
     }
 
-    /// Set the invoice UUID.
+    /// Set the invoice UUID (`cbc:UUID`).
     ///
-    /// Replaces any previously set value.
-    pub fn uuid(mut self, uuid: impl Into<String>) -> Self {
-        self.uuid = Some(uuid.into());
+    /// Parse a string with [`InvoiceUuid::parse`]; with the `uuid` feature a
+    /// `uuid::Uuid` converts via `From`. Replaces any previously set value.
+    pub fn uuid(mut self, uuid: InvoiceUuid) -> Self {
+        self.uuid = Some(uuid);
         self
     }
 
-    /// Set the issue timestamp (`YYYY-MM-DDTHH:MM:SSZ`), validated in `build`.
+    /// Set the issue timestamp; `cbc:IssueDate` and `cbc:IssueTime` are derived from it.
     ///
-    /// Replaces any previously set value.
-    pub fn issue_datetime(mut self, issue_datetime: impl Into<String>) -> Self {
-        self.issue_datetime = Some(issue_datetime.into());
+    /// Parse a `YYYY-MM-DDTHH:MM:SSZ` string with [`InvoiceTimestamp::parse`]; with the
+    /// `chrono` feature a `chrono::DateTime<Utc>` converts via `From`. Replaces any
+    /// previously set value.
+    pub fn issue_datetime(mut self, issue_datetime: InvoiceTimestamp) -> Self {
+        self.issue_datetime = Some(issue_datetime);
         self
     }
 
-    /// Set the document currency code, validated in `build`.
+    /// Set the document currency (`cbc:DocumentCurrencyCode`).
     ///
-    /// Replaces any previously set value.
-    pub fn currency(mut self, currency: impl Into<String>) -> Self {
-        self.currency = Some(currency.into());
+    /// Parse an ISO 4217 code with [`CurrencyCode::parse`]. Replaces any previously set value.
+    pub fn currency(mut self, currency: CurrencyCode) -> Self {
+        self.currency = Some(currency);
         self
     }
 
-    /// Set the previous invoice hash.
+    /// Set the previous invoice hash (PIH).
     ///
-    /// Replaces any previously set value.
-    pub fn previous_invoice_hash(mut self, hash: impl Into<String>) -> Self {
-        self.previous_invoice_hash = Some(hash.into());
+    /// Parse a string with [`InvoiceHash::parse`]. Replaces any previously set value.
+    pub fn previous_invoice_hash(mut self, hash: InvoiceHash) -> Self {
+        self.previous_invoice_hash = Some(hash);
         self
     }
 
@@ -358,7 +400,17 @@ impl InvoiceBuilder {
 
     /// Set the legacy aggregate document-level charge.
     ///
-    /// Replaces any previously set value.
+    /// Replaces any previously set value. The charge is emitted with the document
+    /// VAT category and a rate taken from the first line in that category, and its
+    /// reason is the [`allowance_reason`](Self::allowance_reason) (or `"charge"`).
+    /// It cannot be combined with [`allowance`](Self::allowance) or
+    /// [`charge`](Self::charge).
+    #[deprecated(
+        since = "0.6.0",
+        note = "use `charge(DocumentAdjustment::new(Adjustment::amount(..), category, rate))` \
+                instead; it appends an entry with an explicit VAT category and rate \
+                instead of replacing one aggregate inferred from the document"
+    )]
     pub fn invoice_level_charge(mut self, charge: Decimal) -> Self {
         self.invoice_level_charge = charge;
         self
@@ -366,7 +418,17 @@ impl InvoiceBuilder {
 
     /// Set the legacy aggregate document-level discount.
     ///
-    /// Replaces any previously set value.
+    /// Replaces any previously set value. The allowance is emitted with the document
+    /// VAT category and a rate taken from the first line in that category, and its
+    /// reason is the [`allowance_reason`](Self::allowance_reason) (or `"discount"`).
+    /// It cannot be combined with [`allowance`](Self::allowance) or
+    /// [`charge`](Self::charge).
+    #[deprecated(
+        since = "0.6.0",
+        note = "use `allowance(DocumentAdjustment::new(Adjustment::amount(..), category, rate))` \
+                instead; it appends an entry with an explicit VAT category and rate \
+                instead of replacing one aggregate inferred from the document"
+    )]
     pub fn invoice_level_discount(mut self, discount: Decimal) -> Self {
         self.invoice_level_discount = discount;
         self
@@ -374,7 +436,15 @@ impl InvoiceBuilder {
 
     /// Set the legacy aggregate allowance reason.
     ///
-    /// Replaces any previously set value.
+    /// Replaces any previously set value. The reason applies to both the aggregate
+    /// discount and the aggregate charge, and on its own emits a zero-amount
+    /// allowance. It cannot be combined with [`allowance`](Self::allowance) or
+    /// [`charge`](Self::charge).
+    #[deprecated(
+        since = "0.6.0",
+        note = "set the reason on each entry with `DocumentAdjustment::with_reason` and add it \
+                with `allowance` or `charge` instead"
+    )]
     pub fn allowance_reason(mut self, reason: impl Into<String>) -> Self {
         self.allowance_reason = Some(reason.into());
         self
@@ -439,6 +509,11 @@ impl InvoiceBuilder {
     /// one if none exists.
     ///
     /// Replaces the first payment means' code; later payment means are unchanged.
+    #[deprecated(
+        since = "0.6.0",
+        note = "use `payment_means(PaymentMeans::new(code))` instead; it appends a \
+                payment means rather than changing the code of the first one"
+    )]
     pub fn payment_means_code(mut self, code: impl Into<String>) -> Self {
         self.payment_instruction_placeholder = false;
         if self.payment_means.is_empty() {
@@ -497,10 +572,12 @@ impl InvoiceBuilder {
     ///
     /// Consumes the builder.
     pub fn build(mut self) -> Result<FinalizedInvoice, InvoiceError> {
-        for (index, charge, adjustment) in self.pending_adjustments {
-            self.adjustments
-                .insert(index, adjustment.into_entry(charge)?);
-        }
+        // Conversion errors are reported with the other adjustment checks below,
+        // after the field checks.
+        let entries: Vec<_> = std::mem::take(&mut self.adjustments)
+            .into_iter()
+            .map(|(kind, adjustment)| adjustment.into_entry(kind))
+            .collect();
 
         for (index, line) in self.line_items.iter_mut().enumerate() {
             if line.id.is_none() {
@@ -525,63 +602,21 @@ impl InvoiceBuilder {
             }
             _ => {}
         }
-        match self.uuid.as_deref() {
-            None => push_issue(InvoiceField::Uuid, ValidationKind::Missing, None),
-            Some(value) if value.trim().is_empty() => {
-                push_issue(InvoiceField::Uuid, ValidationKind::Empty, None)
-            }
-            _ => {}
+        if self.uuid.is_none() {
+            push_issue(InvoiceField::Uuid, ValidationKind::Missing, None);
         }
-        let issue_datetime = match self.issue_datetime.as_deref() {
-            None => {
-                push_issue(InvoiceField::IssueDateTime, ValidationKind::Missing, None);
-                None
-            }
-            Some(value) if value.trim().is_empty() => {
-                push_issue(InvoiceField::IssueDateTime, ValidationKind::Empty, None);
-                None
-            }
-            Some(value) => match InvoiceTimestamp::parse(value) {
-                Ok(parsed) => Some(parsed),
-                Err(_) => {
-                    push_issue(
-                        InvoiceField::IssueDateTime,
-                        ValidationKind::InvalidFormat,
-                        None,
-                    );
-                    None
-                }
-            },
-        };
-        let currency = match self.currency.as_deref() {
-            None => {
-                push_issue(InvoiceField::Currency, ValidationKind::Missing, None);
-                None
-            }
-            Some(value) if value.trim().is_empty() => {
-                push_issue(InvoiceField::Currency, ValidationKind::Empty, None);
-                None
-            }
-            Some(value) => match CurrencyCode::parse(value) {
-                Ok(parsed) => Some(parsed),
-                Err(_) => {
-                    push_issue(InvoiceField::Currency, ValidationKind::InvalidFormat, None);
-                    None
-                }
-            },
-        };
-        match self.previous_invoice_hash.as_deref() {
-            None => push_issue(
+        if self.issue_datetime.is_none() {
+            push_issue(InvoiceField::IssueDateTime, ValidationKind::Missing, None);
+        }
+        if self.currency.is_none() {
+            push_issue(InvoiceField::Currency, ValidationKind::Missing, None);
+        }
+        if self.previous_invoice_hash.is_none() {
+            push_issue(
                 InvoiceField::PreviousInvoiceHash,
                 ValidationKind::Missing,
                 None,
-            ),
-            Some(value) if value.trim().is_empty() => push_issue(
-                InvoiceField::PreviousInvoiceHash,
-                ValidationKind::Empty,
-                None,
-            ),
-            _ => {}
+            );
         }
         if self.invoice_counter.is_none() {
             push_issue(InvoiceField::InvoiceCounter, ValidationKind::Missing, None);
@@ -669,7 +704,7 @@ impl InvoiceBuilder {
                         || item
                             .adjustments()
                             .iter()
-                            .any(|a| a.adjustment.value().is_ok_and(|v| v != Decimal::ZERO)))
+                            .any(|a| a.adjustment().value().is_ok_and(|v| v != Decimal::ZERO)))
                 {
                     push_issue(
                         InvoiceField::LineItemTotalAmount,
@@ -725,7 +760,8 @@ impl InvoiceBuilder {
             return Err(InvoiceError::Validation(ValidationError::new(issues)));
         }
 
-        if !self.adjustments.is_empty() {
+        let mut adjustments = Vec::with_capacity(entries.len());
+        if !entries.is_empty() {
             if self.invoice_level_discount != Decimal::ZERO
                 || self.invoice_level_charge != Decimal::ZERO
                 || self.allowance_reason.is_some()
@@ -737,7 +773,8 @@ impl InvoiceBuilder {
                 )])
                 .into());
             }
-            for adjustment in &self.adjustments {
+            for entry in entries {
+                let adjustment = entry?;
                 super::Adjustment {
                     amount: Some(adjustment.amount),
                     base_amount: adjustment.base_amount,
@@ -762,12 +799,13 @@ impl InvoiceBuilder {
                     )])
                     .into());
                 }
-                if adjustment.charge {
+                if adjustment.kind.is_charge() {
                     self.invoice_level_charge = self.invoice_level_charge.add(adjustment.amount)?;
                 } else {
                     self.invoice_level_discount =
                         self.invoice_level_discount.add(adjustment.amount)?;
                 }
+                adjustments.push(adjustment);
             }
         }
         for (seller, value) in self.party_identifiers {
@@ -791,8 +829,8 @@ impl InvoiceBuilder {
             invoice_type: self.invoice_type,
             id: self.id.expect("validated id"),
             uuid: self.uuid.expect("validated uuid"),
-            issue_datetime: issue_datetime.expect("validated issue datetime"),
-            currency: currency.expect("validated currency"),
+            issue_datetime: self.issue_datetime.expect("validated issue datetime"),
+            currency: self.currency.expect("validated currency"),
             tax_currency: self.tax_currency,
             tax_currency_amount: self.tax_currency_amount,
             previous_invoice_hash: self
@@ -814,7 +852,7 @@ impl InvoiceBuilder {
             invoice_level_discount: self.invoice_level_discount,
             adjustment_vat_rate: self.adjustment_vat_rate,
             allowance_reason: self.allowance_reason,
-            adjustments: self.adjustments,
+            adjustments,
         };
 
         if self.prepaid_amount < Decimal::ZERO
@@ -835,7 +873,7 @@ impl InvoiceBuilder {
             )])
             .into());
         }
-        let mut totals = InvoiceTotalsData::from_data(&invoice)?;
+        let mut totals = InvoiceTotals::from_data(&invoice)?;
         let mut seen_groups = Vec::new();
         for supplied in self.supplied_breakdowns {
             let key = (supplied.category, supplied.rate);
@@ -995,19 +1033,31 @@ impl FinalizedInvoice {
     }
 
     /// Totals computed by [`InvoiceBuilder::build`].
-    pub fn totals(&self) -> &InvoiceTotalsData {
+    pub fn totals(&self) -> &InvoiceTotals {
         &self.totals
     }
 
     /// Hash the XML serialization of this finalized model.
     ///
+    /// This is the value the next invoice in the chain passes to
+    /// [`InvoiceBuilder::previous_invoice_hash`].
+    ///
     /// # Errors
     /// Returns [`SigningError`] if XML serialization, parsing, or hashing fails.
-    pub fn hash_base64(&self) -> Result<String, SigningError> {
+    pub fn hash(&self) -> Result<InvoiceHash, SigningError> {
         let xml = self
             .to_xml()
             .map_err(|e| SigningError::SigningError(e.to_string()))?;
-        invoice_hash_base64_from_xml(&xml)
+        super::hash_xml(&xml)
+    }
+
+    /// Hash the XML serialization of this finalized model, as Base64 text.
+    ///
+    /// # Errors
+    /// Returns [`SigningError`] if XML serialization, parsing, or hashing fails.
+    #[deprecated(since = "0.6.0", note = "use `hash()` instead")]
+    pub fn hash_base64(&self) -> Result<String, SigningError> {
+        self.hash().map(|hash| hash.0)
     }
 
     /// Sign the invoice with the provided signer.
@@ -1043,7 +1093,7 @@ impl SignedInvoice {
     }
 
     /// Totals of the underlying finalized invoice.
-    pub fn totals(&self) -> &InvoiceTotalsData {
+    pub fn totals(&self) -> &InvoiceTotals {
         self.finalized.totals()
     }
 
@@ -1068,23 +1118,35 @@ impl SignedInvoice {
     }
 
     /// Invoice UUID.
-    pub fn uuid(&self) -> &str {
-        self.finalized.data().uuid.as_str()
+    pub fn uuid(&self) -> &InvoiceUuid {
+        self.finalized.data().uuid()
     }
 
     /// Return the embedded digest without recomputing or verifying it.
     ///
-    /// Equality with `hash_base64()` alone does not verify signature authenticity.
-    pub fn invoice_hash(&self) -> &str {
+    /// Equality with [`hash()`](Self::hash) alone does not verify signature authenticity.
+    pub fn invoice_hash(&self) -> &InvoiceHash {
         self.signed_properties.invoice_hash()
     }
 
     /// Recompute the invoice digest from the exact stored XML using ZATCA exclusions.
     ///
+    /// This is the value the next invoice in the chain passes to
+    /// [`InvoiceBuilder::previous_invoice_hash`].
+    ///
     /// # Errors
     /// Returns [`SigningError`] if XML parsing or hashing fails.
+    pub fn hash(&self) -> Result<InvoiceHash, SigningError> {
+        super::hash_xml(self.xml())
+    }
+
+    /// Recompute the invoice digest from the exact stored XML, as Base64 text.
+    ///
+    /// # Errors
+    /// Returns [`SigningError`] if XML parsing or hashing fails.
+    #[deprecated(since = "0.6.0", note = "use `hash()` instead")]
     pub fn hash_base64(&self) -> Result<String, SigningError> {
-        invoice_hash_base64_from_xml_str(self.xml())
+        self.hash().map(|hash| hash.0)
     }
 
     /// Base64 DER ECDSA signature over the invoice hash.
@@ -1113,7 +1175,7 @@ pub(super) trait InvoiceView {
     /// Invoice data.
     fn data(&self) -> &InvoiceData;
     /// Computed totals.
-    fn totals(&self) -> &InvoiceTotalsData;
+    fn totals(&self) -> &InvoiceTotals;
     /// Optional QR payload.
     fn qr_code(&self) -> Option<&str>;
 }
@@ -1123,7 +1185,7 @@ impl InvoiceView for FinalizedInvoice {
         self.data()
     }
 
-    fn totals(&self) -> &InvoiceTotalsData {
+    fn totals(&self) -> &InvoiceTotals {
         self.totals()
     }
 
@@ -1137,7 +1199,7 @@ impl InvoiceView for SignedInvoice {
         self.data()
     }
 
-    fn totals(&self) -> &InvoiceTotalsData {
+    fn totals(&self) -> &InvoiceTotals {
         self.totals()
     }
 

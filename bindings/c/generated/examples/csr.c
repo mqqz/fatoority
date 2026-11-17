@@ -33,8 +33,8 @@ int main(void) {
   Csr *csr = NULL;
   DiplomatWrite *pem = NULL;
 
-  fatoora_CsrProperties_parse_csr_config_file_result parsed =
-      fatoora_CsrProperties_parse_csr_config_file(s(FATOORA_DOC_CSR_PROPS));
+  fatoora_CsrProperties_from_file_result parsed =
+      fatoora_CsrProperties_from_file(s(FATOORA_DOC_CSR_PROPS));
   if (!parsed.is_ok) { report_error(parsed.err); goto cleanup; }
   properties = parsed.ok;
 

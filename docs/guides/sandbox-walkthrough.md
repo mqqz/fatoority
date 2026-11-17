@@ -75,8 +75,8 @@ to complete this sequence for your test EGS unit:
    **Production CSID** (`POST /production/csids`). Save that response's token and
    secret, and the issued certificate corresponding to your private key.
 
-The library exposes these operations as `post_csr_for_ccsid`,
-`check_invoice_compliance`, and `post_ccsid_for_pcsid` in Python, with corresponding
+The library exposes these operations as `request_compliance_csid`,
+`check_invoice_compliance`, and `request_production_csid`, with corresponding
 methods in the [other bindings](../reference/api-client.md). ZATCA documents the
 onboarding sequence in section 3.3 of the
 [Detailed Technical Guidelines](https://www.zatca.gov.sa/ar/E-Invoicing/Introduction/Guidelines/Documents/E-invoicing%20Detailed%20Technical%20Guidelines.pdf).
@@ -117,7 +117,7 @@ invoice. Each run generates a new UUID and the current UTC issue time.
 
     [Download the Python project](../assets/examples/journey/python.zip){ .md-button }
 
-    Use CPython 3.13 for this walkthrough. Version 0.5.1 publishes wheels for
+    Use CPython 3.13 for this walkthrough. Version 0.6.0 publishes wheels for
     CPython 3.9–3.13; Python 3.14 needs a source build and is outside this setup. Individual files: [main.py](../assets/examples/journey/python/main.py) and
     [requirements.txt](../assets/examples/journey/python/requirements.txt).
 
@@ -337,7 +337,7 @@ for your integration requirements.
 For standard invoices, supply the required buyer data and use the clearance
 operation. The library accepts a `SignedInvoice` for that call; ZATCA clearance
 produces the document to deliver. Inspect `clearance_status`.
-On successful clearance, save `cleared_invoice_xml()` / `ClearedInvoiceXml()` /
-`clearedInvoiceXml()` and use the returned document for customer delivery. The
+On successful clearance, save `cleared_invoice_xml` / `ClearedInvoiceXml` /
+`clearedInvoiceXml` and use the returned document for customer delivery. The
 [API reference](../reference/api-client.md) explains those return types and the
 nullable cleared-document field.

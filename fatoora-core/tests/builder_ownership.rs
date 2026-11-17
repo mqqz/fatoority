@@ -11,13 +11,13 @@ fn chained_builder_moves_owned_fields_into_invoice() {
     let description_ptr = item.description().as_ptr();
     let invoice = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified))
         .id(id)
-        .uuid("uuid-owned")
-        .issue_datetime("2024-01-01T12:30:00Z")
-        .currency("SAR")
-        .previous_invoice_hash("hash")
+        .uuid("uuid-owned".parse().unwrap())
+        .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+        .currency("SAR".parse().unwrap())
+        .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(1)
         .seller(source.data().seller().clone())
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard)
         .line_item(item)
         .build()
@@ -35,13 +35,13 @@ fn conditional_configuration_and_repeated_lines_keep_order() {
     let source = common::dummy_finalized_invoice();
     let mut builder = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified))
         .id("INV-conditional")
-        .uuid("uuid-conditional")
-        .issue_datetime("2024-01-01T12:30:00Z")
-        .currency("SAR")
-        .previous_invoice_hash("hash")
+        .uuid("uuid-conditional".parse().unwrap())
+        .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+        .currency("SAR".parse().unwrap())
+        .previous_invoice_hash("hash".parse().unwrap())
         .invoice_counter(1)
         .seller(source.data().seller().clone())
-        .payment_means_code("10")
+        .payment_means(fatoora_core::invoice::PaymentMeans::new("10"))
         .vat_category(VatCategory::Standard);
     if let Some(id) = Some("INV-replaced") {
         builder = builder.id(id);

@@ -22,7 +22,7 @@ internal partial struct ProductionRequest
     internal static unsafe extern DiplomatResultBytesBindingError Body(ProductionRequest* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ProductionRequest_decode", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultCsidProductionBindingError Decode(ProductionRequest* handle, ushort status, DiplomatSliceU8 body);
+    internal static unsafe extern DiplomatResultProductionCsidBindingError Decode(ProductionRequest* handle, ushort status, DiplomatSliceU8 body);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ProductionRequest_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(ProductionRequest* handle);

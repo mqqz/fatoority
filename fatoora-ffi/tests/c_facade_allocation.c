@@ -42,14 +42,14 @@ static void test_free(void *p) {
 #undef free
 
 int main(void) {
-    FatooraCsidCompliance *credentials = NULL;
-    assert(fatoora_csid_compliance_create(FATOORA_SIMULATION, "", "a long token", "secret", &credentials, NULL) == FATOORA_OK);
+    FatooraComplianceCsid *credentials = NULL;
+    assert(fatoora_compliance_csid_new(FATOORA_SIMULATION, "", "a long token", "secret", &credentials, NULL) == FATOORA_OK);
     for (int allocation = 0; allocation < 9; ++allocation) {
         fail_at = allocation;
         calls = 0;
         char *token = (char *)credentials;
         FatooraError *error = NULL;
-        FatooraStatus status = fatoora_csid_compliance_binary_security_token(credentials, &token, &error);
+        FatooraStatus status = fatoora_compliance_csid_binary_security_token(credentials, &token, &error);
         if (allocation < 2) {
             assert(status == FATOORA_INTERNAL);
             assert(!token); /* Growth failure must never produce truncated success. */
@@ -63,7 +63,7 @@ int main(void) {
         calls = 0;
         token = NULL;
         error = NULL;
-        status = fatoora_csid_compliance_request_id(credentials, &token, &error);
+        status = fatoora_compliance_csid_request_id(credentials, &token, &error);
         if (allocation == 0) {
             assert(status == FATOORA_INTERNAL);
             assert(!token);
@@ -84,7 +84,7 @@ int main(void) {
         fatoora_error_free(error);
         assert(live == 0);
     }
-    fatoora_csid_compliance_free(credentials);
+    fatoora_compliance_csid_free(credentials);
     puts("C API allocation contract passed");
     return 0;
 }

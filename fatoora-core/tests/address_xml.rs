@@ -1,7 +1,6 @@
 mod common;
 
-use fatoora_core::config::Config;
-use fatoora_core::invoice::validation::validate_xml_invoice_from_str;
+use fatoora_core::invoice::validation::Validator;
 use fatoora_core::invoice::xml::parse::{parse_finalized_invoice_xml, parse_signed_invoice_xml};
 
 #[test]
@@ -56,7 +55,7 @@ fn serializes_and_imports_additional_number() {
     let xml = invoice.to_xml().unwrap();
     assert!(xml.contains("<cbc:PlotIdentification>5678</cbc:PlotIdentification>"));
     assert!(xml.contains("<cbc:CitySubdivisionName>Olaya</cbc:CitySubdivisionName>"));
-    validate_xml_invoice_from_str(&xml, &Config::default()).unwrap();
+    Validator::new().validate_xml(&xml).unwrap();
     let imported = parse_finalized_invoice_xml(&xml).unwrap();
     assert_eq!(
         imported

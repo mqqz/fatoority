@@ -5,7 +5,7 @@ from fatoora.errors import FfiError, FfiErrorKind, ValidationError, error_class_
 
 
 def test_validation_issues_cross_the_ffi_boundary():
-    builder = InvoiceBuilder.new(InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED)
+    builder = InvoiceBuilder(InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED)
     with pytest.raises(ValidationError) as caught:
         builder.build()
     error = caught.value
@@ -41,7 +41,7 @@ def test_decimal_error_keeps_its_details():
     from fatoora import VatCategory
     from fatoora.errors import InvalidInputError
 
-    builder = InvoiceBuilder.new(InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED)
+    builder = InvoiceBuilder(InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED)
     with pytest.raises(InvalidInputError) as caught:
         builder.add_line_item("item", "not-a-number", "PCE", "1", "15", VatCategory.STANDARD)
     assert caught.value.details["type"] == "invalid_decimal"
@@ -50,12 +50,12 @@ def test_decimal_error_keeps_its_details():
 def test_imported_invoice_validation_keeps_structured_issues():
     from pathlib import Path
     import re
-    from fatoora import parse_finalized_invoice_xml
+    from fatoora import FinalizedInvoice
 
     fixture = Path(__file__).resolve().parents[3] / "fatoora-core/tests/fixtures/invoices/sample-simplified-invoice.xml"
     xml = re.sub(r"(<cbc:Percent>)[^<]*(</cbc:Percent>)", r"\g<1>-1\g<2>", fixture.read_text())
     with pytest.raises(ValidationError) as caught:
-        parse_finalized_invoice_xml(xml)
+        FinalizedInvoice.from_xml(xml)
     assert caught.value.details["type"] == "invoice_validation"
     assert caught.value.details["issues"][0]["field"] == "line_item_vat_rate"
     assert caught.value.details["issues"][0]["kind"] == "out_of_range"
@@ -68,7 +68,7 @@ def test_generated_error_is_owned_and_preserves_missing_property():
     from fatoora import CsrProperties
     from fatoora.errors import InvalidInputError
     with pytest.raises(InvalidInputError) as caught:
-        CsrProperties.from_properties_str("csr.common.name=example")
+        CsrProperties.from_str("csr.common.name=example")
     details = caught.value.details
     del caught
     gc.collect()
@@ -109,8 +109,8 @@ def test_error_classes_also_subclass_builtin_exceptions(cls, builtin):
 
 
 def test_missing_invoice_file_is_catchable_as_oserror():
-    from fatoora import parse_finalized_invoice_xml_file
+    from fatoora import FinalizedInvoice
 
     with pytest.raises(OSError) as caught:
-        parse_finalized_invoice_xml_file("/nonexistent/fatoora/invoice.xml")
+        FinalizedInvoice.from_file("/nonexistent/fatoora/invoice.xml")
     assert isinstance(caught.value, FfiError)

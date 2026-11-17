@@ -9,10 +9,75 @@ class ValidationResponse internal constructor(internal val raw: com.fatoora.raw.
         val handle = raw.handle
         attach { com.fatoora.raw.ValidationResponse.lib.fatoora_ValidationResponse_destroy(handle) }
     }
+
+    val httpStatus: Int?
+        get() = nativeCall(listOfNotNull(this)) {
+            raw.httpStatus()?.let { value -> value.toInt() }
+        }
+
+    val outcome: InvoiceOutcome
+        get() = nativeCall(listOfNotNull(this)) {
+            InvoiceOutcome.valueOf(raw.outcome().name)
+        }
+
+    val clearedInvoiceXml: String?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.clearedInvoiceXml())?.let(::readText)
+        }
+
+    val clearedInvoiceBase64: String?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.clearedInvoiceBase64())?.let(::readText)
+        }
+
+    /**
+     * The parsed `reportingStatus`, or null when the response has none.
+     */
+    val reportingStatus: ReportingStatus?
+        get() = nativeCall(listOfNotNull(this)) {
+            raw.reportingStatus()?.let { ReportingStatus.valueOf(it.name) }
+        }
+
+    /**
+     * The `reportingStatus` exactly as ZATCA sent it, or null when absent.
+     */
+    val reportingStatusRaw: String?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.reportingStatusRaw())?.let(::readText)
+        }
+
+    /**
+     * The parsed `clearanceStatus`, or null when the response has none.
+     */
+    val clearanceStatus: ClearanceStatus?
+        get() = nativeCall(listOfNotNull(this)) {
+            raw.clearanceStatus()?.let { ClearanceStatus.valueOf(it.name) }
+        }
+
+    /**
+     * The `clearanceStatus` exactly as ZATCA sent it, or null when absent.
+     */
+    val clearanceStatusRaw: String?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.clearanceStatusRaw())?.let(::readText)
+        }
+
+    val qrSellerStatus: String?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.qrSellerStatus())?.let(::readText)
+        }
+
+    val qrBuyerStatus: String?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.qrBuyerStatus())?.let(::readText)
+        }
+
+    @Deprecated("Use the httpStatus property.", ReplaceWith("httpStatus"))
     fun httpStatus(): Int? = nativeCall(listOfNotNull(this)) {
         raw.httpStatus()?.let { value -> value.toInt() }
     }
 
+    @Deprecated("Use the outcome property.", ReplaceWith("outcome"))
     fun outcome(): InvoiceOutcome = nativeCall(listOfNotNull(this)) {
         InvoiceOutcome.valueOf(raw.outcome().name)
     }
@@ -21,6 +86,7 @@ class ValidationResponse internal constructor(internal val raw: com.fatoora.raw.
         unwrap(raw.ensureAccepted())
     }
 
+    @Deprecated("Use the clearedInvoiceXml property.", ReplaceWith("clearedInvoiceXml"))
     fun clearedInvoiceXml(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.clearedInvoiceXml())?.let(::Text)
     }
@@ -29,22 +95,37 @@ class ValidationResponse internal constructor(internal val raw: com.fatoora.raw.
         ValidationResults(unwrap(raw.validationResults()))
     }
 
+    @Deprecated("Use the clearedInvoiceBase64 property.", ReplaceWith("clearedInvoiceBase64"))
     fun clearedInvoiceBase64(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.clearedInvoiceBase64())?.let(::Text)
     }
 
-    fun reportingStatus(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.reportingStatus())?.let(::Text)
+    @Deprecated("Use the reportingStatus property.", ReplaceWith("reportingStatus"))
+    fun reportingStatus(): ReportingStatus? = nativeCall(listOfNotNull(this)) {
+        raw.reportingStatus()?.let { ReportingStatus.valueOf(it.name) }
     }
 
-    fun clearanceStatus(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.clearanceStatus())?.let(::Text)
+    @Deprecated("Use the reportingStatusRaw property.", ReplaceWith("reportingStatusRaw"))
+    fun reportingStatusRaw(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.reportingStatusRaw())?.let(::Text)
     }
 
+    @Deprecated("Use the clearanceStatus property.", ReplaceWith("clearanceStatus"))
+    fun clearanceStatus(): ClearanceStatus? = nativeCall(listOfNotNull(this)) {
+        raw.clearanceStatus()?.let { ClearanceStatus.valueOf(it.name) }
+    }
+
+    @Deprecated("Use the clearanceStatusRaw property.", ReplaceWith("clearanceStatusRaw"))
+    fun clearanceStatusRaw(): Text? = nativeCall(listOfNotNull(this)) {
+        unwrap(raw.clearanceStatusRaw())?.let(::Text)
+    }
+
+    @Deprecated("Use the qrSellerStatus property.", ReplaceWith("qrSellerStatus"))
     fun qrSellerStatus(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.qrSellerStatus())?.let(::Text)
     }
 
+    @Deprecated("Use the qrBuyerStatus property.", ReplaceWith("qrBuyerStatus"))
     fun qrBuyerStatus(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.qrBuyerStatus())?.let(::Text)
     }

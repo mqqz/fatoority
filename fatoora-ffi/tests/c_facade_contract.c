@@ -24,7 +24,10 @@ static FatooraInvoiceBuilder *builder(void) {
     assert(fatoora_invoice_builder_set_currency(b, "SAR", NULL) == FATOORA_OK);
     assert(fatoora_invoice_builder_set_previous_invoice_hash(b, "hash", NULL) == FATOORA_OK);
     assert(fatoora_invoice_builder_set_invoice_counter(b, 1, NULL) == FATOORA_OK);
-    assert(fatoora_invoice_builder_set_payment_means_code(b, "10", NULL) == FATOORA_OK);
+    FatooraPaymentMeans *means = NULL;
+    assert(fatoora_payment_means_new("10", NULL, &means, NULL) == FATOORA_OK);
+    assert(fatoora_invoice_builder_add_payment_means(b, means, NULL) == FATOORA_OK);
+    fatoora_payment_means_free(means);
     assert(fatoora_invoice_builder_set_vat_category(b, FATOORA_VAT_STANDARD, NULL) == FATOORA_OK);
     FatooraAddress *address = NULL;
     FatooraAddressOptions a = {
@@ -94,7 +97,7 @@ static void invoices(const char *fixture) {
     FatooraSignedInvoice *signed_invoice = NULL;
     assert(fatoora_signed_invoice_from_file(fixture, &signed_invoice, &error) == FATOORA_OK);
     char *computed_hash = NULL, *raw_hash = NULL;
-    assert(fatoora_signed_invoice_hash_base64(signed_invoice, &computed_hash, &error) == FATOORA_OK);
+    assert(fatoora_signed_invoice_hash(signed_invoice, &computed_hash, &error) == FATOORA_OK);
     assert(fatoora_signed_invoice_xml(signed_invoice, &xml, &error) == FATOORA_OK);
     assert(fatoora_xml_hash(xml, &raw_hash, &error) == FATOORA_OK);
     assert(strcmp(computed_hash, raw_hash) == 0);
@@ -129,22 +132,22 @@ static void crypto(void) {
 
 static void optionals_and_arguments(void) {
     FatooraError *error = NULL;
-    FatooraCsidCompliance *credentials = NULL;
+    FatooraComplianceCsid *credentials = NULL;
     char *request = NULL;
-    assert(fatoora_csid_compliance_create(FATOORA_SIMULATION, NULL, "token", "secret", &credentials, &error) == FATOORA_OK);
-    assert(fatoora_csid_compliance_request_id(credentials, &request, &error) == FATOORA_OK);
+    assert(fatoora_compliance_csid_new(FATOORA_SIMULATION, NULL, "token", "secret", &credentials, &error) == FATOORA_OK);
+    assert(fatoora_compliance_csid_request_id(credentials, &request, &error) == FATOORA_OK);
     assert(!request);
-    fatoora_csid_compliance_free(credentials);
-    assert(fatoora_csid_compliance_create(FATOORA_SIMULATION, "", "token", "secret", &credentials, &error) == FATOORA_OK);
-    assert(fatoora_csid_compliance_request_id(credentials, &request, &error) == FATOORA_OK);
+    fatoora_compliance_csid_free(credentials);
+    assert(fatoora_compliance_csid_new(FATOORA_SIMULATION, "", "token", "secret", &credentials, &error) == FATOORA_OK);
+    assert(fatoora_compliance_csid_request_id(credentials, &request, &error) == FATOORA_OK);
     assert(request && !*request);
-    fatoora_csid_compliance_free(credentials);
+    fatoora_compliance_csid_free(credentials);
     fatoora_string_free(request);
     FatooraConfig *config = NULL;
     failure(fatoora_config_new(256, &config, &error), &error);
     failure(fatoora_config_new(-1, &config, &error), &error);
     assert(fatoora_config_new(FATOORA_SIMULATION, &config, &error) == FATOORA_OK);
-    failure(fatoora_xml_validate(config, NULL, NULL, &error), &error);
+    failure(fatoora_xml_validate(NULL, NULL, &error), &error);
     fatoora_config_free(config);
     failure(fatoora_invoice_builder_set_id(NULL, "INV-1", &error), &error);
     FatooraInvoiceBuilder *b = NULL;
@@ -193,9 +196,62 @@ static void line_builder(void) {
     fatoora_line_item_builder_free(NULL);
 }
 
+static void statuses(const char *fixture) {
+    FatooraError *error = NULL;
+    FatooraConfig *config = NULL;
+    FatooraZatcaClient *client = NULL;
+    FatooraProductionCsid *credentials = NULL;
+    FatooraSignedInvoice *invoice = NULL;
+    FatooraInvoiceRequest *request = NULL;
+    assert(fatoora_config_new(FATOORA_NON_PRODUCTION, &config, &error) == FATOORA_OK);
+    FatooraEnvironment env = FATOORA_PRODUCTION;
+    assert(fatoora_config_env(config, &env, &error) == FATOORA_OK && env == FATOORA_NON_PRODUCTION);
+    assert(fatoora_zatca_client_new(config, &client, &error) == FATOORA_OK);
+    assert(fatoora_production_csid_new(FATOORA_NON_PRODUCTION, NULL, "token", "secret", &credentials, &error) == FATOORA_OK);
+    assert(fatoora_signed_invoice_from_file(fixture, &invoice, &error) == FATOORA_OK);
+    failure(fatoora_zatca_client_prepare_clear_standard_invoice(client, invoice, credentials,
+        (FatooraClearanceMode)7, NULL, &request, &error), &error);
+    assert(fatoora_zatca_client_prepare_clear_standard_invoice(client, invoice, credentials,
+        FATOORA_CLEARANCE_ENABLED, NULL, &request, &error) == FATOORA_OK);
+    const char *body = "{\"validationResults\":{\"status\":\"PARTIAL\",\"errorMessages\":[{\"type\":\"ERROR\"}]},"
+        "\"clearanceStatus\":\"CLEARED\"}";
+    FatooraValidationResponse *response = NULL;
+    assert(fatoora_invoice_request_decode(request, 200, (const uint8_t *)body, strlen(body), &response, &error) == FATOORA_OK);
+    bool has_value = true;
+    FatooraReportingStatus reporting = FATOORA_REPORTING_STATUS_REPORTED;
+    assert(fatoora_validation_response_reporting_status(response, &reporting, &has_value, &error) == FATOORA_OK);
+    assert(!has_value);
+    FatooraClearanceStatus clearance = FATOORA_CLEARANCE_STATUS_UNKNOWN;
+    assert(fatoora_validation_response_clearance_status(response, &clearance, &has_value, &error) == FATOORA_OK);
+    assert(has_value && clearance == FATOORA_CLEARANCE_STATUS_CLEARED);
+    FatooraValidationResults *results = NULL;
+    assert(fatoora_validation_response_validation_results(response, &results, &error) == FATOORA_OK);
+    FatooraValidationStatus validation = FATOORA_VALIDATION_STATUS_PASS;
+    assert(fatoora_validation_results_status(results, &validation, &has_value, &error) == FATOORA_OK);
+    assert(has_value && validation == FATOORA_VALIDATION_STATUS_UNKNOWN);
+    char *raw = NULL;
+    assert(fatoora_validation_results_status_raw(results, &raw, &error) == FATOORA_OK);
+    assert(raw && strcmp(raw, "PARTIAL") == 0);
+    fatoora_string_free(raw);
+    FatooraValidationMessage *message = NULL;
+    assert(fatoora_validation_results_error_message(results, 0, &message, &error) == FATOORA_OK);
+    FatooraMessageType type = FATOORA_MESSAGE_TYPE_UNKNOWN;
+    assert(fatoora_validation_message_message_type(message, &type, &has_value, &error) == FATOORA_OK);
+    assert(has_value && type == FATOORA_MESSAGE_TYPE_ERROR);
+    fatoora_validation_message_free(message);
+    fatoora_validation_results_free(results);
+    fatoora_validation_response_free(response);
+    fatoora_invoice_request_free(request);
+    fatoora_signed_invoice_free(invoice);
+    fatoora_production_csid_free(credentials);
+    fatoora_zatca_client_free(client);
+    fatoora_config_free(config);
+}
+
 int main(int argc, char **argv) {
     assert(argc == 2);
     invoices(argv[1]);
+    statuses(argv[1]);
     crypto();
     optionals_and_arguments();
     line_builder();

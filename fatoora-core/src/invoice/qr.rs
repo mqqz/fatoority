@@ -390,7 +390,7 @@ mod tests {
 
     fn sample_invoice_with_items(items: Vec<LineItem>) -> FinalizedInvoice {
         let seller = Party::<SellerRole>::new(
-            "Acme Inc".into(),
+            "Acme Inc",
             Address {
                 province: None,
                 country_code: CountryCode::parse("SAU").expect("country code"),
@@ -402,21 +402,20 @@ mod tests {
                 postal_code: "12222".into(),
                 district: None,
             },
-            "301121971500003",
+            "301121971500003".parse().unwrap(),
             None,
-        )
-        .expect("valid seller");
+        );
 
         let mut builder = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified));
         builder = builder
             .id("INV-1")
-            .uuid("uuid-123")
-            .issue_datetime("2024-01-01T12:30:00Z")
-            .currency("SAR")
-            .previous_invoice_hash("hash")
+            .uuid("uuid-123".parse().unwrap())
+            .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+            .currency("SAR".parse().unwrap())
+            .previous_invoice_hash("hash".parse().unwrap())
             .invoice_counter(0)
             .seller(seller)
-            .payment_means_code("10")
+            .payment_means(crate::invoice::PaymentMeans::new("10"))
             .vat_category(VatCategory::Standard);
         for item in items {
             builder = builder.line_item(item);
@@ -475,7 +474,7 @@ mod tests {
         let qr = QrPayload::from_xml(&signed_xml)
             .unwrap()
             .with_signing_parts(
-                Some(signing.invoice_hash()),
+                Some(signing.invoice_hash().as_str()),
                 Some(signing.signature()),
                 Some(signing.public_key()),
                 signing.zatca_key_signature(),
@@ -511,7 +510,7 @@ mod tests {
         match QrPayload::from_xml(&signed_xml)
             .unwrap()
             .with_signing_parts(
-                Some(signing.invoice_hash()),
+                Some(signing.invoice_hash().as_str()),
                 Some(signing.signature()),
                 Some(signing.public_key()),
                 signing.zatca_key_signature(),
@@ -540,7 +539,7 @@ mod tests {
         match QrPayload::from_xml(&signed_xml)
             .unwrap()
             .with_signing_parts(
-                Some(signing.invoice_hash()),
+                Some(signing.invoice_hash().as_str()),
                 Some(signing.signature()),
                 Some(signing.public_key()),
                 signing.zatca_key_signature(),
