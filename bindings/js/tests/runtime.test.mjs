@@ -289,7 +289,17 @@ test('library failures throw one error class per code', () => {
     assert.ok(error instanceof sdk.FatooraError && error instanceof Error);
     assert.equal(error.name, `${kind}Error`);
     assert.equal(error.kind, kind);
+    // Constructed directly, a subclass carries its own code and kind.
+    const direct = new ErrorClass('m');
+    assert.equal(direct.code, n);
+    assert.equal(direct.kind, kind);
   }
+  const base = new sdk.FatooraError('m');
+  assert.equal(base.code, null);
+  assert.equal(base.kind, null);
+  const transport = new sdk.TransportError('m', new Error('x'));
+  assert.equal(transport.code, sdk.ErrorCode.Network);
+  assert.equal(transport.kind, 'Network');
   let error;
   try { sdk.Address.create('SAU', 'bad\0city', 'street', '1234', '12222', null, null, null); }
   catch (caught) { error = caught; }

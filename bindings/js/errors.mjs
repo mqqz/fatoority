@@ -13,10 +13,12 @@ export const ErrorCode = Object.freeze({
 });
 
 const kinds = new Map(Object.entries(ErrorCode).map(([kind, code]) => [code, kind]));
+// Filled in below: a subclass constructed directly takes its own code.
+const defaultCodes = new Map();
 
 /** Base class of every error the package throws for a library failure. */
 export class FatooraError extends Error {
-  constructor(message, { code = null, details = {}, cause } = {}) {
+  constructor(message, { code = defaultCodes.get(new.target) ?? null, details = {}, cause } = {}) {
     super(message, cause === undefined ? undefined : { cause });
     /** Numeric library code, or `null` when the failure did not come from Rust. */
     this.code = code;
@@ -50,6 +52,7 @@ const classes = new Map([
   [ErrorCode.Internal, InternalError],
   [ErrorCode.Api, ApiError],
 ]);
+for (const [code, ErrorClass] of classes) defaultCodes.set(ErrorClass, code);
 
 // Explicit names survive bundler minification of class identifiers.
 for (const [ErrorClass, name] of [
