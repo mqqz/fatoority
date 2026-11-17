@@ -57,204 +57,225 @@ public partial class ZatcaFinding: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? AssertionSite()
+    /// <exception cref="FfiException"></exception>
+    public string? AssertionSite
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ZatcaFinding>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ZatcaFinding.AssertionSite(selfLease!.Ptr);
-                if (!result.IsOk)
-                {
-                    throw new BindingErrorException(new BindingError(result.Err));
-                }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    public ValidationLayer Layer()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.ZatcaFinding>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.ZatcaFinding.Layer(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
-    public string Code()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.ZatcaFinding>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.ZatcaFinding>? selfLease = null;
                 try
                 {
-                    var result = Raw.ZatcaFinding.Code(selfLease!.Ptr, &writeable);
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.ZatcaFinding.AssertionSite(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
-                    return writeable.ToUnicode();
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
             }
-            finally
-            {
-                selfLease?.Release();
-            }
         }
     }
 
-    public Severity Severity()
+    public ValidationLayer Layer
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ZatcaFinding>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.ZatcaFinding.Severity(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
-    public string Message()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.ZatcaFinding>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.ZatcaFinding>? selfLease = null;
                 try
                 {
-                    var result = Raw.ZatcaFinding.Message(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
-                    {
-                        throw new BindingErrorException(new BindingError(result.Err));
-                    }
-                    return writeable.ToUnicode();
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.ZatcaFinding.Layer(selfLease!.Ptr);
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
             }
-            finally
-            {
-                selfLease?.Release();
-            }
         }
     }
 
-    public ValidationLocationKind? LocationKind()
+    /// <exception cref="FfiException"></exception>
+    public string Code
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ZatcaFinding>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ZatcaFinding.LocationKind(selfLease!.Ptr);
-                return result.IsSome ? result.Value : (ValidationLocationKind?)null;
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? LocationPath()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.ZatcaFinding>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ZatcaFinding.LocationPath(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.ZatcaFinding>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
+                    {
+                        var result = Raw.ZatcaFinding.Code(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
+                    }
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    public uint? LocationLine()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.ZatcaFinding>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ZatcaFinding.LocationLine(selfLease!.Ptr);
-                return result.IsSome ? result.Value : (uint?)null;
-            }
-            finally
-            {
-                selfLease?.Release();
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    public uint? LocationColumn()
+    public Severity Severity
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ZatcaFinding>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ZatcaFinding.LocationColumn(selfLease!.Ptr);
-                return result.IsSome ? result.Value : (uint?)null;
+                BorrowLease<Raw.ZatcaFinding>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.ZatcaFinding.Severity(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
-            finally
+        }
+    }
+
+    /// <exception cref="FfiException"></exception>
+    public string Message
+    {
+        get
+        {
+            unsafe
             {
-                selfLease?.Release();
+                BorrowLease<Raw.ZatcaFinding>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
+                    {
+                        var result = Raw.ZatcaFinding.Message(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
+                    }
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
+            }
+        }
+    }
+
+    public ValidationLocationKind? LocationKind
+    {
+        get
+        {
+            unsafe
+            {
+                BorrowLease<Raw.ZatcaFinding>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.ZatcaFinding.LocationKind(selfLease!.Ptr);
+                    return result.IsSome ? result.Value : (ValidationLocationKind?)null;
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
+            }
+        }
+    }
+
+    /// <exception cref="FfiException"></exception>
+    public string? LocationPath
+    {
+        get
+        {
+            unsafe
+            {
+                BorrowLease<Raw.ZatcaFinding>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.ZatcaFinding.LocationPath(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
+            }
+        }
+    }
+
+    public uint? LocationLine
+    {
+        get
+        {
+            unsafe
+            {
+                BorrowLease<Raw.ZatcaFinding>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.ZatcaFinding.LocationLine(selfLease!.Ptr);
+                    return result.IsSome ? result.Value : (uint?)null;
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
+            }
+        }
+    }
+
+    public uint? LocationColumn
+    {
+        get
+        {
+            unsafe
+            {
+                BorrowLease<Raw.ZatcaFinding>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.ZatcaFinding.LocationColumn(selfLease!.Ptr);
+                    return result.IsSome ? result.Value : (uint?)null;
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }

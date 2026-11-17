@@ -57,41 +57,47 @@ public partial class ZatcaStageReport: IDisposable
         }
     }
 
-    public ZatcaStage Stage()
+    public ZatcaStage Stage
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ZatcaStageReport>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.ZatcaStageReport.Stage(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.ZatcaStageReport>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.ZatcaStageReport.Stage(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    public ZatcaStageStatus Status()
+    public ZatcaStageStatus Status
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ZatcaStageReport>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.ZatcaStageReport.Status(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.ZatcaStageReport>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.ZatcaStageReport.Status(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>ZatcaRuleSource</c> allocated on Rust side.
     /// </returns>
@@ -106,7 +112,7 @@ public partial class ZatcaStageReport: IDisposable
                 var result = Raw.ZatcaStageReport.Provenance(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return result.Ok == null ? null : new ZatcaRuleSource(result.Ok);
             }
@@ -117,28 +123,28 @@ public partial class ZatcaStageReport: IDisposable
         }
     }
 
-    public nuint EvaluatedAssertionsLen()
+    public nuint EvaluatedAssertionsLen
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ZatcaStageReport>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.ZatcaStageReport.EvaluatedAssertionsLen(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.ZatcaStageReport>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.ZatcaStageReport.EvaluatedAssertionsLen(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text EvaluatedAssertion(nuint index)
+    /// <exception cref="FfiException"></exception>
+    public string EvaluatedAssertion(nuint index)
     {
         unsafe
         {
@@ -149,9 +155,9 @@ public partial class ZatcaStageReport: IDisposable
                 var result = Raw.ZatcaStageReport.EvaluatedAssertion(selfLease!.Ptr, index);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
-                return new Text(result.Ok);
+                return global::Fatoora.Text.Take(new global::Fatoora.Text(result.Ok));
             }
             finally
             {
@@ -160,24 +166,27 @@ public partial class ZatcaStageReport: IDisposable
         }
     }
 
-    public nuint FindingsLen()
+    public nuint FindingsLen
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ZatcaStageReport>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.ZatcaStageReport.FindingsLen(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.ZatcaStageReport>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.ZatcaStageReport.FindingsLen(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>ZatcaFinding</c> allocated on Rust side.
     /// </returns>
@@ -192,7 +201,7 @@ public partial class ZatcaStageReport: IDisposable
                 var result = Raw.ZatcaStageReport.Finding(selfLease!.Ptr, index);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new ZatcaFinding(result.Ok);
             }

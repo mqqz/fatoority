@@ -57,154 +57,175 @@ public partial class ZatcaValidationReport: IDisposable
         }
     }
 
-    public uint SchemaVersion()
+    public uint SchemaVersion
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ZatcaValidationReport>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.ZatcaValidationReport.SchemaVersion(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
-    public string Profile()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.ZatcaValidationReport>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.ZatcaValidationReport>? selfLease = null;
                 try
                 {
-                    var result = Raw.ZatcaValidationReport.Profile(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
-                    {
-                        throw new BindingErrorException(new BindingError(result.Err));
-                    }
-                    return writeable.ToUnicode();
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.ZatcaValidationReport.SchemaVersion(selfLease!.Ptr);
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string EvaluatedAt()
+    /// <exception cref="FfiException"></exception>
+    public string Profile
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ZatcaValidationReport>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.ZatcaValidationReport>? selfLease = null;
                 try
                 {
-                    var result = Raw.ZatcaValidationReport.EvaluatedAt(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.ZatcaValidationReport.Profile(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
             }
-            finally
-            {
-                selfLease?.Release();
-            }
         }
     }
 
-    public bool IsComplete()
+    /// <exception cref="FfiException"></exception>
+    public string EvaluatedAt
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ZatcaValidationReport>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.ZatcaValidationReport.IsComplete(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.ZatcaValidationReport>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
+                    {
+                        var result = Raw.ZatcaValidationReport.EvaluatedAt(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
+                    }
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    public bool HasErrors()
+    public bool IsComplete
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ZatcaValidationReport>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.ZatcaValidationReport.HasErrors(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.ZatcaValidationReport>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.ZatcaValidationReport.IsComplete(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    public bool IsValid()
+    public bool HasErrors
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ZatcaValidationReport>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.ZatcaValidationReport.IsValid(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.ZatcaValidationReport>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.ZatcaValidationReport.HasErrors(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    public nuint StagesLen()
+    public bool IsValid
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ZatcaValidationReport>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.ZatcaValidationReport.StagesLen(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.ZatcaValidationReport>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.ZatcaValidationReport.IsValid(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    public nuint StagesLen
+    {
+        get
+        {
+            unsafe
+            {
+                BorrowLease<Raw.ZatcaValidationReport>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.ZatcaValidationReport.StagesLen(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
+            }
+        }
+    }
+
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>ZatcaStageReport</c> allocated on Rust side.
     /// </returns>
@@ -219,7 +240,7 @@ public partial class ZatcaValidationReport: IDisposable
                 var result = Raw.ZatcaValidationReport.Stage(selfLease!.Ptr, index);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new ZatcaStageReport(result.Ok);
             }
@@ -230,7 +251,7 @@ public partial class ZatcaValidationReport: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public string ToJson()
     {
         unsafe
@@ -245,7 +266,7 @@ public partial class ZatcaValidationReport: IDisposable
                     var result = Raw.ZatcaValidationReport.ToJson(selfLease!.Ptr, &writeable);
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return writeable.ToUnicode();
                 }

@@ -57,100 +57,109 @@ public partial class ProductionRequest: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string Method()
+    /// <exception cref="FfiException"></exception>
+    public string Method
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ProductionRequest>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.ProductionRequest>? selfLease = null;
                 try
                 {
-                    var result = Raw.ProductionRequest.Method(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.ProductionRequest.Method(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string Url()
+    /// <exception cref="FfiException"></exception>
+    public string Url
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ProductionRequest>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.ProductionRequest>? selfLease = null;
                 try
                 {
-                    var result = Raw.ProductionRequest.Url(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.ProductionRequest.Url(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string HeadersJson()
+    /// <exception cref="FfiException"></exception>
+    public string HeadersJson
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ProductionRequest>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.ProductionRequest>? selfLease = null;
                 try
                 {
-                    var result = Raw.ProductionRequest.HeadersJson(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.ProductionRequest.HeadersJson(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>Bytes</c> allocated on Rust side.
     /// </returns>
@@ -165,7 +174,7 @@ public partial class ProductionRequest: IDisposable
                 var result = Raw.ProductionRequest.Body(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new Bytes(result.Ok);
             }
@@ -176,7 +185,7 @@ public partial class ProductionRequest: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>ProductionCsid</c> allocated on Rust side.
     /// </returns>
@@ -194,7 +203,7 @@ public partial class ProductionRequest: IDisposable
                     var result = Raw.ProductionRequest.Decode(selfLease!.Ptr, status, new DiplomatSliceU8 { Ptr = bodyPtr, Len = (nuint)body.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return new ProductionCsid(result.Ok);
                 }

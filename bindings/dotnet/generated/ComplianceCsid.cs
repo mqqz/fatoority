@@ -57,7 +57,7 @@ public partial class ComplianceCsid: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>ComplianceCsid</c> allocated on Rust side.
     /// </returns>
@@ -77,120 +77,129 @@ public partial class ComplianceCsid: IDisposable
                 var result = Raw.ComplianceCsid.Create(environment, requestId == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = requestIdPtr, Len = (nuint)requestIdBytes!.Length }), new DiplomatSliceU8 { Ptr = tokenPtr, Len = (nuint)tokenBytes.Length }, new DiplomatSliceU8 { Ptr = secretPtr, Len = (nuint)secretBytes.Length });
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new ComplianceCsid(result.Ok);
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public ZatcaEnvironment Env()
+    /// <exception cref="FfiException"></exception>
+    public ZatcaEnvironment Env
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ComplianceCsid>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ComplianceCsid.Env(selfLease!.Ptr);
-                if (!result.IsOk)
-                {
-                    throw new BindingErrorException(new BindingError(result.Err));
-                }
-                return result.Ok;
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? RequestId()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.ComplianceCsid>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ComplianceCsid.RequestId(selfLease!.Ptr);
-                if (!result.IsOk)
-                {
-                    throw new BindingErrorException(new BindingError(result.Err));
-                }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
-    public string BinarySecurityToken()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.ComplianceCsid>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.ComplianceCsid>? selfLease = null;
                 try
                 {
-                    var result = Raw.ComplianceCsid.BinarySecurityToken(selfLease!.Ptr, &writeable);
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.ComplianceCsid.Env(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
-                    return writeable.ToUnicode();
+                    return result.Ok;
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string Secret()
+    /// <exception cref="FfiException"></exception>
+    public string? RequestId
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ComplianceCsid>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.ComplianceCsid>? selfLease = null;
                 try
                 {
-                    var result = Raw.ComplianceCsid.Secret(selfLease!.Ptr, &writeable);
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.ComplianceCsid.RequestId(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
-                    return writeable.ToUnicode();
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
             }
-            finally
+        }
+    }
+
+    /// <exception cref="FfiException"></exception>
+    public string BinarySecurityToken
+    {
+        get
+        {
+            unsafe
             {
-                selfLease?.Release();
+                BorrowLease<Raw.ComplianceCsid>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
+                    {
+                        var result = Raw.ComplianceCsid.BinarySecurityToken(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
+                    }
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
+            }
+        }
+    }
+
+    /// <exception cref="FfiException"></exception>
+    public string Secret
+    {
+        get
+        {
+            unsafe
+            {
+                BorrowLease<Raw.ComplianceCsid>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
+                    {
+                        var result = Raw.ComplianceCsid.Secret(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
+                    }
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }

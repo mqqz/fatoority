@@ -57,7 +57,7 @@ public partial class TaxExemption: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>TaxExemption</c> allocated on Rust side.
     /// </returns>
@@ -73,61 +73,61 @@ public partial class TaxExemption: IDisposable
                 var result = Raw.TaxExemption.New(code == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = codePtr, Len = (nuint)codeBytes!.Length }), reason == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = reasonPtr, Len = (nuint)reasonBytes!.Length }));
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new TaxExemption(result.Ok);
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? ReasonCode()
+    /// <exception cref="FfiException"></exception>
+    public string? ReasonCode
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.TaxExemption>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.TaxExemption.ReasonCode(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.TaxExemption>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.TaxExemption.ReasonCode(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? Reason()
+    /// <exception cref="FfiException"></exception>
+    public string? Reason
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.TaxExemption>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.TaxExemption.Reason(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.TaxExemption>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.TaxExemption.Reason(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }

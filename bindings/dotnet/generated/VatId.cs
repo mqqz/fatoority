@@ -57,33 +57,36 @@ public partial class VatId: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string Value()
+    /// <exception cref="FfiException"></exception>
+    public string Value
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.VatId>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.VatId>? selfLease = null;
                 try
                 {
-                    var result = Raw.VatId.Value(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.VatId.Value(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }

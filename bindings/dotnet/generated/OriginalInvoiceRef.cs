@@ -57,7 +57,7 @@ public partial class OriginalInvoiceRef: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>OriginalInvoiceRef</c> allocated on Rust side.
     /// </returns>
@@ -80,144 +80,147 @@ public partial class OriginalInvoiceRef: IDisposable
                 var result = Raw.OriginalInvoiceRef.New(new DiplomatSliceU8 { Ptr = idPtr, Len = (nuint)idBytes.Length }, uuid == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = uuidPtr, Len = (nuint)uuidBytes!.Length }), date == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = datePtr, Len = (nuint)dateBytes!.Length }), time == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = timePtr, Len = (nuint)timeBytes!.Length }), typeCode == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = typeCodePtr, Len = (nuint)typeCodeBytes!.Length }));
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new OriginalInvoiceRef(result.Ok);
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? IssueTime()
+    /// <exception cref="FfiException"></exception>
+    public string? IssueTime
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.OriginalInvoiceRef>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.OriginalInvoiceRef.IssueTime(selfLease!.Ptr);
-                if (!result.IsOk)
-                {
-                    throw new BindingErrorException(new BindingError(result.Err));
-                }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? DocumentTypeCode()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.OriginalInvoiceRef>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.OriginalInvoiceRef.DocumentTypeCode(selfLease!.Ptr);
-                if (!result.IsOk)
-                {
-                    throw new BindingErrorException(new BindingError(result.Err));
-                }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
-    public string Id()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.OriginalInvoiceRef>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.OriginalInvoiceRef>? selfLease = null;
                 try
                 {
-                    var result = Raw.OriginalInvoiceRef.Id(selfLease!.Ptr, &writeable);
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.OriginalInvoiceRef.IssueTime(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
-                    return writeable.ToUnicode();
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? Uuid()
+    /// <exception cref="FfiException"></exception>
+    public string? DocumentTypeCode
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.OriginalInvoiceRef>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.OriginalInvoiceRef.Uuid(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.OriginalInvoiceRef>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.OriginalInvoiceRef.DocumentTypeCode(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? IssueDate()
+    /// <exception cref="FfiException"></exception>
+    public string Id
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.OriginalInvoiceRef>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.OriginalInvoiceRef.IssueDate(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.OriginalInvoiceRef>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
+                    {
+                        var result = Raw.OriginalInvoiceRef.Id(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
+                    }
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
-            finally
+        }
+    }
+
+    /// <exception cref="FfiException"></exception>
+    public string? Uuid
+    {
+        get
+        {
+            unsafe
             {
-                selfLease?.Release();
+                BorrowLease<Raw.OriginalInvoiceRef>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.OriginalInvoiceRef.Uuid(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
+            }
+        }
+    }
+
+    /// <exception cref="FfiException"></exception>
+    public string? IssueDate
+    {
+        get
+        {
+            unsafe
+            {
+                BorrowLease<Raw.OriginalInvoiceRef>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.OriginalInvoiceRef.IssueDate(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }

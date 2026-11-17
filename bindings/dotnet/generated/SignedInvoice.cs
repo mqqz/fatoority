@@ -57,7 +57,7 @@ public partial class SignedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>SignedInvoice</c> allocated on Rust side.
     /// </returns>
@@ -72,14 +72,14 @@ public partial class SignedInvoice: IDisposable
                 var result = Raw.SignedInvoice.FromXml(new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new SignedInvoice(result.Ok);
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>SignedInvoice</c> allocated on Rust side.
     /// </returns>
@@ -94,14 +94,14 @@ public partial class SignedInvoice: IDisposable
                 var result = Raw.SignedInvoice.FromFile(new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new SignedInvoice(result.Ok);
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>InvoiceData</c> allocated on Rust side.
     /// </returns>
@@ -116,7 +116,7 @@ public partial class SignedInvoice: IDisposable
                 var result = Raw.SignedInvoice.Data(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new InvoiceData(result.Ok);
             }
@@ -127,7 +127,7 @@ public partial class SignedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>InvoiceTotals</c> allocated on Rust side.
     /// </returns>
@@ -142,7 +142,7 @@ public partial class SignedInvoice: IDisposable
                 var result = Raw.SignedInvoice.Totals(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new InvoiceTotals(result.Ok);
             }
@@ -153,193 +153,211 @@ public partial class SignedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string Hash()
+    /// <exception cref="FfiException"></exception>
+    public string Hash
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.SignedInvoice>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.SignedInvoice>? selfLease = null;
                 try
                 {
-                    var result = Raw.SignedInvoice.Hash(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.SignedInvoice.Hash(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string Xml()
+    /// <exception cref="FfiException"></exception>
+    public string Xml
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.SignedInvoice>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.SignedInvoice>? selfLease = null;
                 try
                 {
-                    var result = Raw.SignedInvoice.Xml(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.SignedInvoice.Xml(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string QrCode()
+    /// <exception cref="FfiException"></exception>
+    public string QrCode
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.SignedInvoice>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.SignedInvoice>? selfLease = null;
                 try
                 {
-                    var result = Raw.SignedInvoice.QrCode(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.SignedInvoice.QrCode(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string Signature()
+    /// <exception cref="FfiException"></exception>
+    public string Signature
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.SignedInvoice>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.SignedInvoice>? selfLease = null;
                 try
                 {
-                    var result = Raw.SignedInvoice.Signature(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.SignedInvoice.Signature(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string PublicKey()
+    /// <exception cref="FfiException"></exception>
+    public string PublicKey
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.SignedInvoice>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.SignedInvoice>? selfLease = null;
                 try
                 {
-                    var result = Raw.SignedInvoice.PublicKey(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.SignedInvoice.PublicKey(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string InvoiceHash()
+    /// <exception cref="FfiException"></exception>
+    public string InvoiceHash
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.SignedInvoice>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.SignedInvoice>? selfLease = null;
                 try
                 {
-                    var result = Raw.SignedInvoice.InvoiceHash(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.SignedInvoice.InvoiceHash(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public string ToXmlBase64()
     {
         unsafe
@@ -354,7 +372,7 @@ public partial class SignedInvoice: IDisposable
                     var result = Raw.SignedInvoice.ToXmlBase64(selfLease!.Ptr, &writeable);
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return writeable.ToUnicode();
                 }
@@ -370,188 +388,203 @@ public partial class SignedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string Issuer()
+    /// <exception cref="FfiException"></exception>
+    public string Issuer
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.SignedInvoice>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.SignedInvoice>? selfLease = null;
                 try
                 {
-                    var result = Raw.SignedInvoice.Issuer(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.SignedInvoice.Issuer(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string Serial()
+    /// <exception cref="FfiException"></exception>
+    public string Serial
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.SignedInvoice>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.SignedInvoice>? selfLease = null;
                 try
                 {
-                    var result = Raw.SignedInvoice.Serial(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.SignedInvoice.Serial(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string CertHash()
+    /// <exception cref="FfiException"></exception>
+    public string CertHash
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.SignedInvoice>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.SignedInvoice>? selfLease = null;
                 try
                 {
-                    var result = Raw.SignedInvoice.CertHash(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.SignedInvoice.CertHash(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string SignedPropsHash()
+    /// <exception cref="FfiException"></exception>
+    public string SignedPropsHash
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.SignedInvoice>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.SignedInvoice>? selfLease = null;
                 try
                 {
-                    var result = Raw.SignedInvoice.SignedPropsHash(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.SignedInvoice.SignedPropsHash(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string SigningTime()
+    /// <exception cref="FfiException"></exception>
+    public string SigningTime
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.SignedInvoice>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.SignedInvoice>? selfLease = null;
                 try
                 {
-                    var result = Raw.SignedInvoice.SigningTime(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.SignedInvoice.SigningTime(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? ZatcaKeySignature()
+    /// <exception cref="FfiException"></exception>
+    public string? ZatcaKeySignature
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.SignedInvoice>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.SignedInvoice.ZatcaKeySignature(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.SignedInvoice>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.SignedInvoice.ZatcaKeySignature(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public string IntoXml()
     {
         unsafe
@@ -566,7 +599,7 @@ public partial class SignedInvoice: IDisposable
                     var result = Raw.SignedInvoice.IntoXml(selfLease!.Ptr, &writeable);
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return writeable.ToUnicode();
                 }

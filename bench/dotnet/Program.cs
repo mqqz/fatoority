@@ -37,7 +37,7 @@ class Program
                 {
                     previous_invoice_hash = pih
                 }));
-                if (!r.IsValid())
+                if (!r.IsValid)
                     throw new Exception("invalid");
                 Console.WriteLine("valid");
             }
@@ -119,7 +119,7 @@ class Program
                     return "signed";
                 }
                 using var r = Xml.ValidateZatca(signed, options);
-                if (!r.IsValid())
+                if (!r.IsValid)
                     throw new Exception("our validation failed: " + r.ToJson());
                 return "valid";
             }

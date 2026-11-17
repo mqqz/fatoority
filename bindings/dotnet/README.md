@@ -16,24 +16,28 @@ using var restored = SigningKey.FromPem(pem);
 
 using var address = Address.New(
     "SA", "الرياض", "King Fahd Rd", "1234", "12345", null, "", "حي العليا");
-Console.WriteLine(address.City());
+Console.WriteLine(address.City); // Scalar getters are properties.
 ```
 
 All opaque owners implement `IDisposable`. Dispose owned return values as well as
 objects you construct. `Dispose()` is idempotent; calls after disposal throw
 `ObjectDisposedException`. Rust operations that consume an invoice or builder
 leave its outer owner disposable, but subsequent operations fail with
-`BindingErrorException`.
+`InvalidInputException`.
 
 String inputs reject invalid UTF-16 and embedded NUL. Optional strings preserve
-null versus empty. Decimal arguments and outputs use invariant decimal strings.
+null versus empty. Quantities, prices, rates and amounts are `decimal` in both
+directions, converted exactly with the invariant culture. Scalar getters are
+read-only properties (`address.City`, `totals.PayableAmount`) and optional text is
+`string?`; getters returning owned native snapshots (`invoice.Data()`) stay methods.
 Enumerated codes are C# enums such as `ZatcaEnvironment.NonProduction` (renamed so
 it does not clash with `System.Environment`), `VatCategory.Standard` and
 `ClearanceMode.Disabled`. Response statuses return a nullable enum (`Unknown` for
-unrecognized values), and `*Raw()` getters return the exact text. Build the
+unrecognized values), and `*Raw` properties return the exact text. Build the
 invoice flag mask by casting, such as `(byte)InvoiceFlag.Export`.
-Native errors throw `BindingErrorException` with the native message; `Inner`
-exposes `Code()`, `Message()`, and `DetailsJson()` and is itself disposable.
+Native errors throw one `FfiException` subclass per error code
+(`InvalidInputException`, `NetworkException`, ...; base `FatooraException`) with
+`Code`, `Kind`, and `DetailsJson`; exceptions hold no native resources.
 Releasing native memory does not guarantee erasure of secrets or managed copies.
 
 `Bytes.AsSlice()` returns a disposable borrowed view. Call `Clone()` to obtain an
@@ -100,6 +104,14 @@ It leaves the upstream generator on PATH for other languages.
 `DIPLOMAT_TOOL_DOTNET` overrides the C# generator path. The combined
 `scripts/generate_bindings.py --check` checks C# as well as the other bindings.
 Edit generator inputs or the fork, then regenerate; do not edit generated C#.
+
+`generate_dotnet.py` post-processes the fork's output into the public API rather
+than wrapping it, so each class keeps the generated handle, disposal and lifetime
+code. The pass turns scalar getters into properties, copies optional `Text`
+results into `string?`, maps every decimal the Rust FFI parses or returns to
+`decimal` (derived from `fatoora-ffi` and `fatoora-core` sources), and throws
+`FfiException` subclasses from `src/Errors.cs`. Hand-written support code lives in
+`src/`; it contains no per-type wrappers.
 
 The .NET contracts cover encoding, optional strings, structured errors, disposal,
 concurrent borrowed reads, keys, invoice signing, hashes against frozen SDK

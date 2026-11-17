@@ -7,7 +7,7 @@ namespace Fatoora;
 
 #nullable enable
 
-public partial class BindingError: IDisposable
+internal partial class BindingError: IDisposable
 {
     private unsafe RustHandle<Raw.BindingError>? _inner;
 
@@ -57,71 +57,80 @@ public partial class BindingError: IDisposable
         }
     }
 
-    public int Code()
+    public int Code
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.BindingError>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.BindingError.Code(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.BindingError>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.BindingError.Code(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    public string Message()
+    public string Message
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.BindingError>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.BindingError>? selfLease = null;
                 try
                 {
-                    Raw.BindingError.Message(selfLease!.Ptr, &writeable);
-                    return writeable.ToUnicode();
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
+                    {
+                        Raw.BindingError.Message(selfLease!.Ptr, &writeable);
+                        return writeable.ToUnicode();
+                    }
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    public string DetailsJson()
+    public string DetailsJson
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.BindingError>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.BindingError>? selfLease = null;
                 try
                 {
-                    Raw.BindingError.DetailsJson(selfLease!.Ptr, &writeable);
-                    return writeable.ToUnicode();
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
+                    {
+                        Raw.BindingError.DetailsJson(selfLease!.Ptr, &writeable);
+                        return writeable.ToUnicode();
+                    }
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }

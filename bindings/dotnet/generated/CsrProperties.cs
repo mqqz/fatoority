@@ -57,7 +57,7 @@ public partial class CsrProperties: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>CsrProperties</c> allocated on Rust side.
     /// </returns>
@@ -96,14 +96,14 @@ public partial class CsrProperties: IDisposable
                 var result = Raw.CsrProperties.New(new DiplomatSliceU8 { Ptr = commonNamePtr, Len = (nuint)commonNameBytes.Length }, new DiplomatSliceU8 { Ptr = serialNumberPtr, Len = (nuint)serialNumberBytes.Length }, new DiplomatSliceU8 { Ptr = organizationIdentifierPtr, Len = (nuint)organizationIdentifierBytes.Length }, new DiplomatSliceU8 { Ptr = organizationUnitNamePtr, Len = (nuint)organizationUnitNameBytes.Length }, new DiplomatSliceU8 { Ptr = organizationNamePtr, Len = (nuint)organizationNameBytes.Length }, new DiplomatSliceU8 { Ptr = countryNamePtr, Len = (nuint)countryNameBytes.Length }, new DiplomatSliceU8 { Ptr = invoiceTypePtr, Len = (nuint)invoiceTypeBytes.Length }, new DiplomatSliceU8 { Ptr = locationAddressPtr, Len = (nuint)locationAddressBytes.Length }, new DiplomatSliceU8 { Ptr = industryBusinessCategoryPtr, Len = (nuint)industryBusinessCategoryBytes.Length });
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new CsrProperties(result.Ok);
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>CsrProperties</c> allocated on Rust side.
     /// </returns>
@@ -118,14 +118,14 @@ public partial class CsrProperties: IDisposable
                 var result = Raw.CsrProperties.FromStr(new DiplomatSliceU8 { Ptr = propertiesPtr, Len = (nuint)propertiesBytes.Length });
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new CsrProperties(result.Ok);
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>CsrProperties</c> allocated on Rust side.
     /// </returns>
@@ -140,14 +140,14 @@ public partial class CsrProperties: IDisposable
                 var result = Raw.CsrProperties.FromFile(new DiplomatSliceU8 { Ptr = pathPtr, Len = (nuint)pathBytes.Length });
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new CsrProperties(result.Ok);
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>Csr</c> allocated on Rust side.
     /// </returns>
@@ -165,7 +165,7 @@ public partial class CsrProperties: IDisposable
                 var result = Raw.CsrProperties.Build(selfLease!.Ptr, keyLease!.Ptr, env);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new Csr(result.Ok);
             }

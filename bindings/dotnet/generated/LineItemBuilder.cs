@@ -57,7 +57,7 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetTaxTotalPresent(bool present)
     {
         unsafe
@@ -69,7 +69,7 @@ public partial class LineItemBuilder: IDisposable
                 var result = Raw.LineItemBuilder.SetTaxTotalPresent(selfLease!.Ptr, present);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return;
             }
@@ -80,7 +80,7 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetGrossAmountPresent(bool present)
     {
         unsafe
@@ -92,7 +92,7 @@ public partial class LineItemBuilder: IDisposable
                 var result = Raw.LineItemBuilder.SetGrossAmountPresent(selfLease!.Ptr, present);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return;
             }
@@ -115,7 +115,7 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>InvoiceLineItem</c> allocated on Rust side.
     /// </returns>
@@ -130,7 +130,7 @@ public partial class LineItemBuilder: IDisposable
                 var result = Raw.LineItemBuilder.Build(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new InvoiceLineItem(result.Ok);
             }
@@ -141,7 +141,7 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetItemName(string value)
     {
         unsafe
@@ -157,7 +157,7 @@ public partial class LineItemBuilder: IDisposable
                     var result = Raw.LineItemBuilder.SetItemName(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -169,7 +169,7 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetInvoicedQuantityUnitCode(string value)
     {
         unsafe
@@ -185,7 +185,7 @@ public partial class LineItemBuilder: IDisposable
                     var result = Raw.LineItemBuilder.SetInvoicedQuantityUnitCode(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -197,7 +197,7 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetItemPriceBaseQuantityUnitCode(string value)
     {
         unsafe
@@ -213,7 +213,7 @@ public partial class LineItemBuilder: IDisposable
                     var result = Raw.LineItemBuilder.SetItemPriceBaseQuantityUnitCode(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -225,7 +225,7 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetId(string value)
     {
         unsafe
@@ -241,7 +241,7 @@ public partial class LineItemBuilder: IDisposable
                     var result = Raw.LineItemBuilder.SetId(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -253,13 +253,12 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public void SetInvoicedQuantity(string value)
+    /// <exception cref="FfiException"></exception>
+    public void SetInvoicedQuantity(decimal value)
     {
         unsafe
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            byte[] valueBytes = Diplomat.Utf8.Clone(value);
+            byte[] valueBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(value));
             BorrowLease<Raw.LineItemBuilder>? selfLease = null;
             try
             {
@@ -269,7 +268,7 @@ public partial class LineItemBuilder: IDisposable
                     var result = Raw.LineItemBuilder.SetInvoicedQuantity(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -281,13 +280,12 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public void SetItemNetPrice(string value)
+    /// <exception cref="FfiException"></exception>
+    public void SetItemNetPrice(decimal value)
     {
         unsafe
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            byte[] valueBytes = Diplomat.Utf8.Clone(value);
+            byte[] valueBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(value));
             BorrowLease<Raw.LineItemBuilder>? selfLease = null;
             try
             {
@@ -297,7 +295,7 @@ public partial class LineItemBuilder: IDisposable
                     var result = Raw.LineItemBuilder.SetItemNetPrice(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -309,13 +307,12 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public void SetItemGrossPrice(string value)
+    /// <exception cref="FfiException"></exception>
+    public void SetItemGrossPrice(decimal value)
     {
         unsafe
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            byte[] valueBytes = Diplomat.Utf8.Clone(value);
+            byte[] valueBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(value));
             BorrowLease<Raw.LineItemBuilder>? selfLease = null;
             try
             {
@@ -325,7 +322,7 @@ public partial class LineItemBuilder: IDisposable
                     var result = Raw.LineItemBuilder.SetItemGrossPrice(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -337,13 +334,12 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public void SetItemPriceDiscount(string value)
+    /// <exception cref="FfiException"></exception>
+    public void SetItemPriceDiscount(decimal value)
     {
         unsafe
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            byte[] valueBytes = Diplomat.Utf8.Clone(value);
+            byte[] valueBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(value));
             BorrowLease<Raw.LineItemBuilder>? selfLease = null;
             try
             {
@@ -353,7 +349,7 @@ public partial class LineItemBuilder: IDisposable
                     var result = Raw.LineItemBuilder.SetItemPriceDiscount(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -365,13 +361,12 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public void SetItemPriceBaseQuantity(string value)
+    /// <exception cref="FfiException"></exception>
+    public void SetItemPriceBaseQuantity(decimal value)
     {
         unsafe
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            byte[] valueBytes = Diplomat.Utf8.Clone(value);
+            byte[] valueBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(value));
             BorrowLease<Raw.LineItemBuilder>? selfLease = null;
             try
             {
@@ -381,7 +376,7 @@ public partial class LineItemBuilder: IDisposable
                     var result = Raw.LineItemBuilder.SetItemPriceBaseQuantity(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -393,13 +388,12 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public void SetLineNetAmount(string value)
+    /// <exception cref="FfiException"></exception>
+    public void SetLineNetAmount(decimal value)
     {
         unsafe
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            byte[] valueBytes = Diplomat.Utf8.Clone(value);
+            byte[] valueBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(value));
             BorrowLease<Raw.LineItemBuilder>? selfLease = null;
             try
             {
@@ -409,7 +403,7 @@ public partial class LineItemBuilder: IDisposable
                     var result = Raw.LineItemBuilder.SetLineNetAmount(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -421,13 +415,12 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public void SetLineVatAmount(string value)
+    /// <exception cref="FfiException"></exception>
+    public void SetLineVatAmount(decimal value)
     {
         unsafe
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            byte[] valueBytes = Diplomat.Utf8.Clone(value);
+            byte[] valueBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(value));
             BorrowLease<Raw.LineItemBuilder>? selfLease = null;
             try
             {
@@ -437,7 +430,7 @@ public partial class LineItemBuilder: IDisposable
                     var result = Raw.LineItemBuilder.SetLineVatAmount(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -449,13 +442,12 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public void SetLineAmountWithVat(string value)
+    /// <exception cref="FfiException"></exception>
+    public void SetLineAmountWithVat(decimal value)
     {
         unsafe
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            byte[] valueBytes = Diplomat.Utf8.Clone(value);
+            byte[] valueBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(value));
             BorrowLease<Raw.LineItemBuilder>? selfLease = null;
             try
             {
@@ -465,7 +457,7 @@ public partial class LineItemBuilder: IDisposable
                     var result = Raw.LineItemBuilder.SetLineAmountWithVat(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -477,13 +469,12 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public void SetVatRate(string value)
+    /// <exception cref="FfiException"></exception>
+    public void SetVatRate(decimal value)
     {
         unsafe
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            byte[] valueBytes = Diplomat.Utf8.Clone(value);
+            byte[] valueBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(value));
             BorrowLease<Raw.LineItemBuilder>? selfLease = null;
             try
             {
@@ -493,7 +484,7 @@ public partial class LineItemBuilder: IDisposable
                     var result = Raw.LineItemBuilder.SetVatRate(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -505,7 +496,7 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetVatCategory(VatCategory value)
     {
         unsafe
@@ -517,7 +508,7 @@ public partial class LineItemBuilder: IDisposable
                 var result = Raw.LineItemBuilder.SetVatCategory(selfLease!.Ptr, value);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return;
             }
@@ -528,7 +519,7 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetExemption(TaxExemption value)
     {
         unsafe
@@ -543,7 +534,7 @@ public partial class LineItemBuilder: IDisposable
                 var result = Raw.LineItemBuilder.SetExemption(selfLease!.Ptr, valueLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return;
             }
@@ -555,7 +546,7 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void AddAllowance(Adjustment value)
     {
         unsafe
@@ -570,7 +561,7 @@ public partial class LineItemBuilder: IDisposable
                 var result = Raw.LineItemBuilder.AddAllowance(selfLease!.Ptr, valueLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return;
             }
@@ -582,7 +573,7 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void AddCharge(Adjustment value)
     {
         unsafe
@@ -597,7 +588,7 @@ public partial class LineItemBuilder: IDisposable
                 var result = Raw.LineItemBuilder.AddCharge(selfLease!.Ptr, valueLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return;
             }
@@ -609,7 +600,7 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void AddDocumentReference(OriginalInvoiceRef value)
     {
         unsafe
@@ -624,7 +615,7 @@ public partial class LineItemBuilder: IDisposable
                 var result = Raw.LineItemBuilder.AddDocumentReference(selfLease!.Ptr, valueLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return;
             }
@@ -636,7 +627,7 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void AddTaxSubtotal(VatBreakdown value)
     {
         unsafe
@@ -651,7 +642,7 @@ public partial class LineItemBuilder: IDisposable
                 var result = Raw.LineItemBuilder.AddTaxSubtotal(selfLease!.Ptr, valueLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return;
             }
@@ -663,7 +654,7 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetItemSellerIdentifier(string value, string? scheme)
     {
         unsafe
@@ -681,7 +672,7 @@ public partial class LineItemBuilder: IDisposable
                     var result = Raw.LineItemBuilder.SetItemSellerIdentifier(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length }, scheme == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = schemePtr, Len = (nuint)schemeBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -693,7 +684,7 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetItemBuyerIdentifier(string value, string? scheme)
     {
         unsafe
@@ -711,7 +702,7 @@ public partial class LineItemBuilder: IDisposable
                     var result = Raw.LineItemBuilder.SetItemBuyerIdentifier(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length }, scheme == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = schemePtr, Len = (nuint)schemeBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -723,7 +714,7 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetItemStandardIdentifier(string value, string? scheme)
     {
         unsafe
@@ -741,7 +732,7 @@ public partial class LineItemBuilder: IDisposable
                     var result = Raw.LineItemBuilder.SetItemStandardIdentifier(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length }, scheme == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = schemePtr, Len = (nuint)schemeBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
