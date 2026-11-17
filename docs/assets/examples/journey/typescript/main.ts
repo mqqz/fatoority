@@ -3,8 +3,8 @@ import { randomUUID } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 import {
-  Address, BindingError, Config, CsidProduction, Environment, InvoiceBuilder, InvoiceSubType,
-  InvoiceTypeKind, Signer, VatCategory, Xml, ZatcaClient,
+  Address, BindingError, Config, Environment, InvoiceBuilder, InvoiceSigner, InvoiceSubType,
+  InvoiceTypeKind, PaymentMeans, ProductionCsid, VatCategory, Xml, ZatcaClient,
   type ValidationResponse, type ValidationMessage,
 } from 'fatoority';
 
@@ -70,7 +70,7 @@ export async function run(inputPath: string, submit: boolean, transport?: typeof
     builder.setCurrency('SAR');
     builder.setInvoiceCounter(BigInt(data.invoice_counter));
     builder.setPreviousInvoiceHash(data.previous_invoice_hash);
-    builder.setPaymentMeansCode('10');
+    builder.addPaymentMeans(PaymentMeans.new_('10', null));
     builder.setVatCategory(VatCategory.Standard);
     const address = Address.new_('SA', seller.city, seller.street, seller.building_number,
       seller.postal_code, null, seller.additional_number, seller.district);
@@ -80,17 +80,16 @@ export async function run(inputPath: string, submit: boolean, transport?: typeof
     writeFileSync(`${output}/invoice.xml`, invoice.xml());
     console.log('Created: SAR 100 net + SAR 15 VAT = SAR 115 payable');
     state.stage = 'sign';
-    const signed = Signer.fromPem(certificate, key).sign(invoice);
+    const signed = InvoiceSigner.fromPem(certificate, key).sign(invoice);
     const signedXml = signed.xml();
     writeFileSync(`${output}/signed.xml`, signedXml);
     state.invoice_hash = signed.invoiceHash();
     state.stage = 'validate';
-    const config = Config.new_(ENVIRONMENT);
-    const report = JSON.parse(Xml.validateZatca(config, signedXml, JSON.stringify({
+    const report = Xml.validateZatca(signedXml, JSON.stringify({
       previous_invoice_hash: data.previous_invoice_hash,
-    })));
-    saveJson(`${output}/validation.json`, report);
-    if (!report.is_valid) throw new Error('Local validation failed; inspect validation.json. Nothing was submitted.');
+    }));
+    saveJson(`${output}/validation.json`, JSON.parse(report.toJson()));
+    if (!report.isValid()) throw new Error('Local validation failed; inspect validation.json. Nothing was submitted.');
     console.log('Local validation passed; inspect validation.json for warnings');
     if (!submit) {
       state.stage = 'local_only';
@@ -100,8 +99,8 @@ export async function run(inputPath: string, submit: boolean, transport?: typeof
     state.stage = 'report';
     state.submitted = true; // Attempted; a failed connection can leave the outcome unknown.
     saveJson(`${output}/state.json`, state);
-    const client = new ZatcaClient(config, transport ? { fetch: transport } : {});
-    const credentials = CsidProduction.create(ENVIRONMENT, null, token, secret);
+    const client = new ZatcaClient(Config.new_(ENVIRONMENT), transport ? { fetch: transport } : {});
+    const credentials = ProductionCsid.create(ENVIRONMENT, null, token, secret);
     const response = await client.reportSimplifiedInvoice(signed, credentials, false, 'en');
     handleResponse(response, output);
     state.stage = 'accepted';

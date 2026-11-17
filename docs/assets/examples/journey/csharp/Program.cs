@@ -72,7 +72,8 @@ public static class Program
             builder.SetCurrency("SAR");
             builder.SetInvoiceCounter(ulong.Parse(Field(data, "invoice_counter")));
             builder.SetPreviousInvoiceHash(Field(data, "previous_invoice_hash"));
-            builder.SetPaymentMeansCode("10");
+            using (var means = PaymentMeans.New("10", null))
+                builder.AddPaymentMeans(means);
             builder.SetVatCategory(VatCategory.Standard);
             using var address = Address.New("SA", Field(seller, "city"), Field(seller, "street"),
                 Field(seller, "building_number"), Field(seller, "postal_code"), null,
@@ -83,19 +84,17 @@ public static class Program
             File.WriteAllText(Path.Combine(output, "invoice.xml"), invoice.Xml());
             Console.WriteLine("Created: SAR 100 net + SAR 15 VAT = SAR 115 payable");
             state["stage"] = "sign";
-            using var signer = Signer.FromPem(certificate, key);
+            using var signer = InvoiceSigner.FromPem(certificate, key);
             using var signed = signer.Sign(invoice);
             string signedXml = signed.Xml();
             File.WriteAllText(Path.Combine(output, "signed.xml"), signedXml);
             state["invoice_hash"] = signed.InvoiceHash();
             state["stage"] = "validate";
-            using var config = Config.New(Sandbox);
-            string reportJson = Xml.ValidateZatca(config, signedXml, JsonSerializer.Serialize(new {
+            using var report = Xml.ValidateZatca(signedXml, JsonSerializer.Serialize(new {
                 previous_invoice_hash = Field(data, "previous_invoice_hash"),
             }));
-            File.WriteAllText(Path.Combine(output, "validation.json"), reportJson);
-            using var report = JsonDocument.Parse(reportJson);
-            if (!report.RootElement.GetProperty("is_valid").GetBoolean())
+            File.WriteAllText(Path.Combine(output, "validation.json"), report.ToJson());
+            if (!report.IsValid())
                 throw new InvalidOperationException("Local validation failed; inspect validation.json. Nothing was submitted.");
             Console.WriteLine("Local validation passed; inspect validation.json for warnings");
             if (!submit)
@@ -107,7 +106,8 @@ public static class Program
             state["stage"] = "report";
             state["submitted"] = true; // Attempted; a failed connection can leave the outcome unknown.
             Save(Path.Combine(output, "state.json"), state);
-            using var credentials = CsidProduction.Create(Sandbox, null, token, secret);
+            using var credentials = ProductionCsid.Create(Sandbox, null, token, secret);
+            using var config = Config.New(Sandbox);
             using var client = ZatcaClient.Create(config);
             using var response = client.ReportSimplifiedInvoice(signed, credentials, ClearanceMode.Disabled, "en");
             HandleResponse(response, output);
