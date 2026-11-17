@@ -20,6 +20,17 @@ class FinalizedInvoice internal constructor(internal val raw: com.fatoora.raw.Fi
             FinalizedInvoice(unwrap(com.fatoora.raw.FinalizedInvoice.fromFile(checkedText(value))))
         }
     }
+
+    val hash: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.hash())
+        }
+
+    val xml: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.xml())
+        }
+
     fun data(): InvoiceData = nativeCall(listOfNotNull(this)) {
         InvoiceData(unwrap(raw.data()))
     }
@@ -28,10 +39,12 @@ class FinalizedInvoice internal constructor(internal val raw: com.fatoora.raw.Fi
         InvoiceTotals(unwrap(raw.totals()))
     }
 
+    @Deprecated("Use the hash property.", ReplaceWith("hash"))
     fun hash(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.hash())
     }
 
+    @Deprecated("Use the xml property.", ReplaceWith("xml"))
     fun xml(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.xml())
     }

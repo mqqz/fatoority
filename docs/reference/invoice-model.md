@@ -448,9 +448,9 @@ correspond to the fields above.
 
 === "Kotlin"
 
-    Use `com.fatoora`. Decimal arguments and amounts are strings; counters and indexes use `java.math.BigInteger`, codes use `com.fatoora` enums, and the flag mask uses `Int`. Optional values are nullable. Methods throw on failure. Close owned objects with `use`; returned `Text` exposes `value()`.
+    Use `com.fatoora`. Quantities, prices, rates and amounts are exact `java.math.BigDecimal` values; counters and indexes use `java.math.BigInteger`, codes use `com.fatoora` enums, and the flag mask uses `Int`. Optional values are nullable. Getters that return copied values are properties; getters that return native owners stay methods. Methods throw on failure. Close owned objects with `use`.
 
-    Enums: `InvoiceTypeKind` (`Tax`, `Prepayment`, `CreditNote`, `DebitNote`), `InvoiceSubType` (`Standard`, `Simplified`), and `VatCategory` (`Exempt`, `Standard`, `Zero`, `OutOfScope`) in `com.fatoora`; pass them as `InvoiceTypeKind.Tax`, `VatCategory.Standard`, and so on. Flags remain an `Int` bitmask; build it from `InvoiceFlag` bits, for example `InvoiceFlag.Export.bit() or InvoiceFlag.Summary.bit()` (`1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed). Use zero for no flags.
+    Enums: `InvoiceTypeKind` (`Tax`, `Prepayment`, `CreditNote`, `DebitNote`), `InvoiceSubType` (`Standard`, `Simplified`), and `VatCategory` (`Exempt`, `Standard`, `Zero`, `OutOfScope`) in `com.fatoora`; pass them as `InvoiceTypeKind.Tax`, `VatCategory.Standard`, and so on. Flags remain an `Int` bitmask; build it from `InvoiceFlag` bits, for example `InvoiceFlag.Export.bit or InvoiceFlag.Summary.bit` (`1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed). Use zero for no flags.
 
     **Create and configure**
 
@@ -469,7 +469,7 @@ correspond to the fields above.
     | `addNote(language: String?, value: String)` | `Unit` |
     | `setSeller(name: String, address: Address, vatId: String, otherId: String? = null, scheme: String? = null)` | `Unit` |
     | `setBuyer(name: String, address: Address, vatId: String? = null, otherId: String? = null, scheme: String? = null)` | `Unit` |
-    | `addLineItem(description: String, quantity: String, unitCode: String, unitPrice: String, vatRate: String, category: VatCategory)` | `Unit` |
+    | `addLineItem(description: String, quantity: BigDecimal, unitCode: String, unitPrice: BigDecimal, vatRate: BigDecimal, category: VatCategory)` | `Unit` |
     | `build()` | `FinalizedInvoice` |
 
     **Address inputs**
@@ -486,49 +486,49 @@ correspond to the fields above.
 
     | Call | Returns |
     | --- | --- |
-    | `id()` | `String` |
-    | `uuid()` | `String` |
-    | `previousInvoiceHash()` | `String` |
-    | `paymentMeansCode()` | `String` |
-    | `currency()` | `String` |
-    | `issueDatetime()` | `String` |
-    | `invoiceLevelCharge()` | `String` |
-    | `invoiceLevelDiscount()` | `String` |
-    | `allowanceReason()` | `Text?` |
-    | `invoiceCounter()` | `java.math.BigInteger` |
-    | `vatCategory()` | `VatCategory` |
-    | `flags()` | `Int` |
-    | `invoiceTypeKind()` | `InvoiceTypeKind` |
-    | `invoiceSubType()` | `InvoiceSubType` |
+    | `id` | `String` |
+    | `uuid` | `String` |
+    | `previousInvoiceHash` | `String` |
+    | `paymentMeansCode` | `String` |
+    | `currency` | `String` |
+    | `issueDatetime` | `String` |
+    | `invoiceLevelCharge` | `BigDecimal` |
+    | `invoiceLevelDiscount` | `BigDecimal` |
+    | `allowanceReason` | `String?` |
+    | `invoiceCounter` | `java.math.BigInteger` |
+    | `vatCategory` | `VatCategory` |
+    | `flags` | `Int` |
+    | `invoiceTypeKind` | `InvoiceTypeKind` |
+    | `invoiceSubType` | `InvoiceSubType` |
     | `seller()` | `Party` |
     | `buyer()` | `Party?` |
     | `note()` | `InvoiceNote?` |
-    | `lineItemsLen()` | `java.math.BigInteger` |
+    | `lineItemsLen` | `java.math.BigInteger` |
     | `lineItem(index: java.math.BigInteger)` | `InvoiceLineItem` |
     | `originalInvoiceRef()` | `OriginalInvoiceRef?` |
-    | `originalInvoiceReason()` | `Text?` |
+    | `originalInvoiceReason` | `String?` |
 
     **Totals**
 
     | Call | Returns |
     | --- | --- |
-    | `taxInclusive()` | `String` |
-    | `taxAmount()` | `String` |
-    | `lineExtension()` | `String` |
-    | `allowanceTotal()` | `String` |
-    | `chargeTotal()` | `String` |
-    | `taxableAmount()` | `String` |
-    | `prepaidAmount()` | `String` |
-    | `payableRoundingAmount()` | `String` |
-    | `payableAmount()` | `String` |
+    | `taxInclusive` | `BigDecimal` |
+    | `taxAmount` | `BigDecimal` |
+    | `lineExtension` | `BigDecimal` |
+    | `allowanceTotal` | `BigDecimal` |
+    | `chargeTotal` | `BigDecimal` |
+    | `taxableAmount` | `BigDecimal` |
+    | `prepaidAmount` | `BigDecimal` |
+    | `payableRoundingAmount` | `BigDecimal` |
+    | `payableAmount` | `BigDecimal` |
 
     Optional object accessors return null when absent. Line-item objects provide description, quantity, unit code, unit price, total amount, VAT rate, VAT amount, and category. See [XML](xml.md) and [signing](invoice-signing.md) for document and signature operations.
 
 === "Java"
 
-    Import `com.fatoora.*`. Decimal arguments and amounts use `String`; counters and indexes use `BigInteger`, codes use `com.fatoora` enums, and the flag mask uses `int`. Optional values accept `null`. Call static `InvoiceBuilder.create(...)` and `Address.create(...)` with all arguments, including optional nulls. Close owned objects with try-with-resources. Returned `Text` exposes `value()`. The signatures below use Java parameter and return types.
+    Import `com.fatoora.*`. Quantities, prices, rates and amounts use `java.math.BigDecimal`; counters and indexes use `BigInteger`, codes use `com.fatoora` enums, and the flag mask uses `int`. Optional values accept `null`. Call static `InvoiceBuilder.create(...)` and `Address.create(...)` with all arguments, including optional nulls. Close owned objects with try-with-resources. Value getters use `getX()`, `isX()` or `hasX()`. The signatures below use Java parameter and return types.
 
-    Enums: `InvoiceTypeKind` (`Tax`, `Prepayment`, `CreditNote`, `DebitNote`), `InvoiceSubType` (`Standard`, `Simplified`), and `VatCategory` (`Exempt`, `Standard`, `Zero`, `OutOfScope`) in `com.fatoora`; pass them as `InvoiceTypeKind.Tax`, `VatCategory.Standard`, and so on. Flags remain an `int` bitmask; build it from `InvoiceFlag` bits, for example `InvoiceFlag.Export.bit() | InvoiceFlag.Summary.bit()` (`1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed). Use zero for no flags.
+    Enums: `InvoiceTypeKind` (`Tax`, `Prepayment`, `CreditNote`, `DebitNote`), `InvoiceSubType` (`Standard`, `Simplified`), and `VatCategory` (`Exempt`, `Standard`, `Zero`, `OutOfScope`) in `com.fatoora`; pass them as `InvoiceTypeKind.Tax`, `VatCategory.Standard`, and so on. Flags remain an `int` bitmask; build it from `InvoiceFlag` bits, for example `InvoiceFlag.Export.getBit() | InvoiceFlag.Summary.getBit()` (`1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed). Use zero for no flags.
 
     **Create and configure**
 
@@ -547,7 +547,7 @@ correspond to the fields above.
     | `addNote(String language, String value)` | `void` |
     | `setSeller(String name, Address address, String vatId, String otherId, String scheme)` | `void` |
     | `setBuyer(String name, Address address, String vatId, String otherId, String scheme)` | `void` |
-    | `addLineItem(String description, String quantity, String unitCode, String unitPrice, String vatRate, VatCategory category)` | `void` |
+    | `addLineItem(String description, BigDecimal quantity, String unitCode, BigDecimal unitPrice, BigDecimal vatRate, VatCategory category)` | `void` |
     | `build()` | `FinalizedInvoice` |
 
     **Address inputs**
@@ -564,41 +564,41 @@ correspond to the fields above.
 
     | Call | Returns |
     | --- | --- |
-    | `id()` | `String` |
-    | `uuid()` | `String` |
-    | `previousInvoiceHash()` | `String` |
-    | `paymentMeansCode()` | `String` |
-    | `currency()` | `String` |
-    | `issueDatetime()` | `String` |
-    | `invoiceLevelCharge()` | `String` |
-    | `invoiceLevelDiscount()` | `String` |
-    | `allowanceReason()` | `Text` |
-    | `invoiceCounter()` | `BigInteger` |
-    | `vatCategory()` | `VatCategory` |
-    | `flags()` | `int` |
-    | `invoiceTypeKind()` | `InvoiceTypeKind` |
-    | `invoiceSubType()` | `InvoiceSubType` |
+    | `getId()` | `String` |
+    | `getUuid()` | `String` |
+    | `getPreviousInvoiceHash()` | `String` |
+    | `getPaymentMeansCode()` | `String` |
+    | `getCurrency()` | `String` |
+    | `getIssueDatetime()` | `String` |
+    | `getInvoiceLevelCharge()` | `BigDecimal` |
+    | `getInvoiceLevelDiscount()` | `BigDecimal` |
+    | `getAllowanceReason()` | `String` |
+    | `getInvoiceCounter()` | `BigInteger` |
+    | `getVatCategory()` | `VatCategory` |
+    | `getFlags()` | `int` |
+    | `getInvoiceTypeKind()` | `InvoiceTypeKind` |
+    | `getInvoiceSubType()` | `InvoiceSubType` |
     | `seller()` | `Party` |
     | `buyer()` | `Party` |
     | `note()` | `InvoiceNote` |
-    | `lineItemsLen()` | `BigInteger` |
+    | `getLineItemsLen()` | `BigInteger` |
     | `lineItem(BigInteger index)` | `InvoiceLineItem` |
     | `originalInvoiceRef()` | `OriginalInvoiceRef` |
-    | `originalInvoiceReason()` | `Text` |
+    | `getOriginalInvoiceReason()` | `String` |
 
     **Totals**
 
     | Call | Returns |
     | --- | --- |
-    | `taxInclusive()` | `String` |
-    | `taxAmount()` | `String` |
-    | `lineExtension()` | `String` |
-    | `allowanceTotal()` | `String` |
-    | `chargeTotal()` | `String` |
-    | `taxableAmount()` | `String` |
-    | `prepaidAmount()` | `String` |
-    | `payableRoundingAmount()` | `String` |
-    | `payableAmount()` | `String` |
+    | `getTaxInclusive()` | `BigDecimal` |
+    | `getTaxAmount()` | `BigDecimal` |
+    | `getLineExtension()` | `BigDecimal` |
+    | `getAllowanceTotal()` | `BigDecimal` |
+    | `getChargeTotal()` | `BigDecimal` |
+    | `getTaxableAmount()` | `BigDecimal` |
+    | `getPrepaidAmount()` | `BigDecimal` |
+    | `getPayableRoundingAmount()` | `BigDecimal` |
+    | `getPayableAmount()` | `BigDecimal` |
 
     Optional object accessors return null when absent. Line-item objects provide description, quantity, unit code, unit price, total amount, VAT rate, VAT amount, and category. See [XML](xml.md) and [signing](invoice-signing.md) for document and signature operations.
 

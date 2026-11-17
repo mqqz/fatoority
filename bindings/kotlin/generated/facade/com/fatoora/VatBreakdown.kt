@@ -11,30 +11,63 @@ class VatBreakdown internal constructor(internal val raw: com.fatoora.raw.VatBre
     }
     companion object {
         @JvmStatic
+        fun create(category: VatCategory, rate: java.math.BigDecimal, taxableAmount: java.math.BigDecimal, taxAmount: java.math.BigDecimal, exemption: TaxExemption): VatBreakdown = nativeCall(listOfNotNull(exemption)) {
+            VatBreakdown(unwrap(com.fatoora.raw.VatBreakdown.new_(com.fatoora.raw.VatCategory.valueOf(category.name), decimalText(rate), decimalText(taxableAmount), decimalText(taxAmount), exemption.raw)))
+        }
+
+        @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("create(category, BigDecimal(rate), BigDecimal(taxableAmount), BigDecimal(taxAmount), exemption)", "java.math.BigDecimal"))
+        @JvmStatic
         fun create(category: VatCategory, rate: String, taxableAmount: String, taxAmount: String, exemption: TaxExemption): VatBreakdown = nativeCall(listOfNotNull(exemption)) {
             VatBreakdown(unwrap(com.fatoora.raw.VatBreakdown.new_(com.fatoora.raw.VatCategory.valueOf(category.name), checkedText(rate), checkedText(taxableAmount), checkedText(taxAmount), exemption.raw)))
         }
     }
-    fun hasVatRate(): Boolean = nativeCall(listOfNotNull(this)) {
-        raw.hasVatRate()
-    }
+
+    @get:JvmName("hasVatRate")
+    val hasVatRate: Boolean
+        get() = nativeCall(listOfNotNull(this)) {
+            raw.hasVatRate()
+        }
+
+    val category: VatCategory
+        get() = nativeCall(listOfNotNull(this)) {
+            VatCategory.valueOf(raw.category().name)
+        }
+
+    val rate: java.math.BigDecimal
+        get() = nativeCall(listOfNotNull(this)) {
+            decimalOf(unwrap(raw.rate()))
+        }
+
+    val taxableAmount: java.math.BigDecimal
+        get() = nativeCall(listOfNotNull(this)) {
+            decimalOf(unwrap(raw.taxableAmount()))
+        }
+
+    val taxAmount: java.math.BigDecimal
+        get() = nativeCall(listOfNotNull(this)) {
+            decimalOf(unwrap(raw.taxAmount()))
+        }
 
     fun withoutVatRate(): VatBreakdown = nativeCall(listOfNotNull(this)) {
         VatBreakdown(unwrap(raw.withoutVatRate()))
     }
 
+    @Deprecated("Use the category property.", ReplaceWith("category"))
     fun category(): VatCategory = nativeCall(listOfNotNull(this)) {
         VatCategory.valueOf(raw.category().name)
     }
 
+    @Deprecated("Use the rate property.", ReplaceWith("rate.toPlainString()"))
     fun rate(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.rate())
     }
 
+    @Deprecated("Use the taxableAmount property.", ReplaceWith("taxableAmount.toPlainString()"))
     fun taxableAmount(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.taxableAmount())
     }
 
+    @Deprecated("Use the taxAmount property.", ReplaceWith("taxAmount.toPlainString()"))
     fun taxAmount(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.taxAmount())
     }

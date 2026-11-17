@@ -261,8 +261,9 @@ old integer codes.
 - `ZatcaClient::{report_simplified_invoice, clear_standard_invoice}` and their
   `prepare_*` forms take `clearance_mode: ClearanceMode` instead of
   `clearance_status: bool`. The JavaScript async `ZatcaClient` still accepts a
-  Boolean (or a `ClearanceMode`), and the Kotlin `*Async` helpers still take a
-  Boolean.
+  Boolean (or a `ClearanceMode`). The Kotlin `reportSimplifiedInvoiceAsync` and
+  `clearStandardInvoiceAsync` helpers take a `ClearanceMode` (see "Kotlin/Java
+  facade" below).
 - `ValidationResponse::{reporting_status, clearance_status}`,
   `ValidationResults::status` and `ValidationMessage::{message_type, status}`
   return an optional enum instead of optional text; use the new `*_raw`
@@ -356,6 +357,40 @@ method with a property or by return type:
 | `using var id = credentials.RequestId(); id?.Value()` | `credentials.RequestId` |
 | `catch (BindingErrorException e) { using var inner = e.Inner; inner.Code(); }` | `catch (FfiException e) { e.Code; e.Kind; e.DetailsJson; }` |
 
+**Kotlin/Java facade (`com.fatoora`)**
+
+- Quantities, prices, rates and amounts are `java.math.BigDecimal` instead of
+  `String`, for arguments (`InvoiceBuilder.addLineItem`, `setPrepaidAmount`,
+  `addAllowance`/`addCharge`/`addTaxExemption` rates, `LineItemBuilder` price
+  and amount setters, `Adjustment.amount`/`percentage`, and the
+  `InvoiceLineItem`, `VatBreakdown` and `AllowanceCharge` factories) and for
+  results (`InvoiceTotals`, `VatBreakdown`, `InvoiceLineItem`,
+  `AllowanceCharge`, `Adjustment` and `InvoiceData` amounts). Conversion is
+  exact: arguments are sent with `toPlainString()` and results parsed with
+  `BigDecimal(String)`. Results are normalized (`10.50` reads back as `10.5`).
+- Zero-argument getters that return copied values (text, amounts, numbers,
+  enums, booleans) are Kotlin `val` properties, which Java sees as `getX()`;
+  `isX` properties keep Java `isX()` and `hasX` properties keep Java `hasX()`.
+  `InvoiceFlag.bit` is a property too. Getters that return native owners, such
+  as `invoice.totals()` or `response.validationResults()`, and conversions
+  (`toPem()`, `toJson()`, `intoXml()`, `asSlice()`) stay methods.
+- Optional text results are `String?` instead of a closeable `Text`
+  (for example `address.district`, `credentials.requestId`,
+  `response.clearedInvoiceXml`). `PaymentMeans.instructionNoteAt(index)` and
+  `ZatcaStageReport.evaluatedAssertion(index)` return `String`.
+- Native failures throw a `BindingException` subclass per error code:
+  `InvalidInputException`, `ValidationException`, `ParseException`,
+  `XmlException`, `CryptoException`, `IoException`, `NetworkException`,
+  `UnauthorizedException`, `InternalException` and `ApiException` (codes 1-10,
+  matching the Python `FfiError` subclasses). `BindingException` is now `open`
+  and gains `kind: ErrorKind?`; unknown codes still throw `BindingException`.
+- `reportSimplifiedInvoiceAsync` and `clearStandardInvoiceAsync` take
+  `clearanceMode: ClearanceMode`, like the blocking methods.
+- Kotlin callers of `isValid()`, `isComplete()`, `hasErrors()`, `hasVatRate()`
+  and the other `is*`/`has*` getters must drop the parentheses; there is no
+  deprecated function because it would clash with the Java getter. Java
+  callers are unaffected.
+
 ### Deprecated
 
 Each of these still compiles with a deprecation warning, forwards to its
@@ -404,6 +439,16 @@ The `fatoora-ffi` exported methods (`set_payment_means_code`,
 `invoice_level_charge`, `invoice_level_discount`, `allowance_reason`,
 `set_allowance`, `AllowanceCharge::without_vat_rate`,
 `VatBreakdown::without_vat_rate`) are unchanged.
+
+Kotlin/Java facade, removed in 0.7:
+
+- The getter functions replaced by properties, such as `address.city()` or
+  `totals.taxAmount()`, keep their 0.5 return types (`String` amounts and
+  closeable `Text?`) and carry `ReplaceWith` hints.
+- The `String` overloads of the amount-taking methods listed above. They keep
+  the 0.5 native parsing; use the `BigDecimal` overloads.
+- The `Boolean` overloads of `reportSimplifiedInvoiceAsync` and
+  `clearStandardInvoiceAsync`.
 
 ### Removed
 

@@ -96,10 +96,10 @@ Clients reject credentials issued for a different environment before sending a r
     | Operation | Returns | Behavior |
     | --- | --- | --- |
     | `Config.create(env: Environment)` | `Config` | Stores the selected environment. |
-    | `config.env()` | `Environment` | Returns the stored environment. |
+    | `config.env` | `Environment` | Returns the stored environment. |
 
     Pass `Environment.NonProduction`, `Environment.Simulation`, or
-    `Environment.Production`. There is no implicit default. `env()` throws only if the
+    `Environment.Production`. There is no implicit default. `env` throws only if the
     native library reports an environment this binding version does not know (code 9).
     Use `.use { ... }` or `close()` for configuration objects. See
     [Kotlin setup](bindings/kotlin.md).
@@ -110,10 +110,10 @@ Clients reject credentials issued for a different environment before sending a r
     | Operation | Returns | Behavior |
     | --- | --- | --- |
     | `Config.create(Environment env)` | `Config` | Stores the selected environment. |
-    | `config.env()` | `Environment` | Returns the stored environment. |
+    | `config.getEnv()` | `Environment` | Returns the stored environment. |
 
     Pass `Environment.NonProduction`, `Environment.Simulation`, or
-    `Environment.Production`. There is no implicit default. `env()` throws only if the
+    `Environment.Production`. There is no implicit default. `getEnv()` throws only if the
     native library reports an environment this binding version does not know (code 9).
     Use try-with-resources or `close()` for configuration objects. See
     [Java setup](bindings/kotlin.md).

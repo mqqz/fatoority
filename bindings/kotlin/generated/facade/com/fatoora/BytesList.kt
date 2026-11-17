@@ -9,6 +9,7 @@ class BytesList internal constructor(internal val raw: com.fatoora.raw.BytesList
         val handle = raw.handle
         attach { com.fatoora.raw.BytesList.lib.fatoora_BytesList_destroy(handle) }
     }
+
     fun len(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
         java.math.BigInteger(raw.len().toString())
     }

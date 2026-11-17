@@ -11,58 +11,132 @@ class AllowanceCharge internal constructor(internal val raw: com.fatoora.raw.All
     }
     companion object {
         @JvmStatic
+        fun create(kind: AdjustmentKind, amount: java.math.BigDecimal, reason: String?, reasonCode: String?, category: VatCategory, rate: java.math.BigDecimal, exemption: TaxExemption): AllowanceCharge = nativeCall(listOfNotNull(exemption)) {
+            AllowanceCharge(unwrap(com.fatoora.raw.AllowanceCharge.new_(com.fatoora.raw.AdjustmentKind.valueOf(kind.name), decimalText(amount), reason?.let(::checkedText), reasonCode?.let(::checkedText), com.fatoora.raw.VatCategory.valueOf(category.name), decimalText(rate), exemption.raw)))
+        }
+
+        @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("create(kind, BigDecimal(amount), reason, reasonCode, category, BigDecimal(rate), exemption)", "java.math.BigDecimal"))
+        @JvmStatic
         fun create(kind: AdjustmentKind, amount: String, reason: String?, reasonCode: String?, category: VatCategory, rate: String, exemption: TaxExemption): AllowanceCharge = nativeCall(listOfNotNull(exemption)) {
             AllowanceCharge(unwrap(com.fatoora.raw.AllowanceCharge.new_(com.fatoora.raw.AdjustmentKind.valueOf(kind.name), checkedText(amount), reason?.let(::checkedText), reasonCode?.let(::checkedText), com.fatoora.raw.VatCategory.valueOf(category.name), checkedText(rate), exemption.raw)))
         }
     }
-    fun hasVatRate(): Boolean = nativeCall(listOfNotNull(this)) {
-        raw.hasVatRate()
-    }
+
+    @get:JvmName("hasVatRate")
+    val hasVatRate: Boolean
+        get() = nativeCall(listOfNotNull(this)) {
+            raw.hasVatRate()
+        }
+
+    val baseAmount: java.math.BigDecimal?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.baseAmount())?.let(::readText)?.let(::decimalOf)
+        }
+
+    val percentage: java.math.BigDecimal?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.percentage())?.let(::readText)?.let(::decimalOf)
+        }
+
+    val kind: AdjustmentKind
+        get() = nativeCall(listOfNotNull(this)) {
+            AdjustmentKind.valueOf(raw.kind().name)
+        }
+
+    val amount: java.math.BigDecimal
+        get() = nativeCall(listOfNotNull(this)) {
+            decimalOf(unwrap(raw.amount()))
+        }
+
+    val rate: java.math.BigDecimal
+        get() = nativeCall(listOfNotNull(this)) {
+            decimalOf(unwrap(raw.rate()))
+        }
+
+    val category: VatCategory
+        get() = nativeCall(listOfNotNull(this)) {
+            VatCategory.valueOf(raw.category().name)
+        }
+
+    val taxCategoryCount: java.math.BigInteger
+        get() = nativeCall(listOfNotNull(this)) {
+            java.math.BigInteger(raw.taxCategoryCount().toString())
+        }
+
+    val reason: String?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.reason())?.let(::readText)
+        }
+
+    val reasonCode: String?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.reasonCode())?.let(::readText)
+        }
 
     fun withoutVatRate(): AllowanceCharge = nativeCall(listOfNotNull(this)) {
         AllowanceCharge(unwrap(raw.withoutVatRate()))
     }
 
+    /**
+     * Retain this adjustment's metadata and check its percentage calculation.
+     */
+    fun withPercentage(base: java.math.BigDecimal, percent: java.math.BigDecimal): AllowanceCharge = nativeCall(listOfNotNull(this)) {
+        AllowanceCharge(unwrap(raw.withPercentage(decimalText(base), decimalText(percent))))
+    }
+
+    @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("withPercentage(BigDecimal(base), BigDecimal(percent))", "java.math.BigDecimal"))
     fun withPercentage(base: String, percent: String): AllowanceCharge = nativeCall(listOfNotNull(this)) {
         AllowanceCharge(unwrap(raw.withPercentage(checkedText(base), checkedText(percent))))
     }
 
+    @Deprecated("Use the baseAmount property.", ReplaceWith("baseAmount"))
     fun baseAmount(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.baseAmount())?.let(::Text)
     }
 
+    @Deprecated("Use the percentage property.", ReplaceWith("percentage"))
     fun percentage(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.percentage())?.let(::Text)
     }
 
+    @Deprecated("Use the kind property.", ReplaceWith("kind"))
     fun kind(): AdjustmentKind = nativeCall(listOfNotNull(this)) {
         AdjustmentKind.valueOf(raw.kind().name)
     }
 
+    @Deprecated("Use the amount property.", ReplaceWith("amount.toPlainString()"))
     fun amount(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.amount())
     }
 
+    @Deprecated("Use the rate property.", ReplaceWith("rate.toPlainString()"))
     fun rate(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.rate())
     }
 
+    @Deprecated("Use the category property.", ReplaceWith("category"))
     fun category(): VatCategory = nativeCall(listOfNotNull(this)) {
         VatCategory.valueOf(raw.category().name)
     }
 
+    /**
+     * Return an independent adjustment with the given number of identical tax classifications.
+     */
     fun withTaxCategoryCount(count: java.math.BigInteger): AllowanceCharge = nativeCall(listOfNotNull(this)) {
         AllowanceCharge(unwrap(raw.withTaxCategoryCount(checkedCounter(count))))
     }
 
+    @Deprecated("Use the taxCategoryCount property.", ReplaceWith("taxCategoryCount"))
     fun taxCategoryCount(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
         java.math.BigInteger(raw.taxCategoryCount().toString())
     }
 
+    @Deprecated("Use the reason property.", ReplaceWith("reason"))
     fun reason(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.reason())?.let(::Text)
     }
 
+    @Deprecated("Use the reasonCode property.", ReplaceWith("reasonCode"))
     fun reasonCode(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.reasonCode())?.let(::Text)
     }

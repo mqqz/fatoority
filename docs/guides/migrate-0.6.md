@@ -217,9 +217,21 @@ C#, which does not emit enum methods). Optional text getters such as
 `requestId()` still return nullable `Text`.
 
 The JavaScript async `ZatcaClient.reportSimplifiedInvoice` and
-`clearStandardInvoice` still accept a Boolean (or a `ClearanceMode`), and the
-Kotlin `reportSimplifiedInvoiceAsync`/`clearStandardInvoiceAsync` helpers still
-take a `Boolean`.
+`clearStandardInvoice` still accept a Boolean (or a `ClearanceMode`). The
+Kotlin `reportSimplifiedInvoiceAsync`/`clearStandardInvoiceAsync` helpers take a
+`ClearanceMode`; their `Boolean` overloads are deprecated.
+
+The Kotlin/Java facade also changes shape. Value getters (text, amounts,
+numbers, enums, booleans) become Kotlin properties, seen from Java as `getX()`,
+`isX()` or `hasX()`, so `address.city()` becomes `address.city` in Kotlin and
+`address.getCity()` in Java. Optional text getters return `String?` instead of a
+closeable `Text`. Quantities, prices, rates and amounts are `java.math.BigDecimal`
+in both directions. Native failures throw a `BindingException` subclass per
+error code, such as `InvalidInputException` or `NetworkException`. The old getter
+functions and `String` amount overloads remain for one release as deprecated
+members with a suggested replacement; Kotlin `isX()`/`hasX()` calls and
+`PaymentMeans.instructionNoteAt`/`ZatcaStageReport.evaluatedAssertion` (now
+`String`) break without a deprecation path.
 
 The C facade (`fatoora.h`) uses typed enums (`FatooraEnvironment`,
 `FatooraInvoiceTypeKind`, `FatooraVatCategory`, `FatooraAdjustmentKind`,

@@ -111,11 +111,11 @@ rules. Run [local validation](../guides/validation.md) for that rule profile.
 
 === "Kotlin"
 
-    Pass quantities, prices, rates and amounts as decimal strings. Numeric getters return `String`. Use `BigDecimal.toPlainString()` when converting a value; scientific notation is not accepted.
+    Pass quantities, prices, rates and amounts as `java.math.BigDecimal`; amount getters return `BigDecimal`. Conversion is exact: the binding sends `toPlainString()` and parses results with `BigDecimal(String)`, so no digits are lost. Compare values with `compareTo`, since returned values are normalized (`10.50` reads back as `10.5`).
 
 === "Java"
 
-    Pass quantities, prices, rates and amounts as decimal strings. Numeric getters return `String`. Use `BigDecimal.toPlainString()` when converting a value; scientific notation is not accepted.
+    Pass quantities, prices, rates and amounts as `java.math.BigDecimal`; amount getters return `BigDecimal`. Conversion is exact: the binding sends `toPlainString()` and parses results with `BigDecimal(String)`, so no digits are lost. Compare values with `compareTo`, since returned values are normalized (`10.50` reads back as `10.5`).
 
 === "C"
 

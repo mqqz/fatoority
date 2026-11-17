@@ -2,6 +2,7 @@ package com.fatoora
 
 import java.lang.ref.PhantomReference
 import java.lang.ref.ReferenceQueue
+import java.math.BigDecimal
 import java.math.BigInteger
 import java.nio.CharBuffer
 import java.nio.charset.CodingErrorAction
@@ -79,16 +80,20 @@ internal fun <T> nativeCall(owners: List<NativeResource>, action: () -> T): T {
     }
 }
 
-/** Native error data copied into managed memory before the native error is freed. */
-class BindingException(val code: Int, override val message: String, val detailsJson: String) :
-    RuntimeException(message)
-
 internal fun <T> unwrap(result: Result<T>): T = result.getOrElse { error ->
     if (error !is com.fatoora.raw.BindingError) throw error
     error.owned = false
-    try { throw BindingException(error.code(), error.message(), error.detailsJson()) }
+    try { throw bindingException(error.code(), error.message(), error.detailsJson()) }
     finally { com.fatoora.raw.BindingError.lib.fatoora_BindingError_destroy(error.handle) }
 }
+
+/** Copies an owned optional-text result and frees it immediately. */
+internal fun readText(raw: com.fatoora.raw.Text): String = Text(raw).use { it.value }
+
+// Decimals cross the native boundary as plain decimal text. Both directions are exact:
+// BigDecimal keeps every digit and the scale, and toPlainString never uses an exponent.
+internal fun decimalOf(text: String): BigDecimal = BigDecimal(text)
+internal fun decimalText(value: BigDecimal): String = value.toPlainString()
 
 internal fun checkedText(value: String): String {
     // The raw generator replaces lone UTF-16 surrogates. Reject them at our boundary.

@@ -2,6 +2,12 @@
 @file:OptIn(ExperimentalUnsignedTypes::class)
 package com.fatoora
 
+/**
+ * Owned results of local ZATCA validation with explicit stage coverage.
+ *
+ * Completion and validity describe only the local profile; they do not
+ * establish acceptance by ZATCA or certificate issuer trust.
+ */
 class ZatcaValidationReport internal constructor(internal val raw: com.fatoora.raw.ZatcaValidationReport) : NativeResource() {
     init {
         check(raw.owned && raw.selfEdges.isEmpty()) { "Facade requires an independent owned handle" }
@@ -9,38 +15,92 @@ class ZatcaValidationReport internal constructor(internal val raw: com.fatoora.r
         val handle = raw.handle
         attach { com.fatoora.raw.ZatcaValidationReport.lib.fatoora_ZatcaValidationReport_destroy(handle) }
     }
+
+    /**
+     * Version of the report's serialized format.
+     */
+    val schemaVersion: Long
+        get() = nativeCall(listOfNotNull(this)) {
+            raw.schemaVersion().toLong()
+        }
+
+    /**
+     * Identifier of the validation profile (the ZATCA SDK release it mirrors).
+     */
+    val profile: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.profile())
+        }
+
+    /**
+     * RFC 3339 instant used for time-dependent rules.
+     */
+    val evaluatedAt: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.evaluatedAt())
+        }
+
+    /**
+     * Whether every required stage finished exactly once.
+     */
+    val isComplete: Boolean
+        get() = nativeCall(listOfNotNull(this)) {
+            raw.isComplete()
+        }
+
+    /**
+     * Whether any stage, including an incomplete stage, reported an error.
+     */
+    @get:JvmName("hasErrors")
+    val hasErrors: Boolean
+        get() = nativeCall(listOfNotNull(this)) {
+            raw.hasErrors()
+        }
+
+    /**
+     * Whether validation is complete and contains no error findings.
+     */
+    val isValid: Boolean
+        get() = nativeCall(listOfNotNull(this)) {
+            raw.isValid()
+        }
+
+    val stagesLen: java.math.BigInteger
+        get() = nativeCall(listOfNotNull(this)) {
+            java.math.BigInteger(raw.stagesLen().toString())
+        }
+
+    @Deprecated("Use the schemaVersion property.", ReplaceWith("schemaVersion"))
     fun schemaVersion(): Long = nativeCall(listOfNotNull(this)) {
         raw.schemaVersion().toLong()
     }
 
+    @Deprecated("Use the profile property.", ReplaceWith("profile"))
     fun profile(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.profile())
     }
 
+    @Deprecated("Use the evaluatedAt property.", ReplaceWith("evaluatedAt"))
     fun evaluatedAt(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.evaluatedAt())
     }
 
-    fun isComplete(): Boolean = nativeCall(listOfNotNull(this)) {
-        raw.isComplete()
-    }
-
-    fun hasErrors(): Boolean = nativeCall(listOfNotNull(this)) {
-        raw.hasErrors()
-    }
-
-    fun isValid(): Boolean = nativeCall(listOfNotNull(this)) {
-        raw.isValid()
-    }
-
+    @Deprecated("Use the stagesLen property.", ReplaceWith("stagesLen"))
     fun stagesLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
         java.math.BigInteger(raw.stagesLen().toString())
     }
 
+    /**
+     * The stage report at `index`, in stage order.
+     */
     fun stage(index: java.math.BigInteger): ZatcaStageReport = nativeCall(listOfNotNull(this)) {
         ZatcaStageReport(unwrap(raw.stage(checkedCounter(index))))
     }
 
+    /**
+     * The report serialized as JSON, including the derived `is_complete`,
+     * `has_errors` and `is_valid` fields.
+     */
     fun toJson(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.toJson())
     }

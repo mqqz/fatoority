@@ -248,7 +248,7 @@ Constructors that take individual fields use the order in the property table abo
     | `Csr.fromDer(der)` | `ByteArray` CSR DER | `Csr` |
     | `csr.toPem()` / `csr.toDer()` | None | `String` / `Bytes` |
     | `csr.toBase64()` / `csr.toPemBase64()` | None | `String` |
-    | `csr.subjectString()` | None | `String` |
+    | `csr.subjectString` | None | `String` |
     | `csr.extensionValuesDer()` | None | `BytesList` |
 
     Environment values are `Environment.NonProduction`, `.Simulation`, and
@@ -275,7 +275,7 @@ Constructors that take individual fields use the order in the property table abo
     | `Csr.fromDer(der)` | `byte[]` CSR DER | `Csr` |
     | `csr.toPem()` / `csr.toDer()` | None | `String` / `Bytes` |
     | `csr.toBase64()` / `csr.toPemBase64()` | None | `String` |
-    | `csr.subjectString()` | None | `String` |
+    | `csr.getSubjectString()` | None | `String` |
     | `csr.extensionValuesDer()` | None | `BytesList` |
 
     Environment values are `Environment.NonProduction`, `.Simulation`, and

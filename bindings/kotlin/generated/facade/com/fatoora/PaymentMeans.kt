@@ -16,16 +16,49 @@ class PaymentMeans internal constructor(internal val raw: com.fatoora.raw.Paymen
             PaymentMeans(unwrap(com.fatoora.raw.PaymentMeans.new_(checkedText(code), instruction?.let(::checkedText))))
         }
     }
+
+    val instructionNotesLen: java.math.BigInteger
+        get() = nativeCall(listOfNotNull(this)) {
+            java.math.BigInteger(raw.instructionNotesLen().toString())
+        }
+
+    val code: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.code())
+        }
+
+    val instructionNote: String?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.instructionNote())?.let(::readText)
+        }
+
+    @get:JvmName("hasAccount")
+    val hasAccount: Boolean
+        get() = nativeCall(listOfNotNull(this)) {
+            raw.hasAccount()
+        }
+
+    val accountIdentifier: String?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.accountIdentifier())?.let(::readText)
+        }
+
+    val paymentTerms: String?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.paymentTerms())?.let(::readText)
+        }
+
     fun withInstructionNote(value: String): PaymentMeans = nativeCall(listOfNotNull(this)) {
         PaymentMeans(unwrap(raw.withInstructionNote(checkedText(value))))
     }
 
+    @Deprecated("Use the instructionNotesLen property.", ReplaceWith("instructionNotesLen"))
     fun instructionNotesLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
         java.math.BigInteger(raw.instructionNotesLen().toString())
     }
 
-    fun instructionNoteAt(index: java.math.BigInteger): Text = nativeCall(listOfNotNull(this)) {
-        Text(unwrap(raw.instructionNoteAt(checkedCounter(index))))
+    fun instructionNoteAt(index: java.math.BigInteger): String = nativeCall(listOfNotNull(this)) {
+        readText(unwrap(raw.instructionNoteAt(checkedCounter(index))))
     }
 
     @JvmOverloads
@@ -33,22 +66,22 @@ class PaymentMeans internal constructor(internal val raw: com.fatoora.raw.Paymen
         PaymentMeans(unwrap(raw.withAccount(id?.let(::checkedText), terms?.let(::checkedText))))
     }
 
+    @Deprecated("Use the code property.", ReplaceWith("code"))
     fun code(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.code())
     }
 
+    @Deprecated("Use the instructionNote property.", ReplaceWith("instructionNote"))
     fun instructionNote(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.instructionNote())?.let(::Text)
     }
 
-    fun hasAccount(): Boolean = nativeCall(listOfNotNull(this)) {
-        raw.hasAccount()
-    }
-
+    @Deprecated("Use the accountIdentifier property.", ReplaceWith("accountIdentifier"))
     fun accountIdentifier(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.accountIdentifier())?.let(::Text)
     }
 
+    @Deprecated("Use the paymentTerms property.", ReplaceWith("paymentTerms"))
     fun paymentTerms(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.paymentTerms())?.let(::Text)
     }

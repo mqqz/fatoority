@@ -1,6 +1,7 @@
 package com.fatoora
 
 import java.io.File
+import java.math.BigDecimal
 import java.nio.charset.CharacterCodingException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -12,13 +13,14 @@ import kotlinx.coroutines.*
 class ContractsTest {
     @Test fun stringsOptionsAndErrors() {
         Address.create("SA", "الرياض", "Street", "1234", "12345", null, "", "حي العليا").use { a ->
-            assertEquals("الرياض", a.city())
-            assertNull(a.additionalStreet())
-            a.additionalNumber()!!.use { assertEquals("", it.value()) }
-            a.district()!!.use { assertEquals("حي العليا", it.value()) }
+            assertEquals("الرياض", a.city)
+            assertNull(a.additionalStreet)
+            assertEquals("", a.additionalNumber)
+            assertEquals("حي العليا", a.district)
         }
-        val error = assertFailsWith<BindingException> { Address.create("XX", "a", "b", "1", "1") }
+        val error = assertFailsWith<InvalidInputException> { Address.create("XX", "a", "b", "1", "1") }
         assertEquals(1, error.code)
+        assertEquals(ErrorKind.InvalidInput, error.kind)
         assertTrue(error.message.contains("Invalid country"))
         assertTrue(error.detailsJson.startsWith("{"))
         assertFailsWith<CharacterCodingException> { Address.create("SA", "\uD800", "b", "1", "1") }
@@ -29,7 +31,7 @@ class ContractsTest {
         InvoiceBuilder.create(InvoiceTypeKind.Tax, InvoiceSubType.Standard).use { builder ->
             assertFailsWith<IllegalArgumentException> { builder.setFlags(-1) }
             assertFailsWith<IllegalArgumentException> { builder.setFlags(256) }
-            builder.setFlags(InvoiceFlag.ThirdParty.bit() or InvoiceFlag.Export.bit())
+            builder.setFlags(InvoiceFlag.ThirdParty.bit or InvoiceFlag.Export.bit)
             val maximum = java.math.BigInteger("18446744073709551615")
             builder.setInvoiceCounter(maximum)
             assertFailsWith<IllegalArgumentException> { builder.setInvoiceCounter(maximum.add(java.math.BigInteger.ONE)) }
@@ -39,21 +41,75 @@ class ContractsTest {
 
     @Test fun zatcaValidationReturnsTypedReport() {
         Xml.validateZatca("<wrong/>", """{"evaluated_at":"2026-09-23T12:00:00+03:00"}""").use { report ->
-            assertFalse(report.isValid())
-            assertTrue(report.hasErrors())
-            assertEquals("2026-09-23T12:00:00+03:00", report.evaluatedAt())
-            assertEquals(java.math.BigInteger.valueOf(6), report.stagesLen())
+            assertFalse(report.isValid)
+            assertTrue(report.hasErrors)
+            assertEquals("2026-09-23T12:00:00+03:00", report.evaluatedAt)
+            assertEquals(java.math.BigInteger.valueOf(6), report.stagesLen)
             report.stage(java.math.BigInteger.ZERO).use { stage ->
-                assertEquals(ZatcaStage.Xsd, stage.stage())
-                assertEquals(ZatcaStageStatus.Completed, stage.status())
+                assertEquals(ZatcaStage.Xsd, stage.stage)
+                assertEquals(ZatcaStageStatus.Completed, stage.status)
                 stage.finding(java.math.BigInteger.ZERO).use { finding ->
-                    assertEquals("XSD_INVALID", finding.code())
-                    assertEquals(Severity.Error, finding.severity())
+                    assertEquals("XSD_INVALID", finding.code)
+                    assertEquals(Severity.Error, finding.severity)
                 }
             }
             assertTrue(report.toJson().contains("\"is_valid\":false"))
         }
-        ComplianceCsid.create(Environment.Simulation, null, "token", "secret").use { assertNull(it.requestId()) }
+        ComplianceCsid.create(Environment.Simulation, null, "token", "secret").use { assertNull(it.requestId) }
+    }
+
+    @Test fun amountsAreExactBigDecimals() {
+        InvoiceLineItem.create("Item", BigDecimal("2"), "PCE", BigDecimal("10.50"), BigDecimal("15"), VatCategory.Standard).use { item ->
+            assertEquals(0, BigDecimal("2").compareTo(item.quantity))
+            assertEquals(0, BigDecimal("10.5").compareTo(item.unitPrice))
+            assertEquals(0, BigDecimal("21").compareTo(item.totalAmount))
+            assertEquals(0, BigDecimal("3.15").compareTo(item.vatAmount))
+            assertEquals(0, BigDecimal("15").compareTo(item.vatRate))
+            assertTrue(item.hasVatRate)
+        }
+        // Digits beyond double precision survive both directions; exponents are written plainly.
+        // Digits beyond double precision survive both directions.
+        val precise = BigDecimal("1234.567890123456789")
+        InvoiceLineItem.create("Item", precise, "PCE", BigDecimal.ONE, BigDecimal("15"), VatCategory.Standard).use {
+            assertEquals(precise.toPlainString(), it.quantity.toPlainString())
+        }
+        Adjustment.amount(BigDecimal("12.50")).use { assertEquals(0, BigDecimal("12.5").compareTo(it.value)) }
+        Adjustment.amount(BigDecimal("1E+3")).use { assertEquals(0, BigDecimal("1000").compareTo(it.value)) }
+        Adjustment.percentage(BigDecimal("200"), BigDecimal("10")).use { adjustment ->
+            assertEquals(0, BigDecimal("200").compareTo(adjustment.baseAmount))
+            assertEquals(0, BigDecimal("10").compareTo(adjustment.percent))
+            assertNull(adjustment.reason)
+        }
+        assertFailsWith<InvalidInputException> { Adjustment.amount(BigDecimal("1E+40")) }
+    }
+
+    @Suppress("DEPRECATION")
+    @Test fun deprecatedAccessorsStillWork() {
+        Address.create("SA", "Riyadh", "Street", "1234", "12345", district = "Olaya").use { a ->
+            assertEquals("Riyadh", a.city())
+            a.district()!!.use { assertEquals("Olaya", it.value()) }
+        }
+        Adjustment.amount("12.50").use { assertEquals("12.5", it.value()) }
+        assertEquals(InvoiceFlag.Export.bit, InvoiceFlag.Export.bit())
+    }
+
+    @Test fun errorCodesMapToExceptionSubclasses() {
+        val expected = mapOf(
+            1 to InvalidInputException::class, 2 to ValidationException::class, 3 to ParseException::class,
+            4 to XmlException::class, 5 to CryptoException::class, 6 to IoException::class,
+            7 to NetworkException::class, 8 to UnauthorizedException::class, 9 to InternalException::class,
+            10 to ApiException::class,
+        )
+        for ((code, type) in expected) {
+            val error = bindingException(code, "message", "{}")
+            assertEquals(type, error::class)
+            assertEquals(code, error.code)
+            assertEquals(code, error.kind!!.code)
+        }
+        val unknown = bindingException(99, "message", "{}")
+        assertEquals(BindingException::class, unknown::class)
+        assertNull(unknown.kind)
+        assertFailsWith<XmlException> { SignedInvoice.fromXml("<not-closed") }
     }
 
     @Test fun keyBytesAndClose() {
@@ -128,21 +184,21 @@ class ContractsTest {
         InvoiceSigner.fromDer(File(root,"credentials/certificate.der").readBytes(), File(root,"credentials/private-key.der").readBytes()).use { signer ->
             val signed = signer.signXml(xml)
             Config.create(Environment.NonProduction).use { config -> ZatcaClient.create(config).use { client ->
-                assertEquals(Environment.NonProduction, config.env())
+                assertEquals(Environment.NonProduction, config.env)
                 val credentials = ProductionCsid.create(Environment.NonProduction, null, "token", "secret")
                 val invoice = SignedInvoice.fromXml(signed)
-                assertEquals(Xml.hash(signed), invoice.hash())
+                assertEquals(Xml.hash(signed), invoice.hash)
                 val request = client.prepareReportSimplifiedInvoice(invoice, credentials, ClearanceMode.Disabled)
                 credentials.close(); invoice.close()
                 request.use {
-                    assertEquals("POST", it.method())
+                    assertEquals("POST", it.method)
                     it.body().use { body -> assertTrue(String(body.asSlice()).contains("invoiceHash")) }
                     it.decode(200, """{"validationResults":{"status":"PASS"},"reportingStatus":"REPORTED"}""".toByteArray()).use { response ->
-                        assertEquals(InvoiceOutcome.Accepted, response.outcome())
-                        assertEquals(ReportingStatus.Reported, response.reportingStatus())
-                        response.reportingStatusRaw()!!.use { raw -> assertEquals("REPORTED", raw.value()) }
-                        assertNull(response.clearanceStatus())
-                        response.validationResults().use { results -> assertEquals(ValidationStatus.Pass, results.status()) }
+                        assertEquals(InvoiceOutcome.Accepted, response.outcome)
+                        assertEquals(ReportingStatus.Reported, response.reportingStatus)
+                        assertEquals("REPORTED", response.reportingStatusRaw)
+                        assertNull(response.clearanceStatus)
+                        response.validationResults().use { results -> assertEquals(ValidationStatus.Pass, results.status) }
                         response.ensureAccepted()
                     }
                     assertFailsWith<BindingException> { it.decode(400, "bad response".toByteArray()) }

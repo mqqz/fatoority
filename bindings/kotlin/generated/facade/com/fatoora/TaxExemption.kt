@@ -16,10 +16,23 @@ class TaxExemption internal constructor(internal val raw: com.fatoora.raw.TaxExe
             TaxExemption(unwrap(com.fatoora.raw.TaxExemption.new_(code?.let(::checkedText), reason?.let(::checkedText))))
         }
     }
+
+    val reasonCode: String?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.reasonCode())?.let(::readText)
+        }
+
+    val reason: String?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.reason())?.let(::readText)
+        }
+
+    @Deprecated("Use the reasonCode property.", ReplaceWith("reasonCode"))
     fun reasonCode(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.reasonCode())?.let(::Text)
     }
 
+    @Deprecated("Use the reason property.", ReplaceWith("reason"))
     fun reason(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.reason())?.let(::Text)
     }

@@ -15,6 +15,7 @@ class ZatcaClient internal constructor(internal val raw: com.fatoora.raw.ZatcaCl
             ZatcaClient(unwrap(com.fatoora.raw.ZatcaClient.create(config.raw)))
         }
     }
+
     fun requestComplianceCsid(csr: Csr, otp: String): ComplianceCsid = nativeCall(listOfNotNull(this, csr)) {
         ComplianceCsid(unwrap(raw.requestComplianceCsid(csr.raw, checkedText(otp))))
     }

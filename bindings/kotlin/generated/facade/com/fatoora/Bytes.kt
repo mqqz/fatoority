@@ -9,6 +9,10 @@ class Bytes internal constructor(internal val raw: com.fatoora.raw.Bytes) : Nati
         val handle = raw.handle
         attach { com.fatoora.raw.Bytes.lib.fatoora_Bytes_destroy(handle) }
     }
+
+    /**
+     * The view is valid while this immutable owner remains alive.
+     */
     fun asSlice(): ByteArray = nativeCall(listOfNotNull(this)) {
         raw.asSlice().toByteArray()
     }

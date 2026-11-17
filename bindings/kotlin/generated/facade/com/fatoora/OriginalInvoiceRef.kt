@@ -16,22 +16,53 @@ class OriginalInvoiceRef internal constructor(internal val raw: com.fatoora.raw.
             OriginalInvoiceRef(unwrap(com.fatoora.raw.OriginalInvoiceRef.new_(checkedText(id), uuid?.let(::checkedText), date?.let(::checkedText), time?.let(::checkedText), typeCode?.let(::checkedText))))
         }
     }
+
+    val issueTime: String?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.issueTime())?.let(::readText)
+        }
+
+    val documentTypeCode: String?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.documentTypeCode())?.let(::readText)
+        }
+
+    val id: String
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.id())
+        }
+
+    val uuid: String?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.uuid())?.let(::readText)
+        }
+
+    val issueDate: String?
+        get() = nativeCall(listOfNotNull(this)) {
+            unwrap(raw.issueDate())?.let(::readText)
+        }
+
+    @Deprecated("Use the issueTime property.", ReplaceWith("issueTime"))
     fun issueTime(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.issueTime())?.let(::Text)
     }
 
+    @Deprecated("Use the documentTypeCode property.", ReplaceWith("documentTypeCode"))
     fun documentTypeCode(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.documentTypeCode())?.let(::Text)
     }
 
+    @Deprecated("Use the id property.", ReplaceWith("id"))
     fun id(): String = nativeCall(listOfNotNull(this)) {
         unwrap(raw.id())
     }
 
+    @Deprecated("Use the uuid property.", ReplaceWith("uuid"))
     fun uuid(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.uuid())?.let(::Text)
     }
 
+    @Deprecated("Use the issueDate property.", ReplaceWith("issueDate"))
     fun issueDate(): Text? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.issueDate())?.let(::Text)
     }
