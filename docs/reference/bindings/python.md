@@ -232,8 +232,23 @@ remote acceptance or certificate issuer trust. See the
 
 ## ZATCA API methods
 
-Create `ZatcaClient(config)` with a live `Config`. Client methods block the
-calling thread and return owned objects:
+Create `ZatcaClient(config, *, timeout=None)` with a live `Config`. Client
+methods block the calling thread and return owned objects.
+
+`timeout` bounds each request, from connecting until the response body is read.
+Pass seconds as an `int`/`float` or a `datetime.timedelta`; it is rounded up to
+whole milliseconds and must be positive and at most about 49.7 days (otherwise
+`ValueError`; a non-numeric value raises `TypeError`). A request that exceeds it
+raises `NetworkError`. The default `None` applies no client-side timeout.
+
+```python
+from datetime import timedelta
+from fatoora import Config, Environment, ZatcaClient
+
+client = ZatcaClient(Config(Environment.SIMULATION), timeout=30)
+client = ZatcaClient(Config(Environment.SIMULATION), timeout=timedelta(seconds=30))
+```
+
 
 | Method | Inputs | Returns |
 | --- | --- | --- |
@@ -247,7 +262,8 @@ calling thread and return owned objects:
 `clearance_status` is a required Boolean controlling the request header; use
 `False` for ordinary reporting and `True` for clearance. It does not describe the
 result. `accept_language` is a string or `None` controlling the language header.
-These methods do not expose an asynchronous or cancellation-token parameter.
+These methods do not expose an asynchronous or cancellation-token parameter;
+use `timeout` to bound how long a call can block.
 
 A successful HTTP request does not guarantee acceptance. Read `outcome` for the
 `InvoiceOutcome`, or call `ensure_accepted()` to raise for rejected/unknown
