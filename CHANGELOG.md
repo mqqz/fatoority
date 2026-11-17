@@ -17,6 +17,11 @@ bindings do not change yet.
   has an `Other(String)` variant that keeps unrecognized values verbatim,
   `as_str()`, `Display`, infallible `From<&str>`/`From<String>`/`FromStr`, and
   serializes as the plain wire string.
+- `invoice::AdjustmentKind::{Allowance, Charge}`, with `is_charge()`,
+  `is_allowance()`, `from_charge_indicator(bool)` and `charge_indicator()`
+  mapping to UBL `cbc:ChargeIndicator`.
+- `api::ClearanceMode::{Enabled, Disabled}` for the `Clearance-Status`
+  request header (`1`/`0`), with `From<bool>`.
 
 ### Changed
 
@@ -29,11 +34,22 @@ bindings do not change yet.
 
 ### Changed (breaking)
 
-These getters change return type in place, so they have no deprecation period.
-Compare with the enum (`Some(&ReportingStatus::Reported)`) or call
-`.map(ReportingStatus::as_str)` for the previous `Option<&str>`. The JSON wire
-format and the `fatoora-ffi` getters, which still return text, are unchanged.
+These change a field, parameter or return type in place, so they have no
+deprecation period.
 
+- `AllowanceCharge::charge: bool` is replaced by `AllowanceCharge::kind:
+  AdjustmentKind`. Write `kind: AdjustmentKind::Charge` for `charge: true` and
+  `AdjustmentKind::Allowance` for `charge: false`, or use
+  `AdjustmentKind::from_charge_indicator(flag)`. The serde field is now
+  `"kind"` with the values `"allowance"`/`"charge"`.
+- `LineAdjustment::charge: bool` is likewise replaced by
+  `LineAdjustment::kind: AdjustmentKind`.
+- `ZatcaClient::{report_simplified_invoice, clear_standard_invoice,
+  prepare_report_simplified_invoice, prepare_clear_standard_invoice}` take
+  `clearance_mode: ClearanceMode` instead of `clearance_status: bool`. Pass
+  `ClearanceMode::Enabled` for `true` and `ClearanceMode::Disabled` for
+  `false`, or `ClearanceMode::from(flag)`. The FFI and language bindings still
+  take a Boolean.
 - `ValidationResponse::reporting_status()` returns `Option<&ReportingStatus>`
   (was `Option<&str>`).
 - `ValidationResponse::clearance_status()` returns `Option<&ClearanceStatus>`
@@ -44,6 +60,10 @@ format and the `fatoora-ffi` getters, which still return text, are unchanged.
   `Option<&str>`).
 - `ValidationMessage::status()` returns `Option<&ValidationStatus>` (was
   `Option<&str>`).
+
+For the status getters, compare with the enum (`Some(&ReportingStatus::Reported)`)
+or call `.map(ReportingStatus::as_str)` for the previous `Option<&str>`. The JSON
+wire format and the `fatoora-ffi` getters, which still return text, are unchanged.
 
 ### Deprecated
 

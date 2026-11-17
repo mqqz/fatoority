@@ -130,8 +130,13 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     | `request_production_csid(ccsid: &ComplianceCsid)` | `Result<ProductionCsid, ZatcaError>` |
     | `renew_csid(pcsid: &CsidCredentials<Production>, csr: &Csr, otp: &str, accept_language: Option<&str>)` | `Result<CsidCredentials<Production>, ZatcaError>` |
     | `check_invoice_compliance(invoice: &SignedInvoice, credentials: &CsidCredentials<Compliance>)` | `Result<ValidationResponse, ZatcaError>` |
-    | `report_simplified_invoice(invoice: &SignedInvoice, credentials: &CsidCredentials<Production>, clearance_status: bool, accept_language: Option<&str>)` | `Result<ValidationResponse, ZatcaError>` |
-    | `clear_standard_invoice(invoice: &SignedInvoice, credentials: &CsidCredentials<Production>, clearance_status: bool, accept_language: Option<&str>)` | `Result<ValidationResponse, ZatcaError>` |
+    | `report_simplified_invoice(invoice: &SignedInvoice, credentials: &CsidCredentials<Production>, clearance_mode: ClearanceMode, accept_language: Option<&str>)` | `Result<ValidationResponse, ZatcaError>` |
+    | `clear_standard_invoice(invoice: &SignedInvoice, credentials: &CsidCredentials<Production>, clearance_mode: ClearanceMode, accept_language: Option<&str>)` | `Result<ValidationResponse, ZatcaError>` |
+
+    `ClearanceMode::Enabled` / `ClearanceMode::Disabled` send the `Clearance-Status`
+    header as `1` / `0`; `ClearanceMode::from(flag)` converts a `bool`. The
+    `prepare_report_simplified_invoice` / `prepare_clear_standard_invoice` variants
+    take the same arguments.
 
     **Credentials**
 
