@@ -93,20 +93,21 @@ An invalid invoice is different from a check that could not finish. Malformed XM
 Execution details include `kind`, optional `stage`, `assertion_site`, `location`, and `report`. The error message is exposed directly or in `diagnostics`, depending on the language API. Failure kinds are `invalid_xml`, `unsupported_xml`, `capacity_exceeded`, `invalid_context`, `rule_evaluation`, `schema`, and `integrity`. Invalid options rejected before validation starts need not carry a report. Never treat partial findings as complete coverage. See [errors](errors.md#local-zatca-execution-failures) for the shared error contract.
 
 <span id="validate_xml_invoice_from_str"></span>
+<span id="validator"></span>
 <span id="validate"></span>
 <span id="validation-reports-rust"></span>
 ## Language reference
 
 === "Rust"
 
-    Import these functions and report types from `fatoora_core::invoice::validation`, and `Config` from `fatoora_core::config`.
+    Import `Validator` and the report types from `fatoora_core::invoice::validation`. `Validator::new()` (or `Validator::default()`) needs no configuration: the schemas and rule set are embedded and do not depend on the ZATCA environment. It is `Copy` and reusable.
 
     **Schema validation**
 
     ```rust
-    validate_xml_invoice_from_str(xml: &str, config: &Config)
+    validator.validate_xml(xml: &str)
         -> Result<(), XmlValidationError>
-    validate_xml_invoice_report_from_str(xml: &str, config: &Config)
+    validator.validate_xml_report(xml: &str)
         -> Result<ValidationReport, XmlValidationError>
     ```
 
@@ -117,9 +118,8 @@ Execution details include `kind`, optional `stage`, `assertion_site`, `location`
     **Local ZATCA validation**
 
     ```rust
-    validate_zatca_invoice_from_str(
+    validator.validate_zatca(
         xml: &str,
-        config: &Config,
         options: &ZatcaValidationOptions,
     ) -> Result<ZatcaValidationReport, ZatcaValidationError>
     ```
@@ -128,7 +128,9 @@ Execution details include `kind`, optional `stage`, `assertion_site`, `location`
 
     `ZatcaValidationReport` exposes `schema_version`, `profile`, `evaluated_at`, and `stages`. Call `is_complete()`, `has_errors()`, and `is_valid()` for derived outcomes. `validation_report()` aggregates findings into the shared report; only completed stages contribute checked layers, and both CEN and KSA must complete before `BusinessRules` is listed. Partial findings remain in the aggregate.
 
-    On `Err(error)`, `error.report` contains the partial `Box<ZatcaValidationReport>`; `error.kind`, `stage`, `assertion_site`, `location`, and `message` describe the failure. Serializing reports includes derived outcomes; deserialization recomputes them from stage coverage. Calls borrow configuration and inputs and do not consume invoice objects.
+    On `Err(error)`, `error.report` contains the partial `Box<ZatcaValidationReport>`; `error.kind`, `stage`, `assertion_site`, `location`, and `message` describe the failure. Serializing reports includes derived outcomes; deserialization recomputes them from stage coverage. Calls borrow inputs and do not consume invoice objects.
+
+    The 0.5 free functions `validate_xml_invoice_from_str`, `validate_xml_invoice_report_from_str` and `validate_zatca_invoice_from_str` still work but are deprecated; they ignore their `Config` argument and forward to `Validator`.
 
 === "Python"
 

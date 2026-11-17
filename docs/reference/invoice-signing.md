@@ -68,12 +68,13 @@ Signed `hash_base64()` equals the XML hash operation on `xml()`. Signed imports 
 <span id="issuer"></span>
 <span id="serial"></span>
 <span id="invoice_hash_base64_from_xml_str"></span>
+<span id="hash_xml"></span>
 <span id="hash-from-xml"></span>
 
 === "Rust"
 
-    Import `InvoiceSigner`, `SigningError`, and `invoice_hash_base64_from_xml_str`
-    from `fatoora_core::invoice::sign`.
+    Import `InvoiceSigner` and `SigningError` from `fatoora_core::invoice::sign`,
+    and `hash_xml` from `fatoora_core::invoice`.
 
     **Construct, export and sign**
 
@@ -84,8 +85,10 @@ Signed `hash_base64()` equals the XML hash operation on `xml()`. Signed imports 
     signer.certificate_der() -> Result<Vec<u8>, SigningError>
     signer.sign_xml(xml: &str) -> Result<String, SigningError>
     invoice.sign(signer: &InvoiceSigner) -> Result<SignedInvoice, SigningError>
-    invoice_hash_base64_from_xml_str(xml: &str) -> Result<String, SigningError>
+    hash_xml(xml: &str) -> Result<InvoiceHash, SigningError>
     ```
+
+    `hash_xml` returns the base64 SHA-256 invoice hash as an `InvoiceHash`, the value the next invoice carries as its previous invoice hash; use `as_str()` for the text. It replaces `sign::invoice_hash_base64_from_xml_str`, which is deprecated and returns `String`.
 
     `invoice.sign` takes a `FinalizedInvoice` by value. `SignedInvoice::xml`, `qr_code`, `invoice_hash`, `signature` and `public_key` return borrowed `&str`; `zatca_key_signature` returns `Option<&str>`. `to_xml_base64` returns `String`; `hash_base64` returns `Result<String, SigningError>`.
 

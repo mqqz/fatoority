@@ -22,6 +22,14 @@ bindings do not change yet.
   mapping to UBL `cbc:ChargeIndicator`.
 - `api::ClearanceMode::{Enabled, Disabled}` for the `Clearance-Status`
   request header (`1`/`0`), with `From<bool>`.
+- `invoice::validation::Validator`, the single entry point for local
+  validation: `validate_xml(xml)` (UBL XSD only), `validate_xml_report(xml)`
+  (XSD findings as a `ValidationReport`) and `validate_zatca(xml, options)`
+  (full local ZATCA profile). It needs no `Config`; validation does not depend
+  on the ZATCA environment.
+- `invoice::hash_xml(xml)`, returning the invoice hash as an `InvoiceHash`
+  (the base64 SHA-256 of the canonicalised invoice, ready to pass on as the
+  next invoice's previous invoice hash).
 
 ### Changed
 
@@ -72,6 +80,12 @@ wire format and the `fatoora-ffi` getters, which still return text, are unchange
   prepare_post_ccsid_for_pcsid}` and `CsrProperties::{from_properties_str,
   parse_csr_config, parse_csr_config_file}` forward to the new names and will
   be removed in 0.7.
+- `invoice::validation::{validate_xml_invoice_from_str,
+  validate_xml_invoice_report_from_str, validate_zatca_invoice_from_str}`
+  forward to `Validator::{validate_xml, validate_xml_report, validate_zatca}`
+  and ignore their `Config` argument. `invoice::sign::invoice_hash_base64_from_xml_str`
+  forwards to `invoice::hash_xml` and still returns `String`. They will be
+  removed in 0.7.
 
 ### Removed
 
