@@ -32,6 +32,15 @@ bindings do not change yet.
   next invoice's previous invoice hash).
 - `AsRef<str>`, `FromStr`, `TryFrom<&str>` and `TryFrom<String>` for
   `InvoiceTime`, matching the other validated wrappers.
+- `DocumentAdjustment::omit_vat_rate()`, `has_vat_rate()` and
+  `tax_category_count(count)`, so `InvoiceBuilder::allowance`/`charge` can
+  express everything `adjustment(AllowanceCharge)` could, and
+  `impl From<AllowanceCharge> for DocumentAdjustment` to convert an existing
+  entry.
+- `omit_vat_rate()` and `has_vat_rate()` as the one name for an omitted VAT
+  rate on `LineItem` (`omit_vat_rate` returns `Result`, like `VatBreakdown`),
+  `VatBreakdown` (`omit_vat_rate` returns `Result`) and `AllowanceCharge`
+  (`omit_vat_rate` returns `Self`; `build` checks it).
 
 ### Changed
 
@@ -41,6 +50,12 @@ bindings do not change yet.
   `prepare_post_csr_for_ccsid`/`prepare_post_ccsid_for_pcsid` are renamed
   `prepare_request_compliance_csid`/`prepare_request_production_csid`.
 - `invoice::InvoiceTotalsData` is renamed `invoice::InvoiceTotals`.
+- `InvoiceBuilder::allowance(DocumentAdjustment)` and
+  `charge(DocumentAdjustment)` are the one way to add document-level
+  allowances and charges, and `payment_means(PaymentMeans::new(code))` the way
+  to add payment means. A `DocumentAdjustment` whose calculation is invalid is
+  now reported with the other adjustment checks in `build`, after missing or
+  invalid fields, instead of before them.
 
 ### Changed (breaking)
 
@@ -70,6 +85,10 @@ deprecation period.
   `Option<&str>`).
 - `ValidationMessage::status()` returns `Option<&ValidationStatus>` (was
   `Option<&str>`).
+- `DocumentAdjustment` has two new public fields, `omitted_rate: bool` and
+  `tax_category_count: usize`. Struct literals must set them (`false` and `1`
+  match the previous behaviour), or use `DocumentAdjustment::new`. Both fields
+  default when deserializing.
 
 For the status getters, compare with the enum (`Some(&ReportingStatus::Reported)`)
 or call `.map(ReportingStatus::as_str)` for the previous `Option<&str>`. The JSON
@@ -119,6 +138,25 @@ reports these four fields only as missing.
   and ignore their `Config` argument. `invoice::sign::invoice_hash_base64_from_xml_str`
   forwards to `invoice::hash_xml` and still returns `String`. They will be
   removed in 0.7.
+- `InvoiceBuilder::adjustment(AllowanceCharge)` forwards to `allowance` or
+  `charge` by the entry's `kind`. Use
+  `allowance(DocumentAdjustment::from(entry))` (or `charge`) instead.
+- `InvoiceBuilder::{invoice_level_discount, invoice_level_charge,
+  allowance_reason}` keep their behaviour: each call replaces one aggregate
+  allowance or charge in the document VAT category, with a rate taken from the
+  first line in that category, and the reason is shared by both (on its own it
+  emits a zero-amount allowance). Use `allowance`/`charge` with
+  `DocumentAdjustment::new(Adjustment::amount(amount), category, rate)
+  .reason(reason)` instead; each call appends an entry with an explicit VAT
+  category and rate.
+- `InvoiceBuilder::payment_means_code(code)` keeps its behaviour: it changes
+  the code of the first payment means, creating one if there is none. Use
+  `payment_means(PaymentMeans::new(code))`, which appends.
+- `VatBreakdown::without_vat_rate()` forwards to `omit_vat_rate()`.
+- All of these will be removed in 0.7. The `fatoora-ffi` exported methods
+  (`set_payment_means_code`, `invoice_level_charge`, `invoice_level_discount`,
+  `allowance_reason`, `set_allowance`, `AllowanceCharge::without_vat_rate`,
+  `VatBreakdown::without_vat_rate`) are unchanged.
 
 ### Removed
 

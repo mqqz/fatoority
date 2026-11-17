@@ -59,9 +59,14 @@ The resulting VAT is SAR 13.50 and payable is SAR 103.50. Use `.charge(...)` for
 shipping or another document charge with its own tax treatment. Repeated calls
 append adjustments.
 
-The scalar `invoice_level_discount` and `invoice_level_charge` setters remain
-available for a single VAT group. Use independent adjustment entries when you
-need multiple groups; combining the two forms is rejected.
+`DocumentAdjustment` also takes a `.reason_code(...)`, an `.exemption(...)` for
+non-standard categories, and `Adjustment::percentage(base, percent)` for a
+percentage of a base amount. An out-of-scope entry can omit its rate with
+`.omit_vat_rate()`.
+
+The scalar `invoice_level_discount`, `invoice_level_charge` and `allowance_reason`
+setters are deprecated since 0.6.0 and will be removed in 0.7. Use `.allowance(...)`
+and `.charge(...)` instead; combining the two forms is rejected.
 
 ## Mixed VAT categories and rates
 

@@ -164,16 +164,12 @@ correspond to the fields above.
     | `issue_datetime(value: InvoiceTimestamp)` | `Self` |
     | `currency(value: CurrencyCode)` | `Self` |
     | `previous_invoice_hash(value: InvoiceHash)` | `Self` |
-    | `payment_means_code(value: impl Into<String>)` | `Self` |
-    | `allowance_reason(value: impl Into<String>)` | `Self` |
     | `invoice_counter(value: u64)` | `Self` |
     | `seller(value: Seller)` | `Self` |
     | `buyer(value: Buyer)` | `Self` |
     | `vat_category(value: VatCategory)` | `Self` |
     | `flags(value: InvoiceFlags)` | `Self` |
     | `note(value: InvoiceNote)` | `Self` |
-    | `invoice_level_charge(value: Decimal)` | `Self` |
-    | `invoice_level_discount(value: Decimal)` | `Self` |
     | `line_item(value: LineItem)` | `Self` |
     | `allowance(value: DocumentAdjustment)` | `Self` |
     | `charge(value: DocumentAdjustment)` | `Self` |
@@ -187,6 +183,10 @@ correspond to the fields above.
     | `tax_exemption(category: VatCategory, rate: Decimal, exemption: TaxExemption)` | `Self` |
     | `vat_breakdown(value: VatBreakdown)` | `Self` |
     | `build(self)` | `Result<FinalizedInvoice, InvoiceError>` |
+
+    `payment_means` appends a payment means; use `.payment_means(PaymentMeans::new(code))` to set the payment means code. Add document-level allowances and charges with `.allowance(DocumentAdjustment)` and `.charge(DocumentAdjustment)`; `DocumentAdjustment` carries the amount or percentage calculation, `reason`, `reason_code`, VAT category and rate, `exemption`, and `omit_vat_rate()` for out-of-scope entries.
+
+    Deprecated since 0.6.0 and removed in 0.7: `payment_means_code` (changes the code of the first payment means), `invoice_level_charge`, `invoice_level_discount` and `allowance_reason` (one aggregate allowance and charge in the document VAT category), and `adjustment(AllowanceCharge)` (convert with `DocumentAdjustment::from`). `VatBreakdown::without_vat_rate` is replaced by `omit_vat_rate`; `LineItem`, `VatBreakdown`, `AllowanceCharge` and `DocumentAdjustment` all report an omitted rate through `has_vat_rate()`.
 
     `build(self)` consumes the builder on success or failure. `VatCategory` variants are `Standard`, `Zero`, `Exempt`, and `OutOfScope`. Combine `InvoiceFlags::THIRD_PARTY`, `NOMINAL`, `EXPORT`, `SUMMARY`, and `SELF_BILLED` with `\|`.
 
