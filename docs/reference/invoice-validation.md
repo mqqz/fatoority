@@ -104,7 +104,7 @@ mirrors the Rust report. Python keeps returning the JSON dictionary.
 | `ZatcaRuleSource` | `stylesheet`, `sha256` |
 | `ZatcaFinding` | nullable `assertion_site`, `layer` (`ValidationLayer`), `code`, `severity` (`Severity`), `message`, nullable `location_kind` (`ValidationLocationKind`: `Field`, `XPath`, `Xml`), nullable `location_path` for field and XPath locations, nullable `location_line` and `location_column` for XML coordinates |
 
-Names follow each language's convention (`isValid()`, `IsValid()`, `fatoora_zatca_validation_report_is_valid`).
+Names follow each language's convention (`isValid()`, the C# `IsValid` property, `fatoora_zatca_validation_report_is_valid`).
 Stage, status, and layer enums carry an `Unknown` variant for values added by a later core version.
 Child objects are independent snapshots and outlive the report.
 
@@ -195,9 +195,9 @@ Child objects are independent snapshots and outlive the report.
     ZatcaValidationReport Xml.ValidateZatca(string xml, string? optionsJson)
     ```
 
-    `Validate` returns `true` on schema success and throws on violations or execution failures. `ValidateZatca` returns an owned report even for a rejected or incomplete invoice; dispose it with `using`. Pass `null` for default options or a JSON object string with the keys documented above (maximum 4096 UTF-8 bytes). Inspect `report.IsValid()`; `report.ToJson()` returns the JSON report.
+    `Validate` returns `true` on schema success and throws on violations or execution failures. `ValidateZatca` returns an owned report even for a rejected or incomplete invoice; dispose it with `using`. Pass `null` for default options or a JSON object string with the keys documented above (maximum 4096 UTF-8 bytes). Inspect `report.IsValid`; `report.ToJson()` returns the JSON report.
 
-    On `BindingErrorException`, `error.Inner.DetailsJson()` returns structured JSON; a failure after validation starts includes `report`. Dispose the owned `error.Inner` after reading it. Earlier input rejection may omit the report.
+    On `FfiException` (or a subclass such as `ValidationException`), `error.DetailsJson` returns structured JSON; a failure after validation starts includes `report`. Earlier input rejection may omit the report.
 
 === "Kotlin"
 

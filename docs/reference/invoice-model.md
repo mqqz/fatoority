@@ -378,7 +378,7 @@ correspond to the fields above.
 
 === "C#"
 
-    Use the `Fatoora` namespace. Decimal arguments and amounts are strings; counters use `ulong`, indexes use `nuint`, codes use C# enums, and the flag mask uses `byte`. Pass `null` for absent optional arguments. Methods throw on failure. Dispose each owned object with `using`; returned `Text` exposes `Value()`.
+    Use the `Fatoora` namespace. Quantities, prices, rates and amounts are `decimal` in both directions; counters use `ulong`, indexes use `nuint`, codes use C# enums, and the flag mask uses `byte`. Pass `null` for absent optional arguments. Members throw on failure. Scalar getters are read-only properties and optional text is `string?`; getters returning owned objects stay methods. Dispose each owned object with `using`.
 
     Enums: `InvoiceTypeKind` (`Tax`, `Prepayment`, `CreditNote`, `DebitNote`), `InvoiceSubType` (`Standard`, `Simplified`), and `VatCategory` (`Exempt`, `Standard`, `Zero`, `OutOfScope`); pass them as `InvoiceTypeKind.Tax`, `VatCategory.Standard`, and so on. Flags remain a `byte` bitmask; build it by casting `InvoiceFlag` values, for example `(byte)(InvoiceFlag.Export | InvoiceFlag.Summary)` (`1` third party, `2` nominal, `4` export, `8` summary, `16` self-billed). Use zero for no flags.
 
@@ -399,7 +399,7 @@ correspond to the fields above.
     | `AddNote(string? language, string value)` | `void` |
     | `SetSeller(string name, Address address, string vatId, string? otherId, string? scheme)` | `void` |
     | `SetBuyer(string name, Address address, string? vatId, string? otherId, string? scheme)` | `void` |
-    | `AddLineItem(string description, string quantity, string unitCode, string unitPrice, string vatRate, VatCategory category)` | `void` |
+    | `AddLineItem(string description, decimal quantity, string unitCode, decimal unitPrice, decimal vatRate, VatCategory category)` | `void` |
     | `Build()` | `FinalizedInvoice` |
 
     **Address inputs**
@@ -414,43 +414,35 @@ correspond to the fields above.
 
     `invoice.Data()` returns an owned `InvoiceData` snapshot; `invoice.Totals()` returns owned `InvoiceTotals`. Both survive disposal of the invoice.
 
-    | Call | Returns |
+    | Member | Returns |
     | --- | --- |
-    | `Id()` | `string` |
-    | `Uuid()` | `string` |
-    | `PreviousInvoiceHash()` | `string` |
-    | `PaymentMeansCode()` | `string` |
-    | `Currency()` | `string` |
-    | `IssueDatetime()` | `string` |
-    | `InvoiceLevelCharge()` | `string` |
-    | `InvoiceLevelDiscount()` | `string` |
-    | `AllowanceReason()` | `Text?` |
-    | `InvoiceCounter()` | `ulong` |
-    | `VatCategory()` | `VatCategory` |
-    | `Flags()` | `byte` |
-    | `InvoiceTypeKind()` | `InvoiceTypeKind` |
-    | `InvoiceSubType()` | `InvoiceSubType` |
+    | `Id` | `string` |
+    | `Uuid` | `string` |
+    | `PreviousInvoiceHash` | `string` |
+    | `PaymentMeansCode` | `string` |
+    | `Currency` | `string` |
+    | `IssueDatetime` | `string` |
+    | `InvoiceLevelCharge` | `decimal` |
+    | `InvoiceLevelDiscount` | `decimal` |
+    | `AllowanceReason` | `string?` |
+    | `InvoiceCounter` | `ulong` |
+    | `VatCategory` | `VatCategory` |
+    | `Flags` | `byte` |
+    | `InvoiceTypeKind` | `InvoiceTypeKind` |
+    | `InvoiceSubType` | `InvoiceSubType` |
     | `Seller()` | `Party` |
     | `Buyer()` | `Party?` |
     | `Note()` | `InvoiceNote?` |
-    | `LineItemsLen()` | `nuint` |
+    | `LineItemsLen` | `nuint` |
     | `LineItem(nuint index)` | `InvoiceLineItem` |
     | `OriginalInvoiceRef()` | `OriginalInvoiceRef?` |
-    | `OriginalInvoiceReason()` | `Text?` |
+    | `OriginalInvoiceReason` | `string?` |
 
     **Totals**
 
-    | Call | Returns |
-    | --- | --- |
-    | `TaxInclusive()` | `string` |
-    | `TaxAmount()` | `string` |
-    | `LineExtension()` | `string` |
-    | `AllowanceTotal()` | `string` |
-    | `ChargeTotal()` | `string` |
-    | `TaxableAmount()` | `string` |
-    | `PrepaidAmount()` | `string` |
-    | `PayableRoundingAmount()` | `string` |
-    | `PayableAmount()` | `string` |
+    All totals are `decimal` properties: `TaxInclusive`, `TaxAmount`,
+    `LineExtension`, `AllowanceTotal`, `ChargeTotal`, `TaxableAmount`,
+    `PrepaidAmount`, `PayableRoundingAmount` and `PayableAmount`.
 
     Optional object accessors return null when absent. Line-item objects provide description, quantity, unit code, unit price, total amount, VAT rate, VAT amount, and category. See [XML](xml.md) and [signing](invoice-signing.md) for document and signature operations.
 

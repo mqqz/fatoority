@@ -9,7 +9,7 @@ if (args.Contains("--zatca"))
     });
     using var report = Xml.ValidateZatca(xml, options);
     Console.WriteLine(report.ToJson());
-    Environment.ExitCode = report.IsValid() ? 0 : 1;
+    Environment.ExitCode = report.IsValid ? 0 : 1;
 }
 else
 {

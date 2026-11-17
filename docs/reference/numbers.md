@@ -107,7 +107,7 @@ rules. Run [local validation](../guides/validation.md) for that rule profile.
 
 === "C#"
 
-    Pass quantities, prices, rates and amounts as invariant decimal strings, such as `"0.3333"`. Numeric getters return `string`. If formatting a `decimal`, use `CultureInfo.InvariantCulture`.
+    Pass quantities, prices, rates and amounts as `decimal`, such as `0.3333m`; numeric getters return `decimal` (or `decimal?` when optional). The binding converts with the invariant culture, never through `double`, so values cross the boundary exactly. Returned values are normalized: `1.50m` comes back as `1.5m`, which compares equal.
 
 === "Kotlin"
 

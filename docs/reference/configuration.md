@@ -81,12 +81,12 @@ Clients reject credentials issued for a different environment before sending a r
     | Operation | Returns | Behavior |
     | --- | --- | --- |
     | `Config.New(ZatcaEnvironment env)` | `Config` | Stores the selected environment. |
-    | `config.Env()` | `ZatcaEnvironment` | Returns the stored environment. |
+    | `config.Env` | `ZatcaEnvironment` | Property returning the stored environment. |
 
     Pass `ZatcaEnvironment.NonProduction`, `ZatcaEnvironment.Simulation`, or
     `ZatcaEnvironment.Production`. The enum is named `ZatcaEnvironment` so it does not
-    clash with `System.Environment`. There is no implicit default. `Env()` throws
-    `BindingErrorException` only if the native library reports an environment this
+    clash with `System.Environment`. There is no implicit default. `Env` throws
+    `InternalException` only if the native library reports an environment this
     binding version does not know (code 9). Use `using` to dispose configuration when
     finished. See [C# setup](bindings/csharp.md).
 

@@ -130,15 +130,15 @@ The signed computed hash equals the XML hash operation on `xml()`. Signed import
     | --- | --- |
     | `InvoiceSigner.FromPem(certPem: string, keyPem: string)` | `InvoiceSigner` |
     | `InvoiceSigner.FromDer(certDer: byte[], keyDer: byte[])` | `InvoiceSigner` |
-    | `signer.CertificatePem()` | `string` |
+    | `signer.CertificatePem` (property) | `string` |
     | `signer.CertificateDer()` | `Bytes` |
     | `signer.SignXml(xml: string)` | `string` |
     | `signer.Sign(invoice: FinalizedInvoice)` | `SignedInvoice`; consumes invoice state |
     | `Xml.Hash(xml: string)` | `string` |
 
-    `SignedInvoice` text getters: `Xml()`, `ToXmlBase64()`, `QrCode()`, `InvoiceHash()`, `Hash()`, `Signature()`, `PublicKey()`, `Issuer()`, `Serial()`, `CertHash()`, `SignedPropsHash()`, `SigningTime()`. Each returns `string`. `ZatcaKeySignature()` returns optional `Text`; read its `Value()` to obtain text.
+    `SignedInvoice` string properties: `Xml`, `QrCode`, `InvoiceHash`, `Hash`, `Signature`, `PublicKey`, `Issuer`, `Serial`, `CertHash`, `SignedPropsHash`, `SigningTime`; `ZatcaKeySignature` is `string?`. `ToXmlBase64()` remains a method returning `string`.
 
-    Dispose native owners, including optional `Text` and certificate `Bytes`. A `Bytes.AsSlice()` view must also be disposed; copy it with `Clone()` before releasing its owner. Native failures throw `BindingErrorException`; dispose its `Inner` after reading details.
+    Dispose native owners, including certificate `Bytes`. A `Bytes.AsSlice()` view must also be disposed; copy it with `Clone()` before releasing its owner. Native failures throw `FfiException` subclasses such as `CryptoException`.
 
 === "Kotlin"
 
