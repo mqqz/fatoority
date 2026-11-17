@@ -57,42 +57,48 @@ public partial class ValidationResponse: IDisposable
         }
     }
 
-    public ushort? HttpStatus()
+    public ushort? HttpStatus
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ValidationResponse>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ValidationResponse.HttpStatus(selfLease!.Ptr);
-                return result.IsSome ? result.Value : (ushort?)null;
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.ValidationResponse>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.ValidationResponse.HttpStatus(selfLease!.Ptr);
+                    return result.IsSome ? result.Value : (ushort?)null;
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    public InvoiceOutcome Outcome()
+    public InvoiceOutcome Outcome
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ValidationResponse>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.ValidationResponse.Outcome(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.ValidationResponse>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.ValidationResponse.Outcome(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void EnsureAccepted()
     {
         unsafe
@@ -104,7 +110,7 @@ public partial class ValidationResponse: IDisposable
                 var result = Raw.ValidationResponse.EnsureAccepted(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return;
             }
@@ -115,33 +121,33 @@ public partial class ValidationResponse: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? ClearedInvoiceXml()
+    /// <exception cref="FfiException"></exception>
+    public string? ClearedInvoiceXml
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ValidationResponse>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ValidationResponse.ClearedInvoiceXml(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.ValidationResponse>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.ValidationResponse.ClearedInvoiceXml(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>ValidationResults</c> allocated on Rust side.
     /// </returns>
@@ -156,7 +162,7 @@ public partial class ValidationResponse: IDisposable
                 var result = Raw.ValidationResponse.ValidationResults(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new ValidationResults(result.Ok);
             }
@@ -167,168 +173,174 @@ public partial class ValidationResponse: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? ClearedInvoiceBase64()
+    /// <exception cref="FfiException"></exception>
+    public string? ClearedInvoiceBase64
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ValidationResponse>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ValidationResponse.ClearedInvoiceBase64(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.ValidationResponse>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.ValidationResponse.ClearedInvoiceBase64(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    public ReportingStatus? ReportingStatus()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.ValidationResponse>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ValidationResponse.ReportingStatus(selfLease!.Ptr);
-                return result.IsSome ? result.Value : (ReportingStatus?)null;
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? ReportingStatusRaw()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.ValidationResponse>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ValidationResponse.ReportingStatusRaw(selfLease!.Ptr);
-                if (!result.IsOk)
+                finally
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease?.Release();
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    public ClearanceStatus? ClearanceStatus()
+    public ReportingStatus? ReportingStatus
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ValidationResponse>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ValidationResponse.ClearanceStatus(selfLease!.Ptr);
-                return result.IsSome ? result.Value : (ClearanceStatus?)null;
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? ClearanceStatusRaw()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.ValidationResponse>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ValidationResponse.ClearanceStatusRaw(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.ValidationResponse>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.ValidationResponse.ReportingStatus(selfLease!.Ptr);
+                    return result.IsSome ? result.Value : (ReportingStatus?)null;
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? QrSellerStatus()
+    /// <exception cref="FfiException"></exception>
+    public string? ReportingStatusRaw
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ValidationResponse>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ValidationResponse.QrSellerStatus(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.ValidationResponse>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.ValidationResponse.ReportingStatusRaw(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? QrBuyerStatus()
+    public ClearanceStatus? ClearanceStatus
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.ValidationResponse>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ValidationResponse.QrBuyerStatus(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.ValidationResponse>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.ValidationResponse.ClearanceStatus(selfLease!.Ptr);
+                    return result.IsSome ? result.Value : (ClearanceStatus?)null;
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
-            finally
+        }
+    }
+
+    /// <exception cref="FfiException"></exception>
+    public string? ClearanceStatusRaw
+    {
+        get
+        {
+            unsafe
             {
-                selfLease?.Release();
+                BorrowLease<Raw.ValidationResponse>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.ValidationResponse.ClearanceStatusRaw(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
+            }
+        }
+    }
+
+    /// <exception cref="FfiException"></exception>
+    public string? QrSellerStatus
+    {
+        get
+        {
+            unsafe
+            {
+                BorrowLease<Raw.ValidationResponse>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.ValidationResponse.QrSellerStatus(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
+            }
+        }
+    }
+
+    /// <exception cref="FfiException"></exception>
+    public string? QrBuyerStatus
+    {
+        get
+        {
+            unsafe
+            {
+                BorrowLease<Raw.ValidationResponse>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.ValidationResponse.QrBuyerStatus(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }

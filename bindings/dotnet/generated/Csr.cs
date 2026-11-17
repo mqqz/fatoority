@@ -57,7 +57,7 @@ public partial class Csr: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>Csr</c> allocated on Rust side.
     /// </returns>
@@ -71,14 +71,14 @@ public partial class Csr: IDisposable
                 var result = Raw.Csr.FromDer(new DiplomatSliceU8 { Ptr = derPtr, Len = (nuint)der.Length });
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new Csr(result.Ok);
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>Bytes</c> allocated on Rust side.
     /// </returns>
@@ -93,7 +93,7 @@ public partial class Csr: IDisposable
                 var result = Raw.Csr.ToDer(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new Bytes(result.Ok);
             }
@@ -104,7 +104,7 @@ public partial class Csr: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public string ToPem()
     {
         unsafe
@@ -119,7 +119,7 @@ public partial class Csr: IDisposable
                     var result = Raw.Csr.ToPem(selfLease!.Ptr, &writeable);
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return writeable.ToUnicode();
                 }
@@ -135,7 +135,7 @@ public partial class Csr: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public string ToBase64()
     {
         unsafe
@@ -150,7 +150,7 @@ public partial class Csr: IDisposable
                     var result = Raw.Csr.ToBase64(selfLease!.Ptr, &writeable);
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return writeable.ToUnicode();
                 }
@@ -166,7 +166,7 @@ public partial class Csr: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public string ToPemBase64()
     {
         unsafe
@@ -181,7 +181,7 @@ public partial class Csr: IDisposable
                     var result = Raw.Csr.ToPemBase64(selfLease!.Ptr, &writeable);
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return writeable.ToUnicode();
                 }
@@ -197,38 +197,41 @@ public partial class Csr: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string SubjectString()
+    /// <exception cref="FfiException"></exception>
+    public string SubjectString
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.Csr>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.Csr>? selfLease = null;
                 try
                 {
-                    var result = Raw.Csr.SubjectString(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.Csr.SubjectString(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>BytesList</c> allocated on Rust side.
     /// </returns>
@@ -243,7 +246,7 @@ public partial class Csr: IDisposable
                 var result = Raw.Csr.ExtensionValuesDer(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new BytesList(result.Ok);
             }

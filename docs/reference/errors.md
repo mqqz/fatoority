@@ -121,14 +121,17 @@ Classification follows the cause: an XML failure during signing is `Xml`, while 
 
 === "C#"
 
-    Native operations throw `BindingErrorException`. Its `Inner` owns a `BindingError`: read `Code()`, `Message()` and `DetailsJson()`, then dispose it. The exception's `Message` is copied text.
+    Native operations throw a subclass of `FfiException` (base `FatooraException`), one per code: `InvalidInputException`, `ValidationException`, `ParseException`, `XmlException`, `CryptoException`, `IoException`, `NetworkException`, `UnauthorizedException`, `InternalException` and `ApiException`. `Code`, `Kind` (`FfiErrorKind`), `Message` and `DetailsJson` are copied values; nothing needs disposal.
 
     ```csharp
-    catch (BindingErrorException error)
+    catch (UnauthorizedException error)
     {
-        using var details = error.Inner;
-        Console.Error.WriteLine($"{details.Code()}: {details.Message()}");
-        Console.Error.WriteLine(details.DetailsJson());
+        Console.Error.WriteLine("Credentials rejected: " + error.Message);
+    }
+    catch (FfiException error)
+    {
+        Console.Error.WriteLine($"{error.Kind} ({error.Code}): {error.Message}");
+        Console.Error.WriteLine(error.DetailsJson);
     }
     ```
 

@@ -12,17 +12,13 @@ public static class Program
             : throw new InvalidOperationException($"Set {name} first");
     private static void Save(string path, object value) =>
         File.WriteAllText(path, JsonSerializer.Serialize(value, JsonOptions) + "\n");
-    private static string? ReadText(Text? value)
-    {
-        using (value) return value?.Value();
-    }
     private static object[] Messages(nuint count, Func<nuint, ValidationMessage> get)
     {
         var result = new List<object>();
         for (nuint i = 0; i < count; i++)
         {
             using var message = get(i);
-            result.Add(new { code = ReadText(message.Code()), message = ReadText(message.Message()) });
+            result.Add(new { code = message.Code, message = message.Message });
         }
         return result.ToArray();
     }
@@ -30,12 +26,12 @@ public static class Program
     {
         using var results = response.ValidationResults();
         var summary = new {
-            http_status = response.HttpStatus(), outcome = response.Outcome().ToString(),
-            reporting_status = ReadText(response.ReportingStatusRaw()),
-            validation_status = ReadText(results.StatusRaw()),
-            info = Messages(results.InfoLen(), results.InfoMessage),
-            warnings = Messages(results.WarningLen(), results.WarningMessage),
-            errors = Messages(results.ErrorLen(), results.ErrorMessage),
+            http_status = response.HttpStatus, outcome = response.Outcome.ToString(),
+            reporting_status = response.ReportingStatusRaw,
+            validation_status = results.StatusRaw,
+            info = Messages(results.InfoLen, results.InfoMessage),
+            warnings = Messages(results.WarningLen, results.WarningMessage),
+            errors = Messages(results.ErrorLen, results.ErrorMessage),
         };
         Save(Path.Combine(output, "response.json"), summary);
         Console.WriteLine(JsonSerializer.Serialize(summary, JsonOptions));
@@ -79,22 +75,22 @@ public static class Program
                 Field(seller, "building_number"), Field(seller, "postal_code"), null,
                 Field(seller, "additional_number"), Field(seller, "district"));
             builder.SetSeller(Field(seller, "name"), address, Field(seller, "vat_id"), Field(seller, "crn"), "CRN");
-            builder.AddLineItem("دفتر", "2", "PCE", "50", "15", VatCategory.Standard);
+            builder.AddLineItem("دفتر", 2m, "PCE", 50m, 15m, VatCategory.Standard);
             using var invoice = builder.Build();
-            File.WriteAllText(Path.Combine(output, "invoice.xml"), invoice.Xml());
+            File.WriteAllText(Path.Combine(output, "invoice.xml"), invoice.Xml);
             Console.WriteLine("Created: SAR 100 net + SAR 15 VAT = SAR 115 payable");
             state["stage"] = "sign";
             using var signer = InvoiceSigner.FromPem(certificate, key);
             using var signed = signer.Sign(invoice);
-            string signedXml = signed.Xml();
+            string signedXml = signed.Xml;
             File.WriteAllText(Path.Combine(output, "signed.xml"), signedXml);
-            state["invoice_hash"] = signed.InvoiceHash();
+            state["invoice_hash"] = signed.InvoiceHash;
             state["stage"] = "validate";
             using var report = Xml.ValidateZatca(signedXml, JsonSerializer.Serialize(new {
                 previous_invoice_hash = Field(data, "previous_invoice_hash"),
             }));
             File.WriteAllText(Path.Combine(output, "validation.json"), report.ToJson());
-            if (!report.IsValid())
+            if (!report.IsValid)
                 throw new InvalidOperationException("Local validation failed; inspect validation.json. Nothing was submitted.");
             Console.WriteLine("Local validation passed; inspect validation.json for warnings");
             if (!submit)
@@ -116,10 +112,10 @@ public static class Program
         catch (Exception error)
         {
             state["error_type"] = error.GetType().Name;
-            if (error is BindingErrorException binding)
+            if (error is FfiException native) // InvalidInputException, NetworkException, ...
             {
-                using var details = JsonDocument.Parse(binding.Inner.DetailsJson());
-                Save(Path.Combine(output, "error.json"), new { code = binding.Inner.Code(), details = details.RootElement });
+                using var details = JsonDocument.Parse(native.DetailsJson);
+                Save(Path.Combine(output, "error.json"), new { code = native.Code, kind = native.Kind?.ToString(), details = details.RootElement });
             }
             throw;
         }

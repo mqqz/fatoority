@@ -64,25 +64,30 @@ complete C# examples.
 | --- | --- |
 | Text input | `string`; invalid UTF-16 and embedded NUL are rejected |
 | Optional text input | `string?`; `null` and `""` remain distinct |
-| Optional text output | `Text?`; read `Value()` and dispose the owner when present |
-| Decimal amount | Invariant decimal string; use `CultureInfo.InvariantCulture` for conversion |
+| Optional text output | `string?`; `null` when absent |
+| Decimal amount, quantity, or rate | `decimal` in both directions, converted exactly with the invariant culture (never through `double`) |
 | Invoice counter | `ulong` |
 | Owned native object | An `IDisposable` class; use `using` or call `Dispose()` |
 | Owned binary output | `Bytes`; call `AsSlice()` and copy with `Clone()` when needed |
 | Invoice acceptance | `InvoiceOutcome.Accepted`, `Rejected`, or `Unknown` |
 | Enumerated code | C# enum: `ZatcaEnvironment`, `InvoiceTypeKind`, `InvoiceSubType`, `VatCategory`, `AdjustmentKind`, `ClearanceMode` |
-| Response status | `ReportingStatus?`, `ClearanceStatus?`, `ValidationStatus?`, or `MessageType?`; `null` when absent, `Unknown` when present but not recognized by this version. The `*Raw()` getter returns the exact text as `Text?` |
-| Invoice flags | `byte` bitmask taken by `InvoiceBuilder.Flags` and returned by `Flags()`; cast `InvoiceFlag` members, such as `(byte)InvoiceFlag.Export`, and combine bits with bitwise OR |
+| Response status | `ReportingStatus?`, `ClearanceStatus?`, `ValidationStatus?`, or `MessageType?`; `null` when absent, `Unknown` when present but not recognized by this version. The `*Raw` property returns the exact text as `string?` |
+| Invoice flags | `byte` bitmask taken by `InvoiceBuilder.SetFlags` and returned by the `Flags` property; cast `InvoiceFlag` members, such as `(byte)InvoiceFlag.Export`, and combine bits with bitwise OR |
+| Scalar getter | Read-only property, such as `address.City`, `totals.PayableAmount`, or `response.Outcome` |
+| Snapshot getter | Method returning an owned `IDisposable`, such as `signed.Data()`, `signed.Totals()`, or `response.ValidationResults()`; dispose it with `using` |
 
-Native object classes implement `IDisposable`, including returned snapshots and
-`BindingError`. Disposal is idempotent; later calls on that wrapper throw
+Amounts keep their scale: `1.50m` is sent as `1.50`, and returned amounts use
+the normalized native form, so `1.50` is returned as `1.5m`; both compare equal.
+C# `decimal` and the native decimal share the same 28-digit range.
+
+Native object classes implement `IDisposable`, including returned snapshots. Disposal is idempotent; later calls on that wrapper throw
 `ObjectDisposedException`. Finalization provides cleanup if disposal is omitted,
 but its timing is not deterministic. Releasing an owner does not guarantee
 zeroization of secrets or copies exported to managed strings and arrays.
 
 `InvoiceBuilder.Build()`, `InvoiceSigner.Sign()`, and `SignedInvoice.IntoXml()` consume
 inner state. The outer wrapper remains disposable, but reusing consumed state
-raises `BindingErrorException`. Build and signing failures can also consume
+raises `InvalidInputException`. Build and signing failures can also consume
 state. Returned invoice data, totals, addresses, and response children are owned
 snapshots and remain usable after their parents are disposed.
 
@@ -109,12 +114,30 @@ that require mutable access also throw `InvalidOperationException`.
 --8<-- "bindings/dotnet/examples/SdkExamples.cs:errors"
 ```
 
-`BindingErrorException.Message` contains the native message. `Inner.Code()` uses
-the shared [error codes](../errors.md), and `Inner.DetailsJson()` preserves
-structured details such as HTTP status and response body. Dispose `Inner` after
-reading it. Invalid UTF-16 fails before the native call with
-`EncoderFallbackException`; invalid native inputs, including embedded NUL, use
-`BindingErrorException`.
+Native failures throw a subclass of `FfiException`, which derives from
+`FatooraException`. Each [error code](../errors.md) has its own class:
+
+| Code | `FfiErrorKind` | Exception |
+| --- | --- | --- |
+| 1 | `InvalidInput` | `InvalidInputException` |
+| 2 | `Validation` | `ValidationException` |
+| 3 | `Parse` | `ParseException` |
+| 4 | `Xml` | `XmlException` |
+| 5 | `Crypto` | `CryptoException` |
+| 6 | `Io` | `IoException` |
+| 7 | `Network` | `NetworkException` |
+| 8 | `Unauthorized` | `UnauthorizedException` |
+| 9 | `Internal` | `InternalException` |
+| 10 | `Api` | `ApiException` |
+
+`Message` contains the native message, `Code` the numeric code, `Kind` the
+category, and `DetailsJson` the structured details such as HTTP status and
+response body. The exception copies these values, so there is nothing to
+dispose. If you also import `System.Xml` or
+`System.ComponentModel.DataAnnotations`, qualify `Fatoora.XmlException` or
+`Fatoora.ValidationException`. Invalid UTF-16 fails before the native call with
+`EncoderFallbackException`; invalid native inputs, including embedded NUL, throw
+`InvalidInputException`.
 
 ## API requests
 
@@ -137,9 +160,8 @@ request header; use `ClearanceMode.Disabled` for ordinary reporting and
 It does not describe the result of the operation.
 
 The native client methods block the calling thread. HTTP success alone does not
-establish invoice acceptance: inspect `Outcome()` or call `EnsureAccepted()`.
-For clearance, `ClearedInvoiceXml()` returns `Text?`: when present, read `Value()`,
-save the text, and dispose the returned owner. See the
+establish invoice acceptance: inspect `Outcome` or call `EnsureAccepted()`.
+For clearance, `ClearedInvoiceXml` returns the cleared XML as `string?`. See the
 [API guide](../../guides/api.md#response-receipt-and-acceptance) for rejection,
 unknown outcomes, and cleared-document semantics.
 
@@ -159,8 +181,8 @@ renewal return `ProductionRequest`; invoice operations return `InvoiceRequest`.
 Their arguments match the corresponding blocking method.
 
 For asynchronous HTTP or cancellation, use a `Prepare*` method and your own
-`HttpClient`. The request exposes `Method()`, `Url()`, `HeadersJson()` (a JSON
-array of header pairs), and an owned `Body()`. Copy its bytes before awaiting the
+`HttpClient`. The request exposes the `Method`, `Url`, and `HeadersJson` (a JSON
+array of header pairs) properties and an owned `Body()`. Copy its bytes before awaiting the
 transport. Pass the HTTP status and response bytes to `Decode(ushort, byte[])`,
 including non-2xx responses, so the library can classify gateway errors.
 `Decode` returns an owned `ComplianceCsid`, `ProductionCsid`, or
@@ -190,12 +212,12 @@ using System.IO;
 
 string invoiceXml = File.ReadAllText("invoice.xml");
 using var report = Xml.ValidateZatca(invoiceXml, null);
-bool valid = report.IsValid();
+bool valid = report.IsValid;
 string json = report.ToJson(); // the same report as JSON
 ```
 
 `Xml.ValidateZatca(xml, optionsJson)` returns an owned `ZatcaValidationReport`. Inspect
-`IsValid()`, `IsComplete()` and `Stage(i)`; a rejected document returns a report, while an execution
+`IsValid`, `IsComplete` and `Stage(i)`; a rejected document returns a report, while an execution
 failure throws an exception that may carry a partial report in its details.
 Provide the predecessor hash from invoice history and set `evaluated_at` for
 repeatable checks. Omitting the timestamp uses the native clock.

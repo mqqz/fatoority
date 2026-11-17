@@ -57,63 +57,59 @@ public partial class Adjustment: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>Adjustment</c> allocated on Rust side.
     /// </returns>
-    public static Adjustment Amount(string value)
+    public static Adjustment Amount(decimal value)
     {
         unsafe
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            byte[] valueBytes = Diplomat.Utf8.Clone(value);
+            byte[] valueBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(value));
             fixed (byte* valuePtr = valueBytes)
             {
                 var result = Raw.Adjustment.Amount(new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new Adjustment(result.Ok);
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>Adjustment</c> allocated on Rust side.
     /// </returns>
-    public static Adjustment Percentage(string @base, string percent)
+    public static Adjustment Percentage(decimal @base, decimal percent)
     {
         unsafe
         {
-            if (@base == null) throw new ArgumentNullException(nameof(@base));
-            if (percent == null) throw new ArgumentNullException(nameof(percent));
-            byte[] baseBytes = Diplomat.Utf8.Clone(@base);
-            byte[] percentBytes = Diplomat.Utf8.Clone(percent);
+            byte[] baseBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(@base));
+            byte[] percentBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(percent));
             fixed (byte* basePtr = baseBytes)
             fixed (byte* percentPtr = percentBytes)
             {
                 var result = Raw.Adjustment.Percentage(new DiplomatSliceU8 { Ptr = basePtr, Len = (nuint)baseBytes.Length }, new DiplomatSliceU8 { Ptr = percentPtr, Len = (nuint)percentBytes.Length });
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new Adjustment(result.Ok);
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>Adjustment</c> allocated on Rust side.
     /// </returns>
-    public Adjustment WithSuppliedAmount(string value)
+    public Adjustment WithSuppliedAmount(decimal value)
     {
         unsafe
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            byte[] valueBytes = Diplomat.Utf8.Clone(value);
+            byte[] valueBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(value));
             BorrowLease<Raw.Adjustment>? selfLease = null;
             try
             {
@@ -123,7 +119,7 @@ public partial class Adjustment: IDisposable
                     var result = Raw.Adjustment.WithSuppliedAmount(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return new Adjustment(result.Ok);
                 }
@@ -135,7 +131,7 @@ public partial class Adjustment: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>Adjustment</c> allocated on Rust side.
     /// </returns>
@@ -155,7 +151,7 @@ public partial class Adjustment: IDisposable
                     var result = Raw.Adjustment.WithReason(selfLease!.Ptr, reason == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = reasonPtr, Len = (nuint)reasonBytes!.Length }), code == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = codePtr, Len = (nuint)codeBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return new Adjustment(result.Ok);
                 }
@@ -167,137 +163,140 @@ public partial class Adjustment: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string Value()
+    /// <exception cref="FfiException"></exception>
+    public decimal Value
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.Adjustment>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.Adjustment>? selfLease = null;
                 try
                 {
-                    var result = Raw.Adjustment.Value(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.Adjustment.Value(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? BaseAmount()
+    /// <exception cref="FfiException"></exception>
+    public decimal? BaseAmount
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.Adjustment>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.Adjustment.BaseAmount(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.Adjustment>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.Adjustment.BaseAmount(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeDecimalOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? Percent()
+    /// <exception cref="FfiException"></exception>
+    public decimal? Percent
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.Adjustment>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.Adjustment.Percent(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.Adjustment>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.Adjustment.Percent(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeDecimalOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? Reason()
+    /// <exception cref="FfiException"></exception>
+    public string? Reason
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.Adjustment>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.Adjustment.Reason(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.Adjustment>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.Adjustment.Reason(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? ReasonCode()
+    /// <exception cref="FfiException"></exception>
+    public string? ReasonCode
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.Adjustment>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.Adjustment.ReasonCode(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.Adjustment>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.Adjustment.ReasonCode(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }

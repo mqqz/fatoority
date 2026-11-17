@@ -57,24 +57,27 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    public bool HasVatRate()
+    public bool HasVatRate
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.AllowanceCharge>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.AllowanceCharge.HasVatRate(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.AllowanceCharge>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.AllowanceCharge.HasVatRate(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>AllowanceCharge</c> allocated on Rust side.
     /// </returns>
@@ -89,7 +92,7 @@ public partial class AllowanceCharge: IDisposable
                 var result = Raw.AllowanceCharge.WithoutVatRate(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new AllowanceCharge(result.Ok);
             }
@@ -100,18 +103,16 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>AllowanceCharge</c> allocated on Rust side.
     /// </returns>
-    public AllowanceCharge WithPercentage(string @base, string percent)
+    public AllowanceCharge WithPercentage(decimal @base, decimal percent)
     {
         unsafe
         {
-            if (@base == null) throw new ArgumentNullException(nameof(@base));
-            if (percent == null) throw new ArgumentNullException(nameof(percent));
-            byte[] baseBytes = Diplomat.Utf8.Clone(@base);
-            byte[] percentBytes = Diplomat.Utf8.Clone(percent);
+            byte[] baseBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(@base));
+            byte[] percentBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(percent));
             BorrowLease<Raw.AllowanceCharge>? selfLease = null;
             try
             {
@@ -122,7 +123,7 @@ public partial class AllowanceCharge: IDisposable
                     var result = Raw.AllowanceCharge.WithPercentage(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = basePtr, Len = (nuint)baseBytes.Length }, new DiplomatSliceU8 { Ptr = percentPtr, Len = (nuint)percentBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return new AllowanceCharge(result.Ok);
                 }
@@ -134,73 +135,71 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? BaseAmount()
+    /// <exception cref="FfiException"></exception>
+    public decimal? BaseAmount
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.AllowanceCharge>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.AllowanceCharge.BaseAmount(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.AllowanceCharge>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.AllowanceCharge.BaseAmount(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeDecimalOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? Percentage()
+    /// <exception cref="FfiException"></exception>
+    public decimal? Percentage
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.AllowanceCharge>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.AllowanceCharge.Percentage(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.AllowanceCharge>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.AllowanceCharge.Percentage(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeDecimalOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>AllowanceCharge</c> allocated on Rust side.
     /// </returns>
-    public static AllowanceCharge New(AdjustmentKind kind, string amount, string? reason, string? reasonCode, VatCategory category, string rate, TaxExemption exemption)
+    public static AllowanceCharge New(AdjustmentKind kind, decimal amount, string? reason, string? reasonCode, VatCategory category, decimal rate, TaxExemption exemption)
     {
         unsafe
         {
-            if (amount == null) throw new ArgumentNullException(nameof(amount));
-            if (rate == null) throw new ArgumentNullException(nameof(rate));
             if (exemption == null) throw new ArgumentNullException(nameof(exemption));
-            byte[] amountBytes = Diplomat.Utf8.Clone(amount);
+            byte[] amountBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(amount));
             byte[]? reasonBytes = reason == null ? null : Diplomat.Utf8.Clone(reason);
             byte[]? reasonCodeBytes = reasonCode == null ? null : Diplomat.Utf8.Clone(reasonCode);
-            byte[] rateBytes = Diplomat.Utf8.Clone(rate);
+            byte[] rateBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(rate));
             BorrowLease<Raw.TaxExemption>? exemptionLease = null;
             try
             {
@@ -213,7 +212,7 @@ public partial class AllowanceCharge: IDisposable
                     var result = Raw.AllowanceCharge.New(kind, new DiplomatSliceU8 { Ptr = amountPtr, Len = (nuint)amountBytes.Length }, reason == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = reasonPtr, Len = (nuint)reasonBytes!.Length }), reasonCode == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = reasonCodePtr, Len = (nuint)reasonCodeBytes!.Length }), category, new DiplomatSliceU8 { Ptr = ratePtr, Len = (nuint)rateBytes.Length }, exemptionLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return new AllowanceCharge(result.Ok);
                 }
@@ -225,103 +224,115 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    public AdjustmentKind Kind()
+    public AdjustmentKind Kind
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.AllowanceCharge>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.AllowanceCharge.Kind(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
-    public string Amount()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.AllowanceCharge>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.AllowanceCharge>? selfLease = null;
                 try
                 {
-                    var result = Raw.AllowanceCharge.Amount(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
-                    {
-                        throw new BindingErrorException(new BindingError(result.Err));
-                    }
-                    return writeable.ToUnicode();
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.AllowanceCharge.Kind(selfLease!.Ptr);
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string Rate()
+    /// <exception cref="FfiException"></exception>
+    public decimal Amount
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.AllowanceCharge>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.AllowanceCharge>? selfLease = null;
                 try
                 {
-                    var result = Raw.AllowanceCharge.Rate(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.AllowanceCharge.Amount(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
             }
-            finally
-            {
-                selfLease?.Release();
-            }
         }
     }
 
-    public VatCategory Category()
+    /// <exception cref="FfiException"></exception>
+    public decimal Rate
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.AllowanceCharge>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.AllowanceCharge.Category(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.AllowanceCharge>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
+                    {
+                        var result = Raw.AllowanceCharge.Rate(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
+                    }
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    public VatCategory Category
+    {
+        get
+        {
+            unsafe
+            {
+                BorrowLease<Raw.AllowanceCharge>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.AllowanceCharge.Category(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
+            }
+        }
+    }
+
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>AllowanceCharge</c> allocated on Rust side.
     /// </returns>
@@ -336,7 +347,7 @@ public partial class AllowanceCharge: IDisposable
                 var result = Raw.AllowanceCharge.WithTaxCategoryCount(selfLease!.Ptr, count);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new AllowanceCharge(result.Ok);
             }
@@ -347,76 +358,79 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    public nuint TaxCategoryCount()
+    public nuint TaxCategoryCount
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.AllowanceCharge>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.AllowanceCharge.TaxCategoryCount(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? Reason()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.AllowanceCharge>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.AllowanceCharge.Reason(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.AllowanceCharge>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.AllowanceCharge.TaxCategoryCount(selfLease!.Ptr);
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? ReasonCode()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.AllowanceCharge>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.AllowanceCharge.ReasonCode(selfLease!.Ptr);
-                if (!result.IsOk)
+                finally
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease?.Release();
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
+    public string? Reason
+    {
+        get
+        {
+            unsafe
+            {
+                BorrowLease<Raw.AllowanceCharge>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.AllowanceCharge.Reason(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
+            }
+        }
+    }
+
+    /// <exception cref="FfiException"></exception>
+    public string? ReasonCode
+    {
+        get
+        {
+            unsafe
+            {
+                BorrowLease<Raw.AllowanceCharge>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.AllowanceCharge.ReasonCode(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
+            }
+        }
+    }
+
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>TaxExemption</c> allocated on Rust side.
     /// </returns>
@@ -431,7 +445,7 @@ public partial class AllowanceCharge: IDisposable
                 var result = Raw.AllowanceCharge.Exemption(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new TaxExemption(result.Ok);
             }

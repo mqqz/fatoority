@@ -35,7 +35,7 @@ public static class SdkExamples
         });
         return Xml.ValidateZatca(xml, options);
     }
-    // The caller disposes the report and inspects IsValid(), IsComplete() and
+    // The caller disposes the report and inspects IsValid, IsComplete and
     // Stage(i); ToJson() returns the same report as JSON.
     // --8<-- [end:validation]
 
@@ -43,7 +43,7 @@ public static class SdkExamples
     public static string ReadQr(string signedXml)
     {
         using var invoice = SignedInvoice.FromXml(signedXml);
-        return invoice.QrCode(); // Base64-encoded TLV payload.
+        return invoice.QrCode; // Base64-encoded TLV payload.
     }
     // --8<-- [end:qr]
 
@@ -57,7 +57,7 @@ public static class SdkExamples
         using var response = client.ReportSimplifiedInvoice(
             invoice, credentials, ClearanceMode.Disabled, "en");
         response.EnsureAccepted(); // HTTP success alone does not mean acceptance.
-        Console.WriteLine(response.Outcome());
+        Console.WriteLine(response.Outcome);
     }
     // This method performs a blocking network request.
     // --8<-- [end:api]
@@ -69,11 +69,11 @@ public static class SdkExamples
         {
             using var key = SigningKey.FromPem("invalid key");
         }
-        catch (BindingErrorException error)
+        catch (InvalidInputException error)
         {
-            using var details = error.Inner;
-            Console.WriteLine($"{details.Code()}: {error.Message}");
-            Console.WriteLine(details.DetailsJson());
+            // Every native error derives from FfiException; Kind names its category.
+            Console.WriteLine($"{error.Kind} ({error.Code}): {error.Message}");
+            Console.WriteLine(error.DetailsJson);
         }
     }
     // --8<-- [end:errors]

@@ -57,7 +57,7 @@ public partial class PaymentMeans: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>PaymentMeans</c> allocated on Rust side.
     /// </returns>
@@ -76,7 +76,7 @@ public partial class PaymentMeans: IDisposable
                     var result = Raw.PaymentMeans.WithInstructionNote(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return new PaymentMeans(result.Ok);
                 }
@@ -88,28 +88,28 @@ public partial class PaymentMeans: IDisposable
         }
     }
 
-    public nuint InstructionNotesLen()
+    public nuint InstructionNotesLen
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.PaymentMeans>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.PaymentMeans.InstructionNotesLen(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
+                BorrowLease<Raw.PaymentMeans>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.PaymentMeans.InstructionNotesLen(selfLease!.Ptr);
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text InstructionNoteAt(nuint index)
+    /// <exception cref="FfiException"></exception>
+    public string InstructionNoteAt(nuint index)
     {
         unsafe
         {
@@ -120,9 +120,9 @@ public partial class PaymentMeans: IDisposable
                 var result = Raw.PaymentMeans.InstructionNoteAt(selfLease!.Ptr, index);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
-                return new Text(result.Ok);
+                return global::Fatoora.Text.Take(new global::Fatoora.Text(result.Ok));
             }
             finally
             {
@@ -131,7 +131,7 @@ public partial class PaymentMeans: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>PaymentMeans</c> allocated on Rust side.
     /// </returns>
@@ -148,14 +148,14 @@ public partial class PaymentMeans: IDisposable
                 var result = Raw.PaymentMeans.New(new DiplomatSliceU8 { Ptr = codePtr, Len = (nuint)codeBytes.Length }, instruction == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = instructionPtr, Len = (nuint)instructionBytes!.Length }));
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new PaymentMeans(result.Ok);
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>PaymentMeans</c> allocated on Rust side.
     /// </returns>
@@ -175,7 +175,7 @@ public partial class PaymentMeans: IDisposable
                     var result = Raw.PaymentMeans.WithAccount(selfLease!.Ptr, id == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = idPtr, Len = (nuint)idBytes!.Length }), terms == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = termsPtr, Len = (nuint)termsBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return new PaymentMeans(result.Ok);
                 }
@@ -187,128 +187,134 @@ public partial class PaymentMeans: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public string Code()
+    /// <exception cref="FfiException"></exception>
+    public string Code
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.PaymentMeans>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
+                BorrowLease<Raw.PaymentMeans>? selfLease = null;
                 try
                 {
-                    var result = Raw.PaymentMeans.Code(selfLease!.Ptr, &writeable);
-                    if (!result.IsOk)
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        var result = Raw.PaymentMeans.Code(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FfiException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return writeable.ToUnicode();
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
-                    writeable.Dispose();
+                    selfLease?.Release();
                 }
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? InstructionNote()
+    /// <exception cref="FfiException"></exception>
+    public string? InstructionNote
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.PaymentMeans>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.PaymentMeans.InstructionNote(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.PaymentMeans>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.PaymentMeans.InstructionNote(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    public bool HasAccount()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.PaymentMeans>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.PaymentMeans.HasAccount(selfLease!.Ptr);
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? AccountIdentifier()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.PaymentMeans>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.PaymentMeans.AccountIdentifier(selfLease!.Ptr);
-                if (!result.IsOk)
+                finally
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease?.Release();
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
-            }
-            finally
-            {
-                selfLease?.Release();
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    /// <returns>
-    /// A <c>Text</c> allocated on Rust side.
-    /// </returns>
-    public Text? PaymentTerms()
+    public bool HasAccount
     {
-        unsafe
+        get
         {
-            BorrowLease<Raw.PaymentMeans>? selfLease = null;
-            try
+            unsafe
             {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.PaymentMeans.PaymentTerms(selfLease!.Ptr);
-                if (!result.IsOk)
+                BorrowLease<Raw.PaymentMeans>? selfLease = null;
+                try
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    return Raw.PaymentMeans.HasAccount(selfLease!.Ptr);
                 }
-                return result.Ok == null ? null : new Text(result.Ok);
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
-            finally
+        }
+    }
+
+    /// <exception cref="FfiException"></exception>
+    public string? AccountIdentifier
+    {
+        get
+        {
+            unsafe
             {
-                selfLease?.Release();
+                BorrowLease<Raw.PaymentMeans>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.PaymentMeans.AccountIdentifier(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
+            }
+        }
+    }
+
+    /// <exception cref="FfiException"></exception>
+    public string? PaymentTerms
+    {
+        get
+        {
+            unsafe
+            {
+                BorrowLease<Raw.PaymentMeans>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    var result = Raw.PaymentMeans.PaymentTerms(selfLease!.Ptr);
+                    if (!result.IsOk)
+                    {
+                        throw FfiException.FromNative(new BindingError(result.Err));
+                    }
+                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
             }
         }
     }

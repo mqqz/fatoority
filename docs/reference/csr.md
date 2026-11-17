@@ -201,7 +201,7 @@ Constructors that take individual fields use the order in the property table abo
     retaining them across later calls. See [JavaScript resource handling](bindings/javascript.md).
 
 === "C#"
-    Use the `Fatoora` namespace. Use `using` for returned objects, including `Bytes` and `BytesList`. Errors throw `BindingErrorException`. Use `using var view = bytes.AsSlice();` and copy bytes with `view.Clone()`. See [C# resource handling](bindings/csharp.md).
+    Use the `Fatoora` namespace. Use `using` for returned objects, including `Bytes` and `BytesList`. Errors throw `FfiException` subclasses such as `InvalidInputException`. Use `using var view = bytes.AsSlice();` and copy bytes with `view.Clone()`. See [C# resource handling](bindings/csharp.md).
 
     **Properties**
 
@@ -221,7 +221,7 @@ Constructors that take individual fields use the order in the property table abo
     | `Csr.FromDer(der)` | `byte[]` CSR DER | `Csr` |
     | `csr.ToPem()` / `csr.ToDer()` | None | `string` / `Bytes` |
     | `csr.ToBase64()` / `csr.ToPemBase64()` | None | `string` |
-    | `csr.SubjectString()` | None | `string` |
+    | `csr.SubjectString` | Property | `string` |
     | `csr.ExtensionValuesDer()` | None | `BytesList` |
 
     Environment values are `ZatcaEnvironment.NonProduction`, `.Simulation`, and

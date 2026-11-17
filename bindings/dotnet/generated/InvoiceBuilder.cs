@@ -57,7 +57,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void AddSellerIdentifier(string value, string? scheme)
     {
         unsafe
@@ -75,7 +75,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.AddSellerIdentifier(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length }, scheme == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = schemePtr, Len = (nuint)schemeBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -87,7 +87,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void AddBuyerIdentifier(string value, string? scheme)
     {
         unsafe
@@ -105,7 +105,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.AddBuyerIdentifier(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length }, scheme == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = schemePtr, Len = (nuint)schemeBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -117,7 +117,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void AddVatBreakdown(VatBreakdown value)
     {
         unsafe
@@ -132,7 +132,7 @@ public partial class InvoiceBuilder: IDisposable
                 var result = Raw.InvoiceBuilder.AddVatBreakdown(selfLease!.Ptr, valueLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return;
             }
@@ -144,7 +144,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void AddPaymentMeans(PaymentMeans value)
     {
         unsafe
@@ -159,7 +159,7 @@ public partial class InvoiceBuilder: IDisposable
                 var result = Raw.InvoiceBuilder.AddPaymentMeans(selfLease!.Ptr, valueLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return;
             }
@@ -171,7 +171,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void AddNote(string? language, string value)
     {
         unsafe
@@ -189,7 +189,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.AddNote(selfLease!.Ptr, language == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = languagePtr, Len = (nuint)languageBytes!.Length }), new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -201,15 +201,14 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public void AddAllowance(Adjustment value, VatCategory category, string rate, TaxExemption exemption)
+    /// <exception cref="FfiException"></exception>
+    public void AddAllowance(Adjustment value, VatCategory category, decimal rate, TaxExemption exemption)
     {
         unsafe
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
-            if (rate == null) throw new ArgumentNullException(nameof(rate));
             if (exemption == null) throw new ArgumentNullException(nameof(exemption));
-            byte[] rateBytes = Diplomat.Utf8.Clone(rate);
+            byte[] rateBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(rate));
             BorrowLease<Raw.InvoiceBuilder>? selfLease = null;
             BorrowLease<Raw.Adjustment>? valueLease = null;
             BorrowLease<Raw.TaxExemption>? exemptionLease = null;
@@ -223,7 +222,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.AddAllowance(selfLease!.Ptr, valueLease!.Ptr, category, new DiplomatSliceU8 { Ptr = ratePtr, Len = (nuint)rateBytes.Length }, exemptionLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -237,15 +236,14 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public void AddCharge(Adjustment value, VatCategory category, string rate, TaxExemption exemption)
+    /// <exception cref="FfiException"></exception>
+    public void AddCharge(Adjustment value, VatCategory category, decimal rate, TaxExemption exemption)
     {
         unsafe
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
-            if (rate == null) throw new ArgumentNullException(nameof(rate));
             if (exemption == null) throw new ArgumentNullException(nameof(exemption));
-            byte[] rateBytes = Diplomat.Utf8.Clone(rate);
+            byte[] rateBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(rate));
             BorrowLease<Raw.InvoiceBuilder>? selfLease = null;
             BorrowLease<Raw.Adjustment>? valueLease = null;
             BorrowLease<Raw.TaxExemption>? exemptionLease = null;
@@ -259,7 +257,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.AddCharge(selfLease!.Ptr, valueLease!.Ptr, category, new DiplomatSliceU8 { Ptr = ratePtr, Len = (nuint)rateBytes.Length }, exemptionLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -273,7 +271,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetBuyerWithoutAddress(string name, string? vatId, string? otherId, string? scheme)
     {
         unsafe
@@ -295,7 +293,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.SetBuyerWithoutAddress(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = namePtr, Len = (nuint)nameBytes.Length }, vatId == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = vatIdPtr, Len = (nuint)vatIdBytes!.Length }), otherId == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = otherIdPtr, Len = (nuint)otherIdBytes!.Length }), scheme == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = schemePtr, Len = (nuint)schemeBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -307,7 +305,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>InvoiceBuilder</c> allocated on Rust side.
     /// </returns>
@@ -327,7 +325,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.NewWithReference(kind, subtype, referenceLease!.Ptr, new DiplomatSliceU8 { Ptr = reasonPtr, Len = (nuint)reasonBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return new InvoiceBuilder(result.Ok);
                 }
@@ -339,7 +337,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetPaymentInstruction(string instruction)
     {
         unsafe
@@ -355,7 +353,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.SetPaymentInstruction(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = instructionPtr, Len = (nuint)instructionBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -367,13 +365,12 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public void SetPrepaidAmount(string amount)
+    /// <exception cref="FfiException"></exception>
+    public void SetPrepaidAmount(decimal amount)
     {
         unsafe
         {
-            if (amount == null) throw new ArgumentNullException(nameof(amount));
-            byte[] amountBytes = Diplomat.Utf8.Clone(amount);
+            byte[] amountBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(amount));
             BorrowLease<Raw.InvoiceBuilder>? selfLease = null;
             try
             {
@@ -383,7 +380,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.SetPrepaidAmount(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = amountPtr, Len = (nuint)amountBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -395,13 +392,12 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public void SetPayableRoundingAmount(string amount)
+    /// <exception cref="FfiException"></exception>
+    public void SetPayableRoundingAmount(decimal amount)
     {
         unsafe
         {
-            if (amount == null) throw new ArgumentNullException(nameof(amount));
-            byte[] amountBytes = Diplomat.Utf8.Clone(amount);
+            byte[] amountBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(amount));
             BorrowLease<Raw.InvoiceBuilder>? selfLease = null;
             try
             {
@@ -411,7 +407,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.SetPayableRoundingAmount(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = amountPtr, Len = (nuint)amountBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -423,7 +419,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetDelivery(string? actual, string? latest)
     {
         unsafe
@@ -440,7 +436,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.SetDelivery(selfLease!.Ptr, actual == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = actualPtr, Len = (nuint)actualBytes!.Length }), latest == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = latestPtr, Len = (nuint)latestBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -452,15 +448,14 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public void SetTaxCurrency(string currency, string amount)
+    /// <exception cref="FfiException"></exception>
+    public void SetTaxCurrency(string currency, decimal amount)
     {
         unsafe
         {
             if (currency == null) throw new ArgumentNullException(nameof(currency));
-            if (amount == null) throw new ArgumentNullException(nameof(amount));
             byte[] currencyBytes = Diplomat.Utf8.Clone(currency);
-            byte[] amountBytes = Diplomat.Utf8.Clone(amount);
+            byte[] amountBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(amount));
             BorrowLease<Raw.InvoiceBuilder>? selfLease = null;
             try
             {
@@ -471,7 +466,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.SetTaxCurrency(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = currencyPtr, Len = (nuint)currencyBytes.Length }, new DiplomatSliceU8 { Ptr = amountPtr, Len = (nuint)amountBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -483,14 +478,13 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public void AddTaxExemption(VatCategory category, string rate, TaxExemption exemption)
+    /// <exception cref="FfiException"></exception>
+    public void AddTaxExemption(VatCategory category, decimal rate, TaxExemption exemption)
     {
         unsafe
         {
-            if (rate == null) throw new ArgumentNullException(nameof(rate));
             if (exemption == null) throw new ArgumentNullException(nameof(exemption));
-            byte[] rateBytes = Diplomat.Utf8.Clone(rate);
+            byte[] rateBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(rate));
             BorrowLease<Raw.InvoiceBuilder>? selfLease = null;
             BorrowLease<Raw.TaxExemption>? exemptionLease = null;
             try
@@ -502,7 +496,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.AddTaxExemption(selfLease!.Ptr, category, new DiplomatSliceU8 { Ptr = ratePtr, Len = (nuint)rateBytes.Length }, exemptionLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -515,7 +509,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void AddAdjustment(AllowanceCharge adjustment)
     {
         unsafe
@@ -530,7 +524,7 @@ public partial class InvoiceBuilder: IDisposable
                 var result = Raw.InvoiceBuilder.AddAdjustment(selfLease!.Ptr, adjustmentLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return;
             }
@@ -542,7 +536,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void AddItem(InvoiceLineItem item)
     {
         unsafe
@@ -557,7 +551,7 @@ public partial class InvoiceBuilder: IDisposable
                 var result = Raw.InvoiceBuilder.AddItem(selfLease!.Ptr, itemLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return;
             }
@@ -569,7 +563,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>InvoiceBuilder</c> allocated on Rust side.
     /// </returns>
@@ -589,14 +583,14 @@ public partial class InvoiceBuilder: IDisposable
                 var result = Raw.InvoiceBuilder.New(kind, subtype, originalId == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = originalIdPtr, Len = (nuint)originalIdBytes!.Length }), originalUuid == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = originalUuidPtr, Len = (nuint)originalUuidBytes!.Length }), originalDate == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = originalDatePtr, Len = (nuint)originalDateBytes!.Length }), reason == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = reasonPtr, Len = (nuint)reasonBytes!.Length }));
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new InvoiceBuilder(result.Ok);
             }
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void AddBillingReference(OriginalInvoiceRef value)
     {
         unsafe
@@ -611,7 +605,7 @@ public partial class InvoiceBuilder: IDisposable
                 var result = Raw.InvoiceBuilder.AddBillingReference(selfLease!.Ptr, valueLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return;
             }
@@ -623,7 +617,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetPurchaseOrderId(string value)
     {
         unsafe
@@ -639,7 +633,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.SetPurchaseOrderId(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -651,7 +645,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetContractId(string value)
     {
         unsafe
@@ -667,7 +661,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.SetContractId(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -679,7 +673,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetId(string value)
     {
         unsafe
@@ -695,7 +689,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.SetId(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -707,7 +701,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetUuid(string value)
     {
         unsafe
@@ -723,7 +717,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.SetUuid(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -735,7 +729,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetIssueDatetime(string value)
     {
         unsafe
@@ -751,7 +745,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.SetIssueDatetime(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -763,7 +757,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetCurrency(string value)
     {
         unsafe
@@ -779,7 +773,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.SetCurrency(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -791,7 +785,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetPreviousInvoiceHash(string value)
     {
         unsafe
@@ -807,7 +801,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.SetPreviousInvoiceHash(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -819,7 +813,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetInvoiceCounter(ulong value)
     {
         unsafe
@@ -831,7 +825,7 @@ public partial class InvoiceBuilder: IDisposable
                 var result = Raw.InvoiceBuilder.SetInvoiceCounter(selfLease!.Ptr, value);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return;
             }
@@ -842,7 +836,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetVatCategory(VatCategory value)
     {
         unsafe
@@ -854,7 +848,7 @@ public partial class InvoiceBuilder: IDisposable
                 var result = Raw.InvoiceBuilder.SetVatCategory(selfLease!.Ptr, value);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return;
             }
@@ -865,7 +859,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetFlags(byte value)
     {
         unsafe
@@ -877,7 +871,7 @@ public partial class InvoiceBuilder: IDisposable
                 var result = Raw.InvoiceBuilder.SetFlags(selfLease!.Ptr, value);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return;
             }
@@ -888,7 +882,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetSeller(string name, Address address, string vatId, string? otherId, string? scheme)
     {
         unsafe
@@ -914,7 +908,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.SetSeller(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = namePtr, Len = (nuint)nameBytes.Length }, addressLease!.Ptr, new DiplomatSliceU8 { Ptr = vatIdPtr, Len = (nuint)vatIdBytes.Length }, otherId == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = otherIdPtr, Len = (nuint)otherIdBytes!.Length }), scheme == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = schemePtr, Len = (nuint)schemeBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -927,7 +921,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     public void SetBuyer(string name, Address address, string? vatId, string? otherId, string? scheme)
     {
         unsafe
@@ -952,7 +946,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.SetBuyer(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = namePtr, Len = (nuint)nameBytes.Length }, addressLease!.Ptr, vatId == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = vatIdPtr, Len = (nuint)vatIdBytes!.Length }), otherId == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = otherIdPtr, Len = (nuint)otherIdBytes!.Length }), scheme == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = schemePtr, Len = (nuint)schemeBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -965,21 +959,18 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
-    public void AddLineItem(string description, string quantity, string unitCode, string unitPrice, string vatRate, VatCategory category)
+    /// <exception cref="FfiException"></exception>
+    public void AddLineItem(string description, decimal quantity, string unitCode, decimal unitPrice, decimal vatRate, VatCategory category)
     {
         unsafe
         {
             if (description == null) throw new ArgumentNullException(nameof(description));
-            if (quantity == null) throw new ArgumentNullException(nameof(quantity));
             if (unitCode == null) throw new ArgumentNullException(nameof(unitCode));
-            if (unitPrice == null) throw new ArgumentNullException(nameof(unitPrice));
-            if (vatRate == null) throw new ArgumentNullException(nameof(vatRate));
             byte[] descriptionBytes = Diplomat.Utf8.Clone(description);
-            byte[] quantityBytes = Diplomat.Utf8.Clone(quantity);
+            byte[] quantityBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(quantity));
             byte[] unitCodeBytes = Diplomat.Utf8.Clone(unitCode);
-            byte[] unitPriceBytes = Diplomat.Utf8.Clone(unitPrice);
-            byte[] vatRateBytes = Diplomat.Utf8.Clone(vatRate);
+            byte[] unitPriceBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(unitPrice));
+            byte[] vatRateBytes = Diplomat.Utf8.Clone(FatooraDecimal.Format(vatRate));
             BorrowLease<Raw.InvoiceBuilder>? selfLease = null;
             try
             {
@@ -993,7 +984,7 @@ public partial class InvoiceBuilder: IDisposable
                     var result = Raw.InvoiceBuilder.AddLineItem(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = descriptionPtr, Len = (nuint)descriptionBytes.Length }, new DiplomatSliceU8 { Ptr = quantityPtr, Len = (nuint)quantityBytes.Length }, new DiplomatSliceU8 { Ptr = unitCodePtr, Len = (nuint)unitCodeBytes.Length }, new DiplomatSliceU8 { Ptr = unitPricePtr, Len = (nuint)unitPriceBytes.Length }, new DiplomatSliceU8 { Ptr = vatRatePtr, Len = (nuint)vatRateBytes.Length }, category);
                     if (!result.IsOk)
                     {
-                        throw new BindingErrorException(new BindingError(result.Err));
+                        throw FfiException.FromNative(new BindingError(result.Err));
                     }
                     return;
                 }
@@ -1005,7 +996,7 @@ public partial class InvoiceBuilder: IDisposable
         }
     }
 
-    /// <exception cref="BindingErrorException"></exception>
+    /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>FinalizedInvoice</c> allocated on Rust side.
     /// </returns>
@@ -1020,7 +1011,7 @@ public partial class InvoiceBuilder: IDisposable
                 var result = Raw.InvoiceBuilder.Build(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw new BindingErrorException(new BindingError(result.Err));
+                    throw FfiException.FromNative(new BindingError(result.Err));
                 }
                 return new FinalizedInvoice(result.Ok);
             }

@@ -319,8 +319,9 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
 === "C#"
     Use the `Fatoora` namespace. `ZatcaClient.Create(config: Config)` returns a client.
-    HTTP methods block; errors throw `BindingErrorException`. Use `using` for owned
-    objects, including child responses and optional `Text` values.
+    HTTP methods block; errors throw `FfiException` subclasses such as
+    `NetworkException` or `UnauthorizedException`. Use `using` for owned objects,
+    including child responses. Scalar getters are read-only properties.
 
     **HTTP operations**
 
@@ -340,34 +341,32 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     `ComplianceCsid.Create(environment, requestId, token, secret)` returns
     compliance credentials; `ProductionCsid.Create` returns production credentials.
     Pass a `ZatcaEnvironment` (`NonProduction`, `Simulation`, or `Production`), a
-    nullable `string` request ID, and `string` token/secret. `Env()` returns
-    `ZatcaEnvironment`;
-    `BinarySecurityToken()` and `Secret()` return `string`;
-    `RequestId()` returns nullable `Text`.
-    Read text with `Value()` and dispose the `Text` object when finished.
+    nullable `string` request ID, and `string` token/secret. The `Env` property
+    returns `ZatcaEnvironment`; `BinarySecurityToken` and `Secret` return `string`;
+    `RequestId` returns `string?`.
 
     **Responses**
 
-    | Method | Returns |
+    | Member | Returns |
     | --- | --- |
-    | `response.HttpStatus()` | `ushort?` |
-    | `response.Outcome()` | `InvoiceOutcome` (`Accepted`, `Rejected`, `Unknown`) |
+    | `response.HttpStatus` | `ushort?` |
+    | `response.Outcome` | `InvoiceOutcome` (`Accepted`, `Rejected`, `Unknown`) |
     | `response.EnsureAccepted()` | No value; throws unless accepted. |
     | `response.ValidationResults()` | `ValidationResults` |
-    | `response.ReportingStatus()` | `ReportingStatus?` (`Reported`, `NotReported`, `Unknown`) |
-    | `response.ClearanceStatus()` | `ClearanceStatus?` (`Cleared`, `NotCleared`, `Unknown`) |
-    | `response.ReportingStatusRaw()` / `ClearanceStatusRaw()` / `QrSellerStatus()` / `QrBuyerStatus()` | Nullable `Text` |
-    | `response.ClearedInvoiceBase64()` / `ClearedInvoiceXml()` | Nullable `Text`; XML decoding can throw. |
-    | `results.Status()` | `ValidationStatus?` (`Pass`, `Warning`, `Error`, `Unknown`) |
-    | `results.StatusRaw()` | Nullable `Text` |
-    | `results.InfoLen()` / `WarningLen()` / `ErrorLen()` | `nuint` message count |
+    | `response.ReportingStatus` | `ReportingStatus?` (`Reported`, `NotReported`, `Unknown`) |
+    | `response.ClearanceStatus` | `ClearanceStatus?` (`Cleared`, `NotCleared`, `Unknown`) |
+    | `response.ReportingStatusRaw` / `ClearanceStatusRaw` / `QrSellerStatus` / `QrBuyerStatus` | `string?` |
+    | `response.ClearedInvoiceBase64` / `ClearedInvoiceXml` | `string?`; XML decoding can throw. |
+    | `results.Status` | `ValidationStatus?` (`Pass`, `Warning`, `Error`, `Unknown`) |
+    | `results.StatusRaw` | `string?` |
+    | `results.InfoLen` / `WarningLen` / `ErrorLen` | `nuint` message count |
     | `results.InfoMessage(index)` / `WarningMessage(index)` / `ErrorMessage(index)` | `ValidationMessage` |
-    | `message.MessageType()` | `MessageType?` (`Info`, `Warning`, `Error`, `Unknown`) |
-    | `message.Status()` | `ValidationStatus?` |
-    | `message.MessageTypeRaw()` / `StatusRaw()` / `Code()` / `Category()` / `Message()` | Nullable `Text` |
+    | `message.MessageType` | `MessageType?` (`Info`, `Warning`, `Error`, `Unknown`) |
+    | `message.Status` | `ValidationStatus?` |
+    | `message.MessageTypeRaw` / `StatusRaw` / `Code` / `Category` / `Message` | `string?` |
 
     Status enums are `null` when the field is absent and `Unknown` when it is present
-    but not recognized by this binding version; the matching `*Raw()` getter returns
+    but not recognized by this binding version; the matching `*Raw` property returns
     the exact wire string.
 
     Use zero-based `nuint` indexes below the corresponding message count. Child
@@ -383,7 +382,7 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     `ProductionRequest` for production credentials/renewal, and `InvoiceRequest` for
     invoice operations, without sending HTTP.
 
-    `request.Method()`, `Url()`, and `HeadersJson()`
+    The `request.Method`, `Url`, and `HeadersJson` properties
     return `string`; `Body()` returns owned `Bytes`.
     `request.Decode(status, body)` accepts `ushort` HTTP status and
     `byte[]` response body, and returns the matching credential or response type.

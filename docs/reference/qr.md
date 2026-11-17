@@ -43,7 +43,7 @@ The getter takes no arguments and leaves the signed invoice usable.
 
 === "C#"
 
-    `SignedInvoice.QrCode()` returns a managed `string`.
+    The `SignedInvoice.QrCode` property returns a managed `string`.
 
 === "Kotlin"
 

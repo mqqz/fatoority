@@ -113,8 +113,8 @@ Choose your language for imports, exact calls, returns, and ownership behavior.
     FinalizedInvoice FinalizedInvoice.FromFile(string value)
     SignedInvoice SignedInvoice.FromXml(string value)
     SignedInvoice SignedInvoice.FromFile(string value)
-    string FinalizedInvoice.Xml()
-    string SignedInvoice.Xml()
+    string FinalizedInvoice.Xml { get; }
+    string SignedInvoice.Xml { get; }
     string SignedInvoice.IntoXml()
     string SignedInvoice.ToXmlBase64()
     ```

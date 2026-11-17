@@ -321,6 +321,41 @@ old integer codes.
   `ValueError` when that category has more than one line VAT rate or when they
   are combined with `add_document_adjustment`/`add_adjustment`.
 
+**.NET (`Fatoority` NuGet package)**
+
+The C# API is now an idiomatic facade generated over the Diplomat output by
+`scripts/generate_dotnet.py`. Native objects still implement `IDisposable`.
+These are hard breaks with no deprecation period, because C# cannot overload a
+method with a property or by return type:
+
+- Quantities, prices, rates and amounts are `decimal` instead of strings, as
+  arguments (`InvoiceBuilder.AddLineItem("Pen", 2m, "PCE", 50m, 15m, ...)`) and
+  as results (`totals.PayableAmount` is `decimal`; optional amounts are
+  `decimal?`). Values are converted exactly with the invariant culture. Returned
+  values are normalized (`1.50` comes back as `1.5m`).
+- Scalar getters are read-only properties: `address.City`, `config.Env`,
+  `signed.Hash`, `signed.Xml`, `response.Outcome`, `report.IsValid`,
+  `request.Method`, and so on. Getters that return a native-owned snapshot stay
+  methods (`invoice.Data()`, `invoice.Totals()`, `response.ValidationResults()`,
+  `request.Body()`), as do indexed accessors and `To*`/`Into*` conversions.
+- Optional text getters return `string?` instead of a disposable `Text?`
+  (`response.ReportingStatusRaw`, `credentials.RequestId`, `address.District`).
+- `BindingErrorException` is replaced by one exception class per error code,
+  matching the Python hierarchy: `FatooraException` > `FfiException` >
+  `InvalidInputException`, `ValidationException`, `ParseException`,
+  `XmlException`, `CryptoException`, `IoException`, `NetworkException`,
+  `UnauthorizedException`, `InternalException`, `ApiException`. The exception
+  exposes `Code`, `Kind` (`FfiErrorKind`) and `DetailsJson` directly and holds
+  no native resources; `BindingError` is no longer public.
+
+| 0.5 | 0.6 |
+| --- | --- |
+| `builder.AddLineItem("Pen", "2", "PCE", "50", "15", VatCategory.Standard)` | `builder.AddLineItem("Pen", 2m, "PCE", 50m, 15m, VatCategory.Standard)` |
+| `decimal.Parse(totals.PayableAmount(), CultureInfo.InvariantCulture)` | `totals.PayableAmount` |
+| `address.City()` | `address.City` |
+| `using var id = credentials.RequestId(); id?.Value()` | `credentials.RequestId` |
+| `catch (BindingErrorException e) { using var inner = e.Inner; inner.Code(); }` | `catch (FfiException e) { e.Code; e.Kind; e.DetailsJson; }` |
+
 ### Deprecated
 
 Each of these still compiles with a deprecation warning, forwards to its
