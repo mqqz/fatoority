@@ -1347,7 +1347,7 @@ pub mod ffi {
             boundary(|| Ok(Box::new(InvoiceTotals(self.get()?.totals().clone()))))
         }
         pub fn hash_base64(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
-            boundary(|| write(self.get()?.hash_base64().map_err(core_error)?, out))
+            boundary(|| write(self.get()?.hash().map_err(core_error)?, out))
         }
         pub fn xml(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
             boundary(|| write(self.get()?.to_xml().map_err(core_error)?, out))
@@ -1381,7 +1381,7 @@ pub mod ffi {
             boundary(|| Ok(Box::new(InvoiceTotals(self.get()?.totals().clone()))))
         }
         pub fn hash_base64(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
-            boundary(|| write(self.get()?.hash_base64().map_err(core_error)?, out))
+            boundary(|| write(self.get()?.hash().map_err(core_error)?, out))
         }
         pub fn xml(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
             boundary(|| write(self.get()?.xml(), out))

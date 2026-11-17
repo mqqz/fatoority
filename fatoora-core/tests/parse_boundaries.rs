@@ -404,10 +404,7 @@ fn blank_required_scalars_report_their_own_field_and_leave_next_parse_usable() {
         ("cac:InvoiceLine[1]/cbc:LineExtensionAmount".to_owned(), "LineExtensionAmount"),
         ("cac:InvoiceLine[1]/cac:Price/cbc:PriceAmount".to_owned(), "PriceAmount"),
     ];
-    let expected = parse_finalized_invoice_xml(XML)
-        .unwrap()
-        .hash_base64()
-        .unwrap();
+    let expected = parse_finalized_invoice_xml(XML).unwrap().hash().unwrap();
     for (path, field) in paths {
         let xml = change(XML, &format!("{ROOT}/{path}"), " \t\n");
         let error = parse_finalized_invoice_xml(&xml).unwrap_err();
@@ -424,10 +421,7 @@ fn blank_required_scalars_report_their_own_field_and_leave_next_parse_usable() {
         );
     }
     assert_eq!(
-        parse_finalized_invoice_xml(XML)
-            .unwrap()
-            .hash_base64()
-            .unwrap(),
+        parse_finalized_invoice_xml(XML).unwrap().hash().unwrap(),
         expected
     );
 }

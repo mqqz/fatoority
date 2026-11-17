@@ -127,20 +127,31 @@ fn sign_xml_emits_signature_and_signing_time() {
 }
 
 #[test]
-fn invoice_hash_base64_decodes_to_32_bytes() {
+fn invoice_hash_decodes_to_32_bytes() {
     let invoice = common::dummy_finalized_invoice();
-    let hash_b64 = invoice.hash_base64().expect("hash");
-    let decoded = Base64::decode_vec(&hash_b64).expect("decode b64");
+    let hash = invoice.hash().expect("hash");
+    let decoded = Base64::decode_vec(hash.as_str()).expect("decode b64");
     assert_eq!(decoded.len(), 32);
 }
 
 #[test]
-fn signed_invoice_hash_base64_matches_finalized_invoice() {
+#[allow(deprecated)]
+fn deprecated_hash_base64_matches_hash() {
     let (signer, _key) = build_test_signer();
     let invoice = common::dummy_finalized_invoice();
-    let expected = invoice.hash_base64().expect("hash");
+    let expected = invoice.hash().expect("hash");
+    assert_eq!(invoice.hash_base64().expect("hash"), expected.as_str());
     let signed = invoice.sign(&signer).expect("sign invoice");
-    let actual = signed.hash_base64().expect("hash");
+    assert_eq!(signed.hash_base64().expect("hash"), expected.as_str());
+}
+
+#[test]
+fn signed_invoice_hash_matches_finalized_invoice() {
+    let (signer, _key) = build_test_signer();
+    let invoice = common::dummy_finalized_invoice();
+    let expected = invoice.hash().expect("hash");
+    let signed = invoice.sign(&signer).expect("sign invoice");
+    let actual = signed.hash().expect("hash");
     assert_eq!(expected, actual);
 }
 
@@ -291,8 +302,8 @@ fn signing_qr_overflow_preserves_error_details_and_signer_reusability() {
     let signed = signer.sign_xml(&xml).unwrap();
     let parsed = fatoora_core::invoice::xml::parse::parse_signed_invoice_xml(&signed).unwrap();
     assert_eq!(
-        parsed.hash_base64().unwrap(),
-        common::dummy_finalized_invoice().hash_base64().unwrap()
+        parsed.hash().unwrap(),
+        common::dummy_finalized_invoice().hash().unwrap()
     );
 }
 
@@ -824,19 +835,10 @@ fn signed_hash_uses_retained_xml_and_does_not_trust_embedded_digest() {
     let (signer, _) = build_test_signer();
     let finalized = common::dummy_finalized_invoice();
     let emitted = finalized.to_xml().unwrap();
-    assert_eq!(
-        finalized.hash_base64().unwrap(),
-        hash_xml(&emitted).unwrap().as_str()
-    );
+    assert_eq!(finalized.hash().unwrap(), hash_xml(&emitted).unwrap());
     let signed = finalized.sign(&signer).unwrap();
-    assert_eq!(
-        signed.hash_base64().unwrap(),
-        hash_xml(signed.xml()).unwrap().as_str()
-    );
-    assert_eq!(
-        signed.hash_base64().unwrap(),
-        signed.invoice_hash().as_str()
-    );
+    assert_eq!(signed.hash().unwrap(), hash_xml(signed.xml()).unwrap());
+    assert_eq!(&signed.hash().unwrap(), signed.invoice_hash());
 
     // A leading zero changes retained XML text without changing the numeric model.
     let changed = signed.xml().replacen("<cbc:Percent>", "<cbc:Percent>0", 1);
@@ -844,7 +846,7 @@ fn signed_hash_uses_retained_xml_and_does_not_trust_embedded_digest() {
     assert!(parse_signed_invoice_xml(&changed).is_err());
     let model = parse_finalized_invoice_xml(&changed).unwrap();
     let raw_hash = hash_xml(&changed).unwrap();
-    assert_ne!(model.hash_base64().unwrap(), raw_hash.as_str());
+    assert_ne!(model.hash().unwrap(), raw_hash);
     assert_ne!(&raw_hash, signed.invoice_hash());
 }
 

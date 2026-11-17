@@ -228,7 +228,7 @@ fn signed_getters_return_typed_values() {
         .unwrap();
     assert_eq!(signed.uuid(), &InvoiceUuid::parse(UUID).unwrap());
     let hash: &InvoiceHash = signed.invoice_hash();
-    assert_eq!(hash.as_str(), signed.hash_base64().unwrap());
+    assert_eq!(hash, &signed.hash().unwrap());
     assert_eq!(signed.signed_properties().invoice_hash(), hash);
 
     let signing_time: &InvoiceTimestamp = signed.signed_properties().signing_time();

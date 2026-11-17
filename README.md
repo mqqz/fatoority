@@ -370,7 +370,7 @@ use fatoora_core::invoice::xml::parse::parse_finalized_invoice_xml;
 
 let xml = std::fs::read_to_string("invoice.xml")?;
 let invoice = parse_finalized_invoice_xml(&xml)?;
-let hash = invoice.hash_base64()?;
+let hash = invoice.hash()?;
 ```
 
 CLI

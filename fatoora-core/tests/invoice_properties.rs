@@ -343,9 +343,6 @@ fn free_text_survives_xml_serialization_and_signing() {
         let parsed = parse_signed_invoice_xml(signed.xml()).unwrap();
         assert_eq!(parsed.data().notes().first().unwrap().text(), text);
         assert_eq!(parsed.data().line_items()[0].description(), text);
-        assert_eq!(
-            parsed.hash_base64().unwrap(),
-            signed.invoice_hash().as_str()
-        );
+        assert_eq!(&parsed.hash().unwrap(), signed.invoice_hash());
     }
 }
