@@ -24,7 +24,7 @@ The wheel bundles its native library, so no separate native upgrade is needed.
    (`TypeError: 'str' object is not callable`).
 2. Pass the arguments that 0.5.1 warned about by keyword: everything after
    `name` in `set_seller`/`set_buyer`, `language` in `add_note`, every
-   `CsrProperties.new` field, and `clearance_status`/`accept_language` in
+   `CsrProperties` field, and the clearance flag and `accept_language` in
    `report_simplified_invoice` and `clear_standard_invoice`. Positional use now
    raises `TypeError`.
 3. Expect `datetime`/`date` values where 0.5 returned text: `issue_datetime`,
@@ -159,9 +159,15 @@ becomes `Adjustment(v)`, `Adjustment.percentage(base, percent)` becomes
 ## Request credentials and report an invoice
 
 `ComplianceCsid` and `ProductionCsid` replace `CsidCompliance` and
-`CsidProduction`; `request_compliance_csid` and `request_production_csid`
-replace `post_csr_for_ccsid` and `post_ccsid_for_pcsid`. Everything is
-importable from the `fatoora` package root.
+`CsidProduction`, and are built with their constructors:
+`ProductionCsid(env, token=..., secret=..., request_id=None)` replaces
+`ProductionCsid.new(env, token, secret, request_id)` (the arguments after `env`
+are keyword-only, so their order no longer matters). `request_compliance_csid`
+and `request_production_csid` replace `post_csr_for_ccsid` and
+`post_ccsid_for_pcsid`. The `Clearance-Status` header is a `ClearanceMode`, as in
+the other languages: `clearance=ClearanceMode.DISABLED` replaces
+`clearance_status=False`. Everything is importable from the `fatoora` package
+root.
 
 === "0.5"
 
@@ -187,16 +193,17 @@ importable from the `fatoora` package root.
 
     ```python
     import os
-    from fatoora import Config, Environment, ProductionCsid, SignedInvoice, ZatcaClient
+    from fatoora import (ClearanceMode, Config, Environment, ProductionCsid, SignedInvoice,
+                         ZatcaClient)
 
     environment = Environment.NON_PRODUCTION
     token = os.environ["ZATCA_TOKEN"]
     secret = os.environ["ZATCA_SECRET"]
     with Config(environment) as config, ZatcaClient(config, timeout=30) as client:
-        with ProductionCsid.new(environment, token, secret) as credentials:
+        with ProductionCsid(environment, token=token, secret=secret) as credentials:
             with SignedInvoice.from_file("signed.xml") as invoice:
                 with client.report_simplified_invoice(
-                    invoice, credentials, clearance_status=False, accept_language="en"
+                    invoice, credentials, clearance=ClearanceMode.DISABLED, accept_language="en"
                 ) as response:
                     response.ensure_accepted()
                     print("Invoice reporting accepted:", response.reporting_status)
@@ -204,9 +211,11 @@ importable from the `fatoora` package root.
 
 `timeout` is new and optional: seconds (`int`/`float`) or a
 `datetime.timedelta` bounding each request. A request that exceeds it raises
-`NetworkError`; the default `None` applies no timeout. `clearance_status` stays
-a Boolean in Python, and response statuses stay strings.
-`ComplianceCsid.request_id` and `ProductionCsid.request_id` are `None` instead of
+`NetworkError`; the default `None` applies no timeout. `clearance_status=False`
+and `ProductionCsid.new(...)` keep working with a `DeprecationWarning`.
+`reporting_status` is a `ReportingStatus` (and `clearance_status` a
+`ClearanceStatus`): `str` enums, so comparing with `"REPORTED"` and printing
+still work. `ComplianceCsid.request_id` and `ProductionCsid.request_id` are `None` instead of
 `""` when absent.
 
 ## Validate and hash an invoice
@@ -286,6 +295,10 @@ and `from_file` (and the same on `FinalizedInvoice`) replace the
         }
     ```
 
+Validation statuses and message types are `str` enums too
+(`ValidationStatus.PASS`, `MessageType.WARNING`). A status this version does not
+recognize keeps the exact text ZATCA sent, in a value whose `name` is `"OTHER"`.
+
 ## Other renames
 
 These keep working with a `DeprecationWarning` until 0.7:
@@ -293,6 +306,9 @@ These keep working with a `DeprecationWarning` until 0.7:
 | 0.5 | 0.6 |
 | --- | --- |
 | `Signer` | `InvoiceSigner` |
+| `CsrProperties.new(*, ...)` | `CsrProperties(*, ...)` |
+| `ComplianceCsid.new(env, token, secret, request_id)`, `ProductionCsid.new(...)` | `ComplianceCsid(env, token=..., secret=..., request_id=...)`, `ProductionCsid(...)` |
+| `clearance_status=False` / `True` | `clearance=ClearanceMode.DISABLED` / `ClearanceMode.ENABLED` |
 | `CsrProperties.from_properties_str(text)`, `parse_csr_config(text)` | `CsrProperties.from_str(text)` |
 | `CsrProperties.parse_csr_config_file(path)` | `CsrProperties.from_file(path)` |
 | `InvoiceBuilder.new_with_reference(type, subtype, ref, reason)` | `InvoiceBuilder(type, subtype, original_invoice=ref, original_invoice_reason=reason)` |

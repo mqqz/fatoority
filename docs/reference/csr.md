@@ -138,14 +138,15 @@ Constructors that take individual fields use the order in the property table abo
     **Properties**
 
     ```python
-    CsrProperties.new(
+    CsrProperties(
         *, common_name: str, serial_number: str, organization_identifier: str,
         organization_unit_name: str, organization_name: str, country_name: str,
         invoice_type: str, location_address: str, industry_business_category: str,
     ) -> CsrProperties
     ```
 
-    Every field is keyword-only.
+    Every field is keyword-only. The 0.5 `CsrProperties.new(*, ...)` still works
+    until 0.7, with a `DeprecationWarning`.
 
     | Call | Returns |
     | --- | --- |

@@ -130,5 +130,5 @@ def test_request_id_is_none_when_absent():
     from fatoora import ComplianceCsid, ProductionCsid, Environment
 
     for cls in (ComplianceCsid, ProductionCsid):
-        assert cls.new(Environment.SIMULATION, "token", "secret").request_id is None
-        assert cls.new(Environment.SIMULATION, "token", "secret", request_id="42").request_id == "42"
+        assert cls(Environment.SIMULATION, token="token", secret="secret").request_id is None
+        assert cls(Environment.SIMULATION, token="token", secret="secret", request_id="42").request_id == "42"

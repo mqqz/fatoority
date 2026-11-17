@@ -503,6 +503,32 @@ working until 0.7 and emits a `DeprecationWarning` naming its replacement (see [
 - `ZatcaClient(config, *, timeout=None)`: `timeout` is seconds (`int`/`float`)
   or a `datetime.timedelta` bounding each request; exceeding it raises
   `NetworkError`. There is no async client in 0.6.
+- `ClearanceMode` (`DISABLED`, `ENABLED`) sets the `Clearance-Status` header, as
+  in the other languages: `report_simplified_invoice` and
+  `clear_standard_invoice` take a required keyword-only
+  `clearance=ClearanceMode...`. The 0.5 `clearance_status=False`/`True` is
+  deprecated and still works; passing both raises `TypeError`.
+- Response statuses are `str` enums instead of plain strings:
+  `reporting_status` is a `ReportingStatus` (`REPORTED`, `NOT_REPORTED`),
+  `clearance_status` a `ClearanceStatus` (`CLEARED`, `NOT_CLEARED`),
+  `ValidationResults.status` and `ValidationMessage.status` a `ValidationStatus`
+  (`PASS`, `WARNING`, `ERROR`) and `ValidationMessage.message_type` a
+  `MessageType` (`INFO`, `WARNING`, `ERROR`). Their values are the wire text,
+  so `== "REPORTED"`, `str()`, f-strings and `json.dumps` behave as before. A
+  value this version does not recognize is kept verbatim, like the core's
+  `Other(String)`: an instance of the enum named `OTHER` whose `value` is the
+  text ZATCA sent. `qr_seller_status`/`qr_buyer_status` stay strings, as in the
+  core.
+- Every type you create directly has a constructor: `CsrProperties(*, ...)`,
+  `ComplianceCsid(env, *, token, secret, request_id=None)` and
+  `ProductionCsid(...)` join `Config`, `ZatcaClient`, the builders and the
+  invoice dataclasses. Deprecated: `CsrProperties.new(*, ...)` and
+  `ComplianceCsid.new`/`ProductionCsid.new`, which keep their 0.5 positional
+  order `(env, token, secret, request_id=None)`; the keyword-only constructor
+  arguments remove the mismatch with the core's `(env, request_id, token,
+  secret)` order. Types obtained from data or another call
+  (`InvoiceSigner`, `SigningKey`, `Csr`, invoices and responses) keep named
+  factories, and calling the class raises a `TypeError` that names them.
 
 - The deprecated 0.5 names (`Signer`, `CsidCompliance`, `post_csr_for_ccsid`,
   `hash_base64`, `set_payment_means_code`, the aggregate adjustment setters and

@@ -30,6 +30,75 @@ class InvoiceOutcome(IntEnum):
     ACCEPTED = 1
     REJECTED = 2
 
+class ClearanceMode(IntEnum):
+    """The ``Clearance-Status`` request header sent when reporting or clearing an invoice.
+
+    ``DISABLED`` sends ``0`` and ``ENABLED`` sends ``1``. It configures the
+    request; it does not describe the result.
+    """
+    DISABLED = 0
+    ENABLED = 1
+
+
+class _WireStatus(str, Enum):
+    """A ZATCA response status; the value is the text ZATCA sent.
+
+    Members are ``str`` subclasses, so ``status == "REPORTED"``, ``str(status)``,
+    f-strings and ``json.dumps`` behave as they did for the 0.5 plain strings.
+    A value this version does not recognise is preserved verbatim, like the
+    core's ``Other(String)`` variant: it comes back as a member named
+    ``"OTHER"`` whose ``value`` (and string form) is the text ZATCA sent.
+    """
+
+    def __str__(self) -> str:
+        return str.__str__(self)
+
+    def __format__(self, spec: str) -> str:
+        return str.__format__(self, spec)
+
+    def __hash__(self) -> int:
+        return str.__hash__(self)
+
+    @classmethod
+    def _missing_(cls, value):
+        if not isinstance(value, str):
+            return None
+        member = str.__new__(cls, value)
+        member._name_ = "OTHER"
+        member._value_ = value
+        return member
+
+
+class ReportingStatus(_WireStatus):
+    """``reportingStatus`` of a reporting response."""
+    REPORTED = "REPORTED"
+    NOT_REPORTED = "NOT_REPORTED"
+
+
+class ClearanceStatus(_WireStatus):
+    """``clearanceStatus`` of a clearance response."""
+    CLEARED = "CLEARED"
+    NOT_CLEARED = "NOT_CLEARED"
+
+
+class ValidationStatus(_WireStatus):
+    """Overall ``validationResults.status``, or the ``status`` of one validation message."""
+    PASS = "PASS"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+
+
+class MessageType(_WireStatus):
+    """The ``type`` of a validation message."""
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+
+
+def _wire_status(cls, text: Optional[str]):
+    return None if text is None else cls(text)
+
+
 class InvoiceTypeKind(IntEnum):
     TAX = 0
     PREPAYMENT = 1
@@ -110,7 +179,14 @@ class _Owned:
     _repr_fields: tuple[str, ...] = ()
     _repr_redacted: tuple[str, ...] = ()
 
-    def __init__(self, handle):
+    # How to obtain an instance of a type without a public constructor.
+    _factories: str = ""
+
+    def __init__(self, *args, **kwargs):
+        name = type(self).__name__
+        raise TypeError(f"{name} has no public constructor; use {self._factories or 'the methods that return it'}")
+
+    def _attach(self, handle) -> None:
         self._handle = handle
         self._lock = RLock()
 
@@ -118,7 +194,7 @@ class _Owned:
     def _wrap(cls, handle):
         """Wrap a native handle without running a public ``__init__``."""
         obj = cls.__new__(cls)
-        _Owned.__init__(obj, handle)
+        _Owned._attach(obj, handle)
         return obj
 
     def close(self):
@@ -217,8 +293,9 @@ _CHARGE = 1  # _native.AdjustmentKind.Charge
 
 
 def _flag(value: bool, name: str) -> int:
-    # Booleans map onto two-variant native enums (AdjustmentKind, ClearanceMode)
-    # whose discriminant 1 is the "true" case.
+    # Booleans map onto two-variant native enums (AdjustmentKind, and
+    # ClearanceMode for the deprecated ``clearance_status``) whose
+    # discriminant 1 is the "true" case.
     if not isinstance(value, bool):
         raise TypeError(f"{name} must be a bool")
     return int(value)
@@ -324,7 +401,7 @@ class Config(_Owned):
     _repr_fields = ('env',)
 
     def __init__(self, env: Environment = Environment.NON_PRODUCTION):
-        super().__init__(_call(_native.Config.new, int(env)))
+        self._attach(_call(_native.Config.new, int(env)))
 
     @property
     def env(self) -> Environment:
@@ -332,6 +409,7 @@ class Config(_Owned):
 
 class InvoiceSigner(_Owned):
     """Signs invoices with a certificate and its private key."""
+    _factories = "InvoiceSigner.from_pem(cert_pem, key_pem) or InvoiceSigner.from_der(cert_der, key_der)"
 
     def sign_xml(self, xml: str) -> str:
         return self._invoke("sign_xml", xml)
@@ -353,6 +431,8 @@ class InvoiceSigner(_Owned):
         return self._invoke("certificate_pem")
 
 class SigningKey(_Owned):
+    _factories = "SigningKey.generate(), SigningKey.from_pem(pem) or SigningKey.from_der(der)"
+
     @classmethod
     def from_pem(cls, pem: str) -> 'SigningKey':
         return cls._wrap(_call(_native.SigningKey.from_pem, pem))
@@ -372,9 +452,23 @@ class SigningKey(_Owned):
         return self._invoke("to_der")
 
 class CsrProperties(_Owned):
+    """The subject and extension fields of a ZATCA CSR (all keyword-only)."""
+
+    def __init__(self, *, common_name: str, serial_number: str, organization_identifier: str,
+                 organization_unit_name: str, organization_name: str, country_name: str,
+                 invoice_type: str, location_address: str, industry_business_category: str) -> None:
+        self._attach(_call(_native.CsrProperties.new, common_name, serial_number, organization_identifier,
+                           organization_unit_name, organization_name, country_name, invoice_type,
+                           location_address, industry_business_category))
+
     @classmethod
+    @deprecated("CsrProperties(common_name=..., ...)")
     def new(cls, *, common_name: str, serial_number: str, organization_identifier: str, organization_unit_name: str, organization_name: str, country_name: str, invoice_type: str, location_address: str, industry_business_category: str) -> 'CsrProperties':
-        return cls._wrap(_call(_native.CsrProperties.new, common_name, serial_number, organization_identifier, organization_unit_name, organization_name, country_name, invoice_type, location_address, industry_business_category))
+        return cls(common_name=common_name, serial_number=serial_number,
+                   organization_identifier=organization_identifier,
+                   organization_unit_name=organization_unit_name, organization_name=organization_name,
+                   country_name=country_name, invoice_type=invoice_type, location_address=location_address,
+                   industry_business_category=industry_business_category)
 
     @classmethod
     def from_str(cls, properties: str) -> 'CsrProperties':
@@ -406,6 +500,7 @@ class CsrProperties(_Owned):
 
 class Csr(_Owned):
     _repr_fields = ('subject_string',)
+    _factories = "CsrProperties.build(key, env) or Csr.from_der(der)"
 
     @classmethod
     def from_der(cls, der: bytes) -> 'Csr':
@@ -436,9 +531,10 @@ class _Csid(_Owned):
     _repr_redacted = ('binary_security_token', 'secret')
     _native_type: Any = None
 
-    @classmethod
-    def new(cls, env: Environment, token: str, secret: str, request_id: Optional[str]=None):
-        return cls._wrap(_call(cls._native_type.create, int(env), request_id, token, secret))
+    def __init__(self, env: Environment, *, token: str, secret: str, request_id: Optional[str] = None) -> None:
+        """Credentials from stored values: the ``binary_security_token`` and ``secret``
+        ZATCA issued, and its optional request ID."""
+        self._attach(_call(self._native_type.create, int(env), request_id, token, secret))
 
     @property
     def request_id(self) -> Optional[str]:
@@ -462,23 +558,26 @@ class ComplianceCsid(_Csid):
     _native_type = _native.ComplianceCsid
 
     @classmethod
+    @deprecated("ComplianceCsid(env, token=..., secret=..., request_id=...)")
     def new(cls, env: Environment, token: str, secret: str, request_id: Optional[str]=None) -> 'ComplianceCsid':
-        return super().new(env, token, secret, request_id)
+        return cls(env, token=token, secret=secret, request_id=request_id)
 
 class ProductionCsid(_Csid):
     """Production CSID credentials, returned by ``ZatcaClient.request_production_csid``."""
     _native_type = _native.ProductionCsid
 
     @classmethod
+    @deprecated("ProductionCsid(env, token=..., secret=..., request_id=...)")
     def new(cls, env: Environment, token: str, secret: str, request_id: Optional[str]=None) -> 'ProductionCsid':
-        return super().new(env, token, secret, request_id)
+        return cls(env, token=token, secret=secret, request_id=request_id)
 
 class ValidationMessage(_Owned):
     _repr_fields = ('message_type', 'code', 'status')
+    _factories = "ValidationResults.info_messages, warning_messages or error_messages"
 
     @property
-    def message_type(self) -> Optional[str]:
-        return self._invoke("message_type_raw")
+    def message_type(self) -> Optional[MessageType]:
+        return _wire_status(MessageType, self._invoke("message_type_raw"))
 
     @property
     def code(self) -> Optional[str]:
@@ -493,15 +592,16 @@ class ValidationMessage(_Owned):
         return self._invoke("message")
 
     @property
-    def status(self) -> Optional[str]:
-        return self._invoke("status_raw")
+    def status(self) -> Optional[ValidationStatus]:
+        return _wire_status(ValidationStatus, self._invoke("status_raw"))
 
 class ValidationResults(_Owned):
     _repr_fields = ('status',)
+    _factories = "ValidationResponse.validation_results"
 
     @property
-    def status(self) -> Optional[str]:
-        return self._invoke("status_raw")
+    def status(self) -> Optional[ValidationStatus]:
+        return _wire_status(ValidationStatus, self._invoke("status_raw"))
 
     @property
     def info_messages(self) -> list[ValidationMessage]:
@@ -517,6 +617,7 @@ class ValidationResults(_Owned):
 
 class ValidationResponse(_Owned):
     _repr_fields = ('http_status', 'outcome')
+    _factories = "the ZatcaClient methods that return it"
 
     @property
     def http_status(self) -> Optional[int]:
@@ -538,12 +639,12 @@ class ValidationResponse(_Owned):
         return self._invoke("cleared_invoice_xml")
 
     @property
-    def reporting_status(self) -> Optional[str]:
-        return self._invoke("reporting_status_raw")
+    def reporting_status(self) -> Optional[ReportingStatus]:
+        return _wire_status(ReportingStatus, self._invoke("reporting_status_raw"))
 
     @property
-    def clearance_status(self) -> Optional[str]:
-        return self._invoke("clearance_status_raw")
+    def clearance_status(self) -> Optional[ClearanceStatus]:
+        return _wire_status(ClearanceStatus, self._invoke("clearance_status_raw"))
 
     @property
     def qr_seller_status(self) -> Optional[str]:
@@ -1048,7 +1149,7 @@ class ZatcaClient(_Owned):
             handle = _call(_native.ZatcaClient.create, config)
         else:
             handle = _call(_native.ZatcaClient.create_with_timeout, config, _timeout_ms(timeout))
-        super().__init__(handle)
+        self._attach(handle)
 
     def request_compliance_csid(self, csr: Csr, otp: str) -> ComplianceCsid:
         """Exchange a CSR and OTP for compliance CSID credentials."""
@@ -1072,11 +1173,37 @@ class ZatcaClient(_Owned):
     def check_invoice_compliance(self, invoice: 'SignedInvoice', ccsid: ComplianceCsid) -> 'ValidationResponse':
         return ValidationResponse._wrap(self._invoke("_blocking_check_invoice_compliance", invoice, ccsid))
 
-    def report_simplified_invoice(self, invoice: 'SignedInvoice', pcsid: ProductionCsid, *, clearance_status: bool, accept_language: Optional[str]=None) -> 'ValidationResponse':
-        return ValidationResponse._wrap(self._invoke("_blocking_report_simplified_invoice", invoice, pcsid, _flag(clearance_status, "clearance_status"), accept_language))
+    def report_simplified_invoice(self, invoice: 'SignedInvoice', pcsid: ProductionCsid, *,
+                                  clearance: Optional[ClearanceMode] = None, accept_language: Optional[str] = None,
+                                  clearance_status: Optional[bool] = None) -> 'ValidationResponse':
+        """Report a simplified invoice. ``clearance`` (required) sets the ``Clearance-Status``
+        header; ``clearance_status=bool`` is the deprecated 0.5 form."""
+        mode = _clearance_mode("report_simplified_invoice", clearance, clearance_status)
+        return ValidationResponse._wrap(self._invoke("_blocking_report_simplified_invoice", invoice, pcsid, mode, accept_language))
 
-    def clear_standard_invoice(self, invoice: 'SignedInvoice', pcsid: ProductionCsid, *, clearance_status: bool, accept_language: Optional[str]=None) -> 'ValidationResponse':
-        return ValidationResponse._wrap(self._invoke("_blocking_clear_standard_invoice", invoice, pcsid, _flag(clearance_status, "clearance_status"), accept_language))
+    def clear_standard_invoice(self, invoice: 'SignedInvoice', pcsid: ProductionCsid, *,
+                               clearance: Optional[ClearanceMode] = None, accept_language: Optional[str] = None,
+                               clearance_status: Optional[bool] = None) -> 'ValidationResponse':
+        """Clear a standard invoice. ``clearance`` (required) sets the ``Clearance-Status``
+        header; ``clearance_status=bool`` is the deprecated 0.5 form."""
+        mode = _clearance_mode("clear_standard_invoice", clearance, clearance_status)
+        return ValidationResponse._wrap(self._invoke("_blocking_clear_standard_invoice", invoice, pcsid, mode, accept_language))
+
+
+def _clearance_mode(method: str, clearance: Optional[ClearanceMode], clearance_status: Optional[bool]) -> int:
+    """The native ``ClearanceMode`` discriminant for ``clearance=`` or the deprecated ``clearance_status=``."""
+    if clearance_status is not None:
+        if clearance is not None:
+            raise TypeError(f"{method}(): pass clearance=ClearanceMode..., not both clearance and clearance_status")
+        value = _flag(clearance_status, "clearance_status")
+        warn(f"{method}(clearance_status={clearance_status}) is deprecated; use "
+             f"clearance=ClearanceMode.{ClearanceMode(value).name} instead", 3)
+        return value
+    if clearance is None:
+        raise TypeError(f"{method}() missing required keyword argument: 'clearance'")
+    if isinstance(clearance, bool) or not isinstance(clearance, int):
+        raise TypeError("clearance must be a ClearanceMode")
+    return int(ClearanceMode(clearance))
 
 class _Invoice(_Owned):
     _repr_fields = ('id', 'uuid')
@@ -1379,6 +1506,7 @@ class _Invoice(_Owned):
 
 class FinalizedInvoice(_Invoice):
     _native_type = _native.FinalizedInvoice
+    _factories = "InvoiceBuilder.build(), FinalizedInvoice.from_xml(xml) or FinalizedInvoice.from_file(path)"
 
     @classmethod
     def from_xml(cls, xml: str) -> 'FinalizedInvoice':
@@ -1400,6 +1528,7 @@ class FinalizedInvoice(_Invoice):
 
 class SignedInvoice(_Invoice):
     _native_type = _native.SignedInvoice
+    _factories = "FinalizedInvoice.sign(signer), SignedInvoice.from_xml(xml) or SignedInvoice.from_file(path)"
 
     @classmethod
     def from_xml(cls, xml: str) -> 'SignedInvoice':
@@ -1468,7 +1597,7 @@ class LineItemBuilder(_Owned):
     """Builds one line item for ``InvoiceBuilder.add_item``-style use; setters chain."""
 
     def __init__(self) -> None:
-        super().__init__(_call(_native.LineItemBuilder.new))
+        self._attach(_call(_native.LineItemBuilder.new))
 
     @classmethod
     @deprecated("LineItemBuilder()")
@@ -1640,7 +1769,7 @@ class InvoiceBuilder(_Owned):
         else:
             handle = _call(_native.InvoiceBuilder.new, int(invoice_type), int(invoice_subtype),
                            None, None, None, original_invoice_reason)
-        super().__init__(handle)
+        self._attach(handle)
         self._init_state()
         for name, value in (("set_id", id), ("set_uuid", uuid), ("set_issue_datetime", issue_datetime),
                             ("set_currency", currency), ("set_previous_invoice_hash", previous_invoice_hash),

@@ -45,6 +45,7 @@ Configuration, CSR generation, and credentials must agree on the environment.
 | Date input / output | `datetime.date` or `"YYYY-MM-DD"` / `datetime.date` |
 | UUID input / output | `uuid.UUID` or `str` / `str` (core keeps the UUID text verbatim) |
 | Local ZATCA report | frozen `ZatcaReport` dataclass |
+| ZATCA response status | `str` enum (`ReportingStatus`, `ClearanceStatus`, `ValidationStatus`, `MessageType`) or `None` |
 | Invoice data (parties, addresses, notes, references, payment means, adjustments, line items, totals) | frozen dataclasses: `Party`, `Address`, `Identifier`, `InvoiceNote`, `OriginalInvoiceRef`, `PaymentMeans`, `Adjustment`, `InvoiceLineItem`, `InvoiceTotals`, `VatBreakdown`, `TaxExemption` |
 
 Use exact decimal text such as `"0.3333"`, rather than constructing a `Decimal`
@@ -60,6 +61,23 @@ Public choices use `IntEnum` members. Prefer their names to raw integers:
 | `VatCategory` | `EXEMPT`, `STANDARD`, `ZERO`, `OUT_OF_SCOPE` |
 | `InvoiceFlag` | `THIRD_PARTY`, `NOMINAL`, `EXPORT`, `SUMMARY`, `SELF_BILLED` |
 | `InvoiceOutcome` | `UNKNOWN`, `ACCEPTED`, `REJECTED` |
+| `ClearanceMode` | `DISABLED`, `ENABLED` |
+
+Statuses read from a ZATCA response are `str` enums whose values are the wire
+text, so `response.reporting_status == "REPORTED"`, `str()`, f-strings and
+`json.dumps` give the text ZATCA sent:
+
+| Enum | Members |
+| --- | --- |
+| `ReportingStatus` | `REPORTED`, `NOT_REPORTED` |
+| `ClearanceStatus` | `CLEARED`, `NOT_CLEARED` |
+| `ValidationStatus` | `PASS`, `WARNING`, `ERROR` |
+| `MessageType` | `INFO`, `WARNING`, `ERROR` |
+
+A status this version does not recognize is kept verbatim, as the core's
+`Other(String)` variant keeps it: it is still an instance of the enum, its
+`name` is `"OTHER"` and its `value` is the text ZATCA sent. Test
+`status.name == "OTHER"` to detect one.
 
 Country/currency values are strings; their constructors validate and normalize
 supported values. See the [invoice model](../invoice-model.md).
@@ -95,9 +113,20 @@ invoice = (
 )
 ```
 
+Every type you create directly has a constructor: `Config(env)`,
+`ZatcaClient(config)`, `CsrProperties(*, ...)`,
+`ComplianceCsid(env, *, token, secret, request_id=None)`,
+`ProductionCsid(...)`, `InvoiceBuilder(...)`, `LineItemBuilder()` and the
+invoice dataclasses. Types you obtain from data or from another call use named
+factories (`InvoiceSigner.from_pem`, `SigningKey.generate`, `Csr.from_der`,
+`SignedInvoice.from_xml`, ...); calling such a class raises `TypeError` naming
+them. The 0.5 `.new(...)` classmethods still work until 0.7, with a
+`DeprecationWarning`.
+
 Arguments after the first are keyword-only for `set_seller`, `set_buyer`,
-`add_note(text, *, language=None)`, `CsrProperties.new(*, ...)`, and the
-`clearance_status`/`accept_language` arguments of the report and clear methods.
+`add_note(text, *, language=None)`, `CsrProperties(*, ...)`, the credentials
+after `env`, and the `clearance`/`accept_language` arguments of the report and
+clear methods.
 `set_seller` and `set_buyer` take a `Party`, or a name with either
 `address=Address(...)` or the address fields, not both. Parse invoices with `FinalizedInvoice.from_xml(xml)` /
 `from_file(path)` and `SignedInvoice.from_xml(xml)` / `from_file(path)`.
@@ -256,20 +285,22 @@ client = ZatcaClient(Config(Environment.SIMULATION), timeout=timedelta(seconds=3
 | `request_production_csid(ccsid)` | `ComplianceCsid` | `ProductionCsid` |
 | `renew_csid(pcsid, csr, otp, accept_language=None)` | `ProductionCsid`, `Csr`, OTP, optional language | `ProductionCsid` |
 | `check_invoice_compliance(invoice, ccsid)` | `SignedInvoice`, `ComplianceCsid` | `ValidationResponse` |
-| `report_simplified_invoice(invoice, pcsid, *, clearance_status, accept_language=None)` | `SignedInvoice`, `ProductionCsid`, keyword-only Boolean and optional language | `ValidationResponse` |
-| `clear_standard_invoice(invoice, pcsid, *, clearance_status, accept_language=None)` | `SignedInvoice`, `ProductionCsid`, keyword-only Boolean and optional language | `ValidationResponse` |
+| `report_simplified_invoice(invoice, pcsid, *, clearance, accept_language=None)` | `SignedInvoice`, `ProductionCsid`, keyword-only `ClearanceMode` and optional language | `ValidationResponse` |
+| `clear_standard_invoice(invoice, pcsid, *, clearance, accept_language=None)` | `SignedInvoice`, `ProductionCsid`, keyword-only `ClearanceMode` and optional language | `ValidationResponse` |
 
-`clearance_status` is a required Boolean controlling the request header; use
-`False` for ordinary reporting and `True` for clearance. It does not describe the
-result. `accept_language` is a string or `None` controlling the language header.
+`clearance` is a required `ClearanceMode` controlling the `Clearance-Status`
+request header: `ClearanceMode.DISABLED` sends `0`, `ClearanceMode.ENABLED`
+sends `1`. It does not describe the result. The 0.5 Boolean
+`clearance_status=False`/`True` still works until 0.7 with a
+`DeprecationWarning`; passing both raises `TypeError`. `accept_language` is a string or `None` controlling the language header.
 These methods do not expose an asynchronous or cancellation-token parameter;
 use `timeout` to bound how long a call can block.
 
 A successful HTTP request does not guarantee acceptance. Read `outcome` for the
 `InvoiceOutcome`, or call `ensure_accepted()` to raise for rejected/unknown
 outcomes. `cleared_invoice_xml` is `str | None`; save that XML for an accepted
-clearance when present. `reporting_status` and `clearance_status` are also
-optional strings. See [API request and response contracts](../api-client.md)
+clearance when present. `reporting_status` is an optional `ReportingStatus` and
+`clearance_status` an optional `ClearanceStatus`. See [API request and response contracts](../api-client.md)
 and the [API guide](../../guides/api.md).
 
 ## Signed invoice metadata
@@ -326,13 +357,16 @@ replacement; they are removed in 0.7. Run your tests with
 | `VatId`, `OtherId`, `item.item_seller_identifier` as a `(value, scheme)` tuple | `Identifier(value, scheme)`; unpacking or indexing an `Identifier` warns |
 | `party.identifiers`, `payment_means.instruction_notes` return lists (hard break) | Tuples |
 | `LineItemBuilder.new()` | `LineItemBuilder()` |
-| `CsrProperties.new(...)` positional (enforced) | `CsrProperties.new(*, ...)` |
+| `CsrProperties.new(...)` positional (enforced) | `CsrProperties(*, ...)`; `CsrProperties.new(*, ...)` is deprecated |
+| `ComplianceCsid.new(env, token, secret, request_id=None)` / `ProductionCsid.new(...)` | `ComplianceCsid(env, *, token=..., secret=..., request_id=None)` / `ProductionCsid(...)` |
 | `CsrProperties.from_properties_str(text)` / `parse_csr_config(text)` | `CsrProperties.from_str(text)` |
 | `CsrProperties.parse_csr_config_file(path)` | `CsrProperties.from_file(path)` |
 | `Signer` | `InvoiceSigner` |
 | `CsidCompliance` / `CsidProduction` | `ComplianceCsid` / `ProductionCsid` |
 | `client.post_csr_for_ccsid(csr, otp)` / `post_ccsid_for_pcsid(ccsid)` | `client.request_compliance_csid(csr, otp)` / `request_production_csid(ccsid)` |
-| `report_simplified_invoice(invoice, pcsid, False)` positional flags (enforced) | `report_simplified_invoice(invoice, pcsid, clearance_status=False)` |
+| `report_simplified_invoice(invoice, pcsid, False)` positional flags (enforced) | `report_simplified_invoice(invoice, pcsid, clearance=ClearanceMode.DISABLED)` |
+| `clearance_status=False` / `True` on `report_simplified_invoice` and `clear_standard_invoice` | `clearance=ClearanceMode.DISABLED` / `ClearanceMode.ENABLED` |
+| `reporting_status`, `clearance_status`, `results.status`, `message.message_type`, `message.status` return `str` (no warning; `type(x) is str` no longer holds) | `str` enums `ReportingStatus`, `ClearanceStatus`, `ValidationStatus`, `MessageType`; comparisons with strings still hold |
 | `parse_finalized_invoice_xml(xml)` / `parse_finalized_invoice_xml_file(path)` | `FinalizedInvoice.from_xml(xml)` / `FinalizedInvoice.from_file(path)` |
 | `parse_signed_invoice_xml(xml)` / `parse_signed_invoice_xml_file(path)` | `SignedInvoice.from_xml(xml)` / `SignedInvoice.from_file(path)` |
 | `invoice.xml()` (hard break), `to_xml()`, `into_xml()` | `invoice.xml` |

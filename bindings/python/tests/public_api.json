@@ -77,7 +77,22 @@
     ]
   },
   "ApiError": {},
+  "ClearanceMode": {
+    "DISABLED": "member",
+    "ENABLED": "member"
+  },
+  "ClearanceStatus": {
+    "CLEARED": "member",
+    "NOT_CLEARED": "member"
+  },
   "ComplianceCsid": {
+    "__init__": [
+      "env",
+      "*",
+      "token",
+      "secret",
+      "request_id"
+    ],
     "binary_security_token": "property",
     "close": [],
     "env": "property",
@@ -111,6 +126,18 @@
     "to_pem_base64": []
   },
   "CsrProperties": {
+    "__init__": [
+      "*",
+      "common_name",
+      "serial_number",
+      "organization_identifier",
+      "organization_unit_name",
+      "organization_name",
+      "country_name",
+      "invoice_type",
+      "location_address",
+      "industry_business_category"
+    ],
     "build": [
       "key",
       "env"
@@ -645,6 +672,11 @@
       "value"
     ]
   },
+  "MessageType": {
+    "INFO": "member",
+    "WARNING": "member",
+    "ERROR": "member"
+  },
   "NetworkError": {},
   "OriginalInvoiceRef": {
     "__init__": [
@@ -710,6 +742,13 @@
     ]
   },
   "ProductionCsid": {
+    "__init__": [
+      "env",
+      "*",
+      "token",
+      "secret",
+      "request_id"
+    ],
     "binary_security_token": "property",
     "close": [],
     "env": "property",
@@ -721,6 +760,10 @@
     ],
     "request_id": "property",
     "secret": "property"
+  },
+  "ReportingStatus": {
+    "REPORTED": "member",
+    "NOT_REPORTED": "member"
   },
   "Severity": {
     "WARNING": "member",
@@ -874,6 +917,11 @@
     "status": "property",
     "warning_messages": "property"
   },
+  "ValidationStatus": {
+    "PASS": "member",
+    "WARNING": "member",
+    "ERROR": "member"
+  },
   "VatBreakdown": {
     "__init__": [
       "category",
@@ -911,8 +959,9 @@
       "invoice",
       "pcsid",
       "*",
-      "clearance_status",
-      "accept_language"
+      "clearance",
+      "accept_language",
+      "clearance_status"
     ],
     "close": [],
     "post_ccsid_for_pcsid": [
@@ -932,8 +981,9 @@
       "invoice",
       "pcsid",
       "*",
-      "clearance_status",
-      "accept_language"
+      "clearance",
+      "accept_language",
+      "clearance_status"
     ],
     "request_compliance_csid": [
       "csr",
@@ -1073,9 +1123,11 @@
     "Adjustment.value",
     "Adjustment.with_supplied_amount",
     "AllowanceCharge",
+    "ComplianceCsid.new",
     "CsidCompliance",
     "CsidProduction",
     "CsrProperties.from_properties_str",
+    "CsrProperties.new",
     "CsrProperties.parse_csr_config",
     "CsrProperties.parse_csr_config_file",
     "DocumentReference",
@@ -1102,6 +1154,7 @@
     "Party.close",
     "PaymentMeans.close",
     "PaymentMeans.new",
+    "ProductionCsid.new",
     "SignedInvoice.hash_base64",
     "SignedInvoice.into_xml",
     "SignedInvoice.to_xml",
