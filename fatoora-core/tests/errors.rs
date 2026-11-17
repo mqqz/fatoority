@@ -90,7 +90,7 @@ fn csr_backend_sources_are_owned_diagnostics() {
     assert!(!diagnostic.message().is_empty());
     assert!(diagnostic.source().is_none());
 
-    let error = CsrProperties::from_properties_str("name=\\uZZZZ").unwrap_err();
+    let error = "name=\\uZZZZ".parse::<CsrProperties>().unwrap_err();
     let CsrError::PropertiesRead { source, .. } = error else {
         panic!("expected properties parse failure");
     };

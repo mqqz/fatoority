@@ -221,14 +221,14 @@ pub(crate) mod lexical;
 pub(crate) mod nav;
 pub mod parse;
 
-struct InvoiceTotals<'a> {
+struct InvoiceTotalsXml<'a> {
     currency: &'a str,
     vat_percent: Decimal,
     vat_category: &'a VatCategory,
-    totals: &'a super::InvoiceTotalsData,
+    totals: &'a super::InvoiceTotals,
 }
 
-impl<'a> InvoiceTotals<'a> {
+impl<'a> InvoiceTotalsXml<'a> {
     fn new<T: InvoiceView + ?Sized>(inv: &'a T) -> Self {
         let data = inv.data();
         let vat_percent = data.adjustment_vat_rate.unwrap_or_else(|| {
@@ -776,7 +776,7 @@ fn tax_subtotal<'a>(data: TaxSubtotalData<'a>) -> impl Serialize + 'a {
 
 fn legal_monetary_total<'a>(
     currency: &'a str,
-    totals: &'a super::InvoiceTotalsData,
+    totals: &'a super::InvoiceTotals,
 ) -> impl Serialize + 'a {
     struct LegalMonetaryTotalSer<'a> {
         currency: &'a str,
@@ -1337,7 +1337,7 @@ impl<'a, T: InvoiceView + ?Sized> Serialize for InvoiceXml<'a, T> {
     {
         let view = self.0;
         let data = view.data();
-        let totals = InvoiceTotals::new(view);
+        let totals = InvoiceTotalsXml::new(view);
         let currency_code = totals.currency();
 
         let mut root = serializer.serialize_struct("Invoice", 0)?;

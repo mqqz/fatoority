@@ -1,5 +1,5 @@
 use base64ct::{Base64, Encoding};
-use fatoora_core::config::EnvironmentType;
+use fatoora_core::config::Environment;
 use fatoora_core::csr::{CsrError, CsrProperties, SigningKey};
 use std::path::Path;
 use std::str::FromStr;
@@ -16,15 +16,15 @@ fn csr_templates_remain_noncritical_and_signatures_verify_in_all_environments() 
         request::CertReq,
     };
 
-    let properties = CsrProperties::from_properties_str(include_str!(
+    let properties = CsrProperties::from_str(include_str!(
         "fixtures/csr-configs/csr-config-example-EN.properties"
     ))
     .unwrap();
     let key = SigningKey::generate();
     for (environment, template) in [
-        (EnvironmentType::NonProduction, "TSTZATCA-Code-Signing"),
-        (EnvironmentType::Simulation, "PREZATCA-Code-Signing"),
-        (EnvironmentType::Production, "ZATCA-Code-Signing"),
+        (Environment::NonProduction, "TSTZATCA-Code-Signing"),
+        (Environment::Simulation, "PREZATCA-Code-Signing"),
+        (Environment::Production, "ZATCA-Code-Signing"),
     ] {
         let csr = properties.build(&key, environment).unwrap();
         let parsed = CertReq::from_der(&csr.to_der().unwrap()).unwrap();
@@ -62,8 +62,8 @@ fn csr_templates_remain_noncritical_and_signatures_verify_in_all_environments() 
 fn test_parse_csr_config() {
     let config_path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures/csr-configs/csr-config-example-EN.properties");
-    let csr_config = CsrProperties::parse_csr_config_file(&config_path).unwrap();
-    let env = EnvironmentType::from_str("non_production")
+    let csr_config = CsrProperties::from_file(&config_path).unwrap();
+    let env = Environment::from_str("non_production")
         .map_err(|e| CsrError::Validation {
             message: e.to_string(),
         })
@@ -82,9 +82,9 @@ fn test_generate_csr() {
     let config_path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures/csr-configs/csr-config-example-EN.properties");
     let csr_props = std::fs::read_to_string(&config_path).unwrap();
-    let csr_config = CsrProperties::from_properties_str(&csr_props).unwrap();
+    let csr_config = CsrProperties::from_str(&csr_props).unwrap();
 
-    let env = EnvironmentType::from_str("non_production")
+    let env = Environment::from_str("non_production")
         .map_err(|e| CsrError::Validation {
             message: e.to_string(),
         })
@@ -162,9 +162,7 @@ fn config_file_errors_keep_the_source_path_and_line() {
         if let Some(contents) = contents {
             std::fs::write(&path, contents.as_bytes()).unwrap();
         }
-        let error: Error = CsrProperties::parse_csr_config_file(&path)
-            .unwrap_err()
-            .into();
+        let error: Error = CsrProperties::from_file(&path).unwrap_err().into();
         assert_eq!(error.kind(), kind);
         let details: serde_json::Value = serde_json::from_str(&error.details_json()).unwrap();
         assert_eq!(details["type"], expected_type);
@@ -199,9 +197,7 @@ fn invalid_csr_fields_are_rejected_before_key_use() {
             })
             .collect::<Vec<_>>()
             .join("\n");
-        let error: fatoora_core::Error = CsrProperties::from_properties_str(&properties)
-            .unwrap_err()
-            .into();
+        let error: fatoora_core::Error = CsrProperties::from_str(&properties).unwrap_err().into();
         assert_eq!(error.kind(), fatoora_core::ErrorKind::Validation);
         let details: serde_json::Value = serde_json::from_str(&error.details_json()).unwrap();
         assert_eq!(details["type"], "csr_validation");
@@ -241,9 +237,7 @@ fn csr_names_preserve_literal_delimiters_in_subject_and_san() {
             "Supply".into(),
         )
         .unwrap();
-        let csr = properties
-            .build(&key, EnvironmentType::NonProduction)
-            .unwrap();
+        let csr = properties.build(&key, Environment::NonProduction).unwrap();
         let parsed = CertReq::from_der(&csr.to_der().unwrap()).unwrap();
         let subject = &parsed.info.subject;
         assert_eq!(
@@ -306,12 +300,8 @@ fn signing_key_debug_contains_no_key_material() {
 }
 
 #[test]
-fn properties_alias_preserves_validation_failures_when_loaded_from_a_file() {
+fn properties_preserve_validation_failures_when_loaded_from_a_file() {
     let source = include_str!("fixtures/csr-configs/csr-config-example-EN.properties");
-    assert_eq!(
-        CsrProperties::parse_csr_config(source).unwrap(),
-        CsrProperties::from_properties_str(source).unwrap()
-    );
     let source = source
         .lines()
         .map(|line| {
@@ -327,8 +317,8 @@ fn properties_alias_preserves_validation_failures_when_loaded_from_a_file() {
     let path = directory.path().join("invalid.properties");
     std::fs::write(&path, &source).unwrap();
     for result in [
-        CsrProperties::parse_csr_config(&source),
-        CsrProperties::parse_csr_config_file(&path),
+        CsrProperties::from_str(&source),
+        CsrProperties::from_file(&path),
     ] {
         let error: fatoora_core::Error = result.unwrap_err().into();
         assert_eq!(error.kind(), fatoora_core::ErrorKind::Validation);

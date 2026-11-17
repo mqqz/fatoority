@@ -207,9 +207,9 @@ pub mod ffi {
         }
         pub fn env(&self) -> u8 {
             match self.0.env() {
-                fatoora_core::config::EnvironmentType::NonProduction => 0,
-                fatoora_core::config::EnvironmentType::Simulation => 1,
-                fatoora_core::config::EnvironmentType::Production => 2,
+                fatoora_core::config::Environment::NonProduction => 0,
+                fatoora_core::config::Environment::Simulation => 1,
+                fatoora_core::config::Environment::Production => 2,
             }
         }
         pub fn request_id(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
@@ -246,9 +246,9 @@ pub mod ffi {
         }
         pub fn env(&self) -> u8 {
             match self.0.env() {
-                fatoora_core::config::EnvironmentType::NonProduction => 0,
-                fatoora_core::config::EnvironmentType::Simulation => 1,
-                fatoora_core::config::EnvironmentType::Production => 2,
+                fatoora_core::config::Environment::NonProduction => 0,
+                fatoora_core::config::Environment::Simulation => 1,
+                fatoora_core::config::Environment::Production => 2,
             }
         }
         pub fn request_id(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
@@ -281,7 +281,7 @@ pub mod ffi {
             otp: &DiplomatStr,
         ) -> Result<Box<CsidCompliance>, Box<BindingError>> {
             boundary(|| {
-                run(self.0.post_csr_for_ccsid(&csr.0, text(otp)?))
+                run(self.0.request_compliance_csid(&csr.0, text(otp)?))
                     .map(|value| Box::new(CsidCompliance(value)))
             })
         }
@@ -292,7 +292,7 @@ pub mod ffi {
             credentials: &CsidCompliance,
         ) -> Result<Box<CsidProduction>, Box<BindingError>> {
             boundary(|| {
-                run(self.0.post_ccsid_for_pcsid(&credentials.0))
+                run(self.0.request_production_csid(&credentials.0))
                     .map(|value| Box::new(CsidProduction(value)))
             })
         }
@@ -386,7 +386,7 @@ pub mod ffi {
         ) -> Result<Box<ComplianceRequest>, Box<BindingError>> {
             boundary(|| {
                 self.0
-                    .prepare_post_csr_for_ccsid(&csr.0, text(otp)?)
+                    .prepare_request_compliance_csid(&csr.0, text(otp)?)
                     .map(|value| Box::new(ComplianceRequest(value)))
                     .map_err(core_error)
             })
@@ -397,7 +397,7 @@ pub mod ffi {
         ) -> Result<Box<ProductionRequest>, Box<BindingError>> {
             boundary(|| {
                 self.0
-                    .prepare_post_ccsid_for_pcsid(&credentials.0)
+                    .prepare_request_production_csid(&credentials.0)
                     .map(|value| Box::new(ProductionRequest(value)))
                     .map_err(core_error)
             })

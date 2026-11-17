@@ -3,7 +3,7 @@
 use fatoora_core::api::{
     Compliance, CsidCredentials, InvoiceOutcome, Production, ZatcaClient, ZatcaError,
 };
-use fatoora_core::config::{Config, EnvironmentType};
+use fatoora_core::config::{Config, Environment};
 use fatoora_core::invoice::xml::parse::parse_signed_invoice_xml;
 use httpmock::{Method::POST, MockServer};
 use serde_json::json;
@@ -85,7 +85,7 @@ fn public_submission_contract() {
 #[ignore = "invoked by public_submission_contract with an isolated local endpoint"]
 fn submission_worker() {
     let case = std::env::var("FATOORA_CONTRACT_CASE").expect("parent supplies scenario");
-    let env = EnvironmentType::NonProduction;
+    let env = Environment::NonProduction;
     let client = ZatcaClient::new(Config::new(env)).unwrap();
     let credentials = CsidCredentials::<Production>::new(env, None, "token", "secret");
     let invoice = parse_signed_invoice_xml(if case == "clearance" {

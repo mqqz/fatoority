@@ -2015,7 +2015,7 @@
         "S": "M",
         "T": "M"
       },
-      "model": "InvoiceTotalsData",
+      "model": "InvoiceTotals",
       "treatment": "preserved",
       "parse": "parse_finalized_invoice_doc; supported malformed values fail",
       "serialize": "typed serializer; retained original XML for signed-only fields",
@@ -2044,7 +2044,7 @@
         "S": "M",
         "T": "M"
       },
-      "model": "InvoiceTotalsData",
+      "model": "InvoiceTotals",
       "treatment": "preserved",
       "parse": "parse_finalized_invoice_doc; supported malformed values fail",
       "serialize": "typed serializer; retained original XML for signed-only fields",
@@ -2071,7 +2071,7 @@
         "S": "C",
         "T": "C"
       },
-      "model": "InvoiceTotalsData",
+      "model": "InvoiceTotals",
       "treatment": "preserved",
       "parse": "parse_finalized_invoice_doc; supported malformed values fail",
       "serialize": "typed serializer; retained original XML for signed-only fields",
@@ -2100,7 +2100,7 @@
         "S": "C",
         "T": "C"
       },
-      "model": "InvoiceTotalsData",
+      "model": "InvoiceTotals",
       "treatment": "preserved",
       "parse": "parse_finalized_invoice_doc; supported malformed values fail",
       "serialize": "typed serializer; retained original XML for signed-only fields",
@@ -2127,7 +2127,7 @@
         "S": "C",
         "T": "C"
       },
-      "model": "InvoiceTotalsData",
+      "model": "InvoiceTotals",
       "treatment": "preserved",
       "parse": "parse_finalized_invoice_doc; supported malformed values fail",
       "serialize": "typed serializer; retained original XML for signed-only fields",
@@ -2156,7 +2156,7 @@
         "S": "C",
         "T": "C"
       },
-      "model": "InvoiceTotalsData",
+      "model": "InvoiceTotals",
       "treatment": "preserved",
       "parse": "parse_finalized_invoice_doc; supported malformed values fail",
       "serialize": "typed serializer; retained original XML for signed-only fields",
@@ -2183,7 +2183,7 @@
         "S": "M",
         "T": "M"
       },
-      "model": "InvoiceTotalsData",
+      "model": "InvoiceTotals",
       "treatment": "preserved",
       "parse": "parse_finalized_invoice_doc; supported malformed values fail",
       "serialize": "typed serializer; retained original XML for signed-only fields",
@@ -2212,7 +2212,7 @@
         "S": "M",
         "T": "M"
       },
-      "model": "InvoiceTotalsData",
+      "model": "InvoiceTotals",
       "treatment": "preserved",
       "parse": "parse_finalized_invoice_doc; supported malformed values fail",
       "serialize": "typed serializer; retained original XML for signed-only fields",
@@ -2239,7 +2239,7 @@
         "S": "M",
         "T": "M"
       },
-      "model": "InvoiceTotalsData",
+      "model": "InvoiceTotals",
       "treatment": "preserved",
       "parse": "parse_finalized_invoice_doc; supported malformed values fail",
       "serialize": "typed serializer; retained original XML for signed-only fields",
@@ -2271,7 +2271,7 @@
         "S": "M",
         "T": "M"
       },
-      "model": "InvoiceTotalsData",
+      "model": "InvoiceTotals",
       "treatment": "preserved",
       "parse": "parse_finalized_invoice_doc; supported malformed values fail",
       "serialize": "typed serializer; retained original XML for signed-only fields",
@@ -2301,7 +2301,7 @@
         "S": "C",
         "T": "C"
       },
-      "model": "InvoiceTotalsData",
+      "model": "InvoiceTotals",
       "treatment": "preserved",
       "parse": "parse_finalized_invoice_doc; supported malformed values fail",
       "serialize": "typed serializer; retained original XML for signed-only fields",
@@ -2333,7 +2333,7 @@
         "S": "C",
         "T": "C"
       },
-      "model": "InvoiceTotalsData",
+      "model": "InvoiceTotals",
       "treatment": "preserved",
       "parse": "parse_finalized_invoice_doc; supported malformed values fail",
       "serialize": "typed serializer; retained original XML for signed-only fields",
@@ -2363,7 +2363,7 @@
         "S": "M",
         "T": "M"
       },
-      "model": "InvoiceTotalsData",
+      "model": "InvoiceTotals",
       "treatment": "preserved",
       "parse": "parse_finalized_invoice_doc; supported malformed values fail",
       "serialize": "typed serializer; retained original XML for signed-only fields",
@@ -2392,7 +2392,7 @@
         "S": "M",
         "T": "M"
       },
-      "model": "InvoiceTotalsData",
+      "model": "InvoiceTotals",
       "treatment": "preserved",
       "parse": "parse_finalized_invoice_doc; supported malformed values fail",
       "serialize": "typed serializer; retained original XML for signed-only fields",
@@ -2419,7 +2419,7 @@
         "S": "O",
         "T": "O"
       },
-      "model": "InvoiceTotalsData",
+      "model": "InvoiceTotals",
       "treatment": "preserved",
       "parse": "parse_finalized_invoice_doc; supported malformed values fail",
       "serialize": "typed serializer; retained original XML for signed-only fields",
@@ -2448,7 +2448,7 @@
         "S": "O",
         "T": "O"
       },
-      "model": "InvoiceTotalsData",
+      "model": "InvoiceTotals",
       "treatment": "preserved",
       "parse": "parse_finalized_invoice_doc; supported malformed values fail",
       "serialize": "typed serializer; retained original XML for signed-only fields",
@@ -2475,7 +2475,7 @@
         "S": "O",
         "T": "O"
       },
-      "model": "InvoiceTotalsData",
+      "model": "InvoiceTotals",
       "treatment": "preserved",
       "parse": "parse_finalized_invoice_doc; supported malformed values fail",
       "serialize": "typed serializer; retained original XML for signed-only fields",
@@ -2504,7 +2504,7 @@
         "S": "O",
         "T": "O"
       },
-      "model": "InvoiceTotalsData",
+      "model": "InvoiceTotals",
       "treatment": "preserved",
       "parse": "parse_finalized_invoice_doc; supported malformed values fail",
       "serialize": "typed serializer; retained original XML for signed-only fields",
@@ -2531,7 +2531,7 @@
         "S": "M",
         "T": "M"
       },
-      "model": "InvoiceTotalsData",
+      "model": "InvoiceTotals",
       "treatment": "preserved",
       "parse": "parse_finalized_invoice_doc; supported malformed values fail",
       "serialize": "typed serializer; retained original XML for signed-only fields",
@@ -2560,7 +2560,7 @@
         "S": "M",
         "T": "M"
       },
-      "model": "InvoiceTotalsData",
+      "model": "InvoiceTotals",
       "treatment": "preserved",
       "parse": "parse_finalized_invoice_doc; supported malformed values fail",
       "serialize": "typed serializer; retained original XML for signed-only fields",

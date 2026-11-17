@@ -1802,11 +1802,6 @@ impl InvoiceData {
         self.invoice_counter
     }
 
-    /// Returns the first note, if any.
-    pub fn note(&self) -> Option<&InvoiceNote> {
-        self.notes.first()
-    }
-
     /// Returns the seller party.
     pub fn seller(&self) -> &Seller {
         &self.seller
@@ -1888,17 +1883,21 @@ impl InvoiceData {
         })
     }
 }
+/// Former name of [`InvoiceTotals`].
+#[deprecated(since = "0.6.0", note = "use `InvoiceTotals` instead")]
+pub type InvoiceTotalsData = InvoiceTotals;
+
 /// Computed invoice totals.
 ///
 /// # Examples
 /// ```rust,ignore
-/// use fatoora_core::invoice::InvoiceTotalsData;
+/// use fatoora_core::invoice::InvoiceTotals;
 ///
-/// let totals: InvoiceTotalsData = unimplemented!();
+/// let totals: InvoiceTotals = unimplemented!();
 /// let _ = totals.tax_inclusive_amount();
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct InvoiceTotalsData {
+pub struct InvoiceTotals {
     #[serde(default)]
     pub(crate) omitted_optional_amounts: [bool; 4],
     line_extension: Decimal,
@@ -2038,7 +2037,7 @@ impl VatBreakdown {
         self.tax_amount
     }
 }
-impl InvoiceTotalsData {
+impl InvoiceTotals {
     pub(crate) fn from_data(data: &InvoiceData) -> Result<Self> {
         let mut line_extension = Decimal::ZERO;
         let mut groups: Vec<VatBreakdown> = Vec::new();

@@ -13,15 +13,15 @@ use thiserror::Error;
 /// # Examples
 /// ```rust
 /// use std::str::FromStr;
-/// use fatoora_core::config::EnvironmentType;
+/// use fatoora_core::config::Environment;
 ///
-/// let env = EnvironmentType::from_str("simulation")?;
-/// assert_eq!(env, EnvironmentType::Simulation);
+/// let env = Environment::from_str("simulation")?;
+/// assert_eq!(env, Environment::Simulation);
 /// use fatoora_core::config::EnvironmentParseError;
 /// # Ok::<(), EnvironmentParseError>(())
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-pub enum EnvironmentType {
+pub enum Environment {
     /// ZATCA "Integration Sandbox" (developer portal); parsed from `"non_production"`.
     NonProduction,
     /// ZATCA "Simulation Test Environment"; parsed from `"simulation"`.
@@ -30,7 +30,11 @@ pub enum EnvironmentType {
     Production,
 }
 
-/// Error returned when parsing an [`EnvironmentType`] from a string.
+/// Former name of [`Environment`].
+#[deprecated(since = "0.6.0", note = "use `Environment` instead")]
+pub type EnvironmentType = Environment;
+
+/// Error returned when parsing an [`Environment`] from a string.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Error)]
 #[non_exhaustive]
 pub enum EnvironmentParseError {
@@ -50,13 +54,13 @@ impl EnvironmentParseError {
     }
 }
 
-impl FromStr for EnvironmentType {
+impl FromStr for Environment {
     type Err = EnvironmentParseError;
-    fn from_str(env: &str) -> Result<EnvironmentType, EnvironmentParseError> {
+    fn from_str(env: &str) -> Result<Environment, EnvironmentParseError> {
         match env.to_ascii_lowercase().as_str() {
-            "non_production" => Ok(EnvironmentType::NonProduction),
-            "simulation" => Ok(EnvironmentType::Simulation),
-            "production" => Ok(EnvironmentType::Production),
+            "non_production" => Ok(Environment::NonProduction),
+            "simulation" => Ok(Environment::Simulation),
+            "production" => Ok(Environment::Production),
             _ => Err(EnvironmentParseError::Invalid {
                 input: env.to_string(),
             }),
@@ -64,14 +68,14 @@ impl FromStr for EnvironmentType {
     }
 }
 
-impl EnvironmentType {
+impl Environment {
     /// Returns the canonical lowercase name (`non_production`, `simulation` or
-    /// `production`), accepted by [`EnvironmentType::from_str`].
+    /// `production`), accepted by [`Environment::from_str`].
     pub fn as_str(&self) -> &'static str {
         match self {
-            EnvironmentType::NonProduction => "non_production",
-            EnvironmentType::Simulation => "simulation",
-            EnvironmentType::Production => "production",
+            Environment::NonProduction => "non_production",
+            Environment::Simulation => "simulation",
+            Environment::Production => "production",
         }
     }
 
@@ -79,13 +83,11 @@ impl EnvironmentType {
     /// trailing slash.
     pub fn endpoint_url(&self) -> &'static str {
         match self {
-            EnvironmentType::NonProduction => {
+            Environment::NonProduction => {
                 "https://gw-fatoora.zatca.gov.sa/e-invoicing/developer-portal/"
             }
-            EnvironmentType::Simulation => {
-                "https://gw-fatoora.zatca.gov.sa/e-invoicing/simulation/"
-            }
-            EnvironmentType::Production => "https://gw-fatoora.zatca.gov.sa/e-invoicing/core/",
+            Environment::Simulation => "https://gw-fatoora.zatca.gov.sa/e-invoicing/simulation/",
+            Environment::Production => "https://gw-fatoora.zatca.gov.sa/e-invoicing/core/",
         }
     }
 }
@@ -94,24 +96,24 @@ impl EnvironmentType {
 ///
 /// # Examples
 /// ```rust
-/// use fatoora_core::config::{Config, EnvironmentType};
+/// use fatoora_core::config::{Config, Environment};
 ///
-/// let config = Config::new(EnvironmentType::NonProduction);
+/// let config = Config::new(Environment::NonProduction);
 /// # let _ = config;
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Config {
-    env: EnvironmentType,
+    env: Environment,
 }
 
 impl Config {
     /// Create a config using the bundled UBL XSD.
-    pub fn new(env: EnvironmentType) -> Self {
+    pub fn new(env: Environment) -> Self {
         Self { env }
     }
 
     /// Returns the configured ZATCA environment.
-    pub fn env(&self) -> EnvironmentType {
+    pub fn env(&self) -> Environment {
         self.env
     }
 }
@@ -120,7 +122,7 @@ impl Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            env: EnvironmentType::NonProduction,
+            env: Environment::NonProduction,
         }
     }
 }

@@ -8,7 +8,7 @@ use anyhow::{Context, Result, bail};
 use base64ct::{Base64, Encoding};
 use clap::{Parser, Subcommand, ValueEnum};
 use fatoora_core::{
-    config::EnvironmentType,
+    config::Environment,
     csr::CsrProperties,
     invoice::{
         FinalizedInvoice, SignedInvoice,
@@ -129,11 +129,12 @@ fn main() -> Result<ExitCode> {
         } => {
             let csr_contents = std::fs::read_to_string(&csr_config)
                 .with_context(|| format!("failed to read CSR config from {csr_config}"))?;
-            let csr_config = CsrProperties::from_properties_str(&csr_contents)
+            let csr_config = csr_contents
+                .parse::<CsrProperties>()
                 .context("failed to parse CSR config")?;
             let signer = fatoora_core::csr::SigningKey::generate();
             let csr = csr_config
-                .build(&signer, EnvironmentType::NonProduction)
+                .build(&signer, Environment::NonProduction)
                 .context("failed to generate CSR")?;
 
             let csr_output = if pem {
@@ -321,7 +322,7 @@ fn validate_command(
     previous_invoice_hash: Option<String>,
     evaluated_at: Option<String>,
 ) -> Result<ExitCode> {
-    let config = fatoora_core::config::Config::new(EnvironmentType::NonProduction);
+    let config = fatoora_core::config::Config::new(Environment::NonProduction);
     if profile == ValidationProfile::Xsd {
         if previous_invoice_hash.is_some() || evaluated_at.is_some() {
             return Ok(validation_input_failure(
