@@ -22,12 +22,10 @@ export {
   errorClassForCode,
 } from './errors.mjs';
 
-/** Accept a boolean, a ClearanceMode or its value name for the Clearance-Status header. */
-function clearanceMode(value) {
+/** Require a ClearanceMode, as every other binding does; booleans and names are rejected. */
+function requireClearanceMode(value) {
   if (value instanceof ClearanceMode) return value;
-  if (typeof value === 'boolean') return value ? ClearanceMode.Enabled : ClearanceMode.Disabled;
-  if (value === 'Enabled' || value === 'Disabled') return ClearanceMode[value];
-  throw new TypeError('clearanceStatus must be a boolean or ClearanceMode');
+  throw new TypeError('clearanceMode must be ClearanceMode.Enabled or ClearanceMode.Disabled');
 }
 
 /** Send an owned prepared request using the caller's fetch implementation. */
@@ -68,11 +66,11 @@ export class ZatcaClient {
   async checkInvoiceCompliance(invoice, credentials, options = {}) {
     return this.#send(this.#native.prepareCheckInvoiceCompliance(invoice, credentials), options);
   }
-  async reportSimplifiedInvoice(invoice, credentials, clearanceStatus = false, acceptLanguage = null, options = {}) {
-    return this.#send(this.#native.prepareReportSimplifiedInvoice(invoice, credentials, clearanceMode(clearanceStatus), acceptLanguage), options);
+  async reportSimplifiedInvoice(invoice, credentials, clearanceMode, acceptLanguage = null, options = {}) {
+    return this.#send(this.#native.prepareReportSimplifiedInvoice(invoice, credentials, requireClearanceMode(clearanceMode), acceptLanguage), options);
   }
-  async clearStandardInvoice(invoice, credentials, clearanceStatus = true, acceptLanguage = null, options = {}) {
-    return this.#send(this.#native.prepareClearStandardInvoice(invoice, credentials, clearanceMode(clearanceStatus), acceptLanguage), options);
+  async clearStandardInvoice(invoice, credentials, clearanceMode, acceptLanguage = null, options = {}) {
+    return this.#send(this.#native.prepareClearStandardInvoice(invoice, credentials, requireClearanceMode(clearanceMode), acceptLanguage), options);
   }
   #send(request, options) { return sendPrepared(request, { ...options, fetch: this.#fetch }); }
 }

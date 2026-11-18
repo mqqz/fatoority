@@ -278,11 +278,13 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     | `requestProductionCsid(credentials, options = {})` | `ProductionCsid` |
     | `renewCsid(credentials, csr, otp, acceptLanguage = null, options = {})` | `ProductionCsid` |
     | `checkInvoiceCompliance(invoice, credentials, options = {})` | `ValidationResponse` |
-    | `reportSimplifiedInvoice(invoice, credentials, clearanceStatus = false, acceptLanguage = null, options = {})` | `ValidationResponse` |
-    | `clearStandardInvoice(invoice, credentials, clearanceStatus = true, acceptLanguage = null, options = {})` | `ValidationResponse` |
+    | `reportSimplifiedInvoice(invoice, credentials, clearanceMode, acceptLanguage = null, options = {})` | `ValidationResponse` |
+    | `clearStandardInvoice(invoice, credentials, clearanceMode, acceptLanguage = null, options = {})` | `ValidationResponse` |
 
     Pass `Csr` for `csr`, `SignedInvoice` for `invoice`, strings for OTP/language, and
-    a boolean, a `ClearanceMode` (`ClearanceMode.Disabled`/`.Enabled`) or its name (`'Disabled'`/`'Enabled'`) for `clearanceStatus`. Compliance issuance uses no credential; compliance checks
+    `ClearanceMode.Disabled` or `ClearanceMode.Enabled` for `clearanceMode`, which is
+    required; any other value, including a boolean or the variant name, rejects with a
+    `TypeError`. Compliance issuance uses no credential; compliance checks
     and production issuance take `ComplianceCsid`; reporting, clearance, and renewal
     take `ProductionCsid`. Each `options` accepts `{ signal: AbortSignal }` for cancellation.
     Transport failures reject with `TransportError` (a `NetworkError`); response/acceptance failures reject with the

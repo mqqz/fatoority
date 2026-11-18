@@ -56,6 +56,26 @@ package root and from `fatoority/raw`. Call `create` with the same arguments.
 `Adjustment.percentage(...)` was a static factory, so code that reads the
 property needs no change.
 
+## Clearance mode is required and must be a `ClearanceMode`
+
+`ZatcaClient.reportSimplifiedInvoice` and `ZatcaClient.clearStandardInvoice`
+no longer accept a boolean or the variant name (`'Enabled'`/`'Disabled'`) for
+the `Clearance-Status` header, and the argument no longer has a default
+(`false` for reporting, `true` for clearance). Pass `ClearanceMode.Disabled` or
+`ClearanceMode.Enabled`, as every other binding does. Any other value, including
+an omitted argument, rejects with a `TypeError`. The parameter is now named
+`clearanceMode`, like the `fatoority/raw` `prepare*` methods, so it is not
+confused with `response.clearanceStatus`.
+
+| 0.6 | 0.7 |
+| --- | --- |
+| `client.reportSimplifiedInvoice(invoice, credentials)` | `client.reportSimplifiedInvoice(invoice, credentials, ClearanceMode.Disabled)` |
+| `client.reportSimplifiedInvoice(invoice, credentials, false, ...)` | `client.reportSimplifiedInvoice(invoice, credentials, ClearanceMode.Disabled, ...)` |
+| `client.clearStandardInvoice(invoice, credentials)` | `client.clearStandardInvoice(invoice, credentials, ClearanceMode.Enabled)` |
+| `client.clearStandardInvoice(invoice, credentials, true, ...)` | `client.clearStandardInvoice(invoice, credentials, ClearanceMode.Enabled, ...)` |
+| `'Enabled'` / `'Disabled'` | `ClearanceMode.Enabled` / `ClearanceMode.Disabled` |
+| `ClearanceModeInput` type | `ClearanceMode` |
+
 ## Example
 
 ```ts

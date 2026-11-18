@@ -184,13 +184,14 @@ All methods below return promises. Optional `options` accepts `{ signal }`, wher
 | `requestProductionCsid(credentials, options?)` | `ComplianceCsid` | `ProductionCsid` |
 | `renewCsid(credentials, csr, otp, acceptLanguage?, options?)` | `ProductionCsid`, `Csr`, OTP, optional language string | `ProductionCsid` |
 | `checkInvoiceCompliance(invoice, credentials, options?)` | `SignedInvoice`, `ComplianceCsid` | `ValidationResponse` |
-| `reportSimplifiedInvoice(invoice, credentials, clearanceStatus?, acceptLanguage?, options?)` | `SignedInvoice`, `ProductionCsid`; status defaults to `false`, language to `null` | `ValidationResponse` |
-| `clearStandardInvoice(invoice, credentials, clearanceStatus?, acceptLanguage?, options?)` | `SignedInvoice`, `ProductionCsid`; status defaults to `true`, language to `null` | `ValidationResponse` |
+| `reportSimplifiedInvoice(invoice, credentials, clearanceMode, acceptLanguage?, options?)` | `SignedInvoice`, `ProductionCsid`, `ClearanceMode`; language defaults to `null` | `ValidationResponse` |
+| `clearStandardInvoice(invoice, credentials, clearanceMode, acceptLanguage?, options?)` | `SignedInvoice`, `ProductionCsid`, `ClearanceMode`; language defaults to `null` | `ValidationResponse` |
 
-`clearanceStatus` controls the clearance-status request header; it is not the
-result of the operation. It accepts a boolean, a `ClearanceMode`
-(`ClearanceMode.Enabled`/`ClearanceMode.Disabled`), or its name; the prepared-request methods
-on `fatoority/raw` require a `ClearanceMode`. `acceptLanguage` controls the language request header.
+`clearanceMode` sets the `Clearance-Status` request header; it is not the
+result of the operation. It is required and must be `ClearanceMode.Enabled` or
+`ClearanceMode.Disabled`, as in every other binding and in the prepared-request
+methods on `fatoority/raw`; any other value, including a boolean or the variant
+name, rejects with a `TypeError`. `acceptLanguage` controls the language request header.
 Pass optional positional arguments explicitly when supplying a later argument.
 
 HTTP success alone does not establish invoice acceptance. Inspect `outcome` or
