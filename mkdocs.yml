@@ -39,6 +39,7 @@ nav:
       - Migrate from 0.6 to 0.7:
           - Overview: guides/migrate-0.7/index.md
           - Rust: guides/migrate-0.7/rust.md
+          - Python: guides/migrate-0.7/python.md
   - Reference:
       - Configuration: reference/configuration.md
       - CSR: reference/csr.md

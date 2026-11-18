@@ -7,8 +7,13 @@ description: Upgrade Python code from fatoority 0.5 to 0.6. Getters become prope
 
 The `fatoority` package (imported as `fatoora`) adopts the core names with a
 Pythonic surface. Most renamed 0.5 names still work in 0.6 and emit a
-`DeprecationWarning` naming their replacement; they are removed in 0.7. A few
+`DeprecationWarning` naming their replacement; 0.7 removed them. A few
 changes are hard breaks, listed first below.
+
+!!! note "Upgrading to 0.7"
+    0.7 removed every name this page marks as deprecated, so on 0.7 use the 0.6
+    replacement. [Migrate from 0.6 to 0.7](../migrate-0.7/python.md) lists the
+    removed names.
 
 ```sh
 pip install "fatoority==0.6.0"
@@ -37,8 +42,9 @@ The wheel bundles its native library, so no separate native upgrade is needed.
    `filterwarnings = ["error::DeprecationWarning"]`) and replace each name the
    warnings point at.
 
-The [Python reference](../../reference/bindings/python.md#migrate-from-05) has
-the complete 0.5 to 0.6 table, one row per renamed or retyped name.
+The [Python reference](../../reference/bindings/python.md#migrate-from-earlier-versions)
+lists the hard breaks, and [Migrate from 0.6 to 0.7](../migrate-0.7/python.md)
+lists every renamed name with its replacement.
 
 ## Build an invoice
 
@@ -301,7 +307,7 @@ recognize keeps the exact text ZATCA sent, in a value whose `name` is `"OTHER"`.
 
 ## Other renames
 
-These keep working with a `DeprecationWarning` until 0.7:
+These kept working in 0.6 with a `DeprecationWarning`; 0.7 removed them:
 
 | 0.5 | 0.6 |
 | --- | --- |

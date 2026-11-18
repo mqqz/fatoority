@@ -104,11 +104,11 @@ profile. Local integrity does not establish issuer trust or remote acceptance. T
 wheel embeds runtime schemas and native rules; Java, SDK files and a source
 checkout are unnecessary.
 
-### Deprecations
+### Upgrading
 
-0.6 turns getters into properties (a hard break: drop the parentheses) and
-renames parts of the 0.5 API (`Signer` -> `InvoiceSigner`, ...). The renamed
-names keep working with a `DeprecationWarning` until 0.7; see the
-[Python reference](../../docs/reference/bindings/python.md#migrate-from-05). The
-public surface is recorded in `tests/public_api.json`; regenerate it after an
+0.7 removes every name that 0.6 deprecated (`Signer`, `parse_signed_invoice_xml`,
+`clearance_status=`, ...). See the
+[0.6 to 0.7 migration guide](../../docs/guides/migrate-0.7/python.md) for each
+replacement, and the [Python reference](../../docs/reference/bindings/python.md#migrate-from-earlier-versions)
+for older upgrades. The public surface is recorded in `tests/public_api.json`; regenerate it after an
 intentional change with `python tests/test_public_api.py --update`.

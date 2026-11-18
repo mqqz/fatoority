@@ -18,9 +18,6 @@ independent adjustments append in order. Rust `allowance(DocumentAdjustment)` an
 `charge(DocumentAdjustment)` append document adjustments, and the generated
 bindings mirror them as `add_allowance` and `add_charge`. In the generated
 bindings, `set_*` methods replace a value and `add_*` methods append one.
-Python's deprecated `set_allowance(reason, amount)` and aggregate setters are
-applied as document adjustments when the invoice is built; use `add_allowance`
-and `add_charge` instead.
 Use collection getters to read every repeated entry.
 
 ## Fields and expected values
@@ -310,9 +307,7 @@ correspond to the fields above.
 
     `FinalizedInvoice.sign(signer: InvoiceSigner) -> SignedInvoice` consumes the finalized invoice on success or signing failure; the signer remains reusable. See [signing](invoice-signing.md) for metadata and [XML](xml.md) for serialization.
 
-    **Deprecated in 0.6 (removed in 0.7)**
-
-    Getters became properties as a hard break in 0.6: drop the parentheses (`invoice.id()` becomes `invoice.id`). `InvoiceBuilder.new(...)` and `new_with_reference(...)` become the `InvoiceBuilder(...)` constructor; `set_note(language, text)` and `set_note_without_language(text)` become `add_note(text, language=...)`; `set_payment_means_code(code)` becomes `add_payment_means(PaymentMeans(code))`; `flags(value)` becomes `set_flags(value)`; `set_tax_exemption` becomes `add_tax_exemption`; `add_document_adjustment(charge, ...)` becomes `add_allowance(...)` / `add_charge(...)`. The aggregate setters `set_allowance`, `invoice_level_discount`, `invoice_level_charge` and `allowance_reason` keep their 0.5 behaviour (one allowance and one charge in the document VAT category, at the single VAT rate of that category's lines) but are deprecated in favour of `add_allowance` / `add_charge` with an explicit category and rate. The value models replace `Address.new`, `PaymentMeans.new` and `OriginalInvoiceRef.new` with their constructors, `AllowanceCharge` with `Adjustment` (`Adjustment.amount(value)` becomes `Adjustment(value)` and `Adjustment.percentage(base, percent)` becomes `Adjustment.percent_of(base, percent)`), `DocumentReference` with `OriginalInvoiceRef`, and `VatId`/`OtherId` and `(value, scheme)` tuples with `Identifier`. See the [Python migration table](bindings/python.md#migrate-from-05).
+    The 0.5 names that 0.6 deprecated (`InvoiceBuilder.new`, the aggregate setters `set_allowance`, `invoice_level_discount`, `invoice_level_charge` and `allowance_reason`, `AllowanceCharge`, `DocumentReference`, `VatId`/`OtherId` and others) were removed in 0.7; see [migrating to 0.7](../guides/migrate-0.7/python.md).
 
 === "JavaScript"
 

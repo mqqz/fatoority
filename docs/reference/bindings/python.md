@@ -120,8 +120,7 @@ Every type you create directly has a constructor: `Config(env)`,
 invoice dataclasses. Types you obtain from data or from another call use named
 factories (`InvoiceSigner.from_pem`, `SigningKey.generate`, `Csr.from_der`,
 `SignedInvoice.from_xml`, ...); calling such a class raises `TypeError` naming
-them. The 0.5 `.new(...)` classmethods still work until 0.7, with a
-`DeprecationWarning`.
+them.
 
 Arguments after the first are keyword-only for `set_seller`, `set_buyer`,
 `add_note(text, *, language=None)`, `CsrProperties(*, ...)`, the credentials
@@ -140,7 +139,7 @@ Independent owners can be used independently.
 
 `InvoiceBuilder.build()` consumes the builder's inner state even when final
 validation fails. `FinalizedInvoice.sign(signer)` consumes the finalized invoice
-(as does the deprecated `SignedInvoice.into_xml()` for a signed one). The wrapper remains safe
+The wrapper remains safe
 to close, but further use of consumed state fails. Create a new input object to
 retry after a consuming operation fails.
 
@@ -290,9 +289,7 @@ client = ZatcaClient(Config(Environment.SIMULATION), timeout=timedelta(seconds=3
 
 `clearance` is a required `ClearanceMode` controlling the `Clearance-Status`
 request header: `ClearanceMode.DISABLED` sends `0`, `ClearanceMode.ENABLED`
-sends `1`. It does not describe the result. The 0.5 Boolean
-`clearance_status=False`/`True` still works until 0.7 with a
-`DeprecationWarning`; passing both raises `TypeError`. `accept_language` is a string or `None` controlling the language header.
+sends `1`. It does not describe the result. `accept_language` is a string or `None` controlling the language header.
 These methods do not expose an asynchronous or cancellation-token parameter;
 use `timeout` to bound how long a call can block.
 
@@ -319,58 +316,30 @@ Parsing a signed invoice checks local signature, digest and QR integrity.
 Run explicit validation for schema and business-rule checks; issuer trust and clearance require separate evidence. See the
 [signing reference](../invoice-signing.md) for key/certificate formats and signing operations.
 
-## Migrate from 0.5
+## Migrate from earlier versions
 
-The [Python migration guide](../../guides/migrate-0.6/python.md) walks through
-the common changes with before-and-after code; this table lists every name.
+The migration guides walk through each upgrade with before-and-after code:
+[0.5 to 0.6](../../guides/migrate-0.6/python.md) and
+[0.6 to 0.7](../../guides/migrate-0.7/python.md). 0.7 removed every name that
+0.6 deprecated; the 0.7 guide lists each one with its replacement.
 
-Getters became read-only properties in 0.6. This is a hard break: drop the
-parentheses (`invoice.id()` becomes `invoice.id`); calling a property now fails
-like calling its value (`TypeError: 'str' object is not callable`). Rows marked
-"enforced" were warnings in 0.5.1 and are now `TypeError`s too. Every other 0.5
-name below still works in 0.6 and emits a `DeprecationWarning` that names its
-replacement; they are removed in 0.7. Run your tests with
-`python -W error::DeprecationWarning` (or pytest's
-`filterwarnings = ["error::DeprecationWarning"]`) to find the remaining uses.
+The 0.6 changes that were hard breaks, with no deprecation period, are below.
+Getters became read-only properties: drop the parentheses (`invoice.id()`
+becomes `invoice.id`); calling a property fails like calling its value
+(`TypeError: 'str' object is not callable`). Rows marked "enforced" were
+warnings in 0.5.1 and became `TypeError`s in 0.6.
 
-| 0.5 | 0.6 |
+| 0.5 | 0.6 and later |
 | --- | --- |
-| Getter methods: `invoice.id()`, `address.city()`, `response.reporting_status()`, ... (hard break) | Properties: `invoice.id`, `address.city`, `response.reporting_status` |
-| `invoice.issue_datetime()`, `signed.signing_time()` return `str` (hard break) | `invoice.issue_datetime`, `signed.signing_time` are aware `datetime`s |
-| `issue_date()`, `actual_delivery_date()`, `latest_delivery_date()`, `OriginalInvoiceRef.issue_date()` return `str` (hard break) | Properties of type `datetime.date` |
-| `InvoiceBuilder.new(type, subtype, ...)` / `new_with_reference(type, subtype, ref, reason)` | `InvoiceBuilder(type, subtype, *, id=..., ..., original_invoice=ref, original_invoice_reason=reason)` |
+| Getter methods: `invoice.id()`, `address.city()`, `response.reporting_status()`, `invoice.xml()`, ... | Properties: `invoice.id`, `address.city`, `response.reporting_status`, `invoice.xml` |
+| `invoice.issue_datetime()`, `signed.signing_time()` return `str` | `invoice.issue_datetime`, `signed.signing_time` are aware `datetime`s |
+| `issue_date()`, `actual_delivery_date()`, `latest_delivery_date()`, `OriginalInvoiceRef.issue_date()` return `str` | Properties of type `datetime.date` |
 | Setters return `None` | Setters return the builder |
 | `set_seller(name, country_code, ...)` positional (enforced) | `set_seller(Party(...))`, or `set_seller(name, *, vat_id=..., address=Address(...))` or the address keywords |
 | `set_buyer(name, country_code, ...)` positional (enforced) | `set_buyer(name, *, address=..., ...)` |
 | `add_note(text, language)` positional (enforced) | `add_note(text, language=...)` |
-| `set_note(language, text)` / `set_note_without_language(text)` | `add_note(text, language=...)` / `add_note(text)` |
-| `set_payment_means_code(code)` | `add_payment_means(PaymentMeans(code))` |
-| `builder.flags(value)` | `builder.set_flags(value)` |
-| `set_tax_exemption(category, rate, exemption)` | `add_tax_exemption(category, rate, exemption)` |
-| `add_document_adjustment(charge, value, category, rate)` | `add_allowance(value, category, rate)` / `add_charge(value, category, rate)` |
-| `set_allowance`, `invoice_level_discount`, `invoice_level_charge`, `allowance_reason` | `add_allowance` / `add_charge` with an explicit category and rate, and `Adjustment(amount, reason=...)` |
-| `Address.new(...)`, `PaymentMeans.new(code, instruction)`, `OriginalInvoiceRef.new(id, uuid, date, time, type_code)` | `Address(...)`, `PaymentMeans(code, (instruction,))`, `OriginalInvoiceRef(id, uuid, issue_date, issue_time, document_type_code)` |
-| `Address`, `Party`, `InvoiceNote`, `OriginalInvoiceRef`, `PaymentMeans`, `Adjustment`, `VatId`, `OtherId` were native handles: `close()`, `with` | Frozen dataclasses; `close()` and `with` are no-ops that warn |
-| `AllowanceCharge(charge, amount, category, rate, ...)` and `Adjustment.amount(value)` / `Adjustment.percentage(base, percent)` | One `Adjustment` model: `Adjustment(amount, ..., charge=..., category=..., rate=...)` / `Adjustment.percent_of(base, percent)`; `invoice.adjustments` returns `Adjustment` values |
-| `adjustment.value`, `adjustment.percent`, `adjustment.with_supplied_amount(value)` | `adjustment.amount`, `adjustment.percentage`, `Adjustment.percent_of(base, percent, amount=value)` |
-| `DocumentReference(id, uuid, issue_date, issue_time, document_type_code)` | `OriginalInvoiceRef(...)` with the same arguments; line `document_references` hold `OriginalInvoiceRef` values and their `issue_date` is a `date` (hard break) |
-| `VatId`, `OtherId`, `item.item_seller_identifier` as a `(value, scheme)` tuple | `Identifier(value, scheme)`; unpacking or indexing an `Identifier` warns |
-| `party.identifiers`, `payment_means.instruction_notes` return lists (hard break) | Tuples |
-| `LineItemBuilder.new()` | `LineItemBuilder()` |
-| `CsrProperties.new(...)` positional (enforced) | `CsrProperties(*, ...)`; `CsrProperties.new(*, ...)` is deprecated |
-| `ComplianceCsid.new(env, token, secret, request_id=None)` / `ProductionCsid.new(...)` | `ComplianceCsid(env, *, token=..., secret=..., request_id=None)` / `ProductionCsid(...)` |
-| `CsrProperties.from_properties_str(text)` / `parse_csr_config(text)` | `CsrProperties.from_str(text)` |
-| `CsrProperties.parse_csr_config_file(path)` | `CsrProperties.from_file(path)` |
-| `Signer` | `InvoiceSigner` |
-| `CsidCompliance` / `CsidProduction` | `ComplianceCsid` / `ProductionCsid` |
-| `client.post_csr_for_ccsid(csr, otp)` / `post_ccsid_for_pcsid(ccsid)` | `client.request_compliance_csid(csr, otp)` / `request_production_csid(ccsid)` |
+| `CsrProperties.new(...)` positional (enforced) | `CsrProperties(*, ...)` |
 | `report_simplified_invoice(invoice, pcsid, False)` positional flags (enforced) | `report_simplified_invoice(invoice, pcsid, clearance=ClearanceMode.DISABLED)` |
-| `clearance_status=False` / `True` on `report_simplified_invoice` and `clear_standard_invoice` | `clearance=ClearanceMode.DISABLED` / `ClearanceMode.ENABLED` |
-| `reporting_status`, `clearance_status`, `results.status`, `message.message_type`, `message.status` return `str` (no warning; `type(x) is str` no longer holds) | `str` enums `ReportingStatus`, `ClearanceStatus`, `ValidationStatus`, `MessageType`; comparisons with strings still hold |
-| `parse_finalized_invoice_xml(xml)` / `parse_finalized_invoice_xml_file(path)` | `FinalizedInvoice.from_xml(xml)` / `FinalizedInvoice.from_file(path)` |
-| `parse_signed_invoice_xml(xml)` / `parse_signed_invoice_xml_file(path)` | `SignedInvoice.from_xml(xml)` / `SignedInvoice.from_file(path)` |
-| `invoice.xml()` (hard break), `to_xml()`, `into_xml()` | `invoice.xml` |
-| `invoice.hash_base64()` | `invoice.hash()` |
-| `invoice_hash_base64_from_xml_str(xml)` | `hash_xml(xml)` |
-| `validate_xml_invoice_from_str(config, xml)` | `validate_xml(xml)` |
-| `validate_zatca_invoice_from_str(config, xml, ...)` returns a `dict` | `validate_zatca(xml, ...)` returns a `ZatcaReport`; `report.to_dict()` gives the 0.5 dictionary |
+| Line `document_references` hold `DocumentReference` values with a `str` `issue_date` | `OriginalInvoiceRef` values whose `issue_date` is a `date` |
+| `party.identifiers`, `payment_means.instruction_notes` return lists | Tuples |
+| `reporting_status`, `clearance_status`, `results.status`, `message.message_type`, `message.status` return `str` | `str` enums `ReportingStatus`, `ClearanceStatus`, `ValidationStatus`, `MessageType`; comparisons with strings still hold, `type(x) is str` does not |
