@@ -107,7 +107,7 @@ The signed computed hash equals the XML hash operation on `xml()`. Signed import
     | `invoice.hash()` | `str`; recomputes the base64 invoice hash |
     | `hash_xml(xml: str)` | `str`; the same hash from XML text |
 
-    `SignedInvoice` string properties are `xml`, `qr_code`, `invoice_hash` (the hash stored in the signature), `signature`, `public_key`, `issuer`, `serial`, `cert_hash` and `signed_props_hash`; `zatca_key_signature` is `str | None` and `signing_time` is a timezone-aware (UTC) `datetime`. `to_xml_base64()` and `hash()` are methods. Strings and bytes are independent copies. Use context managers or `close()` for owners; errors raise the typed exceptions in [errors](errors.md). `Signer`, `hash_base64()` and `invoice_hash_base64_from_xml_str` are deprecated aliases until 0.7.
+    `SignedInvoice` string properties are `xml`, `qr_code`, `invoice_hash` (the hash stored in the signature), `signature`, `public_key`, `issuer`, `serial`, `cert_hash` and `signed_props_hash`; `zatca_key_signature` is `str | None` and `signing_time` is a timezone-aware (UTC) `datetime`. `to_xml_base64()` and `hash()` are methods. Strings and bytes are independent copies. Use context managers or `close()` for owners; errors raise the typed exceptions in [errors](errors.md).
 
 === "JavaScript"
 

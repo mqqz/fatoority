@@ -145,8 +145,7 @@ Constructors that take individual fields use the order in the property table abo
     ) -> CsrProperties
     ```
 
-    Every field is keyword-only. The 0.5 `CsrProperties.new(*, ...)` still works
-    until 0.7, with a `DeprecationWarning`.
+    Every field is keyword-only.
 
     | Call | Returns |
     | --- | --- |
@@ -165,8 +164,6 @@ Constructors that take individual fields use the order in the property table abo
     Use `Environment.NON_PRODUCTION`, `SIMULATION`, or `PRODUCTION`. Failures raise
     classified exceptions; see [Python errors](bindings/python.md). Properties, keys,
     and CSRs support `with` and `close()`. Building and serializing do not consume them.
-    The 0.5 names `from_properties_str`, `parse_csr_config` and `parse_csr_config_file`
-    still work until 0.7, with a `DeprecationWarning`.
 
 === "JavaScript"
     Import `CsrProperties`, `SigningKey`, and `Csr` from `fatoority`.

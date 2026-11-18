@@ -15,8 +15,6 @@ from typing import Any, Optional, Union
 import uuid as _uuid
 
 from . import _native
-from ._compat import (ValueCompat, alias_getattr, deprecated, deprecated_classmethod,
-                      deprecated_property, warn)
 from .errors import InvalidInputError, error_class_for_code
 
 class Environment(IntEnum):
@@ -44,7 +42,7 @@ class _WireStatus(str, Enum):
     """A ZATCA response status; the value is the text ZATCA sent.
 
     Members are ``str`` subclasses, so ``status == "REPORTED"``, ``str(status)``,
-    f-strings and ``json.dumps`` behave as they did for the 0.5 plain strings.
+    f-strings and ``json.dumps`` behave as they do for plain strings.
     A value this version does not recognise is preserved verbatim, like the
     core's ``Other(String)`` variant: it comes back as a member named
     ``"OTHER"`` whose ``value`` (and string form) is the text ZATCA sent.
@@ -293,8 +291,7 @@ _CHARGE = 1  # _native.AdjustmentKind.Charge
 
 
 def _flag(value: bool, name: str) -> int:
-    # Booleans map onto two-variant native enums (AdjustmentKind, and
-    # ClearanceMode for the deprecated ``clearance_status``) whose
+    # Booleans map onto two-variant native enums (AdjustmentKind) whose
     # discriminant 1 is the "true" case.
     if not isinstance(value, bool):
         raise TypeError(f"{name} must be a bool")
@@ -462,15 +459,6 @@ class CsrProperties(_Owned):
                            location_address, industry_business_category))
 
     @classmethod
-    @deprecated("CsrProperties(common_name=..., ...)")
-    def new(cls, *, common_name: str, serial_number: str, organization_identifier: str, organization_unit_name: str, organization_name: str, country_name: str, invoice_type: str, location_address: str, industry_business_category: str) -> 'CsrProperties':
-        return cls(common_name=common_name, serial_number=serial_number,
-                   organization_identifier=organization_identifier,
-                   organization_unit_name=organization_unit_name, organization_name=organization_name,
-                   country_name=country_name, invoice_type=invoice_type, location_address=location_address,
-                   industry_business_category=industry_business_category)
-
-    @classmethod
     def from_str(cls, properties: str) -> 'CsrProperties':
         """Parse CSR properties text (the ZATCA ``csr.*=`` properties format)."""
         return cls._wrap(_call(_native.CsrProperties.from_str, properties))
@@ -479,21 +467,6 @@ class CsrProperties(_Owned):
     def from_file(cls, path: _StrPath) -> 'CsrProperties':
         """Read and parse a CSR properties file."""
         return cls._wrap(_call(_native.CsrProperties.from_file, os.fspath(path)))
-
-    @classmethod
-    @deprecated("CsrProperties.from_str(properties)")
-    def from_properties_str(cls, properties: str) -> 'CsrProperties':
-        return cls.from_str(properties)
-
-    @classmethod
-    @deprecated("CsrProperties.from_str(properties)")
-    def parse_csr_config(cls, properties: str) -> 'CsrProperties':
-        return cls.from_str(properties)
-
-    @classmethod
-    @deprecated("CsrProperties.from_file(path)")
-    def parse_csr_config_file(cls, path: _StrPath) -> 'CsrProperties':
-        return cls.from_file(path)
 
     def build(self, key: SigningKey, env: Environment) -> 'Csr':
         return Csr._wrap(self._invoke("build", key, int(env)))
@@ -557,19 +530,9 @@ class ComplianceCsid(_Csid):
     """Compliance CSID credentials, returned by ``ZatcaClient.request_compliance_csid``."""
     _native_type = _native.ComplianceCsid
 
-    @classmethod
-    @deprecated("ComplianceCsid(env, token=..., secret=..., request_id=...)")
-    def new(cls, env: Environment, token: str, secret: str, request_id: Optional[str]=None) -> 'ComplianceCsid':
-        return cls(env, token=token, secret=secret, request_id=request_id)
-
 class ProductionCsid(_Csid):
     """Production CSID credentials, returned by ``ZatcaClient.request_production_csid``."""
     _native_type = _native.ProductionCsid
-
-    @classmethod
-    @deprecated("ProductionCsid(env, token=..., secret=..., request_id=...)")
-    def new(cls, env: Environment, token: str, secret: str, request_id: Optional[str]=None) -> 'ProductionCsid':
-        return cls(env, token=token, secret=secret, request_id=request_id)
 
 class ValidationMessage(_Owned):
     _repr_fields = ('message_type', 'code', 'status')
@@ -664,7 +627,7 @@ class ValidationResponse(_Owned):
 # their input; values read from an invoice are built straight from native data.
 
 @dataclass(frozen=True)
-class Identifier(ValueCompat):
+class Identifier:
     """An identifier and its optional scheme (``schemeID``), such as ``Identifier("7003339333", "CRN")``."""
     value: str
     scheme: Optional[str] = None
@@ -673,32 +636,17 @@ class Identifier(ValueCompat):
         _check_text(self.value, "value")
         _check_text(self.scheme, "scheme", optional=True)
 
-    # 0.5 returned item identifiers as ``(value, scheme)`` tuples.
-    def __iter__(self):
-        warn("unpacking an Identifier as a (value, scheme) tuple is deprecated; "
-             "use .value and .scheme instead")
-        return iter((self.value, self.scheme))
-
-    def __getitem__(self, index):
-        warn("indexing an Identifier as a (value, scheme) tuple is deprecated; "
-             "use .value and .scheme instead")
-        return (self.value, self.scheme)[index]
-
     @classmethod
     def _from_native(cls, native) -> "Identifier":
         return _frozen(cls, value=_call(native.value), scheme=_call(native.scheme))
 
 
-def _identifier_in(value, name: str, skip: int) -> Optional[Identifier]:
-    """Accept an ``Identifier`` or a bare value string; ``(value, scheme)`` tuples warn."""
+def _identifier_in(value, name: str) -> Optional[Identifier]:
+    """Accept an ``Identifier`` or a bare value string."""
     if value is None or isinstance(value, Identifier):
         return value
     if isinstance(value, str):
         return Identifier(value)
-    if isinstance(value, tuple) and len(value) == 2:
-        warn(f"passing {name} as a (value, scheme) tuple is deprecated; "
-             "use Identifier(value, scheme) instead", skip)
-        return Identifier(*value)
     raise TypeError(f"{name} must be an Identifier or str")
 
 
@@ -719,7 +667,7 @@ def _address_fields(native) -> dict[str, Any]:
 
 
 @dataclass(frozen=True)
-class Address(ValueCompat):
+class Address:
     """A postal address.
 
     The constructor validates the address and normalizes the country code to
@@ -752,17 +700,8 @@ class Address(ValueCompat):
         """Return a copy with ``province`` (the country subdivision) set."""
         return dataclasses.replace(self, province=province)
 
-    @classmethod
-    @deprecated("Address(country_code, city, street, building_number, postal_code, ...)")
-    def new(cls, country_code: str, city: str, street: str, building_number: str, postal_code: str,
-            additional_street: Optional[str] = None, additional_number: Optional[str] = None,
-            district: Optional[str] = None) -> "Address":
-        return cls(country_code, city, street, building_number, postal_code, additional_street,
-                   additional_number, district)
-
-
 @dataclass(frozen=True)
-class Party(ValueCompat):
+class Party:
     """A seller or buyer.
 
     ``vat_id`` and the entries of ``identifiers`` accept an ``Identifier`` or a
@@ -780,8 +719,8 @@ class Party(ValueCompat):
             raise TypeError("address must be an Address or None")
         if isinstance(self.identifiers, (str, Identifier)):
             raise TypeError("identifiers must be a sequence of Identifier")
-        _set(self, vat_id=_identifier_in(self.vat_id, "vat_id", 4),
-             identifiers=tuple(_identifier_in(v, "identifiers", 4) for v in self.identifiers))
+        _set(self, vat_id=_identifier_in(self.vat_id, "vat_id"),
+             identifiers=tuple(_identifier_in(v, "identifiers") for v in self.identifiers))
 
     @property
     def other_id(self) -> Optional[Identifier]:
@@ -801,7 +740,7 @@ class Party(ValueCompat):
 
 
 @dataclass(frozen=True)
-class InvoiceNote(ValueCompat):
+class InvoiceNote:
     """An invoice note; ``language_id`` is ``None`` when the note has no language."""
     text: str
     language_id: Optional[str] = None
@@ -828,7 +767,7 @@ def _reference_fields(native) -> dict[str, Any]:
 
 
 @dataclass(frozen=True)
-class OriginalInvoiceRef(ValueCompat):
+class OriginalInvoiceRef:
     """A reference to another document: the billing reference of a credit or
     debit note, or a line's document reference (a prepayment invoice).
 
@@ -852,15 +791,8 @@ class OriginalInvoiceRef(ValueCompat):
     def _from_native(cls, native) -> "OriginalInvoiceRef":
         return _frozen(cls, **_reference_fields(native))
 
-    @classmethod
-    @deprecated("OriginalInvoiceRef(id, uuid=..., issue_date=..., issue_time=..., document_type_code=...)")
-    def new(cls, id: str, uuid: Optional[_UuidIn] = None, date: Optional[_DateIn] = None,
-            time: Optional[str] = None, type_code: Optional[str] = None) -> "OriginalInvoiceRef":
-        return cls(id, uuid, date, time, type_code)  # type: ignore[arg-type]
-
-
 @dataclass(frozen=True)
-class PaymentMeans(ValueCompat):
+class PaymentMeans:
     """A payment means: the UNTDID 4461 ``code`` (``"10"`` cash, ``"30"`` credit
     transfer, ...), instruction notes, and an optional payee account."""
     code: str
@@ -909,14 +841,8 @@ class PaymentMeans(ValueCompat):
         """Return a copy with the payee account identifier and payment terms set."""
         return dataclasses.replace(self, account_identifier=id, payment_terms=terms)
 
-    @classmethod
-    @deprecated("PaymentMeans(code)")
-    def new(cls, code: str, instruction: Optional[str] = None) -> "PaymentMeans":
-        return cls(code, () if instruction is None else (instruction,))
-
-
 @dataclass(frozen=True)
-class Adjustment(ValueCompat):
+class Adjustment:
     """An allowance or charge, on the document or on a line.
 
     Give a fixed ``amount``, or use :meth:`percent_of` for a percentage of a
@@ -979,10 +905,6 @@ class Adjustment(ValueCompat):
         return dataclasses.replace(self, reason=self.reason if reason is None else reason,
                                    reason_code=self.reason_code if code is None else code)
 
-    @deprecated("Adjustment.percent_of(base, percent, amount=value)")
-    def with_supplied_amount(self, value: _DecimalIn) -> "Adjustment":
-        return dataclasses.replace(self, amount=_to_decimal(value, "amount"))
-
     def _line_native(self):
         """The native line adjustment (category and rate come from the line)."""
         base, percentage = self.base_amount, self.percentage
@@ -1024,38 +946,6 @@ class Adjustment(ValueCompat):
             percentage=_optional_decimal(_call(native.percentage)), charge=charge, category=category, rate=rate,
             exemption=TaxExemption(), tax_category_count=1, omitted_rate=False)
 
-
-# 0.5 names whose identifiers are now dataclass fields: the class attribute is
-# the deprecated factory, the instance attribute the field value.
-Adjustment.amount = deprecated_classmethod(  # type: ignore[assignment]
-    "Adjustment(value)", lambda cls, value: cls(value), "Adjustment.amount")
-Adjustment.percentage = deprecated_classmethod(  # type: ignore[assignment]
-    "Adjustment.percent_of(base, percent)", lambda cls, base, percent: cls.percent_of(base, percent),
-    "Adjustment.percentage")
-Adjustment.value = deprecated_property(  # type: ignore[attr-defined]
-    "the amount field", lambda self: self.amount, "Adjustment.value")
-Adjustment.percent = deprecated_property(  # type: ignore[attr-defined]
-    "the percentage field", lambda self: self.percentage, "Adjustment.percent")
-
-
-class _AllowanceChargeType(type):
-    def __instancecheck__(cls, obj) -> bool:
-        return isinstance(obj, Adjustment)
-
-    def __subclasscheck__(cls, sub) -> bool:
-        return issubclass(sub, Adjustment)
-
-
-class _AllowanceCharge(metaclass=_AllowanceChargeType):
-    """The 0.5 ``AllowanceCharge(charge, amount, category, rate, ...)``; builds an ``Adjustment``."""
-
-    def __new__(cls, charge: bool, amount: _DecimalIn, category: VatCategory, rate: _DecimalIn,
-                reason: Optional[str] = None, reason_code: Optional[str] = None,
-                exemption: TaxExemption = TaxExemption(), tax_category_count: int = 1,
-                base_amount: Optional[_DecimalIn] = None, percentage: Optional[_DecimalIn] = None,
-                omitted_rate: bool = False) -> Any:  # an Adjustment
-        return Adjustment(amount, reason, reason_code, base_amount, percentage, charge,  # type: ignore[arg-type]
-                          category, rate, exemption, tax_category_count, omitted_rate)
 
 
 @dataclass(frozen=True)
@@ -1112,7 +1002,7 @@ class InvoiceLineItem:
                 raise TypeError(f"{name} must contain {kind.__name__} values")
             values[name] = items
         for name in ("item_seller_identifier", "item_buyer_identifier", "item_standard_identifier"):
-            values[name] = _identifier_in(getattr(self, name), name, 4)
+            values[name] = _identifier_in(getattr(self, name), name)
         _set(self, **values)
 
 
@@ -1159,14 +1049,6 @@ class ZatcaClient(_Owned):
         """Exchange compliance credentials for production CSID credentials."""
         return ProductionCsid._wrap(self._invoke("_blocking_request_production_csid", ccsid))
 
-    @deprecated("request_compliance_csid(csr, otp)")
-    def post_csr_for_ccsid(self, csr: Csr, otp: str) -> ComplianceCsid:
-        return self.request_compliance_csid(csr, otp)
-
-    @deprecated("request_production_csid(ccsid)")
-    def post_ccsid_for_pcsid(self, ccsid: ComplianceCsid) -> ProductionCsid:
-        return self.request_production_csid(ccsid)
-
     def renew_csid(self, pcsid: ProductionCsid, csr: Csr, otp: str, accept_language: Optional[str]=None) -> ProductionCsid:
         return ProductionCsid._wrap(self._invoke("_blocking_renew_csid", pcsid, csr, otp, accept_language))
 
@@ -1174,33 +1056,20 @@ class ZatcaClient(_Owned):
         return ValidationResponse._wrap(self._invoke("_blocking_check_invoice_compliance", invoice, ccsid))
 
     def report_simplified_invoice(self, invoice: 'SignedInvoice', pcsid: ProductionCsid, *,
-                                  clearance: Optional[ClearanceMode] = None, accept_language: Optional[str] = None,
-                                  clearance_status: Optional[bool] = None) -> 'ValidationResponse':
-        """Report a simplified invoice. ``clearance`` (required) sets the ``Clearance-Status``
-        header; ``clearance_status=bool`` is the deprecated 0.5 form."""
-        mode = _clearance_mode("report_simplified_invoice", clearance, clearance_status)
+                                  clearance: ClearanceMode, accept_language: Optional[str] = None) -> 'ValidationResponse':
+        """Report a simplified invoice. ``clearance`` sets the ``Clearance-Status`` header."""
+        mode = _clearance_mode(clearance)
         return ValidationResponse._wrap(self._invoke("_blocking_report_simplified_invoice", invoice, pcsid, mode, accept_language))
 
     def clear_standard_invoice(self, invoice: 'SignedInvoice', pcsid: ProductionCsid, *,
-                               clearance: Optional[ClearanceMode] = None, accept_language: Optional[str] = None,
-                               clearance_status: Optional[bool] = None) -> 'ValidationResponse':
-        """Clear a standard invoice. ``clearance`` (required) sets the ``Clearance-Status``
-        header; ``clearance_status=bool`` is the deprecated 0.5 form."""
-        mode = _clearance_mode("clear_standard_invoice", clearance, clearance_status)
+                               clearance: ClearanceMode, accept_language: Optional[str] = None) -> 'ValidationResponse':
+        """Clear a standard invoice. ``clearance`` sets the ``Clearance-Status`` header."""
+        mode = _clearance_mode(clearance)
         return ValidationResponse._wrap(self._invoke("_blocking_clear_standard_invoice", invoice, pcsid, mode, accept_language))
 
 
-def _clearance_mode(method: str, clearance: Optional[ClearanceMode], clearance_status: Optional[bool]) -> int:
-    """The native ``ClearanceMode`` discriminant for ``clearance=`` or the deprecated ``clearance_status=``."""
-    if clearance_status is not None:
-        if clearance is not None:
-            raise TypeError(f"{method}(): pass clearance=ClearanceMode..., not both clearance and clearance_status")
-        value = _flag(clearance_status, "clearance_status")
-        warn(f"{method}(clearance_status={clearance_status}) is deprecated; use "
-             f"clearance=ClearanceMode.{ClearanceMode(value).name} instead", 3)
-        return value
-    if clearance is None:
-        raise TypeError(f"{method}() missing required keyword argument: 'clearance'")
+def _clearance_mode(clearance: ClearanceMode) -> int:
+    """The native ``ClearanceMode`` discriminant for ``clearance=``."""
     if isinstance(clearance, bool) or not isinstance(clearance, int):
         raise TypeError("clearance must be a ClearanceMode")
     return int(ClearanceMode(clearance))
@@ -1491,18 +1360,9 @@ class _Invoice(_Owned):
         """The invoice XML."""
         return self._invoke("xml")
 
-    @deprecated("the xml property")
-    def to_xml(self) -> str:
-        return self._invoke("xml")
-
     def hash(self) -> str:
         """Compute the base64 invoice hash (the next invoice's ``previous_invoice_hash``)."""
         return self._invoke("hash")
-
-    @deprecated("hash()")
-    def hash_base64(self) -> str:
-        return self.hash()
-
 
 class FinalizedInvoice(_Invoice):
     _native_type = _native.FinalizedInvoice
@@ -1539,14 +1399,6 @@ class SignedInvoice(_Invoice):
     def from_file(cls, path: _StrPath) -> 'SignedInvoice':
         """Read and parse a signed invoice XML file."""
         return super().from_file(path)
-
-    @deprecated("the xml property")
-    def into_xml(self) -> str:
-        with self._lock:
-            try:
-                return self._invoke("into_xml")
-            finally:
-                self._cache = None  # consumed
 
     def to_xml_base64(self) -> str:
         return self._invoke("to_xml_base64")
@@ -1598,11 +1450,6 @@ class LineItemBuilder(_Owned):
 
     def __init__(self) -> None:
         self._attach(_call(_native.LineItemBuilder.new))
-
-    @classmethod
-    @deprecated("LineItemBuilder()")
-    def new(cls) -> "LineItemBuilder":
-        return cls()
 
     def build(self) -> InvoiceLineItem:
         return FinalizedInvoice._line_item_value(self._invoke("build"))
@@ -1770,36 +1617,12 @@ class InvoiceBuilder(_Owned):
             handle = _call(_native.InvoiceBuilder.new, int(invoice_type), int(invoice_subtype),
                            None, None, None, original_invoice_reason)
         self._attach(handle)
-        self._init_state()
         for name, value in (("set_id", id), ("set_uuid", uuid), ("set_issue_datetime", issue_datetime),
                             ("set_currency", currency), ("set_previous_invoice_hash", previous_invoice_hash),
                             ("set_invoice_counter", invoice_counter), ("set_vat_category", vat_category),
                             ("set_flags", flags), ("set_seller", seller), ("set_buyer", buyer)):
             if value is not None:
                 getattr(self, name)(value)
-
-    @classmethod
-    def _wrap(cls, handle):
-        obj = super()._wrap(handle)
-        obj._init_state()
-        return obj
-
-    def _init_state(self) -> None:
-        # Inputs for the deprecated aggregate setters, which ``build`` applies as adjustments.
-        self._legacy: Optional[dict[str, Any]] = None
-        self._line_rates: list[tuple[VatCategory, Decimal]] = []
-        self._vat_category: Optional[VatCategory] = None
-        self._explicit_adjustments = False
-
-    @classmethod
-    @deprecated("InvoiceBuilder(invoice_type, invoice_subtype, ...)")
-    def new(cls, invoice_type: InvoiceTypeKind, invoice_subtype: InvoiceSubType, original_invoice_id: Optional[str]=None, original_invoice_uuid: Optional[str]=None, original_invoice_issue_date: Optional[str]=None, original_invoice_reason: Optional[str]=None) -> 'InvoiceBuilder':
-        return cls._wrap(_call(_native.InvoiceBuilder.new, int(invoice_type), int(invoice_subtype), original_invoice_id, original_invoice_uuid, original_invoice_issue_date, original_invoice_reason))
-
-    @classmethod
-    @deprecated("InvoiceBuilder(invoice_type, invoice_subtype, original_invoice=reference, original_invoice_reason=reason)")
-    def new_with_reference(cls, invoice_type: InvoiceTypeKind, invoice_subtype: InvoiceSubType, reference: OriginalInvoiceRef, reason: str) -> 'InvoiceBuilder':
-        return cls._wrap(_call(_native.InvoiceBuilder.new_with_reference, int(invoice_type), int(invoice_subtype), _reference_in(reference)._native_value(), reason))
 
     def _set(self, name, *args) -> "InvoiceBuilder":
         self._invoke(name, *args)
@@ -1827,16 +1650,10 @@ class InvoiceBuilder(_Owned):
         return self._set("set_invoice_counter", invoice_counter)
 
     def set_vat_category(self, vat_category: VatCategory) -> "InvoiceBuilder":
-        self._invoke("set_vat_category", int(vat_category))
-        self._vat_category = VatCategory(vat_category)
-        return self
+        return self._set("set_vat_category", int(vat_category))
 
     def set_flags(self, flags: Union[int, InvoiceFlag]) -> "InvoiceBuilder":
         return self._set("set_flags", int(flags))
-
-    @deprecated("set_flags(flags)")
-    def flags(self, flags: Union[int, InvoiceFlag]) -> "InvoiceBuilder":
-        return self.set_flags(flags)
 
     def set_delivery(self, actual: Optional[_DateIn] = None, latest: Optional[_DateIn] = None) -> "InvoiceBuilder":
         return self._set("set_delivery", _date_text(actual, "actual"), _date_text(latest, "latest"))
@@ -1862,14 +1679,6 @@ class InvoiceBuilder(_Owned):
     def add_note(self, text: str, *, language: Optional[str] = None) -> "InvoiceBuilder":
         return self._set("add_note", language, text)
 
-    @deprecated("add_note(text, language=...)")
-    def set_note(self, language: str, text: str) -> "InvoiceBuilder":
-        return self.add_note(text, language=language)
-
-    @deprecated("add_note(text)")
-    def set_note_without_language(self, text: str) -> "InvoiceBuilder":
-        return self.add_note(text)
-
     def add_billing_reference(self, value: OriginalInvoiceRef) -> "InvoiceBuilder":
         return self._set("add_billing_reference", _reference_in(value)._native_value())
 
@@ -1877,11 +1686,6 @@ class InvoiceBuilder(_Owned):
         if not isinstance(value, PaymentMeans):
             raise TypeError("add_payment_means() takes a PaymentMeans")
         return self._set("add_payment_means", value._native_value())
-
-    @deprecated("add_payment_means(PaymentMeans(code))")
-    def set_payment_means_code(self, payment_means_code: str) -> "InvoiceBuilder":
-        """Append a payment means with this code."""
-        return self.add_payment_means(PaymentMeans(payment_means_code))
 
     # --- parties ----------------------------------------------------------------------
 
@@ -1962,9 +1766,7 @@ class InvoiceBuilder(_Owned):
         for tax in tax_subtotals:
             native = tax._native_value()
             item = _call(item.with_tax_subtotal, native)
-        self._invoke("add_item", item)
-        self._record_line(vat_category, vat_rate, document_references)
-        return self
+        return self._set("add_item", item)
 
     def add_item(self, item: InvoiceLineItem) -> "InvoiceBuilder":
         """Add a line item. ``total_amount`` and ``vat_amount`` are calculated when ``None``."""
@@ -2004,9 +1806,7 @@ class InvoiceBuilder(_Owned):
             b.add_document_reference(ref)
         for tax in item.tax_subtotals:
             b.add_tax_subtotal(tax)
-        self._invoke("add_item", b._invoke("build"))
-        self._record_line(item.vat_category, item.vat_rate, item.document_references)
-        return self
+        return self._set("add_item", b._invoke("build"))
 
     # --- document totals --------------------------------------------------------------
 
@@ -2015,10 +1815,6 @@ class InvoiceBuilder(_Owned):
 
     def add_tax_exemption(self, category: VatCategory, rate: _DecimalIn, exemption: TaxExemption) -> "InvoiceBuilder":
         return self._set("add_tax_exemption", int(category), _decimal(rate), exemption._native_value())
-
-    @deprecated("add_tax_exemption(category, rate, exemption)")
-    def set_tax_exemption(self, category: VatCategory, rate: _DecimalIn, exemption: TaxExemption) -> "InvoiceBuilder":
-        return self.add_tax_exemption(category, rate, exemption)
 
     def add_allowance(self, value: Adjustment, category: Optional[VatCategory] = None,
                       rate: Optional[_DecimalIn] = None, exemption: Optional[TaxExemption] = None) -> "InvoiceBuilder":
@@ -2035,11 +1831,6 @@ class InvoiceBuilder(_Owned):
         ``category``, ``rate`` and ``exemption`` default to the adjustment's own fields.
         """
         return self._add_document_adjustment(True, value, category, rate, exemption, "add_charge")
-
-    @deprecated("add_allowance(value, category, rate) or add_charge(value, category, rate)")
-    def add_document_adjustment(self, charge: bool, value: Adjustment, category: VatCategory, rate: _DecimalIn, exemption: TaxExemption = TaxExemption()) -> "InvoiceBuilder":
-        _flag(charge, "charge")
-        return (self.add_charge if charge else self.add_allowance)(value, category, rate, exemption)
 
     def add_adjustment(self, adjustment: Adjustment) -> "InvoiceBuilder":
         """Append a document-level allowance or charge described entirely by ``adjustment``:
@@ -2060,89 +1851,12 @@ class InvoiceBuilder(_Owned):
             raise TypeError(f"{method}() needs a VAT category and rate: pass them as arguments "
                             "or set them on the Adjustment")
         exemption = value.exemption if exemption is None else exemption
-        self._invoke("add_adjustment", value._document_native(charge, VatCategory(category), rate, exemption))
-        self._explicit_adjustments = True
-        return self
-
-    # The deprecated aggregate setters below are applied by ``build`` as one
-    # document-level allowance and one charge in the document VAT category, at
-    # the single VAT rate of the lines in that category. They cannot be combined
-    # with ``add_allowance``, ``add_charge`` or ``add_adjustment``.
-
-    @deprecated("add_allowance(Adjustment(amount, reason=reason), category, rate)")
-    def set_allowance(self, reason: str, amount: _DecimalIn) -> "InvoiceBuilder":
-        self._aggregate_set("discount", amount)
-        self._aggregate_set("reason", reason)
-        return self
-
-    @deprecated("add_charge(Adjustment(charge), category, rate)")
-    def invoice_level_charge(self, charge: _DecimalIn) -> "InvoiceBuilder":
-        self._aggregate_set("charge", charge)
-        return self
-
-    @deprecated("add_allowance(Adjustment(discount), category, rate)")
-    def invoice_level_discount(self, discount: _DecimalIn) -> "InvoiceBuilder":
-        self._aggregate_set("discount", discount)
-        return self
-
-    @deprecated("Adjustment(amount, reason=reason) on each add_allowance/add_charge entry")
-    def allowance_reason(self, reason: str) -> "InvoiceBuilder":
-        self._aggregate_set("reason", reason)
-        return self
-
-    def _aggregate_set(self, key: str, value) -> None:
-        if key == "reason":
-            if not isinstance(value, str):
-                raise TypeError("reason must be a string")
-        else:
-            value = Adjustment(_to_decimal(value, key))
-        self._require_open()
-        if self._legacy is None:
-            self._legacy = {"charge": None, "discount": None, "reason": None}
-        self._legacy[key] = value
+        return self._set("add_adjustment", value._document_native(charge, VatCategory(category), rate, exemption))
 
     def build(self) -> FinalizedInvoice:
         with self._lock:
             self._require_open()
-            self._apply_aggregate()
             return FinalizedInvoice._wrap(self._invoke("build"))
-
-    def _record_line(self, category, rate, document_references=()) -> None:
-        # Mirror core totals: prepayment adjustment lines (a reference to
-        # document type 386) are not part of the taxable groups.
-        if any((ref.document_type_code or "").strip() == "386" for ref in document_references):
-            return
-        self._line_rates.append((VatCategory(category), Decimal(_decimal(rate))))
-
-    def _apply_aggregate(self) -> None:
-        legacy = self._legacy
-        if legacy is None:
-            return
-        charge, discount, reason = legacy["charge"], legacy["discount"], legacy["reason"]
-        charge = None if charge is None or charge.amount == 0 else charge
-        discount = None if discount is None or discount.amount == 0 else discount
-        if charge is None and discount is None and reason is None:
-            return
-        if self._explicit_adjustments:
-            raise ValueError("invoice_level_charge/invoice_level_discount/allowance_reason cannot be combined with document adjustments")
-        category = self._vat_category
-        rates = {rate for cat, rate in self._line_rates if cat == category}
-        if category is None or len(rates) != 1:
-            raise ValueError("aggregate document adjustments need a document VAT category with exactly one line VAT rate; use add_allowance/add_charge")
-        rate = _decimal(rates.pop())
-        # Prepare (and validate) both entries before touching the native builder,
-        # and keep the pending values until they are added, so a rejected input
-        # can be corrected and build() retried.
-        allowance = None
-        if discount is not None or reason is not None:
-            allowance = (discount or Adjustment(Decimal(0))).with_reason(reason or "discount")._line_native()
-        surcharge = charge.with_reason(reason or "charge")._line_native() if charge is not None else None
-        exemption = TaxExemption()._native_value()
-        if allowance is not None:
-            self._invoke("add_allowance", allowance, int(category), rate, exemption)
-        if surcharge is not None:
-            self._invoke("add_charge", surcharge, int(category), rate, exemption)
-        self._legacy = None
 
 
 # --- local validation -----------------------------------------------------------------
@@ -2262,7 +1976,7 @@ class ZatcaReport:
         return self._json
 
     def to_dict(self) -> dict[str, Any]:
-        """The report as plain JSON-compatible data (the 0.5 return value)."""
+        """The report as plain JSON-compatible data."""
         return json.loads(self._json)
 
     @classmethod
@@ -2336,65 +2050,3 @@ def validate_xml(xml: str) -> bool:
 def hash_xml(xml: str) -> str:
     """Base64 invoice hash of invoice XML (the next invoice's ``previous_invoice_hash``)."""
     return _call(_native.Xml.hash, xml)
-
-
-@deprecated("validate_zatca(xml, ...), which returns a ZatcaReport (report.to_dict() gives this dict)")
-def validate_zatca_invoice_from_str(
-    config: Config,
-    xml: str,
-    *,
-    previous_invoice_hash: Optional[str] = None,
-    evaluated_at: Optional[str] = None,
-) -> dict[str, Any]:
-    # Validation is stateless; ``config`` is accepted for compatibility only.
-    _call(lambda _config: None, config)
-    report = _validate_zatca_native(xml, previous_invoice_hash, evaluated_at)
-    return json.loads(_call(report.to_json))
-
-
-@deprecated("validate_xml(xml)")
-def validate_xml_invoice_from_str(config: Config, xml: str) -> bool:
-    # Validation is stateless; ``config`` is accepted for compatibility only.
-    _call(lambda _config: None, config)
-    return validate_xml(xml)
-
-
-@deprecated("hash_xml(xml)")
-def invoice_hash_base64_from_xml_str(xml: str) -> str:
-    return hash_xml(xml)
-
-
-@deprecated("FinalizedInvoice.from_xml(xml)")
-def parse_finalized_invoice_xml(xml: str) -> FinalizedInvoice:
-    return FinalizedInvoice.from_xml(xml)
-
-
-@deprecated("FinalizedInvoice.from_file(path)")
-def parse_finalized_invoice_xml_file(path: _StrPath) -> FinalizedInvoice:
-    return FinalizedInvoice.from_file(path)
-
-
-@deprecated("SignedInvoice.from_xml(xml)")
-def parse_signed_invoice_xml(xml: str) -> SignedInvoice:
-    return SignedInvoice.from_xml(xml)
-
-
-@deprecated("SignedInvoice.from_file(path)")
-def parse_signed_invoice_xml_file(path: _StrPath) -> SignedInvoice:
-    return SignedInvoice.from_file(path)
-
-
-# Deprecated class names, served by module ``__getattr__`` so that using them warns.
-DEPRECATED_ALIASES: dict[str, tuple[str, Any]] = {
-    "Signer": ("InvoiceSigner", lambda: InvoiceSigner),
-    "CsidCompliance": ("ComplianceCsid", lambda: ComplianceCsid),
-    "CsidProduction": ("ProductionCsid", lambda: ProductionCsid),
-    # Merged into one model in 0.6. ``AllowanceCharge(charge, amount, category,
-    # rate, ...)`` keeps its 0.5 argument order and returns an ``Adjustment``.
-    "AllowanceCharge": ("Adjustment", lambda: _AllowanceCharge),
-    "DocumentReference": ("OriginalInvoiceRef", lambda: OriginalInvoiceRef),
-    "VatId": ("Identifier", lambda: Identifier),
-    "OtherId": ("Identifier", lambda: Identifier),
-}
-
-__getattr__ = alias_getattr(__name__, DEPRECATED_ALIASES)

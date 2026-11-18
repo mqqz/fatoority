@@ -224,19 +224,14 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
     `clearance` (required) and `accept_language` are keyword-only.
     `ClearanceMode.DISABLED` sends `Clearance-Status: 0` and `ClearanceMode.ENABLED`
-    sends `1`. The 0.5 form `clearance_status=False`/`True`, and the 0.5 names
-    `post_csr_for_ccsid` and `post_ccsid_for_pcsid`, still work until 0.7, with a
-    `DeprecationWarning`; passing both `clearance` and `clearance_status` raises
-    `TypeError`.
+    sends `1`.
 
     **Credentials**
 
     `ComplianceCsid(env: Environment, *, token: str, secret: str, request_id: Optional[str] = None)`
     builds compliance credentials from stored values; `ProductionCsid(...)` takes the
-    same arguments. The deprecated `ComplianceCsid.new(env, token, secret, request_id=None)`
-    and `ProductionCsid.new(...)` keep their 0.5 positional order until 0.7. The `env` property is an `Environment`; `binary_security_token` and
-    `secret` are `str`; `request_id` is `Optional[str]`, `None` when absent. The 0.5 class
-    names `CsidCompliance` and `CsidProduction` are deprecated aliases until 0.7.
+    same arguments. The `env` property is an `Environment`; `binary_security_token` and
+    `secret` are `str`; `request_id` is `Optional[str]`, `None` when absent.
 
     **Responses**
 

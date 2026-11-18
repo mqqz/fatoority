@@ -63,6 +63,41 @@ bindings had no deprecated items and are unchanged.
   `FinalizedInvoice::hash_base64` / `SignedInvoice::hash_base64` (use `hash`,
   which returns an `InvoiceHash`).
 
+Python (`fatoority`): every name deprecated in 0.6 is removed, with no
+compatibility aliases, so nothing in the package emits a `DeprecationWarning`
+any more. Each had a replacement in 0.6; see the
+[Python migration guide](https://docs.fatoority.com/guides/migrate-0.7/python/).
+
+- Module names: `Signer`, `CsidCompliance`, `CsidProduction`,
+  `AllowanceCharge`, `DocumentReference`, `VatId` and `OtherId` (use
+  `InvoiceSigner`, `ComplianceCsid`, `ProductionCsid`, `Adjustment`,
+  `OriginalInvoiceRef` and `Identifier`); `parse_finalized_invoice_xml[_file]`,
+  `parse_signed_invoice_xml[_file]`, `invoice_hash_base64_from_xml_str`,
+  `validate_xml_invoice_from_str` and `validate_zatca_invoice_from_str` (use
+  `FinalizedInvoice`/`SignedInvoice.from_xml`/`from_file`, `hash_xml`,
+  `validate_xml` and `validate_zatca`).
+- Factories: the `.new(...)` classmethods of `InvoiceBuilder`,
+  `LineItemBuilder`, `CsrProperties`, `ComplianceCsid`, `ProductionCsid`,
+  `Address`, `PaymentMeans` and `OriginalInvoiceRef`,
+  `InvoiceBuilder.new_with_reference`, and `Adjustment.amount(...)` /
+  `Adjustment.percentage(...)` (use the constructors and
+  `Adjustment.percent_of`); `CsrProperties.from_properties_str`,
+  `parse_csr_config` and `parse_csr_config_file` (use `from_str`/`from_file`).
+- Invoice builder: `flags`, `set_note`, `set_note_without_language`,
+  `set_payment_means_code`, `set_tax_exemption`, `add_document_adjustment` and
+  the aggregate setters `set_allowance`, `invoice_level_discount`,
+  `invoice_level_charge` and `allowance_reason` (use `set_flags`, `add_note`,
+  `add_payment_means`, `add_tax_exemption`, `add_allowance` and `add_charge`).
+- Values and invoices: `Adjustment.value`, `percent` and
+  `with_supplied_amount`; tuple unpacking and indexing of `Identifier` and
+  `(value, scheme)` tuples as identifier input (now a `TypeError`); the no-op
+  `close()` and `with` on the value dataclasses; `to_xml()`, `into_xml()` and
+  `hash_base64()` on invoices (use `xml` and `hash()`).
+- API client: `post_csr_for_ccsid` and `post_ccsid_for_pcsid` (use
+  `request_compliance_csid` and `request_production_csid`), and the
+  `clearance_status=bool` keyword of `report_simplified_invoice` and
+  `clear_standard_invoice` (`clearance=ClearanceMode...` is now required).
+
 ## [0.6.0] - 2026-11-18
 
 The breaking 0.6 release. `fatoora-core` renames items for consistency and
