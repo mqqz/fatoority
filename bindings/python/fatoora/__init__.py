@@ -50,6 +50,7 @@ from .api import (
     validate_xml,
     validate_zatca,
 )
+from ._async import AsyncZatcaClient
 from .errors import (
     ApiError,
     CryptoError,
@@ -68,6 +69,7 @@ from .errors import (
 __all__ = [
     "Address",
     "Adjustment",
+    "AsyncZatcaClient",
     "ClearanceMode",
     "ClearanceStatus",
     "ComplianceCsid",

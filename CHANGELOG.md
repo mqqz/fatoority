@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added
+
+- Python: `AsyncZatcaClient`, an `asyncio` ZATCA client with the methods of
+  `ZatcaClient` as coroutines, the same arguments, results and errors, and a
+  `timeout=` option. The core prepares and decodes each request; httpx sends it
+  (never following redirects), through an `httpx.AsyncClient` you pass as
+  `http_client=` or one the client creates and closes. httpx comes from the new
+  optional `fatoority[async]` extra; `import fatoora` does not need it.
+
 ### Changed (breaking)
 
 - Python: drop support for Python 3.9, which reached end of life in October

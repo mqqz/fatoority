@@ -117,6 +117,8 @@ Choose your language, then follow its setup and run instructions.
     The example makes a real request to the non-production gateway.
 
     This example uses a blocking request; run it away from your application's UI thread.
+    In `asyncio` code, use `AsyncZatcaClient` from the `fatoority[async]` extra
+    instead ([download the async example](../assets/examples/python/api_async.py)).
 
 
     ```python

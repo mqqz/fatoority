@@ -37,7 +37,7 @@ certificate. Preserve the request ID returned during compliance onboarding.
 | Secret | Credential secret returned by ZATCA | Keep credentials out of logs. |
 | Request ID | Optional text from credential issuance | Required to request production credentials from compliance credentials. |
 | Invoice | Signed invoice object | The client sends its hash, UUID, and Base64 XML. |
-| Clearance flag | `ClearanceMode` (`Enabled`/`Disabled`); a Boolean in Python, the JavaScript async client, and the Kotlin `*Async` helpers | Sends `Clearance-Status: 1` when enabled, `0` when disabled. It does not change the selected operation. |
+| Clearance flag | `ClearanceMode` (`Enabled`/`Disabled`) in every language | Sends `Clearance-Status: 1` when enabled, `0` when disabled. It does not change the selected operation. |
 | Response language | `ar`, `en`, or omitted | Only the exact value `ar` selects Arabic; every other value sends English. |
 
 ## Interpret an invoice response
@@ -262,8 +262,19 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
     Client, credential, response, result, and message objects support `with` and
     `close()`. Child results are independently owned. Calls do not consume their
-    inputs. The public Python facade provides the blocking HTTP methods above;
-    prepared-request methods are not exposed by this facade.
+    inputs. Prepared-request methods are not exposed by the Python facade.
+
+    **Asynchronous client**
+
+    `AsyncZatcaClient(config: Config, *, timeout=None, http_client: Optional[httpx.AsyncClient] = None)`
+    has the HTTP operations above as `async def` methods with the same arguments,
+    return types, and errors. It needs the `async` extra
+    (`pip install "fatoority[async]"`), which adds `httpx`; the native library
+    prepares and decodes each request and httpx sends it, without following
+    redirects. Use `async with` or `await client.aclose()`; the client closes the
+    `httpx.AsyncClient` it created, never one passed as `http_client`. A transport
+    failure or timeout raises `NetworkError`. See the
+    [Python reference](bindings/python.md#asynchronous-client).
 
 === "JavaScript"
     Import `ZatcaClient`, `ComplianceCsid`, `ProductionCsid`, and `InvoiceOutcome`

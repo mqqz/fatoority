@@ -28,6 +28,7 @@ def gateway(monkeypatch, status, body, delay=0.0, headers=None):
             self.send_header("Content-Length", str(len(payload)))
             self.end_headers()
             self.wfile.write(payload)
+        do_PATCH = do_POST  # credential renewal
         def log_message(self, *args):
             pass
     server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
