@@ -2231,8 +2231,158 @@ impl LineItem {
 /// let data: InvoiceData = unimplemented!();
 /// # let _ = data;
 /// ```
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+///
+/// # Serialization
+/// Data serialized by 0.5 or 0.6 with an aggregate document-level discount or
+/// charge (`invoice_level_discount`, `invoice_level_charge`, `allowance_reason`
+/// and `adjustment_vat_rate`, with no `adjustments` entries) is converted on
+/// load into equivalent [`AllowanceCharge`] entries, which render the same XML.
+/// Human-readable formats no longer write those fields; compact formats such as
+/// bincode keep their positions so the layout stays readable by 0.6.
+#[derive(Debug, Clone, PartialEq)]
 pub struct InvoiceData {
+    issue_date_override: Option<InvoiceDate>,
+    issue_time_override: Option<InvoiceTime>,
+    document_tax_first: bool,
+    invoice_type: InvoiceType,
+    id: String,
+    uuid: InvoiceUuid,
+    issue_datetime: InvoiceTimestamp,
+    currency: CurrencyCode,
+    tax_currency: Option<CurrencyCode>,
+    tax_currency_amount: Option<Decimal>,
+    previous_invoice_hash: InvoiceHash,
+    invoice_counter: u64,
+    notes: Vec<InvoiceNote>,
+    billing_references: Vec<OriginalInvoiceRef>,
+    purchase_order_id: Option<String>,
+    contract_id: Option<String>,
+    seller: Seller,
+    buyer: Option<Buyer>,
+    delivery: Option<Delivery>,
+    line_items: Vec<LineItem>,
+    payment_means: Vec<PaymentMeans>,
+    vat_category: VatCategory,
+    flags: InvoiceFlags,
+    adjustments: Vec<AllowanceCharge>,
+}
+
+/// Serialized shape of [`InvoiceData`]. The legacy aggregate fields are
+/// skipped in human-readable formats and written (as the entry totals and
+/// `None`) in compact formats, which read fields by position.
+#[derive(Serialize)]
+#[serde(rename = "InvoiceData")]
+struct InvoiceDataSer<'a> {
+    issue_date_override: &'a Option<InvoiceDate>,
+    issue_time_override: &'a Option<InvoiceTime>,
+    document_tax_first: bool,
+    invoice_type: &'a InvoiceType,
+    id: &'a str,
+    uuid: &'a InvoiceUuid,
+    issue_datetime: &'a InvoiceTimestamp,
+    currency: &'a CurrencyCode,
+    tax_currency: &'a Option<CurrencyCode>,
+    tax_currency_amount: &'a Option<Decimal>,
+    previous_invoice_hash: &'a InvoiceHash,
+    invoice_counter: u64,
+    notes: &'a [InvoiceNote],
+    billing_references: &'a [OriginalInvoiceRef],
+    purchase_order_id: &'a Option<String>,
+    contract_id: &'a Option<String>,
+    seller: &'a Seller,
+    buyer: &'a Option<Buyer>,
+    delivery: &'a Option<Delivery>,
+    line_items: &'a [LineItem],
+    payment_means: &'a [PaymentMeans],
+    vat_category: VatCategory,
+    flags: InvoiceFlags,
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        serialize_with = "serialize_present"
+    )]
+    invoice_level_charge: Option<Decimal>,
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        serialize_with = "serialize_present"
+    )]
+    invoice_level_discount: Option<Decimal>,
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        serialize_with = "serialize_present"
+    )]
+    adjustment_vat_rate: Option<Option<Decimal>>,
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        serialize_with = "serialize_present"
+    )]
+    allowance_reason: Option<Option<String>>,
+    adjustments: &'a [AllowanceCharge],
+}
+
+/// Serializes a field that [`InvoiceDataSer`] only emits when present as its
+/// bare value, matching the 0.6 layout.
+fn serialize_present<T: Serialize, S: serde::Serializer>(
+    value: &Option<T>,
+    serializer: S,
+) -> std::result::Result<S::Ok, S::Error> {
+    match value {
+        Some(value) => value.serialize(serializer),
+        None => serializer.serialize_none(),
+    }
+}
+
+impl Serialize for InvoiceData {
+    fn serialize<S: serde::Serializer>(
+        &self,
+        serializer: S,
+    ) -> std::result::Result<S::Ok, S::Error> {
+        let compact = !serializer.is_human_readable();
+        let total = |kind| {
+            self.adjustment_total(kind)
+                .map_err(serde::ser::Error::custom)
+        };
+        InvoiceDataSer {
+            issue_date_override: &self.issue_date_override,
+            issue_time_override: &self.issue_time_override,
+            document_tax_first: self.document_tax_first,
+            invoice_type: &self.invoice_type,
+            id: &self.id,
+            uuid: &self.uuid,
+            issue_datetime: &self.issue_datetime,
+            currency: &self.currency,
+            tax_currency: &self.tax_currency,
+            tax_currency_amount: &self.tax_currency_amount,
+            previous_invoice_hash: &self.previous_invoice_hash,
+            invoice_counter: self.invoice_counter,
+            notes: &self.notes,
+            billing_references: &self.billing_references,
+            purchase_order_id: &self.purchase_order_id,
+            contract_id: &self.contract_id,
+            seller: &self.seller,
+            buyer: &self.buyer,
+            delivery: &self.delivery,
+            line_items: &self.line_items,
+            payment_means: &self.payment_means,
+            vat_category: self.vat_category,
+            flags: self.flags,
+            invoice_level_charge: compact.then(|| total(AdjustmentKind::Charge)).transpose()?,
+            invoice_level_discount: compact
+                .then(|| total(AdjustmentKind::Allowance))
+                .transpose()?,
+            adjustment_vat_rate: compact.then_some(None),
+            allowance_reason: compact.then_some(None),
+            adjustments: &self.adjustments,
+        }
+        .serialize(serializer)
+    }
+}
+
+/// Deserialization shape of [`InvoiceData`]: the current fields plus the 0.5/0.6
+/// aggregate fields, which are converted into [`AllowanceCharge`] entries when
+/// `adjustments` is empty. Its field order matches the compact layout.
+#[derive(Deserialize)]
+#[serde(rename = "InvoiceData")]
+struct InvoiceDataRepr {
     #[serde(default)]
     issue_date_override: Option<InvoiceDate>,
     #[serde(default)]
@@ -2263,16 +2413,156 @@ pub struct InvoiceData {
     line_items: Vec<LineItem>,
     payment_means: Vec<PaymentMeans>,
     vat_category: VatCategory,
-
     flags: InvoiceFlags,
-
-    invoice_level_charge: Decimal,
-    invoice_level_discount: Decimal,
+    #[serde(default, deserialize_with = "deserialize_present")]
+    invoice_level_charge: Option<Decimal>,
+    #[serde(default, deserialize_with = "deserialize_present")]
+    invoice_level_discount: Option<Decimal>,
     #[serde(default)]
     adjustment_vat_rate: Option<Decimal>,
+    #[serde(default)]
     allowance_reason: Option<String>,
     #[serde(default)]
     adjustments: Vec<AllowanceCharge>,
+}
+
+impl<'de> Deserialize<'de> for InvoiceData {
+    fn deserialize<D: serde::Deserializer<'de>>(
+        deserializer: D,
+    ) -> std::result::Result<Self, D::Error> {
+        InvoiceDataRepr::deserialize(deserializer)?
+            .try_into()
+            .map_err(serde::de::Error::custom)
+    }
+}
+
+impl TryFrom<InvoiceDataRepr> for InvoiceData {
+    type Error = String;
+
+    fn try_from(repr: InvoiceDataRepr) -> std::result::Result<Self, Self::Error> {
+        let mut adjustments = repr.adjustments;
+        if adjustments.is_empty() {
+            adjustments = legacy_adjustments(
+                &repr.line_items,
+                repr.vat_category,
+                repr.invoice_level_discount.unwrap_or(Decimal::ZERO),
+                repr.invoice_level_charge.unwrap_or(Decimal::ZERO),
+                repr.adjustment_vat_rate,
+                repr.allowance_reason,
+            )?;
+        }
+        let data = Self {
+            issue_date_override: repr.issue_date_override,
+            issue_time_override: repr.issue_time_override,
+            document_tax_first: repr.document_tax_first,
+            invoice_type: repr.invoice_type,
+            id: repr.id,
+            uuid: repr.uuid,
+            issue_datetime: repr.issue_datetime,
+            currency: repr.currency,
+            tax_currency: repr.tax_currency,
+            tax_currency_amount: repr.tax_currency_amount,
+            previous_invoice_hash: repr.previous_invoice_hash,
+            invoice_counter: repr.invoice_counter,
+            notes: repr.notes,
+            billing_references: repr.billing_references,
+            purchase_order_id: repr.purchase_order_id,
+            contract_id: repr.contract_id,
+            seller: repr.seller,
+            buyer: repr.buyer,
+            delivery: repr.delivery,
+            line_items: repr.line_items,
+            payment_means: repr.payment_means,
+            vat_category: repr.vat_category,
+            flags: repr.flags,
+            adjustments,
+        };
+        // The totals getters rely on the entry sums being representable.
+        for kind in [AdjustmentKind::Allowance, AdjustmentKind::Charge] {
+            data.adjustment_total(kind)
+                .map_err(|_| "document-level allowance or charge total is out of range")?;
+        }
+        Ok(data)
+    }
+}
+
+/// Converts the 0.5/0.6 aggregate document-level discount and charge into the
+/// entries the legacy totals and XML implied: a discount (emitted when non-zero
+/// or when a reason is set) then a charge (when non-zero), in the single VAT
+/// group of the non-prepayment lines matching `vat_category` (and
+/// `adjustment_vat_rate`, if set), each with the shared reason or the legacy
+/// default `"discount"`/`"charge"`.
+fn legacy_adjustments(
+    lines: &[LineItem],
+    vat_category: VatCategory,
+    discount: Decimal,
+    charge: Decimal,
+    adjustment_vat_rate: Option<Decimal>,
+    reason: Option<String>,
+) -> std::result::Result<Vec<AllowanceCharge>, String> {
+    let mut entries = Vec::new();
+    if discount != Decimal::ZERO || reason.is_some() {
+        entries.push((AdjustmentKind::Allowance, discount, "discount"));
+    }
+    if charge != Decimal::ZERO {
+        entries.push((AdjustmentKind::Charge, charge, "charge"));
+    }
+    if entries.is_empty() {
+        return Ok(Vec::new());
+    }
+    // A reason with zero amounts never touched the totals, so 0.6 required no
+    // unique VAT group: its XML took the rate from `adjustment_vat_rate` or the
+    // first line in the category.
+    if discount == Decimal::ZERO && charge == Decimal::ZERO {
+        let written = adjustment_vat_rate.or_else(|| {
+            lines
+                .iter()
+                .find(|line| line.vat_category == vat_category)
+                .map(|line| line.vat_rate)
+        });
+        if let Some(rate) = written {
+            return Ok(vec![
+                AllowanceCharge::new(AdjustmentKind::Allowance, discount, vat_category, rate)
+                    .with_reason(reason.as_deref().unwrap_or("discount")),
+            ]);
+        }
+    }
+    let mut rates: Vec<Decimal> = Vec::new();
+    for line in lines {
+        if !line.is_prepayment_adjustment()
+            && line.vat_category == vat_category
+            && adjustment_vat_rate.is_none_or(|rate| line.vat_rate == rate)
+            && !rates.contains(&line.vat_rate)
+        {
+            rates.push(line.vat_rate);
+        }
+    }
+    let [rate] = rates[..] else {
+        let rate = adjustment_vat_rate.map_or_else(String::new, |rate| format!(" and rate {rate}"));
+        return Err(format!(
+            "cannot convert the legacy invoice_level_discount/invoice_level_charge: VAT category \
+             {vat_category:?}{rate} matches {} VAT groups of the line items, expected exactly one",
+            rates.len()
+        ));
+    };
+    // Keep the rate's written form: the legacy XML took it from
+    // `adjustment_vat_rate` or the first line in the category.
+    let rate = adjustment_vat_rate
+        .or_else(|| {
+            lines
+                .iter()
+                .find(|line| line.vat_category == vat_category)
+                .map(|line| line.vat_rate)
+        })
+        .filter(|written| *written == rate)
+        .unwrap_or(rate);
+    Ok(entries
+        .into_iter()
+        .map(|(kind, amount, default_reason)| {
+            AllowanceCharge::new(kind, amount, vat_category, rate)
+                .with_reason(reason.as_deref().unwrap_or(default_reason))
+        })
+        .collect())
 }
 
 impl InvoiceData {
@@ -2393,8 +2683,7 @@ impl InvoiceData {
             .map_or("", |p| p.payment_means_type_code.as_str())
     }
 
-    /// Returns the document VAT category, used for the aggregate document-level
-    /// discount and charge.
+    /// Returns the document VAT category.
     pub fn vat_category(&self) -> VatCategory {
         self.vat_category
     }
@@ -2429,27 +2718,48 @@ impl InvoiceData {
         self.flags.contains(InvoiceFlags::SELF_BILLED)
     }
 
-    /// Returns the total of all document-level charges.
+    /// Returns the total of all document-level charges in
+    /// [`adjustments`](Self::adjustments).
+    ///
+    /// # Panics
+    /// Does not panic in practice: building and deserializing reject data whose
+    /// entry totals overflow, so the internal `expect` is unreachable.
     pub fn invoice_level_charge(&self) -> Decimal {
-        self.invoice_level_charge
+        self.adjustment_total(AdjustmentKind::Charge)
+            .expect("checked when the data was built or deserialized")
     }
 
-    /// Returns the total of all document-level allowances (discounts).
+    /// Returns the total of all document-level allowances (discounts) in
+    /// [`adjustments`](Self::adjustments).
+    ///
+    /// # Panics
+    /// Does not panic in practice: building and deserializing reject data whose
+    /// entry totals overflow, so the internal `expect` is unreachable.
     pub fn invoice_level_discount(&self) -> Decimal {
-        self.invoice_level_discount
+        self.adjustment_total(AdjustmentKind::Allowance)
+            .expect("checked when the data was built or deserialized")
     }
 
-    /// Returns the document-level allowance reason: the explicitly set reason, or else the
-    /// reason shared by every document-level adjustment (`None` if they differ).
+    /// Returns the reason shared by every document-level adjustment, or `None`
+    /// if there are none, they differ, or they have no reason.
     pub fn allowance_reason(&self) -> Option<&str> {
-        self.allowance_reason.as_deref().or_else(|| {
-            let first = self.adjustments.first()?.reason.as_deref();
-            self.adjustments
-                .iter()
-                .all(|a| a.reason.as_deref() == first)
-                .then_some(first)
-                .flatten()
-        })
+        let first = self.adjustments.first()?.reason.as_deref();
+        self.adjustments
+            .iter()
+            .all(|a| a.reason.as_deref() == first)
+            .then_some(first)
+            .flatten()
+    }
+
+    /// Sums the amounts of the document-level adjustments of one kind.
+    fn adjustment_total(
+        &self,
+        kind: AdjustmentKind,
+    ) -> std::result::Result<Decimal, crate::DecimalError> {
+        self.adjustments
+            .iter()
+            .filter(|a| a.kind == kind)
+            .try_fold(Decimal::ZERO, |sum, a| sum.add(a.amount))
     }
 }
 /// Computed invoice totals.
@@ -2627,31 +2937,6 @@ impl InvoiceTotals {
                 });
             }
         }
-        if data.adjustments.is_empty()
-            && (data.invoice_level_discount != Decimal::ZERO
-                || data.invoice_level_charge != Decimal::ZERO)
-        {
-            let matches: Vec<_> = groups
-                .iter_mut()
-                .filter(|g| {
-                    g.category == data.vat_category
-                        && data.adjustment_vat_rate.is_none_or(|rate| g.rate == rate)
-                })
-                .collect();
-            if matches.len() != 1 {
-                return Err(ValidationError::new(vec![ValidationIssue::new(
-                    InvoiceField::VatCategory,
-                    ValidationKind::Mismatch,
-                    None,
-                )])
-                .into());
-            }
-            let group = matches.into_iter().next().unwrap();
-            group.taxable_amount = group
-                .taxable_amount
-                .sub(data.invoice_level_discount)?
-                .add(data.invoice_level_charge)?;
-        }
         for adjustment in &data.adjustments {
             let index = groups
                 .iter()
@@ -2689,16 +2974,16 @@ impl InvoiceTotals {
             group.tax_amount = group.taxable_amount.product_rounded(group.rate, true)?;
             tax_amount = tax_amount.add(group.tax_amount)?;
         }
-        let taxable_amount = line_extension
-            .sub(data.invoice_level_discount)?
-            .add(data.invoice_level_charge)?;
+        let allowance_total = data.adjustment_total(AdjustmentKind::Allowance)?;
+        let charge_total = data.adjustment_total(AdjustmentKind::Charge)?;
+        let taxable_amount = line_extension.sub(allowance_total)?.add(charge_total)?;
         let tax_inclusive_amount = taxable_amount.add(tax_amount)?;
         Ok(Self {
             omitted_optional_amounts: [false; 4],
             line_extension,
             tax_amount,
-            allowance_total: data.invoice_level_discount,
-            charge_total: data.invoice_level_charge,
+            allowance_total,
+            charge_total,
             taxable_amount,
             tax_inclusive_amount,
             prepaid_amount: Decimal::ZERO,
