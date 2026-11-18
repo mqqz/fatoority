@@ -103,9 +103,6 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    [Obsolete("Use OmitVatRate; WithoutVatRate will be removed in 0.7.")]
-    public AllowanceCharge WithoutVatRate() => OmitVatRate();
-
     /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>AllowanceCharge</c> allocated on Rust side.
@@ -226,9 +223,6 @@ public partial class AllowanceCharge: IDisposable
             }
         }
     }
-
-    [Obsolete("Use Create; New will be removed in 0.7.")]
-    public static AllowanceCharge New(AdjustmentKind kind, decimal amount, string? reason, string? reasonCode, VatCategory category, decimal rate, TaxExemption exemption) => Create(kind, amount, reason, reasonCode, category, rate, exemption);
 
     public AdjustmentKind Kind
     {

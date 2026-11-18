@@ -491,9 +491,6 @@ public partial class InvoiceLineItem: IDisposable
         }
     }
 
-    [Obsolete("Use Create; New will be removed in 0.7.")]
-    public static InvoiceLineItem New(string description, decimal quantity, string unitCode, decimal unitPrice, decimal rate, VatCategory category) => Create(description, quantity, unitCode, unitPrice, rate, category);
-
     /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>InvoiceLineItem</c> allocated on Rust side.

@@ -87,9 +87,6 @@ public partial class OriginalInvoiceRef: IDisposable
         }
     }
 
-    [Obsolete("Use Create; New will be removed in 0.7.")]
-    public static OriginalInvoiceRef New(string id, string? uuid, string? date, string? time, string? typeCode) => Create(id, uuid, date, time, typeCode);
-
     /// <exception cref="FfiException"></exception>
     public string? IssueTime
     {

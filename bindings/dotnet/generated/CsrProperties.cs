@@ -103,9 +103,6 @@ public partial class CsrProperties: IDisposable
         }
     }
 
-    [Obsolete("Use Create; New will be removed in 0.7.")]
-    public static CsrProperties New(string commonName, string serialNumber, string organizationIdentifier, string organizationUnitName, string organizationName, string countryName, string invoiceType, string locationAddress, string industryBusinessCategory) => Create(commonName, serialNumber, organizationIdentifier, organizationUnitName, organizationName, countryName, invoiceType, locationAddress, industryBusinessCategory);
-
     /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>CsrProperties</c> allocated on Rust side.

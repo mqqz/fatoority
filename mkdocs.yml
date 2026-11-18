@@ -40,6 +40,7 @@ nav:
           - Overview: guides/migrate-0.7/index.md
           - Rust: guides/migrate-0.7/rust.md
           - Python: guides/migrate-0.7/python.md
+          - C# / .NET: guides/migrate-0.7/csharp.md
   - Reference:
       - Configuration: reference/configuration.md
       - CSR: reference/csr.md
