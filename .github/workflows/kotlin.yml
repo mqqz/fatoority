@@ -23,6 +23,7 @@ on:
       - 'bindings/kotlin/**'
       - 'scripts/build_kotlin.py'
       - 'scripts/check_kotlin.py'
+      - 'scripts/run_android_instrumentation.sh'
       - 'scripts/generate_kotlin.py'
       - 'scripts/install_kotlin_generator.py'
       - 'scripts/patches/diplomat-kotlin.patch'
@@ -52,6 +53,7 @@ on:
       - 'bindings/kotlin/**'
       - 'scripts/build_kotlin.py'
       - 'scripts/check_kotlin.py'
+      - 'scripts/run_android_instrumentation.sh'
       - 'scripts/generate_kotlin.py'
       - 'scripts/install_kotlin_generator.py'
       - 'scripts/patches/diplomat-kotlin.patch'
@@ -234,7 +236,12 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - uses: reactivecircus/android-emulator-runner@v2
+      # Hosted emulators fail intermittently on infrastructure (corrupt image
+      # downloads, adb losing the device, the system server crashing), so a
+      # failed run gets one fresh emulator. A real test failure fails twice.
+      - id: emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        continue-on-error: true
         with:
           api-level: ${{ matrix.api }}
           arch: x86_64
@@ -242,16 +249,18 @@ jobs:
           # The API 35 16 KiB image exhausts the emulator's default 2560 MiB.
           ram-size: 4096M
           disable-animations: true
-          script: |
-            adb shell cat /proc/meminfo
-            if [ '${{ matrix.page-size }}' = '16384' ]; then test "$(adb shell getconf PAGE_SIZE | tr -d '\r')" = '16384'; fi
-            adb install dist/android/apk/androidTest/debug/android-debug-androidTest.apk
-            adb shell am instrument -w com.fatoora.test/androidx.test.runner.AndroidJUnitRunner | tee instrumentation.txt
-            if ! grep -Eq 'OK \([0-9]+ tests?\)' instrumentation.txt; then adb logcat -d -b crash; adb logcat -d -t 200; exit 1; fi
-            adb install dist/android-consumer/debug/android-consumer-debug.apk
-            adb install dist/android-consumer/androidTest/debug/android-consumer-debug-androidTest.apk
-            adb shell am instrument -w com.fatoora.consumer.test/androidx.test.runner.AndroidJUnitRunner | tee consumer.txt
-            if ! grep -Eq 'OK \([0-9]+ tests?\)' consumer.txt; then adb logcat -d -b crash; adb logcat -d -t 200; exit 1; fi
+          script: sh scripts/run_android_instrumentation.sh ${{ matrix.page-size }}
+      - name: Retry on a fresh emulator
+        if: steps.emulator.outcome == 'failure'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          arch: x86_64
+          target: ${{ matrix.target }}
+          # The API 35 16 KiB image exhausts the emulator's default 2560 MiB.
+          ram-size: 4096M
+          disable-animations: true
+          script: sh scripts/run_android_instrumentation.sh ${{ matrix.page-size }}
 
   central-bundle:
     needs: [generator, package, android-test]
