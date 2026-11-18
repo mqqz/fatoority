@@ -832,7 +832,7 @@ internal class OptionUnit constructor(): Structure(), Structure.ByValue {@JvmFie
 
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
-        return listOf("value", "isOk")
+        return listOf("isOk")
     }
 
     internal fun option(): Unit? {

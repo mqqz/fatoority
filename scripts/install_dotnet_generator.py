@@ -6,7 +6,7 @@ import subprocess
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
-REVISION = "7255ca482b247ed635f6ded2e02fa3dfc4b930a2"
+REVISION = "2687a45709a8dbce5ac018a0c4704d45da680c72"
 SOURCE = "https://github.com/mqqz/diplomat.git"
 
 

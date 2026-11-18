@@ -87,9 +87,10 @@ packages inherit the build host's libc requirements.
 ## Regenerate
 
 The generator uses `mqqz/diplomat` commit
-`7255ca482b247ed635f6ded2e02fa3dfc4b930a2`: upstream Diplomat after 0.17.0 plus
+`2687a45709a8dbce5ac018a0c4704d45da680c72`: upstream Diplomat after 0.17.0 plus
 the opt-in `dotnet.diplomat_str_as_string` configuration (upstream PR #1294), which
-maps `&DiplomatStr` parameters to `string`. `generate_dotnet.py` keeps string
+maps `&DiplomatStr` parameters to `string`, and optional string returns
+(`DiplomatWrite` methods returning `Option<()>`) as `string?`. `generate_dotnet.py` keeps string
 inputs on a strict UTF-8 encoder, so unpaired surrogates throw.
 
 ```sh

@@ -211,6 +211,11 @@ static FatooraStatus fatoora_private_finish(DiplomatWrite *write, char **out,
         free(write->buf);
         return fatoora_private_fail(FATOORA_INTERNAL, "output allocation failed", error);
     }
+    /* C strings end at the first NUL, so a value containing one cannot be returned. */
+    if (memchr(write->buf, '\0', write->len)) {
+        free(write->buf);
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "text must not contain NUL", error);
+    }
     fatoora_private_flush(write);
     *out = write->buf;
     return FATOORA_OK;
