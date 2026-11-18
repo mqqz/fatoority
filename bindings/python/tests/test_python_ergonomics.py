@@ -145,28 +145,16 @@ def test_client_flags_are_keyword_only(monkeypatch, method):
         getattr(client, method)(None, None, ClearanceMode.DISABLED)
     with pytest.raises(TypeError, match="'clearance'"):
         getattr(client, method)(None, None)
-    with pytest.raises(TypeError, match="not both"):
-        getattr(client, method)(None, None, clearance=ClearanceMode.DISABLED, clearance_status=False)
     for value in (False, "1"):
         with pytest.raises(TypeError, match="ClearanceMode"):
             getattr(client, method)(None, None, clearance=value)
-    with pytest.raises(TypeError, match="bool"):
-        getattr(client, method)(None, None, clearance_status=1)
-
-
-@pytest.mark.parametrize("method", ["report_simplified_invoice", "clear_standard_invoice"])
-def test_clearance_status_bool_warns_at_caller(monkeypatch, method):
-    client = _fake_client(monkeypatch)
-    with pytest.warns(DeprecationWarning, match="clearance=ClearanceMode.ENABLED") as record:
+    with pytest.raises(TypeError, match="clearance_status"):
         getattr(client, method)(None, None, clearance_status=True)
-    assert record[0].filename == __file__ and "removed in 0.7" in str(record[0].message)
 
 
 def test_csr_properties_is_keyword_only():
     with pytest.raises(TypeError, match="positional argument"):
         CsrProperties(*CSR_FIELDS.values())
-    with pytest.raises(TypeError, match="positional argument"), pytest.warns(DeprecationWarning):
-        CsrProperties.new(*CSR_FIELDS.values())
 
 
 @pytest.mark.parametrize("cls", [ComplianceCsid, ProductionCsid])
@@ -175,10 +163,6 @@ def test_credentials_take_keywords_after_env(cls):
         cls(Environment.SIMULATION, TOKEN, SECRET)
     creds = cls(Environment.SIMULATION, token=TOKEN, secret=SECRET, request_id="r")
     assert (creds.binary_security_token, creds.secret, creds.request_id) == (TOKEN, SECRET, "r")
-    # The deprecated factory keeps the 0.5 order: (env, token, secret, request_id).
-    with pytest.warns(DeprecationWarning, match=f"{cls.__name__}\\(env, token="):
-        old = cls.new(Environment.SIMULATION, TOKEN, SECRET, "r")
-    assert (old.binary_security_token, old.secret, old.request_id) == (TOKEN, SECRET, "r")
 
 
 @pytest.mark.parametrize("cls,hint", [
@@ -193,9 +177,9 @@ def test_types_without_a_constructor_name_their_factories(cls, hint):
         getattr(fatoora, cls)()
 
 
-def test_keyword_calls_do_not_warn(monkeypatch):
+def test_keyword_calls_succeed_without_warnings(monkeypatch):
     with warnings.catch_warnings():
-        warnings.simplefilter("error", DeprecationWarning)
+        warnings.simplefilter("error")
         b = InvoiceBuilder(InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED)
         b.set_seller("Acme", **SELLER)
         b.set_buyer("Buyer", country_code="SA", city="Riyadh", street="Street",
@@ -216,12 +200,11 @@ def test_keyword_only_signatures():
     kinds = {name: p.kind for name, p in inspect.signature(InvoiceBuilder.set_seller).parameters.items()}
     assert list(kinds)[:2] == ["self", "name"]
     assert all(kind is inspect.Parameter.KEYWORD_ONLY for kind in list(kinds.values())[2:])
-    for factory in (CsrProperties, CsrProperties.new):
-        params = inspect.signature(factory).parameters
-        assert list(params) == list(CSR_FIELDS)
-        assert all(p.kind is inspect.Parameter.KEYWORD_ONLY for p in params.values())
+    params = inspect.signature(CsrProperties).parameters
+    assert list(params) == list(CSR_FIELDS)
+    assert all(p.kind is inspect.Parameter.KEYWORD_ONLY for p in params.values())
     params = inspect.signature(ZatcaClient.report_simplified_invoice).parameters
-    assert [p.kind for p in params.values()][-3:] == [inspect.Parameter.KEYWORD_ONLY] * 3
+    assert [p.kind for p in params.values()][-2:] == [inspect.Parameter.KEYWORD_ONLY] * 2
     params = inspect.signature(ProductionCsid).parameters
     assert [(name, p.kind is inspect.Parameter.KEYWORD_ONLY) for name, p in params.items()] == [
         ("env", False), ("token", True), ("secret", True), ("request_id", True)]

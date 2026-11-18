@@ -6,20 +6,16 @@ from fatoora import SignedInvoice
 from fatoora.errors import FfiError
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")  # into_xml() is deprecated
-def test_signed_xml_copy_and_consuming_access():
+def test_signed_xml_copy_survives_close():
     path = Path(__file__).resolve().parents[3] / "fatoora-core/tests/fixtures/invoices/sample-simplified-invoice.xml"
     xml = path.read_text()
     signed = SignedInvoice.from_xml(xml)
     copied = signed.xml
     assert copied == xml
-    assert signed.into_xml() == xml
+    signed.close()
     assert copied == xml
     with pytest.raises(FfiError):
         signed.xml
-    with pytest.raises(FfiError):
-        signed.into_xml()
-    signed.close()
 
 
 def test_generated_signed_invoice_consumption_keeps_copy_and_owned_data():
