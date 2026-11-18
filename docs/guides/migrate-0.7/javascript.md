@@ -1,6 +1,6 @@
 ---
 title: Migrate a JavaScript or TypeScript Project from fatoority 0.6 to 0.7
-description: Every name the fatoority npm package removed in 0.7, each with the 0.6 replacement to use instead.
+description: Upgrade a JavaScript or TypeScript project from fatoority 0.6 to 0.7, covering removed names, the required ClearanceMode, Uint8Array bytes and the unified error classes.
 ---
 
 # Migrate from 0.6 to 0.7: JavaScript and TypeScript
@@ -82,6 +82,7 @@ confused with `response.clearanceStatus`.
 | `client.clearStandardInvoice(invoice, credentials, true, ...)` | `client.clearStandardInvoice(invoice, credentials, ClearanceMode.Enabled, ...)` |
 | `'Enabled'` / `'Disabled'` | `ClearanceMode.Enabled` / `ClearanceMode.Disabled` |
 | `ClearanceModeInput` type | `ClearanceMode` |
+
 ## Binary data is a `Uint8Array`
 
 `Bytes.asSlice()`, which returned a copied `number[]`, is replaced by

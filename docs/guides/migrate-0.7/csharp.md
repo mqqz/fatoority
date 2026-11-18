@@ -1,6 +1,6 @@
 ---
 title: Migrate a C# Project from fatoority 0.6 to 0.7
-description: Every member of the Fatoority NuGet package removed in 0.7, each with the 0.6 replacement to use instead.
+description: Upgrade a C# project from the Fatoority 0.6 NuGet package to 0.7, covering removed members, TimeSpan timeouts, Bytes.ToArray and the renamed FatooraException.
 ---
 
 # Migrate from 0.6 to 0.7: C# and .NET

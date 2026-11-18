@@ -1,6 +1,6 @@
 ---
 title: Migrate a Kotlin or Java Project from fatoority 0.6 to 0.7
-description: Every Kotlin and Java member removed from com.fatoora in 0.7, each with the 0.6 replacement to use instead.
+description: Upgrade a Kotlin or Java project from fatoority 0.6 to 0.7, covering removed com.fatoora members, Duration timeouts and the renamed FatooraException.
 ---
 
 # Migrate from 0.6 to 0.7: Kotlin and Java
@@ -141,6 +141,12 @@ Only the removed getter functions returned it; every optional text property is
 already a `String?` in 0.6, so replace `text.value` or `text.value()` with the
 string itself and drop the `use { }` block.
 
+Code that calls the low-level `com.fatoora.raw` classes directly gets a
+`String` or `String?` wherever they returned `Text`. Their
+`ValidationResponse.clearedInvoiceXml()` and `SignedInvoice.zatcaKeySignature()`
+fail when the value is absent: check `clearedInvoiceXmlPresent()` or
+`zatcaKeySignaturePresent()` first. The `com.fatoora` properties are unchanged.
+
 ## Changed signatures
 
 These changes have no 0.6 equivalent to migrate to first; update the call when
@@ -159,6 +165,7 @@ timeout.
 | --- | --- |
 | `ZatcaClient.withTimeout(config, 30_000)` | Kotlin: `ZatcaClient.withTimeout(config, 30.seconds)` (`import kotlin.time.Duration.Companion.seconds`) |
 | `ZatcaClient.withTimeout(config, 30000L)` (Java) | `ZatcaClient.withTimeout(config, Duration.ofSeconds(30))` (`import java.time.Duration`) |
+
 ## Error classes
 
 0.7 gives every language the same error hierarchy: a base `FatooraException`, one

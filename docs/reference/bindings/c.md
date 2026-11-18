@@ -103,7 +103,8 @@ Configure your runtime loader to find the shared library: `.so` on Linux, `.dyli
     Enums are scoped wrappers such as `fatoora::Environment::NonProduction` and
     `fatoora::VatCategory::Standard`; optional response statuses return
     `std::optional<fatoora::ReportingStatus>` (and likewise for the other status
-    enums), with the exact wire text available from the fallible `*_raw()` accessor.
+    enums), with the exact wire text available from the `*_raw()` accessor as a
+    `std::optional<std::string>`.
     `fatoora::InvoiceFlag(fatoora::InvoiceFlag::Export).bit()` returns a flag's bit for
     the `uint8_t` mask.
 
@@ -121,7 +122,7 @@ Configure your runtime loader to find the shared library: `.so` on Linux, `.dyli
       -L/path/to/native-library -lfatoora_ffi -o validate_cpp
     ```
 
-    Text inputs are borrowed for the call. Decimal inputs and outputs use exact strings. Optional text can be an absent owner; inspect the result before dereferencing it. Returned invoice, party, address and response objects are independent snapshots. Keep a `Bytes` owner alive while using its byte span.
+    Text inputs are borrowed for the call. Decimal inputs and outputs use exact strings. Optional text is a `std::optional<std::string>`, except `ValidationResponse::cleared_invoice_xml()` and `SignedInvoice::zatca_key_signature()`, which fail when the value is absent: check `cleared_invoice_xml_present()` or `zatca_key_signature_present()` first. Returned invoice, party, address and response objects are independent snapshots. Keep a `Bytes` owner alive while using its byte span.
 
 ## Consumption and safety
 

@@ -40,9 +40,10 @@ nav:
           - Overview: guides/migrate-0.7/index.md
           - Rust: guides/migrate-0.7/rust.md
           - Python: guides/migrate-0.7/python.md
-          - C# / .NET: guides/migrate-0.7/csharp.md
-          - Kotlin / Java: guides/migrate-0.7/kotlin.md
           - JavaScript / TypeScript: guides/migrate-0.7/javascript.md
+          - Kotlin / Java: guides/migrate-0.7/kotlin.md
+          - C# / .NET: guides/migrate-0.7/csharp.md
+          - C/C++: guides/migrate-0.7/c.md
   - Reference:
       - Configuration: reference/configuration.md
       - CSR: reference/csr.md

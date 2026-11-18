@@ -1,6 +1,6 @@
 ---
 title: Migrate a Python Project from fatoority 0.6 to 0.7
-description: Every Python name removed in fatoority 0.7, each with the 0.6 replacement to use instead.
+description: Upgrade a Python project from fatoority 0.6 to 0.7, covering removed names, the renamed error classes, the Python 3.10 floor and the new AsyncZatcaClient.
 ---
 
 # Migrate from 0.6 to 0.7: Python
@@ -19,6 +19,12 @@ compatibility aliases left behind. Each replacement below already exists in
 `filterwarnings = ["error::DeprecationWarning"]`), replace every name the
 warnings point at, and then upgrade. On 0.7 a removed name fails with
 `ImportError`, `AttributeError` or `TypeError`.
+
+## Python 3.10 or newer
+
+0.7 requires Python 3.10 or newer and ships no `cp39` wheels; Python 3.9
+reached end of life in October 2025. Upgrade the interpreter before upgrading
+the package; 0.6 stays installable on 3.9.
 
 ## Removed names
 

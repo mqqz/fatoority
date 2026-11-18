@@ -1,6 +1,6 @@
 ---
 title: Migrate a Rust Project from fatoora-core 0.6 to 0.7
-description: Every fatoora-core item removed in 0.7, each with the 0.6 replacement to use instead.
+description: Upgrade a Rust project from fatoora-core 0.6 to 0.7, covering removed items, the InvoiceData aggregate fields and zero timeouts.
 ---
 
 # Migrate from 0.6 to 0.7: Rust
@@ -65,18 +65,6 @@ you pass, so pass that category and rate to keep the same totals. Likewise,
 `payment_means_code` changed the code of the first payment means, while
 `payment_means` appends one.
 
-The `InvoiceData` getters `invoice_level_discount()`, `invoice_level_charge()`
-and `allowance_reason()` stay: they report the totals and shared reason of the
-document-level entries, which are now the only place `InvoiceData` keeps them.
-
-Invoice data serialized by 0.5 or 0.6 with an aggregate allowance or charge
-still deserializes and produces the same XML: the amounts become entries in
-`adjustments()` with the document VAT category, the rate of the single line
-group in that category, and the old reason (`"discount"` or `"charge"` when none
-was set). If no line group or more than one matches, deserialization fails, as
-the 0.6 totals did. JSON written by 0.7 omits the aggregate fields and does not
-load in 0.6; bincode keeps the 0.6 layout.
-
 ### Validation and hashing
 
 | Removed | Use instead |
@@ -90,6 +78,31 @@ load in 0.6; bincode keeps the 0.6 layout.
 
 The replacements return an `InvoiceHash` instead of a `String`; call
 `.as_str()` or `.to_string()` where you need the text.
+
+## `InvoiceData` keeps only adjustment entries
+
+`InvoiceData` no longer stores the 0.5 aggregate fields
+`invoice_level_discount`, `invoice_level_charge`, `adjustment_vat_rate` and
+`allowance_reason`; document-level allowances and charges live only in
+`adjustments()`. The getters `invoice_level_discount()`,
+`invoice_level_charge()` and `allowance_reason()` stay: they report the totals
+and shared reason of those entries.
+
+Invoice data serialized by 0.5 or 0.6 with an aggregate allowance or charge
+still deserializes and produces the same XML and hash: the amounts become
+entries in `adjustments()` with the document VAT category, the rate of the
+single line group in that category (or `adjustment_vat_rate`), and the old
+reason (`"discount"` or `"charge"` when none was set). If no line group or more
+than one matches, deserialization fails, as the 0.6 totals did. A reason with
+zero amounts needs no unique group and takes the rate from
+`adjustment_vat_rate` or the first line in the category, as 0.6 did; if that
+rate belongs to no line, 0.7 adds a zero VAT subtotal for it, where 0.6 wrote
+XML that fatoority's own parser rejects. Aggregate fields next to non-empty
+`adjustments` are ignored.
+
+JSON and other human-readable formats written by 0.7 omit the four fields, so
+that JSON does not load in 0.6. bincode and other compact formats keep the 0.6
+layout and stay readable in both directions.
 
 ## Zero request timeout is invalid input
 
