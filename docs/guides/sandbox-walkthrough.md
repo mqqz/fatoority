@@ -118,7 +118,7 @@ invoice. Each run generates a new UUID and the current UTC issue time.
     [Download the Python project](../assets/examples/journey/python.zip){ .md-button }
 
     Use CPython 3.13 for this walkthrough. Version 0.6.0 publishes wheels for
-    CPython 3.9–3.13; Python 3.14 needs a source build and is outside this setup. Individual files: [main.py](../assets/examples/journey/python/main.py) and
+    CPython 3.10–3.13; Python 3.14 needs a source build and is outside this setup. Individual files: [main.py](../assets/examples/journey/python/main.py) and
     [requirements.txt](../assets/examples/journey/python/requirements.txt).
 
     ```sh

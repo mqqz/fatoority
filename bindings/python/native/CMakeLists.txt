@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.19)
 project(fatoora_python LANGUAGES CXX)
-find_package(Python 3.9 COMPONENTS Interpreter Development.Module REQUIRED)
+find_package(Python 3.10 COMPONENTS Interpreter Development.Module REQUIRED)
 execute_process(COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
     OUTPUT_VARIABLE nanobind_DIR OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
 find_package(nanobind 2.12.0 EXACT CONFIG REQUIRED)

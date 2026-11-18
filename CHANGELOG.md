@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Changed (breaking)
+
+- Python: drop support for Python 3.9, which reached end of life in October
+  2025. The package now requires Python 3.10 or newer and no longer ships
+  `cp39` wheels.
+
 ## [0.6.0] - 2026-11-18
 
 The breaking 0.6 release. `fatoora-core` renames items for consistency and

@@ -5,7 +5,7 @@ description: Python package reference for fatoority. Learn accepted values, retu
 
 # Python package reference
 
-The published wheels support CPython 3.9–3.13. Use CPython 3.13 for the
+The published wheels support CPython 3.10–3.13. Use CPython 3.13 for the
 [complete sandbox walkthrough](../../guides/sandbox-walkthrough.md). Install
 `fatoority` and import `fatoora`; this page describes Python-specific values and behavior.
 
