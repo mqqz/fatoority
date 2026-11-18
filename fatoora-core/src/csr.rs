@@ -486,41 +486,6 @@ impl CsrProperties {
             error
         })
     }
-
-    /// Parse a CSR properties string.
-    ///
-    /// # Errors
-    /// Returns [`CsrError`] when the properties cannot be read or required fields are missing.
-    #[deprecated(
-        since = "0.6.0",
-        note = "use `str::parse` / `CsrProperties::from_str` instead"
-    )]
-    pub fn from_properties_str(properties: &str) -> Result<CsrProperties, CsrError> {
-        properties.parse()
-    }
-
-    /// Parse a CSR properties string.
-    ///
-    /// # Errors
-    /// Returns [`CsrError`] when the properties cannot be read or required fields are missing.
-    #[deprecated(
-        since = "0.6.0",
-        note = "use `str::parse` / `CsrProperties::from_str` instead"
-    )]
-    pub fn parse_csr_config(properties: &str) -> Result<CsrProperties, CsrError> {
-        properties.parse()
-    }
-
-    /// Parse a CSR properties file.
-    ///
-    /// # Errors
-    /// Returns [`CsrError`] when the file cannot be read or required fields are missing.
-    #[deprecated(since = "0.6.0", note = "use `CsrProperties::from_file` instead")]
-    pub fn parse_csr_config_file(
-        csr_path: impl AsRef<path::Path>,
-    ) -> Result<CsrProperties, CsrError> {
-        Self::from_file(csr_path)
-    }
 }
 
 /// Parses CSR properties text (the ZATCA SDK `csr-config` format).

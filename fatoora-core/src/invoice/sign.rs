@@ -319,18 +319,6 @@ pub(crate) fn invoice_hash_base64_from_xml(xml: &str) -> Result<String, SigningE
     Ok(Base64::encode_string(&Sha256::digest(canonical)))
 }
 
-/// Compute the base64 invoice hash from an XML string.
-///
-/// # Errors
-/// Returns [`SigningError`] if parsing, canonicalization, or hashing fails.
-#[deprecated(
-    since = "0.6.0",
-    note = "use `fatoora_core::invoice::hash_xml` instead"
-)]
-pub fn invoice_hash_base64_from_xml_str(xml: &str) -> Result<String, SigningError> {
-    invoice_hash_base64_from_xml(xml)
-}
-
 fn sign_hash(key: &SigningKey, hash_b64: &str) -> Result<String, SigningError> {
     let hash_bytes = Base64::decode_vec(hash_b64)
         .map_err(|e| SigningError::SigningError(format!("Failed to decode base64 hash: {e:?}")))?;

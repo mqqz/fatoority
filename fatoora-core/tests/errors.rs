@@ -183,7 +183,6 @@ fn incomplete_builder_reports_every_missing_field_to_bindings() {
 }
 
 #[test]
-#[allow(deprecated)] // covers the deprecated aggregate setters' field checks
 fn invalid_imported_line_reports_zero_based_locations_and_numeric_ranges() {
     use fatoora_core::invoice::validation::{ValidationLocation, ValidationReport};
     use fatoora_core::invoice::{InvoiceBuilder, InvoiceSubType, InvoiceType};
@@ -202,8 +201,6 @@ fn invalid_imported_line_reports_zero_based_locations_and_numeric_ranges() {
     }))
     .unwrap();
     let original = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified))
-        .invoice_level_discount(decimal("-1"))
-        .invoice_level_charge(decimal("0.001"))
         .line_item(good)
         .line_item(bad)
         .build()
@@ -219,8 +216,6 @@ fn invalid_imported_line_reports_zero_based_locations_and_numeric_ranges() {
         ("line_items[1].total_amount", "FIELD_OUT_OF_RANGE"),
         ("line_items[1].vat_rate", "FIELD_OUT_OF_RANGE"),
         ("line_items[1].vat_amount", "FIELD_OUT_OF_RANGE"),
-        ("invoice_level_discount", "FIELD_OUT_OF_RANGE"),
-        ("invoice_level_charge", "FIELD_OUT_OF_RANGE"),
         ("issue_datetime", "FIELD_REQUIRED"),
         ("currency", "FIELD_REQUIRED"),
     ] {

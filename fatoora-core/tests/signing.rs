@@ -135,17 +135,6 @@ fn invoice_hash_decodes_to_32_bytes() {
 }
 
 #[test]
-#[allow(deprecated)]
-fn deprecated_hash_base64_matches_hash() {
-    let (signer, _key) = build_test_signer();
-    let invoice = common::dummy_finalized_invoice();
-    let expected = invoice.hash().expect("hash");
-    assert_eq!(invoice.hash_base64().expect("hash"), expected.as_str());
-    let signed = invoice.sign(&signer).expect("sign invoice");
-    assert_eq!(signed.hash_base64().expect("hash"), expected.as_str());
-}
-
-#[test]
 fn signed_invoice_hash_matches_finalized_invoice() {
     let (signer, _key) = build_test_signer();
     let invoice = common::dummy_finalized_invoice();

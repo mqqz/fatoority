@@ -6,8 +6,7 @@ use fatoora_core::{
 fn d(s: &str) -> Decimal {
     s.parse().unwrap()
 }
-/// Adds a finalized entry through `allowance`/`charge`, the replacement for the
-/// deprecated `InvoiceBuilder::adjustment`.
+/// Adds a finalized entry through `allowance`/`charge` according to its kind.
 trait AddEntry {
     fn entry(self, entry: AllowanceCharge) -> Self;
 }
@@ -521,7 +520,6 @@ fn adjustment_balances_still_reject_a_negative_final_vat_group() {
 }
 
 #[test]
-#[allow(deprecated)] // covers rejecting the deprecated aggregate setters combined with entries
 fn builder_rejects_invalid_adjustments_and_inconsistent_accounting_metadata() {
     let adjustment = AllowanceCharge::new(
         AdjustmentKind::Charge,
@@ -529,19 +527,6 @@ fn builder_rejects_invalid_adjustments_and_inconsistent_accounting_metadata() {
         VatCategory::Standard,
         d("15"),
     );
-    for legacy in [
-        builder().invoice_level_charge(d("1")),
-        builder().invoice_level_discount(d("1")),
-        builder().allowance_reason("legacy"),
-    ] {
-        assert!(
-            legacy
-                .line_item(line(VatCategory::Standard))
-                .entry(adjustment.clone())
-                .build()
-                .is_err()
-        );
-    }
     for (amount, rate, category, count) in [
         ("-1", "15", VatCategory::Standard, 1),
         ("0.001", "15", VatCategory::Standard, 1),

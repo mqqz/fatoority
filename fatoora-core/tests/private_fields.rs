@@ -1,5 +1,5 @@
 //! Constructors, getters and `with_*` setters of the value types whose fields are
-//! private, their deprecated forwarders, and their pinned serde wire format.
+//! private, and their pinned serde wire format.
 use fatoora_core::Decimal;
 use fatoora_core::invoice::{
     Address, Adjustment, AdjustmentKind, AllowanceCharge, CountryCode, Delivery,
@@ -129,15 +129,6 @@ fn payment_means_and_account_with_methods_getters_and_wire_format() {
 }
 
 #[test]
-#[allow(deprecated)] // covers the deprecated forwarder
-fn deprecated_instruction_note_forwards_to_with_instruction_note() {
-    assert_eq!(
-        PaymentMeans::new("30").instruction_note("n"),
-        PaymentMeans::new("30").with_instruction_note("n")
-    );
-}
-
-#[test]
 fn delivery_with_methods_getters_and_wire_format() {
     let empty = Delivery::default();
     assert_eq!(empty.actual_date(), None);
@@ -225,25 +216,6 @@ fn adjustment_renamed_constructor_setters_and_getters() {
     assert_eq!(fixed.reason_code(), None);
     // A base amount without a percentage is incomplete.
     assert!(fixed.with_base_amount(d("30")).value().is_err());
-}
-
-#[test]
-#[allow(deprecated)] // covers the deprecated forwarders
-fn adjustment_deprecated_getters_forward_to_plain_names() {
-    let adjustment = Adjustment::percent_of(d("200"), d("5"))
-        .with_reason("Volume")
-        .with_reason_code("95");
-    assert_eq!(adjustment.allowance_charge_reason(), adjustment.reason());
-    assert_eq!(
-        adjustment.allowance_charge_reason_code(),
-        adjustment.reason_code()
-    );
-    assert_eq!(
-        adjustment.calculation_base_amount(),
-        adjustment.base_amount()
-    );
-    assert_eq!(adjustment.calculation_percentage(), adjustment.percentage());
-    assert_eq!(adjustment.allowance_charge_reason(), Some("Volume"));
 }
 
 #[test]

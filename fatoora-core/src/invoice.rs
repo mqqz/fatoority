@@ -1509,11 +1509,6 @@ impl PaymentMeans {
         self.instruction_notes.push(value.into());
         self
     }
-    /// Appends an instruction note.
-    #[deprecated(since = "0.6.0", note = "use `with_instruction_note` instead")]
-    pub fn instruction_note(self, value: impl Into<String>) -> Self {
-        self.with_instruction_note(value)
-    }
     /// Sets the payee financial account (`cac:PayeeFinancialAccount`).
     pub fn with_payee_financial_account(mut self, value: PaymentAccount) -> Self {
         self.payee_financial_account = Some(value);
@@ -2457,10 +2452,6 @@ impl InvoiceData {
         })
     }
 }
-/// Former name of [`InvoiceTotals`].
-#[deprecated(since = "0.6.0", note = "use `InvoiceTotals` instead")]
-pub type InvoiceTotalsData = InvoiceTotals;
-
 /// Computed invoice totals.
 ///
 /// # Examples
@@ -2501,14 +2492,6 @@ impl VatBreakdown {
     /// Returns `false` if the VAT rate (`cbc:Percent`) is omitted from XML.
     pub fn has_vat_rate(&self) -> bool {
         !self.omitted_rate
-    }
-    /// Marks the subtotal so its VAT rate is omitted from XML.
-    ///
-    /// # Errors
-    /// Returns the errors of [`VatBreakdown::omit_vat_rate`].
-    #[deprecated(since = "0.6.0", note = "use `VatBreakdown::omit_vat_rate` instead")]
-    pub fn without_vat_rate(self) -> Result<Self> {
-        self.omit_vat_rate()
     }
     /// Marks the subtotal so its VAT rate (`cbc:Percent`) is omitted from XML.
     ///

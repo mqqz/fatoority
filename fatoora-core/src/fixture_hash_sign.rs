@@ -37,12 +37,6 @@ fn fixture_invoices_match_hash_digest() {
             "invoice hash mismatch for {}",
             file.display()
         );
-        #[allow(deprecated)]
-        let legacy = crate::invoice::sign::invoice_hash_base64_from_xml_str(&xml);
-        assert_eq!(
-            legacy.expect("legacy invoice hash"),
-            actual_invoice_digest.as_str()
-        );
     }
 }
 
