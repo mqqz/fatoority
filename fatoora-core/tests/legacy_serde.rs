@@ -14,6 +14,14 @@ const V0_5_1_JSON: &str = include_str!("fixtures/serde/invoice-data-v0.5.1.json"
 /// `hash_base64()` of the same invoice under v0.5.1.
 const V0_5_1_HASH: &str = "zcgG7AnCQWejCWF1+FIkVctXxgiYy6DXPrHvQplBr84=";
 
+/// The 0.5/0.6 `InvoiceData` fields replaced by `adjustments` in 0.7.
+const LEGACY_AGGREGATE_FIELDS: [&str; 4] = [
+    "invoice_level_charge",
+    "invoice_level_discount",
+    "adjustment_vat_rate",
+    "allowance_reason",
+];
+
 fn d(value: &str) -> Decimal {
     Decimal::parse(value).unwrap()
 }
@@ -114,8 +122,12 @@ fn v0_5_1_json_deserializes_to_the_current_model() {
         ]
     );
 
-    // Re-serializing emits `kind` only; the rest of the document is unchanged.
+    // Re-serializing emits `kind` only and drops the aggregate fields, which
+    // the entries already carry; the rest of the document is unchanged.
     let mut expected: Value = serde_json::from_str(V0_5_1_JSON).unwrap();
+    for field in LEGACY_AGGREGATE_FIELDS {
+        expected.as_object_mut().unwrap().remove(field).unwrap();
+    }
     for adjustment in adjustments(&mut expected) {
         let object = adjustment.as_object_mut().unwrap();
         let charge = object.remove("charge").unwrap().as_bool().unwrap();
@@ -265,4 +277,251 @@ fn compact_formats_round_trip_adjustments() {
         }
     }
     assert_eq!(checked, 4);
+}
+
+/// `serde_json::to_string_pretty(invoice.data())` from fatoora-core v0.6.0 for
+/// invoices built with the deprecated aggregate setters (two lines: 2 x 100.00
+/// at standard 15% and 50.00 zero-rated):
+/// `invoice_level_discount(10.00)`, `invoice_level_charge(4.00)`,
+/// `allowance_reason("Loyalty")`.
+const V0_6_0_AGGREGATES: &str = include_str!("fixtures/serde/invoice-data-v0.6.0-aggregates.json");
+/// The same invoice serialized with `bincode::serialize`.
+const V0_6_0_AGGREGATES_BINCODE: &[u8] =
+    include_bytes!("fixtures/serde/invoice-data-v0.6.0-aggregates.bincode");
+/// `bincode::serialize` under v0.6.0 of the v0.5.1 JSON fixture, which has entries.
+const V0_6_0_ENTRIES_BINCODE: &[u8] =
+    include_bytes!("fixtures/serde/invoice-data-v0.6.0-entries.bincode");
+/// `invoice_level_discount(7.50)` only.
+const V0_6_0_DISCOUNT_ONLY: &str =
+    include_str!("fixtures/serde/invoice-data-v0.6.0-discount-only.json");
+/// `allowance_reason("Reason only")` only, which emitted a zero-amount allowance.
+const V0_6_0_REASON_ONLY: &str =
+    include_str!("fixtures/serde/invoice-data-v0.6.0-reason-only.json");
+/// The aggregates invoice plus a standard 5% line, so two standard VAT groups
+/// match the document category; v0.6.0 rejected its totals.
+const V0_6_0_AMBIGUOUS: &str = include_str!("fixtures/serde/invoice-data-v0.6.0-ambiguous.json");
+/// The ambiguous invoice with `adjustment_vat_rate` 5 selecting one group.
+const V0_6_0_VAT_RATE: &str = include_str!("fixtures/serde/invoice-data-v0.6.0-vat-rate.json");
+
+fn entry(kind: AdjustmentKind, amount: &str, rate: &str, reason: &str) -> AllowanceCharge {
+    AllowanceCharge::new(kind, d(amount), VatCategory::Standard, d(rate)).with_reason(reason)
+}
+
+#[test]
+fn legacy_aggregates_become_entries_with_the_shared_reason() {
+    let data: InvoiceData = serde_json::from_str(V0_6_0_AGGREGATES).unwrap();
+    assert_eq!(
+        data.adjustments(),
+        [
+            entry(AdjustmentKind::Allowance, "10", "15", "Loyalty"),
+            entry(AdjustmentKind::Charge, "4", "15", "Loyalty"),
+        ]
+    );
+    assert_eq!(data.invoice_level_discount(), d("10"));
+    assert_eq!(data.invoice_level_charge(), d("4"));
+    assert_eq!(data.allowance_reason(), Some("Loyalty"));
+}
+
+#[test]
+fn legacy_aggregates_without_a_reason_use_the_legacy_defaults() {
+    let data: InvoiceData = serde_json::from_str(V0_6_0_DISCOUNT_ONLY).unwrap();
+    assert_eq!(
+        data.adjustments(),
+        [entry(AdjustmentKind::Allowance, "7.5", "15", "discount")]
+    );
+    assert_eq!(data.invoice_level_charge(), Decimal::ZERO);
+
+    // A charge alone defaults to "charge"; with both, the reasons differ.
+    let mut value: Value = serde_json::from_str(V0_6_0_AGGREGATES).unwrap();
+    value["allowance_reason"] = Value::Null;
+    value["invoice_level_discount"] = json!("0");
+    let data: InvoiceData = serde_json::from_value(value.clone()).unwrap();
+    assert_eq!(
+        data.adjustments(),
+        [entry(AdjustmentKind::Charge, "4", "15", "charge")]
+    );
+    assert_eq!(data.allowance_reason(), Some("charge"));
+    value["invoice_level_discount"] = json!("10");
+    let data: InvoiceData = serde_json::from_value(value).unwrap();
+    assert_eq!(data.adjustments().len(), 2);
+    assert_eq!(data.allowance_reason(), None);
+}
+
+#[test]
+fn a_legacy_reason_alone_becomes_a_zero_allowance() {
+    let data: InvoiceData = serde_json::from_str(V0_6_0_REASON_ONLY).unwrap();
+    assert_eq!(
+        data.adjustments(),
+        [entry(AdjustmentKind::Allowance, "0", "15", "Reason only")]
+    );
+    assert_eq!(data.invoice_level_discount(), Decimal::ZERO);
+}
+
+#[test]
+fn legacy_adjustment_vat_rate_selects_the_vat_group() {
+    let data: InvoiceData = serde_json::from_str(V0_6_0_VAT_RATE).unwrap();
+    assert_eq!(
+        data.adjustments(),
+        [
+            entry(AdjustmentKind::Allowance, "10", "5", "Loyalty"),
+            entry(AdjustmentKind::Charge, "4", "5", "Loyalty"),
+        ]
+    );
+}
+
+#[test]
+fn ambiguous_legacy_aggregates_are_rejected() {
+    let error = serde_json::from_str::<InvoiceData>(V0_6_0_AMBIGUOUS)
+        .unwrap_err()
+        .to_string();
+    assert!(
+        error.contains(
+            "cannot convert the legacy invoice_level_discount/invoice_level_charge: \
+             VAT category Standard matches 2 VAT groups of the line items, expected exactly one"
+        ),
+        "{error}"
+    );
+
+    // A rate no line has matches no group.
+    let mut value: Value = serde_json::from_str(V0_6_0_AMBIGUOUS).unwrap();
+    value["adjustment_vat_rate"] = json!("7");
+    let error = serde_json::from_value::<InvoiceData>(value)
+        .unwrap_err()
+        .to_string();
+    assert!(
+        error.contains("VAT category Standard and rate 7 matches 0 VAT groups"),
+        "{error}"
+    );
+
+    // Neither does a category no line has.
+    let mut value: Value = serde_json::from_str(V0_6_0_AGGREGATES).unwrap();
+    value["vat_category"] = json!("Exempt");
+    let error = serde_json::from_value::<InvoiceData>(value)
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("VAT category Exempt matches 0"), "{error}");
+}
+
+#[test]
+fn aggregate_fields_beside_entries_are_ignored() {
+    let current = current_invoice();
+    let mut value = serde_json::to_value(&current).unwrap();
+    value["invoice_level_discount"] = json!("999");
+    value["invoice_level_charge"] = json!("999");
+    value["adjustment_vat_rate"] = json!("5");
+    value["allowance_reason"] = json!("Ignored");
+    let decoded: InvoiceData = serde_json::from_value(value).unwrap();
+    assert_eq!(decoded, current);
+    assert_eq!(decoded.invoice_level_discount(), d("10"));
+    assert_eq!(decoded.invoice_level_charge(), d("4"));
+    // The entries' reasons differ.
+    assert_eq!(decoded.allowance_reason(), None);
+}
+
+#[test]
+fn json_no_longer_writes_the_aggregate_fields() {
+    for data in [
+        current_invoice(),
+        serde_json::from_str(V0_6_0_AGGREGATES).unwrap(),
+        common::dummy_finalized_invoice().data().clone(),
+    ] {
+        let value = serde_json::to_value(&data).unwrap();
+        for field in LEGACY_AGGREGATE_FIELDS {
+            assert!(value.get(field).is_none(), "{field}");
+        }
+        assert_eq!(serde_json::from_value::<InvoiceData>(value).unwrap(), data);
+        let text = ron::to_string(&data).unwrap();
+        assert_eq!(ron::from_str::<InvoiceData>(&text).unwrap(), data);
+    }
+}
+
+#[test]
+fn bincode_keeps_the_0_6_layout() {
+    // v0.6.0 bincode converts like the JSON written alongside it.
+    let legacy: InvoiceData = bincode::deserialize(V0_6_0_AGGREGATES_BINCODE).unwrap();
+    let json: InvoiceData = serde_json::from_str(V0_6_0_AGGREGATES).unwrap();
+    assert_eq!(legacy, json);
+
+    for data in [
+        current_invoice(),
+        legacy,
+        common::dummy_finalized_invoice().data().clone(),
+    ] {
+        let bytes = bincode::serialize(&data).unwrap();
+        assert_eq!(bincode::deserialize::<InvoiceData>(&bytes).unwrap(), data);
+    }
+
+    // The aggregate slots hold the entry totals, as 0.6 wrote them, so data
+    // with entries encodes to the same bytes as under 0.6, in both directions.
+    let current = current_invoice();
+    assert_eq!(
+        bincode::serialize(&current).unwrap(),
+        V0_6_0_ENTRIES_BINCODE
+    );
+    assert_eq!(
+        bincode::deserialize::<InvoiceData>(V0_6_0_ENTRIES_BINCODE).unwrap(),
+        current
+    );
+}
+
+#[test]
+fn getters_are_computed_from_the_entries() {
+    let source = common::dummy_finalized_invoice();
+    let adjustment = |amount: &str, reason: &str| {
+        DocumentAdjustment::new(
+            Adjustment::amount(d(amount)),
+            VatCategory::Standard,
+            d("15"),
+        )
+        .with_reason(reason)
+    };
+    let mut builder = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified))
+        .id("INV-GETTERS")
+        .uuid(source.data().uuid().clone())
+        .issue_datetime("2024-01-01T12:30:00Z".parse().unwrap())
+        .currency("SAR".parse().unwrap())
+        .previous_invoice_hash(source.data().previous_invoice_hash().clone())
+        .invoice_counter(0)
+        .seller(source.data().seller().clone())
+        .payment_means(PaymentMeans::new("10"))
+        .vat_category(VatCategory::Standard)
+        .allowance(adjustment("3.00", "Same"))
+        .allowance(adjustment("2.50", "Same"))
+        .charge(adjustment("1.25", "Same"));
+    for line in source.data().line_items() {
+        builder = builder.line_item(line.clone());
+    }
+    let invoice = builder.clone().build().unwrap();
+    assert_eq!(invoice.data().invoice_level_discount(), d("5.50"));
+    assert_eq!(invoice.data().invoice_level_charge(), d("1.25"));
+    assert_eq!(invoice.data().allowance_reason(), Some("Same"));
+    assert_eq!(invoice.totals().allowance_total(), d("5.50"));
+    assert_eq!(invoice.totals().charge_total(), d("1.25"));
+
+    let invoice = builder.charge(adjustment("1.00", "Other")).build().unwrap();
+    assert_eq!(invoice.data().invoice_level_charge(), d("2.25"));
+    assert_eq!(invoice.data().allowance_reason(), None);
+
+    let plain = source.data();
+    assert!(plain.adjustments().is_empty());
+    assert_eq!(plain.invoice_level_discount(), Decimal::ZERO);
+    assert_eq!(plain.invoice_level_charge(), Decimal::ZERO);
+    assert_eq!(plain.allowance_reason(), None);
+}
+
+#[test]
+fn out_of_range_entry_totals_are_rejected() {
+    let mut value = serde_json::to_value(current_invoice()).unwrap();
+    let huge = "79228162514264337593543950335";
+    for adjustment in value["adjustments"].as_array_mut().unwrap() {
+        adjustment["amount"] = json!(huge);
+        adjustment["kind"] = json!("charge");
+    }
+    let error = serde_json::from_value::<InvoiceData>(value)
+        .unwrap_err()
+        .to_string();
+    assert!(
+        error.contains("document-level allowance or charge total is out of range"),
+        "{error}"
+    );
 }

@@ -15,6 +15,21 @@
   plain nullable string in every language instead of a `Text` handle. This
   changes the raw JavaScript methods and the deprecated Kotlin
   `province()`/`assertionSite()` methods, which returned `Text?`.
+- Rust (`fatoora-core`): `InvoiceData` no longer stores the 0.5 aggregate
+  fields `invoice_level_discount`, `invoice_level_charge`,
+  `adjustment_vat_rate` and `allowance_reason`; document-level allowances and
+  charges live only in `adjustments()`. The getters `invoice_level_discount()`,
+  `invoice_level_charge()` and `allowance_reason()` stay and are computed from
+  the entries. Data serialized by 0.5 or 0.6 still loads: aggregate amounts with
+  no entries become equivalent `AllowanceCharge` entries in the single VAT group
+  the old totals used, with the old reason (or `"discount"`/`"charge"`), and
+  render the same XML and hash. Loading such data fails if the document VAT
+  category (and `adjustment_vat_rate`) matches no line group or more than one,
+  where 0.6 failed to compute its totals. Aggregate fields next to non-empty
+  `adjustments` are ignored. JSON and other human-readable formats no longer
+  write the four fields, so `InvoiceData` JSON written by 0.7 does not load in
+  0.6; bincode and other compact formats keep the 0.6 layout and stay readable
+  in both directions.
 
 ### Internal
 

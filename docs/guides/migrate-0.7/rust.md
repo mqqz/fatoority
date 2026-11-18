@@ -67,8 +67,15 @@ you pass, so pass that category and rate to keep the same totals. Likewise,
 
 The `InvoiceData` getters `invoice_level_discount()`, `invoice_level_charge()`
 and `allowance_reason()` stay: they report the totals and shared reason of the
-document-level entries. Invoice data serialized by 0.5 or 0.6 with an aggregate
-allowance or charge still deserializes and produces the same XML.
+document-level entries, which are now the only place `InvoiceData` keeps them.
+
+Invoice data serialized by 0.5 or 0.6 with an aggregate allowance or charge
+still deserializes and produces the same XML: the amounts become entries in
+`adjustments()` with the document VAT category, the rate of the single line
+group in that category, and the old reason (`"discount"` or `"charge"` when none
+was set). If no line group or more than one matches, deserialization fails, as
+the 0.6 totals did. JSON written by 0.7 omits the aggregate fields and does not
+load in 0.6; bincode keeps the 0.6 layout.
 
 ### Validation and hashing
 

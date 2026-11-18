@@ -223,26 +223,13 @@ pub mod parse;
 
 struct InvoiceTotalsXml<'a> {
     currency: &'a str,
-    vat_percent: Decimal,
-    vat_category: &'a VatCategory,
     totals: &'a super::InvoiceTotals,
 }
 
 impl<'a> InvoiceTotalsXml<'a> {
     fn new<T: InvoiceView + ?Sized>(inv: &'a T) -> Self {
-        let data = inv.data();
-        let vat_percent = data.adjustment_vat_rate.unwrap_or_else(|| {
-            data.line_items
-                .iter()
-                .find(|li| li.vat_category == data.vat_category)
-                .map(|li| li.vat_rate)
-                .unwrap_or_default()
-        });
-
         Self {
-            currency: data.currency.as_str(),
-            vat_percent,
-            vat_category: &data.vat_category,
+            currency: inv.data().currency.as_str(),
             totals: inv.totals(),
         }
     }
@@ -253,22 +240,6 @@ impl<'a> InvoiceTotalsXml<'a> {
 
     fn tax_amount(&self) -> Decimal {
         self.totals.tax_amount()
-    }
-
-    fn allowance_total(&self) -> Decimal {
-        self.totals.allowance_total()
-    }
-
-    fn charge_total(&self) -> Decimal {
-        self.totals.charge_total()
-    }
-
-    fn vat_percent(&self) -> Decimal {
-        self.vat_percent
-    }
-
-    fn vat_category(&self) -> &'a VatCategory {
-        self.vat_category
     }
 }
 
@@ -610,56 +581,6 @@ struct TaxSubtotalData<'a> {
     currency: &'a str,
     category: &'a VatCategory,
     percent: Decimal,
-}
-
-fn allowance_charge<'a>(
-    charge_indicator: bool,
-    amount: Decimal,
-    currency: &'a str,
-    reason: &'a str,
-    vat_category: &'a VatCategory,
-    percent: Decimal,
-) -> impl Serialize + 'a {
-    struct AllowanceChargeSer<'a> {
-        charge_indicator: bool,
-        amount: Decimal,
-        currency: &'a str,
-        reason: &'a str,
-        vat_category: &'a VatCategory,
-        percent: Decimal,
-    }
-    impl<'a> Serialize for AllowanceChargeSer<'a> {
-        fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
-        {
-            let mut st = s.serialize_struct("cac:AllowanceCharge", 0)?;
-            st.serialize_field("cbc:ChargeIndicator", &self.charge_indicator)?;
-            st.serialize_field("cbc:AllowanceChargeReason", self.reason)?;
-            st.serialize_field(
-                "cbc:Amount",
-                &currency_amount("cbc:Amount", self.currency, self.amount),
-            )?;
-            st.serialize_field(
-                "cac:TaxCategory",
-                &TaxCategoryXml {
-                    omit_percent: false,
-                    category: self.vat_category,
-                    percent: self.percent,
-                    exemption: &super::TaxExemption::default(),
-                },
-            )?;
-            st.end()
-        }
-    }
-    AllowanceChargeSer {
-        charge_indicator,
-        amount,
-        currency,
-        reason,
-        vat_category,
-        percent,
-    }
 }
 
 struct AdjustmentXml<'a>(&'a super::AllowanceCharge, &'a str);
@@ -1438,35 +1359,6 @@ impl<'a, T: InvoiceView + ?Sized> Serialize for InvoiceXml<'a, T> {
         }
 
         // ---- allowance / charges ----
-        if data.adjustments.is_empty()
-            && (totals.allowance_total() > Decimal::ZERO || data.allowance_reason.is_some())
-        {
-            root.serialize_field(
-                "cac:AllowanceCharge",
-                &allowance_charge(
-                    false,
-                    totals.allowance_total(),
-                    currency_code,
-                    data.allowance_reason.as_deref().unwrap_or("discount"),
-                    totals.vat_category(),
-                    totals.vat_percent(),
-                ),
-            )?;
-        }
-        if data.adjustments.is_empty() && totals.charge_total() > Decimal::ZERO {
-            root.serialize_field(
-                "cac:AllowanceCharge",
-                &allowance_charge(
-                    true,
-                    totals.charge_total(),
-                    currency_code,
-                    data.allowance_reason.as_deref().unwrap_or("charge"),
-                    totals.vat_category(),
-                    totals.vat_percent(),
-                ),
-            )?;
-        }
-
         for adjustment in &data.adjustments {
             root.serialize_field(
                 "cac:AllowanceCharge",

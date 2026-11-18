@@ -101,7 +101,6 @@ pub struct InvoiceBuilder {
     payable_rounding_amount: Decimal,
     vat_category: Option<VatCategory>,
     flags: InvoiceFlags,
-    pub(crate) adjustment_vat_rate: Option<Decimal>,
     adjustments: Vec<(super::AdjustmentKind, super::DocumentAdjustment)>,
     exemptions: Vec<(VatCategory, Decimal, super::TaxExemption)>,
     supplied_breakdowns: Vec<super::VatBreakdown>,
@@ -306,7 +305,6 @@ impl InvoiceBuilder {
             payable_rounding_amount: Decimal::ZERO,
             vat_category: None,
             flags: InvoiceFlags::empty(),
-            adjustment_vat_rate: None,
             adjustments: Vec::new(),
             exemptions: Vec::new(),
             supplied_breakdowns: Vec::new(),
@@ -654,8 +652,6 @@ impl InvoiceBuilder {
         }
 
         let mut adjustments = Vec::with_capacity(entries.len());
-        let mut invoice_level_charge = Decimal::ZERO;
-        let mut invoice_level_discount = Decimal::ZERO;
         for entry in entries {
             let adjustment = entry?;
             super::Adjustment {
@@ -681,11 +677,6 @@ impl InvoiceBuilder {
                     None,
                 )])
                 .into());
-            }
-            if adjustment.kind.is_charge() {
-                invoice_level_charge = invoice_level_charge.add(adjustment.amount)?;
-            } else {
-                invoice_level_discount = invoice_level_discount.add(adjustment.amount)?;
             }
             adjustments.push(adjustment);
         }
@@ -729,10 +720,6 @@ impl InvoiceBuilder {
             payment_means: self.payment_means,
             vat_category: self.vat_category.expect("validated vat category"),
             flags: self.flags,
-            invoice_level_charge,
-            invoice_level_discount,
-            adjustment_vat_rate: self.adjustment_vat_rate,
-            allowance_reason: None,
             adjustments,
         };
 
@@ -1070,3 +1057,6 @@ impl InvoiceView for SignedInvoice {
         Some(self.qr_code())
     }
 }
+
+#[cfg(test)]
+mod legacy_serde_tests;
