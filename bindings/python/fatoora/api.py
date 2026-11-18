@@ -390,7 +390,7 @@ def _parse_timestamp(text: Optional[str]) -> Optional[datetime]:
     if text is None:
         return None
     value = text[:-1] + "+00:00" if text.endswith(("Z", "z")) else text
-    # Core may report nanoseconds; Python 3.9/3.10 only parse 3 or 6 fraction
+    # Core may report nanoseconds; Python 3.10 only parses 3 or 6 fraction
     # digits, and ``datetime`` holds microseconds anyway.
     value = re.sub(r"\.(\d+)", lambda m: "." + m.group(1)[:6].ljust(6, "0"), value, count=1)
     parsed = datetime.fromisoformat(value)
