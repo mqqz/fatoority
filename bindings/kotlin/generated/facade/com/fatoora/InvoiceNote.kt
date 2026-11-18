@@ -24,19 +24,4 @@ class InvoiceNote internal constructor(internal val raw: com.fatoora.raw.Invoice
         get() = nativeCall(listOfNotNull(this)) {
             unwrap(raw.text())
         }
-
-    @Deprecated("Use the languageId property.", ReplaceWith("languageId"))
-    fun languageId(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.languageId())?.let(::Text)
-    }
-
-    @Deprecated("Use the language property.", ReplaceWith("language"))
-    fun language(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.language())
-    }
-
-    @Deprecated("Use the text property.", ReplaceWith("text"))
-    fun text(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.text())
-    }
 }

@@ -14,9 +14,4 @@ class VatId internal constructor(internal val raw: com.fatoora.raw.VatId) : Nati
         get() = nativeCall(listOfNotNull(this)) {
             unwrap(raw.value())
         }
-
-    @Deprecated("Use the value property.", ReplaceWith("value"))
-    fun value(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.value())
-    }
 }

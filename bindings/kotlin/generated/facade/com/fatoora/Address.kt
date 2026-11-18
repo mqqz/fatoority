@@ -65,49 +65,4 @@ class Address internal constructor(internal val raw: com.fatoora.raw.Address) : 
     fun withProvince(value: String): Address = nativeCall(listOfNotNull(this)) {
         Address(unwrap(raw.withProvince(checkedText(value))))
     }
-
-    @Deprecated("Use the province property.", ReplaceWith("province"))
-    fun province(): String? = nativeCall(listOfNotNull(this)) {
-        raw.province()
-    }
-
-    @Deprecated("Use the city property.", ReplaceWith("city"))
-    fun city(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.city())
-    }
-
-    @Deprecated("Use the street property.", ReplaceWith("street"))
-    fun street(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.street())
-    }
-
-    @Deprecated("Use the buildingNumber property.", ReplaceWith("buildingNumber"))
-    fun buildingNumber(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.buildingNumber())
-    }
-
-    @Deprecated("Use the postalCode property.", ReplaceWith("postalCode"))
-    fun postalCode(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.postalCode())
-    }
-
-    @Deprecated("Use the countryCode property.", ReplaceWith("countryCode"))
-    fun countryCode(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.countryCode())
-    }
-
-    @Deprecated("Use the additionalStreet property.", ReplaceWith("additionalStreet"))
-    fun additionalStreet(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.additionalStreet())?.let(::Text)
-    }
-
-    @Deprecated("Use the additionalNumber property.", ReplaceWith("additionalNumber"))
-    fun additionalNumber(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.additionalNumber())?.let(::Text)
-    }
-
-    @Deprecated("Use the district property.", ReplaceWith("district"))
-    fun district(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.district())?.let(::Text)
-    }
 }

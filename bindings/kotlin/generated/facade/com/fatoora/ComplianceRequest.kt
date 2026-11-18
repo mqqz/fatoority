@@ -28,21 +28,6 @@ class ComplianceRequest internal constructor(internal val raw: com.fatoora.raw.C
             unwrap(raw.headersJson())
         }
 
-    @Deprecated("Use the method property.", ReplaceWith("method"))
-    fun method(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.method())
-    }
-
-    @Deprecated("Use the url property.", ReplaceWith("url"))
-    fun url(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.url())
-    }
-
-    @Deprecated("Use the headersJson property.", ReplaceWith("headersJson"))
-    fun headersJson(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.headersJson())
-    }
-
     fun body(): Bytes = nativeCall(listOfNotNull(this)) {
         Bytes(unwrap(raw.body()))
     }

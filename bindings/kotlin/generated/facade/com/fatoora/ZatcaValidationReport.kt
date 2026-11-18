@@ -70,26 +70,6 @@ class ZatcaValidationReport internal constructor(internal val raw: com.fatoora.r
             java.math.BigInteger(raw.stagesLen().toString())
         }
 
-    @Deprecated("Use the schemaVersion property.", ReplaceWith("schemaVersion"))
-    fun schemaVersion(): Long = nativeCall(listOfNotNull(this)) {
-        raw.schemaVersion().toLong()
-    }
-
-    @Deprecated("Use the profile property.", ReplaceWith("profile"))
-    fun profile(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.profile())
-    }
-
-    @Deprecated("Use the evaluatedAt property.", ReplaceWith("evaluatedAt"))
-    fun evaluatedAt(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.evaluatedAt())
-    }
-
-    @Deprecated("Use the stagesLen property.", ReplaceWith("stagesLen"))
-    fun stagesLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
-        java.math.BigInteger(raw.stagesLen().toString())
-    }
-
     /**
      * The stage report at `index`, in stage order.
      */

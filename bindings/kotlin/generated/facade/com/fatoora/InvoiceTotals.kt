@@ -60,57 +60,7 @@ class InvoiceTotals internal constructor(internal val raw: com.fatoora.raw.Invoi
             decimalOf(unwrap(raw.payableAmount()))
         }
 
-    @Deprecated("Use the vatBreakdownLen property.", ReplaceWith("vatBreakdownLen"))
-    fun vatBreakdownLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
-        java.math.BigInteger(raw.vatBreakdownLen().toString())
-    }
-
     fun vatBreakdown(index: java.math.BigInteger): VatBreakdown = nativeCall(listOfNotNull(this)) {
         VatBreakdown(unwrap(raw.vatBreakdown(checkedCounter(index))))
-    }
-
-    @Deprecated("Use the taxInclusive property.", ReplaceWith("taxInclusive.toPlainString()"))
-    fun taxInclusive(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.taxInclusive())
-    }
-
-    @Deprecated("Use the taxAmount property.", ReplaceWith("taxAmount.toPlainString()"))
-    fun taxAmount(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.taxAmount())
-    }
-
-    @Deprecated("Use the lineExtension property.", ReplaceWith("lineExtension.toPlainString()"))
-    fun lineExtension(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.lineExtension())
-    }
-
-    @Deprecated("Use the allowanceTotal property.", ReplaceWith("allowanceTotal.toPlainString()"))
-    fun allowanceTotal(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.allowanceTotal())
-    }
-
-    @Deprecated("Use the chargeTotal property.", ReplaceWith("chargeTotal.toPlainString()"))
-    fun chargeTotal(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.chargeTotal())
-    }
-
-    @Deprecated("Use the taxableAmount property.", ReplaceWith("taxableAmount.toPlainString()"))
-    fun taxableAmount(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.taxableAmount())
-    }
-
-    @Deprecated("Use the prepaidAmount property.", ReplaceWith("prepaidAmount.toPlainString()"))
-    fun prepaidAmount(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.prepaidAmount())
-    }
-
-    @Deprecated("Use the payableRoundingAmount property.", ReplaceWith("payableRoundingAmount.toPlainString()"))
-    fun payableRoundingAmount(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.payableRoundingAmount())
-    }
-
-    @Deprecated("Use the payableAmount property.", ReplaceWith("payableAmount.toPlainString()"))
-    fun payableAmount(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.payableAmount())
     }
 }

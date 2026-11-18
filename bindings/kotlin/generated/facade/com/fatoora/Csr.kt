@@ -37,11 +37,6 @@ class Csr internal constructor(internal val raw: com.fatoora.raw.Csr) : NativeRe
         unwrap(raw.toPemBase64())
     }
 
-    @Deprecated("Use the subjectString property.", ReplaceWith("subjectString"))
-    fun subjectString(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.subjectString())
-    }
-
     fun extensionValuesDer(): BytesList = nativeCall(listOfNotNull(this)) {
         BytesList(unwrap(raw.extensionValuesDer()))
     }

@@ -14,12 +14,6 @@ class InvoiceLineItem internal constructor(internal val raw: com.fatoora.raw.Inv
         fun create(description: String, quantity: java.math.BigDecimal, unitCode: String, unitPrice: java.math.BigDecimal, rate: java.math.BigDecimal, category: VatCategory): InvoiceLineItem = nativeCall(listOfNotNull()) {
             InvoiceLineItem(unwrap(com.fatoora.raw.InvoiceLineItem.new_(checkedText(description), decimalText(quantity), checkedText(unitCode), decimalText(unitPrice), decimalText(rate), com.fatoora.raw.VatCategory.valueOf(category.name))))
         }
-
-        @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("create(description, BigDecimal(quantity), unitCode, BigDecimal(unitPrice), BigDecimal(rate), category)", "java.math.BigDecimal"))
-        @JvmStatic
-        fun create(description: String, quantity: String, unitCode: String, unitPrice: String, rate: String, category: VatCategory): InvoiceLineItem = nativeCall(listOfNotNull()) {
-            InvoiceLineItem(unwrap(com.fatoora.raw.InvoiceLineItem.new_(checkedText(description), checkedText(quantity), checkedText(unitCode), checkedText(unitPrice), checkedText(rate), com.fatoora.raw.VatCategory.valueOf(category.name))))
-        }
     }
 
     val itemGrossPrice: java.math.BigDecimal?
@@ -120,31 +114,6 @@ class InvoiceLineItem internal constructor(internal val raw: com.fatoora.raw.Inv
             VatCategory.valueOf(raw.vatCategory().name)
         }
 
-    @Deprecated("Use the itemGrossPrice property.", ReplaceWith("itemGrossPrice"))
-    fun itemGrossPrice(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.itemGrossPrice())?.let(::Text)
-    }
-
-    @Deprecated("Use the itemPriceDiscount property.", ReplaceWith("itemPriceDiscount"))
-    fun itemPriceDiscount(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.itemPriceDiscount())?.let(::Text)
-    }
-
-    @Deprecated("Use the itemPriceBaseQuantity property.", ReplaceWith("itemPriceBaseQuantity"))
-    fun itemPriceBaseQuantity(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.itemPriceBaseQuantity())?.let(::Text)
-    }
-
-    @Deprecated("Use the itemPriceBaseQuantityUnitCode property.", ReplaceWith("itemPriceBaseQuantityUnitCode"))
-    fun itemPriceBaseQuantityUnitCode(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.itemPriceBaseQuantityUnitCode())?.let(::Text)
-    }
-
-    @Deprecated("Use the adjustmentsLen property.", ReplaceWith("adjustmentsLen"))
-    fun adjustmentsLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
-        java.math.BigInteger(raw.adjustmentsLen().toString())
-    }
-
     fun adjustment(index: java.math.BigInteger): Adjustment = nativeCall(listOfNotNull(this)) {
         Adjustment(unwrap(raw.adjustment(checkedCounter(index))))
     }
@@ -173,18 +142,8 @@ class InvoiceLineItem internal constructor(internal val raw: com.fatoora.raw.Inv
         InvoiceLineItem(unwrap(raw.withTaxSubtotal(subtotal.raw)))
     }
 
-    @Deprecated("Use the documentReferencesLen property.", ReplaceWith("documentReferencesLen"))
-    fun documentReferencesLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
-        java.math.BigInteger(raw.documentReferencesLen().toString())
-    }
-
     fun documentReference(index: java.math.BigInteger): OriginalInvoiceRef = nativeCall(listOfNotNull(this)) {
         OriginalInvoiceRef(unwrap(raw.documentReference(checkedCounter(index))))
-    }
-
-    @Deprecated("Use the taxSubtotalsLen property.", ReplaceWith("taxSubtotalsLen"))
-    fun taxSubtotalsLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
-        java.math.BigInteger(raw.taxSubtotalsLen().toString())
     }
 
     fun taxSubtotal(index: java.math.BigInteger): VatBreakdown = nativeCall(listOfNotNull(this)) {
@@ -195,52 +154,7 @@ class InvoiceLineItem internal constructor(internal val raw: com.fatoora.raw.Inv
         InvoiceLineItem(unwrap(raw.withMetadata(id?.let(::checkedText), exemption.raw)))
     }
 
-    @Deprecated("Use the id property.", ReplaceWith("id"))
-    fun id(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.id())?.let(::Text)
-    }
-
     fun exemption(): TaxExemption = nativeCall(listOfNotNull(this)) {
         TaxExemption(unwrap(raw.exemption()))
-    }
-
-    @Deprecated("Use the description property.", ReplaceWith("description"))
-    fun description(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.description())
-    }
-
-    @Deprecated("Use the unitCode property.", ReplaceWith("unitCode"))
-    fun unitCode(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.unitCode())
-    }
-
-    @Deprecated("Use the quantity property.", ReplaceWith("quantity.toPlainString()"))
-    fun quantity(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.quantity())
-    }
-
-    @Deprecated("Use the unitPrice property.", ReplaceWith("unitPrice.toPlainString()"))
-    fun unitPrice(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.unitPrice())
-    }
-
-    @Deprecated("Use the totalAmount property.", ReplaceWith("totalAmount.toPlainString()"))
-    fun totalAmount(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.totalAmount())
-    }
-
-    @Deprecated("Use the vatRate property.", ReplaceWith("vatRate.toPlainString()"))
-    fun vatRate(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.vatRate())
-    }
-
-    @Deprecated("Use the vatAmount property.", ReplaceWith("vatAmount.toPlainString()"))
-    fun vatAmount(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.vatAmount())
-    }
-
-    @Deprecated("Use the vatCategory property.", ReplaceWith("vatCategory"))
-    fun vatCategory(): VatCategory = nativeCall(listOfNotNull(this)) {
-        VatCategory.valueOf(raw.vatCategory().name)
     }
 }

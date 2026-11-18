@@ -58,16 +58,6 @@ DECIMAL_OUTPUTS = {
     },
     "VatBreakdown": {"rate", "taxAmount", "taxableAmount"},
 }
-# FFI members renamed in 0.6 to match the core, keyed by (class, new raw
-# method) with the old facade name. The old name stays as a deprecated alias
-# until 0.7.
-RENAMED = {
-    ("Adjustment", "percentOf"): "percentage",
-    ("Adjustment", "suppliedAmount"): "withSuppliedAmount",
-    ("Adjustment", "percentage"): "percent",
-    ("AllowanceCharge", "omitVatRate"): "withoutVatRate",
-    ("VatBreakdown", "omitVatRate"): "withoutVatRate",
-}
 # Zero-argument accessors with these prefixes are conversions or operations,
 # not properties.
 VERB_PREFIXES = ("to", "as", "into", "with", "build", "ensure")
@@ -111,7 +101,8 @@ def kdoc(content, position, indent):
 
 def facade(sources):
     owners = {p.stem for p in sources if "internal val handle: Pointer" in sources[p]}
-    public = owners - {"BindingError"}
+    # Text only carries string results; the facade reads it as a String.
+    public = owners - {"BindingError", "Text"}
     # Raw enums are mirrored in com.fatoora by name, so facade signatures never
     # expose com.fatoora.raw types.
     enums = {}
@@ -129,14 +120,13 @@ def facade(sources):
             )
     seen_inputs = set()
     seen_outputs = set()
-    seen_renames = set()
 
-    def managed(ty, decimal=False, legacy=False):
+    def managed(ty, decimal=False):
         if ty.endswith("?"):
-            return managed(ty[:-1], decimal, legacy) + "?"
-        if decimal and not legacy:
+            return managed(ty[:-1], decimal) + "?"
+        if decimal:
             return BIG_DECIMAL
-        if ty == "Text" and not legacy:
+        if ty == "Text":
             return "String"
         return {
             "UByte": "Int",
@@ -146,14 +136,14 @@ def facade(sources):
             "UByteArray": "ByteArray",
         }.get(ty, ty)
 
-    def argument(name, ty, decimal=False, legacy=False):
-        if decimal and not legacy:
+    def argument(name, ty, decimal=False):
+        if decimal:
             return f"{name}?.let(::decimalText)" if ty.endswith("?") else f"decimalText({name})"
         if ty.rstrip("?") in enums:
             raw = f"com.fatoora.raw.{ty.rstrip('?')}.valueOf"
             return f"{name}?.let {{ {raw}(it.name) }}" if ty.endswith("?") else f"{raw}({name}.name)"
-        if ty.endswith("?") and managed(ty, legacy=legacy) != ty:
-            return f"{name}?.let {{ value -> {argument('value', ty[:-1], decimal, legacy)} }}"
+        if ty.endswith("?") and managed(ty) != ty:
+            return f"{name}?.let {{ value -> {argument('value', ty[:-1], decimal)} }}"
         if ty.rstrip("?") in public:
             return name + ("?.raw" if ty.endswith("?") else ".raw")
         return {
@@ -166,19 +156,19 @@ def facade(sources):
             "UByteArray": f"{name}.asUByteArray()",
         }.get(ty, name)
 
-    def result(expr, ty, decimal=False, legacy=False):
-        if not legacy and ty.rstrip("?") == "Text":
+    def result(expr, ty, decimal=False):
+        if ty.rstrip("?") == "Text":
             text = f"{expr}?.let(::readText)" if ty.endswith("?") else f"readText({expr})"
             if decimal:
                 return f"{text}?.let(::decimalOf)" if ty.endswith("?") else f"decimalOf({text})"
             return text
-        if decimal and not legacy:
+        if decimal:
             return f"{expr}?.let(::decimalOf)" if ty.endswith("?") else f"decimalOf({expr})"
         if ty.rstrip("?") in enums:
             value = f"{ty.rstrip('?')}.valueOf"
             return f"{expr}?.let {{ {value}(it.name) }}" if ty.endswith("?") else f"{value}({expr}.name)"
-        if ty.endswith("?") and managed(ty, legacy=legacy) != ty:
-            return f"{expr}?.let {{ value -> {result('value', ty[:-1], decimal, legacy)} }}"
+        if ty.endswith("?") and managed(ty) != ty:
+            return f"{expr}?.let {{ value -> {result('value', ty[:-1], decimal)} }}"
         if ty.rstrip("?") in public:
             return f"{expr}?.let(::{ty[:-1]})" if ty.endswith("?") else f"{ty}({expr})"
         return {
@@ -211,10 +201,6 @@ def facade(sources):
         if re.match(r"has[A-Z]", method):
             return [f'@get:JvmName("{method}")']
         return []
-
-    def legacy_allowed(method):
-        # is*/has* getters keep their JVM name, so the old function would clash.
-        return not re.match(r"(?:is|has)[A-Z]", method)
 
     output = {}
     for path, content in sources.items():
@@ -259,40 +245,21 @@ def facade(sources):
             # Avoid Kotlin keyword escapes in Java source: new_ becomes create.
             exposed = "create" if method == "new_" else method
 
-            def emit(legacy):
-                decl = ", ".join(
-                    f"{n}: {managed(t, n in decimal_args, legacy)}" + (" = null" if i >= optional else "")
-                    for i, (n, t) in enumerate(pairs)
-                )
-                args = ", ".join(argument(n, t, n in decimal_args, legacy) for n, t in pairs)
-                call = f"{'com.fatoora.raw.' + name if is_static else 'raw'}.{method}({args})"
-                if fallible:
-                    call = f"unwrap({call})"
-                expression = result(call, ty, decimal_out, legacy)
-                body = f"nativeCall(listOfNotNull({', '.join(guards)})) {{\n    {expression}\n}}"
-                return decl, managed(ty, decimal_out, legacy), body
-
-            decl, returns, body = emit(legacy=False)
-            renamed = RENAMED.get((name, method))
-            if renamed:
-                seen_renames.add((name, method))
+            decl = ", ".join(
+                f"{n}: {managed(t, n in decimal_args)}" + (" = null" if i >= optional else "")
+                for i, (n, t) in enumerate(pairs)
+            )
+            args = ", ".join(argument(n, t, n in decimal_args) for n, t in pairs)
+            call = f"{'com.fatoora.raw.' + name if is_static else 'raw'}.{method}({args})"
+            if fallible:
+                call = f"unwrap({call})"
+            returns = managed(ty, decimal_out)
+            body = f"nativeCall(listOfNotNull({', '.join(guards)})) {{\n    {result(call, ty, decimal_out)}\n}}"
             if is_property(method, pairs, ty, is_static):
                 lines = getter_annotations(method)
                 lines.append(f"val {method}: {returns}")
                 lines.append(f"    get() = {body.replace(chr(10), chr(10) + '    ')}")
                 properties.append(doc + "\n".join(lines))
-                if renamed:
-                    properties.append(
-                        f'@Deprecated("Use the {method} property.", ReplaceWith("{method}"))\n'
-                        f"val {renamed}: {returns}\n    get() = {method}"
-                    )
-                if legacy_allowed(method):
-                    _, old_returns, old_body = emit(legacy=True)
-                    replace = f"{method}.toPlainString()" if decimal_out and ty == "String" else method
-                    methods.append(
-                        f'@Deprecated("Use the {method} property.", ReplaceWith("{replace}"))\n'
-                        f"fun {renamed or exposed}(): {old_returns} = {old_body}"
-                    )
                 continue
             lines = []
             if is_static:
@@ -301,37 +268,6 @@ def facade(sources):
                 lines.append("@JvmOverloads")
             lines.append(f"fun {exposed}({decl}): {returns} = {body}")
             (statics if is_static else methods).append(doc + "\n".join(lines))
-            if renamed:
-                names = ", ".join(n for n, _ in pairs)
-                alias = [f'@Deprecated("Use {exposed}.", ReplaceWith("{exposed}({names})"))']
-                alias += lines[:-1]
-                alias.append(f"fun {renamed}({decl}): {returns} = {body}")
-                (statics if is_static else methods).append("\n".join(alias))
-            if decimal_args:
-                # Keep the String overload, with its old native parsing, for one release.
-                old_decl, old_returns, old_body = emit(legacy=True)
-                forwarded = ", ".join(
-                    (f"{n}?.let {{ BigDecimal(it) }}" if t.endswith("?") else f"BigDecimal({n})")
-                    if n in decimal_args else n
-                    for n, t in pairs
-                )
-                legacy = [
-                    f'@Deprecated("Pass amounts as java.math.BigDecimal.", '
-                    f'ReplaceWith("{exposed}({forwarded})", "java.math.BigDecimal"))'
-                ]
-                if is_static:
-                    legacy.append("@JvmStatic")
-                if optional < len(pairs):
-                    legacy.append("@JvmOverloads")
-                legacy.append(f"fun {exposed}({old_decl}): {old_returns} = {old_body}")
-                (statics if is_static else methods).append("\n".join(legacy))
-                if renamed:
-                    legacy[0] = (
-                        f'@Deprecated("Use {exposed} with java.math.BigDecimal amounts.", '
-                        f'ReplaceWith("{exposed}({forwarded})", "java.math.BigDecimal"))'
-                    )
-                    legacy[-1] = f"fun {renamed}({old_decl}): {old_returns} = {old_body}"
-                    (statics if is_static else methods).append("\n".join(legacy))
         text = f"""// Generated by scripts/generate_kotlin.py; do not edit.
 @file:OptIn(ExperimentalUnsignedTypes::class)
 package com.fatoora
@@ -361,8 +297,6 @@ package com.fatoora
     missing_outputs = {(o, m) for o, ms in DECIMAL_OUTPUTS.items() for m in ms} - seen_outputs
     if missing_inputs or missing_outputs:
         raise SystemExit(f"Unknown decimal methods: {sorted(missing_inputs | missing_outputs)}")
-    if set(RENAMED) - seen_renames:
-        raise SystemExit(f"Unknown renamed methods: {sorted(set(RENAMED) - seen_renames)}")
     for name, (variants, enum_methods, doc) in sorted(enums.items()):
         body = ", ".join(variants)
         if enum_methods:
@@ -371,10 +305,6 @@ package com.fatoora
                 expression = result(f"com.fatoora.raw.{name}.valueOf(name).{method}()", ty)
                 members.append(
                     f"{method_doc}    val {method}: {managed(ty)}\n        get() = {expression}"
-                )
-                members.append(
-                    f'    @Deprecated("Use the {method} property.", ReplaceWith("{method}"))\n'
-                    f"    fun {method}(): {managed(ty)} = {method}"
                 )
             body += ";\n\n" + "\n\n".join(members) + "\n"
             text = f"{doc}enum class {name} {{\n    {body}}}\n"
