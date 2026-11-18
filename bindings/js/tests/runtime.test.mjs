@@ -311,19 +311,18 @@ test('library failures throw one error class per code', () => {
   assert.doesNotMatch(error.stack.split('\n')[1], /patch\.mjs|errors\.mjs/);
   assert.throws(() => sdk.SigningKey.fromPem('not a key'), e => e instanceof sdk.FatooraError && e.code === e.cause.code());
   // fatoority/raw shares the generated classes, so it throws the same types.
-  assert.throws(() => raw.Address.new_('SAU', '\0', '', '', '', null, null, null), sdk.InvalidInputError);
+  assert.throws(() => raw.Address.create('SAU', '\0', '', '', '', null, null, null), sdk.InvalidInputError);
 });
 
 test('create replaces new_ and the package root exports a deliberate API', () => {
-  const withNew = Object.entries(generated).filter(([, value]) => typeof value?.new_ === 'function').map(([name]) => name);
-  assert.equal(withNew.length, 14);
-  for (const name of withNew) {
-    assert.equal(typeof generated[name].create, 'function', name);
+  const withCreate = Object.entries(generated).filter(([, value]) => typeof value?.create === 'function').map(([name]) => name);
+  assert.equal(withCreate.length, 14);
+  for (const name of withCreate) {
+    assert.equal(generated[name].new_, undefined, name);
     if (name !== 'ZatcaClient') assert.equal(sdk[name], generated[name]);
   }
   assert.ok(sdk.Config.create(sdk.Environment.Simulation) instanceof sdk.Config);
   assert.equal(sdk.Config.create('Production').env, sdk.Environment.Production);
-  assert.equal(sdk.Config.new_(sdk.Environment.Simulation).env, sdk.Environment.Simulation); // deprecated alias
   const replaced = ['Xml', 'ZatcaClient', 'ZatcaValidationReport', 'ZatcaStageReport', 'ZatcaFinding', 'ZatcaRuleSource'];
   for (const [name, value] of Object.entries(generated)) {
     if (replaced.includes(name)) assert.notEqual(sdk[name], value, name);
@@ -361,16 +360,18 @@ test('generated boolean getters return booleans', () => {
   assert.equal(sdk.Xml.validate(loadFixture('sdk-parity/cases/simplified-invoice/sdk-signed.xml')), true);
 });
 
-test('0.5 names of renamed members forward to the core names', () => {
-  const rebate = sdk.Adjustment.percentage('250', '10'); // deprecated
+test('renamed members have only their core names', () => {
+  const rebate = sdk.Adjustment.percentOf('250', '10');
   assert.equal(rebate.value, '25');
-  assert.ok(rebate.percent() instanceof sdk.Text); // the 0.5 alias keeps its 0.5 result
-  assert.equal(rebate.percent().value(), rebate.percentage);
-  assert.equal(rebate.withSuppliedAmount('25').value, rebate.suppliedAmount('25').value);
-  assert.throws(() => rebate.withSuppliedAmount('24').value, sdk.ValidationError);
+  assert.equal(rebate.percentage, '10');
+  assert.equal(rebate.suppliedAmount('25').value, '25');
+  assert.throws(() => rebate.suppliedAmount('24').value, sdk.ValidationError);
   const subtotal = sdk.VatBreakdown.create(sdk.VatCategory.OutOfScope, '0', '10', '0', sdk.TaxExemption.create('VATEX-SA-OOS', 'reason'));
-  assert.equal(subtotal.withoutVatRate().hasVatRate, subtotal.omitVatRate().hasVatRate);
   assert.equal(subtotal.omitVatRate().hasVatRate, false);
+  // The 0.5 names, deprecated in 0.6, are gone in 0.7.
+  assert.equal(Object.hasOwn(sdk.Adjustment, 'percentage'), false);
+  for (const name of ['withSuppliedAmount', 'percent']) assert.equal(name in sdk.Adjustment.prototype, false, name);
+  for (const Class of [sdk.AllowanceCharge, sdk.VatBreakdown]) assert.equal('withoutVatRate' in Class.prototype, false);
 });
 
 test('value getters are read-only properties and optional text is a plain string', () => {

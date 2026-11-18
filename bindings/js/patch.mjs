@@ -5,7 +5,7 @@
 // share one prototype.
 import * as generated from './generated/index.mjs';
 import { FatooraError, fromBindingError } from './errors.mjs';
-import { properties, renamedMembers, textResults } from './members.mjs';
+import { properties, textResults } from './members.mjs';
 
 const { BindingError } = generated;
 const wrapped = Symbol('fatoority.wrapped');
@@ -48,15 +48,11 @@ function adaptMembers(target, skip, shape = {}) {
     if (skip.has(name)) continue;
     const descriptor = Object.getOwnPropertyDescriptor(target, name);
     if (typeof descriptor.value !== 'function' || descriptor.value[wrapped]) continue; // getters, enum singletons
-    const original = descriptor.value;
     const convert = texts.includes(name) ? text : booleans.includes(name) ? Boolean : same;
-    const adapted = adapt(name, original, convert);
+    const adapted = adapt(name, descriptor.value, convert);
     if (properties.includes(name)) {
       // A getter needs no arguments, so the adapter serves as one directly.
       Object.defineProperty(target, name, { get: adapted, enumerable: false, configurable: true });
-      // Keep the generated result for the deprecated 0.5 aliases below.
-      if (!unconverted.has(target)) unconverted.set(target, new Map());
-      unconverted.get(target).set(name, adapt(name, original, booleans.includes(name) ? Boolean : same));
     } else {
       Object.defineProperty(target, name, { ...descriptor, value: adapted });
     }
@@ -77,7 +73,6 @@ export const integerBooleanMethods = {
 
 const staticSkip = new Set(['length', 'name', 'prototype']);
 const prototypeSkip = new Set(['constructor']);
-const unconverted = new Map(); // prototype -> property name -> method with the generated result
 
 for (const [className, value] of Object.entries(generated)) {
   if (typeof value !== 'function' || value === BindingError) continue;
@@ -86,11 +81,13 @@ for (const [className, value] of Object.entries(generated)) {
     continue;
   }
   // Diplomat names a Rust `new` constructor `new_`; the public name is `create`.
-  // Define it before adapting so both names report errors at the caller.
+  // Rename it before adapting so `create` reports errors at the caller.
   const generatedNew = value.new_;
-  if (typeof generatedNew === 'function' && !Object.hasOwn(value, 'create')) {
+  if (typeof generatedNew === 'function') {
+    if (Object.hasOwn(value, 'create')) throw new Error(`${className} already has create`);
     const create = { create(...args) { return generatedNew.apply(this, args); } }.create;
     Object.defineProperty(value, 'create', { value: create, writable: true, configurable: true });
+    delete value.new_;
   }
   adaptMembers(value, staticSkip);
   // Value getters become read-only properties and `Text` results plain strings
@@ -99,23 +96,4 @@ for (const [className, value] of Object.entries(generated)) {
     properties: properties[className], texts: textResults[className],
     booleans: integerBooleanMethods[className],
   });
-}
-
-// 0.5 names of members renamed in 0.6 to match the Rust core. Each forwards
-// to its new name and is removed in 0.7. `Adjustment.percentage(base, percent)`
-// is static, so it does not clash with the `percentage` property of instances.
-// An alias of a property stays a method with its 0.5 result (`Text`).
-export { renamedMembers };
-for (const [name, members] of Object.entries(renamedMembers)) {
-  for (const [side, aliases] of Object.entries(members)) {
-    const target = side === 'static' ? generated[name] : generated[name].prototype;
-    for (const [old, current] of Object.entries(aliases)) {
-      const getter = unconverted.get(target)?.get(current);
-      if (!getter && typeof target[current] !== 'function') throw new Error(`${name}.${current} is missing`);
-      const alias = getter
-        ? { [old]() { return getter.call(this); } }[old]
-        : { [old](...args) { return this[current](...args); } }[old];
-      Object.defineProperty(target, old, { value: alias, writable: true, configurable: true });
-    }
-  }
 }

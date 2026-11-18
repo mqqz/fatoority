@@ -61,8 +61,8 @@ methods, as do `len()` and `isEmpty()`. Assigning to a property throws a
 `TypeError`.
 
 Method names use camelCase. Constructors named `new` in the underlying API are
-`create`, such as `Config.create(Environment.NonProduction)`. The generated name
-`new_` still works but is deprecated in the TypeScript declarations. Generated
+`create`, such as `Config.create(Environment.NonProduction)`; the generated name
+`new_` was removed in 0.7 (see [migrating to 0.7](../../guides/migrate-0.7/javascript.md)). Generated
 constructors (`new Config()`) are internal. Read the [number reference](../numbers.md) for
 accepted decimal syntax and rounding rules.
 

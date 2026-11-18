@@ -42,6 +42,7 @@ nav:
           - Python: guides/migrate-0.7/python.md
           - C# / .NET: guides/migrate-0.7/csharp.md
           - Kotlin / Java: guides/migrate-0.7/kotlin.md
+          - JavaScript / TypeScript: guides/migrate-0.7/javascript.md
   - Reference:
       - Configuration: reference/configuration.md
       - CSR: reference/csr.md

@@ -58,10 +58,3 @@ export const textResults = {
   ZatcaFinding: ['locationPath'],
   ZatcaStageReport: ['evaluatedAssertion'],
 };
-
-/** 0.5 names of members renamed in 0.6 to match the Rust core; removed in 0.7. */
-export const renamedMembers = {
-  Adjustment: { prototype: { percent: 'percentage', withSuppliedAmount: 'suppliedAmount' }, static: { percentage: 'percentOf' } },
-  AllowanceCharge: { prototype: { withoutVatRate: 'omitVatRate' } },
-  VatBreakdown: { prototype: { withoutVatRate: 'omitVatRate' } },
-};
