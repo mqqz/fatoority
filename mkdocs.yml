@@ -36,6 +36,9 @@ nav:
           - Kotlin / Java: guides/migrate-0.6/kotlin.md
           - C# / .NET: guides/migrate-0.6/csharp.md
           - C/C++: guides/migrate-0.6/c.md
+      - Migrate from 0.6 to 0.7:
+          - Overview: guides/migrate-0.7/index.md
+          - Rust: guides/migrate-0.7/rust.md
   - Reference:
       - Configuration: reference/configuration.md
       - CSR: reference/csr.md

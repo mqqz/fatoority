@@ -805,37 +805,6 @@ impl ZatcaClient {
         Ok(ProductionRequest::new(request, self.config.env(), false))
     }
 
-    /// Former name of [`prepare_request_compliance_csid`](Self::prepare_request_compliance_csid).
-    ///
-    /// # Errors
-    /// Same as [`prepare_request_compliance_csid`](Self::prepare_request_compliance_csid).
-    #[deprecated(
-        since = "0.6.0",
-        note = "use `prepare_request_compliance_csid` instead"
-    )]
-    pub fn prepare_post_csr_for_ccsid(
-        &self,
-        csr: &Csr,
-        otp: &str,
-    ) -> Result<ComplianceRequest, ZatcaError> {
-        self.prepare_request_compliance_csid(csr, otp)
-    }
-
-    /// Former name of [`prepare_request_production_csid`](Self::prepare_request_production_csid).
-    ///
-    /// # Errors
-    /// Same as [`prepare_request_production_csid`](Self::prepare_request_production_csid).
-    #[deprecated(
-        since = "0.6.0",
-        note = "use `prepare_request_production_csid` instead"
-    )]
-    pub fn prepare_post_ccsid_for_pcsid(
-        &self,
-        ccsid: &CsidCredentials<Compliance>,
-    ) -> Result<ProductionRequest, ZatcaError> {
-        self.prepare_request_production_csid(ccsid)
-    }
-
     /// Renew a production CSID by submitting a new CSR.
     /// See [ZATCA documentation](https://sandbox.zatca.gov.sa/Integration/renewal-api) for more details.
     ///
@@ -1071,33 +1040,6 @@ impl ZatcaClient {
             .send(prepared.request(), BodyReadPolicy::Issuance)
             .await?;
         prepared.decode(status, &body)
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    /// Former name of [`request_compliance_csid`](Self::request_compliance_csid).
-    ///
-    /// # Errors
-    /// Same as [`request_compliance_csid`](Self::request_compliance_csid).
-    #[deprecated(since = "0.6.0", note = "use `request_compliance_csid` instead")]
-    pub async fn post_csr_for_ccsid(
-        &self,
-        csr: &Csr,
-        otp: &str,
-    ) -> Result<CsidCredentials<Compliance>, ZatcaError> {
-        self.request_compliance_csid(csr, otp).await
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    /// Former name of [`request_production_csid`](Self::request_production_csid).
-    ///
-    /// # Errors
-    /// Same as [`request_production_csid`](Self::request_production_csid).
-    #[deprecated(since = "0.6.0", note = "use `request_production_csid` instead")]
-    pub async fn post_ccsid_for_pcsid(
-        &self,
-        ccsid: &CsidCredentials<Compliance>,
-    ) -> Result<CsidCredentials<Production>, ZatcaError> {
-        self.request_production_csid(ccsid).await
     }
 
     #[cfg(not(target_arch = "wasm32"))]

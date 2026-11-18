@@ -1,8 +1,6 @@
-//! New names introduced in 0.6 and the deprecated aliases kept for one release.
-use fatoora_core::api::{
-    Compliance, ComplianceCsid, CsidCredentials, Production, ProductionCsid, ZatcaClient,
-};
-use fatoora_core::config::{Config, Environment};
+//! Names introduced in 0.6: CSR properties parsing, `Environment` and the CSID aliases.
+use fatoora_core::api::{Compliance, ComplianceCsid, CsidCredentials, Production, ProductionCsid};
+use fatoora_core::config::Environment;
 use fatoora_core::csr::{CsrError, CsrProperties, SigningKey};
 use std::str::FromStr;
 
@@ -51,86 +49,10 @@ fn csr_properties_from_file_reports_the_file_path() {
 }
 
 #[test]
-#[allow(deprecated)]
-fn deprecated_csr_properties_constructors_forward() {
-    let expected: CsrProperties = PROPERTIES.parse().unwrap();
-    assert_eq!(
-        CsrProperties::from_properties_str(PROPERTIES).unwrap(),
-        expected
-    );
-    assert_eq!(
-        CsrProperties::parse_csr_config(PROPERTIES).unwrap(),
-        expected
-    );
-
-    let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("csr.properties");
-    std::fs::write(&path, PROPERTIES).unwrap();
-    assert_eq!(
-        CsrProperties::parse_csr_config_file(&path).unwrap(),
-        expected
-    );
-}
-
-#[test]
-#[allow(deprecated)]
-fn deprecated_environment_type_alias_is_environment() {
-    use fatoora_core::config::EnvironmentType;
-    let env: EnvironmentType = Environment::Simulation;
-    assert_eq!(EnvironmentType::from_str("simulation").unwrap(), env);
-    assert_eq!(
-        Config::new(EnvironmentType::Production).env(),
-        Environment::Production
-    );
-}
-
-#[test]
 fn csid_aliases_name_the_typestates() {
     let compliance: ComplianceCsid =
         CsidCredentials::<Compliance>::new(Environment::NonProduction, None, "token", "secret");
     let production: ProductionCsid =
         CsidCredentials::<Production>::new(Environment::NonProduction, None, "token", "secret");
     assert_eq!(compliance.env(), production.env());
-}
-
-#[test]
-#[allow(deprecated)]
-fn deprecated_invoice_totals_alias_is_invoice_totals() {
-    fn same(
-        _: Option<&fatoora_core::invoice::InvoiceTotalsData>,
-    ) -> Option<&fatoora_core::invoice::InvoiceTotals> {
-        None
-    }
-    assert!(same(None).is_none());
-}
-
-#[test]
-#[allow(deprecated)]
-fn deprecated_csid_request_preparers_forward() {
-    let client = ZatcaClient::new(Config::new(Environment::NonProduction)).unwrap();
-    let csr = PROPERTIES
-        .parse::<CsrProperties>()
-        .unwrap()
-        .build(&SigningKey::generate(), Environment::NonProduction)
-        .unwrap();
-
-    let new = client
-        .prepare_request_compliance_csid(&csr, "123456")
-        .unwrap();
-    let old = client.prepare_post_csr_for_ccsid(&csr, "123456").unwrap();
-    assert_eq!(old.request().url(), new.request().url());
-    assert_eq!(old.request().headers(), new.request().headers());
-    assert_eq!(old.request().body(), new.request().body());
-
-    let ccsid: ComplianceCsid = CsidCredentials::new(
-        Environment::NonProduction,
-        Some("1234567890123".into()),
-        "token",
-        "secret",
-    );
-    let new = client.prepare_request_production_csid(&ccsid).unwrap();
-    let old = client.prepare_post_ccsid_for_pcsid(&ccsid).unwrap();
-    assert_eq!(old.request().url(), new.request().url());
-    assert_eq!(old.request().headers(), new.request().headers());
-    assert_eq!(old.request().body(), new.request().body());
 }

@@ -3,8 +3,6 @@
 //! XSD checks do not run builder field checks, business rules, or signature
 //! verification. Signed imports separately check local signature and QR integrity.
 mod decimal_lexical;
-#[cfg(test)]
-mod forwarder_tests;
 pub(crate) mod integrity;
 mod integrity_xml;
 #[cfg(test)]
@@ -12,17 +10,14 @@ mod integrity_xml_tests;
 mod report;
 mod schemas;
 mod zatca;
+mod zatca_report;
 #[cfg(test)]
 mod zatca_tests;
-#[allow(deprecated)]
-pub use zatca::validate_zatca_invoice_from_str;
-mod zatca_report;
 pub use zatca_report::{
     ZatcaFailureKind, ZatcaFinding, ZatcaRuleSource, ZatcaStage, ZatcaStageReport,
     ZatcaStageStatus, ZatcaValidationError, ZatcaValidationOptions, ZatcaValidationReport,
 };
 mod business_rules;
-use crate::config::Config;
 pub use report::{
     Severity, ValidationFinding, ValidationLayer, ValidationLocation, ValidationReport,
 };
@@ -166,30 +161,6 @@ impl Validator {
     ) -> Result<ZatcaValidationReport, ZatcaValidationError> {
         zatca::validate_zatca(self, xml, options)
     }
-}
-
-/// Validate an XML invoice string against the UBL schema only.
-///
-/// # Errors
-/// Returns [`XmlValidationError`] if the XML is invalid or validation fails.
-#[deprecated(since = "0.6.0", note = "use `Validator::validate_xml` instead")]
-pub fn validate_xml_invoice_from_str(xml: &str, config: &Config) -> ValidationResult {
-    let _ = config;
-    Validator::new().validate_xml(xml)
-}
-
-/// Check the bundled UBL XSD and return findings with explicit layer coverage.
-///
-/// # Errors
-/// Returns [`XmlValidationError`] when the schema cannot be loaded or parsed, or
-/// the input is not parseable XML.
-#[deprecated(since = "0.6.0", note = "use `Validator::validate_xml_report` instead")]
-pub fn validate_xml_invoice_report_from_str(
-    xml: &str,
-    config: &Config,
-) -> Result<ValidationReport, XmlValidationError> {
-    let _ = config;
-    Validator::new().validate_xml_report(xml)
 }
 
 fn schema_validation_report(

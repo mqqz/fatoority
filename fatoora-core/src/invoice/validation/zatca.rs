@@ -6,22 +6,7 @@ use super::{
     business_rules::{self, FailureKind, Source, StageStatus},
     integrity,
 };
-use crate::config::Config;
 use crate::invoice::InvoiceHash;
-
-/// Validate raw XML against the pinned ZATCA SDK profile using local checks.
-///
-/// # Errors
-/// Returns [`ZatcaValidationError`] with completed and partial stage findings.
-#[deprecated(since = "0.6.0", note = "use `Validator::validate_zatca` instead")]
-pub fn validate_zatca_invoice_from_str(
-    xml: &str,
-    config: &Config,
-    options: &ZatcaValidationOptions,
-) -> Result<ZatcaValidationReport, ZatcaValidationError> {
-    let _ = config;
-    Validator::new().validate_zatca(xml, options)
-}
 
 /// Implementation of [`Validator::validate_zatca`].
 pub(super) fn validate_zatca(

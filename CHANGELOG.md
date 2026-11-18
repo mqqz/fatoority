@@ -8,6 +8,42 @@
   2025. The package now requires Python 3.10 or newer and no longer ships
   `cp39` wheels.
 
+### Removed
+
+Rust (`fatoora-core`): every item deprecated in 0.6 is removed. Each had a
+replacement in 0.6; see the
+[Rust migration guide](https://docs.fatoority.com/guides/migrate-0.7/rust/).
+The `fatoora-ffi` bridge, the CLI and the generated C, C++ and Diplomat
+bindings had no deprecated items and are unchanged.
+
+- Configuration and API client: `config::EnvironmentType` (use
+  `Environment`); `ZatcaClient::post_csr_for_ccsid`, `post_ccsid_for_pcsid`,
+  `prepare_post_csr_for_ccsid` and `prepare_post_ccsid_for_pcsid` (use
+  `request_compliance_csid`, `request_production_csid` and their `prepare_*`
+  forms).
+- CSR: `CsrProperties::from_properties_str` and `parse_csr_config` (use
+  `str::parse`), `parse_csr_config_file` (use `CsrProperties::from_file`).
+- Invoice builder: `adjustment` (use `allowance`/`charge` with
+  `DocumentAdjustment::from`), the aggregate setters `invoice_level_discount`,
+  `invoice_level_charge` and `allowance_reason` (use `allowance`/`charge`
+  entries with an explicit VAT category and rate, and
+  `DocumentAdjustment::with_reason`), and `payment_means_code` (use
+  `payment_means(PaymentMeans::new(code))`). The `InvoiceData` getters of the
+  same names stay, and serialized invoice data with aggregate amounts still
+  loads.
+- Invoice values: `invoice::InvoiceTotalsData` (use `InvoiceTotals`),
+  `PaymentMeans::instruction_note` (use `with_instruction_note`),
+  `Adjustment::allowance_charge_reason`, `allowance_charge_reason_code`,
+  `calculation_base_amount` and `calculation_percentage` (use `reason`,
+  `reason_code`, `base_amount` and `percentage`), and
+  `VatBreakdown::without_vat_rate` (use `omit_vat_rate`).
+- Validation and hashing: `validation::validate_xml_invoice_from_str`,
+  `validate_xml_invoice_report_from_str` and `validate_zatca_invoice_from_str`
+  (use `Validator::validate_xml`, `validate_xml_report` and `validate_zatca`);
+  `sign::invoice_hash_base64_from_xml_str` (use `invoice::hash_xml`); and
+  `FinalizedInvoice::hash_base64` / `SignedInvoice::hash_base64` (use `hash`,
+  which returns an `InvoiceHash`).
+
 ## [0.6.0] - 2026-11-18
 
 The breaking 0.6 release. `fatoora-core` renames items for consistency and
