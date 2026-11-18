@@ -1,0 +1,48 @@
+use fatoora_core::invoice::{
+    Address, CountryCode, InvoiceBuilder, InvoiceSubType, InvoiceType, LineItem, OtherId, Party,
+    PaymentMeans, SellerRole, VatCategory, VatId,
+};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let seller = Party::<SellerRole>::new(
+        "Example Store",
+        Address::new(
+            CountryCode::parse("SA")?,
+            "Riyadh",
+            "King Fahd Road",
+            "1234",
+            "12222",
+        )
+        .with_additional_number("5678")
+        .with_district("Olaya"),
+        VatId::parse("399999999900003")?,
+        Some(OtherId::with_scheme("7003339333", "CRN")),
+    );
+    let item = LineItem::new(
+        "Notebook",
+        "2".parse()?,
+        "PCE",
+        "50".parse()?,
+        "15".parse()?,
+        VatCategory::Standard,
+    )?;
+    let invoice = InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified))
+        .id("INV-1001")
+        .uuid("8e6000cf-1a98-4174-b3e7-b5d5954bc10d".parse()?)
+        .issue_datetime("2026-10-26T09:00:00Z".parse()?)
+        .currency("SAR".parse()?)
+        // Demonstration predecessor; use your own invoice history in production.
+        .previous_invoice_hash("NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ==".parse()?)
+        .invoice_counter(1)
+        .seller(seller)
+        .payment_means(PaymentMeans::new("10"))
+        .vat_category(VatCategory::Standard)
+        .line_item(item)
+        .build()?;
+
+    std::fs::write("invoice.xml", invoice.to_xml()?)?;
+    println!("VAT: {} SAR", invoice.totals().tax_amount());
+    println!("Payable: {} SAR", invoice.totals().payable_amount());
+    println!("Saved invoice.xml");
+    Ok(())
+}

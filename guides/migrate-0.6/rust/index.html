@@ -1,0 +1,3316 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Every renamed, retyped, removed and deprecated fatoora-core item between 0.5 and 0.6, with before-and-after Rust code for the common migrations.">
+      
+      
+      
+        <link rel="canonical" href="https://docs.fatoority.com/guides/migrate-0.6/rust/">
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../python/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Migrate a Rust Project from fatoora-core 0.5 to 0.6 - fatoority</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/home.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  
+  
+    
+    
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="fatoority">
+    <meta property="og:title" content="Migrate a Rust Project from fatoora-core 0.5 to 0.6 - fatoority">
+    <meta property="og:description" content="Every renamed, retyped, removed and deprecated fatoora-core item between 0.5 and 0.6, with before-and-after Rust code for the common migrations.">
+    <meta property="og:url" content="https://docs.fatoority.com/guides/migrate-0.6/rust/">
+    <meta property="og:image" content="https://docs.fatoority.com/assets/images/crab-logo.png">
+    <meta property="og:image:alt" content="fatoority crab logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Migrate a Rust Project from fatoora-core 0.5 to 0.6 - fatoority">
+    <meta name="twitter:description" content="Every renamed, retyped, removed and deprecated fatoora-core item between 0.5 and 0.6, with before-and-after Rust code for the common migrations.">
+    <meta name="twitter:image" content="https://docs.fatoority.com/assets/images/crab-logo.png">
+    <meta name="twitter:image:alt" content="fatoority crab logo">
+  
+
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#migrate-from-05-to-06-rust" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="fatoority" class="md-header__button md-logo" aria-label="fatoority" data-md-component="logo">
+      
+  <img src="../../../assets/images/crab-logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            fatoority
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Migrate a Rust Project from fatoora-core 0.5 to 0.6
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/mqqz/fatoority" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mqqz/fatoority
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="fatoority" class="md-nav__button md-logo" aria-label="fatoority" data-md-component="logo">
+      
+  <img src="../../../assets/images/crab-logo.png" alt="logo">
+
+    </a>
+    fatoority
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/mqqz/fatoority" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mqqz/fatoority
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sandbox-walkthrough/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First Sandbox Invoice
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../invoice-creation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Create an Invoice
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../invoice-recipes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pricing and Invoice Recipes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../csr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CSR Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../invoice-signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Invoice Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../qr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QR Codes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ZATCA API Client
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_10" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migrate from 0.5 to 0.6
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Migrate from 0.5 to 0.6
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rust
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rust
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#changed-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed items
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Changed items">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api-client-and-responses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API client and responses
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#csr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CSR
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invoice-building" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invoice building
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invoice-data-getters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invoice data getters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adjustments-and-payment-means" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adjustments and payment means
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validation-and-hashing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation and hashing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#behaviour-and-data-format-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behaviour and data format changes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-migrations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common migrations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common migrations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#build-an-invoice-with-typed-inputs-and-an-allowance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build an invoice with typed inputs and an allowance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#request-csids-and-report-an-invoice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Request CSIDs and report an invoice
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read-response-statuses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Read response statuses
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validate-and-hash-an-invoice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validate and hash an invoice
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../python/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../javascript/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JavaScript / TypeScript
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kotlin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kotlin / Java
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../csharp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C# / .NET
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../c/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C/C++
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_11" id="__nav_2_11_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migrate from 0.6 to 0.7
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Migrate from 0.6 to 0.7
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migrate-0.7/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migrate-0.7/rust/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rust
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migrate-0.7/python/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migrate-0.7/javascript/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JavaScript / TypeScript
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migrate-0.7/kotlin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kotlin / Java
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migrate-0.7/csharp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C# / .NET
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migrate-0.7/c/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C/C++
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/csr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CSR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bindings
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Bindings
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/bindings/python/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/bindings/javascript/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JavaScript / TypeScript
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/bindings/csharp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C# / .NET
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/bindings/kotlin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kotlin / Java
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/bindings/c/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C/C++ (FFI)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Invoice
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Invoice
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/invoice-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/numbers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decimal numbers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/invoice-signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/invoice-validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/xml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../development/invoice-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XML Model Coverage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/xml-and-schemas/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XML and Schemas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/qr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/api-client/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Client
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../development/sdk-parity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SDK Compatibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../development/diplomat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Binding Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../development/business-rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Validation Tests
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../development/releases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Releases
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../benchmarks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#changed-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed items
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Changed items">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api-client-and-responses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API client and responses
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#csr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CSR
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invoice-building" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invoice building
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invoice-data-getters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invoice data getters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adjustments-and-payment-means" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adjustments and payment means
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validation-and-hashing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation and hashing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#behaviour-and-data-format-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behaviour and data format changes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-migrations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common migrations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common migrations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#build-an-invoice-with-typed-inputs-and-an-allowance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build an invoice with typed inputs and an allowance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#request-csids-and-report-an-invoice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Request CSIDs and report an invoice
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read-response-statuses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Read response statuses
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validate-and-hash-an-invoice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validate and hash an invoice
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="migrate-from-05-to-06-rust">Migrate from 0.5 to 0.6: Rust<a class="headerlink" href="#migrate-from-05-to-06-rust" title="Permanent link">&para;</a></h1>
+<p>This page covers the <code>fatoora-core</code> crate. The language packages have their own
+pages: <a href="../python/">Python</a>, <a href="../javascript/">JavaScript/TypeScript</a>,
+<a href="../kotlin/">Kotlin/Java</a>, <a href="../csharp/">C#/.NET</a> and <a href="../c/">C/C++</a>. The
+<a href="../">overview</a> lists what changed in every language.</p>
+<p>Update <code>Cargo.toml</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[dependencies]</span>
+<span class="n">fatoora-core</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"0.6.0"</span>
+</code></pre></div>
+<p>0.6 renames items for consistency, replaces strings and Booleans with typed
+values, and makes the fields of invoice value types private. Each change below
+is one of two kinds:</p>
+<ul>
+<li><strong>Deprecated</strong>: in 0.6 the old name still compiles, with a deprecation
+  warning, and forwards to the new one. 0.7 removed it.</li>
+<li><strong>Breaking</strong>: the old form no longer compiles. The type, signature or field
+  changed in place, so there is no deprecation period.</li>
+</ul>
+<p>A practical order of work: fix the breaking errors until the project compiles,
+then run <code>cargo build</code> (or <code>cargo clippy</code>) and work through the <code>deprecated</code>
+warnings, each of which names its replacement. Adding <code>#![deny(deprecated)]</code>
+to your crate root while you migrate turns the remaining old names into errors.</p>
+<div class="admonition note">
+<p class="admonition-title">Upgrading to 0.7</p>
+<p>0.7 removed every item marked <strong>Deprecated</strong> on this page, so on 0.7 use
+the replacement in the 0.6 column.
+<a href="../../migrate-0.7/rust/">Migrate from 0.6 to 0.7</a> lists the removed items.</p>
+</div>
+<p>The full list of changes, including additions, is in the
+<a href="https://github.com/mqqz/fatoority/blob/main/CHANGELOG.md">changelog</a>.</p>
+<h2 id="changed-items">Changed items<a class="headerlink" href="#changed-items" title="Permanent link">&para;</a></h2>
+<p>Paths are relative to <code>fatoora_core</code>. Status is <strong>Deprecated</strong> (compiles with a
+warning in 0.6, removed in 0.7) or <strong>Breaking</strong> (fails to compile).</p>
+<h3 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>0.5</th>
+<th>0.6</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>config::EnvironmentType</code></td>
+<td><code>config::Environment</code></td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td>Exhaustive <code>match</code> on <code>EnvironmentType</code></td>
+<td><code>Environment</code> is <code>#[non_exhaustive]</code>; add a <code>_ =&gt;</code> arm</td>
+<td>Breaking</td>
+</tr>
+</tbody>
+</table>
+<p><code>Config::new</code>, <code>Config::env</code>, <code>CsidCredentials::new</code>, <code>CsidCredentials::env</code>
+and <code>CsrProperties::build</code> now name <code>Environment</code>; the deprecated alias keeps
+code that names <code>EnvironmentType</code> compiling.</p>
+<h3 id="api-client-and-responses">API client and responses<a class="headerlink" href="#api-client-and-responses" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>0.5</th>
+<th>0.6</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ZatcaClient::post_csr_for_ccsid(csr, otp)</code></td>
+<td><code>ZatcaClient::request_compliance_csid(csr, otp)</code></td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>ZatcaClient::post_ccsid_for_pcsid(ccsid)</code></td>
+<td><code>ZatcaClient::request_production_csid(ccsid)</code></td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>ZatcaClient::prepare_post_csr_for_ccsid(csr, otp)</code></td>
+<td><code>ZatcaClient::prepare_request_compliance_csid(csr, otp)</code></td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>ZatcaClient::prepare_post_ccsid_for_pcsid(ccsid)</code></td>
+<td><code>ZatcaClient::prepare_request_production_csid(ccsid)</code></td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>ZatcaClient::report_simplified_invoice(.., clearance_status: bool, ..)</code></td>
+<td><code>report_simplified_invoice(.., clearance_mode: ClearanceMode, ..)</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>ZatcaClient::clear_standard_invoice(.., clearance_status: bool, ..)</code></td>
+<td><code>clear_standard_invoice(.., clearance_mode: ClearanceMode, ..)</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>ZatcaClient::prepare_report_simplified_invoice(.., bool, ..)</code></td>
+<td><code>prepare_report_simplified_invoice(.., ClearanceMode, ..)</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>ZatcaClient::prepare_clear_standard_invoice(.., bool, ..)</code></td>
+<td><code>prepare_clear_standard_invoice(.., ClearanceMode, ..)</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>ValidationResponse::reporting_status() -&gt; Option&lt;&amp;str&gt;</code></td>
+<td><code>-&gt; Option&lt;&amp;ReportingStatus&gt;</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>ValidationResponse::clearance_status() -&gt; Option&lt;&amp;str&gt;</code></td>
+<td><code>-&gt; Option&lt;&amp;ClearanceStatus&gt;</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>ValidationResults::status() -&gt; Option&lt;&amp;str&gt;</code></td>
+<td><code>-&gt; Option&lt;&amp;ValidationStatus&gt;</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>ValidationMessage::message_type() -&gt; Option&lt;&amp;str&gt;</code></td>
+<td><code>-&gt; Option&lt;&amp;MessageType&gt;</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>ValidationMessage::status() -&gt; Option&lt;&amp;str&gt;</code></td>
+<td><code>-&gt; Option&lt;&amp;ValidationStatus&gt;</code></td>
+<td>Breaking</td>
+</tr>
+</tbody>
+</table>
+<p><code>true</code> becomes <code>ClearanceMode::Enabled</code> and <code>false</code> becomes
+<code>ClearanceMode::Disabled</code>; <code>ClearanceMode::from(flag)</code> converts an existing
+Boolean. The status enums keep any value they do not recognise in an
+<code>Other(String)</code> variant, and <code>as_str()</code> returns the wire text, so
+<code>.map(ReportingStatus::as_str)</code> gives back the 0.5 <code>Option&lt;&amp;str&gt;</code>. The
+<code>api::ComplianceCsid</code> and <code>api::ProductionCsid</code> aliases are new shorthands for
+<code>CsidCredentials&lt;Compliance&gt;</code> and <code>CsidCredentials&lt;Production&gt;</code>.</p>
+<p><code>ZatcaClient::new</code> still applies no request timeout. To bound each request, use
+the new <code>ZatcaClient::with_timeout(config, Duration::from_secs(30))?</code>; a timeout
+surfaces as an <code>ErrorKind::Network</code> error.</p>
+<h3 id="csr">CSR<a class="headerlink" href="#csr" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>0.5</th>
+<th>0.6</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CsrProperties::from_properties_str(text)</code></td>
+<td><code>text.parse::&lt;CsrProperties&gt;()</code> (<code>FromStr</code>)</td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>CsrProperties::parse_csr_config(text)</code></td>
+<td><code>text.parse::&lt;CsrProperties&gt;()</code> (<code>FromStr</code>)</td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>CsrProperties::parse_csr_config_file(path)</code></td>
+<td><code>CsrProperties::from_file(path)</code></td>
+<td>Deprecated</td>
+</tr>
+</tbody>
+</table>
+<h3 id="invoice-building">Invoice building<a class="headerlink" href="#invoice-building" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>0.5</th>
+<th>0.6</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>InvoiceBuilder::uuid(impl Into&lt;String&gt;)</code></td>
+<td><code>InvoiceBuilder::uuid(InvoiceUuid)</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>InvoiceBuilder::issue_datetime(impl Into&lt;String&gt;)</code></td>
+<td><code>InvoiceBuilder::issue_datetime(InvoiceTimestamp)</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>InvoiceBuilder::currency(impl Into&lt;String&gt;)</code></td>
+<td><code>InvoiceBuilder::currency(CurrencyCode)</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>InvoiceBuilder::previous_invoice_hash(impl Into&lt;String&gt;)</code></td>
+<td><code>InvoiceBuilder::previous_invoice_hash(InvoiceHash)</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>Seller::new(name: String, address, vat_id: impl Into&lt;String&gt;, other_id) -&gt; Result&lt;Seller&gt;</code></td>
+<td><code>Seller::new(name: impl Into&lt;String&gt;, address, vat_id: VatId, other_id) -&gt; Seller</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>Buyer::new(name: String, address, vat_id: Option&lt;String&gt;, other_id) -&gt; Result&lt;Buyer&gt;</code></td>
+<td><code>Buyer::new(name: impl Into&lt;String&gt;, address, vat_id: Option&lt;VatId&gt;, other_id) -&gt; Buyer</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>OriginalInvoiceRef::with_uuid(impl Into&lt;String&gt;)</code></td>
+<td><code>OriginalInvoiceRef::with_uuid(InvoiceUuid)</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>OriginalInvoiceRef::with_issue_date_str(text)?</code></td>
+<td><code>OriginalInvoiceRef::with_issue_date(text.parse()?)</code></td>
+<td>Breaking (removed)</td>
+</tr>
+<tr>
+<td><code>Address { country_code, city, street, building_number, postal_code, .. }</code></td>
+<td><code>Address::new(country_code, city, street, building_number, postal_code)</code> plus <code>with_province</code>, <code>with_additional_street</code>, <code>with_additional_number</code>, <code>with_district</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>address.city</code> (and the other <code>Address</code> fields)</td>
+<td><code>address.city()</code> (getters of the same name)</td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>TaxExemption { reason_code, reason }</code></td>
+<td><code>TaxExemption::default().with_reason_code(code).with_reason(text)</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>exemption.reason_code</code>, <code>exemption.reason</code></td>
+<td><code>exemption.reason_code()</code>, <code>exemption.reason()</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>Delivery { actual_date, latest_date }</code></td>
+<td><code>Delivery::default().with_actual_date(date).with_latest_date(date)</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>delivery.actual_date</code>, <code>delivery.latest_date</code></td>
+<td><code>delivery.actual_date()</code>, <code>delivery.latest_date()</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>invoice::LineItems</code></td>
+<td><code>Vec&lt;LineItem&gt;</code></td>
+<td>Breaking (removed)</td>
+</tr>
+</tbody>
+</table>
+<p>Parse a typed value with <code>"SAR".parse()?</code>, <code>CurrencyCode::parse("SAR")?</code> or
+<code>CurrencyCode::try_from("SAR")?</code>; <code>InvoiceUuid</code>, <code>InvoiceTimestamp</code>,
+<code>InvoiceHash</code>, <code>VatId</code>, <code>InvoiceDate</code> and <code>InvoiceTime</code> work the same way.</p>
+<h3 id="invoice-data-getters">Invoice data getters<a class="headerlink" href="#invoice-data-getters" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>0.5</th>
+<th>0.6</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>InvoiceData::uuid() -&gt; &amp;str</code></td>
+<td><code>-&gt; &amp;InvoiceUuid</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>InvoiceData::issue_date() -&gt; &amp;str</code></td>
+<td><code>-&gt; InvoiceDate</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>InvoiceData::issue_time() -&gt; &amp;str</code></td>
+<td><code>-&gt; InvoiceTime</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>InvoiceData::previous_invoice_hash() -&gt; &amp;str</code></td>
+<td><code>-&gt; &amp;InvoiceHash</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>InvoiceData::note()</code></td>
+<td><code>InvoiceData::notes().first()</code></td>
+<td>Breaking (removed)</td>
+</tr>
+<tr>
+<td><code>SignedInvoice::uuid() -&gt; &amp;str</code></td>
+<td><code>-&gt; &amp;InvoiceUuid</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>SignedInvoice::invoice_hash() -&gt; &amp;str</code></td>
+<td><code>-&gt; &amp;InvoiceHash</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>SignedProperties::invoice_hash() -&gt; &amp;str</code></td>
+<td><code>-&gt; &amp;InvoiceHash</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>SignedProperties::signing_time() -&gt; &amp;str</code> (<code>YYYY-MM-DDTHH:MM:SS</code>)</td>
+<td><code>-&gt; &amp;InvoiceTimestamp</code> (<code>as_str()</code> is <code>YYYY-MM-DDTHH:MM:SSZ</code>)</td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>OriginalInvoiceRef::uuid() -&gt; Option&lt;&amp;str&gt;</code></td>
+<td><code>-&gt; Option&lt;&amp;InvoiceUuid&gt;</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>invoice::InvoiceTotalsData</code> (returned by <code>totals()</code>)</td>
+<td><code>invoice::InvoiceTotals</code></td>
+<td>Deprecated</td>
+</tr>
+</tbody>
+</table>
+<p>Every typed value has <code>as_str()</code> and <code>Display</code>, so appending <code>.as_str()</code>
+restores the 0.5 string. The XAdES <code>SigningTime</code> element in signed XML is
+unchanged; only the value returned by <code>signing_time()</code> gains the <code>Z</code>.</p>
+<h3 id="adjustments-and-payment-means">Adjustments and payment means<a class="headerlink" href="#adjustments-and-payment-means" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>0.5</th>
+<th>0.6</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>InvoiceBuilder::adjustment(AllowanceCharge)</code></td>
+<td><code>allowance(DocumentAdjustment::from(entry))</code> or <code>charge(..)</code></td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>InvoiceBuilder::invoice_level_discount(amount)</code></td>
+<td><code>allowance(DocumentAdjustment::new(Adjustment::amount(amount), category, rate))</code></td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>InvoiceBuilder::invoice_level_charge(amount)</code></td>
+<td><code>charge(DocumentAdjustment::new(Adjustment::amount(amount), category, rate))</code></td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>InvoiceBuilder::allowance_reason(text)</code></td>
+<td><code>DocumentAdjustment::with_reason(text)</code> on each entry</td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>InvoiceBuilder::payment_means_code(code)</code></td>
+<td><code>InvoiceBuilder::payment_means(PaymentMeans::new(code))</code></td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>AllowanceCharge { charge: bool, .. }</code> / <code>entry.charge</code></td>
+<td><code>AllowanceCharge::new(kind, amount, category, rate)</code> / <code>entry.kind()</code> returning <code>AdjustmentKind</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>AllowanceCharge</code> struct literal and field reads</td>
+<td><code>AllowanceCharge::new(..)</code> plus <code>with_base_amount</code>, <code>with_percentage</code>, <code>with_reason</code>, <code>with_reason_code</code>, <code>with_exemption</code>, <code>with_tax_category_count</code>; getters of the same names</td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>entry.omitted_rate = true</code> / <code>entry.omitted_rate</code></td>
+<td><code>entry.omit_vat_rate()</code> / <code>!entry.has_vat_rate()</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>LineAdjustment::charge: bool</code></td>
+<td><code>LineAdjustment::kind() -&gt; AdjustmentKind</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>LineAdjustment::adjustment</code> field</td>
+<td><code>LineAdjustment::adjustment()</code></td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>DocumentAdjustment { adjustment, category, rate, exemption }</code> field reads</td>
+<td><code>adjustment()</code>, <code>category()</code>, <code>rate()</code>, <code>exemption()</code> (build with <code>DocumentAdjustment::new</code>)</td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>DocumentAdjustment::reason(text)</code> setter</td>
+<td><code>DocumentAdjustment::with_reason(text)</code>; <code>reason()</code> is now the getter</td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>DocumentAdjustment::reason_code(code)</code> setter</td>
+<td><code>DocumentAdjustment::with_reason_code(code)</code>; <code>reason_code()</code> is now the getter</td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>DocumentAdjustment::exemption(value)</code> setter</td>
+<td><code>DocumentAdjustment::with_exemption(value)</code>; <code>exemption()</code> is now the getter</td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>Adjustment::percentage(base, percent)</code></td>
+<td><code>Adjustment::percent_of(base, percent)</code>; <code>percentage()</code> is now the getter</td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>Adjustment::reason(text)</code> setter</td>
+<td><code>Adjustment::with_reason(text)</code>; <code>reason()</code> is now the getter</td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>Adjustment::reason_code(code)</code> setter</td>
+<td><code>Adjustment::with_reason_code(code)</code>; <code>reason_code()</code> is now the getter</td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>Adjustment::base_amount(amount)</code> setter</td>
+<td><code>Adjustment::with_base_amount(amount)</code>; <code>base_amount()</code> is now the getter</td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>Adjustment::allowance_charge_reason()</code></td>
+<td><code>Adjustment::reason()</code></td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>Adjustment::allowance_charge_reason_code()</code></td>
+<td><code>Adjustment::reason_code()</code></td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>Adjustment::calculation_base_amount()</code></td>
+<td><code>Adjustment::base_amount()</code></td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>Adjustment::calculation_percentage()</code></td>
+<td><code>Adjustment::percentage()</code></td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>VatBreakdown::without_vat_rate()</code></td>
+<td><code>VatBreakdown::omit_vat_rate()</code></td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>PaymentMeans { payment_means_type_code, instruction_notes, payee_financial_account }</code> field reads</td>
+<td><code>code()</code>, <code>instruction_notes()</code>, <code>payee_financial_account()</code> (build with <code>PaymentMeans::new(code)</code>)</td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>PaymentMeans::instruction_note(text)</code></td>
+<td><code>PaymentMeans::with_instruction_note(text)</code></td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>PaymentMeans::payee_financial_account(account)</code> setter</td>
+<td><code>PaymentMeans::with_payee_financial_account(account)</code>; <code>payee_financial_account()</code> is now the getter</td>
+<td>Breaking</td>
+</tr>
+<tr>
+<td><code>PaymentAccount { payment_account_identifier, payment_terms }</code></td>
+<td><code>PaymentAccount::default().with_payment_account_identifier(id).with_payment_terms(terms)</code>; getters of the same names</td>
+<td>Breaking</td>
+</tr>
+</tbody>
+</table>
+<p><code>AdjustmentKind::from_charge_indicator(flag)</code> converts a 0.5 <code>charge</code> Boolean
+and <code>kind.is_charge()</code> reads one back.</p>
+<p>The deprecated <code>invoice_level_discount</code>, <code>invoice_level_charge</code> and
+<code>allowance_reason</code> keep their 0.5 behaviour: each call replaces a single
+aggregate entry in the document VAT category, with the rate taken from the
+first line in that category. <code>allowance</code> and <code>charge</code> append one entry per
+call with the VAT category and rate you pass, so a migrated invoice gets the
+same totals only if you pass that category and rate. Likewise,
+<code>payment_means_code</code> changes the code of the first payment means, while
+<code>payment_means</code> appends one.</p>
+<h3 id="validation-and-hashing">Validation and hashing<a class="headerlink" href="#validation-and-hashing" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>0.5</th>
+<th>0.6</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>invoice::validation::validate_xml_invoice_from_str(xml, &amp;config)</code></td>
+<td><code>Validator::new().validate_xml(xml)</code></td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>invoice::validation::validate_xml_invoice_report_from_str(xml, &amp;config)</code></td>
+<td><code>Validator::new().validate_xml_report(xml)</code></td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>invoice::validation::validate_zatca_invoice_from_str(xml, &amp;config, &amp;options)</code></td>
+<td><code>Validator::new().validate_zatca(xml, &amp;options)</code></td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>invoice::sign::invoice_hash_base64_from_xml_str(xml) -&gt; Result&lt;String, _&gt;</code></td>
+<td><code>invoice::hash_xml(xml) -&gt; Result&lt;InvoiceHash, _&gt;</code></td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>FinalizedInvoice::hash_base64() -&gt; Result&lt;String, SigningError&gt;</code></td>
+<td><code>FinalizedInvoice::hash() -&gt; Result&lt;InvoiceHash, SigningError&gt;</code></td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>SignedInvoice::hash_base64() -&gt; Result&lt;String, SigningError&gt;</code></td>
+<td><code>SignedInvoice::hash() -&gt; Result&lt;InvoiceHash, SigningError&gt;</code></td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>ZatcaValidationOptions { previous_invoice_hash: Option&lt;String&gt;, .. }</code></td>
+<td><code>previous_invoice_hash: Option&lt;InvoiceHash&gt;</code></td>
+<td>Breaking</td>
+</tr>
+</tbody>
+</table>
+<p>Validation never depended on the environment, so <code>Validator</code> takes no
+<code>Config</code>. The deprecated functions ignore their <code>Config</code> argument, and
+<code>invoice_hash_base64_from_xml_str</code> and the deprecated <code>hash_base64</code> methods
+still return a <code>String</code>.</p>
+<p>Set <code>previous_invoice_hash</code> from an <code>InvoiceHash</code>: the value returned by
+<code>hash()</code> or <code>hash_xml</code>, <code>data.previous_invoice_hash().clone()</code>, or
+<code>text.parse()?</code>. Parsing trims surrounding whitespace and rejects blank text;
+<code>validate_zatca</code> still checks the digest format. Deserialized options (for
+example from JSON) go through the same parsing.</p>
+<h2 id="behaviour-and-data-format-changes">Behaviour and data format changes<a class="headerlink" href="#behaviour-and-data-format-changes" title="Permanent link">&para;</a></h2>
+<p>These compile unchanged but can change what your program sees:</p>
+<ul>
+<li><code>InvoiceBuilder::build</code> no longer reports <code>Empty</code> or <code>InvalidFormat</code> issues
+  for the UUID, issue date-time, currency or previous invoice hash. An invalid
+  value now fails earlier, where you parse it into its typed wrapper; <code>build</code>
+  only reports these four fields as <code>Missing</code>.</li>
+<li>A <code>DocumentAdjustment</code> whose amount calculation is invalid is reported with
+  the other adjustment checks in <code>build</code>, after missing or invalid fields,
+  instead of before them.</li>
+<li>Serialized <code>AllowanceCharge</code> and <code>LineAdjustment</code> values, and therefore
+  serialized <code>InvoiceData</code> and <code>LineItem</code> values, use a <code>"kind"</code> field with the
+  values <code>"allowance"</code>/<code>"charge"</code> instead of the Boolean <code>"charge"</code> field.
+  JSON written by 0.5 is still accepted on read: a legacy <code>"charge": true</code>
+  reads as a charge and <code>"charge": false</code> as an allowance. Serialization writes
+  only <code>"kind"</code>, so data saved again is in the 0.6 format. Input with both
+  fields is accepted when they agree and rejected when they conflict. The other
+  serde field names are unchanged.</li>
+<li>The JSON of ZATCA responses and the <code>InvoiceOutcome</code> returned by
+  <code>ValidationResponse::outcome()</code> are unchanged.</li>
+</ul>
+<h2 id="common-migrations">Common migrations<a class="headerlink" href="#common-migrations" title="Permanent link">&para;</a></h2>
+<h3 id="build-an-invoice-with-typed-inputs-and-an-allowance">Build an invoice with typed inputs and an allowance<a class="headerlink" href="#build-an-invoice-with-typed-inputs-and-an-allowance" title="Permanent link">&para;</a></h3>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">0.5</label><label for="__tabbed_1_2">0.6</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="k">use</span><span class="w"> </span><span class="n">fatoora_core</span><span class="p">::</span><span class="n">invoice</span><span class="p">::{</span>
+<span class="w">    </span><span class="n">Address</span><span class="p">,</span><span class="w"> </span><span class="n">CountryCode</span><span class="p">,</span><span class="w"> </span><span class="n">FinalizedInvoice</span><span class="p">,</span><span class="w"> </span><span class="n">InvoiceBuilder</span><span class="p">,</span><span class="w"> </span><span class="n">InvoiceSubType</span><span class="p">,</span><span class="w"> </span><span class="n">InvoiceType</span><span class="p">,</span>
+<span class="w">    </span><span class="n">LineItem</span><span class="p">,</span><span class="w"> </span><span class="n">Party</span><span class="p">,</span><span class="w"> </span><span class="n">SellerRole</span><span class="p">,</span><span class="w"> </span><span class="n">VatCategory</span><span class="p">,</span>
+<span class="p">};</span>
+
+<span class="k">fn</span><span class="w"> </span><span class="nf">build_invoice</span><span class="p">()</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Result</span><span class="o">&lt;</span><span class="n">FinalizedInvoice</span><span class="p">,</span><span class="w"> </span><span class="nb">Box</span><span class="o">&lt;</span><span class="k">dyn</span><span class="w"> </span><span class="n">std</span><span class="p">::</span><span class="n">error</span><span class="p">::</span><span class="n">Error</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">seller</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Party</span><span class="p">::</span><span class="o">&lt;</span><span class="n">SellerRole</span><span class="o">&gt;</span><span class="p">::</span><span class="n">new</span><span class="p">(</span>
+<span class="w">        </span><span class="s">"Example Store"</span><span class="p">.</span><span class="n">to_string</span><span class="p">(),</span>
+<span class="w">        </span><span class="n">Address</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">country_code</span><span class="p">:</span><span class="w"> </span><span class="nc">CountryCode</span><span class="p">::</span><span class="n">parse</span><span class="p">(</span><span class="s">"SA"</span><span class="p">)</span><span class="o">?</span><span class="p">,</span>
+<span class="w">            </span><span class="n">city</span><span class="p">:</span><span class="w"> </span><span class="s">"Riyadh"</span><span class="p">.</span><span class="n">into</span><span class="p">(),</span>
+<span class="w">            </span><span class="n">street</span><span class="p">:</span><span class="w"> </span><span class="s">"King Fahd Road"</span><span class="p">.</span><span class="n">into</span><span class="p">(),</span>
+<span class="w">            </span><span class="n">building_number</span><span class="p">:</span><span class="w"> </span><span class="s">"1234"</span><span class="p">.</span><span class="n">into</span><span class="p">(),</span>
+<span class="w">            </span><span class="n">postal_code</span><span class="p">:</span><span class="w"> </span><span class="s">"12222"</span><span class="p">.</span><span class="n">into</span><span class="p">(),</span>
+<span class="w">            </span><span class="n">district</span><span class="p">:</span><span class="w"> </span><span class="nb">Some</span><span class="p">(</span><span class="s">"Olaya"</span><span class="p">.</span><span class="n">into</span><span class="p">()),</span>
+<span class="w">            </span><span class="n">additional_number</span><span class="p">:</span><span class="w"> </span><span class="nb">None</span><span class="p">,</span>
+<span class="w">            </span><span class="n">additional_street</span><span class="p">:</span><span class="w"> </span><span class="nb">None</span><span class="p">,</span>
+<span class="w">            </span><span class="n">province</span><span class="p">:</span><span class="w"> </span><span class="nb">None</span><span class="p">,</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="s">"399999999900003"</span><span class="p">,</span>
+<span class="w">        </span><span class="nb">None</span><span class="p">,</span>
+<span class="w">    </span><span class="p">)</span><span class="o">?</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LineItem</span><span class="p">::</span><span class="n">new</span><span class="p">(</span>
+<span class="w">        </span><span class="s">"Notebook"</span><span class="p">,</span>
+<span class="w">        </span><span class="s">"2"</span><span class="p">.</span><span class="n">parse</span><span class="p">()</span><span class="o">?</span><span class="p">,</span>
+<span class="w">        </span><span class="s">"PCE"</span><span class="p">,</span>
+<span class="w">        </span><span class="s">"50"</span><span class="p">.</span><span class="n">parse</span><span class="p">()</span><span class="o">?</span><span class="p">,</span>
+<span class="w">        </span><span class="s">"15"</span><span class="p">.</span><span class="n">parse</span><span class="p">()</span><span class="o">?</span><span class="p">,</span>
+<span class="w">        </span><span class="n">VatCategory</span><span class="p">::</span><span class="n">Standard</span><span class="p">,</span>
+<span class="w">    </span><span class="p">)</span><span class="o">?</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">invoice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">InvoiceBuilder</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">InvoiceType</span><span class="p">::</span><span class="n">Tax</span><span class="p">(</span><span class="n">InvoiceSubType</span><span class="p">::</span><span class="n">Simplified</span><span class="p">))</span>
+<span class="w">        </span><span class="p">.</span><span class="n">id</span><span class="p">(</span><span class="s">"INV-1001"</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">uuid</span><span class="p">(</span><span class="s">"8e6000cf-1a98-4174-b3e7-b5d5954bc10d"</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">issue_datetime</span><span class="p">(</span><span class="s">"2026-10-26T09:00:00Z"</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">currency</span><span class="p">(</span><span class="s">"SAR"</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">previous_invoice_hash</span><span class="p">(</span><span class="s">"NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ=="</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">invoice_counter</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">seller</span><span class="p">(</span><span class="n">seller</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">payment_means_code</span><span class="p">(</span><span class="s">"10"</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">vat_category</span><span class="p">(</span><span class="n">VatCategory</span><span class="p">::</span><span class="n">Standard</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">line_item</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">invoice_level_discount</span><span class="p">(</span><span class="s">"10"</span><span class="p">.</span><span class="n">parse</span><span class="p">()</span><span class="o">?</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">allowance_reason</span><span class="p">(</span><span class="s">"Loyalty discount"</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">build</span><span class="p">()</span><span class="o">?</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">invoice</span><span class="p">.</span><span class="n">data</span><span class="p">();</span>
+<span class="w">    </span><span class="fm">println!</span><span class="p">(</span><span class="s">"{} issued {}"</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">uuid</span><span class="p">(),</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">issue_date</span><span class="p">());</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nb">Some</span><span class="p">(</span><span class="n">note</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">note</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="fm">println!</span><span class="p">(</span><span class="s">"{note:?}"</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="nb">Ok</span><span class="p">(</span><span class="n">invoice</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="k">use</span><span class="w"> </span><span class="n">fatoora_core</span><span class="p">::</span><span class="n">invoice</span><span class="p">::{</span>
+<span class="w">    </span><span class="n">Address</span><span class="p">,</span><span class="w"> </span><span class="n">Adjustment</span><span class="p">,</span><span class="w"> </span><span class="n">CountryCode</span><span class="p">,</span><span class="w"> </span><span class="n">DocumentAdjustment</span><span class="p">,</span><span class="w"> </span><span class="n">FinalizedInvoice</span><span class="p">,</span><span class="w"> </span><span class="n">InvoiceBuilder</span><span class="p">,</span>
+<span class="w">    </span><span class="n">InvoiceSubType</span><span class="p">,</span><span class="w"> </span><span class="n">InvoiceType</span><span class="p">,</span><span class="w"> </span><span class="n">LineItem</span><span class="p">,</span><span class="w"> </span><span class="n">Party</span><span class="p">,</span><span class="w"> </span><span class="n">PaymentMeans</span><span class="p">,</span><span class="w"> </span><span class="n">SellerRole</span><span class="p">,</span><span class="w"> </span><span class="n">VatCategory</span><span class="p">,</span><span class="w"> </span><span class="n">VatId</span><span class="p">,</span>
+<span class="p">};</span>
+
+<span class="k">fn</span><span class="w"> </span><span class="nf">build_invoice</span><span class="p">()</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Result</span><span class="o">&lt;</span><span class="n">FinalizedInvoice</span><span class="p">,</span><span class="w"> </span><span class="nb">Box</span><span class="o">&lt;</span><span class="k">dyn</span><span class="w"> </span><span class="n">std</span><span class="p">::</span><span class="n">error</span><span class="p">::</span><span class="n">Error</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">seller</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Party</span><span class="p">::</span><span class="o">&lt;</span><span class="n">SellerRole</span><span class="o">&gt;</span><span class="p">::</span><span class="n">new</span><span class="p">(</span>
+<span class="w">        </span><span class="s">"Example Store"</span><span class="p">,</span>
+<span class="w">        </span><span class="n">Address</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">CountryCode</span><span class="p">::</span><span class="n">parse</span><span class="p">(</span><span class="s">"SA"</span><span class="p">)</span><span class="o">?</span><span class="p">,</span><span class="w"> </span><span class="s">"Riyadh"</span><span class="p">,</span><span class="w"> </span><span class="s">"King Fahd Road"</span><span class="p">,</span><span class="w"> </span><span class="s">"1234"</span><span class="p">,</span><span class="w"> </span><span class="s">"12222"</span><span class="p">)</span>
+<span class="w">            </span><span class="p">.</span><span class="n">with_district</span><span class="p">(</span><span class="s">"Olaya"</span><span class="p">),</span>
+<span class="w">        </span><span class="n">VatId</span><span class="p">::</span><span class="n">parse</span><span class="p">(</span><span class="s">"399999999900003"</span><span class="p">)</span><span class="o">?</span><span class="p">,</span>
+<span class="w">        </span><span class="nb">None</span><span class="p">,</span>
+<span class="w">    </span><span class="p">);</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LineItem</span><span class="p">::</span><span class="n">new</span><span class="p">(</span>
+<span class="w">        </span><span class="s">"Notebook"</span><span class="p">,</span>
+<span class="w">        </span><span class="s">"2"</span><span class="p">.</span><span class="n">parse</span><span class="p">()</span><span class="o">?</span><span class="p">,</span>
+<span class="w">        </span><span class="s">"PCE"</span><span class="p">,</span>
+<span class="w">        </span><span class="s">"50"</span><span class="p">.</span><span class="n">parse</span><span class="p">()</span><span class="o">?</span><span class="p">,</span>
+<span class="w">        </span><span class="s">"15"</span><span class="p">.</span><span class="n">parse</span><span class="p">()</span><span class="o">?</span><span class="p">,</span>
+<span class="w">        </span><span class="n">VatCategory</span><span class="p">::</span><span class="n">Standard</span><span class="p">,</span>
+<span class="w">    </span><span class="p">)</span><span class="o">?</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">invoice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">InvoiceBuilder</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">InvoiceType</span><span class="p">::</span><span class="n">Tax</span><span class="p">(</span><span class="n">InvoiceSubType</span><span class="p">::</span><span class="n">Simplified</span><span class="p">))</span>
+<span class="w">        </span><span class="p">.</span><span class="n">id</span><span class="p">(</span><span class="s">"INV-1001"</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">uuid</span><span class="p">(</span><span class="s">"8e6000cf-1a98-4174-b3e7-b5d5954bc10d"</span><span class="p">.</span><span class="n">parse</span><span class="p">()</span><span class="o">?</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">issue_datetime</span><span class="p">(</span><span class="s">"2026-10-26T09:00:00Z"</span><span class="p">.</span><span class="n">parse</span><span class="p">()</span><span class="o">?</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">currency</span><span class="p">(</span><span class="s">"SAR"</span><span class="p">.</span><span class="n">parse</span><span class="p">()</span><span class="o">?</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">previous_invoice_hash</span><span class="p">(</span><span class="s">"NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ=="</span><span class="p">.</span><span class="n">parse</span><span class="p">()</span><span class="o">?</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">invoice_counter</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">seller</span><span class="p">(</span><span class="n">seller</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">payment_means</span><span class="p">(</span><span class="n">PaymentMeans</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="s">"10"</span><span class="p">))</span>
+<span class="w">        </span><span class="p">.</span><span class="n">vat_category</span><span class="p">(</span><span class="n">VatCategory</span><span class="p">::</span><span class="n">Standard</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">line_item</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">allowance</span><span class="p">(</span>
+<span class="w">            </span><span class="n">DocumentAdjustment</span><span class="p">::</span><span class="n">new</span><span class="p">(</span>
+<span class="w">                </span><span class="n">Adjustment</span><span class="p">::</span><span class="n">amount</span><span class="p">(</span><span class="s">"10"</span><span class="p">.</span><span class="n">parse</span><span class="p">()</span><span class="o">?</span><span class="p">),</span>
+<span class="w">                </span><span class="n">VatCategory</span><span class="p">::</span><span class="n">Standard</span><span class="p">,</span>
+<span class="w">                </span><span class="s">"15"</span><span class="p">.</span><span class="n">parse</span><span class="p">()</span><span class="o">?</span><span class="p">,</span>
+<span class="w">            </span><span class="p">)</span>
+<span class="w">            </span><span class="p">.</span><span class="n">with_reason</span><span class="p">(</span><span class="s">"Loyalty discount"</span><span class="p">),</span>
+<span class="w">        </span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">build</span><span class="p">()</span><span class="o">?</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">invoice</span><span class="p">.</span><span class="n">data</span><span class="p">();</span>
+<span class="w">    </span><span class="fm">println!</span><span class="p">(</span><span class="s">"{} issued {}"</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">uuid</span><span class="p">(),</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">issue_date</span><span class="p">());</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nb">Some</span><span class="p">(</span><span class="n">note</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">notes</span><span class="p">().</span><span class="n">first</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="fm">println!</span><span class="p">(</span><span class="s">"{note:?}"</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="nb">Ok</span><span class="p">(</span><span class="n">invoice</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<h3 id="request-csids-and-report-an-invoice">Request CSIDs and report an invoice<a class="headerlink" href="#request-csids-and-report-an-invoice" title="Permanent link">&para;</a></h3>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">0.5</label><label for="__tabbed_2_2">0.6</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="k">use</span><span class="w"> </span><span class="n">fatoora_core</span><span class="p">::</span><span class="n">api</span><span class="p">::</span><span class="n">ZatcaClient</span><span class="p">;</span>
+<span class="k">use</span><span class="w"> </span><span class="n">fatoora_core</span><span class="p">::</span><span class="n">config</span><span class="p">::{</span><span class="n">Config</span><span class="p">,</span><span class="w"> </span><span class="n">EnvironmentType</span><span class="p">};</span>
+<span class="k">use</span><span class="w"> </span><span class="n">fatoora_core</span><span class="p">::</span><span class="n">csr</span><span class="p">::{</span><span class="n">CsrProperties</span><span class="p">,</span><span class="w"> </span><span class="n">SigningKey</span><span class="p">};</span>
+<span class="k">use</span><span class="w"> </span><span class="n">fatoora_core</span><span class="p">::</span><span class="n">invoice</span><span class="p">::</span><span class="n">SignedInvoice</span><span class="p">;</span>
+
+<span class="k">async</span><span class="w"> </span><span class="k">fn</span><span class="w"> </span><span class="nf">onboard_and_report</span><span class="p">(</span>
+<span class="w">    </span><span class="n">otp</span><span class="p">:</span><span class="w"> </span><span class="kp">&amp;</span><span class="kt">str</span><span class="p">,</span>
+<span class="w">    </span><span class="n">invoice</span><span class="p">:</span><span class="w"> </span><span class="kp">&amp;</span><span class="nc">SignedInvoice</span><span class="p">,</span>
+<span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Result</span><span class="o">&lt;</span><span class="p">(),</span><span class="w"> </span><span class="nb">Box</span><span class="o">&lt;</span><span class="k">dyn</span><span class="w"> </span><span class="n">std</span><span class="p">::</span><span class="n">error</span><span class="p">::</span><span class="n">Error</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">env</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">EnvironmentType</span><span class="p">::</span><span class="n">Simulation</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ZatcaClient</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">Config</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">env</span><span class="p">))</span><span class="o">?</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">csr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CsrProperties</span><span class="p">::</span><span class="n">parse_csr_config_file</span><span class="p">(</span><span class="s">"csr.properties"</span><span class="p">)</span><span class="o">?</span>
+<span class="w">        </span><span class="p">.</span><span class="n">build</span><span class="p">(</span><span class="o">&amp;</span><span class="n">SigningKey</span><span class="p">::</span><span class="n">generate</span><span class="p">(),</span><span class="w"> </span><span class="n">env</span><span class="p">)</span><span class="o">?</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">ccsid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span><span class="p">.</span><span class="n">post_csr_for_ccsid</span><span class="p">(</span><span class="o">&amp;</span><span class="n">csr</span><span class="p">,</span><span class="w"> </span><span class="n">otp</span><span class="p">).</span><span class="k">await</span><span class="o">?</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">pcsid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span><span class="p">.</span><span class="n">post_ccsid_for_pcsid</span><span class="p">(</span><span class="o">&amp;</span><span class="n">ccsid</span><span class="p">).</span><span class="k">await</span><span class="o">?</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span>
+<span class="w">        </span><span class="p">.</span><span class="n">report_simplified_invoice</span><span class="p">(</span><span class="n">invoice</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">pcsid</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="nb">Some</span><span class="p">(</span><span class="s">"en"</span><span class="p">))</span>
+<span class="w">        </span><span class="p">.</span><span class="k">await</span><span class="o">?</span><span class="p">;</span>
+<span class="w">    </span><span class="n">response</span><span class="p">.</span><span class="n">ensure_accepted</span><span class="p">()</span><span class="o">?</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">match</span><span class="w"> </span><span class="n">env</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">EnvironmentType</span><span class="p">::</span><span class="n">Production</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s">"live"</span><span class="p">,</span>
+<span class="w">        </span><span class="n">EnvironmentType</span><span class="p">::</span><span class="n">Simulation</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">EnvironmentType</span><span class="p">::</span><span class="n">NonProduction</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s">"test"</span><span class="p">,</span>
+<span class="w">    </span><span class="p">};</span>
+<span class="w">    </span><span class="fm">println!</span><span class="p">(</span><span class="s">"reported to {label}"</span><span class="p">);</span>
+<span class="w">    </span><span class="nb">Ok</span><span class="p">(())</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="k">use</span><span class="w"> </span><span class="n">fatoora_core</span><span class="p">::</span><span class="n">api</span><span class="p">::{</span><span class="n">ClearanceMode</span><span class="p">,</span><span class="w"> </span><span class="n">ComplianceCsid</span><span class="p">,</span><span class="w"> </span><span class="n">ProductionCsid</span><span class="p">,</span><span class="w"> </span><span class="n">ZatcaClient</span><span class="p">};</span>
+<span class="k">use</span><span class="w"> </span><span class="n">fatoora_core</span><span class="p">::</span><span class="n">config</span><span class="p">::{</span><span class="n">Config</span><span class="p">,</span><span class="w"> </span><span class="n">Environment</span><span class="p">};</span>
+<span class="k">use</span><span class="w"> </span><span class="n">fatoora_core</span><span class="p">::</span><span class="n">csr</span><span class="p">::{</span><span class="n">CsrProperties</span><span class="p">,</span><span class="w"> </span><span class="n">SigningKey</span><span class="p">};</span>
+<span class="k">use</span><span class="w"> </span><span class="n">fatoora_core</span><span class="p">::</span><span class="n">invoice</span><span class="p">::</span><span class="n">SignedInvoice</span><span class="p">;</span>
+
+<span class="k">async</span><span class="w"> </span><span class="k">fn</span><span class="w"> </span><span class="nf">onboard_and_report</span><span class="p">(</span>
+<span class="w">    </span><span class="n">otp</span><span class="p">:</span><span class="w"> </span><span class="kp">&amp;</span><span class="kt">str</span><span class="p">,</span>
+<span class="w">    </span><span class="n">invoice</span><span class="p">:</span><span class="w"> </span><span class="kp">&amp;</span><span class="nc">SignedInvoice</span><span class="p">,</span>
+<span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Result</span><span class="o">&lt;</span><span class="p">(),</span><span class="w"> </span><span class="nb">Box</span><span class="o">&lt;</span><span class="k">dyn</span><span class="w"> </span><span class="n">std</span><span class="p">::</span><span class="n">error</span><span class="p">::</span><span class="n">Error</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">env</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Environment</span><span class="p">::</span><span class="n">Simulation</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ZatcaClient</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">Config</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">env</span><span class="p">))</span><span class="o">?</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">csr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CsrProperties</span><span class="p">::</span><span class="n">from_file</span><span class="p">(</span><span class="s">"csr.properties"</span><span class="p">)</span><span class="o">?</span>
+<span class="w">        </span><span class="p">.</span><span class="n">build</span><span class="p">(</span><span class="o">&amp;</span><span class="n">SigningKey</span><span class="p">::</span><span class="n">generate</span><span class="p">(),</span><span class="w"> </span><span class="n">env</span><span class="p">)</span><span class="o">?</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">ccsid</span><span class="p">:</span><span class="w"> </span><span class="nc">ComplianceCsid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span><span class="p">.</span><span class="n">request_compliance_csid</span><span class="p">(</span><span class="o">&amp;</span><span class="n">csr</span><span class="p">,</span><span class="w"> </span><span class="n">otp</span><span class="p">).</span><span class="k">await</span><span class="o">?</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">pcsid</span><span class="p">:</span><span class="w"> </span><span class="nc">ProductionCsid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span><span class="p">.</span><span class="n">request_production_csid</span><span class="p">(</span><span class="o">&amp;</span><span class="n">ccsid</span><span class="p">).</span><span class="k">await</span><span class="o">?</span><span class="p">;</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span>
+<span class="w">        </span><span class="p">.</span><span class="n">report_simplified_invoice</span><span class="p">(</span><span class="n">invoice</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">pcsid</span><span class="p">,</span><span class="w"> </span><span class="n">ClearanceMode</span><span class="p">::</span><span class="n">Disabled</span><span class="p">,</span><span class="w"> </span><span class="nb">Some</span><span class="p">(</span><span class="s">"en"</span><span class="p">))</span>
+<span class="w">        </span><span class="p">.</span><span class="k">await</span><span class="o">?</span><span class="p">;</span>
+<span class="w">    </span><span class="n">response</span><span class="p">.</span><span class="n">ensure_accepted</span><span class="p">()</span><span class="o">?</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// `Environment` is non-exhaustive: keep a wildcard arm.</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">match</span><span class="w"> </span><span class="n">env</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">Environment</span><span class="p">::</span><span class="n">Production</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s">"live"</span><span class="p">,</span>
+<span class="w">        </span><span class="n">_</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="s">"test"</span><span class="p">,</span>
+<span class="w">    </span><span class="p">};</span>
+<span class="w">    </span><span class="fm">println!</span><span class="p">(</span><span class="s">"reported to {label}"</span><span class="p">);</span>
+<span class="w">    </span><span class="nb">Ok</span><span class="p">(())</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<h3 id="read-response-statuses">Read response statuses<a class="headerlink" href="#read-response-statuses" title="Permanent link">&para;</a></h3>
+<div class="tabbed-set tabbed-alternate" data-tabs="3:2"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">0.5</label><label for="__tabbed_3_2">0.6</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="k">use</span><span class="w"> </span><span class="n">fatoora_core</span><span class="p">::</span><span class="n">api</span><span class="p">::</span><span class="n">ValidationResponse</span><span class="p">;</span>
+
+<span class="k">fn</span><span class="w"> </span><span class="nf">summarize</span><span class="p">(</span><span class="n">response</span><span class="p">:</span><span class="w"> </span><span class="kp">&amp;</span><span class="nc">ValidationResponse</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">match</span><span class="w"> </span><span class="n">response</span><span class="p">.</span><span class="n">reporting_status</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nb">Some</span><span class="p">(</span><span class="s">"REPORTED"</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="fm">println!</span><span class="p">(</span><span class="s">"reported"</span><span class="p">),</span>
+<span class="w">        </span><span class="nb">Some</span><span class="p">(</span><span class="s">"NOT_REPORTED"</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="fm">println!</span><span class="p">(</span><span class="s">"not reported"</span><span class="p">),</span>
+<span class="w">        </span><span class="nb">Some</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="fm">println!</span><span class="p">(</span><span class="s">"unrecognised status {other}"</span><span class="p">),</span>
+<span class="w">        </span><span class="nb">None</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">{}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">response</span><span class="p">.</span><span class="n">clearance_status</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">Some</span><span class="p">(</span><span class="s">"CLEARED"</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="fm">println!</span><span class="p">(</span><span class="s">"cleared"</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">status</span><span class="p">:</span><span class="w"> </span><span class="nb">Option</span><span class="o">&lt;&amp;</span><span class="kt">str</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">response</span><span class="p">.</span><span class="n">validation_results</span><span class="p">().</span><span class="n">status</span><span class="p">();</span>
+<span class="w">    </span><span class="fm">println!</span><span class="p">(</span><span class="s">"validation status: {status:?}"</span><span class="p">);</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="n">message</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">response</span><span class="p">.</span><span class="n">validation_results</span><span class="p">().</span><span class="n">warning_messages</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">message_type</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">Some</span><span class="p">(</span><span class="s">"WARNING"</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="fm">println!</span><span class="p">(</span><span class="s">"{:?}"</span><span class="p">,</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">message</span><span class="p">());</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="k">use</span><span class="w"> </span><span class="n">fatoora_core</span><span class="p">::</span><span class="n">api</span><span class="p">::{</span>
+<span class="w">    </span><span class="n">ClearanceStatus</span><span class="p">,</span><span class="w"> </span><span class="n">MessageType</span><span class="p">,</span><span class="w"> </span><span class="n">ReportingStatus</span><span class="p">,</span><span class="w"> </span><span class="n">ValidationResponse</span><span class="p">,</span><span class="w"> </span><span class="n">ValidationStatus</span><span class="p">,</span>
+<span class="p">};</span>
+
+<span class="k">fn</span><span class="w"> </span><span class="nf">summarize</span><span class="p">(</span><span class="n">response</span><span class="p">:</span><span class="w"> </span><span class="kp">&amp;</span><span class="nc">ValidationResponse</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">match</span><span class="w"> </span><span class="n">response</span><span class="p">.</span><span class="n">reporting_status</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nb">Some</span><span class="p">(</span><span class="n">ReportingStatus</span><span class="p">::</span><span class="n">Reported</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="fm">println!</span><span class="p">(</span><span class="s">"reported"</span><span class="p">),</span>
+<span class="w">        </span><span class="nb">Some</span><span class="p">(</span><span class="n">ReportingStatus</span><span class="p">::</span><span class="n">NotReported</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="fm">println!</span><span class="p">(</span><span class="s">"not reported"</span><span class="p">),</span>
+<span class="w">        </span><span class="nb">Some</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="fm">println!</span><span class="p">(</span><span class="s">"unrecognised status {other}"</span><span class="p">),</span>
+<span class="w">        </span><span class="nb">None</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="p">{}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">response</span><span class="p">.</span><span class="n">clearance_status</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">Some</span><span class="p">(</span><span class="o">&amp;</span><span class="n">ClearanceStatus</span><span class="p">::</span><span class="n">Cleared</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="fm">println!</span><span class="p">(</span><span class="s">"cleared"</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">status</span><span class="p">:</span><span class="w"> </span><span class="nb">Option</span><span class="o">&lt;&amp;</span><span class="kt">str</span><span class="o">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">response</span>
+<span class="w">        </span><span class="p">.</span><span class="n">validation_results</span><span class="p">()</span>
+<span class="w">        </span><span class="p">.</span><span class="n">status</span><span class="p">()</span>
+<span class="w">        </span><span class="p">.</span><span class="n">map</span><span class="p">(</span><span class="n">ValidationStatus</span><span class="p">::</span><span class="n">as_str</span><span class="p">);</span>
+<span class="w">    </span><span class="fm">println!</span><span class="p">(</span><span class="s">"validation status: {status:?}"</span><span class="p">);</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="n">message</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">response</span><span class="p">.</span><span class="n">validation_results</span><span class="p">().</span><span class="n">warning_messages</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">message_type</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">Some</span><span class="p">(</span><span class="o">&amp;</span><span class="n">MessageType</span><span class="p">::</span><span class="n">Warning</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="fm">println!</span><span class="p">(</span><span class="s">"{:?}"</span><span class="p">,</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">message</span><span class="p">());</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<h3 id="validate-and-hash-an-invoice">Validate and hash an invoice<a class="headerlink" href="#validate-and-hash-an-invoice" title="Permanent link">&para;</a></h3>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">0.5</label><label for="__tabbed_4_2">0.6</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="k">use</span><span class="w"> </span><span class="n">fatoora_core</span><span class="p">::</span><span class="n">config</span><span class="p">::{</span><span class="n">Config</span><span class="p">,</span><span class="w"> </span><span class="n">EnvironmentType</span><span class="p">};</span>
+<span class="k">use</span><span class="w"> </span><span class="n">fatoora_core</span><span class="p">::</span><span class="n">invoice</span><span class="p">::</span><span class="n">sign</span><span class="p">::</span><span class="n">invoice_hash_base64_from_xml_str</span><span class="p">;</span>
+<span class="k">use</span><span class="w"> </span><span class="n">fatoora_core</span><span class="p">::</span><span class="n">invoice</span><span class="p">::</span><span class="n">validation</span><span class="p">::{</span>
+<span class="w">    </span><span class="n">validate_xml_invoice_from_str</span><span class="p">,</span><span class="w"> </span><span class="n">validate_zatca_invoice_from_str</span><span class="p">,</span><span class="w"> </span><span class="n">ZatcaValidationOptions</span><span class="p">,</span>
+<span class="p">};</span>
+
+<span class="k">fn</span><span class="w"> </span><span class="nf">check</span><span class="p">(</span><span class="n">xml</span><span class="p">:</span><span class="w"> </span><span class="kp">&amp;</span><span class="kt">str</span><span class="p">,</span><span class="w"> </span><span class="n">previous_hash</span><span class="p">:</span><span class="w"> </span><span class="kp">&amp;</span><span class="kt">str</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Result</span><span class="o">&lt;</span><span class="nb">String</span><span class="p">,</span><span class="w"> </span><span class="nb">Box</span><span class="o">&lt;</span><span class="k">dyn</span><span class="w"> </span><span class="n">std</span><span class="p">::</span><span class="n">error</span><span class="p">::</span><span class="n">Error</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Config</span><span class="p">::</span><span class="n">new</span><span class="p">(</span><span class="n">EnvironmentType</span><span class="p">::</span><span class="n">NonProduction</span><span class="p">);</span>
+<span class="w">    </span><span class="n">validate_xml_invoice_from_str</span><span class="p">(</span><span class="n">xml</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">config</span><span class="p">)</span><span class="o">?</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ZatcaValidationOptions</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">previous_invoice_hash</span><span class="p">:</span><span class="w"> </span><span class="nb">Some</span><span class="p">(</span><span class="n">previous_hash</span><span class="p">.</span><span class="n">to_string</span><span class="p">()),</span>
+<span class="w">        </span><span class="o">..</span><span class="nb">Default</span><span class="p">::</span><span class="n">default</span><span class="p">()</span>
+<span class="w">    </span><span class="p">};</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">report</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">validate_zatca_invoice_from_str</span><span class="p">(</span><span class="n">xml</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">config</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">options</span><span class="p">)</span><span class="o">?</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">!</span><span class="n">report</span><span class="p">.</span><span class="n">is_valid</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">Err</span><span class="p">(</span><span class="s">"invoice failed local ZATCA validation"</span><span class="p">.</span><span class="n">into</span><span class="p">());</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Pass to the next invoice's `previous_invoice_hash(..)`.</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">hash</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">invoice_hash_base64_from_xml_str</span><span class="p">(</span><span class="n">xml</span><span class="p">)</span><span class="o">?</span><span class="p">;</span>
+<span class="w">    </span><span class="nb">Ok</span><span class="p">(</span><span class="n">hash</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="k">use</span><span class="w"> </span><span class="n">fatoora_core</span><span class="p">::</span><span class="n">invoice</span><span class="p">::</span><span class="n">validation</span><span class="p">::{</span><span class="n">Validator</span><span class="p">,</span><span class="w"> </span><span class="n">ZatcaValidationOptions</span><span class="p">};</span>
+<span class="k">use</span><span class="w"> </span><span class="n">fatoora_core</span><span class="p">::</span><span class="n">invoice</span><span class="p">::{</span><span class="n">hash_xml</span><span class="p">,</span><span class="w"> </span><span class="n">InvoiceHash</span><span class="p">};</span>
+
+<span class="k">fn</span><span class="w"> </span><span class="nf">check</span><span class="p">(</span><span class="n">xml</span><span class="p">:</span><span class="w"> </span><span class="kp">&amp;</span><span class="kt">str</span><span class="p">,</span><span class="w"> </span><span class="n">previous_hash</span><span class="p">:</span><span class="w"> </span><span class="kp">&amp;</span><span class="nc">InvoiceHash</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Result</span><span class="o">&lt;</span><span class="n">InvoiceHash</span><span class="p">,</span><span class="w"> </span><span class="nb">Box</span><span class="o">&lt;</span><span class="k">dyn</span><span class="w"> </span><span class="n">std</span><span class="p">::</span><span class="n">error</span><span class="p">::</span><span class="n">Error</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">validator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Validator</span><span class="p">::</span><span class="n">new</span><span class="p">();</span>
+<span class="w">    </span><span class="n">validator</span><span class="p">.</span><span class="n">validate_xml</span><span class="p">(</span><span class="n">xml</span><span class="p">)</span><span class="o">?</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ZatcaValidationOptions</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">previous_invoice_hash</span><span class="p">:</span><span class="w"> </span><span class="nb">Some</span><span class="p">(</span><span class="n">previous_hash</span><span class="p">.</span><span class="n">clone</span><span class="p">()),</span>
+<span class="w">        </span><span class="o">..</span><span class="nb">Default</span><span class="p">::</span><span class="n">default</span><span class="p">()</span>
+<span class="w">    </span><span class="p">};</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">report</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">validator</span><span class="p">.</span><span class="n">validate_zatca</span><span class="p">(</span><span class="n">xml</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">options</span><span class="p">)</span><span class="o">?</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">!</span><span class="n">report</span><span class="p">.</span><span class="n">is_valid</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">Err</span><span class="p">(</span><span class="s">"invoice failed local ZATCA validation"</span><span class="p">.</span><span class="n">into</span><span class="p">());</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// Pass to the next invoice's `previous_invoice_hash(..)`.</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">hash</span><span class="p">:</span><span class="w"> </span><span class="nc">InvoiceHash</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hash_xml</span><span class="p">(</span><span class="n">xml</span><span class="p">)</span><span class="o">?</span><span class="p">;</span>
+<span class="w">    </span><span class="nb">Ok</span><span class="p">(</span><span class="n">hash</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.tabs.link", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

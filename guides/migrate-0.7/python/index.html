@@ -1,0 +1,2775 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Upgrade a Python project from fatoority 0.6 to 0.7, covering removed names, the renamed error classes, the Python 3.10 floor and the new AsyncZatcaClient.">
+      
+      
+      
+        <link rel="canonical" href="https://docs.fatoority.com/guides/migrate-0.7/python/">
+      
+      
+        <link rel="prev" href="../rust/">
+      
+      
+        <link rel="next" href="../javascript/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Migrate a Python Project from fatoority 0.6 to 0.7 - fatoority</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/home.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  
+  
+    
+    
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="fatoority">
+    <meta property="og:title" content="Migrate a Python Project from fatoority 0.6 to 0.7 - fatoority">
+    <meta property="og:description" content="Upgrade a Python project from fatoority 0.6 to 0.7, covering removed names, the renamed error classes, the Python 3.10 floor and the new AsyncZatcaClient.">
+    <meta property="og:url" content="https://docs.fatoority.com/guides/migrate-0.7/python/">
+    <meta property="og:image" content="https://docs.fatoority.com/assets/images/crab-logo.png">
+    <meta property="og:image:alt" content="fatoority crab logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Migrate a Python Project from fatoority 0.6 to 0.7 - fatoority">
+    <meta name="twitter:description" content="Upgrade a Python project from fatoority 0.6 to 0.7, covering removed names, the renamed error classes, the Python 3.10 floor and the new AsyncZatcaClient.">
+    <meta name="twitter:image" content="https://docs.fatoority.com/assets/images/crab-logo.png">
+    <meta name="twitter:image:alt" content="fatoority crab logo">
+  
+
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#migrate-from-06-to-07-python" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="fatoority" class="md-header__button md-logo" aria-label="fatoority" data-md-component="logo">
+      
+  <img src="../../../assets/images/crab-logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            fatoority
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Migrate a Python Project from fatoority 0.6 to 0.7
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/mqqz/fatoority" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mqqz/fatoority
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="fatoority" class="md-nav__button md-logo" aria-label="fatoority" data-md-component="logo">
+      
+  <img src="../../../assets/images/crab-logo.png" alt="logo">
+
+    </a>
+    fatoority
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/mqqz/fatoority" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mqqz/fatoority
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sandbox-walkthrough/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First Sandbox Invoice
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../invoice-creation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Create an Invoice
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../invoice-recipes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pricing and Invoice Recipes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../csr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CSR Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../invoice-signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Invoice Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../qr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QR Codes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ZATCA API Client
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migrate from 0.5 to 0.6
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Migrate from 0.5 to 0.6
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migrate-0.6/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migrate-0.6/rust/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rust
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migrate-0.6/python/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migrate-0.6/javascript/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JavaScript / TypeScript
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migrate-0.6/kotlin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kotlin / Java
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migrate-0.6/csharp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C# / .NET
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migrate-0.6/c/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C/C++
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_11" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_11" id="__nav_2_11_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migrate from 0.6 to 0.7
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_11_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Migrate from 0.6 to 0.7
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rust/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rust
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#python-310-or-newer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Python 3.10 or newer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#removed-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removed names
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Removed names">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#module-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Module names
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#factory-classmethods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Factory classmethods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#csr-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CSR properties
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invoice-builder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invoice builder
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invoice-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invoice values
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invoices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invoices
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#zatca-api-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ZATCA API client
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error classes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-07" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New in 0.7
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../javascript/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JavaScript / TypeScript
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kotlin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kotlin / Java
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../csharp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C# / .NET
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../c/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C/C++
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/csr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CSR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bindings
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Bindings
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/bindings/python/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/bindings/javascript/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JavaScript / TypeScript
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/bindings/csharp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C# / .NET
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/bindings/kotlin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kotlin / Java
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/bindings/c/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C/C++ (FFI)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Invoice
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Invoice
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/invoice-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/numbers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decimal numbers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/invoice-signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/invoice-validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/xml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../development/invoice-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XML Model Coverage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/xml-and-schemas/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XML and Schemas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/qr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/api-client/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Client
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../development/sdk-parity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SDK Compatibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../development/diplomat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Binding Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../development/business-rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Validation Tests
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../development/releases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Releases
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../benchmarks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#python-310-or-newer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Python 3.10 or newer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#removed-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removed names
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Removed names">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#module-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Module names
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#factory-classmethods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Factory classmethods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#csr-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CSR properties
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invoice-builder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invoice builder
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invoice-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invoice values
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invoices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invoices
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#zatca-api-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ZATCA API client
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error classes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-in-07" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New in 0.7
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="migrate-from-06-to-07-python">Migrate from 0.6 to 0.7: Python<a class="headerlink" href="#migrate-from-06-to-07-python" title="Permanent link">&para;</a></h1>
+<p>This page covers the <code>fatoority</code> package (imported as <code>fatoora</code>). The
+<a href="../">overview</a> lists the other languages.</p>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"fatoority==0.7.0"</span>
+</code></pre></div>
+<p>0.7 removes every name that 0.6 kept with a <code>DeprecationWarning</code>, with no
+compatibility aliases left behind. Each replacement below already exists in
+0.6, so the simplest path is to run your tests on 0.6 with
+<code>python -W error::DeprecationWarning</code> (or pytest's
+<code>filterwarnings = ["error::DeprecationWarning"]</code>), replace every name the
+warnings point at, and then upgrade. On 0.7 a removed name fails with
+<code>ImportError</code>, <code>AttributeError</code> or <code>TypeError</code>.</p>
+<h2 id="python-310-or-newer">Python 3.10 or newer<a class="headerlink" href="#python-310-or-newer" title="Permanent link">&para;</a></h2>
+<p>0.7 requires Python 3.10 or newer and ships no <code>cp39</code> wheels; Python 3.9
+reached end of life in October 2025. Upgrade the interpreter before upgrading
+the package; 0.6 stays installable on 3.9.</p>
+<h2 id="removed-names">Removed names<a class="headerlink" href="#removed-names" title="Permanent link">&para;</a></h2>
+<h3 id="module-names">Module names<a class="headerlink" href="#module-names" title="Permanent link">&para;</a></h3>
+<p>These are no longer importable from <code>fatoora</code>, <code>fatoora.invoice</code>,
+<code>fatoora.sign</code> or <code>fatoora.validation</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Removed</th>
+<th>Use instead</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Signer</code></td>
+<td><code>InvoiceSigner</code></td>
+</tr>
+<tr>
+<td><code>CsidCompliance</code> / <code>CsidProduction</code></td>
+<td><code>ComplianceCsid</code> / <code>ProductionCsid</code></td>
+</tr>
+<tr>
+<td><code>AllowanceCharge(charge, amount, category, rate, ...)</code></td>
+<td><code>Adjustment(amount, charge=..., category=..., rate=..., ...)</code></td>
+</tr>
+<tr>
+<td><code>DocumentReference(...)</code></td>
+<td><code>OriginalInvoiceRef(...)</code>, with the same arguments</td>
+</tr>
+<tr>
+<td><code>VatId(value)</code>, <code>OtherId(value, scheme)</code></td>
+<td><code>Identifier(value)</code>, <code>Identifier(value, scheme)</code></td>
+</tr>
+<tr>
+<td><code>parse_finalized_invoice_xml(xml)</code> / <code>parse_finalized_invoice_xml_file(path)</code></td>
+<td><code>FinalizedInvoice.from_xml(xml)</code> / <code>FinalizedInvoice.from_file(path)</code></td>
+</tr>
+<tr>
+<td><code>parse_signed_invoice_xml(xml)</code> / <code>parse_signed_invoice_xml_file(path)</code></td>
+<td><code>SignedInvoice.from_xml(xml)</code> / <code>SignedInvoice.from_file(path)</code></td>
+</tr>
+<tr>
+<td><code>invoice_hash_base64_from_xml_str(xml)</code></td>
+<td><code>hash_xml(xml)</code></td>
+</tr>
+<tr>
+<td><code>validate_xml_invoice_from_str(config, xml)</code></td>
+<td><code>validate_xml(xml)</code></td>
+</tr>
+<tr>
+<td><code>validate_zatca_invoice_from_str(config, xml, ...)</code></td>
+<td><code>validate_zatca(xml, ...)</code>, which returns a <code>ZatcaReport</code>; <code>report.to_dict()</code> gives the old dictionary</td>
+</tr>
+</tbody>
+</table>
+<h3 id="factory-classmethods">Factory classmethods<a class="headerlink" href="#factory-classmethods" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Removed</th>
+<th>Use instead</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>InvoiceBuilder.new(type, subtype, ...)</code></td>
+<td><code>InvoiceBuilder(type, subtype, ...)</code></td>
+</tr>
+<tr>
+<td><code>InvoiceBuilder.new_with_reference(type, subtype, ref, reason)</code></td>
+<td><code>InvoiceBuilder(type, subtype, original_invoice=ref, original_invoice_reason=reason)</code></td>
+</tr>
+<tr>
+<td><code>LineItemBuilder.new()</code></td>
+<td><code>LineItemBuilder()</code></td>
+</tr>
+<tr>
+<td><code>CsrProperties.new(*, ...)</code></td>
+<td><code>CsrProperties(*, ...)</code></td>
+</tr>
+<tr>
+<td><code>ComplianceCsid.new(env, token, secret, request_id=None)</code> / <code>ProductionCsid.new(...)</code></td>
+<td><code>ComplianceCsid(env, token=..., secret=..., request_id=None)</code> / <code>ProductionCsid(...)</code></td>
+</tr>
+<tr>
+<td><code>Address.new(...)</code></td>
+<td><code>Address(...)</code></td>
+</tr>
+<tr>
+<td><code>PaymentMeans.new(code, instruction=None)</code></td>
+<td><code>PaymentMeans(code)</code> or <code>PaymentMeans(code, (instruction,))</code></td>
+</tr>
+<tr>
+<td><code>OriginalInvoiceRef.new(id, uuid, date, time, type_code)</code></td>
+<td><code>OriginalInvoiceRef(id, uuid=..., issue_date=..., issue_time=..., document_type_code=...)</code></td>
+</tr>
+<tr>
+<td><code>Adjustment.amount(value)</code></td>
+<td><code>Adjustment(value)</code></td>
+</tr>
+<tr>
+<td><code>Adjustment.percentage(base, percent)</code></td>
+<td><code>Adjustment.percent_of(base, percent)</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>amount</code> and <code>percentage</code> remain <code>Adjustment</code> fields; only the class-level
+factories are gone.</p>
+<h3 id="csr-properties">CSR properties<a class="headerlink" href="#csr-properties" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Removed</th>
+<th>Use instead</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CsrProperties.from_properties_str(text)</code></td>
+<td><code>CsrProperties.from_str(text)</code></td>
+</tr>
+<tr>
+<td><code>CsrProperties.parse_csr_config(text)</code></td>
+<td><code>CsrProperties.from_str(text)</code></td>
+</tr>
+<tr>
+<td><code>CsrProperties.parse_csr_config_file(path)</code></td>
+<td><code>CsrProperties.from_file(path)</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="invoice-builder">Invoice builder<a class="headerlink" href="#invoice-builder" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Removed</th>
+<th>Use instead</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>builder.flags(value)</code></td>
+<td><code>builder.set_flags(value)</code></td>
+</tr>
+<tr>
+<td><code>set_note(language, text)</code></td>
+<td><code>add_note(text, language=language)</code></td>
+</tr>
+<tr>
+<td><code>set_note_without_language(text)</code></td>
+<td><code>add_note(text)</code></td>
+</tr>
+<tr>
+<td><code>set_payment_means_code(code)</code></td>
+<td><code>add_payment_means(PaymentMeans(code))</code></td>
+</tr>
+<tr>
+<td><code>set_tax_exemption(category, rate, exemption)</code></td>
+<td><code>add_tax_exemption(category, rate, exemption)</code></td>
+</tr>
+<tr>
+<td><code>add_document_adjustment(charge, value, category, rate, exemption)</code></td>
+<td><code>add_charge(value, category, rate, exemption)</code> when <code>charge</code> is true, otherwise <code>add_allowance(...)</code></td>
+</tr>
+<tr>
+<td><code>invoice_level_discount(amount)</code></td>
+<td><code>add_allowance(Adjustment(amount), category, rate)</code></td>
+</tr>
+<tr>
+<td><code>invoice_level_charge(amount)</code></td>
+<td><code>add_charge(Adjustment(amount), category, rate)</code></td>
+</tr>
+<tr>
+<td><code>set_allowance(reason, amount)</code></td>
+<td><code>add_allowance(Adjustment(amount, reason=reason), category, rate)</code></td>
+</tr>
+<tr>
+<td><code>allowance_reason(reason)</code></td>
+<td><code>Adjustment(amount, reason=reason)</code> on each entry</td>
+</tr>
+</tbody>
+</table>
+<p>The aggregate setters (<code>set_allowance</code>, <code>invoice_level_discount</code>,
+<code>invoice_level_charge</code>, <code>allowance_reason</code>) added one allowance and one charge
+in the document VAT category, at the single VAT rate of that category's lines,
+when <code>build()</code> ran. <code>add_allowance</code> and <code>add_charge</code> append one entry per call
+in the category and at the rate you pass, so pass the document category and the
+line rate to keep the same totals.</p>
+<p>The invoice properties <code>invoice_level_discount</code>, <code>invoice_level_charge</code> and
+<code>allowance_reason</code> stay: they report the totals and shared reason of the
+document-level entries.</p>
+<h3 id="invoice-values">Invoice values<a class="headerlink" href="#invoice-values" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Removed</th>
+<th>Use instead</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>adjustment.value</code></td>
+<td><code>adjustment.amount</code></td>
+</tr>
+<tr>
+<td><code>adjustment.percent</code></td>
+<td><code>adjustment.percentage</code></td>
+</tr>
+<tr>
+<td><code>adjustment.with_supplied_amount(value)</code></td>
+<td><code>Adjustment.percent_of(base, percent, amount=value)</code></td>
+</tr>
+<tr>
+<td><code>value, scheme = identifier</code>, <code>identifier[0]</code></td>
+<td><code>identifier.value</code>, <code>identifier.scheme</code></td>
+</tr>
+<tr>
+<td>A <code>(value, scheme)</code> tuple for <code>Party.vat_id</code>, <code>Party.identifiers</code> or an item identifier</td>
+<td><code>Identifier(value, scheme)</code> (a plain <code>str</code> value still works)</td>
+</tr>
+<tr>
+<td><code>close()</code> or <code>with</code> on <code>Address</code>, <code>Party</code>, <code>Identifier</code>, <code>InvoiceNote</code>, <code>OriginalInvoiceRef</code>, <code>PaymentMeans</code> or <code>Adjustment</code></td>
+<td>Nothing: they are plain frozen dataclasses with no cleanup</td>
+</tr>
+</tbody>
+</table>
+<p>Passing a tuple where an identifier is expected now raises <code>TypeError</code>.
+Native owners such as <code>Config</code>, <code>ZatcaClient</code>, <code>InvoiceBuilder</code> and the invoice
+classes still support <code>with</code> and <code>close()</code>.</p>
+<h3 id="invoices">Invoices<a class="headerlink" href="#invoices" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Removed</th>
+<th>Use instead</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>invoice.to_xml()</code></td>
+<td><code>invoice.xml</code></td>
+</tr>
+<tr>
+<td><code>signed.into_xml()</code></td>
+<td><code>signed.xml</code>, then <code>signed.close()</code> when done</td>
+</tr>
+<tr>
+<td><code>invoice.hash_base64()</code></td>
+<td><code>invoice.hash()</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="zatca-api-client">ZATCA API client<a class="headerlink" href="#zatca-api-client" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Removed</th>
+<th>Use instead</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>client.post_csr_for_ccsid(csr, otp)</code></td>
+<td><code>client.request_compliance_csid(csr, otp)</code></td>
+</tr>
+<tr>
+<td><code>client.post_ccsid_for_pcsid(ccsid)</code></td>
+<td><code>client.request_production_csid(ccsid)</code></td>
+</tr>
+<tr>
+<td><code>clearance_status=False</code> / <code>True</code> on <code>report_simplified_invoice</code> and <code>clear_standard_invoice</code></td>
+<td><code>clearance=ClearanceMode.DISABLED</code> / <code>ClearanceMode.ENABLED</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>clearance</code> is now a required keyword-only argument of both methods.</p>
+<h2 id="error-classes">Error classes<a class="headerlink" href="#error-classes" title="Permanent link">&para;</a></h2>
+<p>0.7 gives every language the same error hierarchy: a base <code>FatooraError</code>, one
+<code>ErrorKind</code> enum, and one subclass per kind named <code>&lt;Kind&gt;Error</code>. See
+<a href="../../../reference/errors/">errors and diagnostics</a>. These names change in 0.7
+with no deprecated alias in 0.6, so update them while upgrading.</p>
+<table>
+<thead>
+<tr>
+<th>0.6</th>
+<th>0.7</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FfiError</code></td>
+<td><code>FatooraError</code>; every library failure is a subclass of it</td>
+</tr>
+<tr>
+<td><code>FfiErrorKind</code></td>
+<td><code>ErrorKind</code> (same members and values)</td>
+</tr>
+<tr>
+<td><code>fatoora.errors.error_class_for_code(code)(message, code, details)</code></td>
+<td><code>FatooraError.from_code(code, message, details)</code></td>
+</tr>
+<tr>
+<td><code>InvalidInputError(message, code, details)</code> (any subclass)</td>
+<td><code>InvalidInputError(message, details=details)</code>; the code comes from the class, and <code>code</code> and <code>details</code> are keyword-only</td>
+</tr>
+</tbody>
+</table>
+<p>The subclasses (<code>InvalidInputError</code>, <code>ValidationError</code>, ..., <code>ApiError</code>) keep
+their names and their <code>ValueError</code>/<code>OSError</code> bases. A code the package does not
+recognize now raises plain <code>FatooraError</code> instead of <code>FfiError</code>; its <code>.kind</code> is
+still <code>None</code>. Errors also gain <code>.message</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 0.6</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fatoora.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">FfiError</span><span class="p">,</span> <span class="n">FfiErrorKind</span>
+<span class="k">except</span> <span class="n">FfiError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">error</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="n">FfiErrorKind</span><span class="o">.</span><span class="n">NETWORK</span><span class="p">:</span> <span class="o">...</span>
+
+<span class="c1"># 0.7</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fatoora</span><span class="w"> </span><span class="kn">import</span> <span class="n">ErrorKind</span><span class="p">,</span> <span class="n">FatooraError</span>
+<span class="k">except</span> <span class="n">FatooraError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">error</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="n">ErrorKind</span><span class="o">.</span><span class="n">NETWORK</span><span class="p">:</span> <span class="o">...</span>
+</code></pre></div>
+<h2 id="new-in-07">New in 0.7<a class="headerlink" href="#new-in-07" title="Permanent link">&para;</a></h2>
+<p><code>AsyncZatcaClient</code> is an <code>asyncio</code> client with the methods of <code>ZatcaClient</code>,
+as coroutines. It needs <code>httpx</code>, from the optional <code>async</code> extra
+(<code>pip install "fatoority[async]"</code>); the base package still has no HTTP
+dependency. See <a href="../../../reference/bindings/python/#asynchronous-client">asynchronous client</a>.</p>
+<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">with</span> <span class="n">AsyncZatcaClient</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">report_simplified_invoice</span><span class="p">(</span><span class="n">signed</span><span class="p">,</span> <span class="n">pcsid</span><span class="p">,</span> <span class="n">clearance</span><span class="o">=</span><span class="n">ClearanceMode</span><span class="o">.</span><span class="n">DISABLED</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># 0.6, with DeprecationWarnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fatoora</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">InvoiceBuilder</span><span class="p">,</span> <span class="n">InvoiceSubType</span><span class="p">,</span> <span class="n">InvoiceTypeKind</span><span class="p">,</span> <span class="n">VatCategory</span><span class="p">,</span>
+                     <span class="n">parse_signed_invoice_xml</span><span class="p">)</span>
+
+<span class="n">builder</span> <span class="o">=</span> <span class="n">InvoiceBuilder</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">InvoiceTypeKind</span><span class="o">.</span><span class="n">TAX</span><span class="p">,</span> <span class="n">InvoiceSubType</span><span class="o">.</span><span class="n">SIMPLIFIED</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">set_vat_category</span><span class="p">(</span><span class="n">VatCategory</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">invoice_level_discount</span><span class="p">(</span><span class="s2">"10"</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">allowance_reason</span><span class="p">(</span><span class="s2">"Loyalty discount"</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">set_payment_means_code</span><span class="p">(</span><span class="s2">"10"</span><span class="p">)</span>
+
+<span class="n">signed</span> <span class="o">=</span> <span class="n">parse_signed_invoice_xml</span><span class="p">(</span><span class="n">xml</span><span class="p">)</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">report_simplified_invoice</span><span class="p">(</span><span class="n">signed</span><span class="p">,</span> <span class="n">pcsid</span><span class="p">,</span> <span class="n">clearance_status</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">signed</span><span class="o">.</span><span class="n">hash_base64</span><span class="p">(),</span> <span class="n">signed</span><span class="o">.</span><span class="n">to_xml</span><span class="p">())</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="c1"># 0.7</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fatoora</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">Adjustment</span><span class="p">,</span> <span class="n">ClearanceMode</span><span class="p">,</span> <span class="n">InvoiceBuilder</span><span class="p">,</span> <span class="n">InvoiceSubType</span><span class="p">,</span> <span class="n">InvoiceTypeKind</span><span class="p">,</span>
+                     <span class="n">PaymentMeans</span><span class="p">,</span> <span class="n">SignedInvoice</span><span class="p">,</span> <span class="n">VatCategory</span><span class="p">)</span>
+
+<span class="n">builder</span> <span class="o">=</span> <span class="n">InvoiceBuilder</span><span class="p">(</span><span class="n">InvoiceTypeKind</span><span class="o">.</span><span class="n">TAX</span><span class="p">,</span> <span class="n">InvoiceSubType</span><span class="o">.</span><span class="n">SIMPLIFIED</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">set_vat_category</span><span class="p">(</span><span class="n">VatCategory</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">add_allowance</span><span class="p">(</span><span class="n">Adjustment</span><span class="p">(</span><span class="s2">"10"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"Loyalty discount"</span><span class="p">),</span> <span class="n">VatCategory</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">,</span> <span class="s2">"15"</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">add_payment_means</span><span class="p">(</span><span class="n">PaymentMeans</span><span class="p">(</span><span class="s2">"10"</span><span class="p">))</span>
+
+<span class="n">signed</span> <span class="o">=</span> <span class="n">SignedInvoice</span><span class="o">.</span><span class="n">from_xml</span><span class="p">(</span><span class="n">xml</span><span class="p">)</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">report_simplified_invoice</span><span class="p">(</span><span class="n">signed</span><span class="p">,</span> <span class="n">pcsid</span><span class="p">,</span> <span class="n">clearance</span><span class="o">=</span><span class="n">ClearanceMode</span><span class="o">.</span><span class="n">DISABLED</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">signed</span><span class="o">.</span><span class="n">hash</span><span class="p">(),</span> <span class="n">signed</span><span class="o">.</span><span class="n">xml</span><span class="p">)</span>
+</code></pre></div>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.tabs.link", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

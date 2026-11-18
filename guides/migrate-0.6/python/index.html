@@ -1,0 +1,2635 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Upgrade Python code from fatoority 0.5 to 0.6. Getters become properties, invoice data becomes frozen dataclasses, and renamed 0.5 names warn until 0.7.">
+      
+      
+      
+        <link rel="canonical" href="https://docs.fatoority.com/guides/migrate-0.6/python/">
+      
+      
+        <link rel="prev" href="../rust/">
+      
+      
+        <link rel="next" href="../javascript/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Migrate a Python Project from fatoority 0.5 to 0.6 - fatoority</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/home.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  
+  
+    
+    
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="fatoority">
+    <meta property="og:title" content="Migrate a Python Project from fatoority 0.5 to 0.6 - fatoority">
+    <meta property="og:description" content="Upgrade Python code from fatoority 0.5 to 0.6. Getters become properties, invoice data becomes frozen dataclasses, and renamed 0.5 names warn until 0.7.">
+    <meta property="og:url" content="https://docs.fatoority.com/guides/migrate-0.6/python/">
+    <meta property="og:image" content="https://docs.fatoority.com/assets/images/crab-logo.png">
+    <meta property="og:image:alt" content="fatoority crab logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Migrate a Python Project from fatoority 0.5 to 0.6 - fatoority">
+    <meta name="twitter:description" content="Upgrade Python code from fatoority 0.5 to 0.6. Getters become properties, invoice data becomes frozen dataclasses, and renamed 0.5 names warn until 0.7.">
+    <meta name="twitter:image" content="https://docs.fatoority.com/assets/images/crab-logo.png">
+    <meta name="twitter:image:alt" content="fatoority crab logo">
+  
+
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#migrate-from-05-to-06-python" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="fatoority" class="md-header__button md-logo" aria-label="fatoority" data-md-component="logo">
+      
+  <img src="../../../assets/images/crab-logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            fatoority
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Migrate a Python Project from fatoority 0.5 to 0.6
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/mqqz/fatoority" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mqqz/fatoority
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="fatoority" class="md-nav__button md-logo" aria-label="fatoority" data-md-component="logo">
+      
+  <img src="../../../assets/images/crab-logo.png" alt="logo">
+
+    </a>
+    fatoority
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/mqqz/fatoority" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mqqz/fatoority
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sandbox-walkthrough/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First Sandbox Invoice
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../invoice-creation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Create an Invoice
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../invoice-recipes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pricing and Invoice Recipes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../csr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CSR Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../invoice-signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Invoice Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../qr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QR Codes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ZATCA API Client
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_10" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migrate from 0.5 to 0.6
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Migrate from 0.5 to 0.6
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rust/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rust
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#upgrade-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Upgrade checklist
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-an-invoice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build an invoice
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#document-allowances-and-charges" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Document allowances and charges
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#request-credentials-and-report-an-invoice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Request credentials and report an invoice
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validate-and-hash-an-invoice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validate and hash an invoice
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#read-a-zatca-response" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Read a ZATCA response
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#other-renames" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other renames
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../javascript/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JavaScript / TypeScript
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kotlin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kotlin / Java
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../csharp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C# / .NET
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../c/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C/C++
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_11" id="__nav_2_11_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migrate from 0.6 to 0.7
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Migrate from 0.6 to 0.7
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migrate-0.7/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migrate-0.7/rust/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rust
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migrate-0.7/python/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migrate-0.7/javascript/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JavaScript / TypeScript
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migrate-0.7/kotlin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kotlin / Java
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migrate-0.7/csharp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C# / .NET
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migrate-0.7/c/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C/C++
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/csr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CSR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bindings
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Bindings
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/bindings/python/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/bindings/javascript/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JavaScript / TypeScript
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/bindings/csharp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C# / .NET
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/bindings/kotlin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kotlin / Java
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/bindings/c/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C/C++ (FFI)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Invoice
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Invoice
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/invoice-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/numbers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decimal numbers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/invoice-signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/invoice-validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/xml/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XML
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../development/invoice-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XML Model Coverage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/xml-and-schemas/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    XML and Schemas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/qr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/api-client/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Client
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../development/sdk-parity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SDK Compatibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../development/diplomat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Binding Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../development/business-rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Validation Tests
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../development/releases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Releases
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../benchmarks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#upgrade-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Upgrade checklist
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-an-invoice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build an invoice
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#document-allowances-and-charges" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Document allowances and charges
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#request-credentials-and-report-an-invoice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Request credentials and report an invoice
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validate-and-hash-an-invoice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validate and hash an invoice
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#read-a-zatca-response" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Read a ZATCA response
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#other-renames" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other renames
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="migrate-from-05-to-06-python">Migrate from 0.5 to 0.6: Python<a class="headerlink" href="#migrate-from-05-to-06-python" title="Permanent link">&para;</a></h1>
+<p>The <code>fatoority</code> package (imported as <code>fatoora</code>) adopts the core names with a
+Pythonic surface. Most renamed 0.5 names still work in 0.6 and emit a
+<code>DeprecationWarning</code> naming their replacement; 0.7 removed them. A few
+changes are hard breaks, listed first below.</p>
+<div class="admonition note">
+<p class="admonition-title">Upgrading to 0.7</p>
+<p>0.7 removed every name this page marks as deprecated, so on 0.7 use the 0.6
+replacement. <a href="../../migrate-0.7/python/">Migrate from 0.6 to 0.7</a> lists the
+removed names.</p>
+</div>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"fatoority==0.6.0"</span>
+</code></pre></div>
+<p>The wheel bundles its native library, so no separate native upgrade is needed.</p>
+<h2 id="upgrade-checklist">Upgrade checklist<a class="headerlink" href="#upgrade-checklist" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Drop the parentheses from getters: <code>invoice.id()</code> becomes <code>invoice.id</code>,
+   <code>response.reporting_status()</code> becomes <code>response.reporting_status</code>. Calling a
+   property fails like calling its value
+   (<code>TypeError: 'str' object is not callable</code>).</li>
+<li>Pass the arguments that 0.5.1 warned about by keyword: everything after
+   <code>name</code> in <code>set_seller</code>/<code>set_buyer</code>, <code>language</code> in <code>add_note</code>, every
+   <code>CsrProperties</code> field, and the clearance flag and <code>accept_language</code> in
+   <code>report_simplified_invoice</code> and <code>clear_standard_invoice</code>. Positional use now
+   raises <code>TypeError</code>.</li>
+<li>Expect <code>datetime</code>/<code>date</code> values where 0.5 returned text: <code>issue_datetime</code>,
+   <code>signing_time</code> and <code>ZatcaReport.evaluated_at</code> are timezone-aware UTC
+   <code>datetime</code>s; <code>issue_date</code>, the delivery dates and
+   <code>OriginalInvoiceRef.issue_date</code> are <code>datetime.date</code>s.</li>
+<li>Expect tuples where 0.5 returned lists: <code>party.identifiers</code> and
+   <code>payment_means.instruction_notes</code>.</li>
+<li>Run your tests with <code>python -W error::DeprecationWarning</code> (or pytest's
+   <code>filterwarnings = ["error::DeprecationWarning"]</code>) and replace each name the
+   warnings point at.</li>
+</ol>
+<p>The <a href="../../../reference/bindings/python/#migrate-from-earlier-versions">Python reference</a>
+lists the hard breaks, and <a href="../../migrate-0.7/python/">Migrate from 0.6 to 0.7</a>
+lists every renamed name with its replacement.</p>
+<h2 id="build-an-invoice">Build an invoice<a class="headerlink" href="#build-an-invoice" title="Permanent link">&para;</a></h2>
+<p><code>InvoiceBuilder(...)</code> replaces <code>InvoiceBuilder.new(...)</code> and takes the header
+fields as keywords. Setters return the builder, so calls chain. Dates and UUIDs
+accept <code>datetime</code>, <code>date</code> and <code>uuid.UUID</code> values as well as strings; a naive
+<code>datetime</code> raises <code>ValueError</code>. <code>Address</code>, <code>PaymentMeans</code>, <code>Party</code>,
+<code>Adjustment</code> and the other invoice values are frozen dataclasses built with
+their constructors.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">0.5</label><label for="__tabbed_1_2">0.6</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fatoora</span><span class="w"> </span><span class="kn">import</span> <span class="n">InvoiceBuilder</span><span class="p">,</span> <span class="n">InvoiceSubType</span><span class="p">,</span> <span class="n">InvoiceTypeKind</span><span class="p">,</span> <span class="n">VatCategory</span>
+
+<span class="n">builder</span> <span class="o">=</span> <span class="n">InvoiceBuilder</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">InvoiceTypeKind</span><span class="o">.</span><span class="n">TAX</span><span class="p">,</span> <span class="n">InvoiceSubType</span><span class="o">.</span><span class="n">SIMPLIFIED</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">set_id</span><span class="p">(</span><span class="s2">"INV-1001"</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">set_uuid</span><span class="p">(</span><span class="s2">"8e6000cf-1a98-4174-b3e7-b5d5954bc10d"</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">set_issue_datetime</span><span class="p">(</span><span class="s2">"2026-10-26T09:00:00Z"</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">set_currency</span><span class="p">(</span><span class="s2">"SAR"</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">set_previous_invoice_hash</span><span class="p">(</span>
+    <span class="s2">"NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ=="</span>
+<span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">set_invoice_counter</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">set_payment_means_code</span><span class="p">(</span><span class="s2">"10"</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">set_vat_category</span><span class="p">(</span><span class="n">VatCategory</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">set_seller</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Example Store"</span><span class="p">,</span> <span class="n">country_code</span><span class="o">=</span><span class="s2">"SA"</span><span class="p">,</span> <span class="n">city</span><span class="o">=</span><span class="s2">"Riyadh"</span><span class="p">,</span>
+    <span class="n">street</span><span class="o">=</span><span class="s2">"King Fahd Road"</span><span class="p">,</span> <span class="n">building_number</span><span class="o">=</span><span class="s2">"1234"</span><span class="p">,</span> <span class="n">postal_code</span><span class="o">=</span><span class="s2">"12222"</span><span class="p">,</span>
+    <span class="n">district</span><span class="o">=</span><span class="s2">"Olaya"</span><span class="p">,</span> <span class="n">additional_number</span><span class="o">=</span><span class="s2">"5678"</span><span class="p">,</span> <span class="n">vat_id</span><span class="o">=</span><span class="s2">"399999999900003"</span><span class="p">,</span>
+    <span class="n">other_id</span><span class="o">=</span><span class="s2">"7003339333"</span><span class="p">,</span> <span class="n">other_id_scheme</span><span class="o">=</span><span class="s2">"CRN"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">add_line_item</span><span class="p">(</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Notebook"</span><span class="p">,</span> <span class="n">quantity</span><span class="o">=</span><span class="s2">"2"</span><span class="p">,</span> <span class="n">unit_code</span><span class="o">=</span><span class="s2">"PCE"</span><span class="p">,</span> <span class="n">unit_price</span><span class="o">=</span><span class="s2">"50"</span><span class="p">,</span>
+    <span class="n">vat_rate</span><span class="o">=</span><span class="s2">"15"</span><span class="p">,</span> <span class="n">vat_category</span><span class="o">=</span><span class="n">VatCategory</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">invoice</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="n">Path</span><span class="p">(</span><span class="s2">"invoice.xml"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">invoice</span><span class="o">.</span><span class="n">to_xml</span><span class="p">(),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+<span class="n">totals</span> <span class="o">=</span> <span class="n">invoice</span><span class="o">.</span><span class="n">totals</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Payable: </span><span class="si">{</span><span class="n">totals</span><span class="o">.</span><span class="n">payable_amount</span><span class="si">}</span><span class="s2"> SAR"</span><span class="p">)</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fatoora</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">Address</span><span class="p">,</span> <span class="n">InvoiceBuilder</span><span class="p">,</span> <span class="n">InvoiceSubType</span><span class="p">,</span> <span class="n">InvoiceTypeKind</span><span class="p">,</span>
+                     <span class="n">PaymentMeans</span><span class="p">,</span> <span class="n">VatCategory</span><span class="p">)</span>
+
+<span class="n">seller_address</span> <span class="o">=</span> <span class="n">Address</span><span class="p">(</span>
+    <span class="s2">"SA"</span><span class="p">,</span> <span class="s2">"Riyadh"</span><span class="p">,</span> <span class="s2">"King Fahd Road"</span><span class="p">,</span> <span class="s2">"1234"</span><span class="p">,</span> <span class="s2">"12222"</span><span class="p">,</span>
+    <span class="n">additional_number</span><span class="o">=</span><span class="s2">"5678"</span><span class="p">,</span> <span class="n">district</span><span class="o">=</span><span class="s2">"Olaya"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">invoice</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">InvoiceBuilder</span><span class="p">(</span>
+        <span class="n">InvoiceTypeKind</span><span class="o">.</span><span class="n">TAX</span><span class="p">,</span> <span class="n">InvoiceSubType</span><span class="o">.</span><span class="n">SIMPLIFIED</span><span class="p">,</span>
+        <span class="nb">id</span><span class="o">=</span><span class="s2">"INV-1001"</span><span class="p">,</span>
+        <span class="n">uuid</span><span class="o">=</span><span class="n">UUID</span><span class="p">(</span><span class="s2">"8e6000cf-1a98-4174-b3e7-b5d5954bc10d"</span><span class="p">),</span>
+        <span class="n">issue_datetime</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2026</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">26</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">),</span>
+        <span class="n">currency</span><span class="o">=</span><span class="s2">"SAR"</span><span class="p">,</span>
+        <span class="n">previous_invoice_hash</span><span class="o">=</span><span class="s2">"NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ=="</span><span class="p">,</span>
+        <span class="n">invoice_counter</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">vat_category</span><span class="o">=</span><span class="n">VatCategory</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">set_seller</span><span class="p">(</span><span class="s2">"Example Store"</span><span class="p">,</span> <span class="n">address</span><span class="o">=</span><span class="n">seller_address</span><span class="p">,</span> <span class="n">vat_id</span><span class="o">=</span><span class="s2">"399999999900003"</span><span class="p">,</span>
+                <span class="n">other_id</span><span class="o">=</span><span class="s2">"7003339333"</span><span class="p">,</span> <span class="n">other_id_scheme</span><span class="o">=</span><span class="s2">"CRN"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">add_payment_means</span><span class="p">(</span><span class="n">PaymentMeans</span><span class="p">(</span><span class="s2">"10"</span><span class="p">))</span>
+    <span class="o">.</span><span class="n">add_line_item</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"Notebook"</span><span class="p">,</span> <span class="n">quantity</span><span class="o">=</span><span class="s2">"2"</span><span class="p">,</span> <span class="n">unit_code</span><span class="o">=</span><span class="s2">"PCE"</span><span class="p">,</span> <span class="n">unit_price</span><span class="o">=</span><span class="s2">"50"</span><span class="p">,</span>
+                   <span class="n">vat_rate</span><span class="o">=</span><span class="s2">"15"</span><span class="p">,</span> <span class="n">vat_category</span><span class="o">=</span><span class="n">VatCategory</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="p">)</span>
+<span class="n">Path</span><span class="p">(</span><span class="s2">"invoice.xml"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">invoice</span><span class="o">.</span><span class="n">xml</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+<span class="n">totals</span> <span class="o">=</span> <span class="n">invoice</span><span class="o">.</span><span class="n">totals</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Payable: </span><span class="si">{</span><span class="n">totals</span><span class="o">.</span><span class="n">payable_amount</span><span class="si">}</span><span class="s2"> SAR"</span><span class="p">)</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p><code>set_payment_means_code(code)</code> still works with a warning, but it now appends a
+payment means instead of changing the code of an existing one.</p>
+<h2 id="document-allowances-and-charges">Document allowances and charges<a class="headerlink" href="#document-allowances-and-charges" title="Permanent link">&para;</a></h2>
+<p><code>add_allowance</code> and <code>add_charge</code> append one entry each, in the VAT category and
+at the rate you pass. The 0.5 aggregate setters (<code>set_allowance</code>,
+<code>invoice_level_discount</code>, <code>invoice_level_charge</code>, <code>allowance_reason</code>) are
+deprecated. They still produce one allowance and one charge in the document VAT
+category, applied by <code>build()</code>, which raises <code>ValueError</code> if that category's
+lines have more than one VAT rate or if they are combined with
+<code>add_allowance</code>, <code>add_charge</code> or <code>add_adjustment</code>.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">0.5</label><label for="__tabbed_2_2">0.6</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="n">builder</span><span class="o">.</span><span class="n">set_vat_category</span><span class="p">(</span><span class="n">VatCategory</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">invoice_level_discount</span><span class="p">(</span><span class="s2">"10"</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">allowance_reason</span><span class="p">(</span><span class="s2">"Loyalty discount"</span><span class="p">)</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">fatoora</span><span class="w"> </span><span class="kn">import</span> <span class="n">Adjustment</span><span class="p">,</span> <span class="n">VatCategory</span>
+
+<span class="n">builder</span><span class="o">.</span><span class="n">add_allowance</span><span class="p">(</span>
+    <span class="n">Adjustment</span><span class="p">(</span><span class="s2">"10"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"Loyalty discount"</span><span class="p">),</span> <span class="n">VatCategory</span><span class="o">.</span><span class="n">STANDARD</span><span class="p">,</span> <span class="s2">"15"</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p><code>Adjustment</code> is the one allowance and charge model, for lines, for the document
+and for the values read back from <code>invoice.adjustments</code>. <code>Adjustment.amount(v)</code>
+becomes <code>Adjustment(v)</code>, <code>Adjustment.percentage(base, percent)</code> becomes
+<code>Adjustment.percent_of(base, percent)</code>, <code>.value</code> becomes <code>.amount</code> and
+<code>.percent</code> becomes <code>.percentage</code>. <code>AllowanceCharge(...)</code> and
+<code>add_document_adjustment(charge, ...)</code> are deprecated.</p>
+<h2 id="request-credentials-and-report-an-invoice">Request credentials and report an invoice<a class="headerlink" href="#request-credentials-and-report-an-invoice" title="Permanent link">&para;</a></h2>
+<p><code>ComplianceCsid</code> and <code>ProductionCsid</code> replace <code>CsidCompliance</code> and
+<code>CsidProduction</code>, and are built with their constructors:
+<code>ProductionCsid(env, token=..., secret=..., request_id=None)</code> replaces
+<code>ProductionCsid.new(env, token, secret, request_id)</code> (the arguments after <code>env</code>
+are keyword-only, so their order no longer matters). <code>request_compliance_csid</code>
+and <code>request_production_csid</code> replace <code>post_csr_for_ccsid</code> and
+<code>post_ccsid_for_pcsid</code>. The <code>Clearance-Status</code> header is a <code>ClearanceMode</code>, as in
+the other languages: <code>clearance=ClearanceMode.DISABLED</code> replaces
+<code>clearance_status=False</code>. Everything is importable from the <code>fatoora</code> package
+root.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="3:2"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">0.5</label><label for="__tabbed_3_2">0.6</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fatoora.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">CsidProduction</span><span class="p">,</span> <span class="n">ZatcaClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fatoora.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span><span class="p">,</span> <span class="n">Environment</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fatoora.invoice</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_signed_invoice_xml</span>
+
+<span class="n">environment</span> <span class="o">=</span> <span class="n">Environment</span><span class="o">.</span><span class="n">NON_PRODUCTION</span>
+<span class="n">token</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"ZATCA_TOKEN"</span><span class="p">]</span>
+<span class="n">secret</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"ZATCA_SECRET"</span><span class="p">]</span>
+<span class="k">with</span> <span class="n">Config</span><span class="p">(</span><span class="n">environment</span><span class="p">)</span> <span class="k">as</span> <span class="n">config</span><span class="p">,</span> <span class="n">ZatcaClient</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">CsidProduction</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">environment</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">secret</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">as</span> <span class="n">credentials</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">parse_signed_invoice_xml</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">"signed.xml"</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span> <span class="k">as</span> <span class="n">invoice</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">client</span><span class="o">.</span><span class="n">report_simplified_invoice</span><span class="p">(</span><span class="n">invoice</span><span class="p">,</span> <span class="n">credentials</span><span class="p">,</span> <span class="n">clearance_status</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">accept_language</span><span class="o">=</span><span class="s2">"en"</span><span class="p">)</span> <span class="k">as</span> <span class="n">response</span><span class="p">:</span>
+                <span class="n">response</span><span class="o">.</span><span class="n">ensure_accepted</span><span class="p">()</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">"Invoice reporting accepted:"</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">reporting_status</span><span class="p">())</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fatoora</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">ClearanceMode</span><span class="p">,</span> <span class="n">Config</span><span class="p">,</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">ProductionCsid</span><span class="p">,</span> <span class="n">SignedInvoice</span><span class="p">,</span>
+                     <span class="n">ZatcaClient</span><span class="p">)</span>
+
+<span class="n">environment</span> <span class="o">=</span> <span class="n">Environment</span><span class="o">.</span><span class="n">NON_PRODUCTION</span>
+<span class="n">token</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"ZATCA_TOKEN"</span><span class="p">]</span>
+<span class="n">secret</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"ZATCA_SECRET"</span><span class="p">]</span>
+<span class="k">with</span> <span class="n">Config</span><span class="p">(</span><span class="n">environment</span><span class="p">)</span> <span class="k">as</span> <span class="n">config</span><span class="p">,</span> <span class="n">ZatcaClient</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">ProductionCsid</span><span class="p">(</span><span class="n">environment</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="n">token</span><span class="p">,</span> <span class="n">secret</span><span class="o">=</span><span class="n">secret</span><span class="p">)</span> <span class="k">as</span> <span class="n">credentials</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">SignedInvoice</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="s2">"signed.xml"</span><span class="p">)</span> <span class="k">as</span> <span class="n">invoice</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">client</span><span class="o">.</span><span class="n">report_simplified_invoice</span><span class="p">(</span>
+                <span class="n">invoice</span><span class="p">,</span> <span class="n">credentials</span><span class="p">,</span> <span class="n">clearance</span><span class="o">=</span><span class="n">ClearanceMode</span><span class="o">.</span><span class="n">DISABLED</span><span class="p">,</span> <span class="n">accept_language</span><span class="o">=</span><span class="s2">"en"</span>
+            <span class="p">)</span> <span class="k">as</span> <span class="n">response</span><span class="p">:</span>
+                <span class="n">response</span><span class="o">.</span><span class="n">ensure_accepted</span><span class="p">()</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">"Invoice reporting accepted:"</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">reporting_status</span><span class="p">)</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p><code>timeout</code> is new and optional: seconds (<code>int</code>/<code>float</code>) or a
+<code>datetime.timedelta</code> bounding each request. A request that exceeds it raises
+<code>NetworkError</code>; the default <code>None</code> applies no timeout. <code>clearance_status=False</code>
+and <code>ProductionCsid.new(...)</code> keep working with a <code>DeprecationWarning</code>.
+<code>reporting_status</code> is a <code>ReportingStatus</code> (and <code>clearance_status</code> a
+<code>ClearanceStatus</code>): <code>str</code> enums, so comparing with <code>"REPORTED"</code> and printing
+still work. <code>ComplianceCsid.request_id</code> and <code>ProductionCsid.request_id</code> are <code>None</code> instead of
+<code>""</code> when absent.</p>
+<h2 id="validate-and-hash-an-invoice">Validate and hash an invoice<a class="headerlink" href="#validate-and-hash-an-invoice" title="Permanent link">&para;</a></h2>
+<p>Validation no longer takes a <code>Config</code>. <code>validate_zatca</code> returns a frozen
+<code>ZatcaReport</code> instead of a dictionary; <code>report.to_dict()</code> returns the 0.5
+dictionary shape and <code>report.to_json()</code> the JSON text.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">0.5</label><label for="__tabbed_4_2">0.6</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fatoora</span><span class="w"> </span><span class="kn">import</span> <span class="n">invoice_hash_base64_from_xml_str</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fatoora.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span><span class="p">,</span> <span class="n">Environment</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fatoora.validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_xml_invoice_from_str</span><span class="p">,</span> <span class="n">validate_zatca_invoice_from_str</span>
+
+<span class="n">xml</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"invoice.xml"</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">Config</span><span class="p">(</span><span class="n">Environment</span><span class="o">.</span><span class="n">NON_PRODUCTION</span><span class="p">)</span> <span class="k">as</span> <span class="n">config</span><span class="p">:</span>
+    <span class="n">validate_xml_invoice_from_str</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">xml</span><span class="p">)</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="n">validate_zatca_invoice_from_str</span><span class="p">(</span>
+        <span class="n">config</span><span class="p">,</span> <span class="n">xml</span><span class="p">,</span> <span class="n">previous_invoice_hash</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">"previous-hash.txt"</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">report</span><span class="p">[</span><span class="s2">"is_valid"</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">next_previous_hash</span> <span class="o">=</span> <span class="n">invoice_hash_base64_from_xml_str</span><span class="p">(</span><span class="n">xml</span><span class="p">)</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fatoora</span><span class="w"> </span><span class="kn">import</span> <span class="n">hash_xml</span><span class="p">,</span> <span class="n">validate_xml</span><span class="p">,</span> <span class="n">validate_zatca</span>
+
+<span class="n">xml</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"invoice.xml"</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+<span class="n">validate_xml</span><span class="p">(</span><span class="n">xml</span><span class="p">)</span>
+<span class="n">report</span> <span class="o">=</span> <span class="n">validate_zatca</span><span class="p">(</span>
+    <span class="n">xml</span><span class="p">,</span> <span class="n">previous_invoice_hash</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">"previous-hash.txt"</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>
+<span class="p">)</span>
+<span class="k">for</span> <span class="n">finding</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">findings</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">finding</span><span class="o">.</span><span class="n">severity</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">finding</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="n">finding</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">report</span><span class="o">.</span><span class="n">is_valid</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">next_previous_hash</span> <span class="o">=</span> <span class="n">hash_xml</span><span class="p">(</span><span class="n">xml</span><span class="p">)</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>On a parsed or built invoice, <code>hash()</code> replaces <code>hash_base64()</code>;
+<code>signed.invoice_hash</code> is the hash stored in the signature. <code>SignedInvoice.from_xml</code>
+and <code>from_file</code> (and the same on <code>FinalizedInvoice</code>) replace the
+<code>parse_*_invoice_xml[_file]</code> functions, and the <code>xml</code> property replaces
+<code>to_xml()</code>/<code>into_xml()</code>.</p>
+<h2 id="read-a-zatca-response">Read a ZATCA response<a class="headerlink" href="#read-a-zatca-response" title="Permanent link">&para;</a></h2>
+<div class="tabbed-set tabbed-alternate" data-tabs="5:2"><input checked="checked" id="__tabbed_5_1" name="__tabbed_5" type="radio" /><input id="__tabbed_5_2" name="__tabbed_5" type="radio" /><div class="tabbed-labels"><label for="__tabbed_5_1">0.5</label><label for="__tabbed_5_2">0.6</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">response</span><span class="o">.</span><span class="n">validation_results</span><span class="p">()</span> <span class="k">as</span> <span class="n">results</span><span class="p">:</span>
+    <span class="n">summary</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"http_status"</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">http_status</span><span class="p">(),</span>
+        <span class="s2">"outcome"</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">outcome</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="s2">"reporting_status"</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">reporting_status</span><span class="p">(),</span>
+        <span class="s2">"validation_status"</span><span class="p">:</span> <span class="n">results</span><span class="o">.</span><span class="n">status</span><span class="p">(),</span>
+        <span class="s2">"warnings"</span><span class="p">:</span> <span class="p">[(</span><span class="n">m</span><span class="o">.</span><span class="n">code</span><span class="p">(),</span> <span class="n">m</span><span class="o">.</span><span class="n">message</span><span class="p">())</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">warning_messages</span><span class="p">()],</span>
+    <span class="p">}</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">response</span><span class="o">.</span><span class="n">validation_results</span> <span class="k">as</span> <span class="n">results</span><span class="p">:</span>
+    <span class="n">summary</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"http_status"</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">http_status</span><span class="p">,</span>
+        <span class="s2">"outcome"</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">outcome</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="s2">"reporting_status"</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">reporting_status</span><span class="p">,</span>
+        <span class="s2">"validation_status"</span><span class="p">:</span> <span class="n">results</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+        <span class="s2">"warnings"</span><span class="p">:</span> <span class="p">[(</span><span class="n">m</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">message</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">warning_messages</span><span class="p">],</span>
+    <span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>Validation statuses and message types are <code>str</code> enums too
+(<code>ValidationStatus.PASS</code>, <code>MessageType.WARNING</code>). A status this version does not
+recognize keeps the exact text ZATCA sent, in a value whose <code>name</code> is <code>"OTHER"</code>.</p>
+<h2 id="other-renames">Other renames<a class="headerlink" href="#other-renames" title="Permanent link">&para;</a></h2>
+<p>These kept working in 0.6 with a <code>DeprecationWarning</code>; 0.7 removed them:</p>
+<table>
+<thead>
+<tr>
+<th>0.5</th>
+<th>0.6</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Signer</code></td>
+<td><code>InvoiceSigner</code></td>
+</tr>
+<tr>
+<td><code>CsrProperties.new(*, ...)</code></td>
+<td><code>CsrProperties(*, ...)</code></td>
+</tr>
+<tr>
+<td><code>ComplianceCsid.new(env, token, secret, request_id)</code>, <code>ProductionCsid.new(...)</code></td>
+<td><code>ComplianceCsid(env, token=..., secret=..., request_id=...)</code>, <code>ProductionCsid(...)</code></td>
+</tr>
+<tr>
+<td><code>clearance_status=False</code> / <code>True</code></td>
+<td><code>clearance=ClearanceMode.DISABLED</code> / <code>ClearanceMode.ENABLED</code></td>
+</tr>
+<tr>
+<td><code>CsrProperties.from_properties_str(text)</code>, <code>parse_csr_config(text)</code></td>
+<td><code>CsrProperties.from_str(text)</code></td>
+</tr>
+<tr>
+<td><code>CsrProperties.parse_csr_config_file(path)</code></td>
+<td><code>CsrProperties.from_file(path)</code></td>
+</tr>
+<tr>
+<td><code>InvoiceBuilder.new_with_reference(type, subtype, ref, reason)</code></td>
+<td><code>InvoiceBuilder(type, subtype, original_invoice=ref, original_invoice_reason=reason)</code></td>
+</tr>
+<tr>
+<td><code>LineItemBuilder.new()</code></td>
+<td><code>LineItemBuilder()</code></td>
+</tr>
+<tr>
+<td><code>builder.flags(value)</code></td>
+<td><code>builder.set_flags(value)</code></td>
+</tr>
+<tr>
+<td><code>set_tax_exemption(...)</code></td>
+<td><code>add_tax_exemption(...)</code></td>
+</tr>
+<tr>
+<td><code>set_note(language, text)</code>, <code>set_note_without_language(text)</code></td>
+<td><code>add_note(text, language=...)</code></td>
+</tr>
+<tr>
+<td><code>Address.new(...)</code>, <code>PaymentMeans.new(...)</code>, <code>OriginalInvoiceRef.new(...)</code></td>
+<td><code>Address(...)</code>, <code>PaymentMeans(...)</code>, <code>OriginalInvoiceRef(...)</code></td>
+</tr>
+<tr>
+<td><code>DocumentReference(...)</code></td>
+<td><code>OriginalInvoiceRef(...)</code></td>
+</tr>
+<tr>
+<td><code>VatId</code>, <code>OtherId</code>, <code>(value, scheme)</code> tuples</td>
+<td><code>Identifier(value, scheme)</code></td>
+</tr>
+</tbody>
+</table>
+<p>Calling <code>close()</code> or using <code>with</code> on the invoice value dataclasses (<code>Address</code>,
+<code>Party</code>, <code>Adjustment</code>, ...) is a deprecated no-op. Native objects such as
+<code>Config</code>, <code>ZatcaClient</code>, <code>InvoiceBuilder</code> and invoices remain context managers.</p>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.tabs.link", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>
