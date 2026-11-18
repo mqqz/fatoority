@@ -97,6 +97,16 @@ any more. Each had a replacement in 0.6; see the
   `request_compliance_csid` and `request_production_csid`), and the
   `clearance_status=bool` keyword of `report_simplified_invoice` and
   `clear_standard_invoice` (`clearance=ClearanceMode...` is now required).
+C# (`Fatoority` NuGet package): every `[Obsolete]` member is removed; see the
+[C# migration guide](https://docs.fatoority.com/guides/migrate-0.7/csharp/).
+
+- `New` on `Address`, `AllowanceCharge`, `Config`, `CsrProperties`,
+  `InvoiceBuilder`, `InvoiceLineItem`, `LineItemBuilder`,
+  `OriginalInvoiceRef`, `PaymentMeans`, `TaxExemption` and `VatBreakdown`
+  (use `Create`).
+- `Adjustment.WithSuppliedAmount` (use `SuppliedAmount`), the
+  `Adjustment.Percent` property (use `Percentage`), and `WithoutVatRate()` on
+  `AllowanceCharge` and `VatBreakdown` (use `OmitVatRate()`).
 
 ## [0.6.0] - 2026-11-18
 

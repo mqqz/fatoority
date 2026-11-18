@@ -89,12 +89,9 @@ using (var line = InvoiceLineItem.Create("item", 1.50m, "PCE", 0.000000000000000
 }
 using (var percent = Adjustment.PercentOf(-1234567890.123456789m, 12.5m))
     Check(percent.BaseAmount == -1234567890.123456789m && percent.Percentage == 12.5m, "Optional decimal round trip");
-#pragma warning disable CS0618 // 0.5 names kept as [Obsolete] aliases until 0.7
 using (var rebate = Adjustment.PercentOf(250m, 10m))
-using (var supplied = rebate.WithSuppliedAmount(25m))
-using (var legacyConfig = Config.New(ZatcaEnvironment.Simulation))
-    Check(rebate.Percent == rebate.Percentage && supplied.Value == 25m && legacyConfig.Env == ZatcaEnvironment.Simulation, "Obsolete aliases");
-#pragma warning restore CS0618
+using (var supplied = rebate.SuppliedAmount(25m))
+    Check(rebate.Percentage == 10m && supplied.Value == 25m, "Supplied adjustment amount");
 System.Globalization.CultureInfo.CurrentCulture = culture;
 
 using var builder = InvoiceBuilder.Create(InvoiceTypeKind.Tax, InvoiceSubType.Standard, null, null, null, null);

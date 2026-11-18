@@ -103,9 +103,6 @@ public partial class VatBreakdown: IDisposable
         }
     }
 
-    [Obsolete("Use OmitVatRate; WithoutVatRate will be removed in 0.7.")]
-    public VatBreakdown WithoutVatRate() => OmitVatRate();
-
     /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>VatBreakdown</c> allocated on Rust side.
@@ -140,9 +137,6 @@ public partial class VatBreakdown: IDisposable
             }
         }
     }
-
-    [Obsolete("Use Create; New will be removed in 0.7.")]
-    public static VatBreakdown New(VatCategory category, decimal rate, decimal taxableAmount, decimal taxAmount, TaxExemption exemption) => Create(category, rate, taxableAmount, taxAmount, exemption);
 
     public VatCategory Category
     {

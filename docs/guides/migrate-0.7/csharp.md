@@ -1,0 +1,79 @@
+---
+title: Migrate a C# Project from fatoority 0.6 to 0.7
+description: Every member of the Fatoority NuGet package removed in 0.7, each with the 0.6 replacement to use instead.
+---
+
+# Migrate from 0.6 to 0.7: C# and .NET
+
+This page covers the `Fatoority` NuGet package. The [overview](index.md) lists
+the other languages.
+
+```sh
+dotnet add package Fatoority --version 0.7.0
+```
+
+0.7 removes every member that 0.6 marked `[Obsolete]`. Each replacement below
+already exists in 0.6, so the simplest path is to turn obsolete warnings into
+errors while still on 0.6, fix them, and then upgrade:
+
+```xml
+<PropertyGroup>
+  <WarningsAsErrors>$(WarningsAsErrors);CS0618</WarningsAsErrors>
+</PropertyGroup>
+```
+
+On 0.7 the same calls fail with `CS0117` (no static member `New`) or `CS1061`
+(no instance member).
+
+## Removed members
+
+### `New` factory methods
+
+The static `New` factory on each class below is removed. Call `Create` with the
+same arguments.
+
+| Removed | Use instead |
+| --- | --- |
+| `Address.New(...)` | `Address.Create(...)` |
+| `AllowanceCharge.New(...)` | `AllowanceCharge.Create(...)` |
+| `Config.New(env)` | `Config.Create(env)` |
+| `CsrProperties.New(...)` | `CsrProperties.Create(...)` |
+| `InvoiceBuilder.New(...)` | `InvoiceBuilder.Create(...)` |
+| `InvoiceLineItem.New(...)` | `InvoiceLineItem.Create(...)` |
+| `LineItemBuilder.New()` | `LineItemBuilder.Create()` |
+| `OriginalInvoiceRef.New(...)` | `OriginalInvoiceRef.Create(...)` |
+| `PaymentMeans.New(code, instruction)` | `PaymentMeans.Create(code, instruction)` |
+| `TaxExemption.New(code, reason)` | `TaxExemption.Create(code, reason)` |
+| `VatBreakdown.New(...)` | `VatBreakdown.Create(...)` |
+
+`ZatcaClient`, `ComplianceCsid` and `ProductionCsid` already used `Create` in
+0.5 and are unchanged.
+
+### Adjustments and VAT rates
+
+| Removed | Use instead |
+| --- | --- |
+| `adjustment.WithSuppliedAmount(amount)` | `adjustment.SuppliedAmount(amount)` |
+| `adjustment.Percent` (property) | `adjustment.Percentage` (property) |
+| `allowanceCharge.WithoutVatRate()` | `allowanceCharge.OmitVatRate()` |
+| `vatBreakdown.WithoutVatRate()` | `vatBreakdown.OmitVatRate()` |
+
+## Example
+
+=== "0.6 (obsolete)"
+
+    ```csharp
+    using var config = Config.New(ZatcaEnvironment.Simulation);
+    using var rebate = Adjustment.PercentOf(250m, 10m);
+    using var supplied = rebate.WithSuppliedAmount(25m);
+    Console.WriteLine(rebate.Percent);
+    ```
+
+=== "0.7"
+
+    ```csharp
+    using var config = Config.Create(ZatcaEnvironment.Simulation);
+    using var rebate = Adjustment.PercentOf(250m, 10m);
+    using var supplied = rebate.SuppliedAmount(25m);
+    Console.WriteLine(rebate.Percentage);
+    ```

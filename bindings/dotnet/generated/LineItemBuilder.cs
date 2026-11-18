@@ -115,9 +115,6 @@ public partial class LineItemBuilder: IDisposable
         }
     }
 
-    [Obsolete("Use Create; New will be removed in 0.7.")]
-    public static LineItemBuilder New() => Create();
-
     /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>InvoiceLineItem</c> allocated on Rust side.

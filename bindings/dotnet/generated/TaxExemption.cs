@@ -80,9 +80,6 @@ public partial class TaxExemption: IDisposable
         }
     }
 
-    [Obsolete("Use Create; New will be removed in 0.7.")]
-    public static TaxExemption New(string? code, string? reason) => Create(code, reason);
-
     /// <exception cref="FfiException"></exception>
     public string? ReasonCode
     {

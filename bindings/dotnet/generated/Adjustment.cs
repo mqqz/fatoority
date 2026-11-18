@@ -131,9 +131,6 @@ public partial class Adjustment: IDisposable
         }
     }
 
-    [Obsolete("Use SuppliedAmount; WithSuppliedAmount will be removed in 0.7.")]
-    public Adjustment WithSuppliedAmount(decimal value) => SuppliedAmount(value);
-
     /// <exception cref="FfiException"></exception>
     /// <returns>
     /// A <c>Adjustment</c> allocated on Rust side.
@@ -251,9 +248,6 @@ public partial class Adjustment: IDisposable
             }
         }
     }
-
-    [Obsolete("Use Percentage; Percent will be removed in 0.7.")]
-    public decimal? Percent => Percentage;
 
     /// <exception cref="FfiException"></exception>
     public string? Reason

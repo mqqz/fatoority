@@ -74,9 +74,6 @@ public partial class Config: IDisposable
         }
     }
 
-    [Obsolete("Use Create; New will be removed in 0.7.")]
-    public static Config New(ZatcaEnvironment env) => Create(env);
-
     /// <exception cref="FfiException"></exception>
     public ZatcaEnvironment Env
     {
