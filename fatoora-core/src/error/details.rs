@@ -213,6 +213,7 @@ impl ZatcaError {
             Self::InvalidResponse(message) => message_details("invalid_response", message),
             Self::Http(message) => message_details("http", message),
             Self::ClientState(message) => message_details("client_state", message),
+            Self::InvalidTimeout => json!({"type": "invalid_timeout"}),
         }
     }
 }

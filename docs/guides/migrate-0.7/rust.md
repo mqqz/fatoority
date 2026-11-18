@@ -91,6 +91,15 @@ load in 0.6; bincode keeps the 0.6 layout.
 The replacements return an `InvoiceHash` instead of a `String`; call
 `.as_str()` or `.to_string()` where you need the text.
 
+## Zero request timeout is invalid input
+
+`ZatcaClient::with_timeout(config, Duration::ZERO)` returns the new
+`ZatcaError::InvalidTimeout`, classified as `ErrorKind::InvalidInput`, instead
+of `ZatcaError::ClientState` (`ErrorKind::Internal`). Code that matched
+`ClientState` or `ErrorKind::Internal` for this case should match the new
+variant or kind. The bindings report it with the invalid-input error code (1)
+and details type `invalid_timeout`.
+
 ## Example
 
 ```rust

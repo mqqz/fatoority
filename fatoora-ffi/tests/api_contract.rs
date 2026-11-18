@@ -246,6 +246,9 @@ fn timeout_constructor_rejects_zero() {
     let config = ok(Config::new(Environment::NonProduction));
     ok(ZatcaClient::with_timeout(&config, 30_000));
     let err = ZatcaClient::with_timeout(&config, 0).err().unwrap();
-    assert_eq!(err.code(), fatoora_core::ErrorKind::Internal as i32);
-    assert!(written(|out| err.message(out)).contains("timeout"));
+    assert_eq!(err.code(), fatoora_core::ErrorKind::InvalidInput as i32);
+    assert!(written(|out| err.message(out)).contains("timeout must be greater than zero"));
+    let details: serde_json::Value =
+        serde_json::from_str(&written(|out| err.details_json(out))).unwrap();
+    assert_eq!(details["type"], "invalid_timeout");
 }

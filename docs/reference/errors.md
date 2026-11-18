@@ -248,9 +248,9 @@ Message-only failures use `diagnostics` containing a message. Their types are
 `network`, `invalid_response`, `http`, and `client_state`.
 
 Types without additional fields are `invalid_decimal`, `decimal_out_of_range`,
-`missing_seller_vat`, `missing_seller_name`, `missing_buyer_id`, and
-`invalid_vat_format`. Binding-level failures use `{"type":"binding_error"}` with the
-classification and message available through their accessors.
+`missing_seller_vat`, `missing_seller_name`, `missing_buyer_id`,
+`invalid_vat_format`, and `invalid_timeout`. Binding-level failures use
+`{"type":"binding_error"}` with the classification and message available through their accessors.
 
 Diagnostic location fields may be absent or null. File paths are converted to
 UTF-8 lossily when their native encoding cannot be represented. Nested signing

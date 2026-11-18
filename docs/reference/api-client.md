@@ -86,7 +86,9 @@ body read is a transport error.
 
 No client-side request timeout applies by default. Construct the client with a
 timeout to bound each request, from connecting until the response body is read.
-A request that exceeds it fails as a network (transport) error; zero is rejected.
+A request that exceeds it fails as a network (transport) error. A zero timeout is
+rejected as invalid input (`ErrorKind::InvalidInput`, details type
+`invalid_timeout`).
 JavaScript has no timeout option: its client sends through the `fetch` you supply,
 so bound requests there with an `AbortSignal`.
 
@@ -128,7 +130,8 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     `ZatcaClient::new(config: Config)` returns `Result<ZatcaClient, ZatcaError>`.
     `ZatcaClient::with_timeout(config: Config, timeout: Duration)` does the same with
     a per-request timeout; a timeout surfaces as `ZatcaError::Http` (or
-    `ZatcaError::ResponseRead` mid-body), both `ErrorKind::Network`.
+    `ZatcaError::ResponseRead` mid-body), both `ErrorKind::Network`. A zero
+    timeout returns `ZatcaError::InvalidTimeout` (`ErrorKind::InvalidInput`).
     HTTP methods are async; call them with `.await`. Inputs below are borrowed.
 
     **HTTP operations**
@@ -579,7 +582,8 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
         FatooraZatcaClient **out,
         FatooraError **error);
     /* Like fatoora_zatca_client_new; each request fails with
-     * FATOORA_NETWORK after timeout_ms milliseconds. Zero is rejected. */
+     * FATOORA_NETWORK after timeout_ms milliseconds. Zero fails with
+     * FATOORA_INVALID_INPUT. */
     FatooraStatus fatoora_zatca_client_with_timeout(const FatooraConfig *config,
         uint32_t timeout_ms,
         FatooraZatcaClient **out,
