@@ -11,9 +11,7 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
-#include "BindingError.hpp"
 #include "MessageType.hpp"
-#include "Text.hpp"
 #include "ValidationStatus.hpp"
 #include "diplomat_runtime.hpp"
 
@@ -25,23 +23,23 @@ namespace capi {
     typedef struct fatoora_ValidationMessage_message_type_result {union {_native::capi::MessageType ok; }; bool is_ok;} fatoora_ValidationMessage_message_type_result;
     fatoora_ValidationMessage_message_type_result fatoora_ValidationMessage_message_type(const _native::capi::ValidationMessage* self);
 
-    typedef struct fatoora_ValidationMessage_message_type_raw_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationMessage_message_type_raw_result;
-    fatoora_ValidationMessage_message_type_raw_result fatoora_ValidationMessage_message_type_raw(const _native::capi::ValidationMessage* self);
+    typedef struct fatoora_ValidationMessage_message_type_raw_result { bool is_ok;} fatoora_ValidationMessage_message_type_raw_result;
+    fatoora_ValidationMessage_message_type_raw_result fatoora_ValidationMessage_message_type_raw(const _native::capi::ValidationMessage* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_ValidationMessage_code_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationMessage_code_result;
-    fatoora_ValidationMessage_code_result fatoora_ValidationMessage_code(const _native::capi::ValidationMessage* self);
+    typedef struct fatoora_ValidationMessage_code_result { bool is_ok;} fatoora_ValidationMessage_code_result;
+    fatoora_ValidationMessage_code_result fatoora_ValidationMessage_code(const _native::capi::ValidationMessage* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_ValidationMessage_category_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationMessage_category_result;
-    fatoora_ValidationMessage_category_result fatoora_ValidationMessage_category(const _native::capi::ValidationMessage* self);
+    typedef struct fatoora_ValidationMessage_category_result { bool is_ok;} fatoora_ValidationMessage_category_result;
+    fatoora_ValidationMessage_category_result fatoora_ValidationMessage_category(const _native::capi::ValidationMessage* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_ValidationMessage_message_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationMessage_message_result;
-    fatoora_ValidationMessage_message_result fatoora_ValidationMessage_message(const _native::capi::ValidationMessage* self);
+    typedef struct fatoora_ValidationMessage_message_result { bool is_ok;} fatoora_ValidationMessage_message_result;
+    fatoora_ValidationMessage_message_result fatoora_ValidationMessage_message(const _native::capi::ValidationMessage* self, _native::diplomat::capi::DiplomatWrite* write);
 
     typedef struct fatoora_ValidationMessage_status_result {union {_native::capi::ValidationStatus ok; }; bool is_ok;} fatoora_ValidationMessage_status_result;
     fatoora_ValidationMessage_status_result fatoora_ValidationMessage_status(const _native::capi::ValidationMessage* self);
 
-    typedef struct fatoora_ValidationMessage_status_raw_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationMessage_status_raw_result;
-    fatoora_ValidationMessage_status_raw_result fatoora_ValidationMessage_status_raw(const _native::capi::ValidationMessage* self);
+    typedef struct fatoora_ValidationMessage_status_raw_result { bool is_ok;} fatoora_ValidationMessage_status_raw_result;
+    fatoora_ValidationMessage_status_raw_result fatoora_ValidationMessage_status_raw(const _native::capi::ValidationMessage* self, _native::diplomat::capi::DiplomatWrite* write);
 
     void fatoora_ValidationMessage_destroy(ValidationMessage* self);
 
@@ -54,24 +52,64 @@ inline std::optional<_native::MessageType> _native::ValidationMessage::message_t
     return result.is_ok ? std::optional<_native::MessageType>(_native::MessageType::FromFFI(result.ok)) : std::nullopt;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::ValidationMessage::message_type_raw() const {
-    auto result = _native::capi::fatoora_ValidationMessage_message_type_raw(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::ValidationMessage::message_type_raw() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_ValidationMessage_message_type_raw(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::ValidationMessage::message_type_raw_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_ValidationMessage_message_type_raw(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::ValidationMessage::code() const {
-    auto result = _native::capi::fatoora_ValidationMessage_code(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::ValidationMessage::code() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_ValidationMessage_code(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::ValidationMessage::code_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_ValidationMessage_code(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::ValidationMessage::category() const {
-    auto result = _native::capi::fatoora_ValidationMessage_category(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::ValidationMessage::category() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_ValidationMessage_category(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::ValidationMessage::category_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_ValidationMessage_category(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::ValidationMessage::message() const {
-    auto result = _native::capi::fatoora_ValidationMessage_message(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::ValidationMessage::message() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_ValidationMessage_message(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::ValidationMessage::message_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_ValidationMessage_message(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline std::optional<_native::ValidationStatus> _native::ValidationMessage::status() const {
@@ -79,9 +117,19 @@ inline std::optional<_native::ValidationStatus> _native::ValidationMessage::stat
     return result.is_ok ? std::optional<_native::ValidationStatus>(_native::ValidationStatus::FromFFI(result.ok)) : std::nullopt;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::ValidationMessage::status_raw() const {
-    auto result = _native::capi::fatoora_ValidationMessage_status_raw(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::ValidationMessage::status_raw() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_ValidationMessage_status_raw(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::ValidationMessage::status_raw_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_ValidationMessage_status_raw(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline const _native::capi::ValidationMessage* _native::ValidationMessage::AsFFI() const {

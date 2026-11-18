@@ -13,8 +13,6 @@
 namespace _native {
 namespace capi { struct BindingError; }
 class BindingError;
-namespace capi { struct Text; }
-class Text;
 } // namespace _native
 
 
@@ -33,7 +31,9 @@ public:
   template<typename W>
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> value_write(W& writeable_output) const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> scheme() const;
+  inline std::optional<std::string> scheme() const;
+  template<typename W>
+  inline std::optional<std::monostate> scheme_write(W& writeable_output) const;
 
     inline const _native::capi::OtherId* AsFFI() const;
     inline _native::capi::OtherId* AsFFI();

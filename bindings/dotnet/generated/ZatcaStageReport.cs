@@ -97,7 +97,7 @@ public partial class ZatcaStageReport: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ZatcaRuleSource</c> allocated on Rust side.
     /// </returns>
@@ -112,7 +112,7 @@ public partial class ZatcaStageReport: IDisposable
                 var result = Raw.ZatcaStageReport.Provenance(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return result.Ok == null ? null : new ZatcaRuleSource(result.Ok);
             }
@@ -143,7 +143,7 @@ public partial class ZatcaStageReport: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string EvaluatedAssertion(nuint index)
     {
         unsafe
@@ -152,12 +152,20 @@ public partial class ZatcaStageReport: IDisposable
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ZatcaStageReport.EvaluatedAssertion(selfLease!.Ptr, index);
-                if (!result.IsOk)
+                DiplomatWrite writeable = new DiplomatWrite();
+                try
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    var result = Raw.ZatcaStageReport.EvaluatedAssertion(selfLease!.Ptr, index, &writeable);
+                    if (!result.IsOk)
+                    {
+                        throw FatooraException.FromNative(new BindingError(result.Err));
+                    }
+                    return writeable.ToUnicode();
                 }
-                return global::Fatoora.Text.Take(new global::Fatoora.Text(result.Ok));
+                finally
+                {
+                    writeable.Dispose();
+                }
             }
             finally
             {
@@ -186,7 +194,7 @@ public partial class ZatcaStageReport: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ZatcaFinding</c> allocated on Rust side.
     /// </returns>
@@ -201,7 +209,7 @@ public partial class ZatcaStageReport: IDisposable
                 var result = Raw.ZatcaStageReport.Finding(selfLease!.Ptr, index);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new ZatcaFinding(result.Ok);
             }

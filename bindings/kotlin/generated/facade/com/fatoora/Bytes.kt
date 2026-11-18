@@ -11,9 +11,10 @@ class Bytes internal constructor(internal val raw: com.fatoora.raw.Bytes) : Nati
     }
 
     /**
-     * The view is valid while this immutable owner remains alive.
+     * Returns a copy of the bytes. The array is independent of this owner and
+     * stays valid after it is closed.
      */
-    fun asSlice(): ByteArray = nativeCall(listOfNotNull(this)) {
+    fun toByteArray(): ByteArray = nativeCall(listOfNotNull(this)) {
         raw.asSlice().toByteArray()
     }
 }

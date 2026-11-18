@@ -8,8 +8,8 @@ import com.sun.jna.Structure
 internal interface TaxExemptionLib: Library {
     fun fatoora_TaxExemption_destroy(handle: Pointer)
     fun fatoora_TaxExemption_new(code: OptionSlice, reason: OptionSlice): ResultPointerPointer
-    fun fatoora_TaxExemption_reason_code(handle: Pointer): ResultPointerPointer
-    fun fatoora_TaxExemption_reason(handle: Pointer): ResultPointerPointer
+    fun fatoora_TaxExemption_reason_code(handle: Pointer, write: Pointer): OptionUnit
+    fun fatoora_TaxExemption_reason(handle: Pointer, write: Pointer): OptionUnit
 }
 
 class TaxExemption internal constructor (
@@ -67,38 +67,32 @@ class TaxExemption internal constructor (
         }
     }
 
-    fun reasonCode(): Result<Text?> {
+    fun reasonCode(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_TaxExemption_reason_code(handle, write);
 
-        val returnVal = lib.fatoora_TaxExemption_reason_code(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
-    fun reason(): Result<Text?> {
+    fun reason(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_TaxExemption_reason(handle, write);
 
-        val returnVal = lib.fatoora_TaxExemption_reason(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
 }

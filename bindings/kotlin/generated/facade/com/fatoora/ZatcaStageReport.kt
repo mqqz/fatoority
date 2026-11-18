@@ -33,16 +33,6 @@ class ZatcaStageReport internal constructor(internal val raw: com.fatoora.raw.Za
             java.math.BigInteger(raw.findingsLen().toString())
         }
 
-    @Deprecated("Use the stage property.", ReplaceWith("stage"))
-    fun stage(): ZatcaStage = nativeCall(listOfNotNull(this)) {
-        ZatcaStage.valueOf(raw.stage().name)
-    }
-
-    @Deprecated("Use the status property.", ReplaceWith("status"))
-    fun status(): ZatcaStageStatus = nativeCall(listOfNotNull(this)) {
-        ZatcaStageStatus.valueOf(raw.status().name)
-    }
-
     /**
      * Pinned rule source, for the CEN and KSA business-rule stages.
      */
@@ -50,21 +40,11 @@ class ZatcaStageReport internal constructor(internal val raw: com.fatoora.raw.Za
         unwrap(raw.provenance())?.let(::ZatcaRuleSource)
     }
 
-    @Deprecated("Use the evaluatedAssertionsLen property.", ReplaceWith("evaluatedAssertionsLen"))
-    fun evaluatedAssertionsLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
-        java.math.BigInteger(raw.evaluatedAssertionsLen().toString())
-    }
-
     /**
      * Assertion site at `index` whose selected contexts were all evaluated.
      */
     fun evaluatedAssertion(index: java.math.BigInteger): String = nativeCall(listOfNotNull(this)) {
-        readText(unwrap(raw.evaluatedAssertion(checkedCounter(index))))
-    }
-
-    @Deprecated("Use the findingsLen property.", ReplaceWith("findingsLen"))
-    fun findingsLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
-        java.math.BigInteger(raw.findingsLen().toString())
+        unwrap(raw.evaluatedAssertion(checkedCounter(index)))
     }
 
     fun finding(index: java.math.BigInteger): ZatcaFinding = nativeCall(listOfNotNull(this)) {

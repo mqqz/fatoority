@@ -54,21 +54,11 @@ class InvoiceBuilder internal constructor(internal val raw: com.fatoora.raw.Invo
         unwrap(raw.addAllowance(value.raw, com.fatoora.raw.VatCategory.valueOf(category.name), decimalText(rate), exemption.raw))
     }
 
-    @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("addAllowance(value, category, BigDecimal(rate), exemption)", "java.math.BigDecimal"))
-    fun addAllowance(value: Adjustment, category: VatCategory, rate: String, exemption: TaxExemption): Unit = nativeCall(listOfNotNull(this, value, exemption)) {
-        unwrap(raw.addAllowance(value.raw, com.fatoora.raw.VatCategory.valueOf(category.name), checkedText(rate), exemption.raw))
-    }
-
     /**
      * Append a document-level charge, mirroring core `InvoiceBuilder::charge`.
      */
     fun addCharge(value: Adjustment, category: VatCategory, rate: java.math.BigDecimal, exemption: TaxExemption): Unit = nativeCall(listOfNotNull(this, value, exemption)) {
         unwrap(raw.addCharge(value.raw, com.fatoora.raw.VatCategory.valueOf(category.name), decimalText(rate), exemption.raw))
-    }
-
-    @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("addCharge(value, category, BigDecimal(rate), exemption)", "java.math.BigDecimal"))
-    fun addCharge(value: Adjustment, category: VatCategory, rate: String, exemption: TaxExemption): Unit = nativeCall(listOfNotNull(this, value, exemption)) {
-        unwrap(raw.addCharge(value.raw, com.fatoora.raw.VatCategory.valueOf(category.name), checkedText(rate), exemption.raw))
     }
 
     @JvmOverloads
@@ -84,18 +74,8 @@ class InvoiceBuilder internal constructor(internal val raw: com.fatoora.raw.Invo
         unwrap(raw.setPrepaidAmount(decimalText(amount)))
     }
 
-    @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("setPrepaidAmount(BigDecimal(amount))", "java.math.BigDecimal"))
-    fun setPrepaidAmount(amount: String): Unit = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.setPrepaidAmount(checkedText(amount)))
-    }
-
     fun setPayableRoundingAmount(amount: java.math.BigDecimal): Unit = nativeCall(listOfNotNull(this)) {
         unwrap(raw.setPayableRoundingAmount(decimalText(amount)))
-    }
-
-    @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("setPayableRoundingAmount(BigDecimal(amount))", "java.math.BigDecimal"))
-    fun setPayableRoundingAmount(amount: String): Unit = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.setPayableRoundingAmount(checkedText(amount)))
     }
 
     @JvmOverloads
@@ -107,18 +87,8 @@ class InvoiceBuilder internal constructor(internal val raw: com.fatoora.raw.Invo
         unwrap(raw.setTaxCurrency(checkedText(currency), decimalText(amount)))
     }
 
-    @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("setTaxCurrency(currency, BigDecimal(amount))", "java.math.BigDecimal"))
-    fun setTaxCurrency(currency: String, amount: String): Unit = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.setTaxCurrency(checkedText(currency), checkedText(amount)))
-    }
-
     fun addTaxExemption(category: VatCategory, rate: java.math.BigDecimal, exemption: TaxExemption): Unit = nativeCall(listOfNotNull(this, exemption)) {
         unwrap(raw.addTaxExemption(com.fatoora.raw.VatCategory.valueOf(category.name), decimalText(rate), exemption.raw))
-    }
-
-    @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("addTaxExemption(category, BigDecimal(rate), exemption)", "java.math.BigDecimal"))
-    fun addTaxExemption(category: VatCategory, rate: String, exemption: TaxExemption): Unit = nativeCall(listOfNotNull(this, exemption)) {
-        unwrap(raw.addTaxExemption(com.fatoora.raw.VatCategory.valueOf(category.name), checkedText(rate), exemption.raw))
     }
 
     fun addAdjustment(adjustment: AllowanceCharge): Unit = nativeCall(listOfNotNull(this, adjustment)) {
@@ -185,11 +155,6 @@ class InvoiceBuilder internal constructor(internal val raw: com.fatoora.raw.Invo
 
     fun addLineItem(description: String, quantity: java.math.BigDecimal, unitCode: String, unitPrice: java.math.BigDecimal, vatRate: java.math.BigDecimal, category: VatCategory): Unit = nativeCall(listOfNotNull(this)) {
         unwrap(raw.addLineItem(checkedText(description), decimalText(quantity), checkedText(unitCode), decimalText(unitPrice), decimalText(vatRate), com.fatoora.raw.VatCategory.valueOf(category.name)))
-    }
-
-    @Deprecated("Pass amounts as java.math.BigDecimal.", ReplaceWith("addLineItem(description, BigDecimal(quantity), unitCode, BigDecimal(unitPrice), BigDecimal(vatRate), category)", "java.math.BigDecimal"))
-    fun addLineItem(description: String, quantity: String, unitCode: String, unitPrice: String, vatRate: String, category: VatCategory): Unit = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.addLineItem(checkedText(description), checkedText(quantity), checkedText(unitCode), checkedText(unitPrice), checkedText(vatRate), com.fatoora.raw.VatCategory.valueOf(category.name)))
     }
 
     fun build(): FinalizedInvoice = nativeCall(listOfNotNull(this)) {

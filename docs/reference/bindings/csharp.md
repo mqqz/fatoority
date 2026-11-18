@@ -43,8 +43,7 @@ using Fatoora;
 using var config = Config.Create(ZatcaEnvironment.NonProduction);
 using var key = SigningKey.Generate();
 using var bytes = key.ToDer();
-using var view = bytes.AsSlice();
-byte[] privateKey = view.Clone();
+byte[] privateKey = bytes.ToArray();
 ```
 
 `privateKey` is an independent managed copy. Keep it secure; disposing the native
@@ -68,7 +67,7 @@ complete C# examples.
 | Decimal amount, quantity, or rate | `decimal` in both directions, converted exactly with the invariant culture (never through `double`) |
 | Invoice counter | `ulong` |
 | Owned native object | An `IDisposable` class; use `using` or call `Dispose()` |
-| Owned binary output | `Bytes`; call `AsSlice()` and copy with `Clone()` when needed |
+| Owned binary output | `Bytes`; call `ToArray()` for a `byte[]` copy |
 | Invoice acceptance | `InvoiceOutcome.Accepted`, `Rejected`, or `Unknown` |
 | Enumerated code | C# enum: `ZatcaEnvironment`, `InvoiceTypeKind`, `InvoiceSubType`, `VatCategory`, `AdjustmentKind`, `ClearanceMode` |
 | Response status | `ReportingStatus?`, `ClearanceStatus?`, `ValidationStatus?`, or `MessageType?`; `null` when absent, `Unknown` when present but not recognized by this version. The `*Raw` property returns the exact text as `string?` |
@@ -91,22 +90,19 @@ raises `InvalidInputException`. Build and signing failures can also consume
 state. Returned invoice data, totals, addresses, and response children are owned
 snapshots and remain usable after their parents are disposed.
 
-For binary output, dispose both the owner and its borrowed view:
+For binary output, dispose the `Bytes` owner and keep the array returned by `ToArray()`:
 
 ```csharp
 using Fatoora;
 
 using var key = SigningKey.Generate();
 using var bytes = key.ToDer();
-using var view = bytes.AsSlice();
-byte[] der = view.Clone(); // Independent managed copy.
+byte[] der = bytes.ToArray(); // Independent managed copy.
 ```
 
-`WithSpan()` provides a scoped, read-only view without copying. An active read
-retains native memory through concurrent source disposal. Later reads fail after
-the source is disposed. Disposing the view while a read is active throws
-`InvalidOperationException`; retry once the read has finished. Conflicting calls
-that require mutable access also throw `InvalidOperationException`.
+Each `ToArray()` call returns a new array that stays valid after `bytes` is
+disposed. Conflicting calls that require mutable access throw
+`InvalidOperationException`.
 
 ## Errors
 
@@ -114,10 +110,11 @@ that require mutable access also throw `InvalidOperationException`.
 --8<-- "bindings/dotnet/examples/SdkExamples.cs:errors"
 ```
 
-Native failures throw a subclass of `FfiException`, which derives from
-`FatooraException`. Each [error code](../errors.md) has its own class:
+Library failures throw a subclass of `FatooraException`. Each
+[error kind](../errors.md) has its own class; a code this version does not know
+throws plain `FatooraException` with a `null` `Kind`:
 
-| Code | `FfiErrorKind` | Exception |
+| Code | `ErrorKind` | Exception |
 | --- | --- | --- |
 | 1 | `InvalidInput` | `InvalidInputException` |
 | 2 | `Validation` | `ValidationException` |
@@ -141,8 +138,19 @@ dispose. If you also import `System.Xml` or
 
 ## API requests
 
-Create a client with `ZatcaClient.Create(config)`. Dispose the client, credentials,
-and responses with `using`. The following methods return owned objects:
+Create a client with `ZatcaClient.Create(config)`, or with
+`ZatcaClient.WithTimeout(config, timeout)` to bound each request from connecting
+until the response body is read. `timeout` is a `TimeSpan`, rounded up to whole
+milliseconds; a request that exceeds it throws `NetworkException`. A zero,
+negative (including `Timeout.InfiniteTimeSpan`), or over-`uint.MaxValue`-millisecond
+timeout throws `ArgumentOutOfRangeException`.
+
+```csharp
+using var client = ZatcaClient.WithTimeout(config, TimeSpan.FromSeconds(30));
+```
+
+Dispose the client, credentials, and responses with `using`. The following
+methods return owned objects:
 
 | Method | Inputs | Returns |
 | --- | --- | --- |

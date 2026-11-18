@@ -98,7 +98,7 @@ public partial class ValidationResponse: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public void EnsureAccepted()
     {
         unsafe
@@ -110,7 +110,7 @@ public partial class ValidationResponse: IDisposable
                 var result = Raw.ValidationResponse.EnsureAccepted(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return;
             }
@@ -121,8 +121,7 @@ public partial class ValidationResponse: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
-    public string? ClearedInvoiceXml
+    private bool ClearedInvoiceXmlPresent
     {
         get
         {
@@ -132,12 +131,7 @@ public partial class ValidationResponse: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.ValidationResponse.ClearedInvoiceXml(selfLease!.Ptr);
-                    if (!result.IsOk)
-                    {
-                        throw FfiException.FromNative(new BindingError(result.Err));
-                    }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    return Raw.ValidationResponse.ClearedInvoiceXmlPresent(selfLease!.Ptr);
                 }
                 finally
                 {
@@ -147,7 +141,45 @@ public partial class ValidationResponse: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
+    public string? ClearedInvoiceXml
+    {
+        get
+        {
+            if (!ClearedInvoiceXmlPresent)
+            {
+                return null;
+            }
+            unsafe
+            {
+                BorrowLease<Raw.ValidationResponse>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
+                    {
+                        var result = Raw.ValidationResponse.ClearedInvoiceXml(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FatooraException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
+                    }
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
+            }
+        }
+    }
+
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ValidationResults</c> allocated on Rust side.
     /// </returns>
@@ -162,7 +194,7 @@ public partial class ValidationResponse: IDisposable
                 var result = Raw.ValidationResponse.ValidationResults(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new ValidationResults(result.Ok);
             }
@@ -173,7 +205,6 @@ public partial class ValidationResponse: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
     public string? ClearedInvoiceBase64
     {
         get
@@ -184,12 +215,20 @@ public partial class ValidationResponse: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.ValidationResponse.ClearedInvoiceBase64(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        var result = Raw.ValidationResponse.ClearedInvoiceBase64(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
@@ -220,7 +259,6 @@ public partial class ValidationResponse: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
     public string? ReportingStatusRaw
     {
         get
@@ -231,12 +269,20 @@ public partial class ValidationResponse: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.ValidationResponse.ReportingStatusRaw(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        var result = Raw.ValidationResponse.ReportingStatusRaw(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
@@ -267,7 +313,6 @@ public partial class ValidationResponse: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
     public string? ClearanceStatusRaw
     {
         get
@@ -278,12 +323,20 @@ public partial class ValidationResponse: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.ValidationResponse.ClearanceStatusRaw(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        var result = Raw.ValidationResponse.ClearanceStatusRaw(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
@@ -293,7 +346,6 @@ public partial class ValidationResponse: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
     public string? QrSellerStatus
     {
         get
@@ -304,12 +356,20 @@ public partial class ValidationResponse: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.ValidationResponse.QrSellerStatus(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        var result = Raw.ValidationResponse.QrSellerStatus(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
@@ -319,7 +379,6 @@ public partial class ValidationResponse: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
     public string? QrBuyerStatus
     {
         get
@@ -330,12 +389,20 @@ public partial class ValidationResponse: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.ValidationResponse.QrBuyerStatus(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        var result = Raw.ValidationResponse.QrBuyerStatus(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {

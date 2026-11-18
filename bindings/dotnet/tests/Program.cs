@@ -20,12 +20,12 @@ static void Throws<T>(Action action) where T : Exception
 static void NativeError(Action action, int code, string? message = null)
 {
     try { action(); }
-    catch (FfiException error)
+    catch (FatooraException error)
     {
         Check(error.Code == code, $"Error code: {error.Code} != {code}");
-        Check(error.Kind == (FfiErrorKind)code, "Error kind");
-        Check(error.GetType() == FfiException.Create(code, "").GetType(), $"Exception type: {error.GetType().Name}");
-        Check(error is FatooraException, "Common exception base");
+        Check(error.Kind == (ErrorKind)code, "Error kind");
+        Check(error.GetType() == FatooraException.FromCode(code, "").GetType(), $"Exception type: {error.GetType().Name}");
+        Check(error.GetType().Name == $"{error.Kind}Exception", $"Exception type: {error.GetType().Name}");
         if (message != null) Check(error.Message.Contains(message), "Unexpected error message");
         using var details = JsonDocument.Parse(error.DetailsJson);
         Check(details.RootElement.ValueKind == JsonValueKind.Object, "Error details object");
@@ -35,8 +35,7 @@ static void NativeError(Action action, int code, string? message = null)
 }
 static byte[] Copy(Bytes bytes)
 {
-    using (bytes)
-    using (var span = bytes.AsSlice()) return span.Clone();
+    using (bytes) return bytes.ToArray();
 }
 var root = args[0];
 using var absent = Address.Create("SA", "الرياض", "Street", "1234", "12345", null, null, null);
@@ -44,6 +43,9 @@ Check(absent.City == "الرياض", "UTF-8 round trip");
 Check(absent.AdditionalStreet is null, "Null optional string");
 using var present = Address.Create("SA", "Riyadh", "Street", "1234", "12345", "", null, "حي العليا");
 Check(present.AdditionalStreet == "" && present.District == "حي العليا", "Optional string round trip");
+Check(present.Province is null, "Null optional string return");
+using (var withProvince = present.WithProvince("منطقة الرياض"))
+    Check(withProvince.Province == "منطقة الرياض", "Optional string return");
 foreach (var invalid in new[] { "\uD800", "\uDC00" })
 {
     Throws<EncoderFallbackException>(() => Address.Create("SA", invalid, "s", "1234", "12345", null, null, null));
@@ -51,6 +53,13 @@ foreach (var invalid in new[] { "\uD800", "\uDC00" })
 }
 NativeError(() => Address.Create("XX", "a", "b", "1", "1", null, null, null), 1, "Invalid country code");
 NativeError(() => Address.Create("SA", "bad\0city", "s", "1234", "12345", null, null, null), 1, "NUL");
+foreach (var kind in Enum.GetValues<ErrorKind>())
+{
+    var mapped = FatooraException.FromCode((int)kind, "m");
+    Check(mapped.GetType().Name == $"{kind}Exception" && mapped.Kind == kind && mapped.Code == (int)kind, $"Exception for {kind}");
+}
+var unknown = FatooraException.FromCode(99, "future", "{\"type\":\"future\"}");
+Check(unknown.GetType() == typeof(FatooraException) && unknown.Kind == null && unknown.DetailsJson == "{\"type\":\"future\"}", "Unknown error code");
 absent.Dispose(); absent.Dispose();
 Throws<ObjectDisposedException>(() => _ = absent.City);
 
@@ -62,15 +71,11 @@ var der = Copy(key.ToDer());
 using var restoredDer = SigningKey.FromDer(der);
 Check(restoredDer.ToPem() == pem, "DER round trip");
 using var bytes = key.ToDer();
-using var borrowed = bytes.AsSlice();
-borrowed.WithSpan(s => {
-    bytes.Dispose();
-    Check(s.SequenceEqual(der), "Active read survives owner disposal");
-    Throws<InvalidOperationException>(() => borrowed.Dispose());
-});
-Throws<InvalidOperationException>(() => borrowed.Clone());
-borrowed.Dispose();
-Throws<ObjectDisposedException>(() => borrowed.Clone());
+var copy = bytes.ToArray();
+Check(copy.SequenceEqual(der) && !ReferenceEquals(copy, bytes.ToArray()), "Independent byte copies");
+bytes.Dispose();
+Check(copy.SequenceEqual(der), "Copy survives owner disposal");
+Throws<ObjectDisposedException>(() => bytes.ToArray());
 key.Dispose();
 Throws<ObjectDisposedException>(() => key.ToPem());
 NativeError(() => SigningKey.FromDer(new byte[] { 1, 2 }), 1);
@@ -86,12 +91,9 @@ using (var line = InvoiceLineItem.Create("item", 1.50m, "PCE", 0.000000000000000
 }
 using (var percent = Adjustment.PercentOf(-1234567890.123456789m, 12.5m))
     Check(percent.BaseAmount == -1234567890.123456789m && percent.Percentage == 12.5m, "Optional decimal round trip");
-#pragma warning disable CS0618 // 0.5 names kept as [Obsolete] aliases until 0.7
 using (var rebate = Adjustment.PercentOf(250m, 10m))
-using (var supplied = rebate.WithSuppliedAmount(25m))
-using (var legacyConfig = Config.New(ZatcaEnvironment.Simulation))
-    Check(rebate.Percent == rebate.Percentage && supplied.Value == 25m && legacyConfig.Env == ZatcaEnvironment.Simulation, "Obsolete aliases");
-#pragma warning restore CS0618
+using (var supplied = rebate.SuppliedAmount(25m))
+    Check(rebate.Percentage == 10m && supplied.Value == 25m, "Supplied adjustment amount");
 System.Globalization.CultureInfo.CurrentCulture = culture;
 
 using var builder = InvoiceBuilder.Create(InvoiceTypeKind.Tax, InvoiceSubType.Standard, null, null, null, null);
@@ -104,6 +106,18 @@ Check(Copy(signer.CertificateDer()).SequenceEqual(File.ReadAllBytes(Path.Combine
 using var config = Config.Create(ZatcaEnvironment.NonProduction);
 Check(config.Env == ZatcaEnvironment.NonProduction, "Environment round trip");
 using var client = ZatcaClient.Create(config);
+ZatcaClient.WithTimeout(config, TimeSpan.FromSeconds(30)).Dispose();
+ZatcaClient.WithTimeout(config, TimeSpan.FromTicks(1)).Dispose(); // Rounds up to 1 ms.
+ZatcaClient.WithTimeout(config, TimeSpan.FromMilliseconds(uint.MaxValue)).Dispose();
+foreach (var bad in new[] { TimeSpan.Zero, TimeSpan.FromTicks(-1), Timeout.InfiniteTimeSpan,
+                            TimeSpan.FromMilliseconds(uint.MaxValue) + TimeSpan.FromTicks(1), TimeSpan.MaxValue })
+{
+    Throws<ArgumentOutOfRangeException>(() => ZatcaClient.WithTimeout(config, bad));
+}
+Throws<ArgumentNullException>(() => ZatcaClient.WithTimeout(null!, TimeSpan.FromSeconds(1)));
+Check(typeof(ZatcaClient).GetMethods().Where(m => m.Name == "WithTimeout")
+        .Select(m => m.GetParameters()[1].ParameterType).SequenceEqual(new[] { typeof(TimeSpan) }),
+      "TimeSpan is the only public timeout overload");
 using var credentials = ProductionCsid.Create(ZatcaEnvironment.NonProduction, null, "token", "secret");
 foreach (var kind in new[] { "simplified", "standard" })
 {
@@ -128,8 +142,10 @@ foreach (var kind in new[] { "simplified", "standard" })
     using var body = JsonDocument.Parse(Copy(request.Body()));
     Check(body.RootElement.GetProperty("invoiceHash").GetString() == signed.Hash, "Prepared hash");
     Check(Encoding.UTF8.GetString(Convert.FromBase64String(body.RootElement.GetProperty("invoice").GetString()!)) == signed.Xml, "Prepared invoice");
+    Check(!string.IsNullOrEmpty(signed.ZatcaKeySignature), "ZATCA key signature");
     var signedXml = signed.IntoXml();
     NativeError(() => _ = signed.Xml, 1, "consumed");
+    NativeError(() => _ = signed.ZatcaKeySignature, 1, "consumed");
     signed.Dispose();
     Check(data.Id.Length != 0 && totals.PayableAmount > 0, "Owned snapshots survive source");
     var responseBody = kind == "simplified"
@@ -142,10 +158,12 @@ foreach (var kind in new[] { "simplified", "standard" })
     {
         Check(response.ReportingStatus == ReportingStatus.Reported && response.ClearanceStatus == null, "Reporting status enum");
         Check(response.ReportingStatusRaw == "REPORTED", "Reporting status wire value");
+        Check(response.ClearedInvoiceXml is null, "Absent cleared invoice");
     }
     else
     {
         Check(response.ClearanceStatus == ClearanceStatus.Cleared, "Clearance status enum");
+        Check(response.ClearedInvoiceXml == signedXml, "Cleared invoice XML");
     }
     using var results = response.ValidationResults();
     Check(results.Status == ValidationStatus.Pass, "Validation status enum");
@@ -155,6 +173,8 @@ foreach (var kind in new[] { "simplified", "standard" })
     Check(warning.Code == "WARN", "Response snapshots survive disposal");
     NativeError(() => request.Decode(401, Encoding.UTF8.GetBytes("{}")), 8);
     NativeError(() => request.Decode(200, Encoding.UTF8.GetBytes("invalid json")), 3);
+    using var invalid = request.Decode(200, Encoding.UTF8.GetBytes("{\"validationResults\":{},\"clearedInvoice\":\"!!!\"}"));
+    NativeError(() => _ = invalid.ClearedInvoiceXml, 3);
 }
 using var compliance = ComplianceCsid.Create(ZatcaEnvironment.NonProduction, "request-id", "token", "secret");
 using var productionRequest = client.PrepareRequestProductionCsid(compliance);

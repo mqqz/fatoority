@@ -7,7 +7,7 @@ import subprocess
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
-REVISION = "d53b78666c85f6e3bad34d70c0dbd22052b4cabd"
+REVISION = "0cca8412630402302b4bd720842101b144a3e18d"
 
 
 def main():

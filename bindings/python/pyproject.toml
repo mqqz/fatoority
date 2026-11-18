@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fatoority"
-version = "0.6.0"
+version = "0.7.0"
 description = "Python bindings for the fatoority library, providing ZATCA-compliant e-invoicing functionality."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = "MIT OR Apache-2.0"
 license-files = ["LICENSE-MIT", "LICENSE-APACHE", "THIRD_PARTY_NOTICES.md"]
 authors = [{ name = "mqqz" }]
@@ -27,7 +27,9 @@ Documentation = "https://docs.fatoority.com"
 Issues = "https://github.com/mqqz/fatoority/issues"
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
+# AsyncZatcaClient sends through httpx.
+async = ["httpx>=0.27"]
+dev = ["pytest>=8.0", "httpx>=0.27"]
 
 [tool.setuptools]
 packages = ["fatoora"]
@@ -36,7 +38,7 @@ packages = ["fatoora"]
 fatoora = ["py.typed", "*.so", "*.dylib", "*.dll", "*.h", "licenses/*/*"]
 
 [tool.cibuildwheel]
-build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
+build = "cp310-* cp311-* cp312-* cp313-*"
 skip = "*-musllinux_*"
 test-command = "python {project}/tests/wheel_smoke.py"
 

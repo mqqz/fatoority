@@ -14,7 +14,6 @@ void add_ValidationResponse_binding(nb::module_);
 void add_ValidationResults_binding(nb::module_);
 void add_ZatcaClient_binding(nb::module_);
 void add_BindingError_binding(nb::module_);
-void add_Text_binding(nb::module_);
 void add_Bytes_binding(nb::module_);
 void add_BytesList_binding(nb::module_);
 void add_Config_binding(nb::module_);
@@ -127,7 +126,6 @@ NB_MODULE(_native, mod)
     add_ValidationResults_binding(mod);
     add_ZatcaClient_binding(mod);
     add_BindingError_binding(mod);
-    add_Text_binding(mod);
     add_Bytes_binding(mod);
     add_BytesList_binding(mod);
     add_Config_binding(mod);

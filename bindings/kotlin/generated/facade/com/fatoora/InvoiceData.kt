@@ -27,37 +27,37 @@ class InvoiceData internal constructor(internal val raw: com.fatoora.raw.Invoice
 
     val purchaseOrderId: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.purchaseOrderId())?.let(::readText)
+            raw.purchaseOrderId()
         }
 
     val contractId: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.contractId())?.let(::readText)
+            raw.contractId()
         }
 
     val paymentInstruction: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.paymentInstruction())?.let(::readText)
+            raw.paymentInstruction()
         }
 
     val actualDeliveryDate: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.actualDeliveryDate())?.let(::readText)
+            raw.actualDeliveryDate()
         }
 
     val latestDeliveryDate: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.latestDeliveryDate())?.let(::readText)
+            raw.latestDeliveryDate()
         }
 
     val taxCurrency: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.taxCurrency())?.let(::readText)
+            raw.taxCurrency()
         }
 
     val taxCurrencyAmount: java.math.BigDecimal?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.taxCurrencyAmount())?.let(::readText)?.let(::decimalOf)
+            raw.taxCurrencyAmount()?.let(::decimalOf)
         }
 
     val adjustmentsLen: java.math.BigInteger
@@ -107,7 +107,7 @@ class InvoiceData internal constructor(internal val raw: com.fatoora.raw.Invoice
 
     val allowanceReason: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.allowanceReason())?.let(::readText)
+            raw.allowanceReason()
         }
 
     val invoiceCounter: java.math.BigInteger
@@ -142,7 +142,7 @@ class InvoiceData internal constructor(internal val raw: com.fatoora.raw.Invoice
 
     val originalInvoiceReason: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.originalInvoiceReason())?.let(::readText)
+            raw.originalInvoiceReason()
         }
 
     val notesLen: java.math.BigInteger
@@ -155,137 +155,12 @@ class InvoiceData internal constructor(internal val raw: com.fatoora.raw.Invoice
             java.math.BigInteger(raw.billingReferencesLen().toString())
         }
 
-    @Deprecated("Use the issueTime property.", ReplaceWith("issueTime"))
-    fun issueTime(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.issueTime())
-    }
-
-    @Deprecated("Use the issueDate property.", ReplaceWith("issueDate"))
-    fun issueDate(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.issueDate())
-    }
-
-    @Deprecated("Use the paymentMeansLen property.", ReplaceWith("paymentMeansLen"))
-    fun paymentMeansLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
-        java.math.BigInteger(raw.paymentMeansLen().toString())
-    }
-
     fun paymentMeans(index: java.math.BigInteger): PaymentMeans = nativeCall(listOfNotNull(this)) {
         PaymentMeans(unwrap(raw.paymentMeans(checkedCounter(index))))
     }
 
-    @Deprecated("Use the purchaseOrderId property.", ReplaceWith("purchaseOrderId"))
-    fun purchaseOrderId(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.purchaseOrderId())?.let(::Text)
-    }
-
-    @Deprecated("Use the contractId property.", ReplaceWith("contractId"))
-    fun contractId(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.contractId())?.let(::Text)
-    }
-
-    @Deprecated("Use the paymentInstruction property.", ReplaceWith("paymentInstruction"))
-    fun paymentInstruction(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.paymentInstruction())?.let(::Text)
-    }
-
-    @Deprecated("Use the actualDeliveryDate property.", ReplaceWith("actualDeliveryDate"))
-    fun actualDeliveryDate(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.actualDeliveryDate())?.let(::Text)
-    }
-
-    @Deprecated("Use the latestDeliveryDate property.", ReplaceWith("latestDeliveryDate"))
-    fun latestDeliveryDate(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.latestDeliveryDate())?.let(::Text)
-    }
-
-    @Deprecated("Use the taxCurrency property.", ReplaceWith("taxCurrency"))
-    fun taxCurrency(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.taxCurrency())?.let(::Text)
-    }
-
-    @Deprecated("Use the taxCurrencyAmount property.", ReplaceWith("taxCurrencyAmount"))
-    fun taxCurrencyAmount(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.taxCurrencyAmount())?.let(::Text)
-    }
-
-    @Deprecated("Use the adjustmentsLen property.", ReplaceWith("adjustmentsLen"))
-    fun adjustmentsLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
-        java.math.BigInteger(raw.adjustmentsLen().toString())
-    }
-
     fun adjustment(index: java.math.BigInteger): AllowanceCharge = nativeCall(listOfNotNull(this)) {
         AllowanceCharge(unwrap(raw.adjustment(checkedCounter(index))))
-    }
-
-    @Deprecated("Use the id property.", ReplaceWith("id"))
-    fun id(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.id())
-    }
-
-    @Deprecated("Use the uuid property.", ReplaceWith("uuid"))
-    fun uuid(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.uuid())
-    }
-
-    @Deprecated("Use the previousInvoiceHash property.", ReplaceWith("previousInvoiceHash"))
-    fun previousInvoiceHash(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.previousInvoiceHash())
-    }
-
-    @Deprecated("Use the paymentMeansCode property.", ReplaceWith("paymentMeansCode"))
-    fun paymentMeansCode(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.paymentMeansCode())
-    }
-
-    @Deprecated("Use the currency property.", ReplaceWith("currency"))
-    fun currency(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.currency())
-    }
-
-    @Deprecated("Use the issueDatetime property.", ReplaceWith("issueDatetime"))
-    fun issueDatetime(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.issueDatetime())
-    }
-
-    @Deprecated("Use the invoiceLevelCharge property.", ReplaceWith("invoiceLevelCharge.toPlainString()"))
-    fun invoiceLevelCharge(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.invoiceLevelCharge())
-    }
-
-    @Deprecated("Use the invoiceLevelDiscount property.", ReplaceWith("invoiceLevelDiscount.toPlainString()"))
-    fun invoiceLevelDiscount(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.invoiceLevelDiscount())
-    }
-
-    @Deprecated("Use the allowanceReason property.", ReplaceWith("allowanceReason"))
-    fun allowanceReason(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.allowanceReason())?.let(::Text)
-    }
-
-    @Deprecated("Use the invoiceCounter property.", ReplaceWith("invoiceCounter"))
-    fun invoiceCounter(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
-        java.math.BigInteger(raw.invoiceCounter().toString())
-    }
-
-    @Deprecated("Use the vatCategory property.", ReplaceWith("vatCategory"))
-    fun vatCategory(): VatCategory = nativeCall(listOfNotNull(this)) {
-        VatCategory.valueOf(raw.vatCategory().name)
-    }
-
-    @Deprecated("Use the flags property.", ReplaceWith("flags"))
-    fun flags(): Int = nativeCall(listOfNotNull(this)) {
-        raw.flags().toInt()
-    }
-
-    @Deprecated("Use the invoiceTypeKind property.", ReplaceWith("invoiceTypeKind"))
-    fun invoiceTypeKind(): InvoiceTypeKind = nativeCall(listOfNotNull(this)) {
-        InvoiceTypeKind.valueOf(raw.invoiceTypeKind().name)
-    }
-
-    @Deprecated("Use the invoiceSubType property.", ReplaceWith("invoiceSubType"))
-    fun invoiceSubType(): InvoiceSubType = nativeCall(listOfNotNull(this)) {
-        InvoiceSubType.valueOf(raw.invoiceSubType().name)
     }
 
     fun seller(): Party = nativeCall(listOfNotNull(this)) {
@@ -300,11 +175,6 @@ class InvoiceData internal constructor(internal val raw: com.fatoora.raw.Invoice
         unwrap(raw.note())?.let(::InvoiceNote)
     }
 
-    @Deprecated("Use the lineItemsLen property.", ReplaceWith("lineItemsLen"))
-    fun lineItemsLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
-        java.math.BigInteger(raw.lineItemsLen().toString())
-    }
-
     fun lineItem(index: java.math.BigInteger): InvoiceLineItem = nativeCall(listOfNotNull(this)) {
         InvoiceLineItem(unwrap(raw.lineItem(checkedCounter(index))))
     }
@@ -313,23 +183,8 @@ class InvoiceData internal constructor(internal val raw: com.fatoora.raw.Invoice
         unwrap(raw.originalInvoiceRef())?.let(::OriginalInvoiceRef)
     }
 
-    @Deprecated("Use the originalInvoiceReason property.", ReplaceWith("originalInvoiceReason"))
-    fun originalInvoiceReason(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.originalInvoiceReason())?.let(::Text)
-    }
-
-    @Deprecated("Use the notesLen property.", ReplaceWith("notesLen"))
-    fun notesLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
-        java.math.BigInteger(raw.notesLen().toString())
-    }
-
     fun noteAt(index: java.math.BigInteger): InvoiceNote = nativeCall(listOfNotNull(this)) {
         InvoiceNote(unwrap(raw.noteAt(checkedCounter(index))))
-    }
-
-    @Deprecated("Use the billingReferencesLen property.", ReplaceWith("billingReferencesLen"))
-    fun billingReferencesLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
-        java.math.BigInteger(raw.billingReferencesLen().toString())
     }
 
     fun billingReference(index: java.math.BigInteger): OriginalInvoiceRef = nativeCall(listOfNotNull(this)) {

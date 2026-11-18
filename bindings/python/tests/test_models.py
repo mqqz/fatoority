@@ -10,7 +10,7 @@ import pytest
 from fatoora import (Address, Adjustment, FinalizedInvoice, Identifier, InvoiceBuilder,
                      InvoiceLineItem, InvoiceNote, InvoiceSubType, InvoiceTypeKind,
                      OriginalInvoiceRef, Party, PaymentMeans, TaxExemption, VatCategory)
-from fatoora.errors import FfiError, InvalidInputError
+from fatoora.errors import FatooraError, InvalidInputError
 
 ADDRESS = Address("SA", "Riyadh", "King Fahd", "1234", "12222")
 SELLER = Party("Acme", ADDRESS, vat_id="399999999900003",
@@ -37,7 +37,7 @@ def test_models_are_frozen_hashable_values():
 def test_constructors_validate_and_normalize():
     assert ADDRESS.country_code == "SAU"
     assert ADDRESS.with_province("Riyadh") == dataclasses.replace(ADDRESS, province="Riyadh")
-    with pytest.raises(FfiError):
+    with pytest.raises(FatooraError):
         Address("XX", "Riyadh", "King Fahd", "1234", "12222")
     assert SELLER.vat_id == Identifier("399999999900003")
     assert SELLER.other_id == Identifier("7003339333", "CRN")
@@ -47,7 +47,7 @@ def test_constructors_validate_and_normalize():
     reference = OriginalInvoiceRef("INV-0", "uuid", "2023-11-13", "10:20:30", "388")
     assert reference.issue_date == date(2023, 11, 13)
     assert reference == OriginalInvoiceRef("INV-0", "uuid", date(2023, 11, 13), "10:20:30", "388")
-    with pytest.raises(FfiError):
+    with pytest.raises(FatooraError):
         OriginalInvoiceRef("INV-0", issue_date="13/11/2023")
     with pytest.raises(TypeError):
         PaymentMeans("30", "one note")
@@ -86,7 +86,7 @@ def test_line_item_input_calculates_amounts():
     assert built.item_seller_identifier == Identifier("SKU")
     with pytest.raises(InvalidInputError):
         invoice.line_item(1)
-    with pytest.raises(FfiError):
+    with pytest.raises(FatooraError):
         header().add_item(dataclasses.replace(item, total_amount=Decimal("1")))
 
 

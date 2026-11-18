@@ -12,7 +12,6 @@
 #include <optional>
 #include <cstdlib>
 #include "BindingError.hpp"
-#include "Text.hpp"
 #include "diplomat_runtime.hpp"
 
 
@@ -20,8 +19,8 @@ namespace _native {
 namespace capi {
     extern "C" {
 
-    typedef struct fatoora_InvoiceNote_language_id_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceNote_language_id_result;
-    fatoora_InvoiceNote_language_id_result fatoora_InvoiceNote_language_id(const _native::capi::InvoiceNote* self);
+    typedef struct fatoora_InvoiceNote_language_id_result { bool is_ok;} fatoora_InvoiceNote_language_id_result;
+    fatoora_InvoiceNote_language_id_result fatoora_InvoiceNote_language_id(const _native::capi::InvoiceNote* self, _native::diplomat::capi::DiplomatWrite* write);
 
     typedef struct fatoora_InvoiceNote_language_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceNote_language_result;
     fatoora_InvoiceNote_language_result fatoora_InvoiceNote_language(const _native::capi::InvoiceNote* self, _native::diplomat::capi::DiplomatWrite* write);
@@ -35,9 +34,19 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::InvoiceNote::language_id() const {
-    auto result = _native::capi::fatoora_InvoiceNote_language_id(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::InvoiceNote::language_id() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_InvoiceNote_language_id(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::InvoiceNote::language_id_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_InvoiceNote_language_id(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> _native::InvoiceNote::language() const {

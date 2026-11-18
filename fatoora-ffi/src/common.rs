@@ -56,6 +56,21 @@ pub(crate) fn write(
     out.write_str(value)
         .map_err(|_| local_error(9, "output write failed"))
 }
+/// Writes an optional string for a `fn(&self, out: &mut DiplomatWrite) -> Option<()>`
+/// method, which every generated binding surfaces as a nullable string.
+///
+/// This shape has no error channel, and needs none: `DiplomatWrite` never
+/// fails a write (a failed grow is flagged on the writer and reported by the
+/// binding reading it back). Embedded NUL characters are written as-is; only
+/// the C facade needs NUL-free output, and it rejects them itself.
+pub(crate) fn write_optional(
+    value: Option<impl AsRef<str>>,
+    out: &mut diplomat_runtime::DiplomatWrite,
+) -> Option<()> {
+    use std::fmt::Write;
+    let _ = out.write_str(value?.as_ref());
+    Some(())
+}
 /// Maps a core [`Environment`](fatoora_core::config::Environment) to its FFI
 /// enum. The core enum is `#[non_exhaustive]`; an environment these bindings do
 /// not know yet is reported as an internal error rather than silently mapped
@@ -99,9 +114,41 @@ pub(crate) fn boundary<T>(
     }
 }
 
+/// Readers for `DiplomatWrite` outputs in unit tests.
+#[cfg(test)]
+pub(crate) mod test_support {
+    use diplomat_runtime::DiplomatWrite;
+
+    /// Returns what `f` writes into a fresh `DiplomatWrite`.
+    pub(crate) fn written(f: impl FnOnce(&mut DiplomatWrite)) -> String {
+        struct Writer(*mut DiplomatWrite);
+        impl Drop for Writer {
+            fn drop(&mut self) {
+                // SAFETY: the buffer was created by `diplomat_buffer_write_create`.
+                unsafe { diplomat_runtime::diplomat_buffer_write_destroy(self.0) }
+            }
+        }
+        let out = Writer(diplomat_runtime::diplomat_buffer_write_create(0));
+        // SAFETY: the buffer stays alive until `out` is dropped.
+        unsafe {
+            f(&mut *out.0);
+            String::from_utf8((*out.0).as_bytes().to_vec()).unwrap()
+        }
+    }
+
+    /// Reads a `fn(&self, out: &mut DiplomatWrite) -> Option<()>` optional string.
+    pub(crate) fn optional_written(
+        f: impl FnOnce(&mut DiplomatWrite) -> Option<()>,
+    ) -> Option<String> {
+        let mut present = None;
+        let value = written(|out| present = f(out));
+        present.map(|()| value)
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{boundary, environment_to_ffi, ffi::Environment};
+    use super::{boundary, environment_to_ffi, ffi::Environment, write_optional};
     use fatoora_core::config::Environment as Core;
 
     #[test]
@@ -143,13 +190,30 @@ mod tests {
             .unwrap();
         assert_eq!(error.code(), 9);
     }
+
+    #[test]
+    fn optional_strings_write_only_when_present() {
+        let read = |value: Option<&str>| {
+            let out = diplomat_runtime::diplomat_buffer_write_create(0);
+            // SAFETY: `out` is a live buffer until the destroy call below.
+            unsafe {
+                let present = write_optional(value, &mut *out);
+                let text = String::from_utf8((*out).as_bytes().to_vec()).unwrap();
+                diplomat_runtime::diplomat_buffer_write_destroy(out);
+                (present, text)
+            }
+        };
+        assert_eq!(read(None), (None, String::new()));
+        assert_eq!(read(Some("")), (Some(()), String::new()));
+        assert_eq!(read(Some("a\0b")), (Some(()), "a\0b".into()));
+    }
 }
 
 #[diplomat::bridge]
 #[diplomat::abi_rename = "fatoora_{0}"]
 #[diplomat::attr(cpp, namespace = "fatoora")]
 pub mod ffi {
-    use super::{ErrorData, boundary, write};
+    use super::ErrorData;
     use std::fmt::Write;
     #[diplomat::opaque]
     #[diplomat::attr(dotnet, manually_disposable)]
@@ -176,16 +240,5 @@ pub mod ffi {
         NonProduction = 0,
         Simulation = 1,
         Production = 2,
-    }
-    #[diplomat::opaque]
-    #[diplomat::attr(dotnet, manually_disposable)]
-    pub struct Text(pub(crate) String);
-    impl Text {
-        pub fn value(
-            &self,
-            out: &mut diplomat_runtime::DiplomatWrite,
-        ) -> Result<(), Box<BindingError>> {
-            boundary(|| write(&self.0, out))
-        }
     }
 }

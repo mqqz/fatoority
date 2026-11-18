@@ -1,5 +1,3 @@
-from . import api as _api
-from ._compat import alias_getattr as _alias_getattr
 from .api import (
     Address,
     Adjustment,
@@ -52,22 +50,12 @@ from .api import (
     validate_xml,
     validate_zatca,
 )
-# Deprecated in 0.6, removed in 0.7.
-from .api import (
-    invoice_hash_base64_from_xml_str,
-    parse_finalized_invoice_xml,
-    parse_finalized_invoice_xml_file,
-    parse_signed_invoice_xml,
-    parse_signed_invoice_xml_file,
-    validate_xml_invoice_from_str,
-    validate_zatca_invoice_from_str,
-)
+from ._async import AsyncZatcaClient
 from .errors import (
     ApiError,
     CryptoError,
+    ErrorKind,
     FatooraError,
-    FfiError,
-    FfiErrorKind,
     InternalError,
     InvalidInputError,
     IoError,
@@ -81,6 +69,7 @@ from .errors import (
 __all__ = [
     "Address",
     "Adjustment",
+    "AsyncZatcaClient",
     "ClearanceMode",
     "ClearanceStatus",
     "ComplianceCsid",
@@ -129,18 +118,10 @@ __all__ = [
     "hash_xml",
     "validate_xml",
     "validate_zatca",
-    "invoice_hash_base64_from_xml_str",
-    "parse_finalized_invoice_xml",
-    "parse_finalized_invoice_xml_file",
-    "parse_signed_invoice_xml",
-    "parse_signed_invoice_xml_file",
-    "validate_xml_invoice_from_str",
-    "validate_zatca_invoice_from_str",
     "ApiError",
     "CryptoError",
+    "ErrorKind",
     "FatooraError",
-    "FfiError",
-    "FfiErrorKind",
     "InternalError",
     "InvalidInputError",
     "IoError",
@@ -150,8 +131,3 @@ __all__ = [
     "ValidationError",
     "XmlError",
 ]
-
-# ``Signer``, ``CsidCompliance``, ``CsidProduction``, ``AllowanceCharge``,
-# ``DocumentReference``, ``VatId`` and ``OtherId`` still resolve, with a
-# DeprecationWarning; they are not in ``__all__`` so ``import *`` stays quiet.
-__getattr__ = _alias_getattr(__name__, _api.DEPRECATED_ALIASES)

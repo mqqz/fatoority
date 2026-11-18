@@ -16,7 +16,7 @@ internal partial struct PaymentMeans
     internal static unsafe extern nuint InstructionNotesLen(PaymentMeans* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_PaymentMeans_instruction_note_at", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError InstructionNoteAt(PaymentMeans* handle, nuint index);
+    internal static unsafe extern DiplomatResultVoidBindingError InstructionNoteAt(PaymentMeans* handle, nuint index, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_PaymentMeans_new", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultPaymentMeansBindingError New(DiplomatSliceU8 code, DiplomatOptionSliceU8 instruction);
@@ -28,17 +28,17 @@ internal partial struct PaymentMeans
     internal static unsafe extern DiplomatResultVoidBindingError Code(PaymentMeans* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_PaymentMeans_instruction_note", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError InstructionNote(PaymentMeans* handle);
+    internal static unsafe extern DiplomatOptionVoid InstructionNote(PaymentMeans* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_PaymentMeans_has_account", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.U1)]
     internal static unsafe extern bool HasAccount(PaymentMeans* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_PaymentMeans_account_identifier", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError AccountIdentifier(PaymentMeans* handle);
+    internal static unsafe extern DiplomatOptionVoid AccountIdentifier(PaymentMeans* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_PaymentMeans_payment_terms", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError PaymentTerms(PaymentMeans* handle);
+    internal static unsafe extern DiplomatOptionVoid PaymentTerms(PaymentMeans* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_PaymentMeans_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(PaymentMeans* handle);

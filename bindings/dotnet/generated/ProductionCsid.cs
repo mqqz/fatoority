@@ -57,7 +57,7 @@ public partial class ProductionCsid: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ProductionCsid</c> allocated on Rust side.
     /// </returns>
@@ -77,14 +77,14 @@ public partial class ProductionCsid: IDisposable
                 var result = Raw.ProductionCsid.New(environment, requestId == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = requestIdPtr, Len = (nuint)requestIdBytes!.Length }), new DiplomatSliceU8 { Ptr = tokenPtr, Len = (nuint)tokenBytes.Length }, new DiplomatSliceU8 { Ptr = secretPtr, Len = (nuint)secretBytes.Length });
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new ProductionCsid(result.Ok);
             }
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public ZatcaEnvironment Env
     {
         get
@@ -98,7 +98,7 @@ public partial class ProductionCsid: IDisposable
                     var result = Raw.ProductionCsid.Env(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return result.Ok;
                 }
@@ -110,34 +110,7 @@ public partial class ProductionCsid: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
     public string? RequestId
-    {
-        get
-        {
-            unsafe
-            {
-                BorrowLease<Raw.ProductionCsid>? selfLease = null;
-                try
-                {
-                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.ProductionCsid.RequestId(selfLease!.Ptr);
-                    if (!result.IsOk)
-                    {
-                        throw FfiException.FromNative(new BindingError(result.Err));
-                    }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
-                }
-                finally
-                {
-                    selfLease?.Release();
-                }
-            }
-        }
-    }
-
-    /// <exception cref="FfiException"></exception>
-    public string BinarySecurityToken
     {
         get
         {
@@ -150,10 +123,10 @@ public partial class ProductionCsid: IDisposable
                     DiplomatWrite writeable = new DiplomatWrite();
                     try
                     {
-                        var result = Raw.ProductionCsid.BinarySecurityToken(selfLease!.Ptr, &writeable);
-                        if (!result.IsOk)
+                        var result = Raw.ProductionCsid.RequestId(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            return null;
                         }
                         return writeable.ToUnicode();
                     }
@@ -170,7 +143,41 @@ public partial class ProductionCsid: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
+    public string BinarySecurityToken
+    {
+        get
+        {
+            unsafe
+            {
+                BorrowLease<Raw.ProductionCsid>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
+                    {
+                        var result = Raw.ProductionCsid.BinarySecurityToken(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FatooraException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
+                    }
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
+            }
+        }
+    }
+
+    /// <exception cref="FatooraException"></exception>
     public string Secret
     {
         get
@@ -187,7 +194,7 @@ public partial class ProductionCsid: IDisposable
                         var result = Raw.ProductionCsid.Secret(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }

@@ -9,10 +9,7 @@ and review the JSON diff. For each exported name the contract records:
 * classes: the public constructor (``__init__``) and each public member as ``"property"``, ``"field"`` (dataclass),
   ``"member"`` (enum) or the parameter list of a method, where ``"*"`` marks
   the start of keyword-only parameters;
-* functions: the parameter list;
-* ``__deprecated__``: every name that still works but warns (removed in 0.7),
-  including deprecated properties and the class aliases served by the module
-  ``__getattr__``.
+* functions: the parameter list.
 """
 from __future__ import annotations
 
@@ -43,11 +40,7 @@ def _parameters(function) -> list[str]:
     return result
 
 
-def _is_deprecated(value) -> bool:
-    return hasattr(value, "__deprecated__")
-
-
-def _class_contract(cls, deprecated: list[str]) -> dict:
+def _class_contract(cls) -> dict:
     members: dict[str, object] = {}
     if issubclass(cls, enum.Enum):
         return {name: "member" for name in cls.__members__}
@@ -63,28 +56,18 @@ def _class_contract(cls, deprecated: list[str]) -> dict:
             if name.startswith("_"):
                 continue
             if name in members:
-                # A deprecated 0.5 factory whose name is now a dataclass field
-                # (``Adjustment.amount(value)``) is a class-level descriptor.
-                if _is_deprecated(raw):
-                    deprecated.append(f"{cls.__name__}.{name}")
                 continue
             value = raw.__func__ if isinstance(raw, (classmethod, staticmethod)) else raw
             if isinstance(value, property):
                 members[name] = "property"
-                if _is_deprecated(value.fget):
-                    deprecated.append(f"{cls.__name__}.{name}")
             elif callable(value):
                 members[name] = _parameters(value)
-                if _is_deprecated(value):
-                    deprecated.append(f"{cls.__name__}.{name}")
     return dict(sorted(members.items()))
 
 
 def generate() -> dict:
     import fatoora
-    from fatoora import api
 
-    deprecated: list[str] = []
     contract: dict[str, object] = {}
     for name in sorted(fatoora.__all__):
         value = getattr(fatoora, name)
@@ -92,13 +75,9 @@ def generate() -> dict:
             if value.__module__ == "fatoora.errors":
                 contract[name] = {}
                 continue
-            contract[name] = _class_contract(value, deprecated)
+            contract[name] = _class_contract(value)
         else:
             contract[name] = _parameters(value)
-            if _is_deprecated(value):
-                deprecated.append(name)
-    deprecated.extend(sorted(api.DEPRECATED_ALIASES))
-    contract["__deprecated__"] = sorted(set(deprecated))
     return contract
 
 
@@ -120,22 +99,16 @@ def test_contract_names_resolve_to_one_object():
             assert getattr(api, name) is value
 
 
-def test_deprecated_aliases_resolve_to_the_new_classes():
-    import warnings
+def test_removed_0_6_aliases_are_gone():
     import fatoora
     from fatoora import api
 
-    for alias, (replacement, _) in api.DEPRECATED_ALIASES.items():
-        assert alias not in fatoora.__all__
-        target = getattr(fatoora, replacement)
-        with warnings.catch_warnings(record=True) as caught:
-            warnings.simplefilter("always")
-            value = getattr(fatoora, alias)
-            assert getattr(api, alias) is value
-        assert [w.category for w in caught] == [DeprecationWarning, DeprecationWarning]
-        # Either the new class itself, or an adapter keeping the 0.5 constructor
-        # (``AllowanceCharge``) whose instances are the new class.
-        assert value is target or issubclass(target, value)
+    for module in (fatoora, api):
+        assert not hasattr(module, "DEPRECATED_ALIASES")
+        assert "__getattr__" not in vars(module)
+    for name in ("Signer", "CsidCompliance", "CsidProduction", "AllowanceCharge",
+                 "DocumentReference", "VatId", "OtherId"):
+        assert not hasattr(fatoora, name)
 
 
 def test_distribution_has_no_legacy_loader_or_runtime_dependency():

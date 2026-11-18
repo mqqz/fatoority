@@ -21,17 +21,3 @@ internal static class FatooraDecimal
 
     internal static decimal Parse(string value) => decimal.Parse(value, Style, CultureInfo.InvariantCulture);
 }
-
-public partial class Text
-{
-    internal static string Take(Text text)
-    {
-        using (text) return text.Value;
-    }
-
-    internal static string? TakeOptional(Text? text) => text is null ? null : Take(text);
-
-    internal static decimal TakeDecimal(Text text) => FatooraDecimal.Parse(Take(text));
-
-    internal static decimal? TakeDecimalOptional(Text? text) => text is null ? null : TakeDecimal(text);
-}

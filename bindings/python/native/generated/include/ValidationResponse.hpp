@@ -15,7 +15,6 @@
 #include "ClearanceStatus.hpp"
 #include "InvoiceOutcome.hpp"
 #include "ReportingStatus.hpp"
-#include "Text.hpp"
 #include "ValidationResults.hpp"
 #include "diplomat_runtime.hpp"
 
@@ -32,32 +31,34 @@ namespace capi {
     typedef struct fatoora_ValidationResponse_ensure_accepted_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_ensure_accepted_result;
     fatoora_ValidationResponse_ensure_accepted_result fatoora_ValidationResponse_ensure_accepted(const _native::capi::ValidationResponse* self);
 
-    typedef struct fatoora_ValidationResponse_cleared_invoice_xml_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_cleared_invoice_xml_result;
-    fatoora_ValidationResponse_cleared_invoice_xml_result fatoora_ValidationResponse_cleared_invoice_xml(const _native::capi::ValidationResponse* self);
+    bool fatoora_ValidationResponse_cleared_invoice_xml_present(const _native::capi::ValidationResponse* self);
+
+    typedef struct fatoora_ValidationResponse_cleared_invoice_xml_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_cleared_invoice_xml_result;
+    fatoora_ValidationResponse_cleared_invoice_xml_result fatoora_ValidationResponse_cleared_invoice_xml(const _native::capi::ValidationResponse* self, _native::diplomat::capi::DiplomatWrite* write);
 
     typedef struct fatoora_ValidationResponse_validation_results_result {union {_native::capi::ValidationResults* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_validation_results_result;
     fatoora_ValidationResponse_validation_results_result fatoora_ValidationResponse_validation_results(const _native::capi::ValidationResponse* self);
 
-    typedef struct fatoora_ValidationResponse_cleared_invoice_base64_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_cleared_invoice_base64_result;
-    fatoora_ValidationResponse_cleared_invoice_base64_result fatoora_ValidationResponse_cleared_invoice_base64(const _native::capi::ValidationResponse* self);
+    typedef struct fatoora_ValidationResponse_cleared_invoice_base64_result { bool is_ok;} fatoora_ValidationResponse_cleared_invoice_base64_result;
+    fatoora_ValidationResponse_cleared_invoice_base64_result fatoora_ValidationResponse_cleared_invoice_base64(const _native::capi::ValidationResponse* self, _native::diplomat::capi::DiplomatWrite* write);
 
     typedef struct fatoora_ValidationResponse_reporting_status_result {union {_native::capi::ReportingStatus ok; }; bool is_ok;} fatoora_ValidationResponse_reporting_status_result;
     fatoora_ValidationResponse_reporting_status_result fatoora_ValidationResponse_reporting_status(const _native::capi::ValidationResponse* self);
 
-    typedef struct fatoora_ValidationResponse_reporting_status_raw_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_reporting_status_raw_result;
-    fatoora_ValidationResponse_reporting_status_raw_result fatoora_ValidationResponse_reporting_status_raw(const _native::capi::ValidationResponse* self);
+    typedef struct fatoora_ValidationResponse_reporting_status_raw_result { bool is_ok;} fatoora_ValidationResponse_reporting_status_raw_result;
+    fatoora_ValidationResponse_reporting_status_raw_result fatoora_ValidationResponse_reporting_status_raw(const _native::capi::ValidationResponse* self, _native::diplomat::capi::DiplomatWrite* write);
 
     typedef struct fatoora_ValidationResponse_clearance_status_result {union {_native::capi::ClearanceStatus ok; }; bool is_ok;} fatoora_ValidationResponse_clearance_status_result;
     fatoora_ValidationResponse_clearance_status_result fatoora_ValidationResponse_clearance_status(const _native::capi::ValidationResponse* self);
 
-    typedef struct fatoora_ValidationResponse_clearance_status_raw_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_clearance_status_raw_result;
-    fatoora_ValidationResponse_clearance_status_raw_result fatoora_ValidationResponse_clearance_status_raw(const _native::capi::ValidationResponse* self);
+    typedef struct fatoora_ValidationResponse_clearance_status_raw_result { bool is_ok;} fatoora_ValidationResponse_clearance_status_raw_result;
+    fatoora_ValidationResponse_clearance_status_raw_result fatoora_ValidationResponse_clearance_status_raw(const _native::capi::ValidationResponse* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_ValidationResponse_qr_seller_status_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_qr_seller_status_result;
-    fatoora_ValidationResponse_qr_seller_status_result fatoora_ValidationResponse_qr_seller_status(const _native::capi::ValidationResponse* self);
+    typedef struct fatoora_ValidationResponse_qr_seller_status_result { bool is_ok;} fatoora_ValidationResponse_qr_seller_status_result;
+    fatoora_ValidationResponse_qr_seller_status_result fatoora_ValidationResponse_qr_seller_status(const _native::capi::ValidationResponse* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_ValidationResponse_qr_buyer_status_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_qr_buyer_status_result;
-    fatoora_ValidationResponse_qr_buyer_status_result fatoora_ValidationResponse_qr_buyer_status(const _native::capi::ValidationResponse* self);
+    typedef struct fatoora_ValidationResponse_qr_buyer_status_result { bool is_ok;} fatoora_ValidationResponse_qr_buyer_status_result;
+    fatoora_ValidationResponse_qr_buyer_status_result fatoora_ValidationResponse_qr_buyer_status(const _native::capi::ValidationResponse* self, _native::diplomat::capi::DiplomatWrite* write);
 
     void fatoora_ValidationResponse_destroy(ValidationResponse* self);
 
@@ -80,9 +81,24 @@ inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::Bindin
     return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::ValidationResponse::cleared_invoice_xml() const {
-    auto result = _native::capi::fatoora_ValidationResponse_cleared_invoice_xml(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline bool _native::ValidationResponse::cleared_invoice_xml_present() const {
+    auto result = _native::capi::fatoora_ValidationResponse_cleared_invoice_xml_present(this->AsFFI());
+    return result;
+}
+
+inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> _native::ValidationResponse::cleared_invoice_xml() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_ValidationResponse_cleared_invoice_xml(this->AsFFI(),
+        &write);
+    return result.is_ok ? _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::string>(std::move(output))) : _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+template<typename W>
+inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::ValidationResponse::cleared_invoice_xml_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_ValidationResponse_cleared_invoice_xml(this->AsFFI(),
+        &write);
+    return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
 inline _native::diplomat::result<std::unique_ptr<_native::ValidationResults>, std::unique_ptr<_native::BindingError>> _native::ValidationResponse::validation_results() const {
@@ -90,9 +106,19 @@ inline _native::diplomat::result<std::unique_ptr<_native::ValidationResults>, st
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::ValidationResults>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::ValidationResults>>(std::unique_ptr<_native::ValidationResults>(_native::ValidationResults::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::ValidationResults>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::ValidationResponse::cleared_invoice_base64() const {
-    auto result = _native::capi::fatoora_ValidationResponse_cleared_invoice_base64(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::ValidationResponse::cleared_invoice_base64() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_ValidationResponse_cleared_invoice_base64(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::ValidationResponse::cleared_invoice_base64_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_ValidationResponse_cleared_invoice_base64(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline std::optional<_native::ReportingStatus> _native::ValidationResponse::reporting_status() const {
@@ -100,9 +126,19 @@ inline std::optional<_native::ReportingStatus> _native::ValidationResponse::repo
     return result.is_ok ? std::optional<_native::ReportingStatus>(_native::ReportingStatus::FromFFI(result.ok)) : std::nullopt;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::ValidationResponse::reporting_status_raw() const {
-    auto result = _native::capi::fatoora_ValidationResponse_reporting_status_raw(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::ValidationResponse::reporting_status_raw() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_ValidationResponse_reporting_status_raw(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::ValidationResponse::reporting_status_raw_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_ValidationResponse_reporting_status_raw(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline std::optional<_native::ClearanceStatus> _native::ValidationResponse::clearance_status() const {
@@ -110,19 +146,49 @@ inline std::optional<_native::ClearanceStatus> _native::ValidationResponse::clea
     return result.is_ok ? std::optional<_native::ClearanceStatus>(_native::ClearanceStatus::FromFFI(result.ok)) : std::nullopt;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::ValidationResponse::clearance_status_raw() const {
-    auto result = _native::capi::fatoora_ValidationResponse_clearance_status_raw(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::ValidationResponse::clearance_status_raw() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_ValidationResponse_clearance_status_raw(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::ValidationResponse::clearance_status_raw_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_ValidationResponse_clearance_status_raw(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::ValidationResponse::qr_seller_status() const {
-    auto result = _native::capi::fatoora_ValidationResponse_qr_seller_status(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::ValidationResponse::qr_seller_status() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_ValidationResponse_qr_seller_status(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::ValidationResponse::qr_seller_status_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_ValidationResponse_qr_seller_status(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::ValidationResponse::qr_buyer_status() const {
-    auto result = _native::capi::fatoora_ValidationResponse_qr_buyer_status(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::ValidationResponse::qr_buyer_status() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_ValidationResponse_qr_buyer_status(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::ValidationResponse::qr_buyer_status_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_ValidationResponse_qr_buyer_status(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline const _native::capi::ValidationResponse* _native::ValidationResponse::AsFFI() const {

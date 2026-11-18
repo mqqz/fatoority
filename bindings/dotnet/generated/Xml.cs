@@ -57,7 +57,7 @@ public partial class Xml: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ZatcaValidationReport</c> allocated on Rust side.
     /// </returns>
@@ -74,14 +74,14 @@ public partial class Xml: IDisposable
                 var result = Raw.Xml.ValidateZatca(new DiplomatSliceU8 { Ptr = xmlPtr, Len = (nuint)xmlBytes.Length }, optionsJson == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = optionsJsonPtr, Len = (nuint)optionsJsonBytes!.Length }));
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new ZatcaValidationReport(result.Ok);
             }
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public static bool Validate(string xml)
     {
         unsafe
@@ -93,14 +93,14 @@ public partial class Xml: IDisposable
                 var result = Raw.Xml.Validate(new DiplomatSliceU8 { Ptr = xmlPtr, Len = (nuint)xmlBytes.Length });
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return result.Ok;
             }
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public static string Hash(string xml)
     {
         unsafe
@@ -115,7 +115,7 @@ public partial class Xml: IDisposable
                     var result = Raw.Xml.Hash(new DiplomatSliceU8 { Ptr = xmlPtr, Len = (nuint)xmlBytes.Length }, &writeable);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return writeable.ToUnicode();
                 }

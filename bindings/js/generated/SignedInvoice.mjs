@@ -2,7 +2,6 @@
 import { BindingError } from "./BindingError.mjs"
 import { InvoiceData } from "./InvoiceData.mjs"
 import { InvoiceTotals } from "./InvoiceTotals.mjs"
-import { Text } from "./Text.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
@@ -380,23 +379,52 @@ export class SignedInvoice {
         }
     }
 
-    zatcaKeySignature() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+    /**
+     * Whether the invoice carries a ZATCA key signature.
+     */
+    zatcaKeySignaturePresent() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 1, true);
 
 
-        const result = wasm.fatoora_SignedInvoice_zatca_key_signature(diplomatReceive.buffer, this.ffiValue);
+        const result = wasm.fatoora_SignedInvoice_zatca_key_signature_present(diplomatReceive.buffer, this.ffiValue);
 
         try {
             if (!diplomatReceive.resultFlag) {
                 const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
                 throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
             }
-            return diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer) === 0 ? null : new Text(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+            return (new Uint8Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0] === 1;
         }
 
         finally {
             diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             diplomatReceive.free();
+        }
+    }
+
+    /**
+     * Base64 signature value of the signing certificate, or null when absent.
+     */
+    zatcaKeySignature() {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+
+
+        const result = wasm.fatoora_SignedInvoice_zatca_key_signature(diplomatReceive.buffer, this.ffiValue, write.buffer);
+
+        try {
+            if (!diplomatReceive.resultFlag) {
+                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
+            }
+            return write.readString8();
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+            diplomatReceive.free();
+            write.free();
         }
     }
 

@@ -18,8 +18,6 @@ namespace capi { struct BindingError; }
 class BindingError;
 namespace capi { struct TaxExemption; }
 class TaxExemption;
-namespace capi { struct Text; }
-class Text;
 class AdjustmentKind;
 class VatCategory;
 } // namespace fatoora
@@ -46,9 +44,13 @@ public:
    */
   inline diplomat::result<std::unique_ptr<fatoora::AllowanceCharge>, std::unique_ptr<fatoora::BindingError>> with_percentage(std::string_view base, std::string_view percent) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> base_amount() const;
+  inline std::optional<std::string> base_amount() const;
+  template<typename W>
+  inline std::optional<std::monostate> base_amount_write(W& writeable_output) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> percentage() const;
+  inline std::optional<std::string> percentage() const;
+  template<typename W>
+  inline std::optional<std::monostate> percentage_write(W& writeable_output) const;
 
   inline static diplomat::result<std::unique_ptr<fatoora::AllowanceCharge>, std::unique_ptr<fatoora::BindingError>> new_(fatoora::AdjustmentKind kind, std::string_view amount, std::optional<std::string_view> reason, std::optional<std::string_view> reason_code, fatoora::VatCategory category, std::string_view rate, const fatoora::TaxExemption& exemption);
 
@@ -71,9 +73,13 @@ public:
 
   inline size_t tax_category_count() const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> reason() const;
+  inline std::optional<std::string> reason() const;
+  template<typename W>
+  inline std::optional<std::monostate> reason_write(W& writeable_output) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> reason_code() const;
+  inline std::optional<std::string> reason_code() const;
+  template<typename W>
+  inline std::optional<std::monostate> reason_code_write(W& writeable_output) const;
 
   inline diplomat::result<std::unique_ptr<fatoora::TaxExemption>, std::unique_ptr<fatoora::BindingError>> exemption() const;
 

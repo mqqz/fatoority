@@ -57,7 +57,7 @@ public partial class OtherId: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Value
     {
         get
@@ -74,7 +74,7 @@ public partial class OtherId: IDisposable
                         var result = Raw.OtherId.Value(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -91,7 +91,6 @@ public partial class OtherId: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
     public string? Scheme
     {
         get
@@ -102,12 +101,20 @@ public partial class OtherId: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.OtherId.Scheme(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        var result = Raw.OtherId.Scheme(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {

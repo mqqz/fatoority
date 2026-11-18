@@ -23,8 +23,6 @@ namespace capi { struct OtherId; }
 class OtherId;
 namespace capi { struct TaxExemption; }
 class TaxExemption;
-namespace capi { struct Text; }
-class Text;
 namespace capi { struct VatBreakdown; }
 class VatBreakdown;
 class AdjustmentKind;
@@ -43,13 +41,21 @@ namespace _native {
 class InvoiceLineItem {
 public:
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> item_gross_price() const;
+  inline std::optional<std::string> item_gross_price() const;
+  template<typename W>
+  inline std::optional<std::monostate> item_gross_price_write(W& writeable_output) const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> item_price_discount() const;
+  inline std::optional<std::string> item_price_discount() const;
+  template<typename W>
+  inline std::optional<std::monostate> item_price_discount_write(W& writeable_output) const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> item_price_base_quantity() const;
+  inline std::optional<std::string> item_price_base_quantity() const;
+  template<typename W>
+  inline std::optional<std::monostate> item_price_base_quantity_write(W& writeable_output) const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> item_price_base_quantity_unit_code() const;
+  inline std::optional<std::string> item_price_base_quantity_unit_code() const;
+  template<typename W>
+  inline std::optional<std::monostate> item_price_base_quantity_unit_code_write(W& writeable_output) const;
 
   inline size_t adjustments_len() const;
 
@@ -57,11 +63,11 @@ public:
 
   inline _native::diplomat::result<_native::AdjustmentKind, std::unique_ptr<_native::BindingError>> adjustment_kind(size_t index) const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>> item_seller_identifier() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::OtherId>>, std::unique_ptr<_native::BindingError>> item_seller_identifier() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>> item_buyer_identifier() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::OtherId>>, std::unique_ptr<_native::BindingError>> item_buyer_identifier() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>> item_standard_identifier() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::OtherId>>, std::unique_ptr<_native::BindingError>> item_standard_identifier() const;
 
   inline _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std::unique_ptr<_native::BindingError>> with_document_reference(const _native::OriginalInvoiceRef& reference) const;
 
@@ -79,7 +85,9 @@ public:
 
   inline _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std::unique_ptr<_native::BindingError>> with_metadata(std::optional<std::string_view> id, const _native::TaxExemption& exemption) const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> id() const;
+  inline std::optional<std::string> id() const;
+  template<typename W>
+  inline std::optional<std::monostate> id_write(W& writeable_output) const;
 
   inline _native::diplomat::result<std::unique_ptr<_native::TaxExemption>, std::unique_ptr<_native::BindingError>> exemption() const;
 

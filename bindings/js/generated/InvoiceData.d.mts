@@ -8,7 +8,6 @@ import type { InvoiceTypeKind } from "./InvoiceTypeKind.mjs"
 import type { OriginalInvoiceRef } from "./OriginalInvoiceRef.mjs"
 import type { Party } from "./Party.mjs"
 import type { PaymentMeans } from "./PaymentMeans.mjs"
-import type { Text } from "./Text.mjs"
 import type { VatCategory } from "./VatCategory.mjs"
 import type { pointer, codepoint } from "./diplomat-runtime.mjs";
 
@@ -29,19 +28,19 @@ export class InvoiceData {
 
     paymentMeans(index: number): PaymentMeans;
 
-    purchaseOrderId(): Text | null;
+    purchaseOrderId(): string | null;
 
-    contractId(): Text | null;
+    contractId(): string | null;
 
-    paymentInstruction(): Text | null;
+    paymentInstruction(): string | null;
 
-    actualDeliveryDate(): Text | null;
+    actualDeliveryDate(): string | null;
 
-    latestDeliveryDate(): Text | null;
+    latestDeliveryDate(): string | null;
 
-    taxCurrency(): Text | null;
+    taxCurrency(): string | null;
 
-    taxCurrencyAmount(): Text | null;
+    taxCurrencyAmount(): string | null;
 
     adjustmentsLen(): number;
 
@@ -63,7 +62,7 @@ export class InvoiceData {
 
     invoiceLevelDiscount(): string;
 
-    allowanceReason(): Text | null;
+    allowanceReason(): string | null;
 
     invoiceCounter(): bigint;
 
@@ -87,7 +86,7 @@ export class InvoiceData {
 
     originalInvoiceRef(): OriginalInvoiceRef | null;
 
-    originalInvoiceReason(): Text | null;
+    originalInvoiceReason(): string | null;
 
     notesLen(): number;
 

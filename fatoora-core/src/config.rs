@@ -34,10 +34,6 @@ pub enum Environment {
     Production,
 }
 
-/// Former name of [`Environment`].
-#[deprecated(since = "0.6.0", note = "use `Environment` instead")]
-pub type EnvironmentType = Environment;
-
 /// Error returned when parsing an [`Environment`] from a string.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Error)]
 #[non_exhaustive]

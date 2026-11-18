@@ -8,7 +8,6 @@
 #include "diplomat_runtime.h"
 
 #include "BindingError.d.h"
-#include "Text.d.h"
 #include "ZatcaFinding.d.h"
 #include "ZatcaRuleSource.d.h"
 #include "ZatcaStage.d.h"
@@ -30,8 +29,8 @@ fatoora_ZatcaStageReport_provenance_result fatoora_ZatcaStageReport_provenance(c
 
 size_t fatoora_ZatcaStageReport_evaluated_assertions_len(const ZatcaStageReport* self);
 
-typedef struct fatoora_ZatcaStageReport_evaluated_assertion_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_ZatcaStageReport_evaluated_assertion_result;
-fatoora_ZatcaStageReport_evaluated_assertion_result fatoora_ZatcaStageReport_evaluated_assertion(const ZatcaStageReport* self, size_t index);
+typedef struct fatoora_ZatcaStageReport_evaluated_assertion_result {union { BindingError* err;}; bool is_ok;} fatoora_ZatcaStageReport_evaluated_assertion_result;
+fatoora_ZatcaStageReport_evaluated_assertion_result fatoora_ZatcaStageReport_evaluated_assertion(const ZatcaStageReport* self, size_t index, DiplomatWrite* write);
 
 size_t fatoora_ZatcaStageReport_findings_len(const ZatcaStageReport* self);
 

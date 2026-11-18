@@ -12,7 +12,6 @@
 #include <optional>
 #include <cstdlib>
 #include "BindingError.hpp"
-#include "Text.hpp"
 #include "diplomat_runtime.hpp"
 
 
@@ -35,17 +34,17 @@ namespace capi {
     typedef struct fatoora_Adjustment_value_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_Adjustment_value_result;
     fatoora_Adjustment_value_result fatoora_Adjustment_value(const _native::capi::Adjustment* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_Adjustment_base_amount_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_Adjustment_base_amount_result;
-    fatoora_Adjustment_base_amount_result fatoora_Adjustment_base_amount(const _native::capi::Adjustment* self);
+    typedef struct fatoora_Adjustment_base_amount_result { bool is_ok;} fatoora_Adjustment_base_amount_result;
+    fatoora_Adjustment_base_amount_result fatoora_Adjustment_base_amount(const _native::capi::Adjustment* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_Adjustment_percentage_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_Adjustment_percentage_result;
-    fatoora_Adjustment_percentage_result fatoora_Adjustment_percentage(const _native::capi::Adjustment* self);
+    typedef struct fatoora_Adjustment_percentage_result { bool is_ok;} fatoora_Adjustment_percentage_result;
+    fatoora_Adjustment_percentage_result fatoora_Adjustment_percentage(const _native::capi::Adjustment* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_Adjustment_reason_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_Adjustment_reason_result;
-    fatoora_Adjustment_reason_result fatoora_Adjustment_reason(const _native::capi::Adjustment* self);
+    typedef struct fatoora_Adjustment_reason_result { bool is_ok;} fatoora_Adjustment_reason_result;
+    fatoora_Adjustment_reason_result fatoora_Adjustment_reason(const _native::capi::Adjustment* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_Adjustment_reason_code_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_Adjustment_reason_code_result;
-    fatoora_Adjustment_reason_code_result fatoora_Adjustment_reason_code(const _native::capi::Adjustment* self);
+    typedef struct fatoora_Adjustment_reason_code_result { bool is_ok;} fatoora_Adjustment_reason_code_result;
+    fatoora_Adjustment_reason_code_result fatoora_Adjustment_reason_code(const _native::capi::Adjustment* self, _native::diplomat::capi::DiplomatWrite* write);
 
     void fatoora_Adjustment_destroy(Adjustment* self);
 
@@ -92,24 +91,64 @@ inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::Bindin
     return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::Adjustment::base_amount() const {
-    auto result = _native::capi::fatoora_Adjustment_base_amount(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::Adjustment::base_amount() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_Adjustment_base_amount(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::Adjustment::base_amount_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_Adjustment_base_amount(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::Adjustment::percentage() const {
-    auto result = _native::capi::fatoora_Adjustment_percentage(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::Adjustment::percentage() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_Adjustment_percentage(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::Adjustment::percentage_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_Adjustment_percentage(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::Adjustment::reason() const {
-    auto result = _native::capi::fatoora_Adjustment_reason(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::Adjustment::reason() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_Adjustment_reason(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::Adjustment::reason_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_Adjustment_reason(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::Adjustment::reason_code() const {
-    auto result = _native::capi::fatoora_Adjustment_reason_code(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::Adjustment::reason_code() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_Adjustment_reason_code(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::Adjustment::reason_code_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_Adjustment_reason_code(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline const _native::capi::Adjustment* _native::Adjustment::AsFFI() const {

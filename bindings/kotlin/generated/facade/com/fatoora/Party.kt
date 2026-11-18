@@ -20,11 +20,6 @@ class Party internal constructor(internal val raw: com.fatoora.raw.Party) : Nati
             unwrap(raw.name())
         }
 
-    @Deprecated("Use the identifiersLen property.", ReplaceWith("identifiersLen"))
-    fun identifiersLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
-        java.math.BigInteger(raw.identifiersLen().toString())
-    }
-
     fun identifier(index: java.math.BigInteger): OtherId = nativeCall(listOfNotNull(this)) {
         OtherId(unwrap(raw.identifier(checkedCounter(index))))
     }
@@ -39,10 +34,5 @@ class Party internal constructor(internal val raw: com.fatoora.raw.Party) : Nati
 
     fun otherId(): OtherId? = nativeCall(listOfNotNull(this)) {
         unwrap(raw.otherId())?.let(::OtherId)
-    }
-
-    @Deprecated("Use the name property.", ReplaceWith("name"))
-    fun name(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.name())
     }
 }

@@ -87,20 +87,14 @@ static FatooraStatus fatoora_private_finish(DiplomatWrite *write, char **out,
         free(write->buf);
         return fatoora_private_fail(FATOORA_INTERNAL, "output allocation failed", error);
     }
+    /* C strings end at the first NUL, so a value containing one cannot be returned. */
+    if (memchr(write->buf, '\0', write->len)) {
+        free(write->buf);
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "text must not contain NUL", error);
+    }
     fatoora_private_flush(write);
     *out = write->buf;
     return FATOORA_OK;
-}
-static FatooraStatus fatoora_private_text(Text *text, char **out, FatooraError **error) {
-    if (!text) return FATOORA_OK;
-    DiplomatWrite write = fatoora_private_writer();
-    fatoora_Text_value_result result = fatoora_Text_value(text, &write);
-    fatoora_Text_destroy(text);
-    if (!result.is_ok) {
-        free(write.buf);
-        return fatoora_private_error(result.err, error);
-    }
-    return fatoora_private_finish(&write, out, error);
 }
 static DiplomatStringView fatoora_private_string(const char *value) {
     DiplomatStringView view = {value, strlen(value)};

@@ -7,18 +7,26 @@ implement ``IDisposable`` and track borrow lifetimes, so instead of wrapping
 them a second time this script rewrites the generated wrappers in place:
 
 * value getters (zero-argument instance methods returning a string, number,
-  bool, enum or optional ``Text``) become read-only properties;
+  bool or enum, optional or not) become read-only properties;
   methods returning native-owned ``IDisposable`` snapshots stay methods so
   ownership (``using``) remains explicit, as do ``To*``/``Into*`` conversions;
-* optional ``Text`` results are copied into ``string`` and released at once;
+* a fallible string getter ``X`` with an ``XPresent`` sibling (the FFI's
+  ``x_present``/``x`` pair, see docs/development/diplomat.md) becomes one
+  ``string?`` property that is null when ``XPresent`` is false; ``XPresent``
+  is private;
 * every decimal the Rust FFI parses (``decimal(param, ...)``) or returns
   (a ``fatoora_core`` getter typed ``Decimal``) is ``decimal`` in C#,
   converted with the invariant culture (never through ``double``);
-* native errors are thrown as ``FfiException`` subclasses (see
+* string inputs are encoded with a strict UTF-8 encoder, so unpaired
+  surrogates throw ``EncoderFallbackException`` instead of becoming U+FFFD;
+* native errors are thrown as ``FatooraException`` subclasses (see
   ``bindings/dotnet/src/Errors.cs``) and ``BindingError`` becomes internal;
 * the Rust ``new`` constructors become ``Create`` factory methods, matching
-  the Kotlin and JavaScript packages; ``New`` and the members in ``RENAMED``
-  keep ``[Obsolete]`` aliases until 0.7.
+  the Kotlin and JavaScript packages;
+* raw millisecond overloads in ``PRIVATE_METHODS`` become private helpers
+  behind the ``TimeSpan`` overloads in ``bindings/dotnet/src``;
+* owned native byte buffers (``RustVec``) are copied into ``byte[]`` and freed
+  at once, so ``RustVec`` stays internal.
 
 Decimal members are derived from the Rust sources, so new FFI members are
 picked up without editing this script.
@@ -38,18 +46,9 @@ VALUE_TYPES = {"string", "bool", "byte", "ushort", "int", "uint", "ulong", "nuin
 METHOD_PREFIXES = ("To", "Into", "As")
 SIGNATURE = re.compile(
     r"^    public (?P<static>static )?(?P<ret>[\w<>\[\]?]+) (?P<name>\w+)\((?P<params>.*)\)$")
+# Raw members wrapped by hand-written idiomatic overloads: (Class, Method) -> private name.
+PRIVATE_METHODS = {("ZatcaClient", "WithTimeout"): "WithTimeoutMilliseconds"}
 THROW = "throw new BindingErrorException(new BindingError(result.Err));"
-# FFI members renamed in 0.6 to match the core: (class, new member) -> old name.
-# Adjustment.Percentage (the 0.5 factory, now PercentOf) cannot keep an alias
-# because the Percentage property now uses that name.
-RENAMED = {
-    ("Adjustment", "SuppliedAmount"): "WithSuppliedAmount",
-    ("Adjustment", "Percentage"): "Percent",
-    ("AllowanceCharge", "OmitVatRate"): "WithoutVatRate",
-    ("VatBreakdown", "OmitVatRate"): "WithoutVatRate",
-}
-# Classes whose constructor was already called Create in 0.5, so get no New alias.
-CREATED = {"ComplianceCsid", "ProductionCsid", "ZatcaClient"}
 
 
 def pascal(snake):
@@ -115,7 +114,7 @@ def decimal_members():
         if found:
             inputs[key] = {camel(p) for p in found}
         signature = body.split("{", 1)[0]
-        if "&self" in signature and re.search(r"(DiplomatWrite|Option<Box<Text>>)", signature):
+        if "&self" in signature and "DiplomatWrite" in signature:
             called = set(re.findall(r"\.(\w+)\(\)", body))
             if called & core_getters:
                 outputs.add(key)
@@ -126,11 +125,15 @@ def split_params(params):
     return [p.strip() for p in params.split(",")] if params.strip() else []
 
 
-def transform_class(name, text, inputs, outputs, enums, renamed):
+def transform_class(name, text, inputs, outputs, enums):
     lines = text.split("\n")
     result = []
     index = 0
     seen = set()
+    methods = {m["name"]: m["ret"] for m in map(SIGNATURE.match, lines) if m and not m["params"]}
+    # `x_present`/`x` pairs: a fallible optional string the FFI cannot return as Option.
+    optional_pairs = {m for m, ret in methods.items() if ret == "string" and methods.get(m + "Present") == "bool"}
+    hidden = {m + "Present" for m in optional_pairs}
     while index < len(lines):
         line = lines[index]
         match = SIGNATURE.match(line)
@@ -156,33 +159,33 @@ def transform_class(name, text, inputs, outputs, enums, renamed):
             if not any(f"FatooraDecimal.Format({param})" in b for b in body):
                 raise SystemExit(f"{name}.{method}: unexpected conversion of {param}")
 
-        # Text results become strings; decimal results become decimals.
+        # Decimal results become decimals.
         is_decimal = key in outputs
-        if is_decimal and ret not in {"string", "Text", "Text?"}:
+        if is_decimal and ret not in {"string", "string?"}:
             raise SystemExit(f"{name}.{method}: decimal result has unexpected type {ret}")
-        if ret in {"Text", "Text?"}:
-            helper = ("TakeDecimal" if is_decimal else "Take") + ("" if ret == "Text" else "Optional")
-            ret = ("decimal" if is_decimal else "string") + ("?" if ret == "Text?" else "")
-            body = [re.sub(r"return (.*new )Text\((.*)\);$",
-                           rf"return global::Fatoora.Text.{helper}(\1global::Fatoora.Text(\2));", b)
-                    for b in body]
-            text_doc = ["/// <returns>", "/// A <c>Text</c> allocated on Rust side.", "/// </returns>"]
-            if [r.strip() for r in result[-3:]] == text_doc:
-                del result[-3:]
-        elif is_decimal:
-            ret = "decimal"
+        if is_decimal:
+            ret = ret.replace("string", "decimal")
             body = [b.replace("return writeable.ToUnicode();",
                               "return FatooraDecimal.Parse(writeable.ToUnicode());") for b in body]
-        if match["ret"] != ret and not any("FatooraDecimal.Parse(" in b or ".Text.Take" in b for b in body):
-            raise SystemExit(f"{name}.{method}: unexpected result conversion")
-        if is_decimal and not any("FatooraDecimal.Parse(" in b or ".TakeDecimal" in b for b in body):
-            raise SystemExit(f"{name}.{method}: unexpected decimal result conversion")
+            if not any("FatooraDecimal.Parse(" in b for b in body):
+                raise SystemExit(f"{name}.{method}: unexpected decimal result conversion")
+        if ret == "RustVec":
+            ret = "byte[]"
+            owned = "return new RustVec(result.Ptr, result.Len);"
+            if not any(b.strip() == owned for b in body):
+                raise SystemExit(f"{name}.{method}: unexpected RustVec result")
+            body = [b.replace(owned, "using (var copy = new RustVec(result.Ptr, result.Len)) return copy.Clone();")
+                    for b in body]
+        if method in optional_pairs:
+            ret += "?"
+            body = [f"        if (!{method}Present)", "        {", "            return null;", "        }"] + body
 
-        exposed, old = method, RENAMED.get((name, method))
-        if old:
-            renamed.add((name, method))
-        if match["static"] and method == "New":
-            exposed, old = "Create", None if name in CREATED else "New"
+        exposed = "Create" if match["static"] and method == "New" else method
+        visibility = "public"
+        if key in PRIVATE_METHODS:
+            exposed, visibility = PRIVATE_METHODS[key], "private"
+        if method in hidden:
+            visibility = "private"
         base = ret.rstrip("?")
         is_property = (not match["static"] and not params and ret != "void"
                        and not any(method.startswith(p) and method[len(p):][:1].isupper()
@@ -191,32 +194,23 @@ def transform_class(name, text, inputs, outputs, enums, renamed):
         if is_property:
             if method == name:
                 raise SystemExit(f"{name}.{method}: property would share its class name")
-            result.append(f"    public {ret} {exposed}")
+            result.append(f"    {visibility} {ret} {exposed}")
             result.append("    {")
             result.append("        get")
             result.append("        {")
             result.extend(("    " + b) if b else b for b in body)
             result.append("        }")
             result.append("    }")
-            if old:
-                result.append("")
-                result.append(f'    [Obsolete("Use {exposed}; {old} will be removed in 0.7.")]')
-                result.append(f"    public {ret} {old} => {exposed};")
         else:
-            result.append(f"    public {match['static'] or ''}{ret} {exposed}({', '.join(params)})")
+            result.append(f"    {visibility} {match['static'] or ''}{ret} {exposed}({', '.join(params)})")
             result.append("    {")
             result.extend(body)
             result.append("    }")
-            if old:
-                names = ", ".join(p.split()[-1] for p in params)
-                result.append("")
-                result.append(f'    [Obsolete("Use {exposed}; {old} will be removed in 0.7.")]')
-                result.append(f"    public {match['static'] or ''}{ret} {old}({', '.join(params)}) => {exposed}({names});")
         index = end + 1
     text = "\n".join(result)
-    text = text.replace(THROW, "throw FfiException.FromNative(new BindingError(result.Err));")
+    text = text.replace(THROW, "throw FatooraException.FromNative(new BindingError(result.Err));")
     text = text.replace('/// <exception cref="BindingErrorException"></exception>',
-                        '/// <exception cref="FfiException"></exception>')
+                        '/// <exception cref="FatooraException"></exception>')
     return text, seen
 
 
@@ -227,21 +221,32 @@ def transform(sources):
     sources = dict(sources)
     del sources["BindingErrorException.cs"]
     seen = set()
-    renamed = set()
     for file, text in sources.items():
         if file.startswith(("Raw", "Diplomat")) or "\npublic partial class " not in text:
             continue
         name = file[:-3]
-        text, members = transform_class(name, text, inputs, outputs, enums, renamed)
+        text, members = transform_class(name, text, inputs, outputs, enums)
         seen |= members
         if name == "BindingError":
             text = text.replace("public partial class BindingError", "internal partial class BindingError")
         sources[file] = text
-    missing = (set(inputs) | outputs) - seen
+    # Upstream Diplomat encodes `string` inputs with the lenient UTF-8 encoder, which turns
+    # unpaired surrogates into U+FFFD. Keep rejecting them (EncoderFallbackException).
+    # Byte buffers reach callers as byte[] copies; the native owner stays internal.
+    for public, internal in (("public sealed class RustVec", "internal sealed class RustVec"),
+                             ("public delegate void RustVecSpanAction", "internal delegate void RustVecSpanAction")):
+        if public not in sources["RustVec.cs"]:
+            raise SystemExit(f"Unexpected RustVec.cs; update the rewrite of {public!r}")
+        sources["RustVec.cs"] = sources["RustVec.cs"].replace(public, internal)
+    lenient = "public static byte[] Clone(string value) => System.Text.Encoding.UTF8.GetBytes(value);"
+    if lenient not in sources["Utf8.cs"]:
+        raise SystemExit("Unexpected Utf8.Clone in C# output; update the strict UTF-8 rewrite")
+    sources["Utf8.cs"] = sources["Utf8.cs"].replace(lenient, (
+        "private static readonly System.Text.UTF8Encoding Strict = new System.Text.UTF8Encoding(false, true);\n\n"
+        "    public static byte[] Clone(string value) => Strict.GetBytes(value);"))
+    missing = (set(inputs) | outputs | set(PRIVATE_METHODS)) - seen
     if missing:
         raise SystemExit(f"Decimal members missing from C# output: {sorted(missing)}")
-    if set(RENAMED) - renamed:
-        raise SystemExit(f"Renamed members missing from C# output: {sorted(set(RENAMED) - renamed)}")
     if any("BindingErrorException" in t for t in sources.values()):
         raise SystemExit("Unrewritten BindingErrorException reference")
     return {name: text.encode() for name, text in sources.items()}

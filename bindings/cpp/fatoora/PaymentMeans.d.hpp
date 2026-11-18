@@ -16,8 +16,6 @@ namespace capi { struct BindingError; }
 class BindingError;
 namespace capi { struct PaymentMeans; }
 class PaymentMeans;
-namespace capi { struct Text; }
-class Text;
 } // namespace fatoora
 
 
@@ -37,7 +35,9 @@ public:
 
   inline size_t instruction_notes_len() const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> instruction_note_at(size_t index) const;
+  inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> instruction_note_at(size_t index) const;
+  template<typename W>
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> instruction_note_at_write(size_t index, W& writeable_output) const;
 
   inline static diplomat::result<std::unique_ptr<fatoora::PaymentMeans>, std::unique_ptr<fatoora::BindingError>> new_(std::string_view code, std::optional<std::string_view> instruction);
 
@@ -47,13 +47,19 @@ public:
   template<typename W>
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> code_write(W& writeable_output) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> instruction_note() const;
+  inline std::optional<std::string> instruction_note() const;
+  template<typename W>
+  inline std::optional<std::monostate> instruction_note_write(W& writeable_output) const;
 
   inline bool has_account() const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> account_identifier() const;
+  inline std::optional<std::string> account_identifier() const;
+  template<typename W>
+  inline std::optional<std::monostate> account_identifier_write(W& writeable_output) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> payment_terms() const;
+  inline std::optional<std::string> payment_terms() const;
+  template<typename W>
+  inline std::optional<std::monostate> payment_terms_write(W& writeable_output) const;
 
     inline const fatoora::capi::PaymentMeans* AsFFI() const;
     inline fatoora::capi::PaymentMeans* AsFFI();

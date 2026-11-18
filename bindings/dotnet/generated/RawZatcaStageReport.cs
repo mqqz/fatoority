@@ -22,7 +22,7 @@ internal partial struct ZatcaStageReport
     internal static unsafe extern nuint EvaluatedAssertionsLen(ZatcaStageReport* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaStageReport_evaluated_assertion", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError EvaluatedAssertion(ZatcaStageReport* handle, nuint index);
+    internal static unsafe extern DiplomatResultVoidBindingError EvaluatedAssertion(ZatcaStageReport* handle, nuint index, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaStageReport_findings_len", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern nuint FindingsLen(ZatcaStageReport* handle);

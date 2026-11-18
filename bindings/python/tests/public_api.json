@@ -15,19 +15,8 @@
     "additional_street": "field",
     "building_number": "field",
     "city": "field",
-    "close": [],
     "country_code": "field",
     "district": "field",
-    "new": [
-      "country_code",
-      "city",
-      "street",
-      "building_number",
-      "postal_code",
-      "additional_street",
-      "additional_number",
-      "district"
-    ],
     "postal_code": "field",
     "province": "field",
     "street": "field",
@@ -53,10 +42,8 @@
     "base_amount": "field",
     "category": "field",
     "charge": "field",
-    "close": [],
     "exemption": "field",
     "omitted_rate": "field",
-    "percent": "property",
     "percent_of": [
       "base",
       "percent",
@@ -67,16 +54,52 @@
     "reason": "field",
     "reason_code": "field",
     "tax_category_count": "field",
-    "value": "property",
     "with_reason": [
       "reason",
       "code"
-    ],
-    "with_supplied_amount": [
-      "value"
     ]
   },
   "ApiError": {},
+  "AsyncZatcaClient": {
+    "__init__": [
+      "config",
+      "*",
+      "timeout",
+      "http_client"
+    ],
+    "aclose": [],
+    "check_invoice_compliance": [
+      "invoice",
+      "ccsid"
+    ],
+    "clear_standard_invoice": [
+      "invoice",
+      "pcsid",
+      "*",
+      "clearance",
+      "accept_language"
+    ],
+    "renew_csid": [
+      "pcsid",
+      "csr",
+      "otp",
+      "accept_language"
+    ],
+    "report_simplified_invoice": [
+      "invoice",
+      "pcsid",
+      "*",
+      "clearance",
+      "accept_language"
+    ],
+    "request_compliance_csid": [
+      "csr",
+      "otp"
+    ],
+    "request_production_csid": [
+      "ccsid"
+    ]
+  },
   "ClearanceMode": {
     "DISABLED": "member",
     "ENABLED": "member"
@@ -96,12 +119,6 @@
     "binary_security_token": "property",
     "close": [],
     "env": "property",
-    "new": [
-      "env",
-      "token",
-      "secret",
-      "request_id"
-    ],
     "request_id": "property",
     "secret": "property"
   },
@@ -146,29 +163,8 @@
     "from_file": [
       "path"
     ],
-    "from_properties_str": [
-      "properties"
-    ],
     "from_str": [
       "properties"
-    ],
-    "new": [
-      "*",
-      "common_name",
-      "serial_number",
-      "organization_identifier",
-      "organization_unit_name",
-      "organization_name",
-      "country_name",
-      "invoice_type",
-      "location_address",
-      "industry_business_category"
-    ],
-    "parse_csr_config": [
-      "properties"
-    ],
-    "parse_csr_config_file": [
-      "path"
     ]
   },
   "Environment": {
@@ -176,9 +172,8 @@
     "SIMULATION": "member",
     "PRODUCTION": "member"
   },
+  "ErrorKind": {},
   "FatooraError": {},
-  "FfiError": {},
-  "FfiErrorKind": {},
   "FinalizedInvoice": {
     "actual_delivery_date": "property",
     "adjustments": "property",
@@ -197,7 +192,6 @@
       "xml"
     ],
     "hash": [],
-    "hash_base64": [],
     "id": "property",
     "invoice_counter": "property",
     "invoice_level_charge": "property",
@@ -234,7 +228,6 @@
     ],
     "tax_currency": "property",
     "tax_currency_amount": "property",
-    "to_xml": [],
     "totals": "property",
     "uuid": "property",
     "vat_breakdown": "property",
@@ -246,7 +239,6 @@
       "value",
       "scheme"
     ],
-    "close": [],
     "scheme": "field",
     "value": "field"
   },
@@ -292,13 +284,6 @@
       "rate",
       "exemption"
     ],
-    "add_document_adjustment": [
-      "charge",
-      "value",
-      "category",
-      "rate",
-      "exemption"
-    ],
     "add_item": [
       "item"
     ],
@@ -335,38 +320,8 @@
     "add_vat_breakdown": [
       "value"
     ],
-    "allowance_reason": [
-      "reason"
-    ],
     "build": [],
     "close": [],
-    "flags": [
-      "flags"
-    ],
-    "invoice_level_charge": [
-      "charge"
-    ],
-    "invoice_level_discount": [
-      "discount"
-    ],
-    "new": [
-      "invoice_type",
-      "invoice_subtype",
-      "original_invoice_id",
-      "original_invoice_uuid",
-      "original_invoice_issue_date",
-      "original_invoice_reason"
-    ],
-    "new_with_reference": [
-      "invoice_type",
-      "invoice_subtype",
-      "reference",
-      "reason"
-    ],
-    "set_allowance": [
-      "reason",
-      "amount"
-    ],
     "set_buyer": [
       "name",
       "*",
@@ -412,21 +367,11 @@
     "set_issue_datetime": [
       "issue_datetime"
     ],
-    "set_note": [
-      "language",
-      "text"
-    ],
-    "set_note_without_language": [
-      "text"
-    ],
     "set_payable_rounding_amount": [
       "amount"
     ],
     "set_payment_instruction": [
       "instruction"
-    ],
-    "set_payment_means_code": [
-      "payment_means_code"
     ],
     "set_prepaid_amount": [
       "amount"
@@ -457,11 +402,6 @@
     "set_tax_currency": [
       "currency",
       "amount"
-    ],
-    "set_tax_exemption": [
-      "category",
-      "rate",
-      "exemption"
     ],
     "set_uuid": [
       "uuid"
@@ -532,7 +472,6 @@
       "text",
       "language_id"
     ],
-    "close": [],
     "language": "property",
     "language_id": "field",
     "text": "field"
@@ -607,7 +546,6 @@
     ],
     "build": [],
     "close": [],
-    "new": [],
     "set_exemption": [
       "value"
     ],
@@ -686,18 +624,10 @@
       "issue_time",
       "document_type_code"
     ],
-    "close": [],
     "document_type_code": "field",
     "id": "field",
     "issue_date": "field",
     "issue_time": "field",
-    "new": [
-      "id",
-      "uuid",
-      "date",
-      "time",
-      "type_code"
-    ],
     "uuid": "field"
   },
   "ParseError": {},
@@ -709,7 +639,6 @@
       "identifiers"
     ],
     "address": "field",
-    "close": [],
     "identifiers": "field",
     "name": "field",
     "other_id": "property",
@@ -723,15 +652,10 @@
       "payment_terms"
     ],
     "account_identifier": "field",
-    "close": [],
     "code": "field",
     "has_account": [],
     "instruction_note": "property",
     "instruction_notes": "field",
-    "new": [
-      "code",
-      "instruction"
-    ],
     "payment_terms": "field",
     "with_account": [
       "id",
@@ -752,12 +676,6 @@
     "binary_security_token": "property",
     "close": [],
     "env": "property",
-    "new": [
-      "env",
-      "token",
-      "secret",
-      "request_id"
-    ],
     "request_id": "property",
     "secret": "property"
   },
@@ -788,9 +706,7 @@
       "xml"
     ],
     "hash": [],
-    "hash_base64": [],
     "id": "property",
-    "into_xml": [],
     "invoice_counter": "property",
     "invoice_hash": "property",
     "invoice_level_charge": "property",
@@ -831,7 +747,6 @@
     "signing_time": "property",
     "tax_currency": "property",
     "tax_currency_amount": "property",
-    "to_xml": [],
     "to_xml_base64": [],
     "totals": "property",
     "uuid": "property",
@@ -960,17 +875,9 @@
       "pcsid",
       "*",
       "clearance",
-      "accept_language",
-      "clearance_status"
+      "accept_language"
     ],
     "close": [],
-    "post_ccsid_for_pcsid": [
-      "ccsid"
-    ],
-    "post_csr_for_ccsid": [
-      "csr",
-      "otp"
-    ],
     "renew_csid": [
       "pcsid",
       "csr",
@@ -982,8 +889,7 @@
       "pcsid",
       "*",
       "clearance",
-      "accept_language",
-      "clearance_status"
+      "accept_language"
     ],
     "request_compliance_csid": [
       "csr",
@@ -1078,26 +984,7 @@
   "hash_xml": [
     "xml"
   ],
-  "invoice_hash_base64_from_xml_str": [
-    "xml"
-  ],
-  "parse_finalized_invoice_xml": [
-    "xml"
-  ],
-  "parse_finalized_invoice_xml_file": [
-    "path"
-  ],
-  "parse_signed_invoice_xml": [
-    "xml"
-  ],
-  "parse_signed_invoice_xml_file": [
-    "path"
-  ],
   "validate_xml": [
-    "xml"
-  ],
-  "validate_xml_invoice_from_str": [
-    "config",
     "xml"
   ],
   "validate_zatca": [
@@ -1105,69 +992,5 @@
     "*",
     "previous_invoice_hash",
     "evaluated_at"
-  ],
-  "validate_zatca_invoice_from_str": [
-    "config",
-    "xml",
-    "*",
-    "previous_invoice_hash",
-    "evaluated_at"
-  ],
-  "__deprecated__": [
-    "Address.close",
-    "Address.new",
-    "Adjustment.amount",
-    "Adjustment.close",
-    "Adjustment.percent",
-    "Adjustment.percentage",
-    "Adjustment.value",
-    "Adjustment.with_supplied_amount",
-    "AllowanceCharge",
-    "ComplianceCsid.new",
-    "CsidCompliance",
-    "CsidProduction",
-    "CsrProperties.from_properties_str",
-    "CsrProperties.new",
-    "CsrProperties.parse_csr_config",
-    "CsrProperties.parse_csr_config_file",
-    "DocumentReference",
-    "FinalizedInvoice.hash_base64",
-    "FinalizedInvoice.to_xml",
-    "Identifier.close",
-    "InvoiceBuilder.add_document_adjustment",
-    "InvoiceBuilder.allowance_reason",
-    "InvoiceBuilder.flags",
-    "InvoiceBuilder.invoice_level_charge",
-    "InvoiceBuilder.invoice_level_discount",
-    "InvoiceBuilder.new",
-    "InvoiceBuilder.new_with_reference",
-    "InvoiceBuilder.set_allowance",
-    "InvoiceBuilder.set_note",
-    "InvoiceBuilder.set_note_without_language",
-    "InvoiceBuilder.set_payment_means_code",
-    "InvoiceBuilder.set_tax_exemption",
-    "InvoiceNote.close",
-    "LineItemBuilder.new",
-    "OriginalInvoiceRef.close",
-    "OriginalInvoiceRef.new",
-    "OtherId",
-    "Party.close",
-    "PaymentMeans.close",
-    "PaymentMeans.new",
-    "ProductionCsid.new",
-    "SignedInvoice.hash_base64",
-    "SignedInvoice.into_xml",
-    "SignedInvoice.to_xml",
-    "Signer",
-    "VatId",
-    "ZatcaClient.post_ccsid_for_pcsid",
-    "ZatcaClient.post_csr_for_ccsid",
-    "invoice_hash_base64_from_xml_str",
-    "parse_finalized_invoice_xml",
-    "parse_finalized_invoice_xml_file",
-    "parse_signed_invoice_xml",
-    "parse_signed_invoice_xml_file",
-    "validate_xml_invoice_from_str",
-    "validate_zatca_invoice_from_str"
   ]
 }

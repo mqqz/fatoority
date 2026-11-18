@@ -145,8 +145,7 @@ Constructors that take individual fields use the order in the property table abo
     ) -> CsrProperties
     ```
 
-    Every field is keyword-only. The 0.5 `CsrProperties.new(*, ...)` still works
-    until 0.7, with a `DeprecationWarning`.
+    Every field is keyword-only.
 
     | Call | Returns |
     | --- | --- |
@@ -165,8 +164,6 @@ Constructors that take individual fields use the order in the property table abo
     Use `Environment.NON_PRODUCTION`, `SIMULATION`, or `PRODUCTION`. Failures raise
     classified exceptions; see [Python errors](bindings/python.md). Properties, keys,
     and CSRs support `with` and `close()`. Building and serializing do not consume them.
-    The 0.5 names `from_properties_str`, `parse_csr_config` and `parse_csr_config_file`
-    still work until 0.7, with a `DeprecationWarning`.
 
 === "JavaScript"
     Import `CsrProperties`, `SigningKey`, and `Csr` from `fatoority`.
@@ -188,9 +185,9 @@ Constructors that take individual fields use the order in the property table abo
     | `CsrProperties.fromStr(text)` | `CsrProperties`; `text` is a string. |
     | `properties.build(key, env)` | `Csr`; `key` is a `SigningKey`, `env` is an `Environment`. |
     | `SigningKey.generate()` | `SigningKey` |
-    | `SigningKey.fromPem(pem)` / `SigningKey.fromDer(der)` | `SigningKey`; pass PEM string / array of byte numbers. |
+    | `SigningKey.fromPem(pem)` / `SigningKey.fromDer(der)` | `SigningKey`; pass PEM string / PKCS#8 DER `Uint8Array`. |
     | `key.toPem()` / `key.toDer()` | String / `Bytes` |
-    | `Csr.fromDer(der)` | `Csr`; pass an array of byte numbers. |
+    | `Csr.fromDer(der)` | `Csr`; pass the CSR DER as a `Uint8Array`. |
     | `csr.toPem()` / `csr.toDer()` | String / `Bytes` |
     | `csr.toBase64()` / `csr.toPemBase64()` | String |
     | `csr.subjectString` | String (property) |
@@ -199,11 +196,11 @@ Constructors that take individual fields use the order in the property table abo
     These operations are synchronous and throw a `FatooraError` subclass on failure. Read files
     with your application's file APIs, then call `fromStr`; no file-path
     constructor is exposed. Environment values are `Environment.NonProduction`,
-    `Environment.Simulation`, and `Environment.Production`. Copy returned bytes with `Uint8Array.from(bytes.asSlice())` before
-    retaining them across later calls. See [JavaScript resource handling](bindings/javascript.md).
+    `Environment.Simulation`, and `Environment.Production`. Read returned bytes with
+    `bytes.toUint8Array()`, which returns an independent copy. See [JavaScript resource handling](bindings/javascript.md).
 
 === "C#"
-    Use the `Fatoora` namespace. Use `using` for returned objects, including `Bytes` and `BytesList`. Errors throw `FfiException` subclasses such as `InvalidInputException`. Use `using var view = bytes.AsSlice();` and copy bytes with `view.Clone()`. See [C# resource handling](bindings/csharp.md).
+    Use the `Fatoora` namespace. Use `using` for returned objects, including `Bytes` and `BytesList`. Errors throw `FatooraException` subclasses such as `InvalidInputException`. Copy bytes into a `byte[]` with `bytes.ToArray()`. See [C# resource handling](bindings/csharp.md).
 
     **Properties**
 
@@ -230,7 +227,7 @@ Constructors that take individual fields use the order in the property table abo
     `.Production`. Building and serializing do not consume the properties, key, or CSR.
 
 === "Kotlin"
-    Import types from `com.fatoora`. Use `.use { ... }` or `close()` for returned objects, including `Bytes` and `BytesList`. Errors raise exceptions. Read a copied byte array with `bytes.asSlice()`. See [Kotlin resource handling](bindings/kotlin.md).
+    Import types from `com.fatoora`. Use `.use { ... }` or `close()` for returned objects, including `Bytes` and `BytesList`. Errors raise exceptions. Read a copied byte array with `bytes.toByteArray()`. See [Kotlin resource handling](bindings/kotlin.md).
 
     **Properties**
 
@@ -257,7 +254,7 @@ Constructors that take individual fields use the order in the property table abo
     `.Production`. Building and serializing do not consume the properties, key, or CSR.
 
 === "Java"
-    Import types from `com.fatoora`. Use try-with-resources or `close()` for returned objects, including `Bytes` and `BytesList`. Errors raise exceptions. Read a copied byte array with `bytes.asSlice()`. See [Java resource handling](bindings/kotlin.md).
+    Import types from `com.fatoora`. Use try-with-resources or `close()` for returned objects, including `Bytes` and `BytesList`. Errors raise exceptions. Read a copied byte array with `bytes.toByteArray()`. See [Java resource handling](bindings/kotlin.md).
 
     **Properties**
 

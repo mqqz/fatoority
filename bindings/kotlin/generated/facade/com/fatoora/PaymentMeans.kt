@@ -29,7 +29,7 @@ class PaymentMeans internal constructor(internal val raw: com.fatoora.raw.Paymen
 
     val instructionNote: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.instructionNote())?.let(::readText)
+            raw.instructionNote()
         }
 
     @get:JvmName("hasAccount")
@@ -40,49 +40,24 @@ class PaymentMeans internal constructor(internal val raw: com.fatoora.raw.Paymen
 
     val accountIdentifier: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.accountIdentifier())?.let(::readText)
+            raw.accountIdentifier()
         }
 
     val paymentTerms: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.paymentTerms())?.let(::readText)
+            raw.paymentTerms()
         }
 
     fun withInstructionNote(value: String): PaymentMeans = nativeCall(listOfNotNull(this)) {
         PaymentMeans(unwrap(raw.withInstructionNote(checkedText(value))))
     }
 
-    @Deprecated("Use the instructionNotesLen property.", ReplaceWith("instructionNotesLen"))
-    fun instructionNotesLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
-        java.math.BigInteger(raw.instructionNotesLen().toString())
-    }
-
     fun instructionNoteAt(index: java.math.BigInteger): String = nativeCall(listOfNotNull(this)) {
-        readText(unwrap(raw.instructionNoteAt(checkedCounter(index))))
+        unwrap(raw.instructionNoteAt(checkedCounter(index)))
     }
 
     @JvmOverloads
     fun withAccount(id: String? = null, terms: String? = null): PaymentMeans = nativeCall(listOfNotNull(this)) {
         PaymentMeans(unwrap(raw.withAccount(id?.let(::checkedText), terms?.let(::checkedText))))
-    }
-
-    @Deprecated("Use the code property.", ReplaceWith("code"))
-    fun code(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.code())
-    }
-
-    @Deprecated("Use the instructionNote property.", ReplaceWith("instructionNote"))
-    fun instructionNote(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.instructionNote())?.let(::Text)
-    }
-
-    @Deprecated("Use the accountIdentifier property.", ReplaceWith("accountIdentifier"))
-    fun accountIdentifier(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.accountIdentifier())?.let(::Text)
-    }
-
-    @Deprecated("Use the paymentTerms property.", ReplaceWith("paymentTerms"))
-    fun paymentTerms(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.paymentTerms())?.let(::Text)
     }
 }

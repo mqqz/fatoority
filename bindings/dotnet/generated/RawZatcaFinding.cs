@@ -10,7 +10,7 @@ internal partial struct ZatcaFinding
 {
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaFinding_assertion_site", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError AssertionSite(ZatcaFinding* handle);
+    internal static unsafe extern DiplomatOptionVoid AssertionSite(ZatcaFinding* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaFinding_layer", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern ValidationLayer Layer(ZatcaFinding* handle);
@@ -28,7 +28,7 @@ internal partial struct ZatcaFinding
     internal static unsafe extern DiplomatOptionValidationLocationKind LocationKind(ZatcaFinding* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaFinding_location_path", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError LocationPath(ZatcaFinding* handle);
+    internal static unsafe extern DiplomatOptionVoid LocationPath(ZatcaFinding* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ZatcaFinding_location_line", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatOptionUInt LocationLine(ZatcaFinding* handle);

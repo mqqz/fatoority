@@ -2,7 +2,6 @@
 import type { AdjustmentKind } from "./AdjustmentKind.mjs"
 import type { BindingError } from "./BindingError.mjs"
 import type { TaxExemption } from "./TaxExemption.mjs"
-import type { Text } from "./Text.mjs"
 import type { VatCategory } from "./VatCategory.mjs"
 import type { pointer, codepoint } from "./diplomat-runtime.mjs";
 
@@ -24,9 +23,9 @@ export class AllowanceCharge {
      */
     withPercentage(base: string, percent: string): AllowanceCharge;
 
-    baseAmount(): Text | null;
+    baseAmount(): string | null;
 
-    percentage(): Text | null;
+    percentage(): string | null;
 
     static new_(kind: AdjustmentKind, amount: string, reason: string | null, reasonCode: string | null, category: VatCategory, rate: string, exemption: TaxExemption): AllowanceCharge;
 
@@ -45,9 +44,9 @@ export class AllowanceCharge {
 
     taxCategoryCount(): number;
 
-    reason(): Text | null;
+    reason(): string | null;
 
-    reasonCode(): Text | null;
+    reasonCode(): string | null;
 
     exemption(): TaxExemption;
 }

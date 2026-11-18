@@ -37,31 +37,16 @@ export const properties = {
   ZatcaValidationReport: ['schemaVersion', 'profile', 'evaluatedAt', 'isComplete', 'hasErrors', 'isValid', 'stagesLen'],
 };
 
-/** Members whose generated `Text` result is returned as a string. */
-export const textResults = {
-  Address: ['province', 'additionalStreet', 'additionalNumber', 'district'],
-  Adjustment: ['baseAmount', 'percentage', 'reason', 'reasonCode'],
-  AllowanceCharge: ['baseAmount', 'percentage', 'reason', 'reasonCode'],
-  ComplianceCsid: ['requestId'],
-  InvoiceData: ['purchaseOrderId', 'contractId', 'paymentInstruction', 'actualDeliveryDate', 'latestDeliveryDate', 'taxCurrency', 'taxCurrencyAmount', 'allowanceReason', 'originalInvoiceReason'],
-  InvoiceLineItem: ['itemGrossPrice', 'itemPriceDiscount', 'itemPriceBaseQuantity', 'itemPriceBaseQuantityUnitCode', 'id'],
-  InvoiceNote: ['languageId'],
-  OriginalInvoiceRef: ['issueTime', 'documentTypeCode', 'uuid', 'issueDate'],
-  OtherId: ['scheme'],
-  PaymentMeans: ['instructionNoteAt', 'instructionNote', 'accountIdentifier', 'paymentTerms'],
-  ProductionCsid: ['requestId'],
-  SignedInvoice: ['zatcaKeySignature'],
-  TaxExemption: ['reasonCode', 'reason'],
-  ValidationMessage: ['messageTypeRaw', 'code', 'category', 'message', 'statusRaw'],
-  ValidationResponse: ['clearedInvoiceXml', 'clearedInvoiceBase64', 'reportingStatusRaw', 'clearanceStatusRaw', 'qrSellerStatus', 'qrBuyerStatus'],
-  ValidationResults: ['statusRaw'],
-  ZatcaFinding: ['assertionSite', 'locationPath'],
-  ZatcaStageReport: ['evaluatedAssertion'],
+/**
+ * Fallible string getters that are null when their `*Present` sibling is false.
+ * patch.mjs merges each pair into one member and removes the `*Present` method.
+ */
+export const optionalResults = {
+  SignedInvoice: { zatcaKeySignature: 'zatcaKeySignaturePresent' },
+  ValidationResponse: { clearedInvoiceXml: 'clearedInvoiceXmlPresent' },
 };
 
-/** 0.5 names of members renamed in 0.6 to match the Rust core; removed in 0.7. */
-export const renamedMembers = {
-  Adjustment: { prototype: { percent: 'percentage', withSuppliedAmount: 'suppliedAmount' }, static: { percentage: 'percentOf' } },
-  AllowanceCharge: { prototype: { withoutVatRate: 'omitVatRate' } },
-  VatBreakdown: { prototype: { withoutVatRate: 'omitVatRate' } },
+/** `&[u8]` results by generated name: the public name returns a `Uint8Array` copy. */
+export const byteResults = {
+  Bytes: { asSlice: 'toUint8Array' },
 };

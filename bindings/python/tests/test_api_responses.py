@@ -28,6 +28,7 @@ def gateway(monkeypatch, status, body, delay=0.0, headers=None):
             self.send_header("Content-Length", str(len(payload)))
             self.end_headers()
             self.wfile.write(payload)
+        do_PATCH = do_POST  # credential renewal
         def log_message(self, *args):
             pass
     server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
@@ -122,16 +123,6 @@ def test_clearance_mode_sets_the_header(monkeypatch, mode, header):
     assert seen["clearance-status"] == header
 
 
-@pytest.mark.parametrize("value,header", [(False, "0"), (True, "1")])
-def test_deprecated_clearance_status_still_sets_the_header(monkeypatch, value, header):
-    seen = {}
-    body = '{"validationResults":{"status":"PASS"},"reportingStatus":"REPORTED"}'
-    with gateway(monkeypatch, 200, body, headers=seen):
-        with pytest.warns(DeprecationWarning, match=f"clearance=ClearanceMode.{'ENABLED' if value else 'DISABLED'}"):
-            report(clearance_options={"clearance_status": value}).close()
-    assert seen["clearance-status"] == header
-
-
 @pytest.mark.parametrize("value", [None, "", "%%%", "/w==", "AA=="])
 def test_cleared_invoice_missing_and_invalid(monkeypatch, value):
     body = json.dumps({"validationResults": {}, "reportingStatus": "REPORTED", "clearedInvoice": value})
@@ -190,8 +181,7 @@ def test_api_example_checks_acceptance_against_local_gateway(monkeypatch):
         namespace["signed"].close()
 
 
-@pytest.mark.parametrize("invoice_action", ["into_xml", "close"])
-def test_http_releases_gil_and_retains_locked_arguments(invoice_action):
+def test_http_releases_gil_and_retains_locked_arguments():
     # A subprocess bounds failures even if a regression holds the GIL forever.
     import subprocess
     import sys
@@ -202,8 +192,6 @@ def test_http_releases_gil_and_retains_locked_arguments(invoice_action):
         import base64
         import json
         import os
-        import warnings
-        warnings.simplefilter("ignore", DeprecationWarning)  # into_xml() is deprecated
         from pathlib import Path
         import sys
         from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -213,7 +201,7 @@ def test_http_releases_gil_and_retains_locked_arguments(invoice_action):
         from fatoora.errors import InvalidInputError
 
         received, release = Event(), Event()
-        captured, failures, responses, consumed = {}, [], [], []
+        captured, failures, responses = {}, [], []
 
         class Handler(BaseHTTPRequestHandler):
             def do_POST(self):
@@ -248,14 +236,12 @@ def test_http_releases_gil_and_retains_locked_arguments(invoice_action):
         mutation_threads = []
         try:
             assert received.wait(5), "HTTP operation blocked Python gateway: GIL was not released"
-            for owner, action in [(invoice, sys.argv[2]), (credentials, "close"), (client, "close")]:
+            for owner, action in [(invoice, "close"), (credentials, "close"), (client, "close")]:
                 started, finished = Event(), Event()
                 def mutate(owner=owner, action=action, started=started, finished=finished):
                     started.set()
                     try:
-                        value = getattr(owner, action)()
-                        if action == "into_xml":
-                            consumed.append(value)
+                        getattr(owner, action)()
                     except BaseException as exc:
                         failures.append(repr(exc))
                     finally:
@@ -278,15 +264,13 @@ def test_http_releases_gil_and_retains_locked_arguments(invoice_action):
             responses[0].close()
             assert base64.b64decode(captured["body"]["invoice"]).decode() == xml
             assert captured["authorization"] == "Basic " + base64.b64encode(b"test-token:test-secret").decode()
-            if sys.argv[2] == "into_xml":
-                assert consumed == [xml]
             for owner, name in ((invoice, "xml"), (credentials, "secret")):
                 try:
                     getattr(owner, name)
                 except InvalidInputError:
                     pass
                 else:
-                    raise AssertionError("closed or consumed object remained usable")
+                    raise AssertionError("closed object remained usable")
         finally:
             release.set()
             request_thread.join(2)
@@ -297,7 +281,7 @@ def test_http_releases_gil_and_retains_locked_arguments(invoice_action):
             server_thread.join(2)
     ''')
     result = subprocess.run(
-        [sys.executable, "-c", script, str(fixture), invoice_action],
+        [sys.executable, "-c", script, str(fixture)],
         capture_output=True, text=True, timeout=25,
     )
     assert result.returncode == 0, result.stdout + result.stderr

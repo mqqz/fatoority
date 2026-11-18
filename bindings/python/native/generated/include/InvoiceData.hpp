@@ -20,7 +20,6 @@
 #include "OriginalInvoiceRef.hpp"
 #include "Party.hpp"
 #include "PaymentMeans.hpp"
-#include "Text.hpp"
 #include "VatCategory.hpp"
 #include "diplomat_runtime.hpp"
 
@@ -40,26 +39,26 @@ namespace capi {
     typedef struct fatoora_InvoiceData_payment_means_result {union {_native::capi::PaymentMeans* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_payment_means_result;
     fatoora_InvoiceData_payment_means_result fatoora_InvoiceData_payment_means(const _native::capi::InvoiceData* self, size_t index);
 
-    typedef struct fatoora_InvoiceData_purchase_order_id_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_purchase_order_id_result;
-    fatoora_InvoiceData_purchase_order_id_result fatoora_InvoiceData_purchase_order_id(const _native::capi::InvoiceData* self);
+    typedef struct fatoora_InvoiceData_purchase_order_id_result { bool is_ok;} fatoora_InvoiceData_purchase_order_id_result;
+    fatoora_InvoiceData_purchase_order_id_result fatoora_InvoiceData_purchase_order_id(const _native::capi::InvoiceData* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_InvoiceData_contract_id_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_contract_id_result;
-    fatoora_InvoiceData_contract_id_result fatoora_InvoiceData_contract_id(const _native::capi::InvoiceData* self);
+    typedef struct fatoora_InvoiceData_contract_id_result { bool is_ok;} fatoora_InvoiceData_contract_id_result;
+    fatoora_InvoiceData_contract_id_result fatoora_InvoiceData_contract_id(const _native::capi::InvoiceData* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_InvoiceData_payment_instruction_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_payment_instruction_result;
-    fatoora_InvoiceData_payment_instruction_result fatoora_InvoiceData_payment_instruction(const _native::capi::InvoiceData* self);
+    typedef struct fatoora_InvoiceData_payment_instruction_result { bool is_ok;} fatoora_InvoiceData_payment_instruction_result;
+    fatoora_InvoiceData_payment_instruction_result fatoora_InvoiceData_payment_instruction(const _native::capi::InvoiceData* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_InvoiceData_actual_delivery_date_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_actual_delivery_date_result;
-    fatoora_InvoiceData_actual_delivery_date_result fatoora_InvoiceData_actual_delivery_date(const _native::capi::InvoiceData* self);
+    typedef struct fatoora_InvoiceData_actual_delivery_date_result { bool is_ok;} fatoora_InvoiceData_actual_delivery_date_result;
+    fatoora_InvoiceData_actual_delivery_date_result fatoora_InvoiceData_actual_delivery_date(const _native::capi::InvoiceData* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_InvoiceData_latest_delivery_date_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_latest_delivery_date_result;
-    fatoora_InvoiceData_latest_delivery_date_result fatoora_InvoiceData_latest_delivery_date(const _native::capi::InvoiceData* self);
+    typedef struct fatoora_InvoiceData_latest_delivery_date_result { bool is_ok;} fatoora_InvoiceData_latest_delivery_date_result;
+    fatoora_InvoiceData_latest_delivery_date_result fatoora_InvoiceData_latest_delivery_date(const _native::capi::InvoiceData* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_InvoiceData_tax_currency_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_tax_currency_result;
-    fatoora_InvoiceData_tax_currency_result fatoora_InvoiceData_tax_currency(const _native::capi::InvoiceData* self);
+    typedef struct fatoora_InvoiceData_tax_currency_result { bool is_ok;} fatoora_InvoiceData_tax_currency_result;
+    fatoora_InvoiceData_tax_currency_result fatoora_InvoiceData_tax_currency(const _native::capi::InvoiceData* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_InvoiceData_tax_currency_amount_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_tax_currency_amount_result;
-    fatoora_InvoiceData_tax_currency_amount_result fatoora_InvoiceData_tax_currency_amount(const _native::capi::InvoiceData* self);
+    typedef struct fatoora_InvoiceData_tax_currency_amount_result { bool is_ok;} fatoora_InvoiceData_tax_currency_amount_result;
+    fatoora_InvoiceData_tax_currency_amount_result fatoora_InvoiceData_tax_currency_amount(const _native::capi::InvoiceData* self, _native::diplomat::capi::DiplomatWrite* write);
 
     size_t fatoora_InvoiceData_adjustments_len(const _native::capi::InvoiceData* self);
 
@@ -90,8 +89,8 @@ namespace capi {
     typedef struct fatoora_InvoiceData_invoice_level_discount_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_invoice_level_discount_result;
     fatoora_InvoiceData_invoice_level_discount_result fatoora_InvoiceData_invoice_level_discount(const _native::capi::InvoiceData* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_InvoiceData_allowance_reason_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_allowance_reason_result;
-    fatoora_InvoiceData_allowance_reason_result fatoora_InvoiceData_allowance_reason(const _native::capi::InvoiceData* self);
+    typedef struct fatoora_InvoiceData_allowance_reason_result { bool is_ok;} fatoora_InvoiceData_allowance_reason_result;
+    fatoora_InvoiceData_allowance_reason_result fatoora_InvoiceData_allowance_reason(const _native::capi::InvoiceData* self, _native::diplomat::capi::DiplomatWrite* write);
 
     uint64_t fatoora_InvoiceData_invoice_counter(const _native::capi::InvoiceData* self);
 
@@ -120,8 +119,8 @@ namespace capi {
     typedef struct fatoora_InvoiceData_original_invoice_ref_result {union {_native::capi::OriginalInvoiceRef* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_original_invoice_ref_result;
     fatoora_InvoiceData_original_invoice_ref_result fatoora_InvoiceData_original_invoice_ref(const _native::capi::InvoiceData* self);
 
-    typedef struct fatoora_InvoiceData_original_invoice_reason_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_original_invoice_reason_result;
-    fatoora_InvoiceData_original_invoice_reason_result fatoora_InvoiceData_original_invoice_reason(const _native::capi::InvoiceData* self);
+    typedef struct fatoora_InvoiceData_original_invoice_reason_result { bool is_ok;} fatoora_InvoiceData_original_invoice_reason_result;
+    fatoora_InvoiceData_original_invoice_reason_result fatoora_InvoiceData_original_invoice_reason(const _native::capi::InvoiceData* self, _native::diplomat::capi::DiplomatWrite* write);
 
     size_t fatoora_InvoiceData_notes_len(const _native::capi::InvoiceData* self);
 
@@ -180,39 +179,109 @@ inline _native::diplomat::result<std::unique_ptr<_native::PaymentMeans>, std::un
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::PaymentMeans>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::PaymentMeans>>(std::unique_ptr<_native::PaymentMeans>(_native::PaymentMeans::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::PaymentMeans>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::InvoiceData::purchase_order_id() const {
-    auto result = _native::capi::fatoora_InvoiceData_purchase_order_id(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::InvoiceData::purchase_order_id() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_InvoiceData_purchase_order_id(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::InvoiceData::purchase_order_id_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_InvoiceData_purchase_order_id(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::InvoiceData::contract_id() const {
-    auto result = _native::capi::fatoora_InvoiceData_contract_id(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::InvoiceData::contract_id() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_InvoiceData_contract_id(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::InvoiceData::contract_id_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_InvoiceData_contract_id(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::InvoiceData::payment_instruction() const {
-    auto result = _native::capi::fatoora_InvoiceData_payment_instruction(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::InvoiceData::payment_instruction() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_InvoiceData_payment_instruction(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::InvoiceData::payment_instruction_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_InvoiceData_payment_instruction(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::InvoiceData::actual_delivery_date() const {
-    auto result = _native::capi::fatoora_InvoiceData_actual_delivery_date(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::InvoiceData::actual_delivery_date() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_InvoiceData_actual_delivery_date(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::InvoiceData::actual_delivery_date_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_InvoiceData_actual_delivery_date(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::InvoiceData::latest_delivery_date() const {
-    auto result = _native::capi::fatoora_InvoiceData_latest_delivery_date(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::InvoiceData::latest_delivery_date() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_InvoiceData_latest_delivery_date(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::InvoiceData::latest_delivery_date_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_InvoiceData_latest_delivery_date(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::InvoiceData::tax_currency() const {
-    auto result = _native::capi::fatoora_InvoiceData_tax_currency(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::InvoiceData::tax_currency() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_InvoiceData_tax_currency(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::InvoiceData::tax_currency_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_InvoiceData_tax_currency(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::InvoiceData::tax_currency_amount() const {
-    auto result = _native::capi::fatoora_InvoiceData_tax_currency_amount(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::InvoiceData::tax_currency_amount() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_InvoiceData_tax_currency_amount(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::InvoiceData::tax_currency_amount_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_InvoiceData_tax_currency_amount(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline size_t _native::InvoiceData::adjustments_len() const {
@@ -346,9 +415,19 @@ inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::Bindin
     return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::InvoiceData::allowance_reason() const {
-    auto result = _native::capi::fatoora_InvoiceData_allowance_reason(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::InvoiceData::allowance_reason() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_InvoiceData_allowance_reason(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::InvoiceData::allowance_reason_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_InvoiceData_allowance_reason(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline uint64_t _native::InvoiceData::invoice_counter() const {
@@ -381,14 +460,14 @@ inline _native::diplomat::result<std::unique_ptr<_native::Party>, std::unique_pt
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Party>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Party>>(std::unique_ptr<_native::Party>(_native::Party::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Party>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Party>, std::unique_ptr<_native::BindingError>> _native::InvoiceData::buyer() const {
+inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Party>>, std::unique_ptr<_native::BindingError>> _native::InvoiceData::buyer() const {
     auto result = _native::capi::fatoora_InvoiceData_buyer(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Party>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Party>>(std::unique_ptr<_native::Party>(_native::Party::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Party>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+    return result.is_ok ? _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Party>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::diplomat::maybe_null<std::unique_ptr<_native::Party>>>(std::unique_ptr<_native::Party>(_native::Party::FromFFI(result.ok)))) : _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Party>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::InvoiceNote>, std::unique_ptr<_native::BindingError>> _native::InvoiceData::note() const {
+inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::InvoiceNote>>, std::unique_ptr<_native::BindingError>> _native::InvoiceData::note() const {
     auto result = _native::capi::fatoora_InvoiceData_note(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::InvoiceNote>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::InvoiceNote>>(std::unique_ptr<_native::InvoiceNote>(_native::InvoiceNote::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::InvoiceNote>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+    return result.is_ok ? _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::InvoiceNote>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::diplomat::maybe_null<std::unique_ptr<_native::InvoiceNote>>>(std::unique_ptr<_native::InvoiceNote>(_native::InvoiceNote::FromFFI(result.ok)))) : _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::InvoiceNote>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
 inline size_t _native::InvoiceData::line_items_len() const {
@@ -402,14 +481,24 @@ inline _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std:
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::InvoiceLineItem>>(std::unique_ptr<_native::InvoiceLineItem>(_native::InvoiceLineItem::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::OriginalInvoiceRef>, std::unique_ptr<_native::BindingError>> _native::InvoiceData::original_invoice_ref() const {
+inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::OriginalInvoiceRef>>, std::unique_ptr<_native::BindingError>> _native::InvoiceData::original_invoice_ref() const {
     auto result = _native::capi::fatoora_InvoiceData_original_invoice_ref(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::OriginalInvoiceRef>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::OriginalInvoiceRef>>(std::unique_ptr<_native::OriginalInvoiceRef>(_native::OriginalInvoiceRef::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::OriginalInvoiceRef>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+    return result.is_ok ? _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::OriginalInvoiceRef>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::diplomat::maybe_null<std::unique_ptr<_native::OriginalInvoiceRef>>>(std::unique_ptr<_native::OriginalInvoiceRef>(_native::OriginalInvoiceRef::FromFFI(result.ok)))) : _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::OriginalInvoiceRef>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::InvoiceData::original_invoice_reason() const {
-    auto result = _native::capi::fatoora_InvoiceData_original_invoice_reason(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::InvoiceData::original_invoice_reason() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_InvoiceData_original_invoice_reason(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::InvoiceData::original_invoice_reason_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_InvoiceData_original_invoice_reason(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline size_t _native::InvoiceData::notes_len() const {

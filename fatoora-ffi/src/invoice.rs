@@ -26,8 +26,10 @@ fn party<R: inv_core::PartyRole>(p: &inv_core::Party<R>) -> ffi::Party {
 #[diplomat::attr(cpp, namespace = "fatoora")]
 pub mod ffi {
     use super::{PartyData, decimal, inv_core, party};
-    use crate::common::ffi::{BindingError, Text};
-    use crate::common::{boundary, core_error, local_error, optional_text, text, write};
+    use crate::common::ffi::BindingError;
+    use crate::common::{
+        boundary, core_error, local_error, optional_text, text, write, write_optional,
+    };
     use crate::validation::ffi::ZatcaValidationReport;
     use diplomat_runtime::{DiplomatStr, DiplomatWrite};
 
@@ -115,8 +117,8 @@ pub mod ffi {
                 )))
             })
         }
-        pub fn province(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok(self.0.province().map(|v| Box::new(Text(v.into())))))
+        pub fn province(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.province(), out)
         }
 
         #[allow(clippy::too_many_arguments)]
@@ -165,14 +167,14 @@ pub mod ffi {
         pub fn country_code(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
             boundary(|| write(self.0.country_code().as_str(), out))
         }
-        pub fn additional_street(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok((self.0.additional_street()).map(|v| Box::new(Text(v.to_string())))))
+        pub fn additional_street(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.additional_street(), out)
         }
-        pub fn additional_number(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok((self.0.additional_number()).map(|v| Box::new(Text(v.to_string())))))
+        pub fn additional_number(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.additional_number(), out)
         }
-        pub fn district(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok((self.0.district()).map(|v| Box::new(Text(v.to_string())))))
+        pub fn district(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.district(), out)
         }
     }
     #[diplomat::opaque]
@@ -190,16 +192,16 @@ pub mod ffi {
         pub fn value(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
             boundary(|| write(self.0.as_str(), out))
         }
-        pub fn scheme(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok((self.0.scheme_id()).map(|v| Box::new(Text(v.to_string())))))
+        pub fn scheme(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.scheme_id(), out)
         }
     }
     #[diplomat::opaque]
     #[diplomat::attr(dotnet, manually_disposable)]
     pub struct InvoiceNote(pub(crate) inv_core::InvoiceNote);
     impl InvoiceNote {
-        pub fn language_id(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok(self.0.language_id().map(|s| Box::new(Text(s.into())))))
+        pub fn language_id(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.language_id(), out)
         }
 
         pub fn language(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
@@ -237,36 +239,21 @@ pub mod ffi {
                 Ok(Box::new(Self(r)))
             })
         }
-        pub fn issue_time(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| {
-                Ok(self
-                    .0
-                    .issue_time()
-                    .map(|v| Box::new(Text(v.as_str().into()))))
-            })
+        pub fn issue_time(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.issue_time().map(|v| v.as_str()), out)
         }
-        pub fn document_type_code(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| {
-                Ok(self
-                    .0
-                    .document_type_code()
-                    .map(|v| Box::new(Text(v.into()))))
-            })
+        pub fn document_type_code(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.document_type_code(), out)
         }
 
         pub fn id(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
             boundary(|| write(self.0.id(), out))
         }
-        pub fn uuid(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok((self.0.uuid()).map(|v| Box::new(Text(v.to_string())))))
+        pub fn uuid(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.uuid(), out)
         }
-        pub fn issue_date(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| {
-                Ok(
-                    (self.0.issue_date().map(|v| v.as_str()))
-                        .map(|v| Box::new(Text(v.to_string()))),
-                )
-            })
+        pub fn issue_date(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.issue_date().map(|v| v.as_str()), out)
         }
     }
     #[diplomat::opaque]
@@ -326,11 +313,11 @@ pub mod ffi {
                 Ok(Box::new(Self(exemption)))
             })
         }
-        pub fn reason_code(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok(self.0.reason_code().map(|s| Box::new(Text(s.into())))))
+        pub fn reason_code(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.reason_code(), out)
         }
-        pub fn reason(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok(self.0.reason().map(|s| Box::new(Text(s.into())))))
+        pub fn reason(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.reason(), out)
         }
     }
     #[diplomat::opaque]
@@ -377,11 +364,11 @@ pub mod ffi {
             })
         }
 
-        pub fn base_amount(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok(self.0.base_amount().map(|v| Box::new(Text(v.to_string())))))
+        pub fn base_amount(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.base_amount().map(|v| v.to_string()), out)
         }
-        pub fn percentage(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok(self.0.percentage().map(|v| Box::new(Text(v.to_string())))))
+        pub fn percentage(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.percentage().map(|v| v.to_string()), out)
         }
 
         #[allow(clippy::too_many_arguments)]
@@ -448,11 +435,11 @@ pub mod ffi {
         pub fn tax_category_count(&self) -> usize {
             self.0.tax_category_count()
         }
-        pub fn reason(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok(self.0.reason().map(|s| Box::new(Text(s.into())))))
+        pub fn reason(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.reason(), out)
         }
-        pub fn reason_code(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok(self.0.reason_code().map(|s| Box::new(Text(s.into())))))
+        pub fn reason_code(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.reason_code(), out)
         }
         pub fn exemption(&self) -> Result<Box<TaxExemption>, Box<BindingError>> {
             boundary(|| Ok(Box::new(TaxExemption(self.0.exemption().clone()))))
@@ -562,17 +549,17 @@ pub mod ffi {
         pub fn value(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
             boundary(|| write(self.0.value().map_err(core_error)?.to_string(), out))
         }
-        pub fn base_amount(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok(self.0.base_amount().map(|v| Box::new(Text(v.to_string())))))
+        pub fn base_amount(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.base_amount().map(|v| v.to_string()), out)
         }
-        pub fn percentage(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok(self.0.percentage().map(|v| Box::new(Text(v.to_string())))))
+        pub fn percentage(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.percentage().map(|v| v.to_string()), out)
         }
-        pub fn reason(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok(self.0.reason().map(|v| Box::new(Text(v.into())))))
+        pub fn reason(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.reason(), out)
         }
-        pub fn reason_code(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok(self.0.reason_code().map(|v| Box::new(Text(v.into())))))
+        pub fn reason_code(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.reason_code(), out)
         }
     }
     #[diplomat::opaque_mut]
@@ -774,14 +761,18 @@ pub mod ffi {
         pub fn instruction_notes_len(&self) -> usize {
             self.0.instruction_notes().len()
         }
-        pub fn instruction_note_at(&self, index: usize) -> Result<Box<Text>, Box<BindingError>> {
+        pub fn instruction_note_at(
+            &self,
+            index: usize,
+            out: &mut DiplomatWrite,
+        ) -> Result<(), Box<BindingError>> {
             boundary(|| {
-                self.0
+                let note = self
+                    .0
                     .instruction_notes()
                     .get(index)
-                    .cloned()
-                    .map(|v| Box::new(Text(v)))
-                    .ok_or_else(|| local_error(1, "instruction index out of range"))
+                    .ok_or_else(|| local_error(1, "instruction index out of range"))?;
+                write(note, out)
             })
         }
 
@@ -818,37 +809,29 @@ pub mod ffi {
         pub fn code(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
             boundary(|| write(self.0.code(), out))
         }
-        pub fn instruction_note(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| {
-                Ok(self
-                    .0
-                    .instruction_notes()
-                    .first()
-                    .map(|v| Box::new(Text(v.clone()))))
-            })
+        pub fn instruction_note(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.instruction_notes().first(), out)
         }
         pub fn has_account(&self) -> bool {
             self.0.payee_financial_account().is_some()
         }
-        pub fn account_identifier(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| {
-                Ok(self
-                    .0
+        pub fn account_identifier(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(
+                self.0
                     .payee_financial_account()
                     .as_ref()
-                    .and_then(|v| v.payment_account_identifier())
-                    .map(|v| Box::new(Text(v.into()))))
-            })
+                    .and_then(|v| v.payment_account_identifier()),
+                out,
+            )
         }
-        pub fn payment_terms(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| {
-                Ok(self
-                    .0
+        pub fn payment_terms(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(
+                self.0
                     .payee_financial_account()
                     .as_ref()
-                    .and_then(|v| v.payment_terms())
-                    .map(|v| Box::new(Text(v.into()))))
-            })
+                    .and_then(|v| v.payment_terms()),
+                out,
+            )
         }
     }
     #[diplomat::opaque_mut]
@@ -1366,9 +1349,23 @@ pub mod ffi {
                 write(time.as_str().trim_end_matches('Z'), out)
             })
         }
-        pub fn zatca_key_signature(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
+        // An `x_present`/`x` pair, merged into one nullable string by the facades:
+        // both fail once the invoice is consumed (see `ValidationResponse`).
+        /// Whether the invoice carries a ZATCA key signature.
+        pub fn zatca_key_signature_present(&self) -> Result<bool, Box<BindingError>> {
+            boundary(|| Ok(self.get()?.zatca_key_signature().is_some()))
+        }
+        /// Base64 signature value of the signing certificate, or null when absent.
+        pub fn zatca_key_signature(
+            &self,
+            out: &mut DiplomatWrite,
+        ) -> Result<(), Box<BindingError>> {
             boundary(|| {
-                Ok((self.get()?.zatca_key_signature()).map(|v| Box::new(Text(v.to_string()))))
+                let signature = self
+                    .get()?
+                    .zatca_key_signature()
+                    .ok_or_else(|| local_error(1, "invoice has no ZATCA key signature"))?;
+                write(signature, out)
             })
         }
         pub fn into_xml(&mut self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>> {
@@ -1406,56 +1403,41 @@ pub mod ffi {
             })
         }
 
-        pub fn purchase_order_id(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok(self.0.purchase_order_id().map(|v| Box::new(Text(v.into())))))
+        pub fn purchase_order_id(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.purchase_order_id(), out)
         }
 
-        pub fn contract_id(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok(self.0.contract_id().map(|v| Box::new(Text(v.into())))))
+        pub fn contract_id(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.contract_id(), out)
         }
 
-        pub fn payment_instruction(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| {
-                Ok(self
-                    .0
-                    .payment_instruction()
-                    .map(|s| Box::new(Text(s.into()))))
-            })
+        pub fn payment_instruction(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.payment_instruction(), out)
         }
 
-        pub fn actual_delivery_date(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| {
-                Ok(self
-                    .0
+        pub fn actual_delivery_date(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(
+                self.0
                     .delivery()
                     .and_then(|d| d.actual_date())
-                    .map(|d| Box::new(Text(d.as_str().into()))))
-            })
+                    .map(|d| d.as_str()),
+                out,
+            )
         }
-        pub fn latest_delivery_date(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| {
-                Ok(self
-                    .0
+        pub fn latest_delivery_date(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(
+                self.0
                     .delivery()
                     .and_then(|d| d.latest_date())
-                    .map(|d| Box::new(Text(d.as_str().into()))))
-            })
+                    .map(|d| d.as_str()),
+                out,
+            )
         }
-        pub fn tax_currency(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| {
-                Ok(self
-                    .0
-                    .tax_currency()
-                    .map(|d| Box::new(Text(d.as_str().into()))))
-            })
+        pub fn tax_currency(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.tax_currency().map(|d| d.as_str()), out)
         }
-        pub fn tax_currency_amount(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| {
-                Ok(self
-                    .0
-                    .tax_currency_amount()
-                    .map(|d| Box::new(Text(d.to_string()))))
-            })
+        pub fn tax_currency_amount(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.tax_currency_amount().map(|d| d.to_string()), out)
         }
         pub fn adjustments_len(&self) -> usize {
             self.0.adjustments().len()
@@ -1504,8 +1486,8 @@ pub mod ffi {
         ) -> Result<(), Box<BindingError>> {
             boundary(|| write(self.0.invoice_level_discount().to_string(), out))
         }
-        pub fn allowance_reason(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok((self.0.allowance_reason()).map(|v| Box::new(Text(v.to_string())))))
+        pub fn allowance_reason(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.allowance_reason(), out)
         }
         pub fn invoice_counter(&self) -> u64 {
             self.0.invoice_counter()
@@ -1572,13 +1554,8 @@ pub mod ffi {
                     .map(|v| Box::new(OriginalInvoiceRef(v))))
             })
         }
-        pub fn original_invoice_reason(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| {
-                Ok(self
-                    .0
-                    .payment_instruction()
-                    .map(|v| Box::new(Text(v.into()))))
-            })
+        pub fn original_invoice_reason(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.payment_instruction(), out)
         }
         pub fn notes_len(&self) -> usize {
             self.0.notes().len()
@@ -1614,39 +1591,20 @@ pub mod ffi {
     #[diplomat::attr(dotnet, manually_disposable)]
     pub struct InvoiceLineItem(pub(crate) inv_core::LineItem);
     impl InvoiceLineItem {
-        pub fn item_gross_price(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| {
-                Ok(self
-                    .0
-                    .item_gross_price()
-                    .map(|v| Box::new(Text(v.to_string()))))
-            })
+        pub fn item_gross_price(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.item_gross_price().map(|v| v.to_string()), out)
         }
-        pub fn item_price_discount(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| {
-                Ok(self
-                    .0
-                    .item_price_discount()
-                    .map(|v| Box::new(Text(v.to_string()))))
-            })
+        pub fn item_price_discount(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.item_price_discount().map(|v| v.to_string()), out)
         }
-        pub fn item_price_base_quantity(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| {
-                Ok(self
-                    .0
-                    .item_price_base_quantity()
-                    .map(|v| Box::new(Text(v.to_string()))))
-            })
+        pub fn item_price_base_quantity(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(
+                self.0.item_price_base_quantity().map(|v| v.to_string()),
+                out,
+            )
         }
-        pub fn item_price_base_quantity_unit_code(
-            &self,
-        ) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| {
-                Ok(self
-                    .0
-                    .item_price_base_quantity_unit_code()
-                    .map(|v| Box::new(Text(v.into()))))
-            })
+        pub fn item_price_base_quantity_unit_code(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.item_price_base_quantity_unit_code(), out)
         }
         pub fn adjustments_len(&self) -> usize {
             self.0.adjustments().len()
@@ -1782,8 +1740,8 @@ pub mod ffi {
                 Ok(Box::new(Self(item)))
             })
         }
-        pub fn id(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok(self.0.id().map(|s| Box::new(Text(s.into())))))
+        pub fn id(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.id(), out)
         }
         pub fn exemption(&self) -> Result<Box<TaxExemption>, Box<BindingError>> {
             boundary(|| Ok(Box::new(TaxExemption(self.0.exemption().clone()))))

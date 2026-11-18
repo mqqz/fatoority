@@ -13,7 +13,6 @@
 #include <cstdlib>
 #include "../diplomat_runtime.hpp"
 #include "BindingError.hpp"
-#include "Text.hpp"
 
 
 namespace fatoora {
@@ -25,8 +24,8 @@ namespace capi {
 
     size_t fatoora_PaymentMeans_instruction_notes_len(const fatoora::capi::PaymentMeans* self);
 
-    typedef struct fatoora_PaymentMeans_instruction_note_at_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_PaymentMeans_instruction_note_at_result;
-    fatoora_PaymentMeans_instruction_note_at_result fatoora_PaymentMeans_instruction_note_at(const fatoora::capi::PaymentMeans* self, size_t index);
+    typedef struct fatoora_PaymentMeans_instruction_note_at_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_PaymentMeans_instruction_note_at_result;
+    fatoora_PaymentMeans_instruction_note_at_result fatoora_PaymentMeans_instruction_note_at(const fatoora::capi::PaymentMeans* self, size_t index, diplomat::capi::DiplomatWrite* write);
 
     typedef struct fatoora_PaymentMeans_new_result {union {fatoora::capi::PaymentMeans* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_PaymentMeans_new_result;
     fatoora_PaymentMeans_new_result fatoora_PaymentMeans_new(diplomat::capi::DiplomatStringView code, diplomat::capi::OptionStringView instruction);
@@ -37,16 +36,16 @@ namespace capi {
     typedef struct fatoora_PaymentMeans_code_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_PaymentMeans_code_result;
     fatoora_PaymentMeans_code_result fatoora_PaymentMeans_code(const fatoora::capi::PaymentMeans* self, diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_PaymentMeans_instruction_note_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_PaymentMeans_instruction_note_result;
-    fatoora_PaymentMeans_instruction_note_result fatoora_PaymentMeans_instruction_note(const fatoora::capi::PaymentMeans* self);
+    typedef struct fatoora_PaymentMeans_instruction_note_result { bool is_ok;} fatoora_PaymentMeans_instruction_note_result;
+    fatoora_PaymentMeans_instruction_note_result fatoora_PaymentMeans_instruction_note(const fatoora::capi::PaymentMeans* self, diplomat::capi::DiplomatWrite* write);
 
     bool fatoora_PaymentMeans_has_account(const fatoora::capi::PaymentMeans* self);
 
-    typedef struct fatoora_PaymentMeans_account_identifier_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_PaymentMeans_account_identifier_result;
-    fatoora_PaymentMeans_account_identifier_result fatoora_PaymentMeans_account_identifier(const fatoora::capi::PaymentMeans* self);
+    typedef struct fatoora_PaymentMeans_account_identifier_result { bool is_ok;} fatoora_PaymentMeans_account_identifier_result;
+    fatoora_PaymentMeans_account_identifier_result fatoora_PaymentMeans_account_identifier(const fatoora::capi::PaymentMeans* self, diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_PaymentMeans_payment_terms_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_PaymentMeans_payment_terms_result;
-    fatoora_PaymentMeans_payment_terms_result fatoora_PaymentMeans_payment_terms(const fatoora::capi::PaymentMeans* self);
+    typedef struct fatoora_PaymentMeans_payment_terms_result { bool is_ok;} fatoora_PaymentMeans_payment_terms_result;
+    fatoora_PaymentMeans_payment_terms_result fatoora_PaymentMeans_payment_terms(const fatoora::capi::PaymentMeans* self, diplomat::capi::DiplomatWrite* write);
 
     void fatoora_PaymentMeans_destroy(PaymentMeans* self);
 
@@ -65,10 +64,21 @@ inline size_t fatoora::PaymentMeans::instruction_notes_len() const {
     return result;
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::PaymentMeans::instruction_note_at(size_t index) const {
+inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> fatoora::PaymentMeans::instruction_note_at(size_t index) const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
     auto result = fatoora::capi::fatoora_PaymentMeans_instruction_note_at(this->AsFFI(),
-        index);
-    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+        index,
+        &write);
+    return result.is_ok ? diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::string>(std::move(output))) : diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+template<typename W>
+inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> fatoora::PaymentMeans::instruction_note_at_write(size_t index, W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_PaymentMeans_instruction_note_at(this->AsFFI(),
+        index,
+        &write);
+    return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
 inline diplomat::result<std::unique_ptr<fatoora::PaymentMeans>, std::unique_ptr<fatoora::BindingError>> fatoora::PaymentMeans::new_(std::string_view code, std::optional<std::string_view> instruction) {
@@ -99,9 +109,19 @@ inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> 
     return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::PaymentMeans::instruction_note() const {
-    auto result = fatoora::capi::fatoora_PaymentMeans_instruction_note(this->AsFFI());
-    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::PaymentMeans::instruction_note() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_PaymentMeans_instruction_note(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::PaymentMeans::instruction_note_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_PaymentMeans_instruction_note(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline bool fatoora::PaymentMeans::has_account() const {
@@ -109,14 +129,34 @@ inline bool fatoora::PaymentMeans::has_account() const {
     return result;
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::PaymentMeans::account_identifier() const {
-    auto result = fatoora::capi::fatoora_PaymentMeans_account_identifier(this->AsFFI());
-    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::PaymentMeans::account_identifier() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_PaymentMeans_account_identifier(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::PaymentMeans::account_identifier_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_PaymentMeans_account_identifier(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::PaymentMeans::payment_terms() const {
-    auto result = fatoora::capi::fatoora_PaymentMeans_payment_terms(this->AsFFI());
-    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::PaymentMeans::payment_terms() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_PaymentMeans_payment_terms(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::PaymentMeans::payment_terms_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_PaymentMeans_payment_terms(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline const fatoora::capi::PaymentMeans* fatoora::PaymentMeans::AsFFI() const {

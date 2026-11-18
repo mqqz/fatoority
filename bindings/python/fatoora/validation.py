@@ -12,8 +12,6 @@ from .api import (
     hash_xml,
     validate_xml,
     validate_zatca,
-    validate_xml_invoice_from_str,
-    validate_zatca_invoice_from_str,
 )
 
 __all__ = [
@@ -30,6 +28,4 @@ __all__ = [
     "hash_xml",
     "validate_xml",
     "validate_zatca",
-    "validate_xml_invoice_from_str",
-    "validate_zatca_invoice_from_str",
 ]

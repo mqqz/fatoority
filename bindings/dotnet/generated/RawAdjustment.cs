@@ -25,16 +25,16 @@ internal partial struct Adjustment
     internal static unsafe extern DiplomatResultVoidBindingError Value(Adjustment* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Adjustment_base_amount", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError BaseAmount(Adjustment* handle);
+    internal static unsafe extern DiplomatOptionVoid BaseAmount(Adjustment* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Adjustment_percentage", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError Percentage(Adjustment* handle);
+    internal static unsafe extern DiplomatOptionVoid Percentage(Adjustment* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Adjustment_reason", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError Reason(Adjustment* handle);
+    internal static unsafe extern DiplomatOptionVoid Reason(Adjustment* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Adjustment_reason_code", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError ReasonCode(Adjustment* handle);
+    internal static unsafe extern DiplomatOptionVoid ReasonCode(Adjustment* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Adjustment_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(Adjustment* handle);

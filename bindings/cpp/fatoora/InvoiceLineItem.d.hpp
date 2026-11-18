@@ -24,8 +24,6 @@ namespace capi { struct OtherId; }
 class OtherId;
 namespace capi { struct TaxExemption; }
 class TaxExemption;
-namespace capi { struct Text; }
-class Text;
 namespace capi { struct VatBreakdown; }
 class VatBreakdown;
 class AdjustmentKind;
@@ -45,13 +43,21 @@ namespace fatoora {
 class InvoiceLineItem {
 public:
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> item_gross_price() const;
+  inline std::optional<std::string> item_gross_price() const;
+  template<typename W>
+  inline std::optional<std::monostate> item_gross_price_write(W& writeable_output) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> item_price_discount() const;
+  inline std::optional<std::string> item_price_discount() const;
+  template<typename W>
+  inline std::optional<std::monostate> item_price_discount_write(W& writeable_output) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> item_price_base_quantity() const;
+  inline std::optional<std::string> item_price_base_quantity() const;
+  template<typename W>
+  inline std::optional<std::monostate> item_price_base_quantity_write(W& writeable_output) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> item_price_base_quantity_unit_code() const;
+  inline std::optional<std::string> item_price_base_quantity_unit_code() const;
+  template<typename W>
+  inline std::optional<std::monostate> item_price_base_quantity_unit_code_write(W& writeable_output) const;
 
   inline size_t adjustments_len() const;
 
@@ -59,11 +65,11 @@ public:
 
   inline diplomat::result<fatoora::AdjustmentKind, std::unique_ptr<fatoora::BindingError>> adjustment_kind(size_t index) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::OtherId>, std::unique_ptr<fatoora::BindingError>> item_seller_identifier() const;
+  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::OtherId>>, std::unique_ptr<fatoora::BindingError>> item_seller_identifier() const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::OtherId>, std::unique_ptr<fatoora::BindingError>> item_buyer_identifier() const;
+  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::OtherId>>, std::unique_ptr<fatoora::BindingError>> item_buyer_identifier() const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::OtherId>, std::unique_ptr<fatoora::BindingError>> item_standard_identifier() const;
+  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::OtherId>>, std::unique_ptr<fatoora::BindingError>> item_standard_identifier() const;
 
   inline diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>> with_document_reference(const fatoora::OriginalInvoiceRef& reference) const;
 
@@ -81,7 +87,9 @@ public:
 
   inline diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>> with_metadata(std::optional<std::string_view> id, const fatoora::TaxExemption& exemption) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> id() const;
+  inline std::optional<std::string> id() const;
+  template<typename W>
+  inline std::optional<std::monostate> id_write(W& writeable_output) const;
 
   inline diplomat::result<std::unique_ptr<fatoora::TaxExemption>, std::unique_ptr<fatoora::BindingError>> exemption() const;
 

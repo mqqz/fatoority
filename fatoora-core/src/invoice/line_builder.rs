@@ -110,26 +110,6 @@ impl Adjustment {
     pub fn percentage(&self) -> Option<Decimal> {
         self.percentage
     }
-    /// Returns the free-text reason, if set.
-    #[deprecated(since = "0.6.0", note = "use `reason` instead")]
-    pub fn allowance_charge_reason(&self) -> Option<&str> {
-        self.reason()
-    }
-    /// Returns the reason code, if set.
-    #[deprecated(since = "0.6.0", note = "use `reason_code` instead")]
-    pub fn allowance_charge_reason_code(&self) -> Option<&str> {
-        self.reason_code()
-    }
-    /// Returns the calculation base amount, if set.
-    #[deprecated(since = "0.6.0", note = "use `base_amount` instead")]
-    pub fn calculation_base_amount(&self) -> Option<Decimal> {
-        self.base_amount()
-    }
-    /// Returns the calculation percentage, if set.
-    #[deprecated(since = "0.6.0", note = "use `percentage` instead")]
-    pub fn calculation_percentage(&self) -> Option<Decimal> {
-        self.percentage()
-    }
     pub(crate) fn finalize(mut self) -> Result<Self> {
         self.amount = Some(self.value()?);
         Ok(self)

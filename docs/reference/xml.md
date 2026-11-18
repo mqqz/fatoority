@@ -83,7 +83,7 @@ Choose your language for imports, exact calls, returns, and ownership behavior.
     signed.to_xml_base64() -> str
     ```
 
-    Finalized output uses the default formatting; signed output preserves stored text. String results are independent Python strings and reading them leaves state available. Use context managers or `close()` for owned objects. Errors raise exceptions; see [errors](errors.md). The 0.5 functions `parse_finalized_invoice_xml`, `parse_finalized_invoice_xml_file`, `parse_signed_invoice_xml` and `parse_signed_invoice_xml_file`, and the methods `to_xml()` and `into_xml()` (which consumes the signed invoice), still work until 0.7, with a `DeprecationWarning`.
+    Finalized output uses the default formatting; signed output preserves stored text. String results are independent Python strings and reading them leaves state available. Use context managers or `close()` for owned objects. Errors raise exceptions; see [errors](errors.md).
 
 === "JavaScript"
 

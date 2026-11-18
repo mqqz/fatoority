@@ -28,14 +28,4 @@ class ZatcaRuleSource internal constructor(internal val raw: com.fatoora.raw.Zat
         get() = nativeCall(listOfNotNull(this)) {
             unwrap(raw.sha256())
         }
-
-    @Deprecated("Use the stylesheet property.", ReplaceWith("stylesheet"))
-    fun stylesheet(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.stylesheet())
-    }
-
-    @Deprecated("Use the sha256 property.", ReplaceWith("sha256"))
-    fun sha256(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.sha256())
-    }
 }

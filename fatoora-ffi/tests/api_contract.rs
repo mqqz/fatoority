@@ -9,7 +9,7 @@ use fatoora_ffi::{
 };
 use httpmock::{Method::POST, MockServer};
 use serde_json::json;
-use support::written;
+use support::{optional_written, written};
 
 const SIMPLE: &[u8] =
     include_bytes!("../../fatoora-core/tests/fixtures/invoices/sample-simplified-invoice.xml");
@@ -164,7 +164,7 @@ fn exercise_client() {
                 let warning = ok(results.warning_message(0));
                 drop(results);
                 assert_eq!(
-                    written(|out| ok(ok(warning.message()).unwrap().value(out))),
+                    optional_written(|out| warning.message(out)).unwrap(),
                     "retained"
                 );
             }
@@ -246,6 +246,9 @@ fn timeout_constructor_rejects_zero() {
     let config = ok(Config::new(Environment::NonProduction));
     ok(ZatcaClient::with_timeout(&config, 30_000));
     let err = ZatcaClient::with_timeout(&config, 0).err().unwrap();
-    assert_eq!(err.code(), fatoora_core::ErrorKind::Internal as i32);
-    assert!(written(|out| err.message(out)).contains("timeout"));
+    assert_eq!(err.code(), fatoora_core::ErrorKind::InvalidInput as i32);
+    assert!(written(|out| err.message(out)).contains("timeout must be greater than zero"));
+    let details: serde_json::Value =
+        serde_json::from_str(&written(|out| err.details_json(out))).unwrap();
+    assert_eq!(details["type"], "invalid_timeout");
 }

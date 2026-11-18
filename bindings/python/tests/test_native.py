@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 
 import pytest
 
-from fatoora.errors import FfiError, InvalidInputError
+from fatoora.errors import FatooraError, InvalidInputError
 from fatoora import InvoiceBuilder, InvoiceTypeKind, InvoiceSubType, PaymentMeans, VatCategory
 
 
@@ -63,7 +63,7 @@ def test_error_details_survive_collection_and_input_failure_is_recoverable():
 
 def test_failed_build_consumes():
     b = builder()
-    with pytest.raises(FfiError):
+    with pytest.raises(FatooraError):
         b.build()
     with pytest.raises(InvalidInputError, match="consumed"):
         b.build()

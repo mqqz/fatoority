@@ -20,8 +20,6 @@ export { ZatcaClient } from "./ZatcaClient.mjs"
 
 export { BindingError } from "./BindingError.mjs"
 
-export { Text } from "./Text.mjs"
-
 export { Bytes } from "./Bytes.mjs"
 
 export { BytesList } from "./BytesList.mjs"

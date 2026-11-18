@@ -23,7 +23,7 @@ class ValidationResults internal constructor(internal val raw: com.fatoora.raw.V
      */
     val statusRaw: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.statusRaw())?.let(::readText)
+            raw.statusRaw()
         }
 
     val infoLen: java.math.BigInteger
@@ -41,37 +41,12 @@ class ValidationResults internal constructor(internal val raw: com.fatoora.raw.V
             java.math.BigInteger(raw.errorLen().toString())
         }
 
-    @Deprecated("Use the status property.", ReplaceWith("status"))
-    fun status(): ValidationStatus? = nativeCall(listOfNotNull(this)) {
-        raw.status()?.let { ValidationStatus.valueOf(it.name) }
-    }
-
-    @Deprecated("Use the statusRaw property.", ReplaceWith("statusRaw"))
-    fun statusRaw(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.statusRaw())?.let(::Text)
-    }
-
-    @Deprecated("Use the infoLen property.", ReplaceWith("infoLen"))
-    fun infoLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
-        java.math.BigInteger(raw.infoLen().toString())
-    }
-
     fun infoMessage(index: java.math.BigInteger): ValidationMessage = nativeCall(listOfNotNull(this)) {
         ValidationMessage(unwrap(raw.infoMessage(checkedCounter(index))))
     }
 
-    @Deprecated("Use the warningLen property.", ReplaceWith("warningLen"))
-    fun warningLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
-        java.math.BigInteger(raw.warningLen().toString())
-    }
-
     fun warningMessage(index: java.math.BigInteger): ValidationMessage = nativeCall(listOfNotNull(this)) {
         ValidationMessage(unwrap(raw.warningMessage(checkedCounter(index))))
-    }
-
-    @Deprecated("Use the errorLen property.", ReplaceWith("errorLen"))
-    fun errorLen(): java.math.BigInteger = nativeCall(listOfNotNull(this)) {
-        java.math.BigInteger(raw.errorLen().toString())
     }
 
     fun errorMessage(index: java.math.BigInteger): ValidationMessage = nativeCall(listOfNotNull(this)) {

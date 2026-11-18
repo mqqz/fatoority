@@ -12,7 +12,6 @@
 #include <optional>
 #include <cstdlib>
 #include "BindingError.hpp"
-#include "Text.hpp"
 #include "ZatcaFinding.hpp"
 #include "ZatcaRuleSource.hpp"
 #include "ZatcaStage.hpp"
@@ -33,8 +32,8 @@ namespace capi {
 
     size_t fatoora_ZatcaStageReport_evaluated_assertions_len(const _native::capi::ZatcaStageReport* self);
 
-    typedef struct fatoora_ZatcaStageReport_evaluated_assertion_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ZatcaStageReport_evaluated_assertion_result;
-    fatoora_ZatcaStageReport_evaluated_assertion_result fatoora_ZatcaStageReport_evaluated_assertion(const _native::capi::ZatcaStageReport* self, size_t index);
+    typedef struct fatoora_ZatcaStageReport_evaluated_assertion_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_ZatcaStageReport_evaluated_assertion_result;
+    fatoora_ZatcaStageReport_evaluated_assertion_result fatoora_ZatcaStageReport_evaluated_assertion(const _native::capi::ZatcaStageReport* self, size_t index, _native::diplomat::capi::DiplomatWrite* write);
 
     size_t fatoora_ZatcaStageReport_findings_len(const _native::capi::ZatcaStageReport* self);
 
@@ -57,9 +56,9 @@ inline _native::ZatcaStageStatus _native::ZatcaStageReport::status() const {
     return _native::ZatcaStageStatus::FromFFI(result);
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::ZatcaRuleSource>, std::unique_ptr<_native::BindingError>> _native::ZatcaStageReport::provenance() const {
+inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::ZatcaRuleSource>>, std::unique_ptr<_native::BindingError>> _native::ZatcaStageReport::provenance() const {
     auto result = _native::capi::fatoora_ZatcaStageReport_provenance(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::ZatcaRuleSource>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::ZatcaRuleSource>>(std::unique_ptr<_native::ZatcaRuleSource>(_native::ZatcaRuleSource::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::ZatcaRuleSource>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+    return result.is_ok ? _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::ZatcaRuleSource>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::diplomat::maybe_null<std::unique_ptr<_native::ZatcaRuleSource>>>(std::unique_ptr<_native::ZatcaRuleSource>(_native::ZatcaRuleSource::FromFFI(result.ok)))) : _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::ZatcaRuleSource>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
 inline size_t _native::ZatcaStageReport::evaluated_assertions_len() const {
@@ -67,10 +66,21 @@ inline size_t _native::ZatcaStageReport::evaluated_assertions_len() const {
     return result;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::ZatcaStageReport::evaluated_assertion(size_t index) const {
+inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> _native::ZatcaStageReport::evaluated_assertion(size_t index) const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
     auto result = _native::capi::fatoora_ZatcaStageReport_evaluated_assertion(this->AsFFI(),
-        index);
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+        index,
+        &write);
+    return result.is_ok ? _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::string>(std::move(output))) : _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+template<typename W>
+inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::ZatcaStageReport::evaluated_assertion_write(size_t index, W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_ZatcaStageReport_evaluated_assertion(this->AsFFI(),
+        index,
+        &write);
+    return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
 inline size_t _native::ZatcaStageReport::findings_len() const {

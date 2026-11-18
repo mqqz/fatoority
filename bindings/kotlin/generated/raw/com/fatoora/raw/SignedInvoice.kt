@@ -23,7 +23,8 @@ internal interface SignedInvoiceLib: Library {
     fun fatoora_SignedInvoice_cert_hash(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_SignedInvoice_signed_props_hash(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_SignedInvoice_signing_time(handle: Pointer, write: Pointer): ResultUnitPointer
-    fun fatoora_SignedInvoice_zatca_key_signature(handle: Pointer): ResultPointerPointer
+    fun fatoora_SignedInvoice_zatca_key_signature_present(handle: Pointer): ResultBytePointer
+    fun fatoora_SignedInvoice_zatca_key_signature(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_SignedInvoice_into_xml(handle: Pointer, write: Pointer): ResultUnitPointer
 }
 
@@ -341,16 +342,36 @@ class SignedInvoice internal constructor (
         }
     }
 
-    fun zatcaKeySignature(): Result<Text?> {
+    /**
+     * Whether the invoice carries a ZATCA key signature.
+     */
+    fun zatcaKeySignaturePresent(): Result<Boolean> {
 
-        val returnVal = lib.fatoora_SignedInvoice_zatca_key_signature(handle);
+        val returnVal = lib.fatoora_SignedInvoice_zatca_key_signature_present(handle);
         val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
+        if (nativeOkVal != null) {
+            return (nativeOkVal > 0).ok()
         } else {
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal.getNativeErr()!!
+            val returnOpaque = BindingError(handle, selfEdges, true)
+            return returnOpaque.err()
+        }
+    }
+
+    /**
+     * Base64 signature value of the signing certificate, or null when absent.
+     */
+    fun zatcaKeySignature(): Result<String> {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_SignedInvoice_zatca_key_signature(handle, write);
+        val nativeOkVal = returnVal.getNativeOk();
+        if (nativeOkVal != null) {
+
+            val returnString = DW.writeToString(write)
+            return returnString.ok()
+        } else {
+            DW.lib.diplomat_buffer_write_destroy(write)
             val selfEdges: List<Any> = listOf()
             val handle = returnVal.getNativeErr()!!
             val returnOpaque = BindingError(handle, selfEdges, true)

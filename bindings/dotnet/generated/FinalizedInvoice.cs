@@ -57,7 +57,7 @@ public partial class FinalizedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>FinalizedInvoice</c> allocated on Rust side.
     /// </returns>
@@ -72,14 +72,14 @@ public partial class FinalizedInvoice: IDisposable
                 var result = Raw.FinalizedInvoice.FromXml(new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new FinalizedInvoice(result.Ok);
             }
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>FinalizedInvoice</c> allocated on Rust side.
     /// </returns>
@@ -94,14 +94,14 @@ public partial class FinalizedInvoice: IDisposable
                 var result = Raw.FinalizedInvoice.FromFile(new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new FinalizedInvoice(result.Ok);
             }
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>InvoiceData</c> allocated on Rust side.
     /// </returns>
@@ -116,7 +116,7 @@ public partial class FinalizedInvoice: IDisposable
                 var result = Raw.FinalizedInvoice.Data(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new InvoiceData(result.Ok);
             }
@@ -127,7 +127,7 @@ public partial class FinalizedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>InvoiceTotals</c> allocated on Rust side.
     /// </returns>
@@ -142,7 +142,7 @@ public partial class FinalizedInvoice: IDisposable
                 var result = Raw.FinalizedInvoice.Totals(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new InvoiceTotals(result.Ok);
             }
@@ -153,7 +153,7 @@ public partial class FinalizedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Hash
     {
         get
@@ -170,7 +170,7 @@ public partial class FinalizedInvoice: IDisposable
                         var result = Raw.FinalizedInvoice.Hash(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -187,7 +187,7 @@ public partial class FinalizedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Xml
     {
         get
@@ -204,7 +204,7 @@ public partial class FinalizedInvoice: IDisposable
                         var result = Raw.FinalizedInvoice.Xml(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }

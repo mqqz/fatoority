@@ -7,7 +7,7 @@ import com.sun.jna.Structure
 
 internal interface InvoiceNoteLib: Library {
     fun fatoora_InvoiceNote_destroy(handle: Pointer)
-    fun fatoora_InvoiceNote_language_id(handle: Pointer): ResultPointerPointer
+    fun fatoora_InvoiceNote_language_id(handle: Pointer, write: Pointer): OptionUnit
     fun fatoora_InvoiceNote_language(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_InvoiceNote_text(handle: Pointer, write: Pointer): ResultUnitPointer
 }
@@ -42,21 +42,18 @@ class InvoiceNote internal constructor (
         internal val lib: InvoiceNoteLib = Native.load("fatoora_ffi", libClass)
     }
 
-    fun languageId(): Result<Text?> {
+    fun languageId(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_InvoiceNote_language_id(handle, write);
 
-        val returnVal = lib.fatoora_InvoiceNote_language_id(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
     fun language(): Result<String> {

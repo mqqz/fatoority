@@ -41,6 +41,15 @@ public class JavaContractsTest {
         }
     }
 
+    @Test public void clientTimeoutIsAJavaDuration() {
+        try (Config config = Config.create(Environment.NonProduction);
+             ZatcaClient client = ZatcaClient.withTimeout(config, java.time.Duration.ofSeconds(30))) {
+            assertNotNull(client);
+            try { ZatcaClient.withTimeout(config, java.time.Duration.ZERO); fail("Expected IllegalArgumentException"); }
+            catch (IllegalArgumentException e) { assertTrue(e.getMessage().contains("timeout")); }
+        }
+    }
+
     @Test public void javaUsesFactoriesOverloadsAndExceptions() {
         try (SigningKey key = SigningKey.generate();
              SigningKey restored = SigningKey.fromPem(key.toPem());
@@ -55,8 +64,8 @@ public class JavaContractsTest {
             assertEquals(ErrorKind.InvalidInput, e.getKind());
             assertNotNull(e.getMessage());
         }
-        try { Address.create("XX", "a", "b", "1", "1"); fail("Expected BindingException"); }
-        catch (BindingException e) { assertTrue(e instanceof InvalidInputException); }
+        try { Address.create("XX", "a", "b", "1", "1"); fail("Expected FatooraException"); }
+        catch (FatooraException e) { assertTrue(e instanceof InvalidInputException); }
     }
 
     @Test public void javaSeesAmountsAndPropertyGetters() {

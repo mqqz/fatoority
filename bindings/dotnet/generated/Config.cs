@@ -57,7 +57,7 @@ public partial class Config: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>Config</c> allocated on Rust side.
     /// </returns>
@@ -68,16 +68,13 @@ public partial class Config: IDisposable
             var result = Raw.Config.New(env);
             if (!result.IsOk)
             {
-                throw FfiException.FromNative(new BindingError(result.Err));
+                throw FatooraException.FromNative(new BindingError(result.Err));
             }
             return new Config(result.Ok);
         }
     }
 
-    [Obsolete("Use Create; New will be removed in 0.7.")]
-    public static Config New(ZatcaEnvironment env) => Create(env);
-
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public ZatcaEnvironment Env
     {
         get
@@ -91,7 +88,7 @@ public partial class Config: IDisposable
                     var result = Raw.Config.Env(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return result.Ok;
                 }

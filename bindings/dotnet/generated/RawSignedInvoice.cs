@@ -57,8 +57,11 @@ internal partial struct SignedInvoice
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_SignedInvoice_signing_time", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError SigningTime(SignedInvoice* handle, DiplomatWrite* writeable);
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_SignedInvoice_zatca_key_signature_present", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultBoolBindingError ZatcaKeySignaturePresent(SignedInvoice* handle);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_SignedInvoice_zatca_key_signature", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError ZatcaKeySignature(SignedInvoice* handle);
+    internal static unsafe extern DiplomatResultVoidBindingError ZatcaKeySignature(SignedInvoice* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_SignedInvoice_into_xml", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError IntoXml(SignedInvoice* handle, DiplomatWrite* writeable);

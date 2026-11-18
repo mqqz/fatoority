@@ -57,7 +57,7 @@ public partial class VatId: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Value
     {
         get
@@ -74,7 +74,7 @@ public partial class VatId: IDisposable
                         var result = Raw.VatId.Value(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }

@@ -23,22 +23,22 @@ class ValidationMessage internal constructor(internal val raw: com.fatoora.raw.V
      */
     val messageTypeRaw: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.messageTypeRaw())?.let(::readText)
+            raw.messageTypeRaw()
         }
 
     val code: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.code())?.let(::readText)
+            raw.code()
         }
 
     val category: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.category())?.let(::readText)
+            raw.category()
         }
 
     val message: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.message())?.let(::readText)
+            raw.message()
         }
 
     /**
@@ -54,41 +54,6 @@ class ValidationMessage internal constructor(internal val raw: com.fatoora.raw.V
      */
     val statusRaw: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.statusRaw())?.let(::readText)
+            raw.statusRaw()
         }
-
-    @Deprecated("Use the messageType property.", ReplaceWith("messageType"))
-    fun messageType(): MessageType? = nativeCall(listOfNotNull(this)) {
-        raw.messageType()?.let { MessageType.valueOf(it.name) }
-    }
-
-    @Deprecated("Use the messageTypeRaw property.", ReplaceWith("messageTypeRaw"))
-    fun messageTypeRaw(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.messageTypeRaw())?.let(::Text)
-    }
-
-    @Deprecated("Use the code property.", ReplaceWith("code"))
-    fun code(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.code())?.let(::Text)
-    }
-
-    @Deprecated("Use the category property.", ReplaceWith("category"))
-    fun category(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.category())?.let(::Text)
-    }
-
-    @Deprecated("Use the message property.", ReplaceWith("message"))
-    fun message(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.message())?.let(::Text)
-    }
-
-    @Deprecated("Use the status property.", ReplaceWith("status"))
-    fun status(): ValidationStatus? = nativeCall(listOfNotNull(this)) {
-        raw.status()?.let { ValidationStatus.valueOf(it.name) }
-    }
-
-    @Deprecated("Use the statusRaw property.", ReplaceWith("statusRaw"))
-    fun statusRaw(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.statusRaw())?.let(::Text)
-    }
 }

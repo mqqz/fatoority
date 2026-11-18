@@ -17,6 +17,8 @@ class ContractsTest {
             assertNull(a.additionalStreet)
             assertEquals("", a.additionalNumber)
             assertEquals("حي العليا", a.district)
+            assertNull(a.province)
+            a.withProvince("منطقة الرياض").use { p -> assertEquals("منطقة الرياض", p.province) }
         }
         val error = assertFailsWith<InvalidInputException> { Address.create("XX", "a", "b", "1", "1") }
         assertEquals(1, error.code)
@@ -24,7 +26,7 @@ class ContractsTest {
         assertTrue(error.message.contains("Invalid country"))
         assertTrue(error.detailsJson.startsWith("{"))
         assertFailsWith<CharacterCodingException> { Address.create("SA", "\uD800", "b", "1", "1") }
-        assertFailsWith<BindingException> { Address.create("SA", "bad\u0000city", "b", "1", "1") }
+        assertFailsWith<FatooraException> { Address.create("SA", "bad\u0000city", "b", "1", "1") }
     }
 
     @Test fun unsignedBoundariesRemainJavaCallable() {
@@ -83,21 +85,6 @@ class ContractsTest {
         assertFailsWith<InvalidInputException> { Adjustment.amount(BigDecimal("1E+40")) }
     }
 
-    @Suppress("DEPRECATION")
-    @Test fun deprecatedAccessorsStillWork() {
-        Address.create("SA", "Riyadh", "Street", "1234", "12345", district = "Olaya").use { a ->
-            assertEquals("Riyadh", a.city())
-            a.district()!!.use { assertEquals("Olaya", it.value()) }
-        }
-        Adjustment.amount("12.50").use { assertEquals("12.5", it.value()) }
-        Adjustment.percentage(BigDecimal("200"), BigDecimal("10")).use { a ->
-            assertEquals(0, BigDecimal("10").compareTo(a.percent))
-            a.percent()!!.use { assertEquals("10", it.value()) }
-            a.withSuppliedAmount(BigDecimal("20")).use { assertEquals(0, BigDecimal("20").compareTo(it.value)) }
-        }
-        assertEquals(InvoiceFlag.Export.bit, InvoiceFlag.Export.bit())
-    }
-
     @Test fun errorCodesMapToExceptionSubclasses() {
         val expected = mapOf(
             1 to InvalidInputException::class, 2 to ValidationException::class, 3 to ParseException::class,
@@ -106,13 +93,15 @@ class ContractsTest {
             10 to ApiException::class,
         )
         for ((code, type) in expected) {
-            val error = bindingException(code, "message", "{}")
+            val error = FatooraException.fromCode(code, "message", "{}")
             assertEquals(type, error::class)
             assertEquals(code, error.code)
             assertEquals(code, error.kind!!.code)
+            assertEquals("${error.kind}Exception", error::class.simpleName)
         }
-        val unknown = bindingException(99, "message", "{}")
-        assertEquals(BindingException::class, unknown::class)
+        assertEquals(ErrorKind.entries.map { it.code }, expected.keys.toList())
+        val unknown = FatooraException.fromCode(99, "message", "{}")
+        assertEquals(FatooraException::class, unknown::class)
         assertNull(unknown.kind)
         assertFailsWith<XmlException> { SignedInvoice.fromXml("<not-closed") }
     }
@@ -121,10 +110,10 @@ class ContractsTest {
         val key = SigningKey.generate()
         val pem = key.toPem()
         key.toDer().use { bytes ->
-            val copy = bytes.asSlice()
+            val copy = bytes.toByteArray()
             bytes.close()
             SigningKey.fromDer(copy).use { assertEquals(pem, it.toPem()) }
-            assertFailsWith<IllegalStateException> { bytes.asSlice() }
+            assertFailsWith<IllegalStateException> { bytes.toByteArray() }
         }
         key.close(); key.close()
         assertFailsWith<IllegalStateException> { key.toPem() }
@@ -132,8 +121,8 @@ class ContractsTest {
 
     @Test fun consumptionDoesNotBecomeUseAfterFree() {
         InvoiceBuilder.create(InvoiceTypeKind.Tax, InvoiceSubType.Standard).use { b ->
-            assertFailsWith<BindingException> { b.build() }
-            assertFailsWith<BindingException> { b.setId("again") }
+            assertFailsWith<FatooraException> { b.build() }
+            assertFailsWith<FatooraException> { b.setId("again") }
         }
     }
 
@@ -182,6 +171,27 @@ class ContractsTest {
         assertTrue(destroyed.get())
     }
 
+    @Test fun clientTimeoutsAreDurations() {
+        Config.create(Environment.NonProduction).use { config ->
+            ZatcaClient.withTimeout(config, java.time.Duration.ofSeconds(30)).close()
+            ZatcaClient.withTimeout(config, kotlin.time.Duration.parse("1.5s")).close()
+            ZatcaClient.withTimeout(config, java.time.Duration.ofNanos(1)).close()
+            for (bad in listOf(java.time.Duration.ZERO, java.time.Duration.ofMillis(-1),
+                               java.time.Duration.ofMillis(4294967296L), java.time.Duration.ofSeconds(Long.MAX_VALUE))) {
+                assertFailsWith<IllegalArgumentException> { ZatcaClient.withTimeout(config, bad) }
+            }
+            for (bad in listOf(kotlin.time.Duration.ZERO, kotlin.time.Duration.INFINITE, -kotlin.time.Duration.INFINITE)) {
+                assertFailsWith<IllegalArgumentException> { ZatcaClient.withTimeout(config, bad) }
+            }
+        }
+        // Rounded up to whole milliseconds, like Python's timeout.
+        assertEquals(1u, timeoutMillis(java.time.Duration.ofNanos(1)))
+        assertEquals(1001u, timeoutMillis(java.time.Duration.ofSeconds(1, 1)))
+        assertEquals(1500u, timeoutMillis(javaDuration(kotlin.time.Duration.parse("1.5s"))))
+        assertEquals(UInt.MAX_VALUE, timeoutMillis(java.time.Duration.ofMillis(4294967295L)))
+        assertFailsWith<IllegalArgumentException> { timeoutMillis(java.time.Duration.ofMillis(4294967295L).plusNanos(1)) }
+    }
+
     @Test fun sdkHashSigningAndPreparedRequests() {
         val root = File(System.getProperty("fatoora.fixtures"))
         val xml = File(root, "cases/simplified-invoice/input.xml").readText()
@@ -193,20 +203,29 @@ class ContractsTest {
                 val credentials = ProductionCsid.create(Environment.NonProduction, null, "token", "secret")
                 val invoice = SignedInvoice.fromXml(signed)
                 assertEquals(Xml.hash(signed), invoice.hash)
+                assertTrue(invoice.zatcaKeySignature!!.isNotEmpty())
                 val request = client.prepareReportSimplifiedInvoice(invoice, credentials, ClearanceMode.Disabled)
                 credentials.close(); invoice.close()
                 request.use {
                     assertEquals("POST", it.method)
-                    it.body().use { body -> assertTrue(String(body.asSlice()).contains("invoiceHash")) }
+                    it.body().use { body -> assertTrue(String(body.toByteArray()).contains("invoiceHash")) }
                     it.decode(200, """{"validationResults":{"status":"PASS"},"reportingStatus":"REPORTED"}""".toByteArray()).use { response ->
                         assertEquals(InvoiceOutcome.Accepted, response.outcome)
                         assertEquals(ReportingStatus.Reported, response.reportingStatus)
                         assertEquals("REPORTED", response.reportingStatusRaw)
                         assertNull(response.clearanceStatus)
+                        assertNull(response.clearedInvoiceXml)
                         response.validationResults().use { results -> assertEquals(ValidationStatus.Pass, results.status) }
                         response.ensureAccepted()
                     }
-                    assertFailsWith<BindingException> { it.decode(400, "bad response".toByteArray()) }
+                    assertFailsWith<FatooraException> { it.decode(400, "bad response".toByteArray()) }
+                    val cleared = { encoded: String ->
+                        it.decode(200, """{"validationResults":{},"clearedInvoice":"$encoded"}""".toByteArray())
+                    }
+                    cleared("PEludm9pY2UvPg==").use { response -> assertEquals("<Invoice/>", response.clearedInvoiceXml) }
+                    cleared("!!!").use { response ->
+                        assertEquals(3, assertFailsWith<FatooraException> { response.clearedInvoiceXml }.code)
+                    }
                 }
             } }
         }

@@ -8,7 +8,7 @@ import com.sun.jna.Structure
 internal interface ValidationResultsLib: Library {
     fun fatoora_ValidationResults_destroy(handle: Pointer)
     fun fatoora_ValidationResults_status(handle: Pointer): OptionInt
-    fun fatoora_ValidationResults_status_raw(handle: Pointer): ResultPointerPointer
+    fun fatoora_ValidationResults_status_raw(handle: Pointer, write: Pointer): OptionUnit
     fun fatoora_ValidationResults_info_len(handle: Pointer): FFISizet
     fun fatoora_ValidationResults_info_message(handle: Pointer, index: FFISizet): ResultPointerPointer
     fun fatoora_ValidationResults_warning_len(handle: Pointer): FFISizet
@@ -61,21 +61,18 @@ class ValidationResults internal constructor (
     /**
      * The overall status exactly as ZATCA sent it, or null when absent.
      */
-    fun statusRaw(): Result<Text?> {
+    fun statusRaw(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_ValidationResults_status_raw(handle, write);
 
-        val returnVal = lib.fatoora_ValidationResults_status_raw(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
     fun infoLen(): ULong {

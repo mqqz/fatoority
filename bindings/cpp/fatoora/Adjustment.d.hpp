@@ -16,8 +16,6 @@ namespace capi { struct Adjustment; }
 class Adjustment;
 namespace capi { struct BindingError; }
 class BindingError;
-namespace capi { struct Text; }
-class Text;
 } // namespace fatoora
 
 
@@ -51,13 +49,21 @@ public:
   template<typename W>
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> value_write(W& writeable_output) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> base_amount() const;
+  inline std::optional<std::string> base_amount() const;
+  template<typename W>
+  inline std::optional<std::monostate> base_amount_write(W& writeable_output) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> percentage() const;
+  inline std::optional<std::string> percentage() const;
+  template<typename W>
+  inline std::optional<std::monostate> percentage_write(W& writeable_output) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> reason() const;
+  inline std::optional<std::string> reason() const;
+  template<typename W>
+  inline std::optional<std::monostate> reason_write(W& writeable_output) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> reason_code() const;
+  inline std::optional<std::string> reason_code() const;
+  template<typename W>
+  inline std::optional<std::monostate> reason_code_write(W& writeable_output) const;
 
     inline const fatoora::capi::Adjustment* AsFFI() const;
     inline fatoora::capi::Adjustment* AsFFI();

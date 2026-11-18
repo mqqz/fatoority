@@ -338,40 +338,6 @@ fn imported_category_tax_mismatch_is_rejected() {
     assert!(parse_finalized_invoice_xml(&changed).is_err());
 }
 
-#[test]
-#[allow(deprecated)] // covers the deprecated aggregate setters' VAT group inference
-fn adjustments_require_one_unambiguous_vat_group() {
-    use fatoora_core::invoice::{InvoiceError, InvoiceField, ValidationKind};
-    // Both lines are standard VAT, but the document discount has no rate selector.
-    let error = invoice_builder_for_adjustments()
-        .line_item(line(d("100"), d("1"), d("15")))
-        .line_item(line(d("100"), d("1"), d("5")))
-        .invoice_level_discount(d("10"))
-        .build()
-        .unwrap_err();
-    let InvoiceError::Validation(validation) = error else {
-        panic!("expected ambiguous VAT group")
-    };
-    assert!(
-        validation
-            .issues()
-            .iter()
-            .any(|issue| issue.field() == InvoiceField::VatCategory
-                && issue.kind() == ValidationKind::Mismatch)
-    );
-    // A category absent from the invoice must not fall back to its first group.
-    let error = invoice_builder_for_adjustments()
-        .vat_category(VatCategory::Zero)
-        .line_item(line(d("100"), d("1"), d("15")))
-        .invoice_level_charge(d("10"))
-        .build()
-        .unwrap_err();
-    let InvoiceError::Validation(validation) = error else {
-        panic!("expected missing VAT group")
-    };
-    assert_eq!(validation.issues()[0].field(), InvoiceField::VatCategory);
-}
-
 fn invoice_builder_for_adjustments() -> fatoora_core::invoice::InvoiceBuilder {
     use fatoora_core::invoice::{InvoiceBuilder, InvoiceSubType, InvoiceType};
     InvoiceBuilder::new(InvoiceType::Tax(InvoiceSubType::Simplified))

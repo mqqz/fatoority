@@ -126,7 +126,7 @@ Install a published release from Maven Central.
 ```kotlin
 repositories { mavenCentral() }
 dependencies {
-    implementation("com.fatoority:fatoority:0.6.0")
+    implementation("com.fatoority:fatoority:0.7.0")
 }
 ```
 
@@ -136,11 +136,11 @@ dependencies {
 <dependency>
   <groupId>com.fatoority</groupId>
   <artifactId>fatoority</artifactId>
-  <version>0.6.0</version>
+  <version>0.7.0</version>
 </dependency>
 ```
 
-For Android, use `com.fatoority:fatoority-android:0.6.0` instead of the desktop
+For Android, use `com.fatoority:fatoority-android:0.7.0` instead of the desktop
 artifact. Java/Kotlin imports remain `com.fatoora`.
 
 </details>

@@ -20,9 +20,4 @@ class Config internal constructor(internal val raw: com.fatoora.raw.Config) : Na
         get() = nativeCall(listOfNotNull(this)) {
             Environment.valueOf(unwrap(raw.env()).name)
         }
-
-    @Deprecated("Use the env property.", ReplaceWith("env"))
-    fun env(): Environment = nativeCall(listOfNotNull(this)) {
-        Environment.valueOf(unwrap(raw.env()).name)
-    }
 }

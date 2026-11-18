@@ -1,0 +1,144 @@
+{
+  "issue_date_override": null,
+  "issue_time_override": null,
+  "document_tax_first": false,
+  "invoice_type": {
+    "Tax": "Simplified"
+  },
+  "id": "INV-LEGACY-AGG",
+  "uuid": "8e6000cf-1a98-4174-b3e7-b5d5954bc10d",
+  "issue_datetime": "2024-01-01T12:30:00Z",
+  "currency": "SAR",
+  "tax_currency": "SAR",
+  "tax_currency_amount": "29.1",
+  "previous_invoice_hash": "NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ==",
+  "invoice_counter": 0,
+  "notes": [],
+  "billing_references": [],
+  "purchase_order_id": null,
+  "contract_id": null,
+  "seller": {
+    "_marker": null,
+    "name": "Acme Inc",
+    "address": {
+      "province": null,
+      "country_code": "SAU",
+      "city": "Riyadh",
+      "street": "King Fahd",
+      "additional_street": null,
+      "building_number": "1234",
+      "additional_number": "5678",
+      "postal_code": "12222",
+      "district": "Olaya"
+    },
+    "vat_id": "399999999900003",
+    "identifiers": [
+      {
+        "value": "7003339333",
+        "scheme_id": "CRN"
+      }
+    ]
+  },
+  "buyer": null,
+  "delivery": null,
+  "line_items": [
+    {
+      "omitted_tax_amount": false,
+      "omitted_gross_amount": false,
+      "omitted_vat_rate": false,
+      "price_base_quantity": null,
+      "price_base_unit": null,
+      "price_discount": null,
+      "gross_price": null,
+      "adjustments": [],
+      "seller_item_id": null,
+      "buyer_item_id": null,
+      "standard_item_id": null,
+      "document_references": [],
+      "tax_subtotals": [],
+      "id": "1",
+      "exemption": {
+        "reason_code": null,
+        "reason": null
+      },
+      "description": "Item",
+      "quantity": "2",
+      "unit_code": "PCE",
+      "unit_price": "100",
+      "total_amount": "200",
+      "vat_rate": "15",
+      "vat_amount": "30",
+      "vat_category": "Standard"
+    },
+    {
+      "omitted_tax_amount": false,
+      "omitted_gross_amount": false,
+      "omitted_vat_rate": false,
+      "price_base_quantity": null,
+      "price_base_unit": null,
+      "price_discount": null,
+      "gross_price": null,
+      "adjustments": [],
+      "seller_item_id": null,
+      "buyer_item_id": null,
+      "standard_item_id": null,
+      "document_references": [],
+      "tax_subtotals": [],
+      "id": "2",
+      "exemption": {
+        "reason_code": null,
+        "reason": null
+      },
+      "description": "Zero",
+      "quantity": "1",
+      "unit_code": "PCE",
+      "unit_price": "50",
+      "total_amount": "50",
+      "vat_rate": "0",
+      "vat_amount": "0",
+      "vat_category": "Zero"
+    },
+    {
+      "omitted_tax_amount": false,
+      "omitted_gross_amount": false,
+      "omitted_vat_rate": false,
+      "price_base_quantity": null,
+      "price_base_unit": null,
+      "price_discount": null,
+      "gross_price": null,
+      "adjustments": [],
+      "seller_item_id": null,
+      "buyer_item_id": null,
+      "standard_item_id": null,
+      "document_references": [],
+      "tax_subtotals": [],
+      "id": null,
+      "exemption": {
+        "reason_code": null,
+        "reason": null
+      },
+      "description": "Reduced",
+      "quantity": "1",
+      "unit_code": "PCE",
+      "unit_price": "40",
+      "total_amount": "40",
+      "vat_rate": "5",
+      "vat_amount": "2",
+      "vat_category": "Standard"
+    }
+  ],
+  "payment_means": [
+    {
+      "payment_means_type_code": "10",
+      "instruction_notes": [],
+      "payee_financial_account": null
+    }
+  ],
+  "vat_category": "Standard",
+  "flags": "",
+  "invoice_level_charge": "4",
+  "invoice_level_discount": "10",
+  "adjustment_vat_rate": "5",
+  "allowance_reason": "Loyalty",
+  "adjustments": []
+}

@@ -26,8 +26,6 @@ namespace capi { struct Party; }
 class Party;
 namespace capi { struct PaymentMeans; }
 class PaymentMeans;
-namespace capi { struct Text; }
-class Text;
 class InvoiceSubType;
 class InvoiceTypeKind;
 class VatCategory;
@@ -58,19 +56,33 @@ public:
 
   inline diplomat::result<std::unique_ptr<fatoora::PaymentMeans>, std::unique_ptr<fatoora::BindingError>> payment_means(size_t index) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> purchase_order_id() const;
+  inline std::optional<std::string> purchase_order_id() const;
+  template<typename W>
+  inline std::optional<std::monostate> purchase_order_id_write(W& writeable_output) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> contract_id() const;
+  inline std::optional<std::string> contract_id() const;
+  template<typename W>
+  inline std::optional<std::monostate> contract_id_write(W& writeable_output) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> payment_instruction() const;
+  inline std::optional<std::string> payment_instruction() const;
+  template<typename W>
+  inline std::optional<std::monostate> payment_instruction_write(W& writeable_output) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> actual_delivery_date() const;
+  inline std::optional<std::string> actual_delivery_date() const;
+  template<typename W>
+  inline std::optional<std::monostate> actual_delivery_date_write(W& writeable_output) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> latest_delivery_date() const;
+  inline std::optional<std::string> latest_delivery_date() const;
+  template<typename W>
+  inline std::optional<std::monostate> latest_delivery_date_write(W& writeable_output) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> tax_currency() const;
+  inline std::optional<std::string> tax_currency() const;
+  template<typename W>
+  inline std::optional<std::monostate> tax_currency_write(W& writeable_output) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> tax_currency_amount() const;
+  inline std::optional<std::string> tax_currency_amount() const;
+  template<typename W>
+  inline std::optional<std::monostate> tax_currency_amount_write(W& writeable_output) const;
 
   inline size_t adjustments_len() const;
 
@@ -108,7 +120,9 @@ public:
   template<typename W>
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> invoice_level_discount_write(W& writeable_output) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> allowance_reason() const;
+  inline std::optional<std::string> allowance_reason() const;
+  template<typename W>
+  inline std::optional<std::monostate> allowance_reason_write(W& writeable_output) const;
 
   inline uint64_t invoice_counter() const;
 
@@ -122,17 +136,19 @@ public:
 
   inline diplomat::result<std::unique_ptr<fatoora::Party>, std::unique_ptr<fatoora::BindingError>> seller() const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Party>, std::unique_ptr<fatoora::BindingError>> buyer() const;
+  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Party>>, std::unique_ptr<fatoora::BindingError>> buyer() const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::InvoiceNote>, std::unique_ptr<fatoora::BindingError>> note() const;
+  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::InvoiceNote>>, std::unique_ptr<fatoora::BindingError>> note() const;
 
   inline size_t line_items_len() const;
 
   inline diplomat::result<std::unique_ptr<fatoora::InvoiceLineItem>, std::unique_ptr<fatoora::BindingError>> line_item(size_t index) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::OriginalInvoiceRef>, std::unique_ptr<fatoora::BindingError>> original_invoice_ref() const;
+  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::OriginalInvoiceRef>>, std::unique_ptr<fatoora::BindingError>> original_invoice_ref() const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> original_invoice_reason() const;
+  inline std::optional<std::string> original_invoice_reason() const;
+  template<typename W>
+  inline std::optional<std::monostate> original_invoice_reason_write(W& writeable_output) const;
 
   inline size_t notes_len() const;
 

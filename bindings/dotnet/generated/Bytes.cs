@@ -57,11 +57,7 @@ public partial class Bytes: IDisposable
         }
     }
 
-    /// <remarks>
-    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
-    /// Source handles stay reachable while the returned value exists.
-    /// </remarks>
-    public DiplomatBorrowedSpan<byte> AsSlice()
+    public byte[] ToArray()
     {
         unsafe
         {
@@ -69,8 +65,8 @@ public partial class Bytes: IDisposable
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.Bytes.AsSlice(selfLease!.Ptr);
-                return new DiplomatBorrowedSpan<byte>(result.Ptr, result.Len, new ILifetimeEdge?[] { LifetimeEdge.Move(ref selfLease) });
+                var result = Raw.Bytes.ToArray(selfLease!.Ptr);
+                using (var copy = new RustVec(result.Ptr, result.Len)) return copy.Clone();
             }
             finally
             {

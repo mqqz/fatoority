@@ -29,7 +29,8 @@ void add_SignedInvoice_binding(nb::module_ mod) {
         .def("to_xml_base64", std::move(maybe_op_unwrap(&_native::SignedInvoice::to_xml_base64)))
         .def("totals", std::move(maybe_op_unwrap(&_native::SignedInvoice::totals)))
         .def("xml", std::move(maybe_op_unwrap(&_native::SignedInvoice::xml)))
-        .def("zatca_key_signature", std::move(maybe_op_unwrap(&_native::SignedInvoice::zatca_key_signature)));
+        .def("zatca_key_signature", std::move(maybe_op_unwrap(&_native::SignedInvoice::zatca_key_signature)), "Base64 signature value of the signing certificate, or null when absent.")
+        .def("zatca_key_signature_present", std::move(maybe_op_unwrap(&_native::SignedInvoice::zatca_key_signature_present)), "Whether the invoice carries a ZATCA key signature.");
 }
 
 } 

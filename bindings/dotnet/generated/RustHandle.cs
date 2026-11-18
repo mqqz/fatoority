@@ -22,6 +22,38 @@ internal static class LifetimeEdge
         moved?.TransferToPersistent();
         return moved;
     }
+
+    // A view dies on its own while the Rust value it points into lives on, so whatever it
+    // was asked to keep alive would be freed under that value.
+    internal static void CheckHolder<T>(BorrowLease<T>? holder) where T : unmanaged
+    {
+        if (holder is not null && !holder.Owner.IsOwned)
+        {
+            throw new InvalidOperationException(
+                "A borrowed view cannot keep another value alive; call this on the owning value.");
+        }
+    }
+
+    // Rust may have kept `source` inside `holder`, which the return type doesn't show. It runs
+    // after the call, which still needs the lease, and cannot fail once Rust kept the pointer.
+    internal static void Retain<THolder, TSource>(
+        BorrowLease<THolder>? holder,
+        ref BorrowLease<TSource>? source)
+        where THolder : unmanaged
+        where TSource : unmanaged
+    {
+        if (holder is null || source is null)
+        {
+            return;
+        }
+
+        RustHandle<TSource> sourceHandle = source.Owner;
+        holder.Owner.AddEdge(
+            source.Kind == BorrowKind.Exclusive
+                ? Move(ref source)!
+                : sourceHandle.CurrentVersionEdge(),
+            sourceHandle);
+    }
 }
 
 internal enum BorrowKind
@@ -102,6 +134,32 @@ internal struct LifetimeEdges
         }
     }
 
+    internal void Add(WrapperKind kind, ILifetimeEdge edge, object source)
+    {
+        ILifetimeEdge?[] edges = Volatile.Read(ref _edges);
+        foreach (ILifetimeEdge? existing in edges)
+        {
+            // Storing the same value again would otherwise grow this list on every call.
+            if (edge is IVersionedReference
+                && existing is IVersionedReference versioned
+                && ReferenceEquals(versioned.Source, source))
+            {
+                edge.Release();
+                return;
+            }
+        }
+
+        if (edge is IBorrowLease lease && IsReadView(kind, lease))
+        {
+            edge = lease.IntoVersionedEdge();
+        }
+
+        ILifetimeEdge?[] added = new ILifetimeEdge?[edges.Length + 1];
+        Array.Copy(edges, added, edges.Length);
+        added[edges.Length] = edge;
+        Volatile.Write(ref _edges, added);
+    }
+
     internal void Release()
     {
         ILifetimeEdge?[] edges = Interlocked.Exchange(
@@ -178,6 +236,8 @@ internal struct BorrowLedger
         }
     }
 
+    internal MutationVersion CurrentVersion() => _mutations.Read();
+
     internal MutationVersion Exit(BorrowKind kind)
     {
         if (kind == BorrowKind.Shared)
@@ -200,6 +260,39 @@ internal struct BorrowLedger
 
         internal MutationVersion Advance() =>
             new MutationVersion(Interlocked.Increment(ref _version));
+    }
+}
+
+internal sealed unsafe class DependencyOperationLease<T> : ILifetimeEdge where T : unmanaged
+{
+    private RustHandle<T>? _owner;
+    private ILifetimeEdge[] _dependencies;
+
+    internal DependencyOperationLease(RustHandle<T> owner, ILifetimeEdge[] dependencies)
+    {
+        _owner = owner;
+        _dependencies = dependencies;
+    }
+
+    public void Release()
+    {
+        RustHandle<T>? owner = Interlocked.Exchange(ref _owner, null);
+        if (owner is null)
+        {
+            return;
+        }
+
+        ILifetimeEdge[] dependencies = Interlocked.Exchange(
+            ref _dependencies,
+            Array.Empty<ILifetimeEdge>());
+        try
+        {
+            LifetimeEdges.ReleaseLeases(dependencies);
+        }
+        finally
+        {
+            GC.KeepAlive(owner);
+        }
     }
 }
 
@@ -236,8 +329,8 @@ internal sealed unsafe class OperationLease<T> : ILifetimeEdge where T : unmanag
     }
 }
 
-// Direct calls and scoped borrowed reads retain a SafeHandle claim until access ends.
-// Persistent source edges keep handles reachable and validate borrow state on each access.
+// The SafeHandle count protects only a native call made directly on this value. Source edges
+// keep managed handles reachable and validate borrow state without taking SafeHandle claims.
 internal sealed unsafe class RustHandle<T> : SafeHandle where T : unmanaged
 {
     private readonly RustDestructor<T>? _destructor;
@@ -381,8 +474,31 @@ internal sealed unsafe class RustHandle<T> : SafeHandle where T : unmanaged
         }
     }
 
-    // Borrowed access must pin the SafeHandle against concurrent source disposal.
-    internal OperationLease<T> HoldForCall() => StartCall();
+    internal DependencyOperationLease<T> HoldForCall()
+    {
+        if (IsClosed)
+        {
+            throw new InvalidOperationException(
+                "The source of this borrowed value was disposed.");
+        }
+
+        ILifetimeEdge[] dependencies = _edges.HoldDependenciesForCall();
+        if (!IsClosed)
+        {
+            return new DependencyOperationLease<T>(this, dependencies);
+        }
+
+        LifetimeEdges.ReleaseNoThrow(dependencies);
+        throw new InvalidOperationException(
+            "The source of this borrowed value was disposed.");
+    }
+
+    internal bool IsOwned => _wrapperKind == WrapperKind.Owned;
+
+    internal void AddEdge(ILifetimeEdge edge, object source) => _edges.Add(_wrapperKind, edge, source);
+
+    internal ILifetimeEdge CurrentVersionEdge() =>
+        BorrowLease<T>.VersionedEdge(this, _borrows.CurrentVersion());
 
     internal void ExitBorrow(BorrowKind kind) => _borrows.Exit(kind);
 

@@ -39,11 +39,11 @@ public:
 
   inline diplomat::result<std::unique_ptr<fatoora::OtherId>, std::unique_ptr<fatoora::BindingError>> identifier(size_t index) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Address>, std::unique_ptr<fatoora::BindingError>> address() const;
+  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Address>>, std::unique_ptr<fatoora::BindingError>> address() const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::VatId>, std::unique_ptr<fatoora::BindingError>> vat_id() const;
+  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::VatId>>, std::unique_ptr<fatoora::BindingError>> vat_id() const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::OtherId>, std::unique_ptr<fatoora::BindingError>> other_id() const;
+  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::OtherId>>, std::unique_ptr<fatoora::BindingError>> other_id() const;
 
   inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> name() const;
   template<typename W>

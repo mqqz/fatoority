@@ -30,7 +30,6 @@ def main():
     if not args.package_only:
         run([dotnet, "build", str(ROOT / "bindings/dotnet/examples/Examples.csproj")])
         run(["cargo", "build", "-p", "fatoora-ffi", "--locked"])
-        run([dotnet, "run", "--project", str(ROOT / "bindings/dotnet/tests/Runtime.csproj")])
         run([dotnet, "run", "--project", str(ROOT / "bindings/dotnet/tests/Smoke.csproj"),
              f"-p:NativeLibrary={target / 'debug' / filename}", "--", str(ROOT)])
     if args.package_dir:

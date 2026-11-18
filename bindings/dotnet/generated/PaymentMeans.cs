@@ -57,7 +57,7 @@ public partial class PaymentMeans: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>PaymentMeans</c> allocated on Rust side.
     /// </returns>
@@ -76,7 +76,7 @@ public partial class PaymentMeans: IDisposable
                     var result = Raw.PaymentMeans.WithInstructionNote(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return new PaymentMeans(result.Ok);
                 }
@@ -108,7 +108,7 @@ public partial class PaymentMeans: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string InstructionNoteAt(nuint index)
     {
         unsafe
@@ -117,12 +117,20 @@ public partial class PaymentMeans: IDisposable
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.PaymentMeans.InstructionNoteAt(selfLease!.Ptr, index);
-                if (!result.IsOk)
+                DiplomatWrite writeable = new DiplomatWrite();
+                try
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    var result = Raw.PaymentMeans.InstructionNoteAt(selfLease!.Ptr, index, &writeable);
+                    if (!result.IsOk)
+                    {
+                        throw FatooraException.FromNative(new BindingError(result.Err));
+                    }
+                    return writeable.ToUnicode();
                 }
-                return global::Fatoora.Text.Take(new global::Fatoora.Text(result.Ok));
+                finally
+                {
+                    writeable.Dispose();
+                }
             }
             finally
             {
@@ -131,7 +139,7 @@ public partial class PaymentMeans: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>PaymentMeans</c> allocated on Rust side.
     /// </returns>
@@ -148,17 +156,14 @@ public partial class PaymentMeans: IDisposable
                 var result = Raw.PaymentMeans.New(new DiplomatSliceU8 { Ptr = codePtr, Len = (nuint)codeBytes.Length }, instruction == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = instructionPtr, Len = (nuint)instructionBytes!.Length }));
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new PaymentMeans(result.Ok);
             }
         }
     }
 
-    [Obsolete("Use Create; New will be removed in 0.7.")]
-    public static PaymentMeans New(string code, string? instruction) => Create(code, instruction);
-
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>PaymentMeans</c> allocated on Rust side.
     /// </returns>
@@ -178,7 +183,7 @@ public partial class PaymentMeans: IDisposable
                     var result = Raw.PaymentMeans.WithAccount(selfLease!.Ptr, id == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = idPtr, Len = (nuint)idBytes!.Length }), terms == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = termsPtr, Len = (nuint)termsBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return new PaymentMeans(result.Ok);
                 }
@@ -190,7 +195,7 @@ public partial class PaymentMeans: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Code
     {
         get
@@ -207,7 +212,7 @@ public partial class PaymentMeans: IDisposable
                         var result = Raw.PaymentMeans.Code(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -224,7 +229,6 @@ public partial class PaymentMeans: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
     public string? InstructionNote
     {
         get
@@ -235,12 +239,20 @@ public partial class PaymentMeans: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.PaymentMeans.InstructionNote(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        var result = Raw.PaymentMeans.InstructionNote(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
@@ -270,7 +282,6 @@ public partial class PaymentMeans: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
     public string? AccountIdentifier
     {
         get
@@ -281,12 +292,20 @@ public partial class PaymentMeans: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.PaymentMeans.AccountIdentifier(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        var result = Raw.PaymentMeans.AccountIdentifier(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
@@ -296,7 +315,6 @@ public partial class PaymentMeans: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
     public string? PaymentTerms
     {
         get
@@ -307,12 +325,20 @@ public partial class PaymentMeans: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.PaymentMeans.PaymentTerms(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        var result = Raw.PaymentMeans.PaymentTerms(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {

@@ -16,7 +16,4 @@ enum class InvoiceFlag {
      */
     val bit: Int
         get() = com.fatoora.raw.InvoiceFlag.valueOf(name).bit().toInt()
-
-    @Deprecated("Use the bit property.", ReplaceWith("bit"))
-    fun bit(): Int = bit
 }

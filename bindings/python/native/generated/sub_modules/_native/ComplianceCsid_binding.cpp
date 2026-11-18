@@ -16,7 +16,7 @@ void add_ComplianceCsid_binding(nb::module_ mod) {
         .def("binary_security_token", std::move(maybe_op_unwrap(&_native::ComplianceCsid::binary_security_token)))
         .def("env", std::move(maybe_op_unwrap(&_native::ComplianceCsid::env)))
         .def_static("new", std::move(maybe_op_unwrap(&_native::ComplianceCsid::new_)), "environment"_a, "request_id"_a= nb::none(), "token"_a, "secret"_a)
-        .def("request_id", std::move(maybe_op_unwrap(&_native::ComplianceCsid::request_id)))
+        .def("request_id", &_native::ComplianceCsid::request_id)
         .def("secret", std::move(maybe_op_unwrap(&_native::ComplianceCsid::secret)));
 }
 

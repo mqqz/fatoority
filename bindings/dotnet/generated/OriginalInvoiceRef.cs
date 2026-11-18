@@ -57,7 +57,7 @@ public partial class OriginalInvoiceRef: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>OriginalInvoiceRef</c> allocated on Rust side.
     /// </returns>
@@ -80,70 +80,14 @@ public partial class OriginalInvoiceRef: IDisposable
                 var result = Raw.OriginalInvoiceRef.New(new DiplomatSliceU8 { Ptr = idPtr, Len = (nuint)idBytes.Length }, uuid == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = uuidPtr, Len = (nuint)uuidBytes!.Length }), date == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = datePtr, Len = (nuint)dateBytes!.Length }), time == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = timePtr, Len = (nuint)timeBytes!.Length }), typeCode == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = typeCodePtr, Len = (nuint)typeCodeBytes!.Length }));
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new OriginalInvoiceRef(result.Ok);
             }
         }
     }
 
-    [Obsolete("Use Create; New will be removed in 0.7.")]
-    public static OriginalInvoiceRef New(string id, string? uuid, string? date, string? time, string? typeCode) => Create(id, uuid, date, time, typeCode);
-
-    /// <exception cref="FfiException"></exception>
     public string? IssueTime
-    {
-        get
-        {
-            unsafe
-            {
-                BorrowLease<Raw.OriginalInvoiceRef>? selfLease = null;
-                try
-                {
-                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.OriginalInvoiceRef.IssueTime(selfLease!.Ptr);
-                    if (!result.IsOk)
-                    {
-                        throw FfiException.FromNative(new BindingError(result.Err));
-                    }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
-                }
-                finally
-                {
-                    selfLease?.Release();
-                }
-            }
-        }
-    }
-
-    /// <exception cref="FfiException"></exception>
-    public string? DocumentTypeCode
-    {
-        get
-        {
-            unsafe
-            {
-                BorrowLease<Raw.OriginalInvoiceRef>? selfLease = null;
-                try
-                {
-                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.OriginalInvoiceRef.DocumentTypeCode(selfLease!.Ptr);
-                    if (!result.IsOk)
-                    {
-                        throw FfiException.FromNative(new BindingError(result.Err));
-                    }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
-                }
-                finally
-                {
-                    selfLease?.Release();
-                }
-            }
-        }
-    }
-
-    /// <exception cref="FfiException"></exception>
-    public string Id
     {
         get
         {
@@ -156,10 +100,10 @@ public partial class OriginalInvoiceRef: IDisposable
                     DiplomatWrite writeable = new DiplomatWrite();
                     try
                     {
-                        var result = Raw.OriginalInvoiceRef.Id(selfLease!.Ptr, &writeable);
-                        if (!result.IsOk)
+                        var result = Raw.OriginalInvoiceRef.IssueTime(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            return null;
                         }
                         return writeable.ToUnicode();
                     }
@@ -176,7 +120,73 @@ public partial class OriginalInvoiceRef: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    public string? DocumentTypeCode
+    {
+        get
+        {
+            unsafe
+            {
+                BorrowLease<Raw.OriginalInvoiceRef>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
+                    {
+                        var result = Raw.OriginalInvoiceRef.DocumentTypeCode(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
+                    }
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
+            }
+        }
+    }
+
+    /// <exception cref="FatooraException"></exception>
+    public string Id
+    {
+        get
+        {
+            unsafe
+            {
+                BorrowLease<Raw.OriginalInvoiceRef>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
+                    {
+                        var result = Raw.OriginalInvoiceRef.Id(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FatooraException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
+                    }
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
+            }
+        }
+    }
+
     public string? Uuid
     {
         get
@@ -187,12 +197,20 @@ public partial class OriginalInvoiceRef: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.OriginalInvoiceRef.Uuid(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        var result = Raw.OriginalInvoiceRef.Uuid(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
@@ -202,7 +220,6 @@ public partial class OriginalInvoiceRef: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
     public string? IssueDate
     {
         get
@@ -213,12 +230,20 @@ public partial class OriginalInvoiceRef: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.OriginalInvoiceRef.IssueDate(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        var result = Raw.OriginalInvoiceRef.IssueDate(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {

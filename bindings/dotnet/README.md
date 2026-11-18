@@ -35,21 +35,17 @@ it does not clash with `System.Environment`), `VatCategory.Standard` and
 `ClearanceMode.Disabled`. Response statuses return a nullable enum (`Unknown` for
 unrecognized values), and `*Raw` properties return the exact text. Build the
 invoice flag mask by casting, such as `(byte)InvoiceFlag.Export`.
-Native errors throw one `FfiException` subclass per error code
-(`InvalidInputException`, `NetworkException`, ...; base `FatooraException`) with
-`Code`, `Kind`, and `DetailsJson`; exceptions hold no native resources.
+Library errors throw one `FatooraException` subclass per `ErrorKind`
+(`InvalidInputException`, `NetworkException`, ...) with `Code`, `Kind`, and
+`DetailsJson`; exceptions hold no native resources.
 Releasing native memory does not guarantee erasure of secrets or managed copies.
 
-`Bytes.AsSlice()` returns a disposable borrowed view. Call `Clone()` to obtain an
-independent `byte[]`, or `WithSpan()` for a scoped read. Active reads retain the
-native buffer even if its owner is disposed concurrently. Later reads fail once
-the source is disposed. Disposing a view while a read is active throws
-`InvalidOperationException`; retry after the read completes.
+`Bytes.ToArray()` copies the bytes into a new `byte[]`, which stays valid after
+its owner is disposed.
 
 ```csharp
 using var bytes = restored.ToDer();
-using var view = bytes.AsSlice();
-byte[] der = view.Clone();
+byte[] der = bytes.ToArray();
 ```
 
 Methods using `&mut self` reject conflicting concurrent calls. Native network
@@ -78,7 +74,7 @@ the package are supported. CI uploads a `nuget` artifact. Version tags publish t
 NuGet.org through trusted publishing after all platform consumers pass. For a locally built package:
 
 ```sh
-dotnet add package Fatoority --version 0.6.0 --source /absolute/path/to/dist/dotnet
+dotnet add package Fatoority --version 0.7.0 --source /absolute/path/to/dist/dotnet
 ```
 
 Release `linux-x64` assets are built and tested on glibc 2.28 (AlmaLinux 8).
@@ -88,10 +84,11 @@ packages inherit the build host's libc requirements.
 ## Regenerate
 
 The generator uses `mqqz/diplomat` commit
-`8f2d28f1b39653320db1446ebd8fd264cc8a166d`. This revision provides strict UTF-16
-encoding, synchronized borrowed-span access, and native handle retention during
-borrowed reads. It permits scoped read-only spans from disposable sources while
-preserving the other borrowing restrictions.
+`2687a45709a8dbce5ac018a0c4704d45da680c72`: upstream Diplomat after 0.17.0 plus
+the opt-in `dotnet.diplomat_str_as_string` configuration (upstream PR #1294), which
+maps `&DiplomatStr` parameters to `string`, and optional string returns
+(`DiplomatWrite` methods returning `Option<()>`) as `string?`. `generate_dotnet.py` keeps string
+inputs on a strict UTF-8 encoder, so unpaired surrogates throw.
 
 ```sh
 python3 scripts/install_dotnet_generator.py
@@ -107,14 +104,15 @@ Edit generator inputs or the fork, then regenerate; do not edit generated C#.
 
 `generate_dotnet.py` post-processes the fork's output into the public API rather
 than wrapping it, so each class keeps the generated handle, disposal and lifetime
-code. The pass turns scalar getters into properties, copies optional `Text`
-results into `string?`, maps every decimal the Rust FFI parses or returns to
+code. The pass turns scalar getters into properties, merges each
+`x_present`/`x` pair into one `string?` property, copies native byte buffers
+into `byte[]`, maps every decimal the Rust FFI parses or returns to
 `decimal` (derived from `fatoora-ffi` and `fatoora-core` sources), and throws
-`FfiException` subclasses from `src/Errors.cs`. Hand-written support code lives in
+`FatooraException` subclasses from `src/Errors.cs`. Hand-written support code lives in
 `src/`; it contains no per-type wrappers.
 
 The .NET contracts cover encoding, optional strings, structured errors, disposal,
-concurrent borrowed reads, keys, invoice signing, hashes against frozen SDK
+binary copies, keys, invoice signing, hashes against frozen SDK
 fixtures, prepared requests, response decoding, and owned snapshots. These tests
 run locally without contacting ZATCA.
 

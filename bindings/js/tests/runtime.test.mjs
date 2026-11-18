@@ -6,7 +6,7 @@ import * as raw from '../raw.mjs';
 import * as generated from '../generated/index.mjs';
 import wasm from '../generated/diplomat-wasm.mjs';
 import { integerBooleanMethods } from '../patch.mjs';
-import { properties, textResults } from '../members.mjs';
+import { optionalResults, properties } from '../members.mjs';
 const loadFixture = (path) => readFileSync(new URL(`../../../fatoora-core/tests/fixtures/${path}`, import.meta.url), 'utf8');
 const config = sdk.Config.create(sdk.Environment.NonProduction);
 const ccsid = () => sdk.ComplianceCsid.create(sdk.Environment.NonProduction, '123', 'token', 'secret');
@@ -15,7 +15,7 @@ const invoice = () => sdk.SignedInvoice.fromXml(loadFixture('sdk-parity/cases/si
 const credentialsBody = { requestID: 123, binarySecurityToken: 'new-token', secret: 'new-secret' };
 const validationBody = { validationResults: { status: 'PASS' }, reportingStatus: 'REPORTED' };
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status });
-const code = (n) => (error) => error instanceof sdk.errorClassForCode(n) && error.code === n
+const code = (n) => (error) => error.constructor === sdk.FatooraError.fromCode(n, '').constructor && error.code === n
   && error.cause instanceof sdk.BindingError && error.cause.code() === n;
 
 test('artifact imports only supported host functions and generates real keys', () => {
@@ -54,13 +54,15 @@ test('decimal values remain exact and consumed builders fail safely', () => {
 test('prepared request retains context after invoice consumption and WASM memory growth', () => {
   const inv = invoice();
   const request = raw.ZatcaClient.create(config).prepareReportSimplifiedInvoice(inv, pcsid(), sdk.ClearanceMode.Disabled, 'ar');
-  const bytes = request.body().asSlice();
+  const bytes = request.body().toUint8Array();
   const original = JSON.parse(Buffer.from(bytes).toString());
+  assert.match(inv.zatcaKeySignature, /^[A-Za-z0-9+/]+=*$/);
   inv.intoXml();
+  assert.throws(() => inv.zatcaKeySignature, code(1));
   wasm.memory.grow(1);
   for (let i = 0; i < 20; i++) sdk.SigningKey.generate();
-  assert.equal(JSON.parse(Buffer.from(request.body().asSlice()).toString()).invoiceHash, original.invoiceHash);
-  const result = request.decode(200, [...Buffer.from(JSON.stringify(validationBody))]);
+  assert.equal(JSON.parse(Buffer.from(request.body().toUint8Array()).toString()).invoiceHash, original.invoiceHash);
+  const result = request.decode(200, new TextEncoder().encode(JSON.stringify(validationBody)));
   assert.equal(result.httpStatus, 200);
   assert.equal(result.outcome.value, 'Accepted');
   assert.equal(result.reportingStatus, sdk.ReportingStatus.Reported);
@@ -72,12 +74,16 @@ test('prepared request retains context after invoice consumption and WASM memory
   assert.equal(unknown.reportingStatus, sdk.ReportingStatus.Unknown);
   assert.equal(unknown.reportingStatusRaw, 'LATER');
   assert.equal(unknown.validationResults().status, sdk.ValidationStatus.Unknown);
+  const decode = (body) => request.decode(200, [...Buffer.from(JSON.stringify({validationResults: {}, ...body}))]);
+  assert.equal(result.clearedInvoiceXml, null);
+  assert.equal(decode({clearedInvoice: Buffer.from('<Invoice/>').toString('base64')}).clearedInvoiceXml, '<Invoice/>');
+  assert.throws(() => decode({clearedInvoice: '!!!'}).clearedInvoiceXml, code(3));
 });
 
 test('fetch sees Rust headers and body; concurrent requests decode independently', async () => {
   const pending = [];
   const client = new sdk.ZatcaClient(config, { fetch: (url, init) => new Promise(resolve => pending.push({url, init, resolve})) });
-  const a = client.reportSimplifiedInvoice(invoice(), pcsid(), false, 'ar');
+  const a = client.reportSimplifiedInvoice(invoice(), pcsid(), sdk.ClearanceMode.Disabled, 'ar');
   const b = client.requestProductionCsid(ccsid());
   assert.equal(pending.length, 2);
   const headers = new Headers(pending[0].init.headers);
@@ -108,19 +114,20 @@ test('all credential operations, including renewal 428, share Rust decoding', as
 test('HTTP failures decode in Rust; network, body-read and cancellation failures stay transport errors', async () => {
   for (const status of [400, 401, 409, 500]) {
     const client = new sdk.ZatcaClient(config, { fetch: async () => json(validationBody, status) });
-    await assert.rejects(client.reportSimplifiedInvoice(invoice(), pcsid()), (e) => {
+    await assert.rejects(client.reportSimplifiedInvoice(invoice(), pcsid(), sdk.ClearanceMode.Disabled), (e) => {
       assert.ok(e instanceof sdk.FatooraError);
       assert.equal(e.details.http_status, status);
       assert.equal(JSON.parse(e.cause.detailsJson()).http_status, status); return true;
     });
   }
   const malformed = new sdk.ZatcaClient(config, { fetch: async () => new Response('bad') });
-  await assert.rejects(malformed.reportSimplifiedInvoice(invoice(), pcsid()), code(3));
+  await assert.rejects(malformed.reportSimplifiedInvoice(invoice(), pcsid(), sdk.ClearanceMode.Disabled), code(3));
   const broken = new sdk.ZatcaClient(config, { fetch: async () => ({ status: 200, arrayBuffer: async () => { throw new Error('read'); } }) });
-  await assert.rejects(broken.requestProductionCsid(ccsid()), e => e instanceof sdk.TransportError && e instanceof sdk.NetworkError && e.code === 7 && e.httpStatus === 200);
+  await assert.rejects(broken.requestProductionCsid(ccsid()), e => e instanceof sdk.NetworkError && e.code === 7 && e.kind === sdk.ErrorKind.Network
+    && e.details.type === 'api_response_read' && e.details.http_status === 200 && e.cause.message === 'read');
   const abort = new AbortController(); abort.abort();
   const cancelled = new sdk.ZatcaClient(config, { fetch: async (_url, {signal}) => { signal.throwIfAborted(); } });
-  await assert.rejects(cancelled.requestProductionCsid(ccsid(), {signal: abort.signal}), e => e instanceof sdk.TransportError && e.cause.name === 'AbortError');
+  await assert.rejects(cancelled.requestProductionCsid(ccsid(), {signal: abort.signal}), e => e instanceof sdk.NetworkError && e.details.type === 'network' && e.cause.name === 'AbortError');
 });
 
 test('validation uses supplied time and the public facade supplies a default', () => {
@@ -181,11 +188,14 @@ test('clearance and compliance use their own acceptance fields', async () => {
     ? json({validationResults: {status: 'PASS'}, clearanceStatus: 'CLEARED', reportingStatus: 'NOT_REPORTED'})
     : json({validationResults: {status: 'WARNING'}, reportingStatus: 'NOT_REPORTED'})});
   const standard = sdk.SignedInvoice.fromXml(loadFixture('sdk-parity/cases/standard-invoice/sdk-signed.xml'));
-  assert.equal((await client.clearStandardInvoice(standard, pcsid())).outcome.value, 'Accepted');
+  assert.equal((await client.clearStandardInvoice(standard, pcsid(), sdk.ClearanceMode.Enabled)).outcome.value, 'Accepted');
   assert.equal((await client.checkInvoiceCompliance(invoice(), ccsid())).outcome.value, 'Accepted');
-  await assert.rejects(client.clearStandardInvoice(invoice(), pcsid()));
+  await assert.rejects(client.clearStandardInvoice(invoice(), pcsid(), sdk.ClearanceMode.Enabled), code(9));
   assert.equal((await client.clearStandardInvoice(standard, pcsid(), sdk.ClearanceMode.Enabled)).clearanceStatus, sdk.ClearanceStatus.Cleared);
-  await assert.rejects(client.clearStandardInvoice(standard, pcsid(), 1), TypeError);
+  for (const mode of [true, false, 'Enabled', 'Disabled', 1, undefined]) {
+    await assert.rejects(client.clearStandardInvoice(standard, pcsid(), mode), TypeError);
+    await assert.rejects(client.reportSimplifiedInvoice(invoice(), pcsid(), mode), TypeError);
+  }
 });
 
 test('compressed schemas preserve valid Arabic input and reject schema-invalid XML', () => {
@@ -208,10 +218,31 @@ test('documented examples and signing work in the optimized artifact', async () 
   assert.equal(response.outcome.value, 'Accepted');
   const cert = readFileSync(new URL('../../../fatoora-core/tests/fixtures/sdk-parity/credentials/certificate.der', import.meta.url));
   const key = readFileSync(new URL('../../../fatoora-core/tests/fixtures/sdk-parity/credentials/private-key.der', import.meta.url));
-  const signer = sdk.InvoiceSigner.fromDer([...cert], [...key]);
-  const signed = examples.signInvoice(xml, signer.certificatePem, sdk.SigningKey.fromDer([...key]).toPem());
+  const signer = sdk.InvoiceSigner.fromDer(cert, key);
+  const signed = examples.signInvoice(xml, signer.certificatePem, sdk.SigningKey.fromDer(key).toPem());
   assert.equal(sdk.Xml.hash(signed), sdk.Xml.hash(xml));
   assert.ok(sdk.SignedInvoice.fromXml(signed).signature);
+});
+
+test('binary data is a Uint8Array copy in and out', () => {
+  const key = sdk.SigningKey.generate();
+  const bytes = key.toDer();
+  assert.equal(bytes.asSlice, undefined);
+  assert.equal(raw.Bytes, sdk.Bytes);
+  const der = bytes.toUint8Array();
+  assert.ok(der instanceof Uint8Array);
+  assert.ok(der.length > 0);
+  // Each call returns an independent copy outside WASM memory.
+  const again = bytes.toUint8Array();
+  assert.notEqual(der.buffer, again.buffer);
+  assert.notEqual(der.buffer, wasm.memory.buffer);
+  der.fill(0);
+  assert.deepEqual(bytes.toUint8Array(), again);
+  // Inputs accept a Uint8Array, a Buffer or an array of byte values.
+  assert.deepEqual(sdk.SigningKey.fromDer(again).toDer().toUint8Array(), again);
+  assert.deepEqual(sdk.SigningKey.fromDer(Buffer.from(again)).toDer().toUint8Array(), again);
+  assert.deepEqual(sdk.SigningKey.fromDer([...again]).toDer().toUint8Array(), again);
+  assert.throws(() => sdk.SigningKey.fromDer(new Uint8Array([1, 2, 3])), e => e instanceof sdk.FatooraError);
 });
 
 test('validation options preserve Rust errors before host clock injection', () => {
@@ -278,15 +309,19 @@ test('signed import preserves XML with line-wrapped certificates', () => {
 });
 
 test('library failures throw one error class per code', () => {
-  assert.equal(sdk.errorClassForCode(null), sdk.FatooraError);
-  assert.equal(sdk.errorClassForCode(99), sdk.FatooraError);
+  assert.equal(sdk.FatooraError.fromCode(null, 'm').constructor, sdk.FatooraError);
+  const future = sdk.FatooraError.fromCode(99, 'm', {details: {type: 'future'}});
+  assert.equal(future.constructor, sdk.FatooraError);
+  assert.deepEqual([future.code, future.kind, future.details], [99, null, {type: 'future'}]);
   const names = ['InvalidInputError', 'ValidationError', 'ParseError', 'XmlError', 'CryptoError', 'IoError',
     'NetworkError', 'UnauthorizedError', 'InternalError', 'ApiError'];
-  assert.deepEqual(Object.keys(sdk.ErrorCode), names.map(n => n.replace(/Error$/, '')));
-  for (const [kind, n] of Object.entries(sdk.ErrorCode)) {
-    const ErrorClass = sdk.errorClassForCode(n);
-    assert.equal(ErrorClass, sdk[`${kind}Error`]);
-    const error = new ErrorClass('m', {code: n});
+  assert.deepEqual(Object.keys(sdk.ErrorKind), names.map(n => n.replace(/Error$/, '')));
+  for (const [index, kind] of Object.values(sdk.ErrorKind).entries()) {
+    const n = index + 1;
+    const ErrorClass = sdk[`${kind}Error`];
+    const error = sdk.FatooraError.fromCode(n, 'm');
+    assert.equal(error.constructor, ErrorClass);
+    assert.equal(error.code, n);
     assert.ok(error instanceof sdk.FatooraError && error instanceof Error);
     assert.equal(error.name, `${kind}Error`);
     assert.equal(error.kind, kind);
@@ -298,9 +333,6 @@ test('library failures throw one error class per code', () => {
   const base = new sdk.FatooraError('m');
   assert.equal(base.code, null);
   assert.equal(base.kind, null);
-  const transport = new sdk.TransportError('m', new Error('x'));
-  assert.equal(transport.code, sdk.ErrorCode.Network);
-  assert.equal(transport.kind, 'Network');
   let error;
   try { sdk.Address.create('SAU', 'bad\0city', 'street', '1234', '12222', null, null, null); }
   catch (caught) { error = caught; }
@@ -311,19 +343,18 @@ test('library failures throw one error class per code', () => {
   assert.doesNotMatch(error.stack.split('\n')[1], /patch\.mjs|errors\.mjs/);
   assert.throws(() => sdk.SigningKey.fromPem('not a key'), e => e instanceof sdk.FatooraError && e.code === e.cause.code());
   // fatoority/raw shares the generated classes, so it throws the same types.
-  assert.throws(() => raw.Address.new_('SAU', '\0', '', '', '', null, null, null), sdk.InvalidInputError);
+  assert.throws(() => raw.Address.create('SAU', '\0', '', '', '', null, null, null), sdk.InvalidInputError);
 });
 
 test('create replaces new_ and the package root exports a deliberate API', () => {
-  const withNew = Object.entries(generated).filter(([, value]) => typeof value?.new_ === 'function').map(([name]) => name);
-  assert.equal(withNew.length, 14);
-  for (const name of withNew) {
-    assert.equal(typeof generated[name].create, 'function', name);
+  const withCreate = Object.entries(generated).filter(([, value]) => typeof value?.create === 'function').map(([name]) => name);
+  assert.equal(withCreate.length, 14);
+  for (const name of withCreate) {
+    assert.equal(generated[name].new_, undefined, name);
     if (name !== 'ZatcaClient') assert.equal(sdk[name], generated[name]);
   }
   assert.ok(sdk.Config.create(sdk.Environment.Simulation) instanceof sdk.Config);
   assert.equal(sdk.Config.create('Production').env, sdk.Environment.Production);
-  assert.equal(sdk.Config.new_(sdk.Environment.Simulation).env, sdk.Environment.Simulation); // deprecated alias
   const replaced = ['Xml', 'ZatcaClient', 'ZatcaValidationReport', 'ZatcaStageReport', 'ZatcaFinding', 'ZatcaRuleSource'];
   for (const [name, value] of Object.entries(generated)) {
     if (replaced.includes(name)) assert.notEqual(sdk[name], value, name);
@@ -351,7 +382,10 @@ test('generated boolean getters return booleans', () => {
     let source;
     try { source = readFileSync(new URL(`../generated/${name}.d.mts`, import.meta.url), 'utf8'); }
     catch { continue; }
-    const methods = [...source.matchAll(/^    (\w+)\(\): boolean;$/gm)].map(m => m[1]);
+    // `*Present` halves of optional-string pairs are removed, not adapted.
+    const hidden = Object.values(optionalResults[name] ?? {});
+    const methods = [...source.matchAll(/^    (\w+)\(\): boolean;$/gm)].map(m => m[1])
+      .filter(method => !hidden.includes(method));
     if (methods.length) declared[name] = methods;
   }
   assert.deepEqual(integerBooleanMethods, declared);
@@ -361,16 +395,18 @@ test('generated boolean getters return booleans', () => {
   assert.equal(sdk.Xml.validate(loadFixture('sdk-parity/cases/simplified-invoice/sdk-signed.xml')), true);
 });
 
-test('0.5 names of renamed members forward to the core names', () => {
-  const rebate = sdk.Adjustment.percentage('250', '10'); // deprecated
+test('renamed members have only their core names', () => {
+  const rebate = sdk.Adjustment.percentOf('250', '10');
   assert.equal(rebate.value, '25');
-  assert.ok(rebate.percent() instanceof sdk.Text); // the 0.5 alias keeps its 0.5 result
-  assert.equal(rebate.percent().value(), rebate.percentage);
-  assert.equal(rebate.withSuppliedAmount('25').value, rebate.suppliedAmount('25').value);
-  assert.throws(() => rebate.withSuppliedAmount('24').value, sdk.ValidationError);
+  assert.equal(rebate.percentage, '10');
+  assert.equal(rebate.suppliedAmount('25').value, '25');
+  assert.throws(() => rebate.suppliedAmount('24').value, sdk.ValidationError);
   const subtotal = sdk.VatBreakdown.create(sdk.VatCategory.OutOfScope, '0', '10', '0', sdk.TaxExemption.create('VATEX-SA-OOS', 'reason'));
-  assert.equal(subtotal.withoutVatRate().hasVatRate, subtotal.omitVatRate().hasVatRate);
   assert.equal(subtotal.omitVatRate().hasVatRate, false);
+  // The 0.5 names, deprecated in 0.6, are gone in 0.7.
+  assert.equal(Object.hasOwn(sdk.Adjustment, 'percentage'), false);
+  for (const name of ['withSuppliedAmount', 'percent']) assert.equal(name in sdk.Adjustment.prototype, false, name);
+  for (const Class of [sdk.AllowanceCharge, sdk.VatBreakdown]) assert.equal('withoutVatRate' in Class.prototype, false);
 });
 
 test('value getters are read-only properties and optional text is a plain string', () => {
@@ -390,10 +426,11 @@ test('value getters are read-only properties and optional text is a plain string
   // The 0.5 call form is a hard break: the property value is not callable.
   assert.throws(() => address.city(), TypeError);
   assert.throws(() => { 'use strict'; address.city = 'Jeddah'; }, TypeError);
-  for (const [name, members] of Object.entries(textResults)) {
-    for (const member of members) {
+  for (const [name, pairs] of Object.entries(optionalResults)) {
+    for (const [member, has] of Object.entries(pairs)) {
       const descriptor = Object.getOwnPropertyDescriptor(generated[name].prototype, member);
-      assert.equal(typeof (descriptor.get ?? descriptor.value), 'function', `${name}.${member}`);
+      assert.equal(typeof descriptor?.get, 'function', `${name}.${member}`);
+      assert.equal(has in generated[name].prototype, false, `${name}.${has}`);
     }
   }
   const rebate = sdk.Adjustment.percentOf('250', '10').withReason('rebate', null);

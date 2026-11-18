@@ -16,7 +16,6 @@
 #include "OriginalInvoiceRef.d.h"
 #include "Party.d.h"
 #include "PaymentMeans.d.h"
-#include "Text.d.h"
 #include "VatCategory.d.h"
 
 #include "InvoiceData.d.h"
@@ -37,26 +36,26 @@ size_t fatoora_InvoiceData_payment_means_len(const InvoiceData* self);
 typedef struct fatoora_InvoiceData_payment_means_result {union {PaymentMeans* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_payment_means_result;
 fatoora_InvoiceData_payment_means_result fatoora_InvoiceData_payment_means(const InvoiceData* self, size_t index);
 
-typedef struct fatoora_InvoiceData_purchase_order_id_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_purchase_order_id_result;
-fatoora_InvoiceData_purchase_order_id_result fatoora_InvoiceData_purchase_order_id(const InvoiceData* self);
+typedef struct fatoora_InvoiceData_purchase_order_id_result { bool is_ok;} fatoora_InvoiceData_purchase_order_id_result;
+fatoora_InvoiceData_purchase_order_id_result fatoora_InvoiceData_purchase_order_id(const InvoiceData* self, DiplomatWrite* write);
 
-typedef struct fatoora_InvoiceData_contract_id_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_contract_id_result;
-fatoora_InvoiceData_contract_id_result fatoora_InvoiceData_contract_id(const InvoiceData* self);
+typedef struct fatoora_InvoiceData_contract_id_result { bool is_ok;} fatoora_InvoiceData_contract_id_result;
+fatoora_InvoiceData_contract_id_result fatoora_InvoiceData_contract_id(const InvoiceData* self, DiplomatWrite* write);
 
-typedef struct fatoora_InvoiceData_payment_instruction_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_payment_instruction_result;
-fatoora_InvoiceData_payment_instruction_result fatoora_InvoiceData_payment_instruction(const InvoiceData* self);
+typedef struct fatoora_InvoiceData_payment_instruction_result { bool is_ok;} fatoora_InvoiceData_payment_instruction_result;
+fatoora_InvoiceData_payment_instruction_result fatoora_InvoiceData_payment_instruction(const InvoiceData* self, DiplomatWrite* write);
 
-typedef struct fatoora_InvoiceData_actual_delivery_date_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_actual_delivery_date_result;
-fatoora_InvoiceData_actual_delivery_date_result fatoora_InvoiceData_actual_delivery_date(const InvoiceData* self);
+typedef struct fatoora_InvoiceData_actual_delivery_date_result { bool is_ok;} fatoora_InvoiceData_actual_delivery_date_result;
+fatoora_InvoiceData_actual_delivery_date_result fatoora_InvoiceData_actual_delivery_date(const InvoiceData* self, DiplomatWrite* write);
 
-typedef struct fatoora_InvoiceData_latest_delivery_date_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_latest_delivery_date_result;
-fatoora_InvoiceData_latest_delivery_date_result fatoora_InvoiceData_latest_delivery_date(const InvoiceData* self);
+typedef struct fatoora_InvoiceData_latest_delivery_date_result { bool is_ok;} fatoora_InvoiceData_latest_delivery_date_result;
+fatoora_InvoiceData_latest_delivery_date_result fatoora_InvoiceData_latest_delivery_date(const InvoiceData* self, DiplomatWrite* write);
 
-typedef struct fatoora_InvoiceData_tax_currency_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_tax_currency_result;
-fatoora_InvoiceData_tax_currency_result fatoora_InvoiceData_tax_currency(const InvoiceData* self);
+typedef struct fatoora_InvoiceData_tax_currency_result { bool is_ok;} fatoora_InvoiceData_tax_currency_result;
+fatoora_InvoiceData_tax_currency_result fatoora_InvoiceData_tax_currency(const InvoiceData* self, DiplomatWrite* write);
 
-typedef struct fatoora_InvoiceData_tax_currency_amount_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_tax_currency_amount_result;
-fatoora_InvoiceData_tax_currency_amount_result fatoora_InvoiceData_tax_currency_amount(const InvoiceData* self);
+typedef struct fatoora_InvoiceData_tax_currency_amount_result { bool is_ok;} fatoora_InvoiceData_tax_currency_amount_result;
+fatoora_InvoiceData_tax_currency_amount_result fatoora_InvoiceData_tax_currency_amount(const InvoiceData* self, DiplomatWrite* write);
 
 size_t fatoora_InvoiceData_adjustments_len(const InvoiceData* self);
 
@@ -87,8 +86,8 @@ fatoora_InvoiceData_invoice_level_charge_result fatoora_InvoiceData_invoice_leve
 typedef struct fatoora_InvoiceData_invoice_level_discount_result {union { BindingError* err;}; bool is_ok;} fatoora_InvoiceData_invoice_level_discount_result;
 fatoora_InvoiceData_invoice_level_discount_result fatoora_InvoiceData_invoice_level_discount(const InvoiceData* self, DiplomatWrite* write);
 
-typedef struct fatoora_InvoiceData_allowance_reason_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_allowance_reason_result;
-fatoora_InvoiceData_allowance_reason_result fatoora_InvoiceData_allowance_reason(const InvoiceData* self);
+typedef struct fatoora_InvoiceData_allowance_reason_result { bool is_ok;} fatoora_InvoiceData_allowance_reason_result;
+fatoora_InvoiceData_allowance_reason_result fatoora_InvoiceData_allowance_reason(const InvoiceData* self, DiplomatWrite* write);
 
 uint64_t fatoora_InvoiceData_invoice_counter(const InvoiceData* self);
 
@@ -117,8 +116,8 @@ fatoora_InvoiceData_line_item_result fatoora_InvoiceData_line_item(const Invoice
 typedef struct fatoora_InvoiceData_original_invoice_ref_result {union {OriginalInvoiceRef* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_original_invoice_ref_result;
 fatoora_InvoiceData_original_invoice_ref_result fatoora_InvoiceData_original_invoice_ref(const InvoiceData* self);
 
-typedef struct fatoora_InvoiceData_original_invoice_reason_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_InvoiceData_original_invoice_reason_result;
-fatoora_InvoiceData_original_invoice_reason_result fatoora_InvoiceData_original_invoice_reason(const InvoiceData* self);
+typedef struct fatoora_InvoiceData_original_invoice_reason_result { bool is_ok;} fatoora_InvoiceData_original_invoice_reason_result;
+fatoora_InvoiceData_original_invoice_reason_result fatoora_InvoiceData_original_invoice_reason(const InvoiceData* self, DiplomatWrite* write);
 
 size_t fatoora_InvoiceData_notes_len(const InvoiceData* self);
 

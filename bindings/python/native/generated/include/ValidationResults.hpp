@@ -12,7 +12,6 @@
 #include <optional>
 #include <cstdlib>
 #include "BindingError.hpp"
-#include "Text.hpp"
 #include "ValidationMessage.hpp"
 #include "ValidationStatus.hpp"
 #include "diplomat_runtime.hpp"
@@ -25,8 +24,8 @@ namespace capi {
     typedef struct fatoora_ValidationResults_status_result {union {_native::capi::ValidationStatus ok; }; bool is_ok;} fatoora_ValidationResults_status_result;
     fatoora_ValidationResults_status_result fatoora_ValidationResults_status(const _native::capi::ValidationResults* self);
 
-    typedef struct fatoora_ValidationResults_status_raw_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationResults_status_raw_result;
-    fatoora_ValidationResults_status_raw_result fatoora_ValidationResults_status_raw(const _native::capi::ValidationResults* self);
+    typedef struct fatoora_ValidationResults_status_raw_result { bool is_ok;} fatoora_ValidationResults_status_raw_result;
+    fatoora_ValidationResults_status_raw_result fatoora_ValidationResults_status_raw(const _native::capi::ValidationResults* self, _native::diplomat::capi::DiplomatWrite* write);
 
     size_t fatoora_ValidationResults_info_len(const _native::capi::ValidationResults* self);
 
@@ -54,9 +53,19 @@ inline std::optional<_native::ValidationStatus> _native::ValidationResults::stat
     return result.is_ok ? std::optional<_native::ValidationStatus>(_native::ValidationStatus::FromFFI(result.ok)) : std::nullopt;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::ValidationResults::status_raw() const {
-    auto result = _native::capi::fatoora_ValidationResults_status_raw(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::ValidationResults::status_raw() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_ValidationResults_status_raw(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::ValidationResults::status_raw_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_ValidationResults_status_raw(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline size_t _native::ValidationResults::info_len() const {

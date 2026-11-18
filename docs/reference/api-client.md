@@ -37,7 +37,7 @@ certificate. Preserve the request ID returned during compliance onboarding.
 | Secret | Credential secret returned by ZATCA | Keep credentials out of logs. |
 | Request ID | Optional text from credential issuance | Required to request production credentials from compliance credentials. |
 | Invoice | Signed invoice object | The client sends its hash, UUID, and Base64 XML. |
-| Clearance flag | `ClearanceMode` (`Enabled`/`Disabled`); a Boolean in Python, the JavaScript async client, and the Kotlin `*Async` helpers | Sends `Clearance-Status: 1` when enabled, `0` when disabled. It does not change the selected operation. |
+| Clearance flag | `ClearanceMode` (`Enabled`/`Disabled`) in every language | Sends `Clearance-Status: 1` when enabled, `0` when disabled. It does not change the selected operation. |
 | Response language | `ar`, `en`, or omitted | Only the exact value `ar` selects Arabic; every other value sends English. |
 
 ## Interpret an invoice response
@@ -86,7 +86,9 @@ body read is a transport error.
 
 No client-side request timeout applies by default. Construct the client with a
 timeout to bound each request, from connecting until the response body is read.
-A request that exceeds it fails as a network (transport) error; zero is rejected.
+A request that exceeds it fails as a network (transport) error. A zero timeout is
+rejected as invalid input (`ErrorKind::InvalidInput`, details type
+`invalid_timeout`).
 JavaScript has no timeout option: its client sends through the `fetch` you supply,
 so bound requests there with an `AbortSignal`.
 
@@ -128,7 +130,8 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     `ZatcaClient::new(config: Config)` returns `Result<ZatcaClient, ZatcaError>`.
     `ZatcaClient::with_timeout(config: Config, timeout: Duration)` does the same with
     a per-request timeout; a timeout surfaces as `ZatcaError::Http` (or
-    `ZatcaError::ResponseRead` mid-body), both `ErrorKind::Network`.
+    `ZatcaError::ResponseRead` mid-body), both `ErrorKind::Network`. A zero
+    timeout returns `ZatcaError::InvalidTimeout` (`ErrorKind::InvalidInput`).
     HTTP methods are async; call them with `.await`. Inputs below are borrowed.
 
     **HTTP operations**
@@ -224,19 +227,14 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
     `clearance` (required) and `accept_language` are keyword-only.
     `ClearanceMode.DISABLED` sends `Clearance-Status: 0` and `ClearanceMode.ENABLED`
-    sends `1`. The 0.5 form `clearance_status=False`/`True`, and the 0.5 names
-    `post_csr_for_ccsid` and `post_ccsid_for_pcsid`, still work until 0.7, with a
-    `DeprecationWarning`; passing both `clearance` and `clearance_status` raises
-    `TypeError`.
+    sends `1`.
 
     **Credentials**
 
     `ComplianceCsid(env: Environment, *, token: str, secret: str, request_id: Optional[str] = None)`
     builds compliance credentials from stored values; `ProductionCsid(...)` takes the
-    same arguments. The deprecated `ComplianceCsid.new(env, token, secret, request_id=None)`
-    and `ProductionCsid.new(...)` keep their 0.5 positional order until 0.7. The `env` property is an `Environment`; `binary_security_token` and
-    `secret` are `str`; `request_id` is `Optional[str]`, `None` when absent. The 0.5 class
-    names `CsidCompliance` and `CsidProduction` are deprecated aliases until 0.7.
+    same arguments. The `env` property is an `Environment`; `binary_security_token` and
+    `secret` are `str`; `request_id` is `Optional[str]`, `None` when absent.
 
     **Responses**
 
@@ -264,8 +262,19 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
     Client, credential, response, result, and message objects support `with` and
     `close()`. Child results are independently owned. Calls do not consume their
-    inputs. The public Python facade provides the blocking HTTP methods above;
-    prepared-request methods are not exposed by this facade.
+    inputs. Prepared-request methods are not exposed by the Python facade.
+
+    **Asynchronous client**
+
+    `AsyncZatcaClient(config: Config, *, timeout=None, http_client: Optional[httpx.AsyncClient] = None)`
+    has the HTTP operations above as `async def` methods with the same arguments,
+    return types, and errors. It needs the `async` extra
+    (`pip install "fatoority[async]"`), which adds `httpx`; the native library
+    prepares and decodes each request and httpx sends it, without following
+    redirects. Use `async with` or `await client.aclose()`; the client closes the
+    `httpx.AsyncClient` it created, never one passed as `http_client`. A transport
+    failure or timeout raises `NetworkError`. See the
+    [Python reference](bindings/python.md#asynchronous-client).
 
 === "JavaScript"
     Import `ZatcaClient`, `ComplianceCsid`, `ProductionCsid`, and `InvoiceOutcome`
@@ -280,14 +289,16 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     | `requestProductionCsid(credentials, options = {})` | `ProductionCsid` |
     | `renewCsid(credentials, csr, otp, acceptLanguage = null, options = {})` | `ProductionCsid` |
     | `checkInvoiceCompliance(invoice, credentials, options = {})` | `ValidationResponse` |
-    | `reportSimplifiedInvoice(invoice, credentials, clearanceStatus = false, acceptLanguage = null, options = {})` | `ValidationResponse` |
-    | `clearStandardInvoice(invoice, credentials, clearanceStatus = true, acceptLanguage = null, options = {})` | `ValidationResponse` |
+    | `reportSimplifiedInvoice(invoice, credentials, clearanceMode, acceptLanguage = null, options = {})` | `ValidationResponse` |
+    | `clearStandardInvoice(invoice, credentials, clearanceMode, acceptLanguage = null, options = {})` | `ValidationResponse` |
 
     Pass `Csr` for `csr`, `SignedInvoice` for `invoice`, strings for OTP/language, and
-    a boolean, a `ClearanceMode` (`ClearanceMode.Disabled`/`.Enabled`) or its name (`'Disabled'`/`'Enabled'`) for `clearanceStatus`. Compliance issuance uses no credential; compliance checks
+    `ClearanceMode.Disabled` or `ClearanceMode.Enabled` for `clearanceMode`, which is
+    required; any other value, including a boolean or the variant name, rejects with a
+    `TypeError`. Compliance issuance uses no credential; compliance checks
     and production issuance take `ComplianceCsid`; reporting, clearance, and renewal
     take `ProductionCsid`. Each `options` accepts `{ signal: AbortSignal }` for cancellation.
-    Transport failures reject with `TransportError` (a `NetworkError`); response/acceptance failures reject with the
+    Transport failures reject with `NetworkError` (host error in `cause`); response/acceptance failures reject with the
     `FatooraError` subclass for their code, such as `ApiError` or `UnauthorizedError`. See [JavaScript HTTP setup](bindings/javascript.md#api-requests)
     for browser CORS and custom fetch behavior.
 
@@ -343,16 +354,18 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     to the operation.
 
     `request.method`, `url`, and `headersJson` are strings; `body()` returns
-    `Bytes`. `request.decode(status, body)` takes an HTTP status number and an array of
-    byte numbers and returns the corresponding credentials or validation response.
+    `Bytes`; `toUint8Array()` copies it. `request.decode(status, body)` takes an HTTP
+    status number and a `Uint8Array` and returns the corresponding credentials or validation response.
     Alternatively, `await sendPrepared(request, { fetch, signal })` from `fatoority`
     sends and decodes the request. Preparation owns its data; it does not send HTTP.
 
 === "C#"
     Use the `Fatoora` namespace. `ZatcaClient.Create(config: Config)` returns a client;
-    `ZatcaClient.WithTimeout(config, timeoutMs: uint)` adds a per-request timeout
-    in milliseconds that raises `NetworkException` when exceeded.
-    HTTP methods block; errors throw `FfiException` subclasses such as
+    `ZatcaClient.WithTimeout(config, timeout: TimeSpan)` adds a per-request timeout,
+    rounded up to whole milliseconds, that raises `NetworkException` when exceeded;
+    a zero, negative, or over-`uint.MaxValue`-millisecond timeout throws
+    `ArgumentOutOfRangeException`.
+    HTTP methods block; errors throw `FatooraException` subclasses such as
     `NetworkException` or `UnauthorizedException`. Use `using` for owned objects,
     including child responses. Scalar getters are read-only properties.
 
@@ -423,8 +436,11 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
 === "Kotlin"
     Import types from `com.fatoora`. `ZatcaClient.create(config)` takes `Config` and
-    returns a client; `ZatcaClient.withTimeout(config, timeoutMs: Long)` adds a
-    per-request timeout in milliseconds that raises `NetworkException` when exceeded.
+    returns a client; `ZatcaClient.withTimeout(config, timeout)` takes a
+    `kotlin.time.Duration` (such as `30.seconds`) or `java.time.Duration` and adds a
+    per-request timeout, rounded up to whole milliseconds, that raises
+    `NetworkException` when exceeded; a zero, negative, or too-long timeout throws
+    `IllegalArgumentException`.
     HTTP methods block and errors raise exceptions. Use `.use { ... }` or `close()` for owned objects,
     including child responses.
 
@@ -495,8 +511,10 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
 === "Java"
     Import types from `com.fatoora`. `ZatcaClient.create(config)` takes `Config` and
-    returns a client; `ZatcaClient.withTimeout(config, timeoutMs)` adds a
-    per-request timeout in milliseconds that raises `NetworkException` when exceeded.
+    returns a client; `ZatcaClient.withTimeout(config, Duration.ofSeconds(30))` takes a
+    `java.time.Duration` and adds a per-request timeout, rounded up to whole
+    milliseconds, that raises `NetworkException` when exceeded; a zero, negative, or
+    too-long timeout throws `IllegalArgumentException`.
     HTTP methods block and errors raise exceptions. Use try-with-resources or `close()` for owned objects,
     including child responses.
 
@@ -577,7 +595,8 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
         FatooraZatcaClient **out,
         FatooraError **error);
     /* Like fatoora_zatca_client_new; each request fails with
-     * FATOORA_NETWORK after timeout_ms milliseconds. Zero is rejected. */
+     * FATOORA_NETWORK after timeout_ms milliseconds. Zero fails with
+     * FATOORA_INVALID_INPUT. */
     FatooraStatus fatoora_zatca_client_with_timeout(const FatooraConfig *config,
         uint32_t timeout_ms,
         FatooraZatcaClient **out,

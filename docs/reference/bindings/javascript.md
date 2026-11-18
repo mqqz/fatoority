@@ -44,7 +44,8 @@ package is needed.
 | Optional text output | `string` or `null` |
 | Decimal amount or quantity | Exact decimal `string`, such as `"15.25"`, in arguments and results; do not pass a floating-point number. Use a decimal library such as `decimal.js` for arithmetic |
 | Invoice counter | `bigint`, within the unsigned 64-bit range |
-| Binary output | `Bytes.asSlice()` returns a copied `number[]`; use `Uint8Array.from(...)` for a typed byte array |
+| Binary output | `Bytes.toUint8Array()` returns a new `Uint8Array` copy that stays valid after its owner is collected |
+| Binary input | `Uint8Array` (including a Node.js `Buffer`) or an array of byte numbers, such as `SigningKey.fromDer(der)` |
 | Native object | Object managed by `FinalizationRegistry` |
 | Invoice outcome | `InvoiceOutcome.Accepted`, `Rejected`, or `Unknown` |
 | Enumerated code | Enum class static, such as `Environment.NonProduction`, `InvoiceTypeKind.Tax`, `InvoiceSubType.Simplified`, `VatCategory.Standard`, `AdjustmentKind.Charge`, or `ClearanceMode.Disabled`; `.value` is the variant name string, such as `'Standard'`. Each enum has a matching string-literal union type named with a `Value` suffix, such as `VatCategoryValue` |
@@ -61,8 +62,8 @@ methods, as do `len()` and `isEmpty()`. Assigning to a property throws a
 `TypeError`.
 
 Method names use camelCase. Constructors named `new` in the underlying API are
-`create`, such as `Config.create(Environment.NonProduction)`. The generated name
-`new_` still works but is deprecated in the TypeScript declarations. Generated
+`create`, such as `Config.create(Environment.NonProduction)`; the generated name
+`new_` was removed in 0.7 (see [migrating to 0.7](../../guides/migrate-0.7/javascript.md)). Generated
 constructors (`new Config()`) are internal. Read the [number reference](../numbers.md) for
 accepted decimal syntax and rounding rules.
 
@@ -91,11 +92,13 @@ A library failure throws one `FatooraError` subclass per error code:
 | 9 | `InternalError` | Internal invariant or consumed-state error |
 | 10 | `ApiError` | ZATCA returned an error or non-accepted response |
 
-Each error has `code`, `kind` (the name column without `Error`, or `null` for a
+Each error has `code`, `kind` (an `ErrorKind` value such as
+`ErrorKind.InvalidInput`, which is the string `'InvalidInput'`, or `null` for a
 code this version does not know), `message`, and `details`, the parsed JSON
 object with structured information such as validation findings or an HTTP
-response body. `cause` is the underlying `BindingError`. `ErrorCode` maps kinds
-to codes and `errorClassForCode(code)` returns the class. Typed errors apply to
+response body. `cause` is the underlying `BindingError`.
+`FatooraError.fromCode(code, message, { details })` creates the class for a
+code. Typed errors apply to
 `fatoority/raw` too, because it shares the generated classes.
 See [error codes and details](../errors.md).
 
@@ -111,10 +114,11 @@ try {
 }
 ```
 
-Network, cancellation, and response-body read failures throw `TransportError`,
-a `NetworkError` subclass. It preserves the original host error in `cause`;
-`httpStatus` is present when a response was received but its body could not be
-read. HTTP rejection decoded by the library uses the class for its code instead,
+Network, cancellation, and response-body read failures throw `NetworkError`
+with the original host error in `cause`. Its `details` follow the library
+schema: `{ type: 'network', diagnostics }` when `fetch` fails, or
+`{ type: 'api_response_read', http_status, message }` when a response arrived
+but its body could not be read. HTTP rejection decoded by the library uses the class for its code instead,
 such as `UnauthorizedError` or `ApiError`.
 
 ## Local validation
@@ -184,13 +188,14 @@ All methods below return promises. Optional `options` accepts `{ signal }`, wher
 | `requestProductionCsid(credentials, options?)` | `ComplianceCsid` | `ProductionCsid` |
 | `renewCsid(credentials, csr, otp, acceptLanguage?, options?)` | `ProductionCsid`, `Csr`, OTP, optional language string | `ProductionCsid` |
 | `checkInvoiceCompliance(invoice, credentials, options?)` | `SignedInvoice`, `ComplianceCsid` | `ValidationResponse` |
-| `reportSimplifiedInvoice(invoice, credentials, clearanceStatus?, acceptLanguage?, options?)` | `SignedInvoice`, `ProductionCsid`; status defaults to `false`, language to `null` | `ValidationResponse` |
-| `clearStandardInvoice(invoice, credentials, clearanceStatus?, acceptLanguage?, options?)` | `SignedInvoice`, `ProductionCsid`; status defaults to `true`, language to `null` | `ValidationResponse` |
+| `reportSimplifiedInvoice(invoice, credentials, clearanceMode, acceptLanguage?, options?)` | `SignedInvoice`, `ProductionCsid`, `ClearanceMode`; language defaults to `null` | `ValidationResponse` |
+| `clearStandardInvoice(invoice, credentials, clearanceMode, acceptLanguage?, options?)` | `SignedInvoice`, `ProductionCsid`, `ClearanceMode`; language defaults to `null` | `ValidationResponse` |
 
-`clearanceStatus` controls the clearance-status request header; it is not the
-result of the operation. It accepts a boolean, a `ClearanceMode`
-(`ClearanceMode.Enabled`/`ClearanceMode.Disabled`), or its name; the prepared-request methods
-on `fatoority/raw` require a `ClearanceMode`. `acceptLanguage` controls the language request header.
+`clearanceMode` sets the `Clearance-Status` request header; it is not the
+result of the operation. It is required and must be `ClearanceMode.Enabled` or
+`ClearanceMode.Disabled`, as in every other binding and in the prepared-request
+methods on `fatoority/raw`; any other value, including a boolean or the variant
+name, rejects with a `TypeError`. `acceptLanguage` controls the language request header.
 Pass optional positional arguments explicitly when supplying a later argument.
 
 HTTP success alone does not establish invoice acceptance. Inspect `outcome` or
@@ -211,8 +216,8 @@ it with `ZatcaClient.create(config)`, and call its `prepare*` methods. These ret
 | `method` | HTTP method string |
 | `url` | Complete request URL string |
 | `headersJson` | JSON array of header-name/value pairs |
-| `body()` | `Bytes`; use `asSlice()` for a copied request body |
-| `decode(status, bytes)` | Credentials or `ValidationResponse`, depending on request type; may throw |
+| `body()` | `Bytes`; use `toUint8Array()` for a copied request body |
+| `decode(status, bytes)` | `bytes` is a `Uint8Array`; returns credentials or `ValidationResponse`, depending on request type; may throw |
 
 Prepared requests retain their data and decoding context independently of the
 original invoice and credentials. Copy the outgoing body before awaiting HTTP.

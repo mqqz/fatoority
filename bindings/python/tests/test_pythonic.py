@@ -13,7 +13,7 @@ from fatoora import (Address, Adjustment, ComplianceCsid, Config, CsrProperties,
                      InvoiceTypeKind, LineItemBuilder, OriginalInvoiceRef, PaymentMeans,
                      ProductionCsid, SignedInvoice, SigningKey, TaxExemption, VatCategory,
                      ZatcaClient, hash_xml)
-from fatoora.errors import FfiError
+from fatoora.errors import FatooraError
 
 FIXTURES = Path(__file__).resolve().parents[3] / "fatoora-core/tests/fixtures"
 SIGNED_XML = FIXTURES / "invoices/sample-simplified-invoice.xml"
@@ -178,7 +178,7 @@ def test_parsing_classmethods_and_hashes():
     invoice = complete(header()).build()
     parsed = FinalizedInvoice.from_xml(invoice.xml)
     assert isinstance(parsed, FinalizedInvoice) and parsed.hash() == invoice.hash()
-    with pytest.raises(FfiError):
+    with pytest.raises(FatooraError):
         SignedInvoice.from_xml(invoice.xml)
 
 
@@ -189,7 +189,7 @@ def test_invoice_signer_signs_finalized_invoices():
     invoice = complete(header()).build()
     invoice_id = invoice.id  # caches the invoice data
     signed = invoice.sign(signer)
-    with pytest.raises(FfiError, match="consumed"):
+    with pytest.raises(FatooraError, match="consumed"):
         invoice.id  # signing consumed the finalized invoice, cached data included
     assert signed.id == invoice_id
     assert isinstance(signed, SignedInvoice)
@@ -251,6 +251,16 @@ def test_client_timeout_accepts_seconds_and_timedelta(monkeypatch, timeout, expe
 def test_client_timeout_rejects_invalid_values(timeout, error):
     with pytest.raises(error, match="timeout"):
         ZatcaClient(Config(Environment.NON_PRODUCTION), timeout=timeout)
+
+
+def test_native_zero_timeout_is_invalid_input():
+    # The facade rejects zero first; the native constructor classifies it the same way.
+    from fatoora import api, _native
+    from fatoora.errors import InvalidInputError
+
+    with pytest.raises(InvalidInputError, match="timeout must be greater than zero") as caught:
+        api._call(_native.ZatcaClient.with_timeout, Config(Environment.NON_PRODUCTION), 0)
+    assert caught.value.details["type"] == "invalid_timeout"
 
 
 def test_client_timeout_is_keyword_only():

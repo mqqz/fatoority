@@ -16,8 +16,6 @@ namespace capi { struct BindingError; }
 class BindingError;
 namespace capi { struct TaxExemption; }
 class TaxExemption;
-namespace capi { struct Text; }
-class Text;
 } // namespace fatoora
 
 
@@ -35,9 +33,13 @@ public:
 
   inline static diplomat::result<std::unique_ptr<fatoora::TaxExemption>, std::unique_ptr<fatoora::BindingError>> new_(std::optional<std::string_view> code, std::optional<std::string_view> reason);
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> reason_code() const;
+  inline std::optional<std::string> reason_code() const;
+  template<typename W>
+  inline std::optional<std::monostate> reason_code_write(W& writeable_output) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> reason() const;
+  inline std::optional<std::string> reason() const;
+  template<typename W>
+  inline std::optional<std::monostate> reason_write(W& writeable_output) const;
 
     inline const fatoora::capi::TaxExemption* AsFFI() const;
     inline fatoora::capi::TaxExemption* AsFFI();

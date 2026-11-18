@@ -57,7 +57,6 @@ public partial class ZatcaFinding: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
     public string? AssertionSite
     {
         get
@@ -68,12 +67,20 @@ public partial class ZatcaFinding: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.ZatcaFinding.AssertionSite(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        var result = Raw.ZatcaFinding.AssertionSite(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
@@ -103,7 +110,7 @@ public partial class ZatcaFinding: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Code
     {
         get
@@ -120,7 +127,7 @@ public partial class ZatcaFinding: IDisposable
                         var result = Raw.ZatcaFinding.Code(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -157,7 +164,7 @@ public partial class ZatcaFinding: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Message
     {
         get
@@ -174,7 +181,7 @@ public partial class ZatcaFinding: IDisposable
                         var result = Raw.ZatcaFinding.Message(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -212,7 +219,6 @@ public partial class ZatcaFinding: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
     public string? LocationPath
     {
         get
@@ -223,12 +229,20 @@ public partial class ZatcaFinding: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.ZatcaFinding.LocationPath(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        var result = Raw.ZatcaFinding.LocationPath(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {

@@ -16,8 +16,6 @@ namespace capi { struct BindingError; }
 class BindingError;
 namespace capi { struct ComplianceCsid; }
 class ComplianceCsid;
-namespace capi { struct Text; }
-class Text;
 class Environment;
 } // namespace fatoora
 
@@ -38,7 +36,9 @@ public:
 
   inline diplomat::result<fatoora::Environment, std::unique_ptr<fatoora::BindingError>> env() const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> request_id() const;
+  inline std::optional<std::string> request_id() const;
+  template<typename W>
+  inline std::optional<std::monostate> request_id_write(W& writeable_output) const;
 
   inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> binary_security_token() const;
   template<typename W>

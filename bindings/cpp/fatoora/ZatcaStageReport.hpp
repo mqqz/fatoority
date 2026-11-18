@@ -13,7 +13,6 @@
 #include <cstdlib>
 #include "../diplomat_runtime.hpp"
 #include "BindingError.hpp"
-#include "Text.hpp"
 #include "ZatcaFinding.hpp"
 #include "ZatcaRuleSource.hpp"
 #include "ZatcaStage.hpp"
@@ -33,8 +32,8 @@ namespace capi {
 
     size_t fatoora_ZatcaStageReport_evaluated_assertions_len(const fatoora::capi::ZatcaStageReport* self);
 
-    typedef struct fatoora_ZatcaStageReport_evaluated_assertion_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ZatcaStageReport_evaluated_assertion_result;
-    fatoora_ZatcaStageReport_evaluated_assertion_result fatoora_ZatcaStageReport_evaluated_assertion(const fatoora::capi::ZatcaStageReport* self, size_t index);
+    typedef struct fatoora_ZatcaStageReport_evaluated_assertion_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ZatcaStageReport_evaluated_assertion_result;
+    fatoora_ZatcaStageReport_evaluated_assertion_result fatoora_ZatcaStageReport_evaluated_assertion(const fatoora::capi::ZatcaStageReport* self, size_t index, diplomat::capi::DiplomatWrite* write);
 
     size_t fatoora_ZatcaStageReport_findings_len(const fatoora::capi::ZatcaStageReport* self);
 
@@ -57,9 +56,9 @@ inline fatoora::ZatcaStageStatus fatoora::ZatcaStageReport::status() const {
     return fatoora::ZatcaStageStatus::FromFFI(result);
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::ZatcaRuleSource>, std::unique_ptr<fatoora::BindingError>> fatoora::ZatcaStageReport::provenance() const {
+inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::ZatcaRuleSource>>, std::unique_ptr<fatoora::BindingError>> fatoora::ZatcaStageReport::provenance() const {
     auto result = fatoora::capi::fatoora_ZatcaStageReport_provenance(this->AsFFI());
-    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::ZatcaRuleSource>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::ZatcaRuleSource>>(std::unique_ptr<fatoora::ZatcaRuleSource>(fatoora::ZatcaRuleSource::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::ZatcaRuleSource>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+    return result.is_ok ? diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::ZatcaRuleSource>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<diplomat::maybe_null<std::unique_ptr<fatoora::ZatcaRuleSource>>>(std::unique_ptr<fatoora::ZatcaRuleSource>(fatoora::ZatcaRuleSource::FromFFI(result.ok)))) : diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::ZatcaRuleSource>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
 inline size_t fatoora::ZatcaStageReport::evaluated_assertions_len() const {
@@ -67,10 +66,21 @@ inline size_t fatoora::ZatcaStageReport::evaluated_assertions_len() const {
     return result;
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::ZatcaStageReport::evaluated_assertion(size_t index) const {
+inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> fatoora::ZatcaStageReport::evaluated_assertion(size_t index) const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
     auto result = fatoora::capi::fatoora_ZatcaStageReport_evaluated_assertion(this->AsFFI(),
-        index);
-    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+        index,
+        &write);
+    return result.is_ok ? diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::string>(std::move(output))) : diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+template<typename W>
+inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> fatoora::ZatcaStageReport::evaluated_assertion_write(size_t index, W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_ZatcaStageReport_evaluated_assertion(this->AsFFI(),
+        index,
+        &write);
+    return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
 inline size_t fatoora::ZatcaStageReport::findings_len() const {

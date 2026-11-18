@@ -37,11 +37,11 @@ public:
 
   inline _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>> identifier(size_t index) const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Address>, std::unique_ptr<_native::BindingError>> address() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Address>>, std::unique_ptr<_native::BindingError>> address() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::VatId>, std::unique_ptr<_native::BindingError>> vat_id() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::VatId>>, std::unique_ptr<_native::BindingError>> vat_id() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::OtherId>, std::unique_ptr<_native::BindingError>> other_id() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::OtherId>>, std::unique_ptr<_native::BindingError>> other_id() const;
 
   inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> name() const;
   template<typename W>

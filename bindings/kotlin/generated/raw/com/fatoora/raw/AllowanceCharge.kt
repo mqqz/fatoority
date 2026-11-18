@@ -10,8 +10,8 @@ internal interface AllowanceChargeLib: Library {
     fun fatoora_AllowanceCharge_has_vat_rate(handle: Pointer): Byte
     fun fatoora_AllowanceCharge_omit_vat_rate(handle: Pointer): ResultPointerPointer
     fun fatoora_AllowanceCharge_with_percentage(handle: Pointer, base: Slice, percent: Slice): ResultPointerPointer
-    fun fatoora_AllowanceCharge_base_amount(handle: Pointer): ResultPointerPointer
-    fun fatoora_AllowanceCharge_percentage(handle: Pointer): ResultPointerPointer
+    fun fatoora_AllowanceCharge_base_amount(handle: Pointer, write: Pointer): OptionUnit
+    fun fatoora_AllowanceCharge_percentage(handle: Pointer, write: Pointer): OptionUnit
     fun fatoora_AllowanceCharge_new(kind: Int, amount: Slice, reason: OptionSlice, reasonCode: OptionSlice, category: Int, rate: Slice, exemption: Pointer): ResultPointerPointer
     fun fatoora_AllowanceCharge_kind(handle: Pointer): Int
     fun fatoora_AllowanceCharge_amount(handle: Pointer, write: Pointer): ResultUnitPointer
@@ -19,8 +19,8 @@ internal interface AllowanceChargeLib: Library {
     fun fatoora_AllowanceCharge_category(handle: Pointer): Int
     fun fatoora_AllowanceCharge_with_tax_category_count(handle: Pointer, count: FFISizet): ResultPointerPointer
     fun fatoora_AllowanceCharge_tax_category_count(handle: Pointer): FFISizet
-    fun fatoora_AllowanceCharge_reason(handle: Pointer): ResultPointerPointer
-    fun fatoora_AllowanceCharge_reason_code(handle: Pointer): ResultPointerPointer
+    fun fatoora_AllowanceCharge_reason(handle: Pointer, write: Pointer): OptionUnit
+    fun fatoora_AllowanceCharge_reason_code(handle: Pointer, write: Pointer): OptionUnit
     fun fatoora_AllowanceCharge_exemption(handle: Pointer): ResultPointerPointer
 }
 
@@ -133,38 +133,32 @@ class AllowanceCharge internal constructor (
         }
     }
 
-    fun baseAmount(): Result<Text?> {
+    fun baseAmount(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_AllowanceCharge_base_amount(handle, write);
 
-        val returnVal = lib.fatoora_AllowanceCharge_base_amount(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
-    fun percentage(): Result<Text?> {
+    fun percentage(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_AllowanceCharge_percentage(handle, write);
 
-        val returnVal = lib.fatoora_AllowanceCharge_percentage(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
     fun kind(): AdjustmentKind {
@@ -239,38 +233,32 @@ class AllowanceCharge internal constructor (
         return (returnVal.toULong())
     }
 
-    fun reason(): Result<Text?> {
+    fun reason(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_AllowanceCharge_reason(handle, write);
 
-        val returnVal = lib.fatoora_AllowanceCharge_reason(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
-    fun reasonCode(): Result<Text?> {
+    fun reasonCode(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_AllowanceCharge_reason_code(handle, write);
 
-        val returnVal = lib.fatoora_AllowanceCharge_reason_code(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
     fun exemption(): Result<TaxExemption> {

@@ -12,7 +12,6 @@
 #include <optional>
 #include <cstdlib>
 #include "BindingError.hpp"
-#include "Text.hpp"
 #include "diplomat_runtime.hpp"
 
 
@@ -23,8 +22,8 @@ namespace capi {
     typedef struct fatoora_OtherId_value_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_OtherId_value_result;
     fatoora_OtherId_value_result fatoora_OtherId_value(const _native::capi::OtherId* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_OtherId_scheme_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_OtherId_scheme_result;
-    fatoora_OtherId_scheme_result fatoora_OtherId_scheme(const _native::capi::OtherId* self);
+    typedef struct fatoora_OtherId_scheme_result { bool is_ok;} fatoora_OtherId_scheme_result;
+    fatoora_OtherId_scheme_result fatoora_OtherId_scheme(const _native::capi::OtherId* self, _native::diplomat::capi::DiplomatWrite* write);
 
     void fatoora_OtherId_destroy(OtherId* self);
 
@@ -47,9 +46,19 @@ inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::Bindin
     return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::OtherId::scheme() const {
-    auto result = _native::capi::fatoora_OtherId_scheme(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::OtherId::scheme() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_OtherId_scheme(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::OtherId::scheme_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_OtherId_scheme(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline const _native::capi::OtherId* _native::OtherId::AsFFI() const {

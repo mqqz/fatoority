@@ -15,8 +15,6 @@ namespace capi { struct BindingError; }
 class BindingError;
 namespace capi { struct ComplianceCsid; }
 class ComplianceCsid;
-namespace capi { struct Text; }
-class Text;
 class Environment;
 } // namespace _native
 
@@ -36,7 +34,9 @@ public:
 
   inline _native::diplomat::result<_native::Environment, std::unique_ptr<_native::BindingError>> env() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> request_id() const;
+  inline std::optional<std::string> request_id() const;
+  template<typename W>
+  inline std::optional<std::monostate> request_id_write(W& writeable_output) const;
 
   inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> binary_security_token() const;
   template<typename W>

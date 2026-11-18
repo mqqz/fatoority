@@ -41,7 +41,7 @@ import * as raw from 'fatoority/raw';
 assert.match(SigningKey.generate().toPem(), /BEGIN PRIVATE KEY/);
 assert.equal(raw.Config, Config);
 assert.throws(() => Address.create('SA', '\\0', '', '', '', null, null, null), InvalidInputError);
-assert.throws(() => raw.Address.new_('SA', '\\0', '', '', '', null, null, null), InvalidInputError);
+assert.throws(() => raw.Address.create('SA', '\\0', '', '', '', null, null, null), InvalidInputError);
 const client = new ZatcaClient(Config.create(Environment.NonProduction), {fetch: async () => new Response(JSON.stringify({requestID: 2, binarySecurityToken: 'new', secret: 'secret'}))});
 const response = await client.requestProductionCsid(ComplianceCsid.create(Environment.NonProduction, '1', 'token', 'secret'));
 assert.equal(response.binarySecurityToken, 'new');

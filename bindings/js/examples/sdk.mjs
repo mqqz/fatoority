@@ -30,13 +30,13 @@ export function validateInvoice(xml, previousHash, evaluatedAt) {
 // --8<-- [end:validation]
 
 // --8<-- [start:api]
-import { Config as ApiConfig, ProductionCsid, Environment as ApiEnvironment, SignedInvoice, ZatcaClient } from 'fatoority';
+import { ClearanceMode, Config as ApiConfig, ProductionCsid, Environment as ApiEnvironment, SignedInvoice, ZatcaClient } from 'fatoority';
 
 export async function reportInvoice(signedXml, token, secret, { signal, fetch: transport = globalThis.fetch } = {}) {
   const client = new ZatcaClient(ApiConfig.create(ApiEnvironment.Production), { fetch: transport });
   const credentials = ProductionCsid.create(ApiEnvironment.Production, null, token, secret);
   const invoice = SignedInvoice.fromXml(signedXml);
-  const response = await client.reportSimplifiedInvoice(invoice, credentials, false, 'en', { signal });
+  const response = await client.reportSimplifiedInvoice(invoice, credentials, ClearanceMode.Disabled, 'en', { signal });
   response.ensureAccepted();
   return response;
 }

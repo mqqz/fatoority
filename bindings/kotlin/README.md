@@ -15,7 +15,7 @@ For desktop Gradle projects, add this to `build.gradle.kts`:
 ```kotlin
 repositories { mavenCentral() }
 dependencies {
-    implementation("com.fatoority:fatoority:0.6.0")
+    implementation("com.fatoority:fatoority:0.7.0")
 }
 ```
 
@@ -25,7 +25,7 @@ For Maven, add this dependency to `pom.xml` (Maven Central is used by default):
 <dependency>
   <groupId>com.fatoority</groupId>
   <artifactId>fatoority</artifactId>
-  <version>0.6.0</version>
+  <version>0.7.0</version>
 </dependency>
 ```
 
@@ -35,7 +35,7 @@ artifact to your app's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.fatoority:fatoority-android:0.6.0")
+    implementation("com.fatoority:fatoority-android:0.7.0")
 }
 ```
 
@@ -78,7 +78,7 @@ calls throw `IllegalStateException`. A phantom-reference queue is a fallback,
 not a substitute for closing secrets and large objects promptly. Native release
 does not erase managed strings or byte arrays.
 
-Native failures throw a `BindingException` subclass per error kind, such as
+Native failures throw a `FatooraException` subclass per error kind, such as
 `InvalidInputException`, `ValidationException`, `XmlException` or
 `NetworkException`, each with `code`, `kind`, `message`, and `detailsJson` (Java
 getters). Error data is copied and its native owner freed before throwing.
@@ -91,7 +91,7 @@ return native owners stay methods so ownership is explicit. Unsigned counters us
 `com.fatoora` enums such as `Environment.NonProduction`, `VatCategory.Standard`
 and `ClearanceMode.Disabled`; response statuses return a nullable enum (with
 `Unknown` for unrecognized values), and `*Raw` properties return the exact text.
-`Bytes.asSlice()` copies the native data while holding its owner's lock.
+`Bytes.toByteArray()` copies the native data while holding its owner's lock.
 
 The `com.fatoora.raw` package is an implementation detail. Its direct use bypasses
 ownership, text validation and concurrency guards. Import `com.fatoora` in apps.
@@ -117,7 +117,7 @@ repositories {
     maven { url = uri("/absolute/path/to/fatoority/bindings/kotlin/build/repository") }
     mavenCentral()
 }
-dependencies { implementation("com.fatoority:fatoority:0.6.0") }
+dependencies { implementation("com.fatoority:fatoority:0.7.0") }
 ```
 
 For Android, install SDK 35, build-tools 35.0.0 and NDK 28.2.13676358:
@@ -128,7 +128,7 @@ python3 scripts/build_kotlin.py --android --ndk "$ANDROID_HOME/ndk/28.2.13676358
 bindings/kotlin/gradlew -p bindings/kotlin -Pandroid=true :android:connectedDebugAndroidTest
 ```
 
-Use `com.fatoority:fatoority-android:0.6.0` from that repository in Android apps.
+Use `com.fatoority:fatoority-android:0.7.0` from that repository in Android apps.
 Do not add the desktop artifact alongside it. The AAR bundles both Android native
 libraries and consumer shrinker rules; its Maven metadata supplies JNA's AAR and
 coroutines. Native ELF segments support 16 KiB pages. Android TLS uses bundled
@@ -148,7 +148,9 @@ python3 scripts/generate_kotlin.py --check
 ```
 
 The installer pins upstream Diplomat including #1295 and applies the tracked
-Kotlin patch, running backend tests first. `DIPLOMAT_TOOL_KOTLIN` overrides its
+Kotlin patch, running backend tests first. The patch fixes optional results and
+frees the native write buffer on every path, including optional string
+(`String?`) returns. `DIPLOMAT_TOOL_KOTLIN` overrides its
 isolated tool path. Both raw bindings and the Java-friendly facade are generated;
 do not edit `generated/` by hand.
 

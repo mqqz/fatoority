@@ -14,7 +14,6 @@
 #include "../diplomat_runtime.hpp"
 #include "BindingError.hpp"
 #include "Severity.hpp"
-#include "Text.hpp"
 #include "ValidationLayer.hpp"
 #include "ValidationLocationKind.hpp"
 
@@ -23,8 +22,8 @@ namespace fatoora {
 namespace capi {
     extern "C" {
 
-    typedef struct fatoora_ZatcaFinding_assertion_site_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ZatcaFinding_assertion_site_result;
-    fatoora_ZatcaFinding_assertion_site_result fatoora_ZatcaFinding_assertion_site(const fatoora::capi::ZatcaFinding* self);
+    typedef struct fatoora_ZatcaFinding_assertion_site_result { bool is_ok;} fatoora_ZatcaFinding_assertion_site_result;
+    fatoora_ZatcaFinding_assertion_site_result fatoora_ZatcaFinding_assertion_site(const fatoora::capi::ZatcaFinding* self, diplomat::capi::DiplomatWrite* write);
 
     fatoora::capi::ValidationLayer fatoora_ZatcaFinding_layer(const fatoora::capi::ZatcaFinding* self);
 
@@ -39,8 +38,8 @@ namespace capi {
     typedef struct fatoora_ZatcaFinding_location_kind_result {union {fatoora::capi::ValidationLocationKind ok; }; bool is_ok;} fatoora_ZatcaFinding_location_kind_result;
     fatoora_ZatcaFinding_location_kind_result fatoora_ZatcaFinding_location_kind(const fatoora::capi::ZatcaFinding* self);
 
-    typedef struct fatoora_ZatcaFinding_location_path_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ZatcaFinding_location_path_result;
-    fatoora_ZatcaFinding_location_path_result fatoora_ZatcaFinding_location_path(const fatoora::capi::ZatcaFinding* self);
+    typedef struct fatoora_ZatcaFinding_location_path_result { bool is_ok;} fatoora_ZatcaFinding_location_path_result;
+    fatoora_ZatcaFinding_location_path_result fatoora_ZatcaFinding_location_path(const fatoora::capi::ZatcaFinding* self, diplomat::capi::DiplomatWrite* write);
 
     typedef struct fatoora_ZatcaFinding_location_line_result {union {uint32_t ok; }; bool is_ok;} fatoora_ZatcaFinding_location_line_result;
     fatoora_ZatcaFinding_location_line_result fatoora_ZatcaFinding_location_line(const fatoora::capi::ZatcaFinding* self);
@@ -54,9 +53,19 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::ZatcaFinding::assertion_site() const {
-    auto result = fatoora::capi::fatoora_ZatcaFinding_assertion_site(this->AsFFI());
-    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::ZatcaFinding::assertion_site() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_ZatcaFinding_assertion_site(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::ZatcaFinding::assertion_site_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_ZatcaFinding_assertion_site(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline fatoora::ValidationLayer fatoora::ZatcaFinding::layer() const {
@@ -104,9 +113,19 @@ inline std::optional<fatoora::ValidationLocationKind> fatoora::ZatcaFinding::loc
     return result.is_ok ? std::optional<fatoora::ValidationLocationKind>(fatoora::ValidationLocationKind::FromFFI(result.ok)) : std::nullopt;
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::ZatcaFinding::location_path() const {
-    auto result = fatoora::capi::fatoora_ZatcaFinding_location_path(this->AsFFI());
-    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::ZatcaFinding::location_path() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_ZatcaFinding_location_path(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::ZatcaFinding::location_path_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_ZatcaFinding_location_path(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline std::optional<uint32_t> fatoora::ZatcaFinding::location_line() const {

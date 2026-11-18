@@ -17,16 +17,6 @@ class OtherId internal constructor(internal val raw: com.fatoora.raw.OtherId) : 
 
     val scheme: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.scheme())?.let(::readText)
+            raw.scheme()
         }
-
-    @Deprecated("Use the value property.", ReplaceWith("value"))
-    fun value(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.value())
-    }
-
-    @Deprecated("Use the scheme property.", ReplaceWith("scheme"))
-    fun scheme(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.scheme())?.let(::Text)
-    }
 }

@@ -57,34 +57,7 @@ public partial class InvoiceNote: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
     public string? LanguageId
-    {
-        get
-        {
-            unsafe
-            {
-                BorrowLease<Raw.InvoiceNote>? selfLease = null;
-                try
-                {
-                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.InvoiceNote.LanguageId(selfLease!.Ptr);
-                    if (!result.IsOk)
-                    {
-                        throw FfiException.FromNative(new BindingError(result.Err));
-                    }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
-                }
-                finally
-                {
-                    selfLease?.Release();
-                }
-            }
-        }
-    }
-
-    /// <exception cref="FfiException"></exception>
-    public string Language
     {
         get
         {
@@ -97,10 +70,10 @@ public partial class InvoiceNote: IDisposable
                     DiplomatWrite writeable = new DiplomatWrite();
                     try
                     {
-                        var result = Raw.InvoiceNote.Language(selfLease!.Ptr, &writeable);
-                        if (!result.IsOk)
+                        var result = Raw.InvoiceNote.LanguageId(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            return null;
                         }
                         return writeable.ToUnicode();
                     }
@@ -117,7 +90,41 @@ public partial class InvoiceNote: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
+    public string Language
+    {
+        get
+        {
+            unsafe
+            {
+                BorrowLease<Raw.InvoiceNote>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
+                    {
+                        var result = Raw.InvoiceNote.Language(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FatooraException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
+                    }
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
+            }
+        }
+    }
+
+    /// <exception cref="FatooraException"></exception>
     public string Text
     {
         get
@@ -134,7 +141,7 @@ public partial class InvoiceNote: IDisposable
                         var result = Raw.InvoiceNote.Text(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }

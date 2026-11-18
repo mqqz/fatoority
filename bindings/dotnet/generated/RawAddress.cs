@@ -13,7 +13,7 @@ internal partial struct Address
     internal static unsafe extern DiplomatResultAddressBindingError WithProvince(Address* handle, DiplomatSliceU8 value);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Address_province", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError Province(Address* handle);
+    internal static unsafe extern DiplomatOptionVoid Province(Address* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Address_new", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultAddressBindingError New(DiplomatSliceU8 countryCode, DiplomatSliceU8 city, DiplomatSliceU8 street, DiplomatSliceU8 buildingNumber, DiplomatSliceU8 postalCode, DiplomatOptionSliceU8 additionalStreet, DiplomatOptionSliceU8 additionalNumber, DiplomatOptionSliceU8 district);
@@ -34,13 +34,13 @@ internal partial struct Address
     internal static unsafe extern DiplomatResultVoidBindingError CountryCode(Address* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Address_additional_street", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError AdditionalStreet(Address* handle);
+    internal static unsafe extern DiplomatOptionVoid AdditionalStreet(Address* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Address_additional_number", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError AdditionalNumber(Address* handle);
+    internal static unsafe extern DiplomatOptionVoid AdditionalNumber(Address* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Address_district", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError District(Address* handle);
+    internal static unsafe extern DiplomatOptionVoid District(Address* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Address_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(Address* handle);

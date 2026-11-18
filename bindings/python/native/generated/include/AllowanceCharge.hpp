@@ -14,7 +14,6 @@
 #include "AdjustmentKind.hpp"
 #include "BindingError.hpp"
 #include "TaxExemption.hpp"
-#include "Text.hpp"
 #include "VatCategory.hpp"
 #include "diplomat_runtime.hpp"
 
@@ -31,11 +30,11 @@ namespace capi {
     typedef struct fatoora_AllowanceCharge_with_percentage_result {union {_native::capi::AllowanceCharge* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_with_percentage_result;
     fatoora_AllowanceCharge_with_percentage_result fatoora_AllowanceCharge_with_percentage(const _native::capi::AllowanceCharge* self, _native::diplomat::capi::DiplomatStringView base, _native::diplomat::capi::DiplomatStringView percent);
 
-    typedef struct fatoora_AllowanceCharge_base_amount_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_base_amount_result;
-    fatoora_AllowanceCharge_base_amount_result fatoora_AllowanceCharge_base_amount(const _native::capi::AllowanceCharge* self);
+    typedef struct fatoora_AllowanceCharge_base_amount_result { bool is_ok;} fatoora_AllowanceCharge_base_amount_result;
+    fatoora_AllowanceCharge_base_amount_result fatoora_AllowanceCharge_base_amount(const _native::capi::AllowanceCharge* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_AllowanceCharge_percentage_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_percentage_result;
-    fatoora_AllowanceCharge_percentage_result fatoora_AllowanceCharge_percentage(const _native::capi::AllowanceCharge* self);
+    typedef struct fatoora_AllowanceCharge_percentage_result { bool is_ok;} fatoora_AllowanceCharge_percentage_result;
+    fatoora_AllowanceCharge_percentage_result fatoora_AllowanceCharge_percentage(const _native::capi::AllowanceCharge* self, _native::diplomat::capi::DiplomatWrite* write);
 
     typedef struct fatoora_AllowanceCharge_new_result {union {_native::capi::AllowanceCharge* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_new_result;
     fatoora_AllowanceCharge_new_result fatoora_AllowanceCharge_new(_native::capi::AdjustmentKind kind, _native::diplomat::capi::DiplomatStringView amount, _native::diplomat::capi::OptionStringView reason, _native::diplomat::capi::OptionStringView reason_code, _native::capi::VatCategory category, _native::diplomat::capi::DiplomatStringView rate, const _native::capi::TaxExemption* exemption);
@@ -55,11 +54,11 @@ namespace capi {
 
     size_t fatoora_AllowanceCharge_tax_category_count(const _native::capi::AllowanceCharge* self);
 
-    typedef struct fatoora_AllowanceCharge_reason_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_reason_result;
-    fatoora_AllowanceCharge_reason_result fatoora_AllowanceCharge_reason(const _native::capi::AllowanceCharge* self);
+    typedef struct fatoora_AllowanceCharge_reason_result { bool is_ok;} fatoora_AllowanceCharge_reason_result;
+    fatoora_AllowanceCharge_reason_result fatoora_AllowanceCharge_reason(const _native::capi::AllowanceCharge* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_AllowanceCharge_reason_code_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_reason_code_result;
-    fatoora_AllowanceCharge_reason_code_result fatoora_AllowanceCharge_reason_code(const _native::capi::AllowanceCharge* self);
+    typedef struct fatoora_AllowanceCharge_reason_code_result { bool is_ok;} fatoora_AllowanceCharge_reason_code_result;
+    fatoora_AllowanceCharge_reason_code_result fatoora_AllowanceCharge_reason_code(const _native::capi::AllowanceCharge* self, _native::diplomat::capi::DiplomatWrite* write);
 
     typedef struct fatoora_AllowanceCharge_exemption_result {union {_native::capi::TaxExemption* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_AllowanceCharge_exemption_result;
     fatoora_AllowanceCharge_exemption_result fatoora_AllowanceCharge_exemption(const _native::capi::AllowanceCharge* self);
@@ -87,14 +86,34 @@ inline _native::diplomat::result<std::unique_ptr<_native::AllowanceCharge>, std:
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::AllowanceCharge>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::AllowanceCharge>>(std::unique_ptr<_native::AllowanceCharge>(_native::AllowanceCharge::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::AllowanceCharge>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::AllowanceCharge::base_amount() const {
-    auto result = _native::capi::fatoora_AllowanceCharge_base_amount(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::AllowanceCharge::base_amount() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_AllowanceCharge_base_amount(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::AllowanceCharge::base_amount_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_AllowanceCharge_base_amount(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::AllowanceCharge::percentage() const {
-    auto result = _native::capi::fatoora_AllowanceCharge_percentage(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::AllowanceCharge::percentage() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_AllowanceCharge_percentage(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::AllowanceCharge::percentage_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_AllowanceCharge_percentage(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline _native::diplomat::result<std::unique_ptr<_native::AllowanceCharge>, std::unique_ptr<_native::BindingError>> _native::AllowanceCharge::new_(_native::AdjustmentKind kind, std::string_view amount, std::optional<std::string_view> reason, std::optional<std::string_view> reason_code, _native::VatCategory category, std::string_view rate, const _native::TaxExemption& exemption) {
@@ -159,14 +178,34 @@ inline size_t _native::AllowanceCharge::tax_category_count() const {
     return result;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::AllowanceCharge::reason() const {
-    auto result = _native::capi::fatoora_AllowanceCharge_reason(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::AllowanceCharge::reason() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_AllowanceCharge_reason(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::AllowanceCharge::reason_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_AllowanceCharge_reason(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::AllowanceCharge::reason_code() const {
-    auto result = _native::capi::fatoora_AllowanceCharge_reason_code(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::AllowanceCharge::reason_code() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_AllowanceCharge_reason_code(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::AllowanceCharge::reason_code_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_AllowanceCharge_reason_code(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline _native::diplomat::result<std::unique_ptr<_native::TaxExemption>, std::unique_ptr<_native::BindingError>> _native::AllowanceCharge::exemption() const {

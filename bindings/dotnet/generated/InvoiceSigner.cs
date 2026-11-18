@@ -57,7 +57,7 @@ public partial class InvoiceSigner: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>InvoiceSigner</c> allocated on Rust side.
     /// </returns>
@@ -75,14 +75,14 @@ public partial class InvoiceSigner: IDisposable
                 var result = Raw.InvoiceSigner.FromPem(new DiplomatSliceU8 { Ptr = certPemPtr, Len = (nuint)certPemBytes.Length }, new DiplomatSliceU8 { Ptr = keyPemPtr, Len = (nuint)keyPemBytes.Length });
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new InvoiceSigner(result.Ok);
             }
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>InvoiceSigner</c> allocated on Rust side.
     /// </returns>
@@ -98,14 +98,14 @@ public partial class InvoiceSigner: IDisposable
                 var result = Raw.InvoiceSigner.FromDer(new DiplomatSliceU8 { Ptr = certDerPtr, Len = (nuint)certDer.Length }, new DiplomatSliceU8 { Ptr = keyDerPtr, Len = (nuint)keyDer.Length });
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new InvoiceSigner(result.Ok);
             }
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>Bytes</c> allocated on Rust side.
     /// </returns>
@@ -120,7 +120,7 @@ public partial class InvoiceSigner: IDisposable
                 var result = Raw.InvoiceSigner.CertificateDer(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new Bytes(result.Ok);
             }
@@ -131,7 +131,7 @@ public partial class InvoiceSigner: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string CertificatePem
     {
         get
@@ -148,7 +148,7 @@ public partial class InvoiceSigner: IDisposable
                         var result = Raw.InvoiceSigner.CertificatePem(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -165,7 +165,7 @@ public partial class InvoiceSigner: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>SignedInvoice</c> allocated on Rust side.
     /// </returns>
@@ -183,7 +183,7 @@ public partial class InvoiceSigner: IDisposable
                 var result = Raw.InvoiceSigner.Sign(selfLease!.Ptr, invoiceLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new SignedInvoice(result.Ok);
             }
@@ -195,7 +195,7 @@ public partial class InvoiceSigner: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string SignXml(string xml)
     {
         unsafe
@@ -214,7 +214,7 @@ public partial class InvoiceSigner: IDisposable
                         var result = Raw.InvoiceSigner.SignXml(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = xmlPtr, Len = (nuint)xmlBytes.Length }, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }

@@ -1,6 +1,6 @@
 import './patch.mjs';
 import { ClearanceMode, ZatcaClient as NativeClient, Xml as NativeXml } from './generated/index.mjs';
-import { TransportError } from './errors.mjs';
+import { NetworkError } from './errors.mjs';
 
 // Generated classes re-exported unchanged (after patch.mjs). The native
 // validation report classes stay in `fatoority/raw`; `Xml` and `ZatcaClient`
@@ -12,22 +12,19 @@ export {
   InvoiceNote, InvoiceOutcome, InvoiceRequest, InvoiceSigner, InvoiceSubType, InvoiceTotals,
   InvoiceTypeKind, LineItemBuilder, MessageType, OriginalInvoiceRef, OtherId, Party, PaymentMeans,
   ProductionCsid, ProductionRequest, ReportingStatus, Severity, SignedInvoice, SigningKey,
-  TaxExemption, Text, ValidationLayer, ValidationLocationKind, ValidationMessage,
+  TaxExemption, ValidationLayer, ValidationLocationKind, ValidationMessage,
   ValidationResponse, ValidationResults, ValidationStatus, VatBreakdown, VatCategory, VatId,
   ZatcaStage, ZatcaStageStatus,
 } from './generated/index.mjs';
 export {
-  ErrorCode, FatooraError, InvalidInputError, ValidationError, ParseError, XmlError, CryptoError,
-  IoError, NetworkError, UnauthorizedError, InternalError, ApiError, TransportError,
-  errorClassForCode,
+  ErrorKind, FatooraError, InvalidInputError, ValidationError, ParseError, XmlError, CryptoError,
+  IoError, NetworkError, UnauthorizedError, InternalError, ApiError,
 } from './errors.mjs';
 
-/** Accept a boolean, a ClearanceMode or its value name for the Clearance-Status header. */
-function clearanceMode(value) {
+/** Require a ClearanceMode, as every other binding does; booleans and names are rejected. */
+function requireClearanceMode(value) {
   if (value instanceof ClearanceMode) return value;
-  if (typeof value === 'boolean') return value ? ClearanceMode.Enabled : ClearanceMode.Disabled;
-  if (value === 'Enabled' || value === 'Disabled') return ClearanceMode[value];
-  throw new TypeError('clearanceStatus must be a boolean or ClearanceMode');
+  throw new TypeError('clearanceMode must be ClearanceMode.Enabled or ClearanceMode.Disabled');
 }
 
 /** Send an owned prepared request using the caller's fetch implementation. */
@@ -36,14 +33,20 @@ export async function sendPrepared(request, { fetch: fetchImpl = globalThis.fetc
   const url = request.url;
   const init = {
     method: request.method, headers: JSON.parse(request.headersJson),
-    body: Uint8Array.from(request.body().asSlice()), redirect: 'error', signal,
+    body: request.body().toUint8Array(), redirect: 'error', signal,
   };
   let response;
   try { response = await fetchImpl(url, init); }
-  catch (cause) { throw new TransportError('ZATCA request failed', cause); }
+  catch (cause) {
+    const message = 'ZATCA request failed';
+    throw new NetworkError(message, { cause, details: { type: 'network', diagnostics: [{ message: String(cause?.message ?? cause) }] } });
+  }
   let body;
   try { body = new Uint8Array(await response.arrayBuffer()); }
-  catch (cause) { throw new TransportError('Could not read ZATCA response', cause, response.status); }
+  catch (cause) {
+    const message = 'Could not read ZATCA response';
+    throw new NetworkError(message, { cause, details: { type: 'api_response_read', http_status: response.status, message: String(cause?.message ?? cause) } });
+  }
   // Non-2xx statuses must reach Rust; HTTP success is not invoice acceptance.
   return request.decode(response.status, body);
 }
@@ -68,11 +71,11 @@ export class ZatcaClient {
   async checkInvoiceCompliance(invoice, credentials, options = {}) {
     return this.#send(this.#native.prepareCheckInvoiceCompliance(invoice, credentials), options);
   }
-  async reportSimplifiedInvoice(invoice, credentials, clearanceStatus = false, acceptLanguage = null, options = {}) {
-    return this.#send(this.#native.prepareReportSimplifiedInvoice(invoice, credentials, clearanceMode(clearanceStatus), acceptLanguage), options);
+  async reportSimplifiedInvoice(invoice, credentials, clearanceMode, acceptLanguage = null, options = {}) {
+    return this.#send(this.#native.prepareReportSimplifiedInvoice(invoice, credentials, requireClearanceMode(clearanceMode), acceptLanguage), options);
   }
-  async clearStandardInvoice(invoice, credentials, clearanceStatus = true, acceptLanguage = null, options = {}) {
-    return this.#send(this.#native.prepareClearStandardInvoice(invoice, credentials, clearanceMode(clearanceStatus), acceptLanguage), options);
+  async clearStandardInvoice(invoice, credentials, clearanceMode, acceptLanguage = null, options = {}) {
+    return this.#send(this.#native.prepareClearStandardInvoice(invoice, credentials, requireClearanceMode(clearanceMode), acceptLanguage), options);
   }
   #send(request, options) { return sendPrepared(request, { ...options, fetch: this.#fetch }); }
 }

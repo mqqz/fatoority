@@ -14,7 +14,6 @@
 #include "../diplomat_runtime.hpp"
 #include "BindingError.hpp"
 #include "Environment.hpp"
-#include "Text.hpp"
 
 
 namespace fatoora {
@@ -27,8 +26,8 @@ namespace capi {
     typedef struct fatoora_ProductionCsid_env_result {union {fatoora::capi::Environment ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ProductionCsid_env_result;
     fatoora_ProductionCsid_env_result fatoora_ProductionCsid_env(const fatoora::capi::ProductionCsid* self);
 
-    typedef struct fatoora_ProductionCsid_request_id_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ProductionCsid_request_id_result;
-    fatoora_ProductionCsid_request_id_result fatoora_ProductionCsid_request_id(const fatoora::capi::ProductionCsid* self);
+    typedef struct fatoora_ProductionCsid_request_id_result { bool is_ok;} fatoora_ProductionCsid_request_id_result;
+    fatoora_ProductionCsid_request_id_result fatoora_ProductionCsid_request_id(const fatoora::capi::ProductionCsid* self, diplomat::capi::DiplomatWrite* write);
 
     typedef struct fatoora_ProductionCsid_binary_security_token_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ProductionCsid_binary_security_token_result;
     fatoora_ProductionCsid_binary_security_token_result fatoora_ProductionCsid_binary_security_token(const fatoora::capi::ProductionCsid* self, diplomat::capi::DiplomatWrite* write);
@@ -55,9 +54,19 @@ inline diplomat::result<fatoora::Environment, std::unique_ptr<fatoora::BindingEr
     return result.is_ok ? diplomat::result<fatoora::Environment, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<fatoora::Environment>(fatoora::Environment::FromFFI(result.ok))) : diplomat::result<fatoora::Environment, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::ProductionCsid::request_id() const {
-    auto result = fatoora::capi::fatoora_ProductionCsid_request_id(this->AsFFI());
-    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::ProductionCsid::request_id() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_ProductionCsid_request_id(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::ProductionCsid::request_id_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_ProductionCsid_request_id(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> fatoora::ProductionCsid::binary_security_token() const {

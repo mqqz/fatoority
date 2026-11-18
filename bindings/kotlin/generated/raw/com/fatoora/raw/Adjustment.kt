@@ -12,10 +12,10 @@ internal interface AdjustmentLib: Library {
     fun fatoora_Adjustment_supplied_amount(handle: Pointer, value: Slice): ResultPointerPointer
     fun fatoora_Adjustment_with_reason(handle: Pointer, reason: OptionSlice, code: OptionSlice): ResultPointerPointer
     fun fatoora_Adjustment_value(handle: Pointer, write: Pointer): ResultUnitPointer
-    fun fatoora_Adjustment_base_amount(handle: Pointer): ResultPointerPointer
-    fun fatoora_Adjustment_percentage(handle: Pointer): ResultPointerPointer
-    fun fatoora_Adjustment_reason(handle: Pointer): ResultPointerPointer
-    fun fatoora_Adjustment_reason_code(handle: Pointer): ResultPointerPointer
+    fun fatoora_Adjustment_base_amount(handle: Pointer, write: Pointer): OptionUnit
+    fun fatoora_Adjustment_percentage(handle: Pointer, write: Pointer): OptionUnit
+    fun fatoora_Adjustment_reason(handle: Pointer, write: Pointer): OptionUnit
+    fun fatoora_Adjustment_reason_code(handle: Pointer, write: Pointer): OptionUnit
 }
 
 class Adjustment internal constructor (
@@ -165,72 +165,60 @@ class Adjustment internal constructor (
         }
     }
 
-    fun baseAmount(): Result<Text?> {
+    fun baseAmount(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_Adjustment_base_amount(handle, write);
 
-        val returnVal = lib.fatoora_Adjustment_base_amount(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
-    fun percentage(): Result<Text?> {
+    fun percentage(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_Adjustment_percentage(handle, write);
 
-        val returnVal = lib.fatoora_Adjustment_percentage(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
-    fun reason(): Result<Text?> {
+    fun reason(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_Adjustment_reason(handle, write);
 
-        val returnVal = lib.fatoora_Adjustment_reason(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
-    fun reasonCode(): Result<Text?> {
+    fun reasonCode(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_Adjustment_reason_code(handle, write);
 
-        val returnVal = lib.fatoora_Adjustment_reason_code(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
 }

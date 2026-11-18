@@ -8,7 +8,7 @@ description: Install fatoority from Maven Central for Kotlin, Java, or Android. 
 Use `com.fatoora` classes to build, sign, and validate invoices and send ZATCA API
 requests on the JVM or Android. Value getters are Kotlin properties (Java
 `getX()`), amounts are exact `BigDecimal` values, and failures throw a
-`BindingException` subclass for each error kind.
+`FatooraException` subclass for each error kind.
 
 ## Install from Maven Central
 
@@ -20,7 +20,7 @@ For desktop Gradle projects, add this to `build.gradle.kts`:
 ```kotlin
 repositories { mavenCentral() }
 dependencies {
-    implementation("com.fatoority:fatoority:0.6.0")
+    implementation("com.fatoority:fatoority:0.7.0")
 }
 ```
 
@@ -30,7 +30,7 @@ artifact to your app's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.fatoority:fatoority-android:0.6.0")
+    implementation("com.fatoority:fatoority-android:0.7.0")
 }
 ```
 
@@ -40,8 +40,8 @@ Consumers do not need Rust or a separate native-library build.
 
 | Artifact | Runtime | Bundled native platforms |
 | --- | --- | --- |
-| `com.fatoority:fatoority:0.6.0` | Java 8+ | Linux x86-64, Windows x86-64, macOS arm64 |
-| `com.fatoority:fatoority-android:0.6.0` | Android API 26+ | arm64-v8a, x86_64 |
+| `com.fatoority:fatoority:0.7.0` | Java 8+ | Linux x86-64, Windows x86-64, macOS arm64 |
+| `com.fatoority:fatoority-android:0.7.0` | Android API 26+ | arm64-v8a, x86_64 |
 
 Linux requires glibc 2.28+; musl/Alpine is not included. Desktop binaries cannot
 be used on Android; use the Android artifact for Android applications.
@@ -105,11 +105,11 @@ environment. Factory names use `create`, such as
 | Invoice flags | `Int` bitmask taken by `InvoiceBuilder.setFlags` and held by `InvoiceData.flags`; combine `InvoiceFlag` bits from its `bit` property (`ThirdParty`, `Nominal`, `Export`, `Summary`, `SelfBilled`) |
 | Unsigned 64-bit counter | `BigInteger`, range 0 through 2^64−1 |
 | Binary input / copied output | JVM byte array; copies survive closing their owner |
-| Native failure | `BindingException` subclass with `code`, `kind`, `message`, `detailsJson` |
+| Native failure | `FatooraException` subclass with `code`, `kind`, `message`, `detailsJson` |
 
 Close objects returned by methods as well as those you construct. Native errors
 are copied to managed data and freed immediately; exceptions need no cleanup.
-`Bytes.asSlice()` copies bytes under the owner lock, so the returned array survives
+`Bytes.toByteArray()` copies bytes under the owner lock, so the returned array survives
 closing its native owner. Strings reject lone UTF-16 surrogates and embedded NUL.
 
 Calls acquire all participating owners in a fixed lock order. Concurrent calls
@@ -119,9 +119,9 @@ run concurrently. Consumed builders/invoices remain closeable but reject further
 use with a native error. Automatic cleanup is nondeterministic; explicitly close owners. Freeing native
 memory does not guarantee secret erasure.
 
-Import public classes from `com.fatoora`. The 0.5 getter functions (such as
-`address.city()`), `String` amount overloads and `Boolean` coroutine overloads
-remain as `@Deprecated` members with `ReplaceWith` hints until 0.7.
+Import public classes from `com.fatoora`. 0.7 removed the getter functions,
+`String` amount overloads, renamed aliases and `Boolean` coroutine overloads
+deprecated in 0.6; see the [0.7 migration guide](../../guides/migrate-0.7/kotlin.md).
 
 ## Amounts
 
@@ -144,7 +144,7 @@ normalized, so `10.50` reads back as `10.5`; compare with `compareTo`.
 
 ## Errors
 
-Native failures throw a subclass of `BindingException` chosen by error code:
+Native failures throw a subclass of `FatooraException` chosen by error code:
 
 | Code | `ErrorKind` | Exception |
 | --- | --- | --- |
@@ -159,7 +159,7 @@ Native failures throw a subclass of `BindingException` chosen by error code:
 | 9 | `Internal` | `InternalException` |
 | 10 | `Api` | `ApiException` |
 
-A code this version does not know throws plain `BindingException` with a `null`
+A code this version does not know throws plain `FatooraException` with a `null`
 `kind`. The code, kind, message, and JSON details are managed values; exceptions
 need no cleanup. Invalid UTF-16 and embedded NUL are rejected. Use
 [structured error details](../errors.md) to distinguish validation, input,
@@ -172,7 +172,7 @@ cryptography, and gateway failures.
         Address.create("XX", "Riyadh", "King Fahd Road", "1234", "12345").use { }
     } catch (error: InvalidInputException) {
         println("Rejected input: ${error.message}")
-    } catch (error: BindingException) {
+    } catch (error: FatooraException) {
         println("${error.kind} (${error.code}): ${error.message}")
         println(error.detailsJson)
     }
@@ -185,7 +185,7 @@ cryptography, and gateway failures.
         // An unrecognized country code throws before this block.
     } catch (InvalidInputException error) {
         System.err.println("Rejected input: " + error.getMessage());
-    } catch (BindingException error) {
+    } catch (FatooraException error) {
         System.err.println(error.getKind() + " (" + error.getCode() + "): " + error.getMessage());
         System.err.println(error.getDetailsJson());
     }
@@ -211,8 +211,31 @@ validation does not establish gateway acceptance or certificate issuer trust.
 
 ## API requests
 
-Create a client with `ZatcaClient.create(config)`. Native HTTP methods block the
-calling thread and return objects that must be closed:
+Create a client with `ZatcaClient.create(config)`, or with
+`ZatcaClient.withTimeout(config, timeout)` to bound each request from connecting
+until the response body is read. `timeout` is a `java.time.Duration`, or in
+Kotlin also a `kotlin.time.Duration`; it is rounded up to whole milliseconds, and
+a request that exceeds it throws `NetworkException`. A zero, negative, or
+longer-than-4294967.295-second timeout throws `IllegalArgumentException`.
+
+=== "Kotlin"
+
+    ```kotlin
+    import kotlin.time.Duration.Companion.seconds
+
+    val client = ZatcaClient.withTimeout(config, 30.seconds)
+    ```
+
+=== "Java"
+
+    ```java
+    import java.time.Duration;
+
+    ZatcaClient client = ZatcaClient.withTimeout(config, Duration.ofSeconds(30));
+    ```
+
+Native HTTP methods block the calling thread and return objects that must be
+closed:
 
 | Method | Inputs | Returns |
 | --- | --- | --- |

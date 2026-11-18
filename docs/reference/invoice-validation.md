@@ -146,8 +146,6 @@ Child objects are independent snapshots and outlive the report.
 
     On `Err(error)`, `error.report` contains the partial `Box<ZatcaValidationReport>`; `error.kind`, `stage`, `assertion_site`, `location`, and `message` describe the failure. Serializing reports includes derived outcomes; deserialization recomputes them from stage coverage. Calls borrow inputs and do not consume invoice objects.
 
-    The 0.5 free functions `validate_xml_invoice_from_str`, `validate_xml_invoice_report_from_str` and `validate_zatca_invoice_from_str` still work but are deprecated; they ignore their `Config` argument and forward to `Validator`.
-
 === "Python"
 
     Import from `fatoora`.
@@ -164,7 +162,7 @@ Child objects are independent snapshots and outlive the report.
 
     The schema function returns `True` on success; violations raise an exception rather than returning `False`. `validate_zatca` returns a frozen `ZatcaReport` dataclass even when the document is rejected or coverage is incomplete. Inspect `report.is_valid`, then `report.stages` (each a `ZatcaStageReport` with `stage`, `status`, `findings`, `evaluated_assertions` and `provenance`) or `report.findings` for explanations. Each `ZatcaFinding` has `severity`, `layer`, `code`, `message`, `location` and `assertion_site`. The enums (`ZatcaStage`, `ZatcaStageStatus`, `Severity`, `ValidationLayer`, `ValidationLocationKind`) are string enums whose values are the JSON names. `report.to_json()` returns the JSON report and `report.to_dict()` the decoded dictionary.
 
-    `evaluated_at` takes a timezone-aware `datetime` or RFC 3339 text. Context is encoded as JSON, subject to the 4096-byte options limit; interior NUL characters are rejected. Execution failures raise `FatooraError`; after validation starts, `error.details["report"]` contains the partial report as a dictionary. Check whether the key exists because invalid input can fail before a report exists. Validation does not depend on a `Config`. The 0.5 functions `validate_xml_invoice_from_str(config, xml)` and `validate_zatca_invoice_from_str(config, xml, ...)` (which returns the dictionary) still work until 0.7, with a `DeprecationWarning`.
+    `evaluated_at` takes a timezone-aware `datetime` or RFC 3339 text. Context is encoded as JSON, subject to the 4096-byte options limit; interior NUL characters are rejected. Execution failures raise `FatooraError`; after validation starts, `error.details["report"]` contains the partial report as a dictionary. Check whether the key exists because invalid input can fail before a report exists. Validation does not depend on a `Config`.
 
 === "JavaScript"
 
@@ -200,7 +198,7 @@ Child objects are independent snapshots and outlive the report.
 
     `Validate` returns `true` on schema success and throws on violations or execution failures. `ValidateZatca` returns an owned report even for a rejected or incomplete invoice; dispose it with `using`. Pass `null` for default options or a JSON object string with the keys documented above (maximum 4096 UTF-8 bytes). Inspect `report.IsValid`; `report.ToJson()` returns the JSON report.
 
-    On `FfiException` (or a subclass such as `ValidationException`), `error.DetailsJson` returns structured JSON; a failure after validation starts includes `report`. Earlier input rejection may omit the report.
+    On `FatooraException` (or a subclass such as `ValidationException`), `error.DetailsJson` returns structured JSON; a failure after validation starts includes `report`. Earlier input rejection may omit the report.
 
 === "Kotlin"
 
@@ -211,9 +209,9 @@ Child objects are independent snapshots and outlive the report.
     Xml.validateZatca(xml: String, optionsJson: String? = null): ZatcaValidationReport
     ```
 
-    `validate` returns `true` on schema success; violations and execution failures throw `BindingException`. `validateZatca` returns an owned report for completed calls, including rejected or incomplete invoices. Close it with `use` and inspect `isValid`; `toJson()` returns the JSON report.
+    `validate` returns `true` on schema success; violations and execution failures throw `FatooraException`. `validateZatca` returns an owned report for completed calls, including rejected or incomplete invoices. Close it with `use` and inspect `isValid`; `toJson()` returns the JSON report.
 
-    Omit `optionsJson` or pass null for defaults; otherwise provide a JSON object string containing the documented context keys, limited to 4096 UTF-8 bytes. `BindingException.detailsJson` contains structured failure details and an optional partial `report`. Invalid options can fail before that report exists.
+    Omit `optionsJson` or pass null for defaults; otherwise provide a JSON object string containing the documented context keys, limited to 4096 UTF-8 bytes. `FatooraException.detailsJson` contains structured failure details and an optional partial `report`. Invalid options can fail before that report exists.
 
 === "Java"
 
@@ -225,7 +223,7 @@ Child objects are independent snapshots and outlive the report.
     ZatcaValidationReport Xml.validateZatca(String xml, String optionsJson)
     ```
 
-    `validate` returns `true` on schema success and throws `BindingException` on violations or execution failures. `validateZatca` returns an owned report even if validation rejects the invoice or coverage is incomplete. Close it with try-with-resources and inspect `isValid()`; `toJson()` returns the JSON report.
+    `validate` returns `true` on schema success and throws `FatooraException` on violations or execution failures. `validateZatca` returns an owned report even if validation rejects the invoice or coverage is incomplete. Close it with try-with-resources and inspect `isValid()`; `toJson()` returns the JSON report.
 
     The one-argument overload uses default options. The second argument accepts null or a JSON object string with the documented context keys, limited to 4096 UTF-8 bytes. On failure, `error.getDetailsJson()` returns structured details with an optional partial `report`; earlier input rejection may omit it.
 

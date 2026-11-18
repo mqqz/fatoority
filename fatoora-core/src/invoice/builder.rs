@@ -101,10 +101,6 @@ pub struct InvoiceBuilder {
     payable_rounding_amount: Decimal,
     vat_category: Option<VatCategory>,
     flags: InvoiceFlags,
-    invoice_level_charge: Decimal,
-    invoice_level_discount: Decimal,
-    pub(crate) adjustment_vat_rate: Option<Decimal>,
-    allowance_reason: Option<String>,
     adjustments: Vec<(super::AdjustmentKind, super::DocumentAdjustment)>,
     exemptions: Vec<(VatCategory, Decimal, super::TaxExemption)>,
     supplied_breakdowns: Vec<super::VatBreakdown>,
@@ -261,25 +257,6 @@ impl InvoiceBuilder {
         self
     }
 
-    /// Add an individual document adjustment. Do not combine with legacy aggregate setters.
-    ///
-    /// Appends; earlier adjustments are kept in call order. Forwards to
-    /// [`allowance`](Self::allowance) or [`charge`](Self::charge) according to
-    /// `adjustment.kind`, converting with `DocumentAdjustment::from`.
-    #[deprecated(
-        since = "0.6.0",
-        note = "use `allowance(DocumentAdjustment)` or `charge(DocumentAdjustment)` instead; \
-                `DocumentAdjustment::from(AllowanceCharge)` converts an existing entry"
-    )]
-    pub fn adjustment(self, adjustment: super::AllowanceCharge) -> Self {
-        let kind = adjustment.kind;
-        let adjustment = super::DocumentAdjustment::from(adjustment);
-        match kind {
-            super::AdjustmentKind::Allowance => self.allowance(adjustment),
-            super::AdjustmentKind::Charge => self.charge(adjustment),
-        }
-    }
-
     /// Append a VAT exemption reason for a category and rate.
     ///
     /// Appends; conflicting exemptions for the same category and rate fail in `build`.
@@ -328,10 +305,6 @@ impl InvoiceBuilder {
             payable_rounding_amount: Decimal::ZERO,
             vat_category: None,
             flags: InvoiceFlags::empty(),
-            invoice_level_charge: Decimal::ZERO,
-            invoice_level_discount: Decimal::ZERO,
-            adjustment_vat_rate: None,
-            allowance_reason: None,
             adjustments: Vec::new(),
             exemptions: Vec::new(),
             supplied_breakdowns: Vec::new(),
@@ -398,58 +371,6 @@ impl InvoiceBuilder {
         self
     }
 
-    /// Set the legacy aggregate document-level charge.
-    ///
-    /// Replaces any previously set value. The charge is emitted with the document
-    /// VAT category and a rate taken from the first line in that category, and its
-    /// reason is the [`allowance_reason`](Self::allowance_reason) (or `"charge"`).
-    /// It cannot be combined with [`allowance`](Self::allowance) or
-    /// [`charge`](Self::charge).
-    #[deprecated(
-        since = "0.6.0",
-        note = "use `charge(DocumentAdjustment::new(Adjustment::amount(..), category, rate))` \
-                instead; it appends an entry with an explicit VAT category and rate \
-                instead of replacing one aggregate inferred from the document"
-    )]
-    pub fn invoice_level_charge(mut self, charge: Decimal) -> Self {
-        self.invoice_level_charge = charge;
-        self
-    }
-
-    /// Set the legacy aggregate document-level discount.
-    ///
-    /// Replaces any previously set value. The allowance is emitted with the document
-    /// VAT category and a rate taken from the first line in that category, and its
-    /// reason is the [`allowance_reason`](Self::allowance_reason) (or `"discount"`).
-    /// It cannot be combined with [`allowance`](Self::allowance) or
-    /// [`charge`](Self::charge).
-    #[deprecated(
-        since = "0.6.0",
-        note = "use `allowance(DocumentAdjustment::new(Adjustment::amount(..), category, rate))` \
-                instead; it appends an entry with an explicit VAT category and rate \
-                instead of replacing one aggregate inferred from the document"
-    )]
-    pub fn invoice_level_discount(mut self, discount: Decimal) -> Self {
-        self.invoice_level_discount = discount;
-        self
-    }
-
-    /// Set the legacy aggregate allowance reason.
-    ///
-    /// Replaces any previously set value. The reason applies to both the aggregate
-    /// discount and the aggregate charge, and on its own emits a zero-amount
-    /// allowance. It cannot be combined with [`allowance`](Self::allowance) or
-    /// [`charge`](Self::charge).
-    #[deprecated(
-        since = "0.6.0",
-        note = "set the reason on each entry with `DocumentAdjustment::with_reason` and add it \
-                with `allowance` or `charge` instead"
-    )]
-    pub fn allowance_reason(mut self, reason: impl Into<String>) -> Self {
-        self.allowance_reason = Some(reason.into());
-        self
-    }
-
     /// Append a billing reference to an original invoice.
     ///
     /// Appends; earlier references are kept in call order.
@@ -502,25 +423,6 @@ impl InvoiceBuilder {
     /// Replaces any previously set value.
     pub fn buyer(mut self, buyer: Buyer) -> Self {
         self.buyer = Some(buyer);
-        self
-    }
-
-    /// Set the payment means type code of the first payment means, creating
-    /// one if none exists.
-    ///
-    /// Replaces the first payment means' code; later payment means are unchanged.
-    #[deprecated(
-        since = "0.6.0",
-        note = "use `payment_means(PaymentMeans::new(code))` instead; it appends a \
-                payment means rather than changing the code of the first one"
-    )]
-    pub fn payment_means_code(mut self, code: impl Into<String>) -> Self {
-        self.payment_instruction_placeholder = false;
-        if self.payment_means.is_empty() {
-            self.payment_means.push(super::PaymentMeans::new(code));
-        } else {
-            self.payment_means[0].payment_means_type_code = code.into();
-        }
         self
     }
 
@@ -745,68 +647,38 @@ impl InvoiceBuilder {
                 item.total_amount().add(item.vat_amount())?;
             }
         }
-        for (field, amount) in [
-            (
-                InvoiceField::InvoiceLevelDiscount,
-                self.invoice_level_discount,
-            ),
-            (InvoiceField::InvoiceLevelCharge, self.invoice_level_charge),
-        ] {
-            if amount < Decimal::ZERO || amount.scale() > 2 {
-                push_issue(field, ValidationKind::OutOfRange, None);
-            }
-        }
         if !issues.is_empty() {
             return Err(InvoiceError::Validation(ValidationError::new(issues)));
         }
 
         let mut adjustments = Vec::with_capacity(entries.len());
-        if !entries.is_empty() {
-            if self.invoice_level_discount != Decimal::ZERO
-                || self.invoice_level_charge != Decimal::ZERO
-                || self.allowance_reason.is_some()
+        for entry in entries {
+            let adjustment = entry?;
+            super::Adjustment {
+                amount: Some(adjustment.amount),
+                base_amount: adjustment.base_amount,
+                percentage: adjustment.percentage,
+                reason: adjustment.reason.clone(),
+                reason_code: adjustment.reason_code.clone(),
+            }
+            .value()?;
+            if (adjustment.omitted_rate && adjustment.category != VatCategory::OutOfScope)
+                || adjustment.amount < Decimal::ZERO
+                || adjustment.amount.scale() > 2
+                || adjustment.rate < Decimal::ZERO
+                || adjustment.rate > Decimal::from(100)
+                || adjustment.rate.scale() > 2
+                || (adjustment.category != VatCategory::Standard
+                    && adjustment.rate != Decimal::ZERO)
             {
                 return Err(ValidationError::new(vec![ValidationIssue::new(
                     InvoiceField::InvoiceLevelDiscount,
-                    ValidationKind::Mismatch,
+                    ValidationKind::OutOfRange,
                     None,
                 )])
                 .into());
             }
-            for entry in entries {
-                let adjustment = entry?;
-                super::Adjustment {
-                    amount: Some(adjustment.amount),
-                    base_amount: adjustment.base_amount,
-                    percentage: adjustment.percentage,
-                    reason: adjustment.reason.clone(),
-                    reason_code: adjustment.reason_code.clone(),
-                }
-                .value()?;
-                if (adjustment.omitted_rate && adjustment.category != VatCategory::OutOfScope)
-                    || adjustment.amount < Decimal::ZERO
-                    || adjustment.amount.scale() > 2
-                    || adjustment.rate < Decimal::ZERO
-                    || adjustment.rate > Decimal::from(100)
-                    || adjustment.rate.scale() > 2
-                    || (adjustment.category != VatCategory::Standard
-                        && adjustment.rate != Decimal::ZERO)
-                {
-                    return Err(ValidationError::new(vec![ValidationIssue::new(
-                        InvoiceField::InvoiceLevelDiscount,
-                        ValidationKind::OutOfRange,
-                        None,
-                    )])
-                    .into());
-                }
-                if adjustment.kind.is_charge() {
-                    self.invoice_level_charge = self.invoice_level_charge.add(adjustment.amount)?;
-                } else {
-                    self.invoice_level_discount =
-                        self.invoice_level_discount.add(adjustment.amount)?;
-                }
-                adjustments.push(adjustment);
-            }
+            adjustments.push(adjustment);
         }
         for (seller, value) in self.party_identifiers {
             if seller {
@@ -848,10 +720,6 @@ impl InvoiceBuilder {
             payment_means: self.payment_means,
             vat_category: self.vat_category.expect("validated vat category"),
             flags: self.flags,
-            invoice_level_charge: self.invoice_level_charge,
-            invoice_level_discount: self.invoice_level_discount,
-            adjustment_vat_rate: self.adjustment_vat_rate,
-            allowance_reason: self.allowance_reason,
             adjustments,
         };
 
@@ -1051,15 +919,6 @@ impl FinalizedInvoice {
         super::hash_xml(&xml)
     }
 
-    /// Hash the XML serialization of this finalized model, as Base64 text.
-    ///
-    /// # Errors
-    /// Returns [`SigningError`] if XML serialization, parsing, or hashing fails.
-    #[deprecated(since = "0.6.0", note = "use `hash()` instead")]
-    pub fn hash_base64(&self) -> Result<String, SigningError> {
-        self.hash().map(|hash| hash.0)
-    }
-
     /// Sign the invoice with the provided signer.
     ///
     /// Produces signature material without running XSD or business-rule validation.
@@ -1140,15 +999,6 @@ impl SignedInvoice {
         super::hash_xml(self.xml())
     }
 
-    /// Recompute the invoice digest from the exact stored XML, as Base64 text.
-    ///
-    /// # Errors
-    /// Returns [`SigningError`] if XML parsing or hashing fails.
-    #[deprecated(since = "0.6.0", note = "use `hash()` instead")]
-    pub fn hash_base64(&self) -> Result<String, SigningError> {
-        self.hash().map(|hash| hash.0)
-    }
-
     /// Base64 DER ECDSA signature over the invoice hash.
     pub fn signature(&self) -> &str {
         self.signed_properties.signature()
@@ -1207,3 +1057,6 @@ impl InvoiceView for SignedInvoice {
         Some(self.qr_code())
     }
 }
+
+#[cfg(test)]
+mod legacy_serde_tests;

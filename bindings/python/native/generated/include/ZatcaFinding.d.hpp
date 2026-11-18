@@ -13,8 +13,6 @@
 namespace _native {
 namespace capi { struct BindingError; }
 class BindingError;
-namespace capi { struct Text; }
-class Text;
 class Severity;
 class ValidationLayer;
 class ValidationLocationKind;
@@ -38,7 +36,9 @@ public:
   /**
    * Rule assertion that produced the finding, for business-rule findings.
    */
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> assertion_site() const;
+  inline std::optional<std::string> assertion_site() const;
+  template<typename W>
+  inline std::optional<std::monostate> assertion_site_write(W& writeable_output) const;
 
   inline _native::ValidationLayer layer() const;
 
@@ -66,7 +66,9 @@ public:
   /**
    * The field path or XPath, or null for other location kinds.
    */
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> location_path() const;
+  inline std::optional<std::string> location_path() const;
+  template<typename W>
+  inline std::optional<std::monostate> location_path_write(W& writeable_output) const;
 
   /**
    * One-based XML line, or null when the location is not XML coordinates.

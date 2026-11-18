@@ -16,13 +16,21 @@ class ZatcaClient internal constructor(internal val raw: com.fatoora.raw.ZatcaCl
         }
 
         /**
-         * Create a client whose requests fail with a network error after
-         * the given number of milliseconds. Zero is rejected.
+         * Create a client whose requests fail with a network error once they take
+         * longer than [timeout], from connecting until the response body is read.
+         * The timeout is rounded up to whole milliseconds.
+         *
+         * @throws IllegalArgumentException if [timeout] is zero, negative, or longer
+         *   than 4294967.295 seconds (`UInt.MAX_VALUE` milliseconds).
          */
         @JvmStatic
-        fun withTimeout(config: Config, timeoutMs: Long): ZatcaClient = nativeCall(listOfNotNull(config)) {
-            ZatcaClient(unwrap(com.fatoora.raw.ZatcaClient.withTimeout(config.raw, checkedUnsigned(timeoutMs, 4294967295L).toUInt())))
+        fun withTimeout(config: Config, timeout: java.time.Duration): ZatcaClient = nativeCall(listOfNotNull(config)) {
+            ZatcaClient(unwrap(com.fatoora.raw.ZatcaClient.withTimeout(config.raw, timeoutMillis(timeout))))
         }
+
+        /** [withTimeout] taking a [kotlin.time.Duration]. */
+        @JvmSynthetic
+        fun withTimeout(config: Config, timeout: kotlin.time.Duration): ZatcaClient = withTimeout(config, javaDuration(timeout))
     }
 
     fun requestComplianceCsid(csr: Csr, otp: String): ComplianceCsid = nativeCall(listOfNotNull(this, csr)) {

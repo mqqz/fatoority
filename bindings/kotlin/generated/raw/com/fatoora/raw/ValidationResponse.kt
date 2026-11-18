@@ -10,15 +10,16 @@ internal interface ValidationResponseLib: Library {
     fun fatoora_ValidationResponse_http_status(handle: Pointer): OptionFFIUint16
     fun fatoora_ValidationResponse_outcome(handle: Pointer): Int
     fun fatoora_ValidationResponse_ensure_accepted(handle: Pointer): ResultUnitPointer
-    fun fatoora_ValidationResponse_cleared_invoice_xml(handle: Pointer): ResultPointerPointer
+    fun fatoora_ValidationResponse_cleared_invoice_xml_present(handle: Pointer): Byte
+    fun fatoora_ValidationResponse_cleared_invoice_xml(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_ValidationResponse_validation_results(handle: Pointer): ResultPointerPointer
-    fun fatoora_ValidationResponse_cleared_invoice_base64(handle: Pointer): ResultPointerPointer
+    fun fatoora_ValidationResponse_cleared_invoice_base64(handle: Pointer, write: Pointer): OptionUnit
     fun fatoora_ValidationResponse_reporting_status(handle: Pointer): OptionInt
-    fun fatoora_ValidationResponse_reporting_status_raw(handle: Pointer): ResultPointerPointer
+    fun fatoora_ValidationResponse_reporting_status_raw(handle: Pointer, write: Pointer): OptionUnit
     fun fatoora_ValidationResponse_clearance_status(handle: Pointer): OptionInt
-    fun fatoora_ValidationResponse_clearance_status_raw(handle: Pointer): ResultPointerPointer
-    fun fatoora_ValidationResponse_qr_seller_status(handle: Pointer): ResultPointerPointer
-    fun fatoora_ValidationResponse_qr_buyer_status(handle: Pointer): ResultPointerPointer
+    fun fatoora_ValidationResponse_clearance_status_raw(handle: Pointer, write: Pointer): OptionUnit
+    fun fatoora_ValidationResponse_qr_seller_status(handle: Pointer, write: Pointer): OptionUnit
+    fun fatoora_ValidationResponse_qr_buyer_status(handle: Pointer, write: Pointer): OptionUnit
 }
 
 class ValidationResponse internal constructor (
@@ -77,16 +78,29 @@ class ValidationResponse internal constructor (
         }
     }
 
-    fun clearedInvoiceXml(): Result<Text?> {
+    /**
+     * Whether the response carries a cleared invoice.
+     */
+    fun clearedInvoiceXmlPresent(): Boolean {
 
-        val returnVal = lib.fatoora_ValidationResponse_cleared_invoice_xml(handle);
+        val returnVal = lib.fatoora_ValidationResponse_cleared_invoice_xml_present(handle);
+        return (returnVal > 0)
+    }
+
+    /**
+     * The decoded cleared invoice, or null when the response has none.
+     * Fails when the content is not base64-encoded UTF-8 text without NUL.
+     */
+    fun clearedInvoiceXml(): Result<String> {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_ValidationResponse_cleared_invoice_xml(handle, write);
         val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
+        if (nativeOkVal != null) {
+
+            val returnString = DW.writeToString(write)
+            return returnString.ok()
         } else {
+            DW.lib.diplomat_buffer_write_destroy(write)
             val selfEdges: List<Any> = listOf()
             val handle = returnVal.getNativeErr()!!
             val returnOpaque = BindingError(handle, selfEdges, true)
@@ -111,21 +125,18 @@ class ValidationResponse internal constructor (
         }
     }
 
-    fun clearedInvoiceBase64(): Result<Text?> {
+    fun clearedInvoiceBase64(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_ValidationResponse_cleared_invoice_base64(handle, write);
 
-        val returnVal = lib.fatoora_ValidationResponse_cleared_invoice_base64(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
     /**
@@ -142,21 +153,18 @@ class ValidationResponse internal constructor (
     /**
      * The `reportingStatus` exactly as ZATCA sent it, or null when absent.
      */
-    fun reportingStatusRaw(): Result<Text?> {
+    fun reportingStatusRaw(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_ValidationResponse_reporting_status_raw(handle, write);
 
-        val returnVal = lib.fatoora_ValidationResponse_reporting_status_raw(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
     /**
@@ -173,55 +181,46 @@ class ValidationResponse internal constructor (
     /**
      * The `clearanceStatus` exactly as ZATCA sent it, or null when absent.
      */
-    fun clearanceStatusRaw(): Result<Text?> {
+    fun clearanceStatusRaw(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_ValidationResponse_clearance_status_raw(handle, write);
 
-        val returnVal = lib.fatoora_ValidationResponse_clearance_status_raw(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
-    fun qrSellerStatus(): Result<Text?> {
+    fun qrSellerStatus(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_ValidationResponse_qr_seller_status(handle, write);
 
-        val returnVal = lib.fatoora_ValidationResponse_qr_seller_status(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
-    fun qrBuyerStatus(): Result<Text?> {
+    fun qrBuyerStatus(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_ValidationResponse_qr_buyer_status(handle, write);
 
-        val returnVal = lib.fatoora_ValidationResponse_qr_buyer_status(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
 }

@@ -77,7 +77,7 @@ public partial class ZatcaValidationReport: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Profile
     {
         get
@@ -94,7 +94,7 @@ public partial class ZatcaValidationReport: IDisposable
                         var result = Raw.ZatcaValidationReport.Profile(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -111,7 +111,7 @@ public partial class ZatcaValidationReport: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string EvaluatedAt
     {
         get
@@ -128,7 +128,7 @@ public partial class ZatcaValidationReport: IDisposable
                         var result = Raw.ZatcaValidationReport.EvaluatedAt(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -225,7 +225,7 @@ public partial class ZatcaValidationReport: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ZatcaStageReport</c> allocated on Rust side.
     /// </returns>
@@ -240,7 +240,7 @@ public partial class ZatcaValidationReport: IDisposable
                 var result = Raw.ZatcaValidationReport.Stage(selfLease!.Ptr, index);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new ZatcaStageReport(result.Ok);
             }
@@ -251,7 +251,7 @@ public partial class ZatcaValidationReport: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string ToJson()
     {
         unsafe
@@ -266,7 +266,7 @@ public partial class ZatcaValidationReport: IDisposable
                     var result = Raw.ZatcaValidationReport.ToJson(selfLease!.Ptr, &writeable);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return writeable.ToUnicode();
                 }

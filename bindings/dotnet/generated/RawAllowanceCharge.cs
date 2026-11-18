@@ -20,10 +20,10 @@ internal partial struct AllowanceCharge
     internal static unsafe extern DiplomatResultAllowanceChargeBindingError WithPercentage(AllowanceCharge* handle, DiplomatSliceU8 @base, DiplomatSliceU8 percent);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_AllowanceCharge_base_amount", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError BaseAmount(AllowanceCharge* handle);
+    internal static unsafe extern DiplomatOptionVoid BaseAmount(AllowanceCharge* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_AllowanceCharge_percentage", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError Percentage(AllowanceCharge* handle);
+    internal static unsafe extern DiplomatOptionVoid Percentage(AllowanceCharge* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_AllowanceCharge_new", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultAllowanceChargeBindingError New(AdjustmentKind kind, DiplomatSliceU8 amount, DiplomatOptionSliceU8 reason, DiplomatOptionSliceU8 reasonCode, VatCategory category, DiplomatSliceU8 rate, TaxExemption* exemption);
@@ -47,10 +47,10 @@ internal partial struct AllowanceCharge
     internal static unsafe extern nuint TaxCategoryCount(AllowanceCharge* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_AllowanceCharge_reason", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError Reason(AllowanceCharge* handle);
+    internal static unsafe extern DiplomatOptionVoid Reason(AllowanceCharge* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_AllowanceCharge_reason_code", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError ReasonCode(AllowanceCharge* handle);
+    internal static unsafe extern DiplomatOptionVoid ReasonCode(AllowanceCharge* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_AllowanceCharge_exemption", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultTaxExemptionBindingError Exemption(AllowanceCharge* handle);

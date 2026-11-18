@@ -1,31 +1,44 @@
-/** Library error codes reported by `BindingError.code()`, mirroring Rust `ErrorKind`. */
-export const ErrorCode = Object.freeze({
-  InvalidInput: 1,
-  Validation: 2,
-  Parse: 3,
-  Xml: 4,
-  Crypto: 5,
-  Io: 6,
-  Network: 7,
-  Unauthorized: 8,
-  Internal: 9,
-  Api: 10,
+/** Category of a library failure, mirroring Rust `ErrorKind`; each value is its own name. */
+export const ErrorKind = Object.freeze({
+  InvalidInput: 'InvalidInput',
+  Validation: 'Validation',
+  Parse: 'Parse',
+  Xml: 'Xml',
+  Crypto: 'Crypto',
+  Io: 'Io',
+  Network: 'Network',
+  Unauthorized: 'Unauthorized',
+  Internal: 'Internal',
+  Api: 'Api',
 });
 
-const kinds = new Map(Object.entries(ErrorCode).map(([kind, code]) => [code, kind]));
+// Stable numeric codes, shared with every other binding and the C API.
+const codes = new Map([
+  [ErrorKind.InvalidInput, 1], [ErrorKind.Validation, 2], [ErrorKind.Parse, 3], [ErrorKind.Xml, 4],
+  [ErrorKind.Crypto, 5], [ErrorKind.Io, 6], [ErrorKind.Network, 7], [ErrorKind.Unauthorized, 8],
+  [ErrorKind.Internal, 9], [ErrorKind.Api, 10],
+]);
+const kinds = new Map([...codes].map(([kind, code]) => [code, kind]));
 // Filled in below: a subclass constructed directly takes its own code.
 const defaultCodes = new Map();
+const classes = new Map();
 
 /** Base class of every error the package throws for a library failure. */
 export class FatooraError extends Error {
   constructor(message, { code = defaultCodes.get(new.target) ?? null, details = {}, cause } = {}) {
     super(message, cause === undefined ? undefined : { cause });
-    /** Numeric library code, or `null` when the failure did not come from Rust. */
+    /** Numeric error code, or `null` when the failure did not come from the library. */
     this.code = code;
-    /** Variant name of `code`, or `null` when this version does not recognize it. */
+    /** `ErrorKind` of `code`, or `null` when this version does not recognize it. */
     this.kind = kinds.get(code) ?? null;
-    /** Structured details from the library, such as findings or an HTTP response body. */
+    /** Structured details, such as validation findings or an HTTP response body. */
     this.details = details;
+  }
+
+  /** Create the subclass that matches `code`; `FatooraError` for an unrecognized code. */
+  static fromCode(code, message, { details = {}, cause } = {}) {
+    const ErrorClass = classes.get(code) ?? FatooraError;
+    return new ErrorClass(message, { code, details, cause });
   }
 }
 
@@ -40,55 +53,25 @@ export class UnauthorizedError extends FatooraError {}
 export class InternalError extends FatooraError {}
 export class ApiError extends FatooraError {}
 
-const classes = new Map([
-  [ErrorCode.InvalidInput, InvalidInputError],
-  [ErrorCode.Validation, ValidationError],
-  [ErrorCode.Parse, ParseError],
-  [ErrorCode.Xml, XmlError],
-  [ErrorCode.Crypto, CryptoError],
-  [ErrorCode.Io, IoError],
-  [ErrorCode.Network, NetworkError],
-  [ErrorCode.Unauthorized, UnauthorizedError],
-  [ErrorCode.Internal, InternalError],
-  [ErrorCode.Api, ApiError],
-]);
-for (const [code, ErrorClass] of classes) defaultCodes.set(ErrorClass, code);
-
-// Explicit names survive bundler minification of class identifiers.
-for (const [ErrorClass, name] of [
-  [FatooraError, 'FatooraError'], [InvalidInputError, 'InvalidInputError'],
-  [ValidationError, 'ValidationError'], [ParseError, 'ParseError'], [XmlError, 'XmlError'],
-  [CryptoError, 'CryptoError'], [IoError, 'IoError'], [NetworkError, 'NetworkError'],
-  [UnauthorizedError, 'UnauthorizedError'], [InternalError, 'InternalError'], [ApiError, 'ApiError'],
+for (const [kind, ErrorClass] of [
+  [ErrorKind.InvalidInput, InvalidInputError], [ErrorKind.Validation, ValidationError],
+  [ErrorKind.Parse, ParseError], [ErrorKind.Xml, XmlError], [ErrorKind.Crypto, CryptoError],
+  [ErrorKind.Io, IoError], [ErrorKind.Network, NetworkError], [ErrorKind.Unauthorized, UnauthorizedError],
+  [ErrorKind.Internal, InternalError], [ErrorKind.Api, ApiError],
 ]) {
-  Object.defineProperty(ErrorClass.prototype, 'name', { value: name, writable: true, configurable: true });
+  classes.set(codes.get(kind), ErrorClass);
+  defaultCodes.set(ErrorClass, codes.get(kind));
+  // Explicit names survive bundler minification of class identifiers.
+  Object.defineProperty(ErrorClass.prototype, 'name', { value: `${kind}Error`, writable: true, configurable: true });
 }
+Object.defineProperty(FatooraError.prototype, 'name', { value: 'FatooraError', writable: true, configurable: true });
 
-/** The error subclass for a library code; `FatooraError` for an unrecognized code. */
-export function errorClassForCode(code) {
-  return classes.get(code) ?? FatooraError;
-}
-
-/**
- * Fetch, cancellation and response-body read failures in the JavaScript host.
- * `cause` is the original host error; `httpStatus` is set when a response arrived.
- */
-export class TransportError extends NetworkError {
-  constructor(message, cause, httpStatus = undefined) {
-    super(message, { code: ErrorCode.Network, cause });
-    this.httpStatus = httpStatus;
-  }
-}
-Object.defineProperty(TransportError.prototype, 'name', { value: 'TransportError', writable: true, configurable: true });
-
-/** Convert a generated `BindingError` into its typed error, reading it eagerly. */
+/** Internal: convert a generated `BindingError` into its typed error, reading it eagerly. */
 export function fromBindingError(binding) {
-  const code = binding.code();
   let details = {};
   try {
     const parsed = JSON.parse(binding.detailsJson());
     if (parsed !== null && typeof parsed === 'object') details = parsed;
   } catch { /* details are best-effort */ }
-  const ErrorClass = errorClassForCode(code);
-  return new ErrorClass(binding.message(), { code, details, cause: binding });
+  return FatooraError.fromCode(binding.code(), binding.message(), { details, cause: binding });
 }

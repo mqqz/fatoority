@@ -13,7 +13,6 @@
 #include <cstdlib>
 #include "../diplomat_runtime.hpp"
 #include "BindingError.hpp"
-#include "Text.hpp"
 
 
 namespace fatoora {
@@ -23,8 +22,8 @@ namespace capi {
     typedef struct fatoora_Address_with_province_result {union {fatoora::capi::Address* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Address_with_province_result;
     fatoora_Address_with_province_result fatoora_Address_with_province(const fatoora::capi::Address* self, diplomat::capi::DiplomatStringView value);
 
-    typedef struct fatoora_Address_province_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Address_province_result;
-    fatoora_Address_province_result fatoora_Address_province(const fatoora::capi::Address* self);
+    typedef struct fatoora_Address_province_result { bool is_ok;} fatoora_Address_province_result;
+    fatoora_Address_province_result fatoora_Address_province(const fatoora::capi::Address* self, diplomat::capi::DiplomatWrite* write);
 
     typedef struct fatoora_Address_new_result {union {fatoora::capi::Address* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Address_new_result;
     fatoora_Address_new_result fatoora_Address_new(diplomat::capi::DiplomatStringView country_code, diplomat::capi::DiplomatStringView city, diplomat::capi::DiplomatStringView street, diplomat::capi::DiplomatStringView building_number, diplomat::capi::DiplomatStringView postal_code, diplomat::capi::OptionStringView additional_street, diplomat::capi::OptionStringView additional_number, diplomat::capi::OptionStringView district);
@@ -44,14 +43,14 @@ namespace capi {
     typedef struct fatoora_Address_country_code_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Address_country_code_result;
     fatoora_Address_country_code_result fatoora_Address_country_code(const fatoora::capi::Address* self, diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_Address_additional_street_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Address_additional_street_result;
-    fatoora_Address_additional_street_result fatoora_Address_additional_street(const fatoora::capi::Address* self);
+    typedef struct fatoora_Address_additional_street_result { bool is_ok;} fatoora_Address_additional_street_result;
+    fatoora_Address_additional_street_result fatoora_Address_additional_street(const fatoora::capi::Address* self, diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_Address_additional_number_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Address_additional_number_result;
-    fatoora_Address_additional_number_result fatoora_Address_additional_number(const fatoora::capi::Address* self);
+    typedef struct fatoora_Address_additional_number_result { bool is_ok;} fatoora_Address_additional_number_result;
+    fatoora_Address_additional_number_result fatoora_Address_additional_number(const fatoora::capi::Address* self, diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_Address_district_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Address_district_result;
-    fatoora_Address_district_result fatoora_Address_district(const fatoora::capi::Address* self);
+    typedef struct fatoora_Address_district_result { bool is_ok;} fatoora_Address_district_result;
+    fatoora_Address_district_result fatoora_Address_district(const fatoora::capi::Address* self, diplomat::capi::DiplomatWrite* write);
 
     void fatoora_Address_destroy(Address* self);
 
@@ -65,9 +64,19 @@ inline diplomat::result<std::unique_ptr<fatoora::Address>, std::unique_ptr<fatoo
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Address>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Address>>(std::unique_ptr<fatoora::Address>(fatoora::Address::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Address>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::Address::province() const {
-    auto result = fatoora::capi::fatoora_Address_province(this->AsFFI());
-    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::Address::province() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_Address_province(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::Address::province_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_Address_province(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline diplomat::result<std::unique_ptr<fatoora::Address>, std::unique_ptr<fatoora::BindingError>> fatoora::Address::new_(std::string_view country_code, std::string_view city, std::string_view street, std::string_view building_number, std::string_view postal_code, std::optional<std::string_view> additional_street, std::optional<std::string_view> additional_number, std::optional<std::string_view> district) {
@@ -157,19 +166,49 @@ inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> 
     return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::Address::additional_street() const {
-    auto result = fatoora::capi::fatoora_Address_additional_street(this->AsFFI());
-    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::Address::additional_street() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_Address_additional_street(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::Address::additional_street_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_Address_additional_street(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::Address::additional_number() const {
-    auto result = fatoora::capi::fatoora_Address_additional_number(this->AsFFI());
-    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::Address::additional_number() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_Address_additional_number(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::Address::additional_number_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_Address_additional_number(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> fatoora::Address::district() const {
-    auto result = fatoora::capi::fatoora_Address_district(this->AsFFI());
-    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::Text>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::Address::district() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_Address_district(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::Address::district_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_Address_district(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline const fatoora::capi::Address* fatoora::Address::AsFFI() const {

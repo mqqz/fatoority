@@ -20,8 +20,18 @@ pub mod ffi {
     impl Bytes {
         /// The view is valid while this immutable owner remains alive.
         #[allow(clippy::needless_lifetimes)] // Diplomat requires an explicit return lifetime.
+        #[diplomat::attr(dotnet, disable)]
         pub fn as_slice<'a>(&'a self) -> &'a [u8] {
             &self.0
+        }
+
+        /// Copy of the bytes, independent of this owner.
+        // .NET only: `Bytes` is manually disposable there and Diplomat rejects
+        // views that borrow from such owners. The facade returns a `byte[]`.
+        #[diplomat::attr(not(dotnet), disable)]
+        #[diplomat::attr(dotnet, rename = "ToArray")]
+        pub fn to_owned_slice(&self) -> Box<[u8]> {
+            self.0.clone().into_boxed_slice()
         }
     }
 
