@@ -13,6 +13,11 @@ The quickest route is to build your project against 0.6 with deprecation
 warnings turned into errors, replace every name the warnings point at, and then
 upgrade to 0.7. Each warning names its replacement.
 
+A few signatures change without a deprecation step. Each language page lists
+them under "Changed signatures"; so far, `ZatcaClient.withTimeout` (Kotlin and
+Java) and `ZatcaClient.WithTimeout` (C#) take a duration instead of a
+millisecond count.
+
 | Language | Package | Migration page |
 | --- | --- | --- |
 | Rust | `fatoora-core = "0.7.0"` | [Rust](rust.md) |

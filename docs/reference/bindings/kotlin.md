@@ -211,8 +211,31 @@ validation does not establish gateway acceptance or certificate issuer trust.
 
 ## API requests
 
-Create a client with `ZatcaClient.create(config)`. Native HTTP methods block the
-calling thread and return objects that must be closed:
+Create a client with `ZatcaClient.create(config)`, or with
+`ZatcaClient.withTimeout(config, timeout)` to bound each request from connecting
+until the response body is read. `timeout` is a `java.time.Duration`, or in
+Kotlin also a `kotlin.time.Duration`; it is rounded up to whole milliseconds, and
+a request that exceeds it throws `NetworkException`. A zero, negative, or
+longer-than-4294967.295-second timeout throws `IllegalArgumentException`.
+
+=== "Kotlin"
+
+    ```kotlin
+    import kotlin.time.Duration.Companion.seconds
+
+    val client = ZatcaClient.withTimeout(config, 30.seconds)
+    ```
+
+=== "Java"
+
+    ```java
+    import java.time.Duration;
+
+    ZatcaClient client = ZatcaClient.withTimeout(config, Duration.ofSeconds(30));
+    ```
+
+Native HTTP methods block the calling thread and return objects that must be
+closed:
 
 | Method | Inputs | Returns |
 | --- | --- | --- |

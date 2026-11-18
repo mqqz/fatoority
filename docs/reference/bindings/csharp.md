@@ -141,8 +141,19 @@ dispose. If you also import `System.Xml` or
 
 ## API requests
 
-Create a client with `ZatcaClient.Create(config)`. Dispose the client, credentials,
-and responses with `using`. The following methods return owned objects:
+Create a client with `ZatcaClient.Create(config)`, or with
+`ZatcaClient.WithTimeout(config, timeout)` to bound each request from connecting
+until the response body is read. `timeout` is a `TimeSpan`, rounded up to whole
+milliseconds; a request that exceeds it throws `NetworkException`. A zero,
+negative (including `Timeout.InfiniteTimeSpan`), or over-`uint.MaxValue`-millisecond
+timeout throws `ArgumentOutOfRangeException`.
+
+```csharp
+using var client = ZatcaClient.WithTimeout(config, TimeSpan.FromSeconds(30));
+```
+
+Dispose the client, credentials, and responses with `using`. The following
+methods return owned objects:
 
 | Method | Inputs | Returns |
 | --- | --- | --- |

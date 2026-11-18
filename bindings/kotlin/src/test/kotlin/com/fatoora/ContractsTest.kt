@@ -169,6 +169,27 @@ class ContractsTest {
         assertTrue(destroyed.get())
     }
 
+    @Test fun clientTimeoutsAreDurations() {
+        Config.create(Environment.NonProduction).use { config ->
+            ZatcaClient.withTimeout(config, java.time.Duration.ofSeconds(30)).close()
+            ZatcaClient.withTimeout(config, kotlin.time.Duration.parse("1.5s")).close()
+            ZatcaClient.withTimeout(config, java.time.Duration.ofNanos(1)).close()
+            for (bad in listOf(java.time.Duration.ZERO, java.time.Duration.ofMillis(-1),
+                               java.time.Duration.ofMillis(4294967296L), java.time.Duration.ofSeconds(Long.MAX_VALUE))) {
+                assertFailsWith<IllegalArgumentException> { ZatcaClient.withTimeout(config, bad) }
+            }
+            for (bad in listOf(kotlin.time.Duration.ZERO, kotlin.time.Duration.INFINITE, -kotlin.time.Duration.INFINITE)) {
+                assertFailsWith<IllegalArgumentException> { ZatcaClient.withTimeout(config, bad) }
+            }
+        }
+        // Rounded up to whole milliseconds, like Python's timeout.
+        assertEquals(1u, timeoutMillis(java.time.Duration.ofNanos(1)))
+        assertEquals(1001u, timeoutMillis(java.time.Duration.ofSeconds(1, 1)))
+        assertEquals(1500u, timeoutMillis(javaDuration(kotlin.time.Duration.parse("1.5s"))))
+        assertEquals(UInt.MAX_VALUE, timeoutMillis(java.time.Duration.ofMillis(4294967295L)))
+        assertFailsWith<IllegalArgumentException> { timeoutMillis(java.time.Duration.ofMillis(4294967295L).plusNanos(1)) }
+    }
+
     @Test fun sdkHashSigningAndPreparedRequests() {
         val root = File(System.getProperty("fatoora.fixtures"))
         val xml = File(root, "cases/simplified-invoice/input.xml").readText()

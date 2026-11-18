@@ -58,6 +58,23 @@ same arguments.
 | `allowanceCharge.WithoutVatRate()` | `allowanceCharge.OmitVatRate()` |
 | `vatBreakdown.WithoutVatRate()` | `vatBreakdown.OmitVatRate()` |
 
+## Changed signatures
+
+These changes have no 0.6 equivalent to migrate to first; update the call when
+you upgrade.
+
+### Client timeout
+
+`ZatcaClient.WithTimeout` takes a `TimeSpan` instead of a `uint` millisecond
+count. The timeout is rounded up to whole milliseconds; zero, negative
+(including `Timeout.InfiniteTimeSpan`) and over-`uint.MaxValue`-millisecond
+values throw `ArgumentOutOfRangeException`. Use `ZatcaClient.Create(config)`
+for no client-side timeout.
+
+| 0.6 | 0.7 |
+| --- | --- |
+| `ZatcaClient.WithTimeout(config, 30_000)` | `ZatcaClient.WithTimeout(config, TimeSpan.FromSeconds(30))` |
+
 ## Example
 
 === "0.6 (obsolete)"

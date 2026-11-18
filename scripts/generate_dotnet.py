@@ -19,7 +19,9 @@ them a second time this script rewrites the generated wrappers in place:
 * native errors are thrown as ``FfiException`` subclasses (see
   ``bindings/dotnet/src/Errors.cs``) and ``BindingError`` becomes internal;
 * the Rust ``new`` constructors become ``Create`` factory methods, matching
-  the Kotlin and JavaScript packages.
+  the Kotlin and JavaScript packages;
+* raw millisecond overloads in ``PRIVATE_METHODS`` become private helpers
+  behind the ``TimeSpan`` overloads in ``bindings/dotnet/src``.
 
 Decimal members are derived from the Rust sources, so new FFI members are
 picked up without editing this script.
@@ -39,6 +41,8 @@ VALUE_TYPES = {"string", "bool", "byte", "ushort", "int", "uint", "ulong", "nuin
 METHOD_PREFIXES = ("To", "Into", "As")
 SIGNATURE = re.compile(
     r"^    public (?P<static>static )?(?P<ret>[\w<>\[\]?]+) (?P<name>\w+)\((?P<params>.*)\)$")
+# Raw members wrapped by hand-written idiomatic overloads: (Class, Method) -> private name.
+PRIVATE_METHODS = {("ZatcaClient", "WithTimeout"): "WithTimeoutMilliseconds"}
 THROW = "throw new BindingErrorException(new BindingError(result.Err));"
 
 
@@ -169,6 +173,9 @@ def transform_class(name, text, inputs, outputs, enums):
             raise SystemExit(f"{name}.{method}: unexpected decimal result conversion")
 
         exposed = "Create" if match["static"] and method == "New" else method
+        visibility = "public"
+        if key in PRIVATE_METHODS:
+            exposed, visibility = PRIVATE_METHODS[key], "private"
         base = ret.rstrip("?")
         is_property = (not match["static"] and not params and ret != "void"
                        and not any(method.startswith(p) and method[len(p):][:1].isupper()
@@ -185,7 +192,7 @@ def transform_class(name, text, inputs, outputs, enums):
             result.append("        }")
             result.append("    }")
         else:
-            result.append(f"    public {match['static'] or ''}{ret} {exposed}({', '.join(params)})")
+            result.append(f"    {visibility} {match['static'] or ''}{ret} {exposed}({', '.join(params)})")
             result.append("    {")
             result.extend(body)
             result.append("    }")
@@ -221,7 +228,7 @@ def transform(sources):
     sources["Utf8.cs"] = sources["Utf8.cs"].replace(lenient, (
         "private static readonly System.Text.UTF8Encoding Strict = new System.Text.UTF8Encoding(false, true);\n\n"
         "    public static byte[] Clone(string value) => Strict.GetBytes(value);"))
-    missing = (set(inputs) | outputs) - seen
+    missing = (set(inputs) | outputs | set(PRIVATE_METHODS)) - seen
     if missing:
         raise SystemExit(f"Decimal members missing from C# output: {sorted(missing)}")
     if any("BindingErrorException" in t for t in sources.values()):

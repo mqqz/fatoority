@@ -34,6 +34,14 @@
   write the four fields, so `InvoiceData` JSON written by 0.7 does not load in
   0.6; bincode and other compact formats keep the 0.6 layout and stay readable
   in both directions.
+- Kotlin/Java: `ZatcaClient.withTimeout(config, timeout)` takes a
+  `java.time.Duration`, plus a Kotlin-only `kotlin.time.Duration` overload
+  (`ZatcaClient.withTimeout(config, 30.seconds)`), instead of a `Long`
+  millisecond count. C#: `ZatcaClient.WithTimeout(config, timeout)` takes a
+  `TimeSpan` instead of a `uint`. The millisecond overloads are removed. As in
+  Python, the timeout is rounded up to whole milliseconds; zero, negative and
+  over-4294967.295-second timeouts throw `IllegalArgumentException` (Kotlin/Java)
+  or `ArgumentOutOfRangeException` (C#) before reaching the native library.
 
 ### Internal
 
