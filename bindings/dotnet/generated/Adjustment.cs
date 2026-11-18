@@ -57,7 +57,7 @@ public partial class Adjustment: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>Adjustment</c> allocated on Rust side.
     /// </returns>
@@ -71,14 +71,14 @@ public partial class Adjustment: IDisposable
                 var result = Raw.Adjustment.Amount(new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new Adjustment(result.Ok);
             }
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>Adjustment</c> allocated on Rust side.
     /// </returns>
@@ -94,14 +94,14 @@ public partial class Adjustment: IDisposable
                 var result = Raw.Adjustment.PercentOf(new DiplomatSliceU8 { Ptr = basePtr, Len = (nuint)baseBytes.Length }, new DiplomatSliceU8 { Ptr = percentPtr, Len = (nuint)percentBytes.Length });
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new Adjustment(result.Ok);
             }
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>Adjustment</c> allocated on Rust side.
     /// </returns>
@@ -119,7 +119,7 @@ public partial class Adjustment: IDisposable
                     var result = Raw.Adjustment.SuppliedAmount(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return new Adjustment(result.Ok);
                 }
@@ -131,7 +131,7 @@ public partial class Adjustment: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>Adjustment</c> allocated on Rust side.
     /// </returns>
@@ -151,7 +151,7 @@ public partial class Adjustment: IDisposable
                     var result = Raw.Adjustment.WithReason(selfLease!.Ptr, reason == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = reasonPtr, Len = (nuint)reasonBytes!.Length }), code == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = codePtr, Len = (nuint)codeBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return new Adjustment(result.Ok);
                 }
@@ -163,7 +163,7 @@ public partial class Adjustment: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public decimal Value
     {
         get
@@ -180,7 +180,7 @@ public partial class Adjustment: IDisposable
                         var result = Raw.Adjustment.Value(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
@@ -197,7 +197,7 @@ public partial class Adjustment: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public decimal? BaseAmount
     {
         get
@@ -211,7 +211,7 @@ public partial class Adjustment: IDisposable
                     var result = Raw.Adjustment.BaseAmount(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeDecimalOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
@@ -223,7 +223,7 @@ public partial class Adjustment: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public decimal? Percentage
     {
         get
@@ -237,7 +237,7 @@ public partial class Adjustment: IDisposable
                     var result = Raw.Adjustment.Percentage(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeDecimalOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
@@ -249,7 +249,7 @@ public partial class Adjustment: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? Reason
     {
         get
@@ -263,7 +263,7 @@ public partial class Adjustment: IDisposable
                     var result = Raw.Adjustment.Reason(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
@@ -275,7 +275,7 @@ public partial class Adjustment: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? ReasonCode
     {
         get
@@ -289,7 +289,7 @@ public partial class Adjustment: IDisposable
                     var result = Raw.Adjustment.ReasonCode(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }

@@ -28,7 +28,7 @@ uv build --wheel
 - Building the native extension requires CMake and a C++20 compiler. Nanobind is
   pinned in the build dependencies. Reinstall the package after native changes.
 - ZATCA API responses are exposed via owned objects with read-only properties (no JSON payloads).
-- Errors are raised as typed exceptions mapped from FFI error codes (see `FfiErrorKind`). Each exception exposes `.code`, `.kind`, and `.details`, a dictionary containing structured validation issues or diagnostics. Unknown codes remain available on a generic `FfiError`.
+- Errors are raised as `FatooraError` subclasses, one per `ErrorKind` (such as `InvalidInputError` or `NetworkError`). Each exception exposes `.code`, `.kind`, `.message`, and `.details`, a dictionary containing structured validation issues or diagnostics. Unknown codes raise plain `FatooraError` with `.kind` set to `None`.
 - Reinstall the package after changes; the extension loads its bundled shared library.
 
 ### Examples

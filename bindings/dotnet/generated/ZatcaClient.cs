@@ -57,7 +57,7 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ZatcaClient</c> allocated on Rust side.
     /// </returns>
@@ -73,7 +73,7 @@ public partial class ZatcaClient: IDisposable
                 var result = Raw.ZatcaClient.New(configLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new ZatcaClient(result.Ok);
             }
@@ -84,7 +84,7 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ZatcaClient</c> allocated on Rust side.
     /// </returns>
@@ -100,7 +100,7 @@ public partial class ZatcaClient: IDisposable
                 var result = Raw.ZatcaClient.WithTimeout(configLease!.Ptr, timeoutMs);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new ZatcaClient(result.Ok);
             }
@@ -111,7 +111,7 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ComplianceCsid</c> allocated on Rust side.
     /// </returns>
@@ -133,7 +133,7 @@ public partial class ZatcaClient: IDisposable
                     var result = Raw.ZatcaClient.RequestComplianceCsid(selfLease!.Ptr, csrLease!.Ptr, new DiplomatSliceU8 { Ptr = otpPtr, Len = (nuint)otpBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return new ComplianceCsid(result.Ok);
                 }
@@ -146,7 +146,7 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ProductionCsid</c> allocated on Rust side.
     /// </returns>
@@ -164,7 +164,7 @@ public partial class ZatcaClient: IDisposable
                 var result = Raw.ZatcaClient.RequestProductionCsid(selfLease!.Ptr, credentialsLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new ProductionCsid(result.Ok);
             }
@@ -176,7 +176,7 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ProductionCsid</c> allocated on Rust side.
     /// </returns>
@@ -203,7 +203,7 @@ public partial class ZatcaClient: IDisposable
                     var result = Raw.ZatcaClient.RenewCsid(selfLease!.Ptr, credentialsLease!.Ptr, csrLease!.Ptr, new DiplomatSliceU8 { Ptr = otpPtr, Len = (nuint)otpBytes.Length }, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return new ProductionCsid(result.Ok);
                 }
@@ -217,7 +217,7 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ValidationResponse</c> allocated on Rust side.
     /// </returns>
@@ -238,7 +238,7 @@ public partial class ZatcaClient: IDisposable
                 var result = Raw.ZatcaClient.CheckInvoiceCompliance(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new ValidationResponse(result.Ok);
             }
@@ -251,7 +251,7 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ValidationResponse</c> allocated on Rust side.
     /// </returns>
@@ -275,7 +275,7 @@ public partial class ZatcaClient: IDisposable
                     var result = Raw.ZatcaClient.ReportSimplifiedInvoice(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr, clearanceMode, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return new ValidationResponse(result.Ok);
                 }
@@ -289,7 +289,7 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ValidationResponse</c> allocated on Rust side.
     /// </returns>
@@ -313,7 +313,7 @@ public partial class ZatcaClient: IDisposable
                     var result = Raw.ZatcaClient.ClearStandardInvoice(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr, clearanceMode, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return new ValidationResponse(result.Ok);
                 }
@@ -327,7 +327,7 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ComplianceRequest</c> allocated on Rust side.
     /// </returns>
@@ -349,7 +349,7 @@ public partial class ZatcaClient: IDisposable
                     var result = Raw.ZatcaClient.PrepareRequestComplianceCsid(selfLease!.Ptr, csrLease!.Ptr, new DiplomatSliceU8 { Ptr = otpPtr, Len = (nuint)otpBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return new ComplianceRequest(result.Ok);
                 }
@@ -362,7 +362,7 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ProductionRequest</c> allocated on Rust side.
     /// </returns>
@@ -380,7 +380,7 @@ public partial class ZatcaClient: IDisposable
                 var result = Raw.ZatcaClient.PrepareRequestProductionCsid(selfLease!.Ptr, credentialsLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new ProductionRequest(result.Ok);
             }
@@ -392,7 +392,7 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ProductionRequest</c> allocated on Rust side.
     /// </returns>
@@ -419,7 +419,7 @@ public partial class ZatcaClient: IDisposable
                     var result = Raw.ZatcaClient.PrepareRenewCsid(selfLease!.Ptr, credentialsLease!.Ptr, csrLease!.Ptr, new DiplomatSliceU8 { Ptr = otpPtr, Len = (nuint)otpBytes.Length }, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return new ProductionRequest(result.Ok);
                 }
@@ -433,7 +433,7 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>InvoiceRequest</c> allocated on Rust side.
     /// </returns>
@@ -454,7 +454,7 @@ public partial class ZatcaClient: IDisposable
                 var result = Raw.ZatcaClient.PrepareCheckInvoiceCompliance(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new InvoiceRequest(result.Ok);
             }
@@ -467,7 +467,7 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>InvoiceRequest</c> allocated on Rust side.
     /// </returns>
@@ -491,7 +491,7 @@ public partial class ZatcaClient: IDisposable
                     var result = Raw.ZatcaClient.PrepareReportSimplifiedInvoice(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr, clearanceMode, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return new InvoiceRequest(result.Ok);
                 }
@@ -505,7 +505,7 @@ public partial class ZatcaClient: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>InvoiceRequest</c> allocated on Rust side.
     /// </returns>
@@ -529,7 +529,7 @@ public partial class ZatcaClient: IDisposable
                     var result = Raw.ZatcaClient.PrepareClearStandardInvoice(selfLease!.Ptr, invoiceLease!.Ptr, credentialsLease!.Ptr, clearanceMode, acceptLanguage == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = acceptLanguagePtr, Len = (nuint)acceptLanguageBytes!.Length }));
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return new InvoiceRequest(result.Ok);
                 }

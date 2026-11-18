@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from fatoora import SignedInvoice
-from fatoora.errors import FfiError
+from fatoora.errors import FatooraError
 
 
 def test_signed_xml_copy_survives_close():
@@ -14,7 +14,7 @@ def test_signed_xml_copy_survives_close():
     assert copied == xml
     signed.close()
     assert copied == xml
-    with pytest.raises(FfiError):
+    with pytest.raises(FatooraError):
         signed.xml
 
 
@@ -45,7 +45,7 @@ def test_closed_facade_is_idempotent_and_rejects_use():
     signed = SignedInvoice.from_xml(path.read_text())
     signed.close()
     signed.close()
-    with pytest.raises(FfiError) as caught:
+    with pytest.raises(FatooraError) as caught:
         signed.xml
     assert caught.value.code == 1
 
@@ -66,5 +66,5 @@ def test_signed_import_rejects_tampered_qr():
     assert qr == embedded
     raw = bytearray(base64.b64decode(qr))
     raw[2] ^= 1
-    with pytest.raises(FfiError):
+    with pytest.raises(FatooraError):
         SignedInvoice.from_xml(xml.replace(qr, base64.b64encode(raw).decode()))

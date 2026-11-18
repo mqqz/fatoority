@@ -77,7 +77,7 @@ public partial class InvoiceTotals: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>VatBreakdown</c> allocated on Rust side.
     /// </returns>
@@ -92,7 +92,7 @@ public partial class InvoiceTotals: IDisposable
                 var result = Raw.InvoiceTotals.VatBreakdown(selfLease!.Ptr, index);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new VatBreakdown(result.Ok);
             }
@@ -103,7 +103,7 @@ public partial class InvoiceTotals: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public decimal TaxInclusive
     {
         get
@@ -120,7 +120,7 @@ public partial class InvoiceTotals: IDisposable
                         var result = Raw.InvoiceTotals.TaxInclusive(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
@@ -137,7 +137,7 @@ public partial class InvoiceTotals: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public decimal TaxAmount
     {
         get
@@ -154,7 +154,7 @@ public partial class InvoiceTotals: IDisposable
                         var result = Raw.InvoiceTotals.TaxAmount(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
@@ -171,7 +171,7 @@ public partial class InvoiceTotals: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public decimal LineExtension
     {
         get
@@ -188,7 +188,7 @@ public partial class InvoiceTotals: IDisposable
                         var result = Raw.InvoiceTotals.LineExtension(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
@@ -205,7 +205,7 @@ public partial class InvoiceTotals: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public decimal AllowanceTotal
     {
         get
@@ -222,7 +222,7 @@ public partial class InvoiceTotals: IDisposable
                         var result = Raw.InvoiceTotals.AllowanceTotal(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
@@ -239,7 +239,7 @@ public partial class InvoiceTotals: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public decimal ChargeTotal
     {
         get
@@ -256,7 +256,7 @@ public partial class InvoiceTotals: IDisposable
                         var result = Raw.InvoiceTotals.ChargeTotal(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
@@ -273,7 +273,7 @@ public partial class InvoiceTotals: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public decimal TaxableAmount
     {
         get
@@ -290,7 +290,7 @@ public partial class InvoiceTotals: IDisposable
                         var result = Raw.InvoiceTotals.TaxableAmount(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
@@ -307,7 +307,7 @@ public partial class InvoiceTotals: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public decimal PrepaidAmount
     {
         get
@@ -324,7 +324,7 @@ public partial class InvoiceTotals: IDisposable
                         var result = Raw.InvoiceTotals.PrepaidAmount(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
@@ -341,7 +341,7 @@ public partial class InvoiceTotals: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public decimal PayableRoundingAmount
     {
         get
@@ -358,7 +358,7 @@ public partial class InvoiceTotals: IDisposable
                         var result = Raw.InvoiceTotals.PayableRoundingAmount(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
@@ -375,7 +375,7 @@ public partial class InvoiceTotals: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public decimal PayableAmount
     {
         get
@@ -392,7 +392,7 @@ public partial class InvoiceTotals: IDisposable
                         var result = Raw.InvoiceTotals.PayableAmount(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return FatooraDecimal.Parse(writeable.ToUnicode());
                     }

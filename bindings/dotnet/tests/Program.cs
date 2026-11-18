@@ -20,12 +20,12 @@ static void Throws<T>(Action action) where T : Exception
 static void NativeError(Action action, int code, string? message = null)
 {
     try { action(); }
-    catch (FfiException error)
+    catch (FatooraException error)
     {
         Check(error.Code == code, $"Error code: {error.Code} != {code}");
-        Check(error.Kind == (FfiErrorKind)code, "Error kind");
-        Check(error.GetType() == FfiException.Create(code, "").GetType(), $"Exception type: {error.GetType().Name}");
-        Check(error is FatooraException, "Common exception base");
+        Check(error.Kind == (ErrorKind)code, "Error kind");
+        Check(error.GetType() == FatooraException.FromCode(code, "").GetType(), $"Exception type: {error.GetType().Name}");
+        Check(error.GetType().Name == $"{error.Kind}Exception", $"Exception type: {error.GetType().Name}");
         if (message != null) Check(error.Message.Contains(message), "Unexpected error message");
         using var details = JsonDocument.Parse(error.DetailsJson);
         Check(details.RootElement.ValueKind == JsonValueKind.Object, "Error details object");
@@ -54,6 +54,13 @@ foreach (var invalid in new[] { "\uD800", "\uDC00" })
 }
 NativeError(() => Address.Create("XX", "a", "b", "1", "1", null, null, null), 1, "Invalid country code");
 NativeError(() => Address.Create("SA", "bad\0city", "s", "1234", "12345", null, null, null), 1, "NUL");
+foreach (var kind in Enum.GetValues<ErrorKind>())
+{
+    var mapped = FatooraException.FromCode((int)kind, "m");
+    Check(mapped.GetType().Name == $"{kind}Exception" && mapped.Kind == kind && mapped.Code == (int)kind, $"Exception for {kind}");
+}
+var unknown = FatooraException.FromCode(99, "future", "{\"type\":\"future\"}");
+Check(unknown.GetType() == typeof(FatooraException) && unknown.Kind == null && unknown.DetailsJson == "{\"type\":\"future\"}", "Unknown error code");
 absent.Dispose(); absent.Dispose();
 Throws<ObjectDisposedException>(() => _ = absent.City);
 

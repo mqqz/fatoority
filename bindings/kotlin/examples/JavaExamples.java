@@ -39,7 +39,7 @@ public final class JavaExamples {
             return "signed by " + invoice.getIssuer();
         } catch (InvalidInputException error) {
             return "bad input: " + error.getMessage();
-        } catch (BindingException error) {
+        } catch (FatooraException error) {
             return error.getKind() + ": " + error.getMessage() + " " + error.getDetailsJson();
         }
     }

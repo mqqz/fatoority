@@ -62,7 +62,7 @@ def test_repeated_adjustment_classifications_can_be_rebuilt():
     from dataclasses import replace
     import xml.etree.ElementTree as ET
     import pytest
-    from fatoora.errors import FfiError
+    from fatoora.errors import FatooraError
 
     exemption = TaxExemption("VATEX-SA-29", "إعفاء & <test>")
     adjustment = Adjustment(Decimal("1"), "رسوم &", "95", charge=True, category=VatCategory.EXEMPT,
@@ -91,7 +91,7 @@ def test_repeated_adjustment_classifications_can_be_rebuilt():
                 b.add_adjustment(replace(restored, tax_category_count=invalid_count))
         b.add_adjustment(restored)
         for invalid_count in [0, 1025]:
-            with pytest.raises(FfiError):
+            with pytest.raises(FatooraError):
                 b.add_adjustment(replace(restored, tax_category_count=invalid_count))
         rebuilt = b.build()
         assert rebuilt.adjustments == [restored]
@@ -256,22 +256,22 @@ def test_breakdown_rate_absence_survives_all_python_entrypoints():
         parsed = FinalizedInvoice.from_xml(output)
         assert parsed.vat_breakdown == [group]
         assert parsed.line_item(0).tax_subtotals == (group,)
-    from fatoora.errors import FfiError
-    with pytest.raises(FfiError):
+    from fatoora.errors import FatooraError
+    with pytest.raises(FatooraError):
         builder().add_vat_breakdown(replace(group, category=VatCategory.STANDARD))
 
 
 def test_presence_flags_reject_hidden_values_and_keep_explicit_zeroes():
     from dataclasses import replace
     import pytest
-    from fatoora.errors import FfiError
+    from fatoora.errors import FatooraError
 
     b = builder()
     b.add_line_item("item", 1, "PCE", 100, 15, VatCategory.STANDARD)
     item = b.build().line_item(0)
     with pytest.raises(ValueError, match="omitted VAT rate"):
         builder().add_item(replace(item, omitted_vat_rate=True))
-    with pytest.raises(FfiError):
+    with pytest.raises(FatooraError):
         builder().add_item(replace(item, omitted_tax_amount=True))
-    with pytest.raises(FfiError):
+    with pytest.raises(FatooraError):
         builder().add_item(replace(item, vat_rate=Decimal(0), omitted_vat_rate=True))

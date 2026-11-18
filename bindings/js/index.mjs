@@ -1,6 +1,6 @@
 import './patch.mjs';
 import { ClearanceMode, ZatcaClient as NativeClient, Xml as NativeXml } from './generated/index.mjs';
-import { TransportError } from './errors.mjs';
+import { NetworkError } from './errors.mjs';
 
 // Generated classes re-exported unchanged (after patch.mjs). The native
 // validation report classes stay in `fatoority/raw`; `Xml` and `ZatcaClient`
@@ -17,9 +17,8 @@ export {
   ZatcaStage, ZatcaStageStatus,
 } from './generated/index.mjs';
 export {
-  ErrorCode, FatooraError, InvalidInputError, ValidationError, ParseError, XmlError, CryptoError,
-  IoError, NetworkError, UnauthorizedError, InternalError, ApiError, TransportError,
-  errorClassForCode,
+  ErrorKind, FatooraError, InvalidInputError, ValidationError, ParseError, XmlError, CryptoError,
+  IoError, NetworkError, UnauthorizedError, InternalError, ApiError,
 } from './errors.mjs';
 
 /** Require a ClearanceMode, as every other binding does; booleans and names are rejected. */
@@ -38,10 +37,16 @@ export async function sendPrepared(request, { fetch: fetchImpl = globalThis.fetc
   };
   let response;
   try { response = await fetchImpl(url, init); }
-  catch (cause) { throw new TransportError('ZATCA request failed', cause); }
+  catch (cause) {
+    const message = 'ZATCA request failed';
+    throw new NetworkError(message, { cause, details: { type: 'network', diagnostics: [{ message: String(cause?.message ?? cause) }] } });
+  }
   let body;
   try { body = new Uint8Array(await response.arrayBuffer()); }
-  catch (cause) { throw new TransportError('Could not read ZATCA response', cause, response.status); }
+  catch (cause) {
+    const message = 'Could not read ZATCA response';
+    throw new NetworkError(message, { cause, details: { type: 'api_response_read', http_status: response.status, message: String(cause?.message ?? cause) } });
+  }
   // Non-2xx statuses must reach Rust; HTTP success is not invoice acceptance.
   return request.decode(response.status, body);
 }

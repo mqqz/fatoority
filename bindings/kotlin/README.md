@@ -78,7 +78,7 @@ calls throw `IllegalStateException`. A phantom-reference queue is a fallback,
 not a substitute for closing secrets and large objects promptly. Native release
 does not erase managed strings or byte arrays.
 
-Native failures throw a `BindingException` subclass per error kind, such as
+Native failures throw a `FatooraException` subclass per error kind, such as
 `InvalidInputException`, `ValidationException`, `XmlException` or
 `NetworkException`, each with `code`, `kind`, `message`, and `detailsJson` (Java
 getters). Error data is copied and its native owner freed before throwing.

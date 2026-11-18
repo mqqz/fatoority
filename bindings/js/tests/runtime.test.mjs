@@ -15,7 +15,7 @@ const invoice = () => sdk.SignedInvoice.fromXml(loadFixture('sdk-parity/cases/si
 const credentialsBody = { requestID: 123, binarySecurityToken: 'new-token', secret: 'new-secret' };
 const validationBody = { validationResults: { status: 'PASS' }, reportingStatus: 'REPORTED' };
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status });
-const code = (n) => (error) => error instanceof sdk.errorClassForCode(n) && error.code === n
+const code = (n) => (error) => error.constructor === sdk.FatooraError.fromCode(n, '').constructor && error.code === n
   && error.cause instanceof sdk.BindingError && error.cause.code() === n;
 
 test('artifact imports only supported host functions and generates real keys', () => {
@@ -117,10 +117,11 @@ test('HTTP failures decode in Rust; network, body-read and cancellation failures
   const malformed = new sdk.ZatcaClient(config, { fetch: async () => new Response('bad') });
   await assert.rejects(malformed.reportSimplifiedInvoice(invoice(), pcsid(), sdk.ClearanceMode.Disabled), code(3));
   const broken = new sdk.ZatcaClient(config, { fetch: async () => ({ status: 200, arrayBuffer: async () => { throw new Error('read'); } }) });
-  await assert.rejects(broken.requestProductionCsid(ccsid()), e => e instanceof sdk.TransportError && e instanceof sdk.NetworkError && e.code === 7 && e.httpStatus === 200);
+  await assert.rejects(broken.requestProductionCsid(ccsid()), e => e instanceof sdk.NetworkError && e.code === 7 && e.kind === sdk.ErrorKind.Network
+    && e.details.type === 'api_response_read' && e.details.http_status === 200 && e.cause.message === 'read');
   const abort = new AbortController(); abort.abort();
   const cancelled = new sdk.ZatcaClient(config, { fetch: async (_url, {signal}) => { signal.throwIfAborted(); } });
-  await assert.rejects(cancelled.requestProductionCsid(ccsid(), {signal: abort.signal}), e => e instanceof sdk.TransportError && e.cause.name === 'AbortError');
+  await assert.rejects(cancelled.requestProductionCsid(ccsid(), {signal: abort.signal}), e => e instanceof sdk.NetworkError && e.details.type === 'network' && e.cause.name === 'AbortError');
 });
 
 test('validation uses supplied time and the public facade supplies a default', () => {
@@ -281,15 +282,19 @@ test('signed import preserves XML with line-wrapped certificates', () => {
 });
 
 test('library failures throw one error class per code', () => {
-  assert.equal(sdk.errorClassForCode(null), sdk.FatooraError);
-  assert.equal(sdk.errorClassForCode(99), sdk.FatooraError);
+  assert.equal(sdk.FatooraError.fromCode(null, 'm').constructor, sdk.FatooraError);
+  const future = sdk.FatooraError.fromCode(99, 'm', {details: {type: 'future'}});
+  assert.equal(future.constructor, sdk.FatooraError);
+  assert.deepEqual([future.code, future.kind, future.details], [99, null, {type: 'future'}]);
   const names = ['InvalidInputError', 'ValidationError', 'ParseError', 'XmlError', 'CryptoError', 'IoError',
     'NetworkError', 'UnauthorizedError', 'InternalError', 'ApiError'];
-  assert.deepEqual(Object.keys(sdk.ErrorCode), names.map(n => n.replace(/Error$/, '')));
-  for (const [kind, n] of Object.entries(sdk.ErrorCode)) {
-    const ErrorClass = sdk.errorClassForCode(n);
-    assert.equal(ErrorClass, sdk[`${kind}Error`]);
-    const error = new ErrorClass('m', {code: n});
+  assert.deepEqual(Object.keys(sdk.ErrorKind), names.map(n => n.replace(/Error$/, '')));
+  for (const [index, kind] of Object.values(sdk.ErrorKind).entries()) {
+    const n = index + 1;
+    const ErrorClass = sdk[`${kind}Error`];
+    const error = sdk.FatooraError.fromCode(n, 'm');
+    assert.equal(error.constructor, ErrorClass);
+    assert.equal(error.code, n);
     assert.ok(error instanceof sdk.FatooraError && error instanceof Error);
     assert.equal(error.name, `${kind}Error`);
     assert.equal(error.kind, kind);
@@ -301,9 +306,6 @@ test('library failures throw one error class per code', () => {
   const base = new sdk.FatooraError('m');
   assert.equal(base.code, null);
   assert.equal(base.kind, null);
-  const transport = new sdk.TransportError('m', new Error('x'));
-  assert.equal(transport.code, sdk.ErrorCode.Network);
-  assert.equal(transport.kind, 'Network');
   let error;
   try { sdk.Address.create('SAU', 'bad\0city', 'street', '1234', '12222', null, null, null); }
   catch (caught) { error = caught; }

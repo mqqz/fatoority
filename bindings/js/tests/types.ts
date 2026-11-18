@@ -1,8 +1,8 @@
 import {
   Address, Adjustment, ClearanceMode, Config, Environment, FatooraError, InvalidInputError, InvoiceBuilder,
-  InvoiceSubType, InvoiceTypeKind, LineItemBuilder, PaymentMeans, ReportingStatus, Severity, TransportError, NetworkError,
-  ZatcaClient, ComplianceCsid, Xml, errorClassForCode, ErrorCode, sendPrepared,
-  type EnvironmentValue, type ErrorKind, type ProductionCsid, type SeverityValue, type SignedInvoice,
+  InvoiceSubType, InvoiceTypeKind, LineItemBuilder, PaymentMeans, ReportingStatus, Severity, NetworkError, ErrorKind,
+  ZatcaClient, ComplianceCsid, Xml, sendPrepared,
+  type EnvironmentValue, type ProductionCsid, type SeverityValue, type SignedInvoice,
   type ValidationResponse, type ZatcaFinding, type ZatcaStageReport, type ZatcaValidationReport,
 } from 'fatoority';
 import { ZatcaClient as RawClient, Config as RawConfig } from 'fatoority/raw';
@@ -66,10 +66,11 @@ const environment: EnvironmentValue = 'Simulation';
 try { Config.create(Environment.Production); }
 catch (error) {
   if (error instanceof InvalidInputError) { const code: 1 = error.code; void code; }
-  if (error instanceof TransportError) { const status: number | undefined = error.httpStatus; const network: NetworkError = error; void [status, network]; }
+  if (error instanceof NetworkError) { const kind: 'Network' = error.kind; const network: FatooraError = error; void [kind, network]; }
+  if (error instanceof FatooraError && error.kind === ErrorKind.Network) { const kind: ErrorKind = error.kind; void kind; }
   if (error instanceof FatooraError) { const kind: ErrorKind | null = error.kind; const details: Record<string, unknown> = error.details; void [kind, details]; }
 }
-const ErrorClass: typeof FatooraError = errorClassForCode(ErrorCode.Crypto);
+const crypto: FatooraError = FatooraError.fromCode(5, 'message', { details: {} });
 
 declare const validation: ValidationResponse;
 const status: ReportingStatus | null = validation.reportingStatus;
@@ -80,5 +81,5 @@ const xml: string = invoice.xml;
 const counter: bigint = invoice.data().invoiceCounter;
 const url: string = prepared.url;
 
-void [response, sent, reported, cleared, line, legacy, valid, bogus, severity, environment, ErrorClass,
+void [response, sent, reported, cleared, line, legacy, valid, bogus, severity, environment, crypto,
   percentage, amount, city, district, environmentProperty, status, statusText, httpStatus, results, xml, counter, url];

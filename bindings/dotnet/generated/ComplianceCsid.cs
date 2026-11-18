@@ -57,7 +57,7 @@ public partial class ComplianceCsid: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ComplianceCsid</c> allocated on Rust side.
     /// </returns>
@@ -77,14 +77,14 @@ public partial class ComplianceCsid: IDisposable
                 var result = Raw.ComplianceCsid.New(environment, requestId == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = requestIdPtr, Len = (nuint)requestIdBytes!.Length }), new DiplomatSliceU8 { Ptr = tokenPtr, Len = (nuint)tokenBytes.Length }, new DiplomatSliceU8 { Ptr = secretPtr, Len = (nuint)secretBytes.Length });
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new ComplianceCsid(result.Ok);
             }
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public ZatcaEnvironment Env
     {
         get
@@ -98,7 +98,7 @@ public partial class ComplianceCsid: IDisposable
                     var result = Raw.ComplianceCsid.Env(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return result.Ok;
                 }
@@ -110,7 +110,7 @@ public partial class ComplianceCsid: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? RequestId
     {
         get
@@ -124,7 +124,7 @@ public partial class ComplianceCsid: IDisposable
                     var result = Raw.ComplianceCsid.RequestId(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
@@ -136,7 +136,7 @@ public partial class ComplianceCsid: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string BinarySecurityToken
     {
         get
@@ -153,7 +153,7 @@ public partial class ComplianceCsid: IDisposable
                         var result = Raw.ComplianceCsid.BinarySecurityToken(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -170,7 +170,7 @@ public partial class ComplianceCsid: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Secret
     {
         get
@@ -187,7 +187,7 @@ public partial class ComplianceCsid: IDisposable
                         var result = Raw.ComplianceCsid.Secret(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }

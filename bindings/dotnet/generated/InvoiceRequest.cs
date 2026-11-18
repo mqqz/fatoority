@@ -57,7 +57,7 @@ public partial class InvoiceRequest: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Method
     {
         get
@@ -74,7 +74,7 @@ public partial class InvoiceRequest: IDisposable
                         var result = Raw.InvoiceRequest.Method(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -91,7 +91,7 @@ public partial class InvoiceRequest: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Url
     {
         get
@@ -108,7 +108,7 @@ public partial class InvoiceRequest: IDisposable
                         var result = Raw.InvoiceRequest.Url(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -125,7 +125,7 @@ public partial class InvoiceRequest: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string HeadersJson
     {
         get
@@ -142,7 +142,7 @@ public partial class InvoiceRequest: IDisposable
                         var result = Raw.InvoiceRequest.HeadersJson(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -159,7 +159,7 @@ public partial class InvoiceRequest: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>Bytes</c> allocated on Rust side.
     /// </returns>
@@ -174,7 +174,7 @@ public partial class InvoiceRequest: IDisposable
                 var result = Raw.InvoiceRequest.Body(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new Bytes(result.Ok);
             }
@@ -185,7 +185,7 @@ public partial class InvoiceRequest: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ValidationResponse</c> allocated on Rust side.
     /// </returns>
@@ -203,7 +203,7 @@ public partial class InvoiceRequest: IDisposable
                     var result = Raw.InvoiceRequest.Decode(selfLease!.Ptr, status, new DiplomatSliceU8 { Ptr = bodyPtr, Len = (nuint)body.Length });
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return new ValidationResponse(result.Ok);
                 }

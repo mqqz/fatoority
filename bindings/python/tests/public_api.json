@@ -132,9 +132,8 @@
     "SIMULATION": "member",
     "PRODUCTION": "member"
   },
+  "ErrorKind": {},
   "FatooraError": {},
-  "FfiError": {},
-  "FfiErrorKind": {},
   "FinalizedInvoice": {
     "actual_delivery_date": "property",
     "adjustments": "property",

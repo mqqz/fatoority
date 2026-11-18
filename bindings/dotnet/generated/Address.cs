@@ -57,7 +57,7 @@ public partial class Address: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>Address</c> allocated on Rust side.
     /// </returns>
@@ -76,7 +76,7 @@ public partial class Address: IDisposable
                     var result = Raw.Address.WithProvince(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return new Address(result.Ok);
                 }
@@ -121,7 +121,7 @@ public partial class Address: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>Address</c> allocated on Rust side.
     /// </returns>
@@ -154,14 +154,14 @@ public partial class Address: IDisposable
                 var result = Raw.Address.New(new DiplomatSliceU8 { Ptr = countryCodePtr, Len = (nuint)countryCodeBytes.Length }, new DiplomatSliceU8 { Ptr = cityPtr, Len = (nuint)cityBytes.Length }, new DiplomatSliceU8 { Ptr = streetPtr, Len = (nuint)streetBytes.Length }, new DiplomatSliceU8 { Ptr = buildingNumberPtr, Len = (nuint)buildingNumberBytes.Length }, new DiplomatSliceU8 { Ptr = postalCodePtr, Len = (nuint)postalCodeBytes.Length }, additionalStreet == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = additionalStreetPtr, Len = (nuint)additionalStreetBytes!.Length }), additionalNumber == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = additionalNumberPtr, Len = (nuint)additionalNumberBytes!.Length }), district == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = districtPtr, Len = (nuint)districtBytes!.Length }));
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new Address(result.Ok);
             }
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string City
     {
         get
@@ -178,7 +178,7 @@ public partial class Address: IDisposable
                         var result = Raw.Address.City(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -195,7 +195,7 @@ public partial class Address: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Street
     {
         get
@@ -212,7 +212,7 @@ public partial class Address: IDisposable
                         var result = Raw.Address.Street(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -229,7 +229,7 @@ public partial class Address: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string BuildingNumber
     {
         get
@@ -246,7 +246,7 @@ public partial class Address: IDisposable
                         var result = Raw.Address.BuildingNumber(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -263,7 +263,7 @@ public partial class Address: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string PostalCode
     {
         get
@@ -280,7 +280,7 @@ public partial class Address: IDisposable
                         var result = Raw.Address.PostalCode(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -297,7 +297,7 @@ public partial class Address: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string CountryCode
     {
         get
@@ -314,7 +314,7 @@ public partial class Address: IDisposable
                         var result = Raw.Address.CountryCode(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -331,7 +331,7 @@ public partial class Address: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? AdditionalStreet
     {
         get
@@ -345,7 +345,7 @@ public partial class Address: IDisposable
                     var result = Raw.Address.AdditionalStreet(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
@@ -357,7 +357,7 @@ public partial class Address: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? AdditionalNumber
     {
         get
@@ -371,7 +371,7 @@ public partial class Address: IDisposable
                     var result = Raw.Address.AdditionalNumber(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
@@ -383,7 +383,7 @@ public partial class Address: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? District
     {
         get
@@ -397,7 +397,7 @@ public partial class Address: IDisposable
                     var result = Raw.Address.District(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }

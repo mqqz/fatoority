@@ -57,7 +57,7 @@ public partial class OriginalInvoiceRef: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>OriginalInvoiceRef</c> allocated on Rust side.
     /// </returns>
@@ -80,14 +80,14 @@ public partial class OriginalInvoiceRef: IDisposable
                 var result = Raw.OriginalInvoiceRef.New(new DiplomatSliceU8 { Ptr = idPtr, Len = (nuint)idBytes.Length }, uuid == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = uuidPtr, Len = (nuint)uuidBytes!.Length }), date == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = datePtr, Len = (nuint)dateBytes!.Length }), time == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = timePtr, Len = (nuint)timeBytes!.Length }), typeCode == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = typeCodePtr, Len = (nuint)typeCodeBytes!.Length }));
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new OriginalInvoiceRef(result.Ok);
             }
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? IssueTime
     {
         get
@@ -101,7 +101,7 @@ public partial class OriginalInvoiceRef: IDisposable
                     var result = Raw.OriginalInvoiceRef.IssueTime(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
@@ -113,7 +113,7 @@ public partial class OriginalInvoiceRef: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? DocumentTypeCode
     {
         get
@@ -127,7 +127,7 @@ public partial class OriginalInvoiceRef: IDisposable
                     var result = Raw.OriginalInvoiceRef.DocumentTypeCode(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
@@ -139,7 +139,7 @@ public partial class OriginalInvoiceRef: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Id
     {
         get
@@ -156,7 +156,7 @@ public partial class OriginalInvoiceRef: IDisposable
                         var result = Raw.OriginalInvoiceRef.Id(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -173,7 +173,7 @@ public partial class OriginalInvoiceRef: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? Uuid
     {
         get
@@ -187,7 +187,7 @@ public partial class OriginalInvoiceRef: IDisposable
                     var result = Raw.OriginalInvoiceRef.Uuid(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
@@ -199,7 +199,7 @@ public partial class OriginalInvoiceRef: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? IssueDate
     {
         get
@@ -213,7 +213,7 @@ public partial class OriginalInvoiceRef: IDisposable
                     var result = Raw.OriginalInvoiceRef.IssueDate(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }

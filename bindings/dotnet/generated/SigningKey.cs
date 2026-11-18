@@ -57,7 +57,7 @@ public partial class SigningKey: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>SigningKey</c> allocated on Rust side.
     /// </returns>
@@ -68,13 +68,13 @@ public partial class SigningKey: IDisposable
             var result = Raw.SigningKey.Generate();
             if (!result.IsOk)
             {
-                throw FfiException.FromNative(new BindingError(result.Err));
+                throw FatooraException.FromNative(new BindingError(result.Err));
             }
             return new SigningKey(result.Ok);
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>SigningKey</c> allocated on Rust side.
     /// </returns>
@@ -89,14 +89,14 @@ public partial class SigningKey: IDisposable
                 var result = Raw.SigningKey.FromPem(new DiplomatSliceU8 { Ptr = pemPtr, Len = (nuint)pemBytes.Length });
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new SigningKey(result.Ok);
             }
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>SigningKey</c> allocated on Rust side.
     /// </returns>
@@ -110,14 +110,14 @@ public partial class SigningKey: IDisposable
                 var result = Raw.SigningKey.FromDer(new DiplomatSliceU8 { Ptr = derPtr, Len = (nuint)der.Length });
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new SigningKey(result.Ok);
             }
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string ToPem()
     {
         unsafe
@@ -132,7 +132,7 @@ public partial class SigningKey: IDisposable
                     var result = Raw.SigningKey.ToPem(selfLease!.Ptr, &writeable);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return writeable.ToUnicode();
                 }
@@ -148,7 +148,7 @@ public partial class SigningKey: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>Bytes</c> allocated on Rust side.
     /// </returns>
@@ -163,7 +163,7 @@ public partial class SigningKey: IDisposable
                 var result = Raw.SigningKey.ToDer(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new Bytes(result.Ok);
             }

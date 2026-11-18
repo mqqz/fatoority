@@ -15,7 +15,7 @@ from typing import Any, Optional, Union
 import uuid as _uuid
 
 from . import _native
-from .errors import InvalidInputError, error_class_for_code
+from .errors import FatooraError, InvalidInputError
 
 class Environment(IntEnum):
     NON_PRODUCTION = 0
@@ -209,7 +209,7 @@ class _Owned:
 
     def _require_open(self):
         if self._handle is None:
-            raise InvalidInputError("object is closed", 1, {"type": "binding_error"})
+            raise InvalidInputError("object is closed", details={"type": "binding_error"})
         return self._handle
 
     def _invoke(self, name, *args):
@@ -242,7 +242,7 @@ def _call(function, *args):
                 raise
             error = exc.args[0]
             code = error.code()
-            raise error_class_for_code(code)(error.message(), code, json.loads(error.details_json())) from None
+            raise FatooraError.from_code(code, error.message(), json.loads(error.details_json())) from None
         return _convert(value)
 
 
@@ -1283,7 +1283,7 @@ class _Invoice(_Owned):
     def line_item(self, index: int) -> InvoiceLineItem:
         line_items = self._get("line_items")
         if not 0 <= index < len(line_items):
-            raise InvalidInputError("line item index out of range", 1, {"type": "binding_error"})
+            raise InvalidInputError("line item index out of range", details={"type": "binding_error"})
         return line_items[index]
 
     @staticmethod

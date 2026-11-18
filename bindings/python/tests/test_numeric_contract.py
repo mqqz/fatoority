@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 import pytest
-from fatoora.errors import FfiError
+from fatoora.errors import FatooraError
 
 from fatoora import InvoiceBuilder, InvoiceSubType, InvoiceTypeKind, PaymentMeans, VatCategory
 
@@ -44,7 +44,7 @@ def test_float_input_is_rejected():
 @pytest.mark.parametrize("bad", ["NaN", "1e2", "0.00000000000000000000000000001"])
 def test_invalid_decimal_reaches_binding_error(bad):
     b = builder()
-    with pytest.raises(FfiError) as error:
+    with pytest.raises(FatooraError) as error:
         b.add_line_item("item", 1, "PCE", bad, 15, VatCategory.STANDARD)
     assert "unit_price" in str(error.value)
 

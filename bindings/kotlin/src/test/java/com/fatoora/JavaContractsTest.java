@@ -64,8 +64,8 @@ public class JavaContractsTest {
             assertEquals(ErrorKind.InvalidInput, e.getKind());
             assertNotNull(e.getMessage());
         }
-        try { Address.create("XX", "a", "b", "1", "1"); fail("Expected BindingException"); }
-        catch (BindingException e) { assertTrue(e instanceof InvalidInputException); }
+        try { Address.create("XX", "a", "b", "1", "1"); fail("Expected FatooraException"); }
+        catch (FatooraException e) { assertTrue(e instanceof InvalidInputException); }
     }
 
     @Test public void javaSeesAmountsAndPropertyGetters() {

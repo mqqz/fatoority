@@ -77,7 +77,7 @@ public partial class Party: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>OtherId</c> allocated on Rust side.
     /// </returns>
@@ -92,7 +92,7 @@ public partial class Party: IDisposable
                 var result = Raw.Party.Identifier(selfLease!.Ptr, index);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new OtherId(result.Ok);
             }
@@ -103,7 +103,7 @@ public partial class Party: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>Address</c> allocated on Rust side.
     /// </returns>
@@ -118,7 +118,7 @@ public partial class Party: IDisposable
                 var result = Raw.Party.Address(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return result.Ok == null ? null : new Address(result.Ok);
             }
@@ -129,7 +129,7 @@ public partial class Party: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>VatId</c> allocated on Rust side.
     /// </returns>
@@ -144,7 +144,7 @@ public partial class Party: IDisposable
                 var result = Raw.Party.VatId(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return result.Ok == null ? null : new VatId(result.Ok);
             }
@@ -155,7 +155,7 @@ public partial class Party: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>OtherId</c> allocated on Rust side.
     /// </returns>
@@ -170,7 +170,7 @@ public partial class Party: IDisposable
                 var result = Raw.Party.OtherId(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return result.Ok == null ? null : new OtherId(result.Ok);
             }
@@ -181,7 +181,7 @@ public partial class Party: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Name
     {
         get
@@ -198,7 +198,7 @@ public partial class Party: IDisposable
                         var result = Raw.Party.Name(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }

@@ -78,7 +78,7 @@ public partial class ValidationResults: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? StatusRaw
     {
         get
@@ -92,7 +92,7 @@ public partial class ValidationResults: IDisposable
                     var result = Raw.ValidationResults.StatusRaw(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
@@ -124,7 +124,7 @@ public partial class ValidationResults: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ValidationMessage</c> allocated on Rust side.
     /// </returns>
@@ -139,7 +139,7 @@ public partial class ValidationResults: IDisposable
                 var result = Raw.ValidationResults.InfoMessage(selfLease!.Ptr, index);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new ValidationMessage(result.Ok);
             }
@@ -170,7 +170,7 @@ public partial class ValidationResults: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ValidationMessage</c> allocated on Rust side.
     /// </returns>
@@ -185,7 +185,7 @@ public partial class ValidationResults: IDisposable
                 var result = Raw.ValidationResults.WarningMessage(selfLease!.Ptr, index);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new ValidationMessage(result.Ok);
             }
@@ -216,7 +216,7 @@ public partial class ValidationResults: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ValidationMessage</c> allocated on Rust side.
     /// </returns>
@@ -231,7 +231,7 @@ public partial class ValidationResults: IDisposable
                 var result = Raw.ValidationResults.ErrorMessage(selfLease!.Ptr, index);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new ValidationMessage(result.Ok);
             }

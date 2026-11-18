@@ -57,7 +57,7 @@ public partial class InvoiceNote: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? LanguageId
     {
         get
@@ -71,7 +71,7 @@ public partial class InvoiceNote: IDisposable
                     var result = Raw.InvoiceNote.LanguageId(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
@@ -83,7 +83,7 @@ public partial class InvoiceNote: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Language
     {
         get
@@ -100,7 +100,7 @@ public partial class InvoiceNote: IDisposable
                         var result = Raw.InvoiceNote.Language(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -117,7 +117,7 @@ public partial class InvoiceNote: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Text
     {
         get
@@ -134,7 +134,7 @@ public partial class InvoiceNote: IDisposable
                         var result = Raw.InvoiceNote.Text(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
