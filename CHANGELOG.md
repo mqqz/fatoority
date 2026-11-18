@@ -125,6 +125,15 @@ Kotlin/Java (`com.fatoority:fatoority`, `fatoority-android`): every
   `clearStandardInvoiceAsync` (pass a `ClearanceMode`).
 - The `com.fatoora.Text` class, which only the removed getter functions
   returned (optional text properties are `String?`).
+JavaScript/TypeScript (`fatoority` on npm): every name marked `@deprecated`
+in 0.6 is removed from the package root and `fatoority/raw`; see the
+[JavaScript migration guide](https://docs.fatoority.com/guides/migrate-0.7/javascript/).
+
+- `new_` on every class with a Rust `new` constructor (use `create`).
+- `Adjustment.percentage(base, percent)`, `adjustment.withSuppliedAmount`,
+  `adjustment.percent()` and `withoutVatRate()` on `AllowanceCharge` and
+  `VatBreakdown` (use `Adjustment.percentOf`, `suppliedAmount`, the
+  `percentage` property and `omitVatRate()`).
 
 ## [0.6.0] - 2026-11-18
 

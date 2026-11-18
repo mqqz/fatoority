@@ -8,11 +8,11 @@ import {
 import { ZatcaClient as RawClient, Config as RawConfig } from 'fatoority/raw';
 
 const config = Config.create(Environment.NonProduction);
-const rawConfig: Config = RawConfig.new_(Environment.NonProduction); // raw instances are root instances
+const rawConfig: Config = RawConfig.create(Environment.NonProduction); // raw instances are root instances
 const credentials = ComplianceCsid.create(Environment.NonProduction, '1', 'token', 'secret');
 const client = new ZatcaClient(config, {fetch});
 const response: Promise<ProductionCsid> = client.requestProductionCsid(credentials, {signal: new AbortController().signal});
-const prepared = RawClient.new_(rawConfig).prepareRequestProductionCsid(credentials);
+const prepared = RawClient.create(rawConfig).prepareRequestProductionCsid(credentials);
 const sent: Promise<ProductionCsid> = sendPrepared(prepared);
 declare const invoice: SignedInvoice, production: ProductionCsid;
 const reported: Promise<ValidationResponse> = client.reportSimplifiedInvoice(invoice, production, ClearanceMode.Disabled);
@@ -33,9 +33,12 @@ const district: string | null = Address.create('SA', 'Riyadh', 'Street', '1234',
 const environmentProperty: Environment = rawConfig.env;
 // @ts-expect-error properties are read-only
 rawConfig.env = Environment.Production;
-/** 0.5 names still type-check until 0.7. */
-const legacyRebate: Adjustment = Adjustment.percentage('250', '10').withSuppliedAmount('25');
-const legacyPercent: string | undefined = legacyRebate.percent()?.value();
+// @ts-expect-error the 0.5 names were removed in 0.7
+Adjustment.percentage('250', '10');
+// @ts-expect-error the 0.5 names were removed in 0.7
+rebate.withSuppliedAmount('25');
+// @ts-expect-error `new_` was removed in 0.7
+Config.new_(Environment.NonProduction);
 line.addAllowance(rebate);
 // @ts-expect-error generated constructors are not public
 new Config();
@@ -73,4 +76,4 @@ const counter: bigint = invoice.data().invoiceCounter;
 const url: string = prepared.url;
 
 void [response, sent, reported, cleared, named, line, legacy, valid, bogus, severity, environment, ErrorClass,
-  percentage, amount, city, district, environmentProperty, status, statusText, httpStatus, results, xml, counter, url, legacyPercent];
+  percentage, amount, city, district, environmentProperty, status, statusText, httpStatus, results, xml, counter, url];
