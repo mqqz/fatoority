@@ -139,7 +139,7 @@ The signed computed hash equals the XML hash operation on `xml()`. Signed import
 
     `SignedInvoice` string properties: `Xml`, `QrCode`, `InvoiceHash`, `Hash`, `Signature`, `PublicKey`, `Issuer`, `Serial`, `CertHash`, `SignedPropsHash`, `SigningTime`; `ZatcaKeySignature` is `string?`. `ToXmlBase64()` remains a method returning `string`.
 
-    Dispose native owners, including certificate `Bytes`. The native copy returned by `Bytes.AsSlice()` must also be disposed; `Clone()` copies it into a `byte[]`. Native failures throw `FatooraException` subclasses such as `CryptoException`.
+    Dispose native owners, including certificate `Bytes`; `Bytes.ToArray()` copies the bytes into a `byte[]`. Native failures throw `FatooraException` subclasses such as `CryptoException`.
 
 === "Kotlin"
 

@@ -5,7 +5,7 @@ namespace Fatoora.Diplomat;
 
 #nullable enable
 
-public delegate void RustVecSpanAction(Span<byte> span);
+internal delegate void RustVecSpanAction(Span<byte> span);
 
 /// <summary>
 /// Owns a Rust <c>Box&lt;[u8]&gt;</c> without copying it into managed memory.
@@ -15,7 +15,7 @@ public delegate void RustVecSpanAction(Span<byte> span);
 /// when an explicit GC-managed copy is needed. Use <c>using</c> for deterministic cleanup;
 /// the finalizer is a fallback when the owner is not disposed.
 /// </summary>
-public sealed class RustVec : IDisposable
+internal sealed class RustVec : IDisposable
 {
     private readonly object _gate = new object();
     private IntPtr _ptr;

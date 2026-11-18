@@ -25,10 +25,11 @@ pub mod ffi {
             &self.0
         }
 
-        /// Independent copy for .NET, where `Bytes` is manually disposable and
-        /// Diplomat rejects views that borrow from such owners.
+        /// Copy of the bytes, independent of this owner.
+        // .NET only: `Bytes` is manually disposable there and Diplomat rejects
+        // views that borrow from such owners. The facade returns a `byte[]`.
         #[diplomat::attr(not(dotnet), disable)]
-        #[diplomat::attr(dotnet, rename = "AsSlice")]
+        #[diplomat::attr(dotnet, rename = "ToArray")]
         pub fn to_owned_slice(&self) -> Box<[u8]> {
             self.0.clone().into_boxed_slice()
         }

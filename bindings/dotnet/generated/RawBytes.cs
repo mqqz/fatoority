@@ -10,7 +10,7 @@ internal partial struct Bytes
 {
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Bytes_to_owned_slice", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatOwnedSliceU8 AsSlice(Bytes* handle);
+    internal static unsafe extern DiplomatOwnedSliceU8 ToArray(Bytes* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Bytes_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(Bytes* handle);

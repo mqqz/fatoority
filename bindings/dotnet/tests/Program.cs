@@ -35,8 +35,7 @@ static void NativeError(Action action, int code, string? message = null)
 }
 static byte[] Copy(Bytes bytes)
 {
-    using (bytes)
-    using (var span = bytes.AsSlice()) return span.Clone();
+    using (bytes) return bytes.ToArray();
 }
 var root = args[0];
 using var absent = Address.Create("SA", "الرياض", "Street", "1234", "12345", null, null, null);
@@ -72,15 +71,11 @@ var der = Copy(key.ToDer());
 using var restoredDer = SigningKey.FromDer(der);
 Check(restoredDer.ToPem() == pem, "DER round trip");
 using var bytes = key.ToDer();
-using var borrowed = bytes.AsSlice();
-borrowed.WithSpan(s => {
-    bytes.Dispose();
-    Check(s.SequenceEqual(der), "Active read survives owner disposal");
-    Throws<InvalidOperationException>(() => borrowed.Dispose());
-});
-Check(borrowed.Clone().SequenceEqual(der), "Copy survives owner disposal");
-borrowed.Dispose();
-Throws<ObjectDisposedException>(() => borrowed.Clone());
+var copy = bytes.ToArray();
+Check(copy.SequenceEqual(der) && !ReferenceEquals(copy, bytes.ToArray()), "Independent byte copies");
+bytes.Dispose();
+Check(copy.SequenceEqual(der), "Copy survives owner disposal");
+Throws<ObjectDisposedException>(() => bytes.ToArray());
 key.Dispose();
 Throws<ObjectDisposedException>(() => key.ToPem());
 NativeError(() => SigningKey.FromDer(new byte[] { 1, 2 }), 1);

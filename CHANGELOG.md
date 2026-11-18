@@ -16,10 +16,10 @@
 - Python: drop support for Python 3.9, which reached end of life in October
   2025. The package now requires Python 3.10 or newer and no longer ships
   `cp39` wheels.
-- C#: `Bytes.AsSlice()` returns a `RustVec` holding a native copy of the bytes
-  instead of a `DiplomatBorrowedSpan<byte>` view, so it stays valid after its
-  owner is disposed. `Clone()`, `WithSpan()`, `Length` and `using` work as
-  before.
+- C#: `Bytes.AsSlice()`, which returned a disposable `DiplomatBorrowedSpan<byte>`
+  view, is replaced by `Bytes.ToArray()`, which returns a new `byte[]` that
+  stays valid after its owner is disposed. No `Fatoora.Diplomat` byte-view type
+  is public any more.
 - Bindings: the `Text` string handle is removed from every binding: the
   JavaScript package root and `fatoority/raw` no longer export it, and the
   C# `Fatoora.Text`, Kotlin `com.fatoora.raw.Text`, C++ `fatoora::Text` and

@@ -57,7 +57,7 @@ public partial class Bytes: IDisposable
         }
     }
 
-    public RustVec AsSlice()
+    public byte[] ToArray()
     {
         unsafe
         {
@@ -65,8 +65,8 @@ public partial class Bytes: IDisposable
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.Bytes.AsSlice(selfLease!.Ptr);
-                return new RustVec(result.Ptr, result.Len);
+                var result = Raw.Bytes.ToArray(selfLease!.Ptr);
+                using (var copy = new RustVec(result.Ptr, result.Len)) return copy.Clone();
             }
             finally
             {

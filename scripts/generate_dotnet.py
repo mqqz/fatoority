@@ -24,7 +24,9 @@ them a second time this script rewrites the generated wrappers in place:
 * the Rust ``new`` constructors become ``Create`` factory methods, matching
   the Kotlin and JavaScript packages;
 * raw millisecond overloads in ``PRIVATE_METHODS`` become private helpers
-  behind the ``TimeSpan`` overloads in ``bindings/dotnet/src``.
+  behind the ``TimeSpan`` overloads in ``bindings/dotnet/src``;
+* owned native byte buffers (``RustVec``) are copied into ``byte[]`` and freed
+  at once, so ``RustVec`` stays internal.
 
 Decimal members are derived from the Rust sources, so new FFI members are
 picked up without editing this script.
@@ -167,6 +169,13 @@ def transform_class(name, text, inputs, outputs, enums):
                               "return FatooraDecimal.Parse(writeable.ToUnicode());") for b in body]
             if not any("FatooraDecimal.Parse(" in b for b in body):
                 raise SystemExit(f"{name}.{method}: unexpected decimal result conversion")
+        if ret == "RustVec":
+            ret = "byte[]"
+            owned = "return new RustVec(result.Ptr, result.Len);"
+            if not any(b.strip() == owned for b in body):
+                raise SystemExit(f"{name}.{method}: unexpected RustVec result")
+            body = [b.replace(owned, "using (var copy = new RustVec(result.Ptr, result.Len)) return copy.Clone();")
+                    for b in body]
         if method in optional_pairs:
             ret += "?"
             body = [f"        if (!{method}Present)", "        {", "            return null;", "        }"] + body
@@ -223,6 +232,12 @@ def transform(sources):
         sources[file] = text
     # Upstream Diplomat encodes `string` inputs with the lenient UTF-8 encoder, which turns
     # unpaired surrogates into U+FFFD. Keep rejecting them (EncoderFallbackException).
+    # Byte buffers reach callers as byte[] copies; the native owner stays internal.
+    for public, internal in (("public sealed class RustVec", "internal sealed class RustVec"),
+                             ("public delegate void RustVecSpanAction", "internal delegate void RustVecSpanAction")):
+        if public not in sources["RustVec.cs"]:
+            raise SystemExit(f"Unexpected RustVec.cs; update the rewrite of {public!r}")
+        sources["RustVec.cs"] = sources["RustVec.cs"].replace(public, internal)
     lenient = "public static byte[] Clone(string value) => System.Text.Encoding.UTF8.GetBytes(value);"
     if lenient not in sources["Utf8.cs"]:
         raise SystemExit("Unexpected Utf8.Clone in C# output; update the strict UTF-8 rewrite")

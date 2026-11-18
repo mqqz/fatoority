@@ -115,7 +115,7 @@ The combined check covers all generators, including C# and Kotlin. It requires a
     python3 scripts/check_dotnet.py
     ```
 
-    To test an already built NuGet package as well, pass `--package-dir dist/dotnet`. Keep disposal, optional results, borrowed byte views and error ownership covered by the package tests.
+    To test an already built NuGet package as well, pass `--package-dir dist/dotnet`. Keep disposal, optional results, byte copies and error ownership covered by the package tests.
 
 === "Kotlin and Java"
 
