@@ -96,10 +96,8 @@ export declare class AllowanceCharge {
 
 export declare class Bytes {
   private constructor();
-  /**
-   * The view is valid while this immutable owner remains alive.
-   */
-  asSlice(): Array<number>;
+  /** Copy the bytes into a new `Uint8Array`, independent of this object. */
+  toUint8Array(): Uint8Array;
 }
 
 export declare class BytesList {
@@ -127,7 +125,7 @@ export declare class ComplianceRequest {
   get url(): string;
   get headersJson(): string;
   body(): Bytes;
-  decode(status: number, body: Array<number>): ComplianceCsid;
+  decode(status: number, body: Uint8Array | readonly number[]): ComplianceCsid;
 }
 
 export declare class Config {
@@ -138,7 +136,7 @@ export declare class Config {
 
 export declare class Csr {
   private constructor();
-  static fromDer(der: Array<number>): Csr;
+  static fromDer(der: Uint8Array | readonly number[]): Csr;
   toDer(): Bytes;
   toPem(): string;
   toBase64(): string;
@@ -305,13 +303,13 @@ export declare class InvoiceRequest {
   get url(): string;
   get headersJson(): string;
   body(): Bytes;
-  decode(status: number, body: Array<number>): ValidationResponse;
+  decode(status: number, body: Uint8Array | readonly number[]): ValidationResponse;
 }
 
 export declare class InvoiceSigner {
   private constructor();
   static fromPem(certPem: string, keyPem: string): InvoiceSigner;
-  static fromDer(certDer: Array<number>, keyDer: Array<number>): InvoiceSigner;
+  static fromDer(certDer: Uint8Array | readonly number[], keyDer: Uint8Array | readonly number[]): InvoiceSigner;
   certificateDer(): Bytes;
   get certificatePem(): string;
   sign(invoice: FinalizedInvoice): SignedInvoice;
@@ -421,7 +419,7 @@ export declare class ProductionRequest {
   get url(): string;
   get headersJson(): string;
   body(): Bytes;
-  decode(status: number, body: Array<number>): ProductionCsid;
+  decode(status: number, body: Uint8Array | readonly number[]): ProductionCsid;
 }
 
 export declare class SignedInvoice {
@@ -452,7 +450,7 @@ export declare class SigningKey {
   private constructor();
   static generate(): SigningKey;
   static fromPem(pem: string): SigningKey;
-  static fromDer(der: Array<number>): SigningKey;
+  static fromDer(der: Uint8Array | readonly number[]): SigningKey;
   toPem(): string;
   toDer(): Bytes;
 }

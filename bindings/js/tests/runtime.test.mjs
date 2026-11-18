@@ -54,15 +54,15 @@ test('decimal values remain exact and consumed builders fail safely', () => {
 test('prepared request retains context after invoice consumption and WASM memory growth', () => {
   const inv = invoice();
   const request = raw.ZatcaClient.create(config).prepareReportSimplifiedInvoice(inv, pcsid(), sdk.ClearanceMode.Disabled, 'ar');
-  const bytes = request.body().asSlice();
+  const bytes = request.body().toUint8Array();
   const original = JSON.parse(Buffer.from(bytes).toString());
   assert.match(inv.zatcaKeySignature, /^[A-Za-z0-9+/]+=*$/);
   inv.intoXml();
   assert.throws(() => inv.zatcaKeySignature, code(1));
   wasm.memory.grow(1);
   for (let i = 0; i < 20; i++) sdk.SigningKey.generate();
-  assert.equal(JSON.parse(Buffer.from(request.body().asSlice()).toString()).invoiceHash, original.invoiceHash);
-  const result = request.decode(200, [...Buffer.from(JSON.stringify(validationBody))]);
+  assert.equal(JSON.parse(Buffer.from(request.body().toUint8Array()).toString()).invoiceHash, original.invoiceHash);
+  const result = request.decode(200, new TextEncoder().encode(JSON.stringify(validationBody)));
   assert.equal(result.httpStatus, 200);
   assert.equal(result.outcome.value, 'Accepted');
   assert.equal(result.reportingStatus, sdk.ReportingStatus.Reported);
@@ -218,10 +218,31 @@ test('documented examples and signing work in the optimized artifact', async () 
   assert.equal(response.outcome.value, 'Accepted');
   const cert = readFileSync(new URL('../../../fatoora-core/tests/fixtures/sdk-parity/credentials/certificate.der', import.meta.url));
   const key = readFileSync(new URL('../../../fatoora-core/tests/fixtures/sdk-parity/credentials/private-key.der', import.meta.url));
-  const signer = sdk.InvoiceSigner.fromDer([...cert], [...key]);
-  const signed = examples.signInvoice(xml, signer.certificatePem, sdk.SigningKey.fromDer([...key]).toPem());
+  const signer = sdk.InvoiceSigner.fromDer(cert, key);
+  const signed = examples.signInvoice(xml, signer.certificatePem, sdk.SigningKey.fromDer(key).toPem());
   assert.equal(sdk.Xml.hash(signed), sdk.Xml.hash(xml));
   assert.ok(sdk.SignedInvoice.fromXml(signed).signature);
+});
+
+test('binary data is a Uint8Array copy in and out', () => {
+  const key = sdk.SigningKey.generate();
+  const bytes = key.toDer();
+  assert.equal(bytes.asSlice, undefined);
+  assert.equal(raw.Bytes, sdk.Bytes);
+  const der = bytes.toUint8Array();
+  assert.ok(der instanceof Uint8Array);
+  assert.ok(der.length > 0);
+  // Each call returns an independent copy outside WASM memory.
+  const again = bytes.toUint8Array();
+  assert.notEqual(der.buffer, again.buffer);
+  assert.notEqual(der.buffer, wasm.memory.buffer);
+  der.fill(0);
+  assert.deepEqual(bytes.toUint8Array(), again);
+  // Inputs accept a Uint8Array, a Buffer or an array of byte values.
+  assert.deepEqual(sdk.SigningKey.fromDer(again).toDer().toUint8Array(), again);
+  assert.deepEqual(sdk.SigningKey.fromDer(Buffer.from(again)).toDer().toUint8Array(), again);
+  assert.deepEqual(sdk.SigningKey.fromDer([...again]).toDer().toUint8Array(), again);
+  assert.throws(() => sdk.SigningKey.fromDer(new Uint8Array([1, 2, 3])), e => e instanceof sdk.FatooraError);
 });
 
 test('validation options preserve Rust errors before host clock injection', () => {

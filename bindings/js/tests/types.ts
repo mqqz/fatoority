@@ -1,7 +1,7 @@
 import {
   Address, Adjustment, ClearanceMode, Config, Environment, FatooraError, InvalidInputError, InvoiceBuilder,
   InvoiceSubType, InvoiceTypeKind, LineItemBuilder, PaymentMeans, ReportingStatus, Severity, NetworkError, ErrorKind,
-  ZatcaClient, ComplianceCsid, Xml, sendPrepared,
+  ZatcaClient, ComplianceCsid, SigningKey, Xml, sendPrepared,
   type EnvironmentValue, type ProductionCsid, type SeverityValue, type SignedInvoice,
   type ValidationResponse, type ZatcaFinding, type ZatcaStageReport, type ZatcaValidationReport,
 } from 'fatoority';
@@ -47,6 +47,12 @@ Config.new_(Environment.NonProduction);
 line.addAllowance(rebate);
 // @ts-expect-error generated constructors are not public
 new Config();
+const der: Uint8Array = SigningKey.generate().toDer().toUint8Array(); // binary data is a Uint8Array copy
+SigningKey.fromDer(der);
+SigningKey.fromDer([...der]);
+const body: Uint8Array = prepared.body().toUint8Array();
+// @ts-expect-error `asSlice()` was renamed to `toUint8Array()` in 0.7
+prepared.body().asSlice();
 
 const report: ZatcaValidationReport = Xml.validateZatca('<Invoice/>', {previousInvoiceHash: 'hash', evaluatedAt: new Date()});
 const legacy: ZatcaValidationReport = Xml.validateZatca('<Invoice/>', '{"evaluated_at":"2025-01-01T00:00:00Z"}');

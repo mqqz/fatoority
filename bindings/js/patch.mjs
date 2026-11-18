@@ -1,12 +1,12 @@
 // Internal: adapts the generated classes in place: typed errors, `create`,
-// value getters as properties and fallible optional strings merged from their
-// `*Present` pairs (see members.mjs).
+// value getters as properties, fallible optional strings merged from their
+// `*Present` pairs and byte results as `Uint8Array` copies (see members.mjs).
 // Both `fatoority` and `fatoority/raw` import this module, so the classes
 // behave the same through either entry point and instances returned anywhere
 // share one prototype.
 import * as generated from './generated/index.mjs';
 import { FatooraError, fromBindingError } from './errors.mjs';
-import { optionalResults, properties } from './members.mjs';
+import { byteResults, optionalResults, properties } from './members.mjs';
 
 const { BindingError } = generated;
 const wrapped = Symbol('fatoority.wrapped');
@@ -96,6 +96,15 @@ for (const [className, value] of Object.entries(generated)) {
     const create = { create(...args) { return generatedNew.apply(this, args); } }.create;
     Object.defineProperty(value, 'create', { value: create, writable: true, configurable: true });
     delete value.new_;
+  }
+  // Diplomat copies a `&[u8]` result into a `number[]`; the public method
+  // (`Bytes.toUint8Array`) returns a `Uint8Array` copy instead.
+  for (const [generatedName, name] of Object.entries(byteResults[className] ?? {})) {
+    const slice = value.prototype[generatedName];
+    if (typeof slice !== 'function') throw new Error(`${className}.${generatedName} is missing`);
+    const copy = { [name]() { return Uint8Array.from(slice.call(this)); } }[name];
+    Object.defineProperty(value.prototype, name, { value: copy, writable: true, configurable: true });
+    delete value.prototype[generatedName];
   }
   adaptMembers(value, staticSkip);
   // Value getters become read-only properties and `*Present` pairs nullable strings

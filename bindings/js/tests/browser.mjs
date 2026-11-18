@@ -44,15 +44,18 @@ try {
     try { await pending; } catch (e) { aborted = e instanceof sdk.NetworkError && e.cause.name === 'AbortError'; }
     let typedError = false;
     try { sdk.Address.create('SAU', '\0', '', '', '', null, null, null); } catch (e) { typedError = e instanceof sdk.InvalidInputError && e.code === 1; }
-    return {pem: key.toPem(), token: response.binarySecurityToken, redirectBlocked, aborted, typedError};
+    const der = key.toDer().toUint8Array();
+    const bytes = der instanceof Uint8Array && sdk.SigningKey.fromDer(der).toPem() === key.toPem();
+    return {pem: key.toPem(), bytes, token: response.binarySecurityToken, redirectBlocked, aborted, typedError};
   });
   assert.match(result.pem, /BEGIN PRIVATE KEY/);
+  assert.equal(result.bytes, true);
   assert.equal(result.token, 'new');
   assert.equal(result.redirectBlocked, true);
   assert.equal(result.aborted, true);
   assert.equal(result.typedError, true);
   assert.equal(redirected, 0);
-  console.log('Chromium: WASM loading, randomness, prepared requests, redirect refusal, cancellation and typed errors passed');
+  console.log('Chromium: WASM loading, randomness, Uint8Array bytes, prepared requests, redirect refusal, cancellation and typed errors passed');
 } finally {
   await browser.close();
   server.closeAllConnections();

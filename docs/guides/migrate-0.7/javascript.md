@@ -82,6 +82,28 @@ confused with `response.clearanceStatus`.
 | `client.clearStandardInvoice(invoice, credentials, true, ...)` | `client.clearStandardInvoice(invoice, credentials, ClearanceMode.Enabled, ...)` |
 | `'Enabled'` / `'Disabled'` | `ClearanceMode.Enabled` / `ClearanceMode.Disabled` |
 | `ClearanceModeInput` type | `ClearanceMode` |
+## Binary data is a `Uint8Array`
+
+`Bytes.asSlice()`, which returned a copied `number[]`, is replaced by
+`Bytes.toUint8Array()`, which returns a new `Uint8Array` that stays valid after
+its owner is collected. The rename applies to the package root and to
+`fatoority/raw`, and matches C# `Bytes.ToArray()`. Byte arguments
+(`SigningKey.fromDer`, `Csr.fromDer`, `InvoiceSigner.fromDer` and the
+prepared requests' `decode`) are typed to accept a `Uint8Array`, including a
+Node.js `Buffer`, as well as an array of byte numbers, so the
+`[...buffer]` spread is no longer needed.
+
+| 0.6 | 0.7 |
+| --- | --- |
+| `bytes.asSlice()` (`number[]`) | `bytes.toUint8Array()` (`Uint8Array`) |
+| `Uint8Array.from(bytes.asSlice())` | `bytes.toUint8Array()` |
+| `Buffer.from(request.body().asSlice())` | `Buffer.from(request.body().toUint8Array())` |
+| `SigningKey.fromDer([...der])` | `SigningKey.fromDer(der)` |
+| `request.decode(status, [...body])` | `request.decode(status, body)` |
+
+`toUint8Array()` has no 0.6 alias, so rename the calls while upgrading. Code
+that needs a plain array can call `Array.from(bytes.toUint8Array())`.
+
 ## Error classes
 
 0.7 gives every language the same error hierarchy: a base `FatooraError`, one

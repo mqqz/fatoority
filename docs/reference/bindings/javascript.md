@@ -44,7 +44,8 @@ package is needed.
 | Optional text output | `string` or `null` |
 | Decimal amount or quantity | Exact decimal `string`, such as `"15.25"`, in arguments and results; do not pass a floating-point number. Use a decimal library such as `decimal.js` for arithmetic |
 | Invoice counter | `bigint`, within the unsigned 64-bit range |
-| Binary output | `Bytes.asSlice()` returns a copied `number[]`; use `Uint8Array.from(...)` for a typed byte array |
+| Binary output | `Bytes.toUint8Array()` returns a new `Uint8Array` copy that stays valid after its owner is collected |
+| Binary input | `Uint8Array` (including a Node.js `Buffer`) or an array of byte numbers, such as `SigningKey.fromDer(der)` |
 | Native object | Object managed by `FinalizationRegistry` |
 | Invoice outcome | `InvoiceOutcome.Accepted`, `Rejected`, or `Unknown` |
 | Enumerated code | Enum class static, such as `Environment.NonProduction`, `InvoiceTypeKind.Tax`, `InvoiceSubType.Simplified`, `VatCategory.Standard`, `AdjustmentKind.Charge`, or `ClearanceMode.Disabled`; `.value` is the variant name string, such as `'Standard'`. Each enum has a matching string-literal union type named with a `Value` suffix, such as `VatCategoryValue` |
@@ -215,8 +216,8 @@ it with `ZatcaClient.create(config)`, and call its `prepare*` methods. These ret
 | `method` | HTTP method string |
 | `url` | Complete request URL string |
 | `headersJson` | JSON array of header-name/value pairs |
-| `body()` | `Bytes`; use `asSlice()` for a copied request body |
-| `decode(status, bytes)` | Credentials or `ValidationResponse`, depending on request type; may throw |
+| `body()` | `Bytes`; use `toUint8Array()` for a copied request body |
+| `decode(status, bytes)` | `bytes` is a `Uint8Array`; returns credentials or `ValidationResponse`, depending on request type; may throw |
 
 Prepared requests retain their data and decoding context independently of the
 original invoice and credentials. Copy the outgoing body before awaiting HTTP.

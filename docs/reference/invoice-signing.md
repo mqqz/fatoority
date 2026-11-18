@@ -114,7 +114,7 @@ The signed computed hash equals the XML hash operation on `xml()`. Signed import
     | Call | Return |
     | --- | --- |
     | `InvoiceSigner.fromPem(certPem: string, keyPem: string)` | `InvoiceSigner` |
-    | `InvoiceSigner.fromDer(certDer: Array<number>, keyDer: Array<number>)` | `InvoiceSigner` |
+    | `InvoiceSigner.fromDer(certDer: Uint8Array, keyDer: Uint8Array)` | `InvoiceSigner` |
     | `signer.certificatePem` | `string` (property) |
     | `signer.certificateDer()` | `Bytes` |
     | `signer.signXml(xml: string)` | `string` |
@@ -123,7 +123,7 @@ The signed computed hash equals the XML hash operation on `xml()`. Signed import
 
     `SignedInvoice` string properties: `xml`, `qrCode`, `invoiceHash`, `hash`, `signature`, `publicKey`, `issuer`, `serial`, `certHash`, `signedPropsHash`, `signingTime`; `zatcaKeySignature` is a `string` or `null`. `toXmlBase64()` is a method returning `string`.
 
-    Objects use garbage-collected cleanup. `Bytes.asSlice()` returns a copied number array. Native failures throw a `FatooraError` subclass; see [error handling](errors.md).
+    Objects use garbage-collected cleanup. `Bytes.toUint8Array()` returns a copied `Uint8Array`. Native failures throw a `FatooraError` subclass; see [error handling](errors.md).
 
 === "C#"
 
