@@ -74,6 +74,23 @@ for no client-side timeout.
 | 0.6 | 0.7 |
 | --- | --- |
 | `ZatcaClient.WithTimeout(config, 30_000)` | `ZatcaClient.WithTimeout(config, TimeSpan.FromSeconds(30))` |
+## Error classes
+
+0.7 gives every language the same error hierarchy: a base `FatooraException`, one
+`ErrorKind` enum, and one subclass per kind named `<Kind>Exception`. See
+[errors and diagnostics](../../reference/errors.md). These names change in 0.7
+with no deprecated alias in 0.6, so update them while upgrading.
+
+| 0.6 | 0.7 |
+| --- | --- |
+| `FfiException` | `FatooraException`, which now carries `Code`, `Kind` and `DetailsJson` |
+| `FfiErrorKind` | `ErrorKind` (same members and values) |
+| `FfiException.Create(code, message, detailsJson)` | `FatooraException.FromCode(code, message, detailsJson)` |
+| `new InvalidInputException(message, code, detailsJson)` (any subclass) | `new InvalidInputException(message, detailsJson)`; the code comes from the class |
+| `new FatooraException(message)`, `new FatooraException(message, inner)` | `new FatooraException(message, code, detailsJson)` |
+
+The subclasses (`InvalidInputException`, ..., `ApiException`) keep their names.
+A `catch (FfiException error)` becomes `catch (FatooraException error)`.
 
 ## Example
 

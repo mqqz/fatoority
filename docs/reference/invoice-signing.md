@@ -139,7 +139,7 @@ The signed computed hash equals the XML hash operation on `xml()`. Signed import
 
     `SignedInvoice` string properties: `Xml`, `QrCode`, `InvoiceHash`, `Hash`, `Signature`, `PublicKey`, `Issuer`, `Serial`, `CertHash`, `SignedPropsHash`, `SigningTime`; `ZatcaKeySignature` is `string?`. `ToXmlBase64()` remains a method returning `string`.
 
-    Dispose native owners, including certificate `Bytes`. The native copy returned by `Bytes.AsSlice()` must also be disposed; `Clone()` copies it into a `byte[]`. Native failures throw `FfiException` subclasses such as `CryptoException`.
+    Dispose native owners, including certificate `Bytes`. The native copy returned by `Bytes.AsSlice()` must also be disposed; `Clone()` copies it into a `byte[]`. Native failures throw `FatooraException` subclasses such as `CryptoException`.
 
 === "Kotlin"
 
@@ -155,7 +155,7 @@ The signed computed hash equals the XML hash operation on `xml()`. Signed import
 
     `SignedInvoice` text properties: `xml`, `qrCode`, `invoiceHash`, `hash`, `signature`, `publicKey`, `issuer`, `serial`, `certHash`, `signedPropsHash`, `signingTime`, each a `String`; `zatcaKeySignature` is `String?`. `toXmlBase64()` returns `String`.
 
-    Use `use` or `close()` for native owners, including certificate `Bytes`. `Bytes.asSlice()` returns a copied `ByteArray`. Failures throw `BindingException`.
+    Use `use` or `close()` for native owners, including certificate `Bytes`. `Bytes.asSlice()` returns a copied `ByteArray`. Failures throw `FatooraException`.
 
 === "Java"
 
@@ -171,7 +171,7 @@ The signed computed hash equals the XML hash operation on `xml()`. Signed import
 
     `SignedInvoice` text getters: `getXml()`, `toXmlBase64()`, `getQrCode()`, `getInvoiceHash()`, `getHash()`, `getSignature()`, `getPublicKey()`, `getIssuer()`, `getSerial()`, `getCertHash()`, `getSignedPropsHash()`, `getSigningTime()`. Each returns `String`. `getZatcaKeySignature()` returns a nullable `String`.
 
-    Use try-with-resources for native owners, including certificate `Bytes`. `Bytes.asSlice()` returns a copied `byte[]`. Failures throw `BindingException`.
+    Use try-with-resources for native owners, including certificate `Bytes`. `Bytes.asSlice()` returns a copied `byte[]`. Failures throw `FatooraException`.
 
 === "C"
 

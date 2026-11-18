@@ -125,6 +125,37 @@ classes still support `with` and `close()`.
 
 `clearance` is now a required keyword-only argument of both methods.
 
+## Error classes
+
+0.7 gives every language the same error hierarchy: a base `FatooraError`, one
+`ErrorKind` enum, and one subclass per kind named `<Kind>Error`. See
+[errors and diagnostics](../../reference/errors.md). These names change in 0.7
+with no deprecated alias in 0.6, so update them while upgrading.
+
+| 0.6 | 0.7 |
+| --- | --- |
+| `FfiError` | `FatooraError`; every library failure is a subclass of it |
+| `FfiErrorKind` | `ErrorKind` (same members and values) |
+| `fatoora.errors.error_class_for_code(code)(message, code, details)` | `FatooraError.from_code(code, message, details)` |
+| `InvalidInputError(message, code, details)` (any subclass) | `InvalidInputError(message, details=details)`; the code comes from the class, and `code` and `details` are keyword-only |
+
+The subclasses (`InvalidInputError`, `ValidationError`, ..., `ApiError`) keep
+their names and their `ValueError`/`OSError` bases. A code the package does not
+recognize now raises plain `FatooraError` instead of `FfiError`; its `.kind` is
+still `None`. Errors also gain `.message`.
+
+```python
+# 0.6
+from fatoora.errors import FfiError, FfiErrorKind
+except FfiError as error:
+    if error.kind == FfiErrorKind.NETWORK: ...
+
+# 0.7
+from fatoora import ErrorKind, FatooraError
+except FatooraError as error:
+    if error.kind == ErrorKind.NETWORK: ...
+```
+
 ## Example
 
 ```python

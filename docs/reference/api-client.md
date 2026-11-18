@@ -287,7 +287,7 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     `TypeError`. Compliance issuance uses no credential; compliance checks
     and production issuance take `ComplianceCsid`; reporting, clearance, and renewal
     take `ProductionCsid`. Each `options` accepts `{ signal: AbortSignal }` for cancellation.
-    Transport failures reject with `TransportError` (a `NetworkError`); response/acceptance failures reject with the
+    Transport failures reject with `NetworkError` (host error in `cause`); response/acceptance failures reject with the
     `FatooraError` subclass for their code, such as `ApiError` or `UnauthorizedError`. See [JavaScript HTTP setup](bindings/javascript.md#api-requests)
     for browser CORS and custom fetch behavior.
 
@@ -354,7 +354,7 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     rounded up to whole milliseconds, that raises `NetworkException` when exceeded;
     a zero, negative, or over-`uint.MaxValue`-millisecond timeout throws
     `ArgumentOutOfRangeException`.
-    HTTP methods block; errors throw `FfiException` subclasses such as
+    HTTP methods block; errors throw `FatooraException` subclasses such as
     `NetworkException` or `UnauthorizedException`. Use `using` for owned objects,
     including child responses. Scalar getters are read-only properties.
 

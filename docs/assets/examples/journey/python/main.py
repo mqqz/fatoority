@@ -10,7 +10,7 @@ from uuid import uuid4
 from fatoora import (Address, ClearanceMode, Config, Environment, InvoiceBuilder, InvoiceSigner,
                      InvoiceSubType, InvoiceTypeKind, PaymentMeans, ProductionCsid, VatCategory,
                      ZatcaClient, validate_zatca)
-from fatoora.errors import FfiError
+from fatoora.errors import FatooraError
 
 ENVIRONMENT = Environment.NON_PRODUCTION  # Integration Sandbox only.
 
@@ -114,7 +114,7 @@ def run(input_path, submit):
                     state["stage"] = "accepted"
     except Exception as error:
         state["error_type"] = type(error).__name__
-        if isinstance(error, FfiError):
+        if isinstance(error, FatooraError):
             save_json(output / "error.json", {"code": error.code, "details": error.details})
         raise
     finally:

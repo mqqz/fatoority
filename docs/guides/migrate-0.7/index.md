@@ -17,6 +17,11 @@ A few signatures change without a deprecation step. Each language page lists
 them under "Changed signatures"; so far, `ZatcaClient.withTimeout` (Kotlin and
 Java) and `ZatcaClient.WithTimeout` (C#) take a duration instead of a
 millisecond count.
+A few binding names change in 0.7 without a deprecation period in 0.6: the
+error classes now form one hierarchy with the same names in every language
+(`FatooraError` or `FatooraException`, an `ErrorKind` enum and one subclass per
+kind). Each language page lists them under "Error classes"; the Rust crate is
+unaffected.
 
 | Language | Package | Migration page |
 | --- | --- | --- |

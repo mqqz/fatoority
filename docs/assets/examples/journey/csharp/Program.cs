@@ -112,7 +112,7 @@ public static class Program
         catch (Exception error)
         {
             state["error_type"] = error.GetType().Name;
-            if (error is FfiException native) // InvalidInputException, NetworkException, ...
+            if (error is FatooraException native) // InvalidInputException, NetworkException, ...
             {
                 using var details = JsonDocument.Parse(native.DetailsJson);
                 Save(Path.Combine(output, "error.json"), new { code = native.Code, kind = native.Kind?.ToString(), details = details.RootElement });

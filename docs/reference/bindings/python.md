@@ -183,36 +183,37 @@ builder.add_charge(Adjustment.percent_of(90, 5, reason="Delivery"), VatCategory.
 
 ## Errors
 
-Native failures raise subclasses of `FfiError`, which inherits `FatooraError`.
-Use `str(error)` for the message, `.code` for its numeric classification,
-`.kind` for `FfiErrorKind`, and `.details` for structured data.
+Library failures raise a subclass of `FatooraError`, one per `ErrorKind`.
+Use `str(error)` or `.message` for the message, `.code` for its numeric
+classification, `.kind` for the `ErrorKind`, and `.details` for structured data
+as a `dict`.
 
 ```python
-from fatoora import SigningKey
-from fatoora.errors import FfiError
+from fatoora import FatooraError, SigningKey
 
 try:
     SigningKey.from_pem("invalid key")
-except FfiError as error:
-    print(error.code, str(error))
+except FatooraError as error:
+    print(error.kind, error.code, error.message)
     print(error.details)
 ```
 
-| Category | Exception |
-| --- | --- |
-| Invalid input | `InvalidInputError` |
-| Validation rejection | `ValidationError` |
-| Parsing | `ParseError` |
-| XML | `XmlError` |
-| Cryptography | `CryptoError` |
-| File access | `IoError` |
-| Network | `NetworkError` |
-| Authorization | `UnauthorizedError` |
-| Internal failure | `InternalError` |
-| API response | `ApiError` |
+| Code | `ErrorKind` | Exception |
+| --- | --- | --- |
+| 1 | `INVALID_INPUT` | `InvalidInputError` (also a `ValueError`) |
+| 2 | `VALIDATION` | `ValidationError` |
+| 3 | `PARSE` | `ParseError` |
+| 4 | `XML` | `XmlError` |
+| 5 | `CRYPTO` | `CryptoError` |
+| 6 | `IO` | `IoError` (also an `OSError`) |
+| 7 | `NETWORK` | `NetworkError` |
+| 8 | `UNAUTHORIZED` | `UnauthorizedError` |
+| 9 | `INTERNAL` | `InternalError` |
+| 10 | `API` | `ApiError` |
 
-Unknown native codes produce `FfiError` with `.kind` set to `None`; `.code` and
-`.details` remain available. Python argument checks can raise `TypeError` or
+`ErrorKind` is an `IntEnum`, so `error.kind == error.code` for a known code.
+Unknown native codes raise plain `FatooraError` with `.kind` set to `None`;
+`.code` and `.details` remain available. Python argument checks can raise `TypeError` or
 `ValueError` before a native call. Do not parse message text to identify an error;
 use [error codes and structured details](../errors.md).
 

@@ -75,6 +75,33 @@ confused with `response.clearanceStatus`.
 | `client.clearStandardInvoice(invoice, credentials, true, ...)` | `client.clearStandardInvoice(invoice, credentials, ClearanceMode.Enabled, ...)` |
 | `'Enabled'` / `'Disabled'` | `ClearanceMode.Enabled` / `ClearanceMode.Disabled` |
 | `ClearanceModeInput` type | `ClearanceMode` |
+## Error classes
+
+0.7 gives every language the same error hierarchy: a base `FatooraError`, one
+`ErrorKind` enum, and one subclass per kind named `<Kind>Error`. See
+[errors and diagnostics](../../reference/errors.md). These names change in 0.7
+with no deprecated alias in 0.6, so update them while upgrading.
+
+| 0.6 | 0.7 |
+| --- | --- |
+| `ErrorCode` (names to numbers) | `ErrorKind` (names to names: `ErrorKind.Network === 'Network'`); compare `error.kind` with it. `error.code` is still the number |
+| `errorClassForCode(code)` | `FatooraError.fromCode(code, message, { details })` creates the error |
+| `TransportError` | `NetworkError`, with the host error in `cause` |
+| `transportError.httpStatus` | `error.details.http_status`; `details.type` is `'api_response_read'` when a response arrived and `'network'` when `fetch` failed |
+
+`FatooraError`, `kind` and the subclasses (`InvalidInputError`, ...,
+`ApiError`) are unchanged, so `instanceof NetworkError` checks keep working.
+The TypeScript type `ErrorKind` is unchanged.
+
+```javascript
+// 0.6
+if (error instanceof TransportError && error.httpStatus) retryLater();
+if (error.code === ErrorCode.Unauthorized) renewCredentials();
+
+// 0.7
+if (error instanceof NetworkError && error.details.http_status) retryLater();
+if (error.kind === ErrorKind.Unauthorized) renewCredentials();
+```
 
 ## Example
 
