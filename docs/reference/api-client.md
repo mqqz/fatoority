@@ -37,7 +37,7 @@ certificate. Preserve the request ID returned during compliance onboarding.
 | Secret | Credential secret returned by ZATCA | Keep credentials out of logs. |
 | Request ID | Optional text from credential issuance | Required to request production credentials from compliance credentials. |
 | Invoice | Signed invoice object | The client sends its hash, UUID, and Base64 XML. |
-| Clearance flag | `ClearanceMode` (`Enabled`/`Disabled`); a Boolean in Python, the JavaScript async client, and the Kotlin `*Async` helpers | Sends `Clearance-Status: 1` when enabled, `0` when disabled. It does not change the selected operation. |
+| Clearance flag | `ClearanceMode` (`Enabled`/`Disabled`) in every language | Sends `Clearance-Status: 1` when enabled, `0` when disabled. It does not change the selected operation. |
 | Response language | `ar`, `en`, or omitted | Only the exact value `ar` selects Arabic; every other value sends English. |
 
 ## Interpret an invoice response
