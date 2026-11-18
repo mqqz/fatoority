@@ -166,6 +166,17 @@ timeout.
 | `ZatcaClient.withTimeout(config, 30_000)` | Kotlin: `ZatcaClient.withTimeout(config, 30.seconds)` (`import kotlin.time.Duration.Companion.seconds`) |
 | `ZatcaClient.withTimeout(config, 30000L)` (Java) | `ZatcaClient.withTimeout(config, Duration.ofSeconds(30))` (`import java.time.Duration`) |
 
+### Binary output
+
+`Bytes.asSlice()` is renamed `Bytes.toByteArray()`, the Kotlin name for a
+conversion that returns a new array. It still returns an independent copy that
+stays valid after the `Bytes` owner is closed.
+
+| 0.6 | 0.7 |
+| --- | --- |
+| `bytes.asSlice()` (Kotlin, `ByteArray`) | `bytes.toByteArray()` |
+| `bytes.asSlice()` (Java, `byte[]`) | `bytes.toByteArray()` |
+
 ## Error classes
 
 0.7 gives every language the same error hierarchy: a base `FatooraException`, one

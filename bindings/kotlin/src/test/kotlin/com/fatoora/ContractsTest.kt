@@ -110,10 +110,10 @@ class ContractsTest {
         val key = SigningKey.generate()
         val pem = key.toPem()
         key.toDer().use { bytes ->
-            val copy = bytes.asSlice()
+            val copy = bytes.toByteArray()
             bytes.close()
             SigningKey.fromDer(copy).use { assertEquals(pem, it.toPem()) }
-            assertFailsWith<IllegalStateException> { bytes.asSlice() }
+            assertFailsWith<IllegalStateException> { bytes.toByteArray() }
         }
         key.close(); key.close()
         assertFailsWith<IllegalStateException> { key.toPem() }
@@ -208,7 +208,7 @@ class ContractsTest {
                 credentials.close(); invoice.close()
                 request.use {
                     assertEquals("POST", it.method)
-                    it.body().use { body -> assertTrue(String(body.asSlice()).contains("invoiceHash")) }
+                    it.body().use { body -> assertTrue(String(body.toByteArray()).contains("invoiceHash")) }
                     it.decode(200, """{"validationResults":{"status":"PASS"},"reportingStatus":"REPORTED"}""".toByteArray()).use { response ->
                         assertEquals(InvoiceOutcome.Accepted, response.outcome)
                         assertEquals(ReportingStatus.Reported, response.reportingStatus)

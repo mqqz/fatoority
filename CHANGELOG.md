@@ -221,6 +221,9 @@ Every name marked `@deprecated` in 0.6 is removed from the package root and
   `com.fatoora` facade still returns one nullable string.
 - Error renames: `BindingException` → `FatooraException`, which gains a public
   `fromCode` factory.
+- `Bytes.asSlice()` is renamed `Bytes.toByteArray()`, matching C#
+  `Bytes.ToArray()` and JavaScript `Bytes.toUint8Array()`; it still returns an
+  independent copy.
 
 #### Removed
 

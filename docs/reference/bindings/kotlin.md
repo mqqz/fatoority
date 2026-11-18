@@ -109,7 +109,7 @@ environment. Factory names use `create`, such as
 
 Close objects returned by methods as well as those you construct. Native errors
 are copied to managed data and freed immediately; exceptions need no cleanup.
-`Bytes.asSlice()` copies bytes under the owner lock, so the returned array survives
+`Bytes.toByteArray()` copies bytes under the owner lock, so the returned array survives
 closing its native owner. Strings reject lone UTF-16 surrogates and embedded NUL.
 
 Calls acquire all participating owners in a fixed lock order. Concurrent calls

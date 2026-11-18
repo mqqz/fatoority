@@ -75,6 +75,15 @@ DURATION_DOCS = {
  */
 """,
 }
+# Raw methods the facade exposes under an idiomatic name, with their KDoc,
+# keyed by (class, raw method).
+RENAMED_METHODS = {
+    ("Bytes", "asSlice"): ("toByteArray", """/**
+ * Returns a copy of the bytes. The array is independent of this owner and
+ * stays valid after it is closed.
+ */
+"""),
+}
 # Zero-argument accessors with these prefixes are conversions or operations,
 # not properties.
 VERB_PREFIXES = ("to", "as", "into", "with", "build", "ensure")
@@ -137,6 +146,7 @@ def facade(sources):
     seen_inputs = set()
     seen_outputs = set()
     seen_durations = set()
+    seen_renames = set()
 
     def managed(ty, decimal=False):
         if ty.endswith("?"):
@@ -270,6 +280,9 @@ def facade(sources):
             ]
             # Avoid Kotlin keyword escapes in Java source: new_ becomes create.
             exposed = "create" if method == "new_" else method
+            if (name, method) in RENAMED_METHODS:
+                exposed, doc = RENAMED_METHODS[(name, method)]
+                seen_renames.add((name, method))
 
             decl = ", ".join(
                 (
@@ -349,6 +362,9 @@ package com.fatoora
     missing_inputs = set(DECIMAL_INPUTS) - seen_inputs
     missing_outputs = {(o, m) for o, ms in DECIMAL_OUTPUTS.items() for m in ms} - seen_outputs
     missing_durations = set(DURATION_INPUTS) - seen_durations
+    missing_renames = set(RENAMED_METHODS) - seen_renames
+    if missing_renames:
+        raise SystemExit(f"renamed raw methods not found: {sorted(missing_renames)}")
     if missing_durations:
         raise SystemExit(f"Unknown duration methods: {sorted(missing_durations)}")
     if missing_inputs or missing_outputs:

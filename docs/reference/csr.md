@@ -227,7 +227,7 @@ Constructors that take individual fields use the order in the property table abo
     `.Production`. Building and serializing do not consume the properties, key, or CSR.
 
 === "Kotlin"
-    Import types from `com.fatoora`. Use `.use { ... }` or `close()` for returned objects, including `Bytes` and `BytesList`. Errors raise exceptions. Read a copied byte array with `bytes.asSlice()`. See [Kotlin resource handling](bindings/kotlin.md).
+    Import types from `com.fatoora`. Use `.use { ... }` or `close()` for returned objects, including `Bytes` and `BytesList`. Errors raise exceptions. Read a copied byte array with `bytes.toByteArray()`. See [Kotlin resource handling](bindings/kotlin.md).
 
     **Properties**
 
@@ -254,7 +254,7 @@ Constructors that take individual fields use the order in the property table abo
     `.Production`. Building and serializing do not consume the properties, key, or CSR.
 
 === "Java"
-    Import types from `com.fatoora`. Use try-with-resources or `close()` for returned objects, including `Bytes` and `BytesList`. Errors raise exceptions. Read a copied byte array with `bytes.asSlice()`. See [Java resource handling](bindings/kotlin.md).
+    Import types from `com.fatoora`. Use try-with-resources or `close()` for returned objects, including `Bytes` and `BytesList`. Errors raise exceptions. Read a copied byte array with `bytes.toByteArray()`. See [Java resource handling](bindings/kotlin.md).
 
     **Properties**
 

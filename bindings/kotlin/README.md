@@ -91,7 +91,7 @@ return native owners stay methods so ownership is explicit. Unsigned counters us
 `com.fatoora` enums such as `Environment.NonProduction`, `VatCategory.Standard`
 and `ClearanceMode.Disabled`; response statuses return a nullable enum (with
 `Unknown` for unrecognized values), and `*Raw` properties return the exact text.
-`Bytes.asSlice()` copies the native data while holding its owner's lock.
+`Bytes.toByteArray()` copies the native data while holding its owner's lock.
 
 The `com.fatoora.raw` package is an implementation detail. Its direct use bypasses
 ownership, text validation and concurrency guards. Import `com.fatoora` in apps.
