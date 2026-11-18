@@ -35,6 +35,15 @@ static FatooraInvoiceBuilder *builder(void) {
         .building_number = "1234", .postal_code = "12222", .district = "Olaya"
     };
     assert(fatoora_address_new(&a, &address, NULL) == FATOORA_OK);
+    /* Optional string output: NULL when absent, an owned string when present. */
+    char *province = (char *)"stale";
+    assert(fatoora_address_province(address, &province, NULL) == FATOORA_OK && !province);
+    FatooraAddress *with_province = NULL;
+    assert(fatoora_address_with_province(address, "Riyadh", &with_province, NULL) == FATOORA_OK);
+    assert(fatoora_address_province(with_province, &province, NULL) == FATOORA_OK);
+    assert(strcmp(province, "Riyadh") == 0);
+    fatoora_string_free(province);
+    fatoora_address_free(with_province);
     FatooraPartyOptions seller = {.name = "Seller", .address = address, .vat_id = "399999999900003"};
     assert(fatoora_invoice_builder_set_seller(b, &seller, NULL) == FATOORA_OK);
     fatoora_address_free(address);

@@ -14,7 +14,7 @@ export class Address {
 
     withProvince(value: string): Address;
 
-    province(): Text | null;
+    province(): string | null;
 
     static new_(countryCode: string, city: string, street: string, buildingNumber: string, postalCode: string, additionalStreet: string | null, additionalNumber: string | null, district: string | null): Address;
 

@@ -38,7 +38,9 @@ public:
   /**
    * Rule assertion that produced the finding, for business-rule findings.
    */
-  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> assertion_site() const;
+  inline std::optional<std::string> assertion_site() const;
+  template<typename W>
+  inline std::optional<std::monostate> assertion_site_write(W& writeable_output) const;
 
   inline _native::ValidationLayer layer() const;
 

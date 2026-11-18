@@ -63,22 +63,18 @@ export class Address {
     }
 
     province() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
 
-        const result = wasm.fatoora_Address_province(diplomatReceive.buffer, this.ffiValue);
+        const result = wasm.fatoora_Address_province(this.ffiValue, write.buffer);
 
         try {
-            if (!diplomatReceive.resultFlag) {
-                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
-            }
-            return diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer) === 0 ? null : new Text(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+            return result === 0 ? null : write.readString8();
         }
 
         finally {
             diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
-            diplomatReceive.free();
+            write.free();
         }
     }
 

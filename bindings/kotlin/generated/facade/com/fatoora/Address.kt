@@ -19,7 +19,7 @@ class Address internal constructor(internal val raw: com.fatoora.raw.Address) : 
 
     val province: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.province())?.let(::readText)
+            raw.province()
         }
 
     val city: String
@@ -67,8 +67,8 @@ class Address internal constructor(internal val raw: com.fatoora.raw.Address) : 
     }
 
     @Deprecated("Use the province property.", ReplaceWith("province"))
-    fun province(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.province())?.let(::Text)
+    fun province(): String? = nativeCall(listOfNotNull(this)) {
+        raw.province()
     }
 
     @Deprecated("Use the city property.", ReplaceWith("city"))

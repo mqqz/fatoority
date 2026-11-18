@@ -44,6 +44,9 @@ Check(absent.City == "الرياض", "UTF-8 round trip");
 Check(absent.AdditionalStreet is null, "Null optional string");
 using var present = Address.Create("SA", "Riyadh", "Street", "1234", "12345", "", null, "حي العليا");
 Check(present.AdditionalStreet == "" && present.District == "حي العليا", "Optional string round trip");
+Check(present.Province is null, "Null optional string return");
+using (var withProvince = present.WithProvince("منطقة الرياض"))
+    Check(withProvince.Province == "منطقة الرياض", "Optional string return");
 foreach (var invalid in new[] { "\uD800", "\uDC00" })
 {
     Throws<EncoderFallbackException>(() => Address.Create("SA", invalid, "s", "1234", "12345", null, null, null));

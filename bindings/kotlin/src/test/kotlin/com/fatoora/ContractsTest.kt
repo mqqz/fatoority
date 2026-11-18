@@ -17,6 +17,8 @@ class ContractsTest {
             assertNull(a.additionalStreet)
             assertEquals("", a.additionalNumber)
             assertEquals("حي العليا", a.district)
+            assertNull(a.province)
+            a.withProvince("منطقة الرياض").use { p -> assertEquals("منطقة الرياض", p.province) }
         }
         val error = assertFailsWith<InvalidInputException> { Address.create("XX", "a", "b", "1", "1") }
         assertEquals(1, error.code)

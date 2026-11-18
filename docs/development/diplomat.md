@@ -14,6 +14,8 @@ Use this page when changing the shared bridge or a language package. Installatio
 3. Regenerate the bindings. Update a handwritten facade when it needs language-specific conversion or resource handling.
 4. Test the affected language and its installed package. Update public examples and reference documentation.
 
+Return an optional string as `fn name(&self, out: &mut DiplomatWrite) -> Option<()>`, implemented with `common::write_optional`. Every binding surfaces it as a nullable string (`str | None`, `string | null`, `String?`, `string?`, `std::optional<std::string>`, or a `NULL` C string), and the generated code frees the write buffer on both paths. The shape has no error channel, so use it only for values that cannot fail; keep `Result<(), Box<BindingError>>` for required strings.
+
 Preserve exact decimals, absent versus empty values, structured errors and ownership on failure. Test consumed objects, returned children after parent disposal, and concurrent close where relevant. Test HTTP behavior against a local server.
 
 ## Generate and verify

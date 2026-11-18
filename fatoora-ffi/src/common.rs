@@ -56,6 +56,21 @@ pub(crate) fn write(
     out.write_str(value)
         .map_err(|_| local_error(9, "output write failed"))
 }
+/// Writes an optional string for a `fn(&self, out: &mut DiplomatWrite) -> Option<()>`
+/// method, which every generated binding surfaces as a nullable string.
+///
+/// This shape has no error channel, and needs none: `DiplomatWrite` never
+/// fails a write (a failed grow is flagged on the writer and reported by the
+/// binding reading it back). Embedded NUL characters are written as-is; only
+/// the C facade needs NUL-free output, and it rejects them itself.
+pub(crate) fn write_optional(
+    value: Option<impl AsRef<str>>,
+    out: &mut diplomat_runtime::DiplomatWrite,
+) -> Option<()> {
+    use std::fmt::Write;
+    let _ = out.write_str(value?.as_ref());
+    Some(())
+}
 /// Maps a core [`Environment`](fatoora_core::config::Environment) to its FFI
 /// enum. The core enum is `#[non_exhaustive]`; an environment these bindings do
 /// not know yet is reported as an internal error rather than silently mapped
@@ -101,7 +116,7 @@ pub(crate) fn boundary<T>(
 
 #[cfg(test)]
 mod tests {
-    use super::{boundary, environment_to_ffi, ffi::Environment};
+    use super::{boundary, environment_to_ffi, ffi::Environment, write_optional};
     use fatoora_core::config::Environment as Core;
 
     #[test]
@@ -142,6 +157,23 @@ mod tests {
             .err()
             .unwrap();
         assert_eq!(error.code(), 9);
+    }
+
+    #[test]
+    fn optional_strings_write_only_when_present() {
+        let read = |value: Option<&str>| {
+            let out = diplomat_runtime::diplomat_buffer_write_create(0);
+            // SAFETY: `out` is a live buffer until the destroy call below.
+            unsafe {
+                let present = write_optional(value, &mut *out);
+                let text = String::from_utf8((*out).as_bytes().to_vec()).unwrap();
+                diplomat_runtime::diplomat_buffer_write_destroy(out);
+                (present, text)
+            }
+        };
+        assert_eq!(read(None), (None, String::new()));
+        assert_eq!(read(Some("")), (Some(()), String::new()));
+        assert_eq!(read(Some("a\0b")), (Some(()), "a\0b".into()));
     }
 }
 

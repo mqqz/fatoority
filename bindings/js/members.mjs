@@ -39,7 +39,7 @@ export const properties = {
 
 /** Members whose generated `Text` result is returned as a string. */
 export const textResults = {
-  Address: ['province', 'additionalStreet', 'additionalNumber', 'district'],
+  Address: ['additionalStreet', 'additionalNumber', 'district'],
   Adjustment: ['baseAmount', 'percentage', 'reason', 'reasonCode'],
   AllowanceCharge: ['baseAmount', 'percentage', 'reason', 'reasonCode'],
   ComplianceCsid: ['requestId'],
@@ -55,7 +55,7 @@ export const textResults = {
   ValidationMessage: ['messageTypeRaw', 'code', 'category', 'message', 'statusRaw'],
   ValidationResponse: ['clearedInvoiceXml', 'clearedInvoiceBase64', 'reportingStatusRaw', 'clearanceStatusRaw', 'qrSellerStatus', 'qrBuyerStatus'],
   ValidationResults: ['statusRaw'],
-  ZatcaFinding: ['assertionSite', 'locationPath'],
+  ZatcaFinding: ['locationPath'],
   ZatcaStageReport: ['evaluatedAssertion'],
 };
 
