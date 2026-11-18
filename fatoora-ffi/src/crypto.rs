@@ -20,8 +20,17 @@ pub mod ffi {
     impl Bytes {
         /// The view is valid while this immutable owner remains alive.
         #[allow(clippy::needless_lifetimes)] // Diplomat requires an explicit return lifetime.
+        #[diplomat::attr(dotnet, disable)]
         pub fn as_slice<'a>(&'a self) -> &'a [u8] {
             &self.0
+        }
+
+        /// Independent copy for .NET, where `Bytes` is manually disposable and
+        /// Diplomat rejects views that borrow from such owners.
+        #[diplomat::attr(not(dotnet), disable)]
+        #[diplomat::attr(dotnet, rename = "AsSlice")]
+        pub fn to_owned_slice(&self) -> Box<[u8]> {
+            self.0.clone().into_boxed_slice()
         }
     }
 

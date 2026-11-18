@@ -68,7 +68,7 @@ borrowed.WithSpan(s => {
     Check(s.SequenceEqual(der), "Active read survives owner disposal");
     Throws<InvalidOperationException>(() => borrowed.Dispose());
 });
-Throws<InvalidOperationException>(() => borrowed.Clone());
+Check(borrowed.Clone().SequenceEqual(der), "Copy survives owner disposal");
 borrowed.Dispose();
 Throws<ObjectDisposedException>(() => borrowed.Clone());
 key.Dispose();

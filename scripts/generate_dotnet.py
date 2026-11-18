@@ -14,6 +14,8 @@ them a second time this script rewrites the generated wrappers in place:
 * every decimal the Rust FFI parses (``decimal(param, ...)``) or returns
   (a ``fatoora_core`` getter typed ``Decimal``) is ``decimal`` in C#,
   converted with the invariant culture (never through ``double``);
+* string inputs are encoded with a strict UTF-8 encoder, so unpaired
+  surrogates throw ``EncoderFallbackException`` instead of becoming U+FFFD;
 * native errors are thrown as ``FfiException`` subclasses (see
   ``bindings/dotnet/src/Errors.cs``) and ``BindingError`` becomes internal;
 * the Rust ``new`` constructors become ``Create`` factory methods, matching
@@ -237,6 +239,14 @@ def transform(sources):
         if name == "BindingError":
             text = text.replace("public partial class BindingError", "internal partial class BindingError")
         sources[file] = text
+    # Upstream Diplomat encodes `string` inputs with the lenient UTF-8 encoder, which turns
+    # unpaired surrogates into U+FFFD. Keep rejecting them (EncoderFallbackException).
+    lenient = "public static byte[] Clone(string value) => System.Text.Encoding.UTF8.GetBytes(value);"
+    if lenient not in sources["Utf8.cs"]:
+        raise SystemExit("Unexpected Utf8.Clone in C# output; update the strict UTF-8 rewrite")
+    sources["Utf8.cs"] = sources["Utf8.cs"].replace(lenient, (
+        "private static readonly System.Text.UTF8Encoding Strict = new System.Text.UTF8Encoding(false, true);\n\n"
+        "    public static byte[] Clone(string value) => Strict.GetBytes(value);"))
     missing = (set(inputs) | outputs) - seen
     if missing:
         raise SystemExit(f"Decimal members missing from C# output: {sorted(missing)}")

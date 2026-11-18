@@ -33,9 +33,9 @@ public:
 
   inline static _native::diplomat::result<std::unique_ptr<_native::TaxExemption>, std::unique_ptr<_native::BindingError>> new_(std::optional<std::string_view> code, std::optional<std::string_view> reason);
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> reason_code() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> reason_code() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> reason() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> reason() const;
 
     inline const _native::capi::TaxExemption* AsFFI() const;
     inline _native::capi::TaxExemption* AsFFI();

@@ -39,13 +39,13 @@ public:
   /**
    * The message `type` exactly as ZATCA sent it, or null when absent.
    */
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> message_type_raw() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> message_type_raw() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> code() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> code() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> category() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> category() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> message() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> message() const;
 
   /**
    * The parsed message `status`, or null when the message has none.
@@ -55,7 +55,7 @@ public:
   /**
    * The message `status` exactly as ZATCA sent it, or null when absent.
    */
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> status_raw() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> status_raw() const;
 
     inline const _native::capi::ValidationMessage* AsFFI() const;
     inline _native::capi::ValidationMessage* AsFFI();

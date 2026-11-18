@@ -56,19 +56,19 @@ public:
 
   inline _native::diplomat::result<std::unique_ptr<_native::PaymentMeans>, std::unique_ptr<_native::BindingError>> payment_means(size_t index) const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> purchase_order_id() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> purchase_order_id() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> contract_id() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> contract_id() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> payment_instruction() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> payment_instruction() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> actual_delivery_date() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> actual_delivery_date() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> latest_delivery_date() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> latest_delivery_date() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> tax_currency() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> tax_currency() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> tax_currency_amount() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> tax_currency_amount() const;
 
   inline size_t adjustments_len() const;
 
@@ -106,7 +106,7 @@ public:
   template<typename W>
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> invoice_level_discount_write(W& writeable_output) const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> allowance_reason() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> allowance_reason() const;
 
   inline uint64_t invoice_counter() const;
 
@@ -120,17 +120,17 @@ public:
 
   inline _native::diplomat::result<std::unique_ptr<_native::Party>, std::unique_ptr<_native::BindingError>> seller() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Party>, std::unique_ptr<_native::BindingError>> buyer() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Party>>, std::unique_ptr<_native::BindingError>> buyer() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::InvoiceNote>, std::unique_ptr<_native::BindingError>> note() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::InvoiceNote>>, std::unique_ptr<_native::BindingError>> note() const;
 
   inline size_t line_items_len() const;
 
   inline _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std::unique_ptr<_native::BindingError>> line_item(size_t index) const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::OriginalInvoiceRef>, std::unique_ptr<_native::BindingError>> original_invoice_ref() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::OriginalInvoiceRef>>, std::unique_ptr<_native::BindingError>> original_invoice_ref() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> original_invoice_reason() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> original_invoice_reason() const;
 
   inline size_t notes_len() const;
 

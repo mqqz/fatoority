@@ -35,7 +35,7 @@ public:
   template<typename W>
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> value_write(W& writeable_output) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> scheme() const;
+  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> scheme() const;
 
     inline const fatoora::capi::OtherId* AsFFI() const;
     inline fatoora::capi::OtherId* AsFFI();

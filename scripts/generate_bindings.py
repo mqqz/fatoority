@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the checked-in bindings with diplomat-tool 0.16.1."""
+"""Generate the checked-in bindings with diplomat-tool 0.17.0."""
 import os
 import re
 import shutil
@@ -40,6 +40,11 @@ def main():
                     content = content.replace("'./diplomat-runtime'", "'./diplomat-runtime.mjs'")
                     declaration.with_suffix('.mts').write_text(content)
                     declaration.unlink()
+            if backend == "nanobind":
+                # diplomat-tool 0.17.0 hard-codes the feature-test `somelib` namespace in
+                # the callback caster; fixed upstream by rust-diplomat/diplomat#1308.
+                common = Path(generated) / "include/diplomat_nanobind_common.hpp"
+                common.write_text(common.read_text().replace("somelib::", "_native::"))
             expected = {p.relative_to(generated) for p in Path(generated).rglob("*") if p.is_file()}
             for existing in (ROOT / output).rglob("*"):
                 if "examples" not in existing.relative_to(ROOT / output).parts and existing.is_file() and existing.suffix in (".h", ".hpp", ".cpp", ".mjs", ".ts", ".mts") and existing.relative_to(ROOT / output) not in expected:

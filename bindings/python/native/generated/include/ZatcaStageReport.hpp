@@ -57,9 +57,9 @@ inline _native::ZatcaStageStatus _native::ZatcaStageReport::status() const {
     return _native::ZatcaStageStatus::FromFFI(result);
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::ZatcaRuleSource>, std::unique_ptr<_native::BindingError>> _native::ZatcaStageReport::provenance() const {
+inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::ZatcaRuleSource>>, std::unique_ptr<_native::BindingError>> _native::ZatcaStageReport::provenance() const {
     auto result = _native::capi::fatoora_ZatcaStageReport_provenance(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::ZatcaRuleSource>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::ZatcaRuleSource>>(std::unique_ptr<_native::ZatcaRuleSource>(_native::ZatcaRuleSource::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::ZatcaRuleSource>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+    return result.is_ok ? _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::ZatcaRuleSource>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::diplomat::maybe_null<std::unique_ptr<_native::ZatcaRuleSource>>>(std::unique_ptr<_native::ZatcaRuleSource>(_native::ZatcaRuleSource::FromFFI(result.ok)))) : _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::ZatcaRuleSource>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
 inline size_t _native::ZatcaStageReport::evaluated_assertions_len() const {

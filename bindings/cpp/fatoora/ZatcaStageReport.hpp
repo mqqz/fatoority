@@ -57,9 +57,9 @@ inline fatoora::ZatcaStageStatus fatoora::ZatcaStageReport::status() const {
     return fatoora::ZatcaStageStatus::FromFFI(result);
 }
 
-inline diplomat::result<std::unique_ptr<fatoora::ZatcaRuleSource>, std::unique_ptr<fatoora::BindingError>> fatoora::ZatcaStageReport::provenance() const {
+inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::ZatcaRuleSource>>, std::unique_ptr<fatoora::BindingError>> fatoora::ZatcaStageReport::provenance() const {
     auto result = fatoora::capi::fatoora_ZatcaStageReport_provenance(this->AsFFI());
-    return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::ZatcaRuleSource>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::ZatcaRuleSource>>(std::unique_ptr<fatoora::ZatcaRuleSource>(fatoora::ZatcaRuleSource::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::ZatcaRuleSource>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+    return result.is_ok ? diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::ZatcaRuleSource>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<diplomat::maybe_null<std::unique_ptr<fatoora::ZatcaRuleSource>>>(std::unique_ptr<fatoora::ZatcaRuleSource>(fatoora::ZatcaRuleSource::FromFFI(result.ok)))) : diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::ZatcaRuleSource>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
 inline size_t fatoora::ZatcaStageReport::evaluated_assertions_len() const {

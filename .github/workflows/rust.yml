@@ -231,7 +231,7 @@ jobs:
         run: python3 scripts/install_kotlin_generator.py
       - name: Check generated bindings and native contracts
         run: |
-          cargo install diplomat-tool --version 0.16.1 --locked
+          cargo install diplomat-tool --version 0.17.0 --locked
           python3 scripts/generate_bindings.py --check
           python3 scripts/check_native_bindings.py
       - name: Install cargo-llvm-cov

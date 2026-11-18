@@ -91,7 +91,7 @@ public:
   template<typename W>
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> signing_time_write(W& writeable_output) const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> zatca_key_signature() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> zatca_key_signature() const;
 
   inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> into_xml();
   template<typename W>

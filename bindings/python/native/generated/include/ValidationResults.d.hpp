@@ -40,7 +40,7 @@ public:
   /**
    * The overall status exactly as ZATCA sent it, or null when absent.
    */
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> status_raw() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> status_raw() const;
 
   inline size_t info_len() const;
 

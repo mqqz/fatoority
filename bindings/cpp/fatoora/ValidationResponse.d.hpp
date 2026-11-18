@@ -42,11 +42,11 @@ public:
 
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> ensure_accepted() const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> cleared_invoice_xml() const;
+  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> cleared_invoice_xml() const;
 
   inline diplomat::result<std::unique_ptr<fatoora::ValidationResults>, std::unique_ptr<fatoora::BindingError>> validation_results() const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> cleared_invoice_base64() const;
+  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> cleared_invoice_base64() const;
 
   /**
    * The parsed `reportingStatus`, or null when the response has none.
@@ -56,7 +56,7 @@ public:
   /**
    * The `reportingStatus` exactly as ZATCA sent it, or null when absent.
    */
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> reporting_status_raw() const;
+  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> reporting_status_raw() const;
 
   /**
    * The parsed `clearanceStatus`, or null when the response has none.
@@ -66,11 +66,11 @@ public:
   /**
    * The `clearanceStatus` exactly as ZATCA sent it, or null when absent.
    */
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> clearance_status_raw() const;
+  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> clearance_status_raw() const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> qr_seller_status() const;
+  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> qr_seller_status() const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> qr_buyer_status() const;
+  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> qr_buyer_status() const;
 
     inline const fatoora::capi::ValidationResponse* AsFFI() const;
     inline fatoora::capi::ValidationResponse* AsFFI();

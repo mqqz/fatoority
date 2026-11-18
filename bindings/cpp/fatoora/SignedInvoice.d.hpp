@@ -93,7 +93,7 @@ public:
   template<typename W>
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> signing_time_write(W& writeable_output) const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> zatca_key_signature() const;
+  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> zatca_key_signature() const;
 
   inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> into_xml();
   template<typename W>
