@@ -19,7 +19,11 @@ The shape matches the Kotlin and .NET facades:
 * a fallible ``x(): string`` getter with an ``xPresent(): boolean`` sibling
   (the FFI's ``x_present``/``x`` pair, see docs/development/diplomat.md) is
   one ``string | null`` property; patch.mjs removes ``xPresent``;
-* the Rust ``new`` constructor is ``create``; patch.mjs removes ``new_``.
+* the Rust ``new`` constructor is ``create``; patch.mjs removes ``new_``;
+* binary data is a ``Uint8Array``: the ``&[u8]`` getter ``Bytes::as_slice``
+  (Diplomat's ``asSlice(): Array<number>``) is ``toUint8Array()``, returning
+  an independent copy, and ``&[u8]`` parameters accept a ``Uint8Array`` or an
+  array of byte values.
 
 Decimal amounts stay decimal strings: JavaScript has no decimal type and
 ``number`` would round money.
@@ -39,6 +43,12 @@ UNCHANGED = {"BindingError"}
 VERB_PREFIXES = ("to", "as", "into", "with", "build", "ensure")
 VERBS = {"len", "isEmpty"}
 SCALARS = {"string", "number", "bigint", "boolean"}
+# Diplomat declares every `&[u8]` as `Array<number>`; the FFI has no other slices.
+BYTE_SLICE = "Array<number>"
+BYTE_INPUT = "Uint8Array | readonly number[]"
+# `&[u8]` results renamed to a method returning a `Uint8Array` copy.
+BYTE_RESULTS = {"Bytes": {"asSlice": "toUint8Array"}}
+BYTE_RESULT_DOC = "  /** Copy the bytes into a new `Uint8Array`, independent of this object. */\n"
 MEMBER = re.compile(r"^    (?P<static>static )?(?P<name>\w+)\((?P<params>[^)]*)\): (?P<ret>[^;]+);$")
 
 
@@ -95,6 +105,10 @@ def facade():
             lines = re.sub(r"\n{3,}", "\n\n", body).strip("\n").splitlines()
             body = "\n".join(line[2:] if line.startswith("    ") else line for line in lines)
             enum_declarations[name] = f"{match.group(1)}export declare class {name} {{\n{body}\n}}"
+    for path in sorted(GENERATED.glob("*.mjs")):
+        for rust_type in re.findall(r'DiplomatBuf\.slice\(wasm, \w+, "(\w+)"\)', path.read_text()):
+            if rust_type != "u8":
+                raise SystemExit(f"{path.name}: unexpected {rust_type} slice parameter")
     optionals, declarations = {}, []
     for name, (class_doc, members) in classes.items():
         body = ["  private constructor();"]
@@ -110,7 +124,13 @@ def facade():
                 continue
             shown = ret + " | null" if method in pairs else ret
             prefix = "  " + doc.replace("\n    ", "\n  ").strip() + "\n" if doc else ""
-            if is_property(method, static, params, ret, enums):
+            params = params.replace(BYTE_SLICE, BYTE_INPUT)
+            if ret == BYTE_SLICE:
+                renamed = BYTE_RESULTS.get(name, {}).get(method)
+                if renamed is None or static or params:
+                    raise SystemExit(f"{name}.{method}: add the byte slice result to BYTE_RESULTS")
+                body.append(f"{BYTE_RESULT_DOC}  {renamed}(): Uint8Array;")
+            elif is_property(method, static, params, ret, enums):
                 properties.setdefault(name, []).append(method)
                 body.append(f"{prefix}  get {method}(): {shown};")
             elif static and method == "new_":
@@ -138,7 +158,9 @@ def facade():
         + " * Fallible string getters that are null when their `*Present` sibling is false.\n"
         + " * patch.mjs merges each pair into one member and removes the `*Present` method.\n"
         + " */\n"
-        + f"export const optionalResults = {pairs_table(optionals)};\n"
+        + f"export const optionalResults = {pairs_table(optionals)};\n\n"
+        + "/** `&[u8]` results by generated name: the public name returns a `Uint8Array` copy. */\n"
+        + f"export const byteResults = {pairs_table(BYTE_RESULTS)};\n"
     )
     exported = sorted(enums - set(enum_declarations)) + sorted(UNCHANGED)
     raw_dts = (

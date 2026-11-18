@@ -33,7 +33,7 @@ export async function sendPrepared(request, { fetch: fetchImpl = globalThis.fetc
   const url = request.url;
   const init = {
     method: request.method, headers: JSON.parse(request.headersJson),
-    body: Uint8Array.from(request.body().asSlice()), redirect: 'error', signal,
+    body: request.body().toUint8Array(), redirect: 'error', signal,
   };
   let response;
   try { response = await fetchImpl(url, init); }

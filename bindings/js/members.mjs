@@ -45,3 +45,8 @@ export const optionalResults = {
   SignedInvoice: { zatcaKeySignature: 'zatcaKeySignaturePresent' },
   ValidationResponse: { clearedInvoiceXml: 'clearedInvoiceXmlPresent' },
 };
+
+/** `&[u8]` results by generated name: the public name returns a `Uint8Array` copy. */
+export const byteResults = {
+  Bytes: { asSlice: 'toUint8Array' },
+};

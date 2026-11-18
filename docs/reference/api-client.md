@@ -354,8 +354,8 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
     to the operation.
 
     `request.method`, `url`, and `headersJson` are strings; `body()` returns
-    `Bytes`. `request.decode(status, body)` takes an HTTP status number and an array of
-    byte numbers and returns the corresponding credentials or validation response.
+    `Bytes`; `toUint8Array()` copies it. `request.decode(status, body)` takes an HTTP
+    status number and a `Uint8Array` and returns the corresponding credentials or validation response.
     Alternatively, `await sendPrepared(request, { fetch, signal })` from `fatoority`
     sends and decodes the request. Preparation owns its data; it does not send HTTP.
 

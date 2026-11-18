@@ -20,6 +20,12 @@
   view, is replaced by `Bytes.ToArray()`, which returns a new `byte[]` that
   stays valid after its owner is disposed. No `Fatoora.Diplomat` byte-view type
   is public any more.
+- JavaScript: `Bytes.asSlice()`, which returned a copied `number[]`, is
+  replaced by `Bytes.toUint8Array()`, which returns a new `Uint8Array`, in the
+  package root and `fatoority/raw`. Byte parameters (`SigningKey.fromDer`,
+  `Csr.fromDer`, `InvoiceSigner.fromDer`, prepared requests' `decode`) are
+  typed `Uint8Array | readonly number[]` instead of `Array<number>`, so a
+  `Uint8Array` or Node.js `Buffer` passes without conversion.
 - Bindings: the `Text` string handle is removed from every binding: the
   JavaScript package root and `fatoority/raw` no longer export it, and the
   C# `Fatoora.Text`, Kotlin `com.fatoora.raw.Text`, C++ `fatoora::Text` and
