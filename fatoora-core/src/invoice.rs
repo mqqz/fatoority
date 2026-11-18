@@ -2510,6 +2510,23 @@ fn legacy_adjustments(
     if entries.is_empty() {
         return Ok(Vec::new());
     }
+    // A reason with zero amounts never touched the totals, so 0.6 required no
+    // unique VAT group: its XML took the rate from `adjustment_vat_rate` or the
+    // first line in the category.
+    if discount == Decimal::ZERO && charge == Decimal::ZERO {
+        let written = adjustment_vat_rate.or_else(|| {
+            lines
+                .iter()
+                .find(|line| line.vat_category == vat_category)
+                .map(|line| line.vat_rate)
+        });
+        if let Some(rate) = written {
+            return Ok(vec![
+                AllowanceCharge::new(AdjustmentKind::Allowance, discount, vat_category, rate)
+                    .with_reason(reason.as_deref().unwrap_or("discount")),
+            ]);
+        }
+    }
     let mut rates: Vec<Decimal> = Vec::new();
     for line in lines {
         if !line.is_prepayment_adjustment()

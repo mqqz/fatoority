@@ -358,6 +358,36 @@ fn a_legacy_reason_alone_becomes_a_zero_allowance() {
 }
 
 #[test]
+fn a_legacy_reason_alone_needs_no_unique_vat_group() {
+    // Two standard groups (15% and 5%): 0.6 only required a unique group for
+    // non-zero amounts, and its XML used the first standard line's rate.
+    let mut value: Value = serde_json::from_str(V0_6_0_AMBIGUOUS).unwrap();
+    value["invoice_level_discount"] = json!("0");
+    value["invoice_level_charge"] = json!("0");
+    let data: InvoiceData = serde_json::from_value(value.clone()).unwrap();
+    assert_eq!(
+        data.adjustments(),
+        [entry(AdjustmentKind::Allowance, "0", "15", "Loyalty")]
+    );
+
+    // `adjustment_vat_rate` still picks the rate.
+    value["adjustment_vat_rate"] = json!("5");
+    let data: InvoiceData = serde_json::from_value(value.clone()).unwrap();
+    assert_eq!(
+        data.adjustments(),
+        [entry(AdjustmentKind::Allowance, "0", "5", "Loyalty")]
+    );
+
+    // A category no line has still has no rate to use.
+    value["adjustment_vat_rate"] = Value::Null;
+    value["vat_category"] = json!("Exempt");
+    let error = serde_json::from_value::<InvoiceData>(value)
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("VAT category Exempt matches 0"), "{error}");
+}
+
+#[test]
 fn legacy_adjustment_vat_rate_selects_the_vat_group() {
     let data: InvoiceData = serde_json::from_str(V0_6_0_VAT_RATE).unwrap();
     assert_eq!(
