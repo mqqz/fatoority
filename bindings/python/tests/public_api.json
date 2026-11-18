@@ -60,6 +60,46 @@
     ]
   },
   "ApiError": {},
+  "AsyncZatcaClient": {
+    "__init__": [
+      "config",
+      "*",
+      "timeout",
+      "http_client"
+    ],
+    "aclose": [],
+    "check_invoice_compliance": [
+      "invoice",
+      "ccsid"
+    ],
+    "clear_standard_invoice": [
+      "invoice",
+      "pcsid",
+      "*",
+      "clearance",
+      "accept_language"
+    ],
+    "renew_csid": [
+      "pcsid",
+      "csr",
+      "otp",
+      "accept_language"
+    ],
+    "report_simplified_invoice": [
+      "invoice",
+      "pcsid",
+      "*",
+      "clearance",
+      "accept_language"
+    ],
+    "request_compliance_csid": [
+      "csr",
+      "otp"
+    ],
+    "request_production_csid": [
+      "ccsid"
+    ]
+  },
   "ClearanceMode": {
     "DISABLED": "member",
     "ENABLED": "member"
