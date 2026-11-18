@@ -15,6 +15,9 @@ The published wheels support CPython 3.10–3.13. Use CPython 3.13 for the
 python -m pip install fatoority
 ```
 
+The [asynchronous client](#asynchronous-client) needs the `async` extra, which
+adds `httpx`: `python -m pip install "fatoority[async]"`.
+
 ```python
 from fatoora import Config, Environment, SigningKey
 
@@ -291,8 +294,8 @@ client = ZatcaClient(Config(Environment.SIMULATION), timeout=timedelta(seconds=3
 `clearance` is a required `ClearanceMode` controlling the `Clearance-Status`
 request header: `ClearanceMode.DISABLED` sends `0`, `ClearanceMode.ENABLED`
 sends `1`. It does not describe the result. `accept_language` is a string or `None` controlling the language header.
-These methods do not expose an asynchronous or cancellation-token parameter;
-use `timeout` to bound how long a call can block.
+These methods block; use `timeout` to bound how long a call can block, or the
+[asynchronous client](#asynchronous-client) in `asyncio` code.
 
 A successful HTTP request does not guarantee acceptance. Read `outcome` for the
 `InvoiceOutcome`, or call `ensure_accepted()` to raise for rejected/unknown
@@ -300,6 +303,46 @@ outcomes. `cleared_invoice_xml` is `str | None`; save that XML for an accepted
 clearance when present. `reporting_status` is an optional `ReportingStatus` and
 `clearance_status` an optional `ClearanceStatus`. See [API request and response contracts](../api-client.md)
 and the [API guide](../../guides/api.md).
+
+### Asynchronous client
+
+`AsyncZatcaClient(config, *, timeout=None, http_client=None)` has the methods
+above as coroutines, with the same arguments, return types and errors. The
+native library prepares each request and decodes each response, as for
+`ZatcaClient`; [httpx](https://www.python-httpx.org/) sends it. Install the
+`async` extra for httpx (`pip install "fatoority[async]"`). Importing `fatoora`
+does not need httpx; creating an `AsyncZatcaClient` without it raises
+`ImportError` naming the extra.
+
+```python
+import asyncio
+from fatoora import AsyncZatcaClient, ClearanceMode, Config, Environment
+
+async def report(invoice, pcsid):
+    async with AsyncZatcaClient(Config(Environment.SIMULATION), timeout=30) as client:
+        response = await client.report_simplified_invoice(invoice, pcsid, clearance=ClearanceMode.DISABLED)
+    response.ensure_accepted()
+    return response
+```
+
+- `timeout` takes the same values as for `ZatcaClient` and bounds each request,
+  from sending it until the response body is read. A request that exceeds it
+  raises `NetworkError`. You can also cancel a call, for example with
+  `asyncio.wait_for`.
+- Without `http_client`, the client creates an `httpx.AsyncClient` with no httpx
+  timeouts and closes it in `aclose()` or at the end of `async with`. Pass your
+  own `httpx.AsyncClient` to share its connection pool, proxy or TLS settings;
+  its own timeouts then also apply (a timeout raises `NetworkError`), and
+  closing the `AsyncZatcaClient` leaves it open.
+- Redirects are never followed, even when the `httpx.AsyncClient` enables them.
+- A transport failure, before the response arrives, raises `NetworkError`
+  (details type `network`, with the httpx exception as `__cause__`). A response
+  body that cannot be read raises `NetworkError` (details type
+  `api_response_read`) for invoice operations. Every HTTP status reaches the
+  decoder, so status errors are the same as `ZatcaClient`'s.
+- `FATOORA_ZATCA_BASE_URL` overrides the gateway URL as it does for `ZatcaClient`.
+- Calls do not hold their arguments while waiting for the response. After
+  `aclose()`, calls raise `InvalidInputError`.
 
 ## Signed invoice metadata
 

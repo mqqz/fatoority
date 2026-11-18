@@ -156,6 +156,18 @@ except FatooraError as error:
     if error.kind == ErrorKind.NETWORK: ...
 ```
 
+## New in 0.7
+
+`AsyncZatcaClient` is an `asyncio` client with the methods of `ZatcaClient`,
+as coroutines. It needs `httpx`, from the optional `async` extra
+(`pip install "fatoority[async]"`); the base package still has no HTTP
+dependency. See [asynchronous client](../../reference/bindings/python.md#asynchronous-client).
+
+```python
+async with AsyncZatcaClient(config, timeout=30) as client:
+    response = await client.report_simplified_invoice(signed, pcsid, clearance=ClearanceMode.DISABLED)
+```
+
 ## Example
 
 ```python
