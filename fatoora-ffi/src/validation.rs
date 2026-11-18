@@ -59,7 +59,7 @@ fn json_error(error: serde_json::Error) -> Box<crate::common::ffi::BindingError>
 #[diplomat::attr(cpp, namespace = "fatoora")]
 pub mod ffi {
     use super::{index_error, json_error, zv};
-    use crate::common::ffi::{BindingError, Text};
+    use crate::common::ffi::BindingError;
     use crate::common::{boundary, write, write_optional};
     use diplomat_runtime::DiplomatWrite;
 
@@ -238,14 +238,18 @@ pub mod ffi {
             self.0.evaluated_assertions.len()
         }
         /// Assertion site at `index` whose selected contexts were all evaluated.
-        pub fn evaluated_assertion(&self, index: usize) -> Result<Box<Text>, Box<BindingError>> {
+        pub fn evaluated_assertion(
+            &self,
+            index: usize,
+            out: &mut DiplomatWrite,
+        ) -> Result<(), Box<BindingError>> {
             boundary(|| {
-                self.0
+                let site = self
+                    .0
                     .evaluated_assertions
                     .get(index)
-                    .cloned()
-                    .map(|v| Box::new(Text(v)))
-                    .ok_or_else(|| index_error("assertion"))
+                    .ok_or_else(|| index_error("assertion"))?;
+                write(site, out)
             })
         }
         pub fn findings_len(&self) -> usize {
@@ -307,16 +311,13 @@ pub mod ffi {
                 })
         }
         /// The field path or XPath, or null for other location kinds.
-        pub fn location_path(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| {
-                Ok(match &self.0.finding.location {
-                    Some(zv::ValidationLocation::Field(path))
-                    | Some(zv::ValidationLocation::XPath(path)) => {
-                        Some(Box::new(Text(path.clone())))
-                    }
-                    _ => None,
-                })
-            })
+        pub fn location_path(&self, out: &mut DiplomatWrite) -> Option<()> {
+            let path = match &self.0.finding.location {
+                Some(zv::ValidationLocation::Field(path))
+                | Some(zv::ValidationLocation::XPath(path)) => Some(path),
+                _ => None,
+            };
+            write_optional(path, out)
         }
         /// One-based XML line, or null when the location is not XML coordinates.
         pub fn location_line(&self) -> Option<u32> {
@@ -339,6 +340,7 @@ pub mod ffi {
 mod tests {
     use super::ffi::*;
     use super::zv;
+    use crate::common::test_support::{optional_written, written};
 
     fn finding(location: Option<zv::ValidationLocation>) -> zv::ZatcaFinding {
         serde_json::from_value(serde_json::json!({
@@ -385,22 +387,6 @@ mod tests {
         )
     }
 
-    fn written(f: impl FnOnce(&mut diplomat_runtime::DiplomatWrite)) -> String {
-        struct Writer(*mut diplomat_runtime::DiplomatWrite);
-        impl Drop for Writer {
-            fn drop(&mut self) {
-                // SAFETY: the buffer was created by `diplomat_buffer_write_create`.
-                unsafe { diplomat_runtime::diplomat_buffer_write_destroy(self.0) }
-            }
-        }
-        let out = Writer(diplomat_runtime::diplomat_buffer_write_create(0));
-        // SAFETY: the buffer stays alive until `out` is dropped.
-        unsafe {
-            f(&mut *out.0);
-            String::from_utf8((*out.0).as_bytes().to_vec()).unwrap()
-        }
-    }
-
     #[test]
     fn report_exposes_outcomes_stages_and_json() {
         let report = report();
@@ -438,8 +424,13 @@ mod tests {
         assert_eq!(written(|o| source.stylesheet(o).ok().unwrap()), "CEN.xsl");
         assert_eq!(written(|o| source.sha256(o).ok().unwrap()), "ab");
         assert_eq!(cen.evaluated_assertions_len(), 1);
-        assert_eq!(cen.evaluated_assertion(0).ok().unwrap().0, "BR-01#0");
-        assert!(cen.evaluated_assertion(1).is_err());
+        assert_eq!(
+            written(|o| cen.evaluated_assertion(0, o).ok().unwrap()),
+            "BR-01#0"
+        );
+        let mut missing = Ok(());
+        written(|o| missing = cen.evaluated_assertion(1, o));
+        assert!(missing.is_err());
         assert_eq!(cen.findings_len(), 1);
         assert!(cen.finding(1).is_err());
         let finding = cen.finding(0).ok().unwrap();
@@ -451,7 +442,10 @@ mod tests {
         assert_eq!(written(|o| finding.code(o).ok().unwrap()), "BR-01");
         assert_eq!(written(|o| finding.message(o).ok().unwrap()), "رسالة");
         assert_eq!(finding.location_kind(), Some(ValidationLocationKind::XPath));
-        assert_eq!(finding.location_path().ok().unwrap().unwrap().0, "/Invoice");
+        assert_eq!(
+            optional_written(|o| finding.location_path(o)).unwrap(),
+            "/Invoice"
+        );
         assert_eq!(finding.location_line(), None);
         assert_eq!(finding.location_column(), None);
         let first = report_stage_without_provenance();
@@ -469,7 +463,7 @@ mod tests {
         ))));
         assert_eq!(field.location_kind(), Some(ValidationLocationKind::Field));
         assert_eq!(
-            field.location_path().ok().unwrap().unwrap().0,
+            optional_written(|o| field.location_path(o)).unwrap(),
             "line_items[0].quantity"
         );
         let xml = ZatcaFinding(finding(Some(zv::ValidationLocation::Xml {
@@ -477,7 +471,7 @@ mod tests {
             column: Some(7),
         })));
         assert_eq!(xml.location_kind(), Some(ValidationLocationKind::Xml));
-        assert!(xml.location_path().ok().unwrap().is_none());
+        assert!(optional_written(|o| xml.location_path(o)).is_none());
         assert_eq!(xml.location_line(), Some(3));
         assert_eq!(xml.location_column(), Some(7));
         let none = ZatcaFinding(finding(None));

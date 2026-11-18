@@ -20,8 +20,6 @@ namespace capi { struct InvoiceTotals; }
 class InvoiceTotals;
 namespace capi { struct SignedInvoice; }
 class SignedInvoice;
-namespace capi { struct Text; }
-class Text;
 } // namespace fatoora
 
 
@@ -93,7 +91,17 @@ public:
   template<typename W>
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> signing_time_write(W& writeable_output) const;
 
-  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> zatca_key_signature() const;
+  /**
+   * Whether the invoice carries a ZATCA key signature.
+   */
+  inline diplomat::result<bool, std::unique_ptr<fatoora::BindingError>> zatca_key_signature_present() const;
+
+  /**
+   * Base64 signature value of the signing certificate, or null when absent.
+   */
+  inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> zatca_key_signature() const;
+  template<typename W>
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> zatca_key_signature_write(W& writeable_output) const;
 
   inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> into_xml();
   template<typename W>

@@ -152,12 +152,20 @@ public partial class ZatcaStageReport: IDisposable
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                var result = Raw.ZatcaStageReport.EvaluatedAssertion(selfLease!.Ptr, index);
-                if (!result.IsOk)
+                DiplomatWrite writeable = new DiplomatWrite();
+                try
                 {
-                    throw FatooraException.FromNative(new BindingError(result.Err));
+                    var result = Raw.ZatcaStageReport.EvaluatedAssertion(selfLease!.Ptr, index, &writeable);
+                    if (!result.IsOk)
+                    {
+                        throw FatooraException.FromNative(new BindingError(result.Err));
+                    }
+                    return writeable.ToUnicode();
                 }
-                return global::Fatoora.Text.Take(new global::Fatoora.Text(result.Ok));
+                finally
+                {
+                    writeable.Dispose();
+                }
             }
             finally
             {

@@ -74,6 +74,25 @@ for no client-side timeout.
 | 0.6 | 0.7 |
 | --- | --- |
 | `ZatcaClient.WithTimeout(config, 30_000)` | `ZatcaClient.WithTimeout(config, TimeSpan.FromSeconds(30))` |
+
+### Binary output
+
+`Bytes.AsSlice()`, which returned a disposable `DiplomatBorrowedSpan<byte>`
+view, is replaced by `Bytes.ToArray()`, which returns a new `byte[]`. The array
+stays valid after the `Bytes` owner is disposed, so there is no view to dispose
+and no `WithSpan()` read. The `Fatoora.Diplomat` byte-view types are no longer
+public.
+
+| 0.6 | 0.7 |
+| --- | --- |
+| `using var view = bytes.AsSlice(); byte[] der = view.Clone();` | `byte[] der = bytes.ToArray();` |
+| `view.WithSpan(span => ...)` | `ReadOnlySpan<byte> span = bytes.ToArray();` |
+
+### `Text` class
+
+The `Fatoora.Text` class is removed. No public member returned it in 0.6:
+optional text was already `string?`.
+
 ## Error classes
 
 0.7 gives every language the same error hierarchy: a base `FatooraException`, one

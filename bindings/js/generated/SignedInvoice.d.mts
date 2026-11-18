@@ -2,7 +2,6 @@
 import type { BindingError } from "./BindingError.mjs"
 import type { InvoiceData } from "./InvoiceData.mjs"
 import type { InvoiceTotals } from "./InvoiceTotals.mjs"
-import type { Text } from "./Text.mjs"
 import type { pointer, codepoint } from "./diplomat-runtime.mjs";
 
 
@@ -44,7 +43,15 @@ export class SignedInvoice {
 
     signingTime(): string;
 
-    zatcaKeySignature(): Text | null;
+    /**
+     * Whether the invoice carries a ZATCA key signature.
+     */
+    zatcaKeySignaturePresent(): boolean;
+
+    /**
+     * Base64 signature value of the signing certificate, or null when absent.
+     */
+    zatcaKeySignature(): string;
 
     intoXml(): string;
 }

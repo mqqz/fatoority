@@ -135,7 +135,6 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    /// <exception cref="FatooraException"></exception>
     public decimal? BaseAmount
     {
         get
@@ -146,12 +145,20 @@ public partial class AllowanceCharge: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.AllowanceCharge.BaseAmount(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FatooraException.FromNative(new BindingError(result.Err));
+                        var result = Raw.AllowanceCharge.BaseAmount(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
-                    return global::Fatoora.Text.TakeDecimalOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
@@ -161,7 +168,6 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    /// <exception cref="FatooraException"></exception>
     public decimal? Percentage
     {
         get
@@ -172,12 +178,20 @@ public partial class AllowanceCharge: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.AllowanceCharge.Percentage(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FatooraException.FromNative(new BindingError(result.Err));
+                        var result = Raw.AllowanceCharge.Percentage(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
-                    return global::Fatoora.Text.TakeDecimalOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
@@ -378,7 +392,6 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    /// <exception cref="FatooraException"></exception>
     public string? Reason
     {
         get
@@ -389,12 +402,20 @@ public partial class AllowanceCharge: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.AllowanceCharge.Reason(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FatooraException.FromNative(new BindingError(result.Err));
+                        var result = Raw.AllowanceCharge.Reason(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
@@ -404,7 +425,6 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    /// <exception cref="FatooraException"></exception>
     public string? ReasonCode
     {
         get
@@ -415,12 +435,20 @@ public partial class AllowanceCharge: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.AllowanceCharge.ReasonCode(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FatooraException.FromNative(new BindingError(result.Err));
+                        var result = Raw.AllowanceCharge.ReasonCode(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {

@@ -19,11 +19,11 @@ class TaxExemption internal constructor(internal val raw: com.fatoora.raw.TaxExe
 
     val reasonCode: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.reasonCode())?.let(::readText)
+            raw.reasonCode()
         }
 
     val reason: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.reason())?.let(::readText)
+            raw.reason()
         }
 }

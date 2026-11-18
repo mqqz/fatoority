@@ -10,7 +10,7 @@ use fatoora_ffi::{
     invoice::ffi::SignedInvoice,
 };
 use serde_json::{Value, json};
-use support::written;
+use support::{optional_written, written};
 
 const SIMPLE: &[u8] =
     include_bytes!("../../fatoora-core/tests/fixtures/invoices/sample-simplified-invoice.xml");
@@ -201,7 +201,7 @@ fn prepared_credentials_retain_environment_payload_and_renewal_semantics() {
         let decoded = ok(issuance.decode(201, CREDENTIALS));
         assert_eq!(decoded.env().ok(), Some(environment));
         assert_eq!(
-            written(|out| ok(ok(decoded.request_id()).unwrap().value(out))),
+            optional_written(|out| decoded.request_id(out)).unwrap(),
             "123"
         );
         assert_eq!(
@@ -232,7 +232,7 @@ fn prepared_credentials_retain_environment_payload_and_renewal_semantics() {
             let decoded = ok(request.decode(200, CREDENTIALS));
             assert_eq!(decoded.env().ok(), Some(environment));
             assert_eq!(
-                written(|out| ok(ok(decoded.request_id()).unwrap().value(out))),
+                optional_written(|out| decoded.request_id(out)).unwrap(),
                 "123"
             );
             assert_eq!(

@@ -12,7 +12,7 @@ export {
   InvoiceNote, InvoiceOutcome, InvoiceRequest, InvoiceSigner, InvoiceSubType, InvoiceTotals,
   InvoiceTypeKind, LineItemBuilder, MessageType, OriginalInvoiceRef, OtherId, Party, PaymentMeans,
   ProductionCsid, ProductionRequest, ReportingStatus, Severity, SignedInvoice, SigningKey,
-  TaxExemption, Text, ValidationLayer, ValidationLocationKind, ValidationMessage,
+  TaxExemption, ValidationLayer, ValidationLocationKind, ValidationMessage,
   ValidationResponse, ValidationResults, ValidationStatus, VatBreakdown, VatCategory, VatId,
   ZatcaStage, ZatcaStageStatus,
 } from './generated/index.mjs';

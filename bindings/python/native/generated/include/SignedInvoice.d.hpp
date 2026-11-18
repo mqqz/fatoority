@@ -19,8 +19,6 @@ namespace capi { struct InvoiceTotals; }
 class InvoiceTotals;
 namespace capi { struct SignedInvoice; }
 class SignedInvoice;
-namespace capi { struct Text; }
-class Text;
 } // namespace _native
 
 
@@ -91,7 +89,17 @@ public:
   template<typename W>
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> signing_time_write(W& writeable_output) const;
 
-  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> zatca_key_signature() const;
+  /**
+   * Whether the invoice carries a ZATCA key signature.
+   */
+  inline _native::diplomat::result<bool, std::unique_ptr<_native::BindingError>> zatca_key_signature_present() const;
+
+  /**
+   * Base64 signature value of the signing certificate, or null when absent.
+   */
+  inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> zatca_key_signature() const;
+  template<typename W>
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> zatca_key_signature_write(W& writeable_output) const;
 
   inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> into_xml();
   template<typename W>

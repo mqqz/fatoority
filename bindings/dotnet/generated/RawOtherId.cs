@@ -13,7 +13,7 @@ internal partial struct OtherId
     internal static unsafe extern DiplomatResultVoidBindingError Value(OtherId* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_OtherId_scheme", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError Scheme(OtherId* handle);
+    internal static unsafe extern DiplomatOptionVoid Scheme(OtherId* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_OtherId_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(OtherId* handle);

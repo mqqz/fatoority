@@ -24,12 +24,12 @@ class AllowanceCharge internal constructor(internal val raw: com.fatoora.raw.All
 
     val baseAmount: java.math.BigDecimal?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.baseAmount())?.let(::readText)?.let(::decimalOf)
+            raw.baseAmount()?.let(::decimalOf)
         }
 
     val percentage: java.math.BigDecimal?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.percentage())?.let(::readText)?.let(::decimalOf)
+            raw.percentage()?.let(::decimalOf)
         }
 
     val kind: AdjustmentKind
@@ -59,12 +59,12 @@ class AllowanceCharge internal constructor(internal val raw: com.fatoora.raw.All
 
     val reason: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.reason())?.let(::readText)
+            raw.reason()
         }
 
     val reasonCode: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.reasonCode())?.let(::readText)
+            raw.reasonCode()
         }
 
     fun omitVatRate(): AllowanceCharge = nativeCall(listOfNotNull(this)) {

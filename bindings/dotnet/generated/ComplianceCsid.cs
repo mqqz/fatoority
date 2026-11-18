@@ -110,7 +110,6 @@ public partial class ComplianceCsid: IDisposable
         }
     }
 
-    /// <exception cref="FatooraException"></exception>
     public string? RequestId
     {
         get
@@ -121,12 +120,20 @@ public partial class ComplianceCsid: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.ComplianceCsid.RequestId(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FatooraException.FromNative(new BindingError(result.Err));
+                        var result = Raw.ComplianceCsid.RequestId(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {

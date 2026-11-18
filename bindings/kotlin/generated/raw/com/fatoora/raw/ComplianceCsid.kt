@@ -9,7 +9,7 @@ internal interface ComplianceCsidLib: Library {
     fun fatoora_ComplianceCsid_destroy(handle: Pointer)
     fun fatoora_ComplianceCsid_new(environment: Int, requestId: OptionSlice, token: Slice, secret: Slice): ResultPointerPointer
     fun fatoora_ComplianceCsid_env(handle: Pointer): ResultIntPointer
-    fun fatoora_ComplianceCsid_request_id(handle: Pointer): ResultPointerPointer
+    fun fatoora_ComplianceCsid_request_id(handle: Pointer, write: Pointer): OptionUnit
     fun fatoora_ComplianceCsid_binary_security_token(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_ComplianceCsid_secret(handle: Pointer, write: Pointer): ResultUnitPointer
 }
@@ -85,21 +85,18 @@ class ComplianceCsid internal constructor (
         }
     }
 
-    fun requestId(): Result<Text?> {
+    fun requestId(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_ComplianceCsid_request_id(handle, write);
 
-        val returnVal = lib.fatoora_ComplianceCsid_request_id(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
     fun binarySecurityToken(): Result<String> {

@@ -136,10 +136,10 @@ The enum function `InvoiceFlag.bit()` follows the same rule: use
 
 ### `Text` class
 
-`com.fatoora.Text` is removed. Only the removed getter functions returned it;
-every optional text property is already a `String?` in 0.6, so replace
-`text.value` or `text.value()` with the string itself and drop the
-`use { }` block.
+`com.fatoora.Text` is removed, along with the internal `com.fatoora.raw.Text`.
+Only the removed getter functions returned it; every optional text property is
+already a `String?` in 0.6, so replace `text.value` or `text.value()` with the
+string itself and drop the `use { }` block.
 
 ## Changed signatures
 

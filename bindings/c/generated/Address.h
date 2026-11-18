@@ -8,7 +8,6 @@
 #include "diplomat_runtime.h"
 
 #include "BindingError.d.h"
-#include "Text.d.h"
 
 #include "Address.d.h"
 
@@ -41,14 +40,14 @@ fatoora_Address_postal_code_result fatoora_Address_postal_code(const Address* se
 typedef struct fatoora_Address_country_code_result {union { BindingError* err;}; bool is_ok;} fatoora_Address_country_code_result;
 fatoora_Address_country_code_result fatoora_Address_country_code(const Address* self, DiplomatWrite* write);
 
-typedef struct fatoora_Address_additional_street_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_Address_additional_street_result;
-fatoora_Address_additional_street_result fatoora_Address_additional_street(const Address* self);
+typedef struct fatoora_Address_additional_street_result { bool is_ok;} fatoora_Address_additional_street_result;
+fatoora_Address_additional_street_result fatoora_Address_additional_street(const Address* self, DiplomatWrite* write);
 
-typedef struct fatoora_Address_additional_number_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_Address_additional_number_result;
-fatoora_Address_additional_number_result fatoora_Address_additional_number(const Address* self);
+typedef struct fatoora_Address_additional_number_result { bool is_ok;} fatoora_Address_additional_number_result;
+fatoora_Address_additional_number_result fatoora_Address_additional_number(const Address* self, DiplomatWrite* write);
 
-typedef struct fatoora_Address_district_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_Address_district_result;
-fatoora_Address_district_result fatoora_Address_district(const Address* self);
+typedef struct fatoora_Address_district_result { bool is_ok;} fatoora_Address_district_result;
+fatoora_Address_district_result fatoora_Address_district(const Address* self, DiplomatWrite* write);
 
 void fatoora_Address_destroy(Address* self);
 

@@ -118,8 +118,7 @@ def kdoc(content, position, indent):
 
 def facade(sources):
     owners = {p.stem for p in sources if "internal val handle: Pointer" in sources[p]}
-    # Text only carries string results; the facade reads it as a String.
-    public = owners - {"BindingError", "Text"}
+    public = owners - {"BindingError"}
     # Raw enums are mirrored in com.fatoora by name, so facade signatures never
     # expose com.fatoora.raw types.
     enums = {}
@@ -144,8 +143,6 @@ def facade(sources):
             return managed(ty[:-1], decimal) + "?"
         if decimal:
             return BIG_DECIMAL
-        if ty == "Text":
-            return "String"
         return {
             "UByte": "Int",
             "UShort": "Int",
@@ -175,11 +172,6 @@ def facade(sources):
         }.get(ty, name)
 
     def result(expr, ty, decimal=False):
-        if ty.rstrip("?") == "Text":
-            text = f"{expr}?.let(::readText)" if ty.endswith("?") else f"readText({expr})"
-            if decimal:
-                return f"{text}?.let(::decimalOf)" if ty.endswith("?") else f"decimalOf({text})"
-            return text
         if decimal:
             return f"{expr}?.let(::decimalOf)" if ty.endswith("?") else f"decimalOf({expr})"
         if ty.rstrip("?") in enums:
@@ -228,11 +220,21 @@ def facade(sources):
         properties = []
         methods = []
         statics = []
-        for match in re.finditer(
+        members = list(re.finditer(
             r"^(    |        )fun (\w+)\(([^\n]*)\): ([^\n{]+) \{", content, re.M
-        ):
+        ))
+        getters = {m.group(2): m.group(4).strip() for m in members if len(m.group(1)) == 4 and not m.group(3)}
+        # `x_present`/`x` pairs: a fallible optional string the FFI cannot return
+        # as Option<()>; the facade merges them into one nullable `x` and hides
+        # `xPresent`.
+        optional_pairs = {
+            m for m, ret in getters.items()
+            if ret == "Result<String>" and getters.get(m + "Present") in {"Boolean", "Result<Boolean>"}
+        }
+        hidden = {m + "Present" for m in optional_pairs}
+        for match in members:
             indent, method, params, ret = match.groups()
-            if method == "finalize":
+            if method == "finalize" or method in hidden:
                 continue
             is_static = len(indent) == 8
             doc = kdoc(content, match.start(), "")
@@ -256,7 +258,7 @@ def facade(sources):
                 seen_inputs.add((name, method))
             decimal_out = method in DECIMAL_OUTPUTS.get(name, set()) and not pairs and not is_static
             if decimal_out:
-                if ty.rstrip("?") not in {"String", "Text"}:
+                if ty.rstrip("?") != "String":
                     raise SystemExit(f"{name}.{method} returns {ty}, not decimal text")
                 seen_outputs.add((name, method))
             # Default only trailing optional arguments, so Java overloads stay unambiguous.
@@ -285,7 +287,13 @@ def facade(sources):
             if fallible:
                 call = f"unwrap({call})"
             returns = managed(ty, decimal_out)
-            body = f"nativeCall(listOfNotNull({', '.join(guards)})) {{\n    {result(call, ty, decimal_out)}\n}}"
+            value = result(call, ty, decimal_out)
+            if method in optional_pairs:
+                has = method + "Present"
+                present = f"raw.{has}()" if getters[has] == "Boolean" else f"unwrap(raw.{has}())"
+                ty, returns = ty + "?", returns + "?"
+                value = f"if ({present}) {value} else null"
+            body = f"nativeCall(listOfNotNull({', '.join(guards)})) {{\n    {value}\n}}"
             if is_property(method, pairs, ty, is_static):
                 lines = getter_annotations(method)
                 lines.append(f"val {method}: {returns}")

@@ -11,7 +11,6 @@
 #include "ClearanceStatus.d.h"
 #include "InvoiceOutcome.d.h"
 #include "ReportingStatus.d.h"
-#include "Text.d.h"
 #include "ValidationResults.d.h"
 
 #include "ValidationResponse.d.h"
@@ -29,32 +28,34 @@ InvoiceOutcome fatoora_ValidationResponse_outcome(const ValidationResponse* self
 typedef struct fatoora_ValidationResponse_ensure_accepted_result {union { BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_ensure_accepted_result;
 fatoora_ValidationResponse_ensure_accepted_result fatoora_ValidationResponse_ensure_accepted(const ValidationResponse* self);
 
-typedef struct fatoora_ValidationResponse_cleared_invoice_xml_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_cleared_invoice_xml_result;
-fatoora_ValidationResponse_cleared_invoice_xml_result fatoora_ValidationResponse_cleared_invoice_xml(const ValidationResponse* self);
+bool fatoora_ValidationResponse_cleared_invoice_xml_present(const ValidationResponse* self);
+
+typedef struct fatoora_ValidationResponse_cleared_invoice_xml_result {union { BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_cleared_invoice_xml_result;
+fatoora_ValidationResponse_cleared_invoice_xml_result fatoora_ValidationResponse_cleared_invoice_xml(const ValidationResponse* self, DiplomatWrite* write);
 
 typedef struct fatoora_ValidationResponse_validation_results_result {union {ValidationResults* ok; BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_validation_results_result;
 fatoora_ValidationResponse_validation_results_result fatoora_ValidationResponse_validation_results(const ValidationResponse* self);
 
-typedef struct fatoora_ValidationResponse_cleared_invoice_base64_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_cleared_invoice_base64_result;
-fatoora_ValidationResponse_cleared_invoice_base64_result fatoora_ValidationResponse_cleared_invoice_base64(const ValidationResponse* self);
+typedef struct fatoora_ValidationResponse_cleared_invoice_base64_result { bool is_ok;} fatoora_ValidationResponse_cleared_invoice_base64_result;
+fatoora_ValidationResponse_cleared_invoice_base64_result fatoora_ValidationResponse_cleared_invoice_base64(const ValidationResponse* self, DiplomatWrite* write);
 
 typedef struct fatoora_ValidationResponse_reporting_status_result {union {ReportingStatus ok; }; bool is_ok;} fatoora_ValidationResponse_reporting_status_result;
 fatoora_ValidationResponse_reporting_status_result fatoora_ValidationResponse_reporting_status(const ValidationResponse* self);
 
-typedef struct fatoora_ValidationResponse_reporting_status_raw_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_reporting_status_raw_result;
-fatoora_ValidationResponse_reporting_status_raw_result fatoora_ValidationResponse_reporting_status_raw(const ValidationResponse* self);
+typedef struct fatoora_ValidationResponse_reporting_status_raw_result { bool is_ok;} fatoora_ValidationResponse_reporting_status_raw_result;
+fatoora_ValidationResponse_reporting_status_raw_result fatoora_ValidationResponse_reporting_status_raw(const ValidationResponse* self, DiplomatWrite* write);
 
 typedef struct fatoora_ValidationResponse_clearance_status_result {union {ClearanceStatus ok; }; bool is_ok;} fatoora_ValidationResponse_clearance_status_result;
 fatoora_ValidationResponse_clearance_status_result fatoora_ValidationResponse_clearance_status(const ValidationResponse* self);
 
-typedef struct fatoora_ValidationResponse_clearance_status_raw_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_clearance_status_raw_result;
-fatoora_ValidationResponse_clearance_status_raw_result fatoora_ValidationResponse_clearance_status_raw(const ValidationResponse* self);
+typedef struct fatoora_ValidationResponse_clearance_status_raw_result { bool is_ok;} fatoora_ValidationResponse_clearance_status_raw_result;
+fatoora_ValidationResponse_clearance_status_raw_result fatoora_ValidationResponse_clearance_status_raw(const ValidationResponse* self, DiplomatWrite* write);
 
-typedef struct fatoora_ValidationResponse_qr_seller_status_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_qr_seller_status_result;
-fatoora_ValidationResponse_qr_seller_status_result fatoora_ValidationResponse_qr_seller_status(const ValidationResponse* self);
+typedef struct fatoora_ValidationResponse_qr_seller_status_result { bool is_ok;} fatoora_ValidationResponse_qr_seller_status_result;
+fatoora_ValidationResponse_qr_seller_status_result fatoora_ValidationResponse_qr_seller_status(const ValidationResponse* self, DiplomatWrite* write);
 
-typedef struct fatoora_ValidationResponse_qr_buyer_status_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_ValidationResponse_qr_buyer_status_result;
-fatoora_ValidationResponse_qr_buyer_status_result fatoora_ValidationResponse_qr_buyer_status(const ValidationResponse* self);
+typedef struct fatoora_ValidationResponse_qr_buyer_status_result { bool is_ok;} fatoora_ValidationResponse_qr_buyer_status_result;
+fatoora_ValidationResponse_qr_buyer_status_result fatoora_ValidationResponse_qr_buyer_status(const ValidationResponse* self, DiplomatWrite* write);
 
 void fatoora_ValidationResponse_destroy(ValidationResponse* self);
 

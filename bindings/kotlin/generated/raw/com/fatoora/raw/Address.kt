@@ -15,9 +15,9 @@ internal interface AddressLib: Library {
     fun fatoora_Address_building_number(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_Address_postal_code(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_Address_country_code(handle: Pointer, write: Pointer): ResultUnitPointer
-    fun fatoora_Address_additional_street(handle: Pointer): ResultPointerPointer
-    fun fatoora_Address_additional_number(handle: Pointer): ResultPointerPointer
-    fun fatoora_Address_district(handle: Pointer): ResultPointerPointer
+    fun fatoora_Address_additional_street(handle: Pointer, write: Pointer): OptionUnit
+    fun fatoora_Address_additional_number(handle: Pointer, write: Pointer): OptionUnit
+    fun fatoora_Address_district(handle: Pointer, write: Pointer): OptionUnit
 }
 
 class Address internal constructor (
@@ -208,55 +208,46 @@ class Address internal constructor (
         }
     }
 
-    fun additionalStreet(): Result<Text?> {
+    fun additionalStreet(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_Address_additional_street(handle, write);
 
-        val returnVal = lib.fatoora_Address_additional_street(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
-    fun additionalNumber(): Result<Text?> {
+    fun additionalNumber(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_Address_additional_number(handle, write);
 
-        val returnVal = lib.fatoora_Address_additional_number(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
-    fun district(): Result<Text?> {
+    fun district(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_Address_district(handle, write);
 
-        val returnVal = lib.fatoora_Address_district(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
 }

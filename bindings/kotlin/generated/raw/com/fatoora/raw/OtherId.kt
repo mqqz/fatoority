@@ -8,7 +8,7 @@ import com.sun.jna.Structure
 internal interface OtherIdLib: Library {
     fun fatoora_OtherId_destroy(handle: Pointer)
     fun fatoora_OtherId_value(handle: Pointer, write: Pointer): ResultUnitPointer
-    fun fatoora_OtherId_scheme(handle: Pointer): ResultPointerPointer
+    fun fatoora_OtherId_scheme(handle: Pointer, write: Pointer): OptionUnit
 }
 
 class OtherId internal constructor (
@@ -58,21 +58,18 @@ class OtherId internal constructor (
         }
     }
 
-    fun scheme(): Result<Text?> {
+    fun scheme(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_OtherId_scheme(handle, write);
 
-        val returnVal = lib.fatoora_OtherId_scheme(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
 }

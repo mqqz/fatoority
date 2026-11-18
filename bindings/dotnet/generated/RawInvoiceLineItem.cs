@@ -10,16 +10,16 @@ internal partial struct InvoiceLineItem
 {
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_item_gross_price", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError ItemGrossPrice(InvoiceLineItem* handle);
+    internal static unsafe extern DiplomatOptionVoid ItemGrossPrice(InvoiceLineItem* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_item_price_discount", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError ItemPriceDiscount(InvoiceLineItem* handle);
+    internal static unsafe extern DiplomatOptionVoid ItemPriceDiscount(InvoiceLineItem* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_item_price_base_quantity", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError ItemPriceBaseQuantity(InvoiceLineItem* handle);
+    internal static unsafe extern DiplomatOptionVoid ItemPriceBaseQuantity(InvoiceLineItem* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_item_price_base_quantity_unit_code", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError ItemPriceBaseQuantityUnitCode(InvoiceLineItem* handle);
+    internal static unsafe extern DiplomatOptionVoid ItemPriceBaseQuantityUnitCode(InvoiceLineItem* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_adjustments_len", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern nuint AdjustmentsLen(InvoiceLineItem* handle);
@@ -64,7 +64,7 @@ internal partial struct InvoiceLineItem
     internal static unsafe extern DiplomatResultInvoiceLineItemBindingError WithMetadata(InvoiceLineItem* handle, DiplomatOptionSliceU8 id, TaxExemption* exemption);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_id", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError Id(InvoiceLineItem* handle);
+    internal static unsafe extern DiplomatOptionVoid Id(InvoiceLineItem* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceLineItem_exemption", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultTaxExemptionBindingError Exemption(InvoiceLineItem* handle);

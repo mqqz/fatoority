@@ -43,8 +43,7 @@ using Fatoora;
 using var config = Config.Create(ZatcaEnvironment.NonProduction);
 using var key = SigningKey.Generate();
 using var bytes = key.ToDer();
-using var view = bytes.AsSlice();
-byte[] privateKey = view.Clone();
+byte[] privateKey = bytes.ToArray();
 ```
 
 `privateKey` is an independent managed copy. Keep it secure; disposing the native
@@ -68,7 +67,7 @@ complete C# examples.
 | Decimal amount, quantity, or rate | `decimal` in both directions, converted exactly with the invariant culture (never through `double`) |
 | Invoice counter | `ulong` |
 | Owned native object | An `IDisposable` class; use `using` or call `Dispose()` |
-| Owned binary output | `Bytes`; call `AsSlice()` and copy with `Clone()` when needed |
+| Owned binary output | `Bytes`; call `ToArray()` for a `byte[]` copy |
 | Invoice acceptance | `InvoiceOutcome.Accepted`, `Rejected`, or `Unknown` |
 | Enumerated code | C# enum: `ZatcaEnvironment`, `InvoiceTypeKind`, `InvoiceSubType`, `VatCategory`, `AdjustmentKind`, `ClearanceMode` |
 | Response status | `ReportingStatus?`, `ClearanceStatus?`, `ValidationStatus?`, or `MessageType?`; `null` when absent, `Unknown` when present but not recognized by this version. The `*Raw` property returns the exact text as `string?` |
@@ -91,22 +90,19 @@ raises `InvalidInputException`. Build and signing failures can also consume
 state. Returned invoice data, totals, addresses, and response children are owned
 snapshots and remain usable after their parents are disposed.
 
-For binary output, dispose both the owner and the copy returned by `AsSlice()`:
+For binary output, dispose the `Bytes` owner and keep the array returned by `ToArray()`:
 
 ```csharp
 using Fatoora;
 
 using var key = SigningKey.Generate();
 using var bytes = key.ToDer();
-using var view = bytes.AsSlice();
-byte[] der = view.Clone(); // Independent managed copy.
+byte[] der = bytes.ToArray(); // Independent managed copy.
 ```
 
-`AsSlice()` copies the bytes into a native `RustVec` that stays valid after
-`bytes` is disposed. `WithSpan()` reads it in place without another copy.
-Disposing the view while a read is active throws
-`InvalidOperationException`; retry once the read has finished. Conflicting calls
-that require mutable access also throw `InvalidOperationException`.
+Each `ToArray()` call returns a new array that stays valid after `bytes` is
+disposed. Conflicting calls that require mutable access throw
+`InvalidOperationException`.
 
 ## Errors
 

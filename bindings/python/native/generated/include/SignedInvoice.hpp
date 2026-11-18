@@ -14,7 +14,6 @@
 #include "BindingError.hpp"
 #include "InvoiceData.hpp"
 #include "InvoiceTotals.hpp"
-#include "Text.hpp"
 #include "diplomat_runtime.hpp"
 
 
@@ -70,8 +69,11 @@ namespace capi {
     typedef struct fatoora_SignedInvoice_signing_time_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_signing_time_result;
     fatoora_SignedInvoice_signing_time_result fatoora_SignedInvoice_signing_time(const _native::capi::SignedInvoice* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_SignedInvoice_zatca_key_signature_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_zatca_key_signature_result;
-    fatoora_SignedInvoice_zatca_key_signature_result fatoora_SignedInvoice_zatca_key_signature(const _native::capi::SignedInvoice* self);
+    typedef struct fatoora_SignedInvoice_zatca_key_signature_present_result {union {bool ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_zatca_key_signature_present_result;
+    fatoora_SignedInvoice_zatca_key_signature_present_result fatoora_SignedInvoice_zatca_key_signature_present(const _native::capi::SignedInvoice* self);
+
+    typedef struct fatoora_SignedInvoice_zatca_key_signature_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_zatca_key_signature_result;
+    fatoora_SignedInvoice_zatca_key_signature_result fatoora_SignedInvoice_zatca_key_signature(const _native::capi::SignedInvoice* self, _native::diplomat::capi::DiplomatWrite* write);
 
     typedef struct fatoora_SignedInvoice_into_xml_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_into_xml_result;
     fatoora_SignedInvoice_into_xml_result fatoora_SignedInvoice_into_xml(_native::capi::SignedInvoice* self, _native::diplomat::capi::DiplomatWrite* write);
@@ -282,9 +284,24 @@ inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::Bindin
     return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> _native::SignedInvoice::zatca_key_signature() const {
-    auto result = _native::capi::fatoora_SignedInvoice_zatca_key_signature(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline _native::diplomat::result<bool, std::unique_ptr<_native::BindingError>> _native::SignedInvoice::zatca_key_signature_present() const {
+    auto result = _native::capi::fatoora_SignedInvoice_zatca_key_signature_present(this->AsFFI());
+    return result.is_ok ? _native::diplomat::result<bool, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<bool>(result.ok)) : _native::diplomat::result<bool, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+
+inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> _native::SignedInvoice::zatca_key_signature() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_SignedInvoice_zatca_key_signature(this->AsFFI(),
+        &write);
+    return result.is_ok ? _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::string>(std::move(output))) : _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+template<typename W>
+inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::SignedInvoice::zatca_key_signature_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_SignedInvoice_zatca_key_signature(this->AsFFI(),
+        &write);
+    return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
 inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> _native::SignedInvoice::into_xml() {

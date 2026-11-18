@@ -171,7 +171,6 @@ public partial class InvoiceData: IDisposable
         }
     }
 
-    /// <exception cref="FatooraException"></exception>
     public string? PurchaseOrderId
     {
         get
@@ -182,12 +181,20 @@ public partial class InvoiceData: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.InvoiceData.PurchaseOrderId(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FatooraException.FromNative(new BindingError(result.Err));
+                        var result = Raw.InvoiceData.PurchaseOrderId(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
@@ -197,7 +204,6 @@ public partial class InvoiceData: IDisposable
         }
     }
 
-    /// <exception cref="FatooraException"></exception>
     public string? ContractId
     {
         get
@@ -208,12 +214,20 @@ public partial class InvoiceData: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.InvoiceData.ContractId(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FatooraException.FromNative(new BindingError(result.Err));
+                        var result = Raw.InvoiceData.ContractId(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
@@ -223,7 +237,6 @@ public partial class InvoiceData: IDisposable
         }
     }
 
-    /// <exception cref="FatooraException"></exception>
     public string? PaymentInstruction
     {
         get
@@ -234,12 +247,20 @@ public partial class InvoiceData: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.InvoiceData.PaymentInstruction(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FatooraException.FromNative(new BindingError(result.Err));
+                        var result = Raw.InvoiceData.PaymentInstruction(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
@@ -249,7 +270,6 @@ public partial class InvoiceData: IDisposable
         }
     }
 
-    /// <exception cref="FatooraException"></exception>
     public string? ActualDeliveryDate
     {
         get
@@ -260,12 +280,20 @@ public partial class InvoiceData: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.InvoiceData.ActualDeliveryDate(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FatooraException.FromNative(new BindingError(result.Err));
+                        var result = Raw.InvoiceData.ActualDeliveryDate(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
@@ -275,7 +303,6 @@ public partial class InvoiceData: IDisposable
         }
     }
 
-    /// <exception cref="FatooraException"></exception>
     public string? LatestDeliveryDate
     {
         get
@@ -286,12 +313,20 @@ public partial class InvoiceData: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.InvoiceData.LatestDeliveryDate(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FatooraException.FromNative(new BindingError(result.Err));
+                        var result = Raw.InvoiceData.LatestDeliveryDate(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
@@ -301,7 +336,6 @@ public partial class InvoiceData: IDisposable
         }
     }
 
-    /// <exception cref="FatooraException"></exception>
     public string? TaxCurrency
     {
         get
@@ -312,12 +346,20 @@ public partial class InvoiceData: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.InvoiceData.TaxCurrency(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FatooraException.FromNative(new BindingError(result.Err));
+                        var result = Raw.InvoiceData.TaxCurrency(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
@@ -327,7 +369,6 @@ public partial class InvoiceData: IDisposable
         }
     }
 
-    /// <exception cref="FatooraException"></exception>
     public decimal? TaxCurrencyAmount
     {
         get
@@ -338,12 +379,20 @@ public partial class InvoiceData: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.InvoiceData.TaxCurrencyAmount(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FatooraException.FromNative(new BindingError(result.Err));
+                        var result = Raw.InvoiceData.TaxCurrencyAmount(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
-                    return global::Fatoora.Text.TakeDecimalOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
@@ -671,7 +720,6 @@ public partial class InvoiceData: IDisposable
         }
     }
 
-    /// <exception cref="FatooraException"></exception>
     public string? AllowanceReason
     {
         get
@@ -682,12 +730,20 @@ public partial class InvoiceData: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.InvoiceData.AllowanceReason(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FatooraException.FromNative(new BindingError(result.Err));
+                        var result = Raw.InvoiceData.AllowanceReason(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {
@@ -947,7 +1003,6 @@ public partial class InvoiceData: IDisposable
         }
     }
 
-    /// <exception cref="FatooraException"></exception>
     public string? OriginalInvoiceReason
     {
         get
@@ -958,12 +1013,20 @@ public partial class InvoiceData: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.InvoiceData.OriginalInvoiceReason(selfLease!.Ptr);
-                    if (!result.IsOk)
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
                     {
-                        throw FatooraException.FromNative(new BindingError(result.Err));
+                        var result = Raw.InvoiceData.OriginalInvoiceReason(selfLease!.Ptr, &writeable);
+                        if (!result.IsSome)
+                        {
+                            return null;
+                        }
+                        return writeable.ToUnicode();
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {

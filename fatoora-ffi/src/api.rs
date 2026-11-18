@@ -1,5 +1,5 @@
 //! Owned ZATCA credentials and blocking HTTP operations for generated bindings.
-use crate::common::ffi::{BindingError, Text};
+use crate::common::ffi::BindingError;
 use crate::common::{boundary, core_error, local_error, text, write};
 use diplomat_runtime::DiplomatStr;
 use fatoora_core::api as core_api;
@@ -46,17 +46,6 @@ fn run<T: Send>(
                 local_error(9, "HTTP worker panicked")
             })?
     })
-}
-
-fn optional(value: Option<&str>) -> Result<Option<Box<Text>>, Box<BindingError>> {
-    value
-        .map(|value| {
-            if value.contains('\0') {
-                return Err(local_error(1, "output contains NUL"));
-            }
-            Ok(Box::new(Text(value.to_owned())))
-        })
-        .transpose()
 }
 
 fn optional_input(value: Option<&DiplomatStr>) -> Result<Option<&str>, Box<BindingError>> {
@@ -111,9 +100,10 @@ impl From<&core_api::MessageType> for ffi::MessageType {
 pub mod ffi {
     #[cfg(not(target_arch = "wasm32"))]
     use super::run;
-    use super::{boundary, core_error, local_error, optional, optional_input, text, write};
+    use super::{boundary, core_error, local_error, optional_input, text, write};
     use crate::common::environment_to_ffi;
-    use crate::common::ffi::{BindingError, Environment, Text};
+    use crate::common::ffi::{BindingError, Environment};
+    use crate::common::write_optional;
     use crate::crypto::ffi::{Bytes, Config, Csr};
     use crate::invoice::ffi::SignedInvoice;
     use diplomat_runtime::{DiplomatStr, DiplomatWrite};
@@ -318,8 +308,8 @@ pub mod ffi {
         pub fn env(&self) -> Result<Environment, Box<BindingError>> {
             boundary(|| environment_to_ffi(self.0.env()))
         }
-        pub fn request_id(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| optional(self.0.request_id()))
+        pub fn request_id(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.request_id(), out)
         }
         pub fn binary_security_token(
             &self,
@@ -353,8 +343,8 @@ pub mod ffi {
         pub fn env(&self) -> Result<Environment, Box<BindingError>> {
             boundary(|| environment_to_ffi(self.0.env()))
         }
-        pub fn request_id(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| optional(self.0.request_id()))
+        pub fn request_id(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.request_id(), out)
         }
         pub fn binary_security_token(
             &self,
@@ -616,8 +606,27 @@ pub mod ffi {
         pub fn ensure_accepted(&self) -> Result<(), Box<BindingError>> {
             boundary(|| self.0.ensure_accepted().map_err(core_error))
         }
-        pub fn cleared_invoice_xml(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| optional(self.0.cleared_invoice_xml().map_err(core_error)?.as_deref()))
+        // A fallible optional string is an `x_present`/`x` pair: Diplomat cannot
+        // express `Result<Option<()>, E>`. The generated facades merge the pair
+        // into one nullable string and hide `x_present`; raw `x` fails when absent.
+        /// Whether the response carries a cleared invoice.
+        pub fn cleared_invoice_xml_present(&self) -> bool {
+            self.0.cleared_invoice_base64().is_some()
+        }
+        /// The decoded cleared invoice, or null when the response has none.
+        /// Fails when the content is not base64-encoded UTF-8 text without NUL.
+        pub fn cleared_invoice_xml(
+            &self,
+            out: &mut DiplomatWrite,
+        ) -> Result<(), Box<BindingError>> {
+            boundary(|| {
+                let xml = self
+                    .0
+                    .cleared_invoice_xml()
+                    .map_err(core_error)?
+                    .ok_or_else(|| local_error(1, "response has no cleared invoice"))?;
+                write(xml, out)
+            })
         }
         pub fn validation_results(&self) -> Result<Box<ValidationResults>, Box<BindingError>> {
             boundary(|| {
@@ -626,30 +635,30 @@ pub mod ffi {
                 )))
             })
         }
-        pub fn cleared_invoice_base64(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| optional(self.0.cleared_invoice_base64()))
+        pub fn cleared_invoice_base64(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.cleared_invoice_base64(), out)
         }
         /// The parsed `reportingStatus`, or null when the response has none.
         pub fn reporting_status(&self) -> Option<ReportingStatus> {
             self.0.reporting_status().map(Into::into)
         }
         /// The `reportingStatus` exactly as ZATCA sent it, or null when absent.
-        pub fn reporting_status_raw(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| optional(self.0.reporting_status().map(|v| v.as_str())))
+        pub fn reporting_status_raw(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.reporting_status().map(|v| v.as_str()), out)
         }
         /// The parsed `clearanceStatus`, or null when the response has none.
         pub fn clearance_status(&self) -> Option<ClearanceStatus> {
             self.0.clearance_status().map(Into::into)
         }
         /// The `clearanceStatus` exactly as ZATCA sent it, or null when absent.
-        pub fn clearance_status_raw(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| optional(self.0.clearance_status().map(|v| v.as_str())))
+        pub fn clearance_status_raw(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.clearance_status().map(|v| v.as_str()), out)
         }
-        pub fn qr_seller_status(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| optional(self.0.qr_seller_status()))
+        pub fn qr_seller_status(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.qr_seller_status(), out)
         }
-        pub fn qr_buyer_status(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| optional(self.0.qr_buyer_status()))
+        pub fn qr_buyer_status(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.qr_buyer_status(), out)
         }
     }
     impl ValidationResults {
@@ -658,8 +667,8 @@ pub mod ffi {
             self.0.status().map(Into::into)
         }
         /// The overall status exactly as ZATCA sent it, or null when absent.
-        pub fn status_raw(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| optional(self.0.status().map(|v| v.as_str())))
+        pub fn status_raw(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.status().map(|v| v.as_str()), out)
         }
         pub fn info_len(&self) -> usize {
             match self.0.info_messages() {
@@ -723,25 +732,25 @@ pub mod ffi {
             self.0.message_type().map(Into::into)
         }
         /// The message `type` exactly as ZATCA sent it, or null when absent.
-        pub fn message_type_raw(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| optional(self.0.message_type().map(|v| v.as_str())))
+        pub fn message_type_raw(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.message_type().map(|v| v.as_str()), out)
         }
-        pub fn code(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| optional(self.0.code()))
+        pub fn code(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.code(), out)
         }
-        pub fn category(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| optional(self.0.category()))
+        pub fn category(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.category(), out)
         }
-        pub fn message(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| optional(self.0.message()))
+        pub fn message(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.message(), out)
         }
         /// The parsed message `status`, or null when the message has none.
         pub fn status(&self) -> Option<ValidationStatus> {
             self.0.status().map(Into::into)
         }
         /// The message `status` exactly as ZATCA sent it, or null when absent.
-        pub fn status_raw(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| optional(self.0.status().map(|v| v.as_str())))
+        pub fn status_raw(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.status().map(|v| v.as_str()), out)
         }
     }
 }
@@ -750,6 +759,16 @@ pub mod ffi {
 mod tests {
     use super::{ffi::*, run};
     use crate::common::ffi::Environment;
+    use crate::common::test_support::{optional_written, written};
+
+    fn cleared_xml(response: &ValidationResponse) -> Result<Option<String>, i32> {
+        if !response.cleared_invoice_xml_present() {
+            return Ok(None);
+        }
+        let mut result = Ok(());
+        let xml = written(|o| result = response.cleared_invoice_xml(o));
+        result.map(|()| Some(xml)).map_err(|error| error.code())
+    }
 
     #[test]
     fn blocking_adapter_supports_nested_runtime_and_contains_panics() {
@@ -783,9 +802,9 @@ mod tests {
             .ok()
             .unwrap();
         assert_eq!(absent.env().ok(), Some(Environment::Simulation));
-        assert!(absent.request_id().ok().unwrap().is_none());
+        assert!(optional_written(|o| absent.request_id(o)).is_none());
         assert_eq!(empty.env().ok(), Some(Environment::Production));
-        assert_eq!(empty.request_id().ok().unwrap().unwrap().0, "");
+        assert_eq!(optional_written(|o| empty.request_id(o)).unwrap(), "");
     }
 
     #[test]
@@ -816,11 +835,14 @@ mod tests {
         assert!(results.error_message(0).is_err());
         let message = results.info_message(0).ok().unwrap();
         drop(results);
-        assert_eq!(message.message().ok().unwrap().unwrap().0, "retained");
+        assert_eq!(
+            optional_written(|o| message.message(o)).unwrap(),
+            "retained"
+        );
     }
 
     #[test]
-    fn response_rejects_nul_text_and_invalid_cleared_xml() {
+    fn response_keeps_nul_text_and_rejects_invalid_cleared_xml() {
         for encoded in ["", "!!!", "AA==", "/w=="] {
             let response = ValidationResponse(
                 serde_json::from_value(serde_json::json!({
@@ -828,7 +850,8 @@ mod tests {
                 }))
                 .unwrap(),
             );
-            assert_eq!(response.cleared_invoice_xml().err().unwrap().code(), 3);
+            assert!(response.cleared_invoice_xml_present());
+            assert_eq!(cleared_xml(&response), Err(3));
         }
         let response = ValidationResponse(
             serde_json::from_value(serde_json::json!({
@@ -836,9 +859,17 @@ mod tests {
             }))
             .unwrap(),
         );
-        assert_eq!(response.reporting_status_raw().err().unwrap().code(), 1);
+        // Nullable strings carry NUL as-is; only the C facade rejects it.
+        assert_eq!(
+            optional_written(|o| response.reporting_status_raw(o)).as_deref(),
+            Some("REPORTED\0")
+        );
         assert_eq!(response.reporting_status(), Some(ReportingStatus::Unknown));
-        assert!(response.cleared_invoice_xml().ok().unwrap().is_none());
+        assert!(!response.cleared_invoice_xml_present());
+        assert_eq!(cleared_xml(&response), Ok(None));
+        let mut result = Ok(());
+        written(|o| result = response.cleared_invoice_xml(o));
+        assert_eq!(result.err().unwrap().code(), 1);
     }
 
     #[test]
@@ -864,48 +895,37 @@ mod tests {
             let results = response.validation_results().ok().unwrap();
             drop(response);
             assert_eq!(results.status(), Some(ValidationStatus::Error));
-            assert_eq!(results.status_raw().ok().unwrap().unwrap().0, "ERROR");
+            assert_eq!(
+                optional_written(|o| results.status_raw(o)).unwrap(),
+                "ERROR"
+            );
             assert_eq!(results.info_len(), expected_len);
             assert_eq!(results.error_len(), 1);
             assert_eq!(results.info_message(expected_len).err().unwrap().code(), 1);
             assert_eq!(results.info_message(usize::MAX).err().unwrap().code(), 1);
             if expected_len > 0 {
-                assert_eq!(
-                    results
-                        .info_message(0)
-                        .ok()
-                        .unwrap()
-                        .code()
-                        .ok()
-                        .unwrap()
-                        .unwrap()
-                        .0,
-                    "BR-KSA-07"
-                );
+                let info = results.info_message(0).ok().unwrap();
+                assert_eq!(optional_written(|o| info.code(o)).unwrap(), "BR-KSA-07");
             }
             if expected_len == 2 {
-                assert_eq!(
-                    results
-                        .info_message(1)
-                        .ok()
-                        .unwrap()
-                        .code()
-                        .ok()
-                        .unwrap()
-                        .unwrap()
-                        .0,
-                    "SECOND"
-                );
+                let info = results.info_message(1).ok().unwrap();
+                assert_eq!(optional_written(|o| info.code(o)).unwrap(), "SECOND");
             }
             let error = results.error_message(0).ok().unwrap();
             drop(results);
             assert_eq!(error.message_type(), Some(MessageType::Warning));
-            assert_eq!(error.message_type_raw().ok().unwrap().unwrap().0, "WARNING");
-            assert_eq!(error.code().ok().unwrap().unwrap().0, "BR-KSA-07");
-            assert_eq!(error.category().ok().unwrap().unwrap().0, "KSA");
-            assert_eq!(error.message().ok().unwrap().unwrap().0, "ملاحظة");
+            assert_eq!(
+                optional_written(|o| error.message_type_raw(o)).unwrap(),
+                "WARNING"
+            );
+            assert_eq!(optional_written(|o| error.code(o)).unwrap(), "BR-KSA-07");
+            assert_eq!(optional_written(|o| error.category(o)).unwrap(), "KSA");
+            assert_eq!(optional_written(|o| error.message(o)).unwrap(), "ملاحظة");
             assert_eq!(error.status(), Some(ValidationStatus::Warning));
-            assert_eq!(error.status_raw().ok().unwrap().unwrap().0, "WARNING");
+            assert_eq!(
+                optional_written(|o| error.status_raw(o)).unwrap(),
+                "WARNING"
+            );
         }
     }
 
@@ -921,22 +941,28 @@ mod tests {
             }))
             .unwrap(),
         );
-        let decoded = response.cleared_invoice_xml().ok().unwrap().unwrap();
+        let decoded = cleared_xml(&response).unwrap().unwrap();
         assert_eq!(
-            response.cleared_invoice_base64().ok().unwrap().unwrap().0,
+            optional_written(|o| response.cleared_invoice_base64(o)).unwrap(),
             encoded
         );
         assert_eq!(response.clearance_status(), Some(ClearanceStatus::Cleared));
         assert_eq!(
-            response.clearance_status_raw().ok().unwrap().unwrap().0,
+            optional_written(|o| response.clearance_status_raw(o)).unwrap(),
             "CLEARED"
         );
         assert!(response.reporting_status().is_none());
-        assert!(response.reporting_status_raw().ok().unwrap().is_none());
-        assert_eq!(response.qr_seller_status().ok().unwrap().unwrap().0, "");
-        assert_eq!(response.qr_buyer_status().ok().unwrap().unwrap().0, "PASS");
+        assert!(optional_written(|o| response.reporting_status_raw(o)).is_none());
+        assert_eq!(
+            optional_written(|o| response.qr_seller_status(o)).unwrap(),
+            ""
+        );
+        assert_eq!(
+            optional_written(|o| response.qr_buyer_status(o)).unwrap(),
+            "PASS"
+        );
         drop(response);
-        assert_eq!(decoded.0, xml);
+        assert_eq!(decoded, xml);
     }
 
     #[test]
@@ -952,20 +978,20 @@ mod tests {
             }))
             .unwrap(),
         );
-        type Out =
-            Result<Option<Box<crate::common::ffi::Text>>, Box<crate::common::ffi::BindingError>>;
-        let text = |value: Out| value.ok().unwrap().unwrap().0;
-        assert_eq!(text(response.reporting_status_raw()), "reported ");
+        let text = |f: &dyn Fn(&mut diplomat_runtime::DiplomatWrite) -> Option<()>| {
+            optional_written(f).unwrap()
+        };
+        assert_eq!(text(&|o| response.reporting_status_raw(o)), "reported ");
         assert_eq!(response.reporting_status(), Some(ReportingStatus::Unknown));
-        assert_eq!(text(response.clearance_status_raw()), "");
+        assert_eq!(text(&|o| response.clearance_status_raw(o)), "");
         assert_eq!(response.clearance_status(), Some(ClearanceStatus::Unknown));
         let results = response.validation_results().ok().unwrap();
-        assert_eq!(text(results.status_raw()), "PARTIAL");
+        assert_eq!(text(&|o| results.status_raw(o)), "PARTIAL");
         assert_eq!(results.status(), Some(ValidationStatus::Unknown));
         let message = results.error_message(0).ok().unwrap();
-        assert_eq!(text(message.message_type_raw()), "Notice");
+        assert_eq!(text(&|o| message.message_type_raw(o)), "Notice");
         assert_eq!(message.message_type(), Some(MessageType::Unknown));
-        assert_eq!(text(message.status_raw()), "WARN");
+        assert_eq!(text(&|o| message.status_raw(o)), "WARN");
         assert_eq!(message.status(), Some(ValidationStatus::Unknown));
     }
 
@@ -1005,7 +1031,7 @@ mod tests {
         let empty = results.error_message(2).ok().unwrap();
         assert!(empty.message_type().is_none());
         assert!(empty.status().is_none());
-        assert!(empty.message_type_raw().ok().unwrap().is_none());
+        assert!(optional_written(|o| empty.message_type_raw(o)).is_none());
     }
 
     #[test]

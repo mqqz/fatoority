@@ -20,14 +20,18 @@ class ValidationResponse internal constructor(internal val raw: com.fatoora.raw.
             InvoiceOutcome.valueOf(raw.outcome().name)
         }
 
+    /**
+     * The decoded cleared invoice, or null when the response has none.
+     * Fails when the content is not base64-encoded UTF-8 text without NUL.
+     */
     val clearedInvoiceXml: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.clearedInvoiceXml())?.let(::readText)
+            if (raw.clearedInvoiceXmlPresent()) unwrap(raw.clearedInvoiceXml()) else null
         }
 
     val clearedInvoiceBase64: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.clearedInvoiceBase64())?.let(::readText)
+            raw.clearedInvoiceBase64()
         }
 
     /**
@@ -43,7 +47,7 @@ class ValidationResponse internal constructor(internal val raw: com.fatoora.raw.
      */
     val reportingStatusRaw: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.reportingStatusRaw())?.let(::readText)
+            raw.reportingStatusRaw()
         }
 
     /**
@@ -59,17 +63,17 @@ class ValidationResponse internal constructor(internal val raw: com.fatoora.raw.
      */
     val clearanceStatusRaw: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.clearanceStatusRaw())?.let(::readText)
+            raw.clearanceStatusRaw()
         }
 
     val qrSellerStatus: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.qrSellerStatus())?.let(::readText)
+            raw.qrSellerStatus()
         }
 
     val qrBuyerStatus: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.qrBuyerStatus())?.let(::readText)
+            raw.qrBuyerStatus()
         }
 
     fun ensureAccepted(): Unit = nativeCall(listOfNotNull(this)) {

@@ -15,8 +15,6 @@ namespace capi { struct Address; }
 class Address;
 namespace capi { struct BindingError; }
 class BindingError;
-namespace capi { struct Text; }
-class Text;
 } // namespace _native
 
 
@@ -59,11 +57,17 @@ public:
   template<typename W>
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> country_code_write(W& writeable_output) const;
 
-  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> additional_street() const;
+  inline std::optional<std::string> additional_street() const;
+  template<typename W>
+  inline std::optional<std::monostate> additional_street_write(W& writeable_output) const;
 
-  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> additional_number() const;
+  inline std::optional<std::string> additional_number() const;
+  template<typename W>
+  inline std::optional<std::monostate> additional_number_write(W& writeable_output) const;
 
-  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> district() const;
+  inline std::optional<std::string> district() const;
+  template<typename W>
+  inline std::optional<std::monostate> district_write(W& writeable_output) const;
 
     inline const _native::capi::Address* AsFFI() const;
     inline _native::capi::Address* AsFFI();

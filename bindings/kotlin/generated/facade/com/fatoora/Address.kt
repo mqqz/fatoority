@@ -49,17 +49,17 @@ class Address internal constructor(internal val raw: com.fatoora.raw.Address) : 
 
     val additionalStreet: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.additionalStreet())?.let(::readText)
+            raw.additionalStreet()
         }
 
     val additionalNumber: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.additionalNumber())?.let(::readText)
+            raw.additionalNumber()
         }
 
     val district: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.district())?.let(::readText)
+            raw.district()
         }
 
     fun withProvince(value: String): Address = nativeCall(listOfNotNull(this)) {

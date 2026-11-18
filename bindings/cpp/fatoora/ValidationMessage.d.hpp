@@ -12,10 +12,6 @@
 #include "../diplomat_runtime.hpp"
 
 namespace fatoora {
-namespace capi { struct BindingError; }
-class BindingError;
-namespace capi { struct Text; }
-class Text;
 class MessageType;
 class ValidationStatus;
 } // namespace fatoora
@@ -41,13 +37,21 @@ public:
   /**
    * The message `type` exactly as ZATCA sent it, or null when absent.
    */
-  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> message_type_raw() const;
+  inline std::optional<std::string> message_type_raw() const;
+  template<typename W>
+  inline std::optional<std::monostate> message_type_raw_write(W& writeable_output) const;
 
-  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> code() const;
+  inline std::optional<std::string> code() const;
+  template<typename W>
+  inline std::optional<std::monostate> code_write(W& writeable_output) const;
 
-  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> category() const;
+  inline std::optional<std::string> category() const;
+  template<typename W>
+  inline std::optional<std::monostate> category_write(W& writeable_output) const;
 
-  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> message() const;
+  inline std::optional<std::string> message() const;
+  template<typename W>
+  inline std::optional<std::monostate> message_write(W& writeable_output) const;
 
   /**
    * The parsed message `status`, or null when the message has none.
@@ -57,7 +61,9 @@ public:
   /**
    * The message `status` exactly as ZATCA sent it, or null when absent.
    */
-  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> status_raw() const;
+  inline std::optional<std::string> status_raw() const;
+  template<typename W>
+  inline std::optional<std::monostate> status_raw_write(W& writeable_output) const;
 
     inline const fatoora::capi::ValidationMessage* AsFFI() const;
     inline fatoora::capi::ValidationMessage* AsFFI();

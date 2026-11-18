@@ -40,15 +40,12 @@ Library errors throw one `FatooraException` subclass per `ErrorKind`
 `DetailsJson`; exceptions hold no native resources.
 Releasing native memory does not guarantee erasure of secrets or managed copies.
 
-`Bytes.AsSlice()` returns a disposable `RustVec` holding a native copy of the
-bytes, so it stays valid after its owner is disposed. Call `Clone()` to obtain an
-independent `byte[]`, or `WithSpan()` for a scoped read. Disposing a view while a
-read is active throws `InvalidOperationException`; retry after the read completes.
+`Bytes.ToArray()` copies the bytes into a new `byte[]`, which stays valid after
+its owner is disposed.
 
 ```csharp
 using var bytes = restored.ToDer();
-using var view = bytes.AsSlice();
-byte[] der = view.Clone();
+byte[] der = bytes.ToArray();
 ```
 
 Methods using `&mut self` reject conflicting concurrent calls. Native network
@@ -107,8 +104,9 @@ Edit generator inputs or the fork, then regenerate; do not edit generated C#.
 
 `generate_dotnet.py` post-processes the fork's output into the public API rather
 than wrapping it, so each class keeps the generated handle, disposal and lifetime
-code. The pass turns scalar getters into properties, copies optional `Text`
-results into `string?`, maps every decimal the Rust FFI parses or returns to
+code. The pass turns scalar getters into properties, merges each
+`x_present`/`x` pair into one `string?` property, copies native byte buffers
+into `byte[]`, maps every decimal the Rust FFI parses or returns to
 `decimal` (derived from `fatoora-ffi` and `fatoora-core` sources), and throws
 `FatooraException` subclasses from `src/Errors.cs`. Hand-written support code lives in
 `src/`; it contains no per-type wrappers.

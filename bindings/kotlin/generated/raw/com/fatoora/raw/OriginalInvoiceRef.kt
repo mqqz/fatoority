@@ -8,11 +8,11 @@ import com.sun.jna.Structure
 internal interface OriginalInvoiceRefLib: Library {
     fun fatoora_OriginalInvoiceRef_destroy(handle: Pointer)
     fun fatoora_OriginalInvoiceRef_new(id: Slice, uuid: OptionSlice, date: OptionSlice, time: OptionSlice, typeCode: OptionSlice): ResultPointerPointer
-    fun fatoora_OriginalInvoiceRef_issue_time(handle: Pointer): ResultPointerPointer
-    fun fatoora_OriginalInvoiceRef_document_type_code(handle: Pointer): ResultPointerPointer
+    fun fatoora_OriginalInvoiceRef_issue_time(handle: Pointer, write: Pointer): OptionUnit
+    fun fatoora_OriginalInvoiceRef_document_type_code(handle: Pointer, write: Pointer): OptionUnit
     fun fatoora_OriginalInvoiceRef_id(handle: Pointer, write: Pointer): ResultUnitPointer
-    fun fatoora_OriginalInvoiceRef_uuid(handle: Pointer): ResultPointerPointer
-    fun fatoora_OriginalInvoiceRef_issue_date(handle: Pointer): ResultPointerPointer
+    fun fatoora_OriginalInvoiceRef_uuid(handle: Pointer, write: Pointer): OptionUnit
+    fun fatoora_OriginalInvoiceRef_issue_date(handle: Pointer, write: Pointer): OptionUnit
 }
 
 class OriginalInvoiceRef internal constructor (
@@ -76,38 +76,32 @@ class OriginalInvoiceRef internal constructor (
         }
     }
 
-    fun issueTime(): Result<Text?> {
+    fun issueTime(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_OriginalInvoiceRef_issue_time(handle, write);
 
-        val returnVal = lib.fatoora_OriginalInvoiceRef_issue_time(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
-    fun documentTypeCode(): Result<Text?> {
+    fun documentTypeCode(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_OriginalInvoiceRef_document_type_code(handle, write);
 
-        val returnVal = lib.fatoora_OriginalInvoiceRef_document_type_code(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
     fun id(): Result<String> {
@@ -127,38 +121,32 @@ class OriginalInvoiceRef internal constructor (
         }
     }
 
-    fun uuid(): Result<Text?> {
+    fun uuid(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_OriginalInvoiceRef_uuid(handle, write);
 
-        val returnVal = lib.fatoora_OriginalInvoiceRef_uuid(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
-    fun issueDate(): Result<Text?> {
+    fun issueDate(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_OriginalInvoiceRef_issue_date(handle, write);
 
-        val returnVal = lib.fatoora_OriginalInvoiceRef_issue_date(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
 }

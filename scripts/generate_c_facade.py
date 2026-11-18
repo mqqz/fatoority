@@ -53,7 +53,7 @@ def generate():
     headers = sorted((ROOT / "bindings/c/generated").glob("*.h"))
     texts = {p: p.read_text() for p in headers}
     opaque = sorted(set(re.findall(r"typedef struct (\w+) \1;", "\n".join(texts.values()))))
-    handles = [t for t in opaque if t not in ("BindingError", "Text", "Xml")]
+    handles = [t for t in opaque if t not in ("BindingError", "Xml")]
     enums = {
         name: re.findall(r"^  " + name + r"_(\w+) = (-?\d+),$", body, re.M)
         for name, body in re.findall(r"typedef enum (\w+) \{\n(.*?)\} \1;", "\n".join(texts.values()), re.S)
@@ -127,12 +127,20 @@ const char *fatoora_error_details_json(const FatooraError *error);
         # Tag-only results: a writer method returning Option<()> (optional string).
         results.update((name, "") for name in re.findall(r"typedef struct (fatoora_\w+_result) \{ bool is_ok;\} \1;", text))
         declarations = re.findall(r"^.*\bfatoora_\w+\(.*\);$", text, re.M)
+        natives = {re.search(r"\b(fatoora_\w+)\(", d).group(1): d.split(" ", 1)[0] for d in declarations}
         for declaration_text in declarations:
             match = re.fullmatch(r"(\w+\*?) (fatoora_(\w+?)_(\w+))\((.*?)\);", declaration_text)
             if not match:
                 raise ValueError(f"Unsupported function declaration: {declaration_text}")
             ret, native, owner, method, params = match.groups()
-            if owner in ("BindingError", "Text", *enums) or (owner == "Xml" and method == "destroy"):
+            if owner in ("BindingError", *enums) or (owner == "Xml" and method == "destroy"):
+                continue
+            # An `x_present`/`x` pair is one optional string: `x` leaves *out NULL
+            # when `x_present` is false, and `x_present` is not exported on its own.
+            presence = f"fatoora_{owner}_{method}_present"
+            if presence not in natives:
+                presence = None
+            if method.endswith("_present") and f"fatoora_{owner}_{method[:-8]}" in natives:
                 continue
             name = "fatoora_" + snake(owner) + "_" + ("free" if method == "destroy" else method)
             args, call, checks, init = [], [], [], ["    if (error) *error = NULL;"]
@@ -198,7 +206,7 @@ const char *fatoora_error_details_json(const FatooraError *error);
                 ok = re.search(r"(\w+\*?) ok;", fields or "")
                 value_type = ok.group(1) if ok else (ret if fields is None else None)
                 if value_type and value_type not in {
-                    "Text*", "bool", "uint8_t", "uint16_t", "uint32_t", "uint64_t", "size_t",
+                    "bool", "uint8_t", "uint16_t", "uint32_t", "uint64_t", "size_t",
                     "DiplomatU8View", *enums, *(handle + "*" for handle in handles)
                 }:
                     raise ValueError(f"Unsupported return type in {native}: {value_type}")
@@ -206,8 +214,8 @@ const char *fatoora_error_details_json(const FatooraError *error);
                     if value_type:
                         raise ValueError(f"Unexpected writer value: {native}")
                     out_type = "char*"
-                elif value_type == "Text*":
-                    out_type = "char*"
+                elif presence:
+                    raise ValueError(f"Presence check for a non-string result: {native}")
                 elif value_type == "DiplomatU8View":
                     out_type = "FatooraBytesView"
                 elif value_type:
@@ -219,7 +227,7 @@ const char *fatoora_error_details_json(const FatooraError *error);
                     checks.append("!out")
                     zero = "(FatooraBytesView){0}" if out_type == "FatooraBytesView" else "0"
                     init.append(f"    if (out) *out = {zero};")
-                # An optional string leaves *out NULL for None, like a NULL Text*.
+                # An optional string leaves *out NULL for None.
                 optional_string = writer and fields == ""
                 optional_scalar = fields is not None and not fallible and not optional_string
                 if optional_scalar:
@@ -233,6 +241,13 @@ const char *fatoora_error_details_json(const FatooraError *error);
                     body.extend(["    if (!options)", '        return fatoora_private_fail(FATOORA_INVALID_INPUT, "options is NULL", error);', *bindings])
                 if checks:
                     body.extend([f"    if ({' || '.join(checks)})", '        return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);'])
+                if presence:
+                    if natives[presence] == "bool":
+                        body.extend([f"    if (!{presence}(self))", "        return FATOORA_OK;"])
+                    else:
+                        body.extend([f"    {natives[presence]} present = {presence}(self);",
+                                     "    if (!present.is_ok)", "        return fatoora_private_error(present.err, error);",
+                                     "    if (!present.ok)", "        return FATOORA_OK;"])
                 if writer:
                     body.extend(["    DiplomatWrite write = fatoora_private_writer();", "    if (write.grow_failed)", '        return fatoora_private_fail(FATOORA_INTERNAL, "output allocation failed", error);'])
                 if fallible:
@@ -257,8 +272,6 @@ const char *fatoora_error_details_json(const FatooraError *error);
                     value = None
                 if writer:
                     body.append("    return fatoora_private_finish(&write, out, error);")
-                elif value_type == "Text*":
-                    body.append(f"    return fatoora_private_text({value}, out, error);")
                 else:
                     if value and value_type == "DiplomatU8View":
                         body.extend([f"    out->data = {value}.data;", f"    out->len = {value}.len;"])

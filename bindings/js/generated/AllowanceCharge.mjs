@@ -2,7 +2,6 @@
 import { AdjustmentKind } from "./AdjustmentKind.mjs"
 import { BindingError } from "./BindingError.mjs"
 import { TaxExemption } from "./TaxExemption.mjs"
-import { Text } from "./Text.mjs"
 import { VatCategory } from "./VatCategory.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
@@ -103,42 +102,34 @@ export class AllowanceCharge {
     }
 
     baseAmount() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
 
-        const result = wasm.fatoora_AllowanceCharge_base_amount(diplomatReceive.buffer, this.ffiValue);
+        const result = wasm.fatoora_AllowanceCharge_base_amount(this.ffiValue, write.buffer);
 
         try {
-            if (!diplomatReceive.resultFlag) {
-                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
-            }
-            return diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer) === 0 ? null : new Text(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+            return result === 0 ? null : write.readString8();
         }
 
         finally {
             diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
-            diplomatReceive.free();
+            write.free();
         }
     }
 
     percentage() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
 
-        const result = wasm.fatoora_AllowanceCharge_percentage(diplomatReceive.buffer, this.ffiValue);
+        const result = wasm.fatoora_AllowanceCharge_percentage(this.ffiValue, write.buffer);
 
         try {
-            if (!diplomatReceive.resultFlag) {
-                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
-            }
-            return diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer) === 0 ? null : new Text(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+            return result === 0 ? null : write.readString8();
         }
 
         finally {
             diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
-            diplomatReceive.free();
+            write.free();
         }
     }
 
@@ -277,42 +268,34 @@ export class AllowanceCharge {
     }
 
     reason() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
 
-        const result = wasm.fatoora_AllowanceCharge_reason(diplomatReceive.buffer, this.ffiValue);
+        const result = wasm.fatoora_AllowanceCharge_reason(this.ffiValue, write.buffer);
 
         try {
-            if (!diplomatReceive.resultFlag) {
-                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
-            }
-            return diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer) === 0 ? null : new Text(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+            return result === 0 ? null : write.readString8();
         }
 
         finally {
             diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
-            diplomatReceive.free();
+            write.free();
         }
     }
 
     reasonCode() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
 
-        const result = wasm.fatoora_AllowanceCharge_reason_code(diplomatReceive.buffer, this.ffiValue);
+        const result = wasm.fatoora_AllowanceCharge_reason_code(this.ffiValue, write.buffer);
 
         try {
-            if (!diplomatReceive.resultFlag) {
-                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
-            }
-            return diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer) === 0 ? null : new Text(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+            return result === 0 ? null : write.readString8();
         }
 
         finally {
             diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
-            diplomatReceive.free();
+            write.free();
         }
     }
 

@@ -8,7 +8,6 @@
 #include "diplomat_runtime.h"
 
 #include "BindingError.d.h"
-#include "Text.d.h"
 #include "ValidationMessage.d.h"
 #include "ValidationStatus.d.h"
 
@@ -22,8 +21,8 @@
 typedef struct fatoora_ValidationResults_status_result {union {ValidationStatus ok; }; bool is_ok;} fatoora_ValidationResults_status_result;
 fatoora_ValidationResults_status_result fatoora_ValidationResults_status(const ValidationResults* self);
 
-typedef struct fatoora_ValidationResults_status_raw_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_ValidationResults_status_raw_result;
-fatoora_ValidationResults_status_raw_result fatoora_ValidationResults_status_raw(const ValidationResults* self);
+typedef struct fatoora_ValidationResults_status_raw_result { bool is_ok;} fatoora_ValidationResults_status_raw_result;
+fatoora_ValidationResults_status_raw_result fatoora_ValidationResults_status_raw(const ValidationResults* self, DiplomatWrite* write);
 
 size_t fatoora_ValidationResults_info_len(const ValidationResults* self);
 

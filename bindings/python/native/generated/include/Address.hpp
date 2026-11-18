@@ -12,7 +12,6 @@
 #include <optional>
 #include <cstdlib>
 #include "BindingError.hpp"
-#include "Text.hpp"
 #include "diplomat_runtime.hpp"
 
 
@@ -44,14 +43,14 @@ namespace capi {
     typedef struct fatoora_Address_country_code_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_Address_country_code_result;
     fatoora_Address_country_code_result fatoora_Address_country_code(const _native::capi::Address* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_Address_additional_street_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_Address_additional_street_result;
-    fatoora_Address_additional_street_result fatoora_Address_additional_street(const _native::capi::Address* self);
+    typedef struct fatoora_Address_additional_street_result { bool is_ok;} fatoora_Address_additional_street_result;
+    fatoora_Address_additional_street_result fatoora_Address_additional_street(const _native::capi::Address* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_Address_additional_number_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_Address_additional_number_result;
-    fatoora_Address_additional_number_result fatoora_Address_additional_number(const _native::capi::Address* self);
+    typedef struct fatoora_Address_additional_number_result { bool is_ok;} fatoora_Address_additional_number_result;
+    fatoora_Address_additional_number_result fatoora_Address_additional_number(const _native::capi::Address* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_Address_district_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_Address_district_result;
-    fatoora_Address_district_result fatoora_Address_district(const _native::capi::Address* self);
+    typedef struct fatoora_Address_district_result { bool is_ok;} fatoora_Address_district_result;
+    fatoora_Address_district_result fatoora_Address_district(const _native::capi::Address* self, _native::diplomat::capi::DiplomatWrite* write);
 
     void fatoora_Address_destroy(Address* self);
 
@@ -167,19 +166,49 @@ inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::Bindin
     return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> _native::Address::additional_street() const {
-    auto result = _native::capi::fatoora_Address_additional_street(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::Address::additional_street() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_Address_additional_street(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::Address::additional_street_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_Address_additional_street(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> _native::Address::additional_number() const {
-    auto result = _native::capi::fatoora_Address_additional_number(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::Address::additional_number() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_Address_additional_number(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::Address::additional_number_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_Address_additional_number(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> _native::Address::district() const {
-    auto result = _native::capi::fatoora_Address_district(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::Address::district() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_Address_district(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::Address::district_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_Address_district(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline const _native::capi::Address* _native::Address::AsFFI() const {

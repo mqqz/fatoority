@@ -23,7 +23,7 @@ class ProductionCsid internal constructor(internal val raw: com.fatoora.raw.Prod
 
     val requestId: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.requestId())?.let(::readText)
+            raw.requestId()
         }
 
     val binarySecurityToken: String

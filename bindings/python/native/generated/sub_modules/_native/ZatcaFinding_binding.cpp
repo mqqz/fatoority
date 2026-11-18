@@ -18,7 +18,7 @@ void add_ZatcaFinding_binding(nb::module_ mod) {
         .def("location_column", &_native::ZatcaFinding::location_column, "One-based XML column, or null when unknown.")
         .def("location_kind", &_native::ZatcaFinding::location_kind, "The kind of location, or null when the source cannot locate the finding.")
         .def("location_line", &_native::ZatcaFinding::location_line, "One-based XML line, or null when the location is not XML coordinates.")
-        .def("location_path", std::move(maybe_op_unwrap(&_native::ZatcaFinding::location_path)), "The field path or XPath, or null for other location kinds.")
+        .def("location_path", &_native::ZatcaFinding::location_path, "The field path or XPath, or null for other location kinds.")
         .def("message", std::move(maybe_op_unwrap(&_native::ZatcaFinding::message)), "Human-readable text; the wording is not a stable API.")
         .def("severity", &_native::ZatcaFinding::severity);
 }

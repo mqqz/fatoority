@@ -27,37 +27,37 @@ class InvoiceData internal constructor(internal val raw: com.fatoora.raw.Invoice
 
     val purchaseOrderId: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.purchaseOrderId())?.let(::readText)
+            raw.purchaseOrderId()
         }
 
     val contractId: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.contractId())?.let(::readText)
+            raw.contractId()
         }
 
     val paymentInstruction: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.paymentInstruction())?.let(::readText)
+            raw.paymentInstruction()
         }
 
     val actualDeliveryDate: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.actualDeliveryDate())?.let(::readText)
+            raw.actualDeliveryDate()
         }
 
     val latestDeliveryDate: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.latestDeliveryDate())?.let(::readText)
+            raw.latestDeliveryDate()
         }
 
     val taxCurrency: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.taxCurrency())?.let(::readText)
+            raw.taxCurrency()
         }
 
     val taxCurrencyAmount: java.math.BigDecimal?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.taxCurrencyAmount())?.let(::readText)?.let(::decimalOf)
+            raw.taxCurrencyAmount()?.let(::decimalOf)
         }
 
     val adjustmentsLen: java.math.BigInteger
@@ -107,7 +107,7 @@ class InvoiceData internal constructor(internal val raw: com.fatoora.raw.Invoice
 
     val allowanceReason: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.allowanceReason())?.let(::readText)
+            raw.allowanceReason()
         }
 
     val invoiceCounter: java.math.BigInteger
@@ -142,7 +142,7 @@ class InvoiceData internal constructor(internal val raw: com.fatoora.raw.Invoice
 
     val originalInvoiceReason: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.originalInvoiceReason())?.let(::readText)
+            raw.originalInvoiceReason()
         }
 
     val notesLen: java.math.BigInteger

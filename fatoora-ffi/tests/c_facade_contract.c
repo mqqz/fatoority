@@ -113,10 +113,18 @@ static void invoices(const char *fixture) {
     fatoora_string_free(computed_hash);
     fatoora_string_free(raw_hash);
     fatoora_string_free(xml);
+    char *key_signature = NULL;
+    assert(fatoora_signed_invoice_zatca_key_signature(signed_invoice, &key_signature, &error) == FATOORA_OK);
+    assert(key_signature && strlen(key_signature));
+    fatoora_string_free(key_signature);
     assert(fatoora_signed_invoice_into_xml(signed_invoice, &xml, &error) == FATOORA_OK);
     assert(strstr(xml, "Invoice"));
     failure(fatoora_signed_invoice_xml(signed_invoice, &value, &error), &error);
     assert(!value);
+    /* A consumed invoice fails rather than reporting an absent signature. */
+    key_signature = (char *)"stale";
+    failure(fatoora_signed_invoice_zatca_key_signature(signed_invoice, &key_signature, &error), &error);
+    assert(!key_signature);
     fatoora_signed_invoice_free(signed_invoice);
     fatoora_string_free(xml);
 }
@@ -249,7 +257,27 @@ static void statuses(const char *fixture) {
     assert(has_value && type == FATOORA_MESSAGE_TYPE_ERROR);
     fatoora_validation_message_free(message);
     fatoora_validation_results_free(results);
+    char *cleared = (char *)"stale";
+    assert(fatoora_validation_response_cleared_invoice_xml(response, &cleared, &error) == FATOORA_OK);
+    assert(!cleared);
     fatoora_validation_response_free(response);
+    const char *bodies[] = {
+        "{\"validationResults\":{},\"clearedInvoice\":\"PEludm9pY2UvPg==\"}",
+        "{\"validationResults\":{},\"clearedInvoice\":\"!!!\"}",
+    };
+    for (size_t i = 0; i < 2; i++) {
+        assert(fatoora_invoice_request_decode(request, 200, (const uint8_t *)bodies[i], strlen(bodies[i]),
+            &response, &error) == FATOORA_OK);
+        if (i == 0) {
+            assert(fatoora_validation_response_cleared_invoice_xml(response, &cleared, &error) == FATOORA_OK);
+            assert(cleared && strcmp(cleared, "<Invoice/>") == 0);
+            fatoora_string_free(cleared);
+        } else {
+            failure(fatoora_validation_response_cleared_invoice_xml(response, &cleared, &error), &error);
+            assert(!cleared);
+        }
+        fatoora_validation_response_free(response);
+    }
     fatoora_invoice_request_free(request);
     fatoora_signed_invoice_free(invoice);
     fatoora_production_csid_free(credentials);

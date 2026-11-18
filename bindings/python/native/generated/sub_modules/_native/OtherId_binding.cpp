@@ -12,7 +12,7 @@ void add_OtherId_binding(nb::module_ mod) {
     
     nb::class_<_native::OtherId> opaque(mod, "OtherId", nb::type_slots(_native_OtherId_slots));
     opaque
-        .def("scheme", std::move(maybe_op_unwrap(&_native::OtherId::scheme)))
+        .def("scheme", &_native::OtherId::scheme)
         .def("value", std::move(maybe_op_unwrap(&_native::OtherId::value)));
 }
 

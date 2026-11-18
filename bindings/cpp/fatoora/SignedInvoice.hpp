@@ -15,7 +15,6 @@
 #include "BindingError.hpp"
 #include "InvoiceData.hpp"
 #include "InvoiceTotals.hpp"
-#include "Text.hpp"
 
 
 namespace fatoora {
@@ -70,8 +69,11 @@ namespace capi {
     typedef struct fatoora_SignedInvoice_signing_time_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_signing_time_result;
     fatoora_SignedInvoice_signing_time_result fatoora_SignedInvoice_signing_time(const fatoora::capi::SignedInvoice* self, diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_SignedInvoice_zatca_key_signature_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_zatca_key_signature_result;
-    fatoora_SignedInvoice_zatca_key_signature_result fatoora_SignedInvoice_zatca_key_signature(const fatoora::capi::SignedInvoice* self);
+    typedef struct fatoora_SignedInvoice_zatca_key_signature_present_result {union {bool ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_zatca_key_signature_present_result;
+    fatoora_SignedInvoice_zatca_key_signature_present_result fatoora_SignedInvoice_zatca_key_signature_present(const fatoora::capi::SignedInvoice* self);
+
+    typedef struct fatoora_SignedInvoice_zatca_key_signature_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_zatca_key_signature_result;
+    fatoora_SignedInvoice_zatca_key_signature_result fatoora_SignedInvoice_zatca_key_signature(const fatoora::capi::SignedInvoice* self, diplomat::capi::DiplomatWrite* write);
 
     typedef struct fatoora_SignedInvoice_into_xml_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_into_xml_result;
     fatoora_SignedInvoice_into_xml_result fatoora_SignedInvoice_into_xml(fatoora::capi::SignedInvoice* self, diplomat::capi::DiplomatWrite* write);
@@ -282,9 +284,24 @@ inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> 
     return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> fatoora::SignedInvoice::zatca_key_signature() const {
-    auto result = fatoora::capi::fatoora_SignedInvoice_zatca_key_signature(this->AsFFI());
-    return result.is_ok ? diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline diplomat::result<bool, std::unique_ptr<fatoora::BindingError>> fatoora::SignedInvoice::zatca_key_signature_present() const {
+    auto result = fatoora::capi::fatoora_SignedInvoice_zatca_key_signature_present(this->AsFFI());
+    return result.is_ok ? diplomat::result<bool, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<bool>(result.ok)) : diplomat::result<bool, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+
+inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> fatoora::SignedInvoice::zatca_key_signature() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_SignedInvoice_zatca_key_signature(this->AsFFI(),
+        &write);
+    return result.is_ok ? diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::string>(std::move(output))) : diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+}
+template<typename W>
+inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> fatoora::SignedInvoice::zatca_key_signature_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_SignedInvoice_zatca_key_signature(this->AsFFI(),
+        &write);
+    return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
 inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> fatoora::SignedInvoice::into_xml() {

@@ -16,14 +16,26 @@
 - Python: drop support for Python 3.9, which reached end of life in October
   2025. The package now requires Python 3.10 or newer and no longer ships
   `cp39` wheels.
-- C#: `Bytes.AsSlice()` returns a `RustVec` holding a native copy of the bytes
-  instead of a `DiplomatBorrowedSpan<byte>` view, so it stays valid after its
-  owner is disposed. `Clone()`, `WithSpan()`, `Length` and `using` work as
-  before.
-- Bindings: `Address.province` and `ZatcaFinding.assertion_site` return a
-  plain nullable string in every language instead of a `Text` handle. This
-  changes the raw JavaScript methods and the deprecated Kotlin
-  `province()`/`assertionSite()` methods, which returned `Text?`.
+- C#: `Bytes.AsSlice()`, which returned a disposable `DiplomatBorrowedSpan<byte>`
+  view, is replaced by `Bytes.ToArray()`, which returns a new `byte[]` that
+  stays valid after its owner is disposed. No `Fatoora.Diplomat` byte-view type
+  is public any more.
+- Bindings: the `Text` string handle is removed from every binding: the
+  JavaScript package root and `fatoority/raw` no longer export it, and the
+  C# `Fatoora.Text`, Kotlin `com.fatoora.raw.Text`, C++ `fatoora::Text` and
+  Python `fatoora._native.Text` classes are gone. Every string the bridge
+  returns is a plain string or a nullable string (`str | None`,
+  `string | null`, `String?`, `string?`, `std::optional<std::string>`, or a
+  `NULL` C string). The idiomatic APIs and the C facade keep their signatures;
+  the raw C++ and Kotlin classes return strings where they returned `Text`.
+  An optional string containing NUL is returned unchanged instead of
+  failing, except in C, which still reports `FATOORA_INVALID_INPUT`.
+- C++ and raw Kotlin: `ValidationResponse::cleared_invoice_xml` and
+  `SignedInvoice::zatca_key_signature` return a plain string and fail when the
+  value is absent; check the new `cleared_invoice_xml_present()` and
+  `zatca_key_signature_present()` (Kotlin `clearedInvoiceXmlPresent()`,
+  `zatcaKeySignaturePresent()`) first. Every other binding still returns one
+  nullable string.
 - Rust (`fatoora-core`): `InvoiceData` no longer stores the 0.5 aggregate
   fields `invoice_level_discount`, `invoice_level_charge`,
   `adjustment_vat_rate` and `allowance_reason`; document-level allowances and
@@ -100,6 +112,11 @@
   `DiplomatWrite` method returning `Option<()>`); the Kotlin patch frees the
   write buffer when the result is absent. The C facade rejects any string
   output containing NUL.
+- Every FFI string return writes into a `DiplomatWrite`; the `Text` opaque
+  and its special cases in the C, C#, Kotlin, JavaScript and Python facades are
+  removed. A fallible optional string is an `x_present`/`x` pair that the
+  generators merge into one nullable string (see
+  `docs/development/diplomat.md`).
 
 ### Removed
 

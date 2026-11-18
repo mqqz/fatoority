@@ -13,7 +13,7 @@ internal partial struct ValidationResults
     internal static unsafe extern DiplomatOptionValidationStatus Status(ValidationResults* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ValidationResults_status_raw", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError StatusRaw(ValidationResults* handle);
+    internal static unsafe extern DiplomatOptionVoid StatusRaw(ValidationResults* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ValidationResults_info_len", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern nuint InfoLen(ValidationResults* handle);

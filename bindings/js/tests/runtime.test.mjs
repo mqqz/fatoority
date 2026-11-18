@@ -6,7 +6,7 @@ import * as raw from '../raw.mjs';
 import * as generated from '../generated/index.mjs';
 import wasm from '../generated/diplomat-wasm.mjs';
 import { integerBooleanMethods } from '../patch.mjs';
-import { properties, textResults } from '../members.mjs';
+import { optionalResults, properties } from '../members.mjs';
 const loadFixture = (path) => readFileSync(new URL(`../../../fatoora-core/tests/fixtures/${path}`, import.meta.url), 'utf8');
 const config = sdk.Config.create(sdk.Environment.NonProduction);
 const ccsid = () => sdk.ComplianceCsid.create(sdk.Environment.NonProduction, '123', 'token', 'secret');
@@ -56,7 +56,9 @@ test('prepared request retains context after invoice consumption and WASM memory
   const request = raw.ZatcaClient.create(config).prepareReportSimplifiedInvoice(inv, pcsid(), sdk.ClearanceMode.Disabled, 'ar');
   const bytes = request.body().asSlice();
   const original = JSON.parse(Buffer.from(bytes).toString());
+  assert.match(inv.zatcaKeySignature, /^[A-Za-z0-9+/]+=*$/);
   inv.intoXml();
+  assert.throws(() => inv.zatcaKeySignature, code(1));
   wasm.memory.grow(1);
   for (let i = 0; i < 20; i++) sdk.SigningKey.generate();
   assert.equal(JSON.parse(Buffer.from(request.body().asSlice()).toString()).invoiceHash, original.invoiceHash);
@@ -72,6 +74,10 @@ test('prepared request retains context after invoice consumption and WASM memory
   assert.equal(unknown.reportingStatus, sdk.ReportingStatus.Unknown);
   assert.equal(unknown.reportingStatusRaw, 'LATER');
   assert.equal(unknown.validationResults().status, sdk.ValidationStatus.Unknown);
+  const decode = (body) => request.decode(200, [...Buffer.from(JSON.stringify({validationResults: {}, ...body}))]);
+  assert.equal(result.clearedInvoiceXml, null);
+  assert.equal(decode({clearedInvoice: Buffer.from('<Invoice/>').toString('base64')}).clearedInvoiceXml, '<Invoice/>');
+  assert.throws(() => decode({clearedInvoice: '!!!'}).clearedInvoiceXml, code(3));
 });
 
 test('fetch sees Rust headers and body; concurrent requests decode independently', async () => {
@@ -355,7 +361,10 @@ test('generated boolean getters return booleans', () => {
     let source;
     try { source = readFileSync(new URL(`../generated/${name}.d.mts`, import.meta.url), 'utf8'); }
     catch { continue; }
-    const methods = [...source.matchAll(/^    (\w+)\(\): boolean;$/gm)].map(m => m[1]);
+    // `*Present` halves of optional-string pairs are removed, not adapted.
+    const hidden = Object.values(optionalResults[name] ?? {});
+    const methods = [...source.matchAll(/^    (\w+)\(\): boolean;$/gm)].map(m => m[1])
+      .filter(method => !hidden.includes(method));
     if (methods.length) declared[name] = methods;
   }
   assert.deepEqual(integerBooleanMethods, declared);
@@ -396,10 +405,11 @@ test('value getters are read-only properties and optional text is a plain string
   // The 0.5 call form is a hard break: the property value is not callable.
   assert.throws(() => address.city(), TypeError);
   assert.throws(() => { 'use strict'; address.city = 'Jeddah'; }, TypeError);
-  for (const [name, members] of Object.entries(textResults)) {
-    for (const member of members) {
+  for (const [name, pairs] of Object.entries(optionalResults)) {
+    for (const [member, has] of Object.entries(pairs)) {
       const descriptor = Object.getOwnPropertyDescriptor(generated[name].prototype, member);
-      assert.equal(typeof (descriptor.get ?? descriptor.value), 'function', `${name}.${member}`);
+      assert.equal(typeof descriptor?.get, 'function', `${name}.${member}`);
+      assert.equal(has in generated[name].prototype, false, `${name}.${has}`);
     }
   }
   const rebate = sdk.Adjustment.percentOf('250', '10').withReason('rebate', null);

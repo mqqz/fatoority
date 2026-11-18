@@ -18,22 +18,22 @@ class InvoiceLineItem internal constructor(internal val raw: com.fatoora.raw.Inv
 
     val itemGrossPrice: java.math.BigDecimal?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.itemGrossPrice())?.let(::readText)?.let(::decimalOf)
+            raw.itemGrossPrice()?.let(::decimalOf)
         }
 
     val itemPriceDiscount: java.math.BigDecimal?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.itemPriceDiscount())?.let(::readText)?.let(::decimalOf)
+            raw.itemPriceDiscount()?.let(::decimalOf)
         }
 
     val itemPriceBaseQuantity: java.math.BigDecimal?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.itemPriceBaseQuantity())?.let(::readText)?.let(::decimalOf)
+            raw.itemPriceBaseQuantity()?.let(::decimalOf)
         }
 
     val itemPriceBaseQuantityUnitCode: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.itemPriceBaseQuantityUnitCode())?.let(::readText)
+            raw.itemPriceBaseQuantityUnitCode()
         }
 
     val adjustmentsLen: java.math.BigInteger
@@ -53,7 +53,7 @@ class InvoiceLineItem internal constructor(internal val raw: com.fatoora.raw.Inv
 
     val id: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.id())?.let(::readText)
+            raw.id()
         }
 
     val description: String

@@ -13,7 +13,6 @@
 #include <cstdlib>
 #include "../diplomat_runtime.hpp"
 #include "BindingError.hpp"
-#include "Text.hpp"
 #include "ValidationMessage.hpp"
 #include "ValidationStatus.hpp"
 
@@ -25,8 +24,8 @@ namespace capi {
     typedef struct fatoora_ValidationResults_status_result {union {fatoora::capi::ValidationStatus ok; }; bool is_ok;} fatoora_ValidationResults_status_result;
     fatoora_ValidationResults_status_result fatoora_ValidationResults_status(const fatoora::capi::ValidationResults* self);
 
-    typedef struct fatoora_ValidationResults_status_raw_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_ValidationResults_status_raw_result;
-    fatoora_ValidationResults_status_raw_result fatoora_ValidationResults_status_raw(const fatoora::capi::ValidationResults* self);
+    typedef struct fatoora_ValidationResults_status_raw_result { bool is_ok;} fatoora_ValidationResults_status_raw_result;
+    fatoora_ValidationResults_status_raw_result fatoora_ValidationResults_status_raw(const fatoora::capi::ValidationResults* self, diplomat::capi::DiplomatWrite* write);
 
     size_t fatoora_ValidationResults_info_len(const fatoora::capi::ValidationResults* self);
 
@@ -54,9 +53,19 @@ inline std::optional<fatoora::ValidationStatus> fatoora::ValidationResults::stat
     return result.is_ok ? std::optional<fatoora::ValidationStatus>(fatoora::ValidationStatus::FromFFI(result.ok)) : std::nullopt;
 }
 
-inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> fatoora::ValidationResults::status_raw() const {
-    auto result = fatoora::capi::fatoora_ValidationResults_status_raw(this->AsFFI());
-    return result.is_ok ? diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::ValidationResults::status_raw() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_ValidationResults_status_raw(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::ValidationResults::status_raw_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_ValidationResults_status_raw(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline size_t fatoora::ValidationResults::info_len() const {

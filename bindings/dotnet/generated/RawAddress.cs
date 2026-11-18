@@ -34,13 +34,13 @@ internal partial struct Address
     internal static unsafe extern DiplomatResultVoidBindingError CountryCode(Address* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Address_additional_street", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError AdditionalStreet(Address* handle);
+    internal static unsafe extern DiplomatOptionVoid AdditionalStreet(Address* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Address_additional_number", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError AdditionalNumber(Address* handle);
+    internal static unsafe extern DiplomatOptionVoid AdditionalNumber(Address* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Address_district", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError District(Address* handle);
+    internal static unsafe extern DiplomatOptionVoid District(Address* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Address_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(Address* handle);

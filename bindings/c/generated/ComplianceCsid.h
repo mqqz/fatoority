@@ -9,7 +9,6 @@
 
 #include "BindingError.d.h"
 #include "Environment.d.h"
-#include "Text.d.h"
 
 #include "ComplianceCsid.d.h"
 
@@ -24,8 +23,8 @@ fatoora_ComplianceCsid_new_result fatoora_ComplianceCsid_new(Environment environ
 typedef struct fatoora_ComplianceCsid_env_result {union {Environment ok; BindingError* err;}; bool is_ok;} fatoora_ComplianceCsid_env_result;
 fatoora_ComplianceCsid_env_result fatoora_ComplianceCsid_env(const ComplianceCsid* self);
 
-typedef struct fatoora_ComplianceCsid_request_id_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_ComplianceCsid_request_id_result;
-fatoora_ComplianceCsid_request_id_result fatoora_ComplianceCsid_request_id(const ComplianceCsid* self);
+typedef struct fatoora_ComplianceCsid_request_id_result { bool is_ok;} fatoora_ComplianceCsid_request_id_result;
+fatoora_ComplianceCsid_request_id_result fatoora_ComplianceCsid_request_id(const ComplianceCsid* self, DiplomatWrite* write);
 
 typedef struct fatoora_ComplianceCsid_binary_security_token_result {union { BindingError* err;}; bool is_ok;} fatoora_ComplianceCsid_binary_security_token_result;
 fatoora_ComplianceCsid_binary_security_token_result fatoora_ComplianceCsid_binary_security_token(const ComplianceCsid* self, DiplomatWrite* write);

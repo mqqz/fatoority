@@ -29,7 +29,7 @@ class PaymentMeans internal constructor(internal val raw: com.fatoora.raw.Paymen
 
     val instructionNote: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.instructionNote())?.let(::readText)
+            raw.instructionNote()
         }
 
     @get:JvmName("hasAccount")
@@ -40,12 +40,12 @@ class PaymentMeans internal constructor(internal val raw: com.fatoora.raw.Paymen
 
     val accountIdentifier: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.accountIdentifier())?.let(::readText)
+            raw.accountIdentifier()
         }
 
     val paymentTerms: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.paymentTerms())?.let(::readText)
+            raw.paymentTerms()
         }
 
     fun withInstructionNote(value: String): PaymentMeans = nativeCall(listOfNotNull(this)) {
@@ -53,7 +53,7 @@ class PaymentMeans internal constructor(internal val raw: com.fatoora.raw.Paymen
     }
 
     fun instructionNoteAt(index: java.math.BigInteger): String = nativeCall(listOfNotNull(this)) {
-        readText(unwrap(raw.instructionNoteAt(checkedCounter(index))))
+        unwrap(raw.instructionNoteAt(checkedCounter(index)))
     }
 
     @JvmOverloads

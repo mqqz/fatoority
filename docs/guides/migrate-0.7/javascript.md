@@ -56,6 +56,13 @@ package root and from `fatoority/raw`. Call `create` with the same arguments.
 `Adjustment.percentage(...)` was a static factory, so code that reads the
 property needs no change.
 
+### `Text` class
+
+`Text` is no longer exported from the package root or from `fatoority/raw`. No
+member returned it in 0.6: optional text was already `string | null`, so only
+code that imported the class itself, for example for `instanceof` checks, needs
+a change.
+
 ## Clearance mode is required and must be a `ClearanceMode`
 
 `ZatcaClient.reportSimplifiedInvoice` and `ZatcaClient.clearStandardInvoice`
