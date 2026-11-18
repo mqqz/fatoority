@@ -89,9 +89,9 @@ The signed computed hash equals the XML hash operation on `xml()`. Signed import
     hash_xml(xml: &str) -> Result<InvoiceHash, SigningError>
     ```
 
-    `hash_xml` returns the base64 SHA-256 invoice hash as an `InvoiceHash`, the value the next invoice carries as its previous invoice hash; use `as_str()` for the text. It replaces `sign::invoice_hash_base64_from_xml_str`, which is deprecated and returns `String`.
+    `hash_xml` returns the base64 SHA-256 invoice hash as an `InvoiceHash`, the value the next invoice carries as its previous invoice hash; use `as_str()` for the text.
 
-    `invoice.sign` takes a `FinalizedInvoice` by value. `SignedInvoice::xml`, `qr_code`, `signature` and `public_key` return borrowed `&str`; `invoice_hash` returns `&InvoiceHash` and `uuid` returns `&InvoiceUuid` (call `.as_str()` for text); `zatca_key_signature` returns `Option<&str>`. `to_xml_base64` returns `String`; `hash` returns `Result<InvoiceHash, SigningError>`. `hash_base64`, which returns `Result<String, SigningError>`, is deprecated in favour of `hash`.
+    `invoice.sign` takes a `FinalizedInvoice` by value. `SignedInvoice::xml`, `qr_code`, `signature` and `public_key` return borrowed `&str`; `invoice_hash` returns `&InvoiceHash` and `uuid` returns `&InvoiceUuid` (call `.as_str()` for text); `zatca_key_signature` returns `Option<&str>`. `to_xml_base64` returns `String`; `hash` returns `Result<InvoiceHash, SigningError>`.
 
     Use `signed.signed_properties()` for `issuer()`, `serial()`, `cert_hash()` and `signed_props_hash()`, all borrowed `&str`, plus `invoice_hash() -> &InvoiceHash` and `signing_time() -> &InvoiceTimestamp`. The XAdES `SigningTime` element has no zone suffix; `signing_time().as_str()` returns the same clock value in canonical `YYYY-MM-DDTHH:MM:SSZ` form. Copy borrowed strings to retain them after dropping the invoice. Failures expose `SigningError::kind()` and structured details through the shared error type.
 

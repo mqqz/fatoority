@@ -65,8 +65,7 @@ percentage of a base amount. An out-of-scope entry can omit its rate with
 `.omit_vat_rate()`.
 
 The scalar `invoice_level_discount`, `invoice_level_charge` and `allowance_reason`
-setters are deprecated since 0.6.0 and will be removed in 0.7. Use `.allowance(...)`
-and `.charge(...)` instead; combining the two forms is rejected.
+setters were removed in 0.7; see [migrating to 0.7](migrate-0.7/rust.md).
 
 ## Mixed VAT categories and rates
 

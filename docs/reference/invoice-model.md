@@ -188,7 +188,7 @@ correspond to the fields above.
 
     `payment_means` appends a payment means; use `.payment_means(PaymentMeans::new(code))` to set the payment means code. Add document-level allowances and charges with `.allowance(DocumentAdjustment)` and `.charge(DocumentAdjustment)`; `DocumentAdjustment` carries the amount or percentage calculation, `with_reason`, `with_reason_code`, VAT category and rate, `with_exemption`, and `omit_vat_rate()` for out-of-scope entries.
 
-    Deprecated since 0.6.0 and removed in 0.7: `payment_means_code` (changes the code of the first payment means), `invoice_level_charge`, `invoice_level_discount` and `allowance_reason` (one aggregate allowance and charge in the document VAT category), and `adjustment(AllowanceCharge)` (convert with `DocumentAdjustment::from`). `VatBreakdown::without_vat_rate` is replaced by `omit_vat_rate`; `LineItem`, `VatBreakdown`, `AllowanceCharge` and `DocumentAdjustment` all report an omitted rate through `has_vat_rate()`.
+    To add an existing `AllowanceCharge` entry, convert it with `DocumentAdjustment::from`. `VatBreakdown::omit_vat_rate` omits an out-of-scope subtotal's rate; `LineItem`, `VatBreakdown`, `AllowanceCharge` and `DocumentAdjustment` all report an omitted rate through `has_vat_rate()`. The 0.5 aggregate setters and other names deprecated in 0.6 were removed in 0.7; see [migrating to 0.7](../guides/migrate-0.7/rust.md).
 
     `build(self)` consumes the builder on success or failure. `VatCategory` variants are `Standard`, `Zero`, `Exempt`, and `OutOfScope`. Combine `InvoiceFlags::THIRD_PARTY`, `NOMINAL`, `EXPORT`, `SUMMARY`, and `SELF_BILLED` with `\|`.
 
@@ -212,7 +212,7 @@ correspond to the fields above.
 
     **Read invoice data**
 
-    Both invoice types provide `data() -> &InvoiceData`, `totals() -> &InvoiceTotals`, and `hash() -> Result<InvoiceHash, SigningError>` (the deprecated `hash_base64()` returns the same value as `String`). Read fields through the returned data's accessor methods, including `id()`, `uuid() -> &InvoiceUuid`, `issue_date() -> InvoiceDate`, `issue_time() -> InvoiceTime`, `previous_invoice_hash() -> &InvoiceHash`, `seller()`, `buyer()`, `line_items()`, `flags()`, and `invoice_type()`. Decimal accessors return `Decimal`; optional fields return `Option`.
+    Both invoice types provide `data() -> &InvoiceData`, `totals() -> &InvoiceTotals`, and `hash() -> Result<InvoiceHash, SigningError>`. Read fields through the returned data's accessor methods, including `id()`, `uuid() -> &InvoiceUuid`, `issue_date() -> InvoiceDate`, `issue_time() -> InvoiceTime`, `previous_invoice_hash() -> &InvoiceHash`, `seller()`, `buyer()`, `line_items()`, `flags()`, and `invoice_type()`. Decimal accessors return `Decimal`; optional fields return `Option`.
 
     `FinalizedInvoice::sign(self, signer: &InvoiceSigner) -> Result<SignedInvoice, SigningError>` consumes the finalized invoice even if signing fails. Signed metadata and XML access are described in [signing](invoice-signing.md) and [XML](xml.md).
 

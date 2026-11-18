@@ -21,8 +21,8 @@ fatoora-core = "0.6.0"
 values, and makes the fields of invoice value types private. Each change below
 is one of two kinds:
 
-- **Deprecated**: the old name still compiles, with a deprecation warning, and
-  forwards to the new one. It will be removed in 0.7.
+- **Deprecated**: in 0.6 the old name still compiles, with a deprecation
+  warning, and forwards to the new one. 0.7 removed it.
 - **Breaking**: the old form no longer compiles. The type, signature or field
   changed in place, so there is no deprecation period.
 
@@ -31,13 +31,18 @@ then run `cargo build` (or `cargo clippy`) and work through the `deprecated`
 warnings, each of which names its replacement. Adding `#![deny(deprecated)]`
 to your crate root while you migrate turns the remaining old names into errors.
 
+!!! note "Upgrading to 0.7"
+    0.7 removed every item marked **Deprecated** on this page, so on 0.7 use
+    the replacement in the 0.6 column.
+    [Migrate from 0.6 to 0.7](../migrate-0.7/rust.md) lists the removed items.
+
 The full list of changes, including additions, is in the
 [changelog](https://github.com/mqqz/fatoority/blob/main/CHANGELOG.md).
 
 ## Changed items
 
 Paths are relative to `fatoora_core`. Status is **Deprecated** (compiles with a
-warning until 0.7) or **Breaking** (fails to compile).
+warning in 0.6, removed in 0.7) or **Breaking** (fails to compile).
 
 ### Configuration
 

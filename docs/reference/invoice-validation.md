@@ -146,8 +146,6 @@ Child objects are independent snapshots and outlive the report.
 
     On `Err(error)`, `error.report` contains the partial `Box<ZatcaValidationReport>`; `error.kind`, `stage`, `assertion_site`, `location`, and `message` describe the failure. Serializing reports includes derived outcomes; deserialization recomputes them from stage coverage. Calls borrow inputs and do not consume invoice objects.
 
-    The 0.5 free functions `validate_xml_invoice_from_str`, `validate_xml_invoice_report_from_str` and `validate_zatca_invoice_from_str` still work but are deprecated; they ignore their `Config` argument and forward to `Validator`.
-
 === "Python"
 
     Import from `fatoora`.
