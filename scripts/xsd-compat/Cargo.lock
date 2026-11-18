@@ -526,7 +526,7 @@ dependencies = [
 
 [[package]]
 name = "fatoora-core"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "base64ct",
  "bitflags",
@@ -563,7 +563,7 @@ dependencies = [
 
 [[package]]
 name = "fatoora-derive"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "proc-macro2",
  "quote",

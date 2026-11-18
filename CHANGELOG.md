@@ -2,50 +2,33 @@
 
 ## Unreleased
 
-### Added
+## [0.7.0] - 2026-11-18
 
-- Python: `AsyncZatcaClient`, an `asyncio` ZATCA client with the methods of
-  `ZatcaClient` as coroutines, the same arguments, results and errors, and a
-  `timeout=` option. The core prepares and decodes each request; httpx sends it
-  (never following redirects), through an `httpx.AsyncClient` you pass as
-  `http_client=` or one the client creates and closes. httpx comes from the new
-  optional `fatoority[async]` extra; `import fatoora` does not need it.
+The breaking 0.7 release. It removes every name deprecated in 0.6, gives the
+bindings one error hierarchy with the same names in every language, and returns
+every bridge string as a plain or nullable string instead of a `Text` handle.
+Kotlin/Java and C# client timeouts take durations, the JavaScript client
+requires a `ClearanceMode`, C# and JavaScript return bytes as `byte[]` and
+`Uint8Array`, and Python gains an `asyncio` client and drops Python 3.9. Upgrade
+language packages and native libraries together.
 
-### Changed (breaking)
+Migration guides with before-and-after code for each language:
+[overview](https://docs.fatoority.com/guides/migrate-0.7/),
+[Rust](https://docs.fatoority.com/guides/migrate-0.7/rust/),
+[Python](https://docs.fatoority.com/guides/migrate-0.7/python/),
+[JavaScript/TypeScript](https://docs.fatoority.com/guides/migrate-0.7/javascript/),
+[Kotlin/Java](https://docs.fatoority.com/guides/migrate-0.7/kotlin/),
+[C#/.NET](https://docs.fatoority.com/guides/migrate-0.7/csharp/) and
+[C/C++](https://docs.fatoority.com/guides/migrate-0.7/c/).
 
-- Python: drop support for Python 3.9, which reached end of life in October
-  2025. The package now requires Python 3.10 or newer and no longer ships
-  `cp39` wheels.
-- C#: `Bytes.AsSlice()`, which returned a disposable `DiplomatBorrowedSpan<byte>`
-  view, is replaced by `Bytes.ToArray()`, which returns a new `byte[]` that
-  stays valid after its owner is disposed. No `Fatoora.Diplomat` byte-view type
-  is public any more.
-- JavaScript: `Bytes.asSlice()`, which returned a copied `number[]`, is
-  replaced by `Bytes.toUint8Array()`, which returns a new `Uint8Array`, in the
-  package root and `fatoority/raw`. Byte parameters (`SigningKey.fromDer`,
-  `Csr.fromDer`, `InvoiceSigner.fromDer`, prepared requests' `decode`) are
-  typed `Uint8Array | readonly number[]` instead of `Array<number>`, so a
-  `Uint8Array` or Node.js `Buffer` passes without conversion.
-- Bindings: the `Text` string handle is removed from every binding: the
-  JavaScript package root and `fatoority/raw` no longer export it, and the
-  C# `Fatoora.Text`, Kotlin `com.fatoora.raw.Text`, C++ `fatoora::Text` and
-  Python `fatoora._native.Text` classes are gone. Every string the bridge
-  returns is a plain string or a nullable string (`str | None`,
-  `string | null`, `String?`, `string?`, `std::optional<std::string>`, or a
-  `NULL` C string). The idiomatic APIs and the C facade keep their signatures;
-  the raw C++ and Kotlin classes return strings where they returned `Text`.
-  An optional string containing NUL is returned unchanged instead of
-  failing, except in C, which still reports `FATOORA_INVALID_INPUT`.
-- C++ and raw Kotlin: `ValidationResponse::cleared_invoice_xml` and
-  `SignedInvoice::zatca_key_signature` return a plain string and fail when the
-  value is absent; check the new `cleared_invoice_xml_present()` and
-  `zatca_key_signature_present()` (Kotlin `clearedInvoiceXmlPresent()`,
-  `zatcaKeySignaturePresent()`) first. Every other binding still returns one
-  nullable string.
-- Rust (`fatoora-core`): `InvoiceData` no longer stores the 0.5 aggregate
-  fields `invoice_level_discount`, `invoice_level_charge`,
-  `adjustment_vat_rate` and `allowance_reason`; document-level allowances and
-  charges live only in `adjustments()`. The getters `invoice_level_discount()`,
+### Rust (`fatoora-core`)
+
+#### Changed (breaking)
+
+- `InvoiceData` no longer stores the 0.5 aggregate fields
+  `invoice_level_discount`, `invoice_level_charge`, `adjustment_vat_rate` and
+  `allowance_reason`; document-level allowances and charges live only in
+  `adjustments()`. The getters `invoice_level_discount()`,
   `invoice_level_charge()` and `allowance_reason()` stay and are computed from
   the entries. Data serialized by 0.5 or 0.6 still loads: aggregate amounts with
   no entries become equivalent `AllowanceCharge` entries in the single VAT group
@@ -56,81 +39,25 @@
   unique group and takes the rate from `adjustment_vat_rate` or the first line
   in the category, as 0.6 did. One output differs: if that rate belongs to no
   line, 0.6 wrote an allowance at a rate with no VAT subtotal, which fatoority's
-  own XML parser rejects; 0.7 adds a zero VAT subtotal for it. Aggregate fields next to non-empty
-  `adjustments` are ignored. JSON and other human-readable formats no longer
-  write the four fields, so `InvoiceData` JSON written by 0.7 does not load in
-  0.6; bincode and other compact formats keep the 0.6 layout and stay readable
-  in both directions.
-- Kotlin/Java: `ZatcaClient.withTimeout(config, timeout)` takes a
-  `java.time.Duration`, plus a Kotlin-only `kotlin.time.Duration` overload
-  (`ZatcaClient.withTimeout(config, 30.seconds)`), instead of a `Long`
-  millisecond count. C#: `ZatcaClient.WithTimeout(config, timeout)` takes a
-  `TimeSpan` instead of a `uint`. The millisecond overloads are removed. As in
-  Python, the timeout is rounded up to whole milliseconds; zero, negative and
-  over-4294967.295-second timeouts throw `IllegalArgumentException` (Kotlin/Java)
-  or `ArgumentOutOfRangeException` (C#) before reaching the native library.
-- Rust (`fatoora-core`): `ZatcaClient::with_timeout` with a zero timeout
-  returns the new `ZatcaError::InvalidTimeout` (`ErrorKind::InvalidInput`,
-  details type `invalid_timeout`) instead of `ZatcaError::ClientState`
+  own XML parser rejects; 0.7 adds a zero VAT subtotal for it. Aggregate fields
+  next to non-empty `adjustments` are ignored. JSON and other human-readable
+  formats no longer write the four fields, so `InvoiceData` JSON written by 0.7
+  does not load in 0.6; bincode and other compact formats keep the 0.6 layout
+  and stay readable in both directions.
+- `ZatcaClient::with_timeout` with a zero timeout returns the new
+  `ZatcaError::InvalidTimeout` (`ErrorKind::InvalidInput`, details type
+  `invalid_timeout`) instead of `ZatcaError::ClientState`
   (`ErrorKind::Internal`). The FFI constructor reports it with the
   invalid-input code, so Kotlin/Java and C# throw `InvalidInputException` and C
   returns `FATOORA_INVALID_INPUT`. Python still raises `ValueError` before
   calling native code.
-- JavaScript: `ZatcaClient.reportSimplifiedInvoice` and
-  `ZatcaClient.clearStandardInvoice` require a `ClearanceMode` for the
-  `Clearance-Status` header, like every other binding. Booleans, the variant
-  names `'Enabled'`/`'Disabled'` and an omitted argument (which defaulted to
-  `false` for reporting and `true` for clearance) reject with a `TypeError`.
-  The parameter is renamed `clearanceStatus` -> `clearanceMode`, matching the
-  `fatoority/raw` `prepare*` methods, and the `ClearanceModeInput` type is
-  removed.
-- Bindings: errors form one hierarchy with the same names in every language:
-  a base `FatooraError` (Python, JavaScript) or `FatooraException` (C#,
-  Kotlin/Java), an `ErrorKind` enum mirroring `fatoora_core::ErrorKind`, and
-  one subclass per kind (`InvalidInputError`/`InvalidInputException`, ...,
-  `ApiError`/`ApiException`). Every error carries its code, kind, message and
-  details, and `FatooraError.from_code` / `fromCode` / `FromCode` creates the
-  subclass for a code. Renamed with no aliases:
-  - Python: `FfiError` → `FatooraError`, `FfiErrorKind` → `ErrorKind`,
-    `fatoora.errors.error_class_for_code` → `FatooraError.from_code`; error
-    constructors take `code` and `details` as keyword-only arguments and a
-    subclass supplies its own code.
-  - C#: `FfiException` → `FatooraException`, `FfiErrorKind` → `ErrorKind`,
-    `FfiException.Create` → `FatooraException.FromCode`; subclass constructors
-    drop the redundant `code` argument, and the old message-only
-    `FatooraException` constructors are removed.
-  - Kotlin/Java: `BindingException` → `FatooraException`, which gains a public
-    `fromCode` factory.
-  - JavaScript: `ErrorCode` → `ErrorKind` (string values matching
-    `error.kind`), `errorClassForCode` → `FatooraError.fromCode`, and
-    `TransportError` is removed: fetch, cancellation and body-read failures
-    throw `NetworkError` with the host error in `cause` and `details` in the
-    library schema (`network`, or `api_response_read` with `http_status`
-    in place of `httpStatus`).
 
-### Internal
+#### Removed
 
-- Bindings are generated with Diplomat 0.17.0 (`diplomat` 0.17.0,
-  `diplomat-runtime` 0.16.1). The C# generator moves to current upstream
-  Diplomat plus the opt-in `diplomat_str_as_string` option; the Kotlin generator
-  moves to the `v0.17.0` tag.
-- The C# and Kotlin generators support optional string returns (a
-  `DiplomatWrite` method returning `Option<()>`); the Kotlin patch frees the
-  write buffer when the result is absent. The C facade rejects any string
-  output containing NUL.
-- Every FFI string return writes into a `DiplomatWrite`; the `Text` opaque
-  and its special cases in the C, C#, Kotlin, JavaScript and Python facades are
-  removed. A fallible optional string is an `x_present`/`x` pair that the
-  generators merge into one nullable string (see
-  `docs/development/diplomat.md`).
-
-### Removed
-
-Rust (`fatoora-core`): every item deprecated in 0.6 is removed. Each had a
-replacement in 0.6; see the
+Every item deprecated in 0.6 is removed. Each had a replacement in 0.6; see the
 [Rust migration guide](https://docs.fatoority.com/guides/migrate-0.7/rust/).
 The `fatoora-ffi` bridge, the CLI and the generated C, C++ and Diplomat
-bindings had no deprecated items and are unchanged.
+bindings had no deprecated items.
 
 - Configuration and API client: `config::EnvironmentType` (use
   `Environment`); `ZatcaClient::post_csr_for_ccsid`, `post_ccsid_for_pcsid`,
@@ -160,9 +87,54 @@ bindings had no deprecated items and are unchanged.
   `FinalizedInvoice::hash_base64` / `SignedInvoice::hash_base64` (use `hash`,
   which returns an `InvoiceHash`).
 
-Python (`fatoority`): every name deprecated in 0.6 is removed, with no
-compatibility aliases, so nothing in the package emits a `DeprecationWarning`
-any more. Each had a replacement in 0.6; see the
+### Bindings (`fatoora-ffi`)
+
+#### Changed (breaking)
+
+- The `Text` string handle is removed from every binding: the JavaScript
+  package root and `fatoority/raw` no longer export it, and the C#
+  `Fatoora.Text`, Kotlin `com.fatoora.raw.Text`, C++ `fatoora::Text` and Python
+  `fatoora._native.Text` classes are gone. Every string the bridge returns is a
+  plain string or a nullable string (`str | None`, `string | null`, `String?`,
+  `string?`, `std::optional<std::string>`, or a `NULL` C string). The idiomatic
+  APIs and the C facade keep their signatures; the raw C++ and Kotlin classes
+  return strings where they returned `Text`. An optional string containing NUL
+  is returned unchanged instead of failing, except in C, which still reports
+  `FATOORA_INVALID_INPUT`.
+- Errors form one hierarchy with the same names in every language: a base
+  `FatooraError` (Python, JavaScript) or `FatooraException` (C#, Kotlin/Java),
+  an `ErrorKind` enum mirroring `fatoora_core::ErrorKind`, and one subclass per
+  kind (`InvalidInputError`/`InvalidInputException`, ...,
+  `ApiError`/`ApiException`). Every error carries its code, kind, message and
+  details, and `FatooraError.from_code` / `fromCode` / `FromCode` creates the
+  subclass for a code. The renames, with no aliases, are listed under each
+  language below.
+
+### Python (`fatoority` on PyPI)
+
+#### Added
+
+- `AsyncZatcaClient`, an `asyncio` ZATCA client with the methods of
+  `ZatcaClient` as coroutines, the same arguments, results and errors, and a
+  `timeout=` option. The core prepares and decodes each request; httpx sends it
+  (never following redirects), through an `httpx.AsyncClient` you pass as
+  `http_client=` or one the client creates and closes. httpx comes from the new
+  optional `fatoority[async]` extra; `import fatoora` does not need it.
+
+#### Changed (breaking)
+
+- Drop support for Python 3.9, which reached end of life in October 2025. The
+  package now requires Python 3.10 or newer and no longer ships `cp39` wheels.
+- Error renames: `FfiError` → `FatooraError`, `FfiErrorKind` → `ErrorKind`,
+  `fatoora.errors.error_class_for_code` → `FatooraError.from_code`; error
+  constructors take `code` and `details` as keyword-only arguments and a
+  subclass supplies its own code.
+
+#### Removed
+
+Every name deprecated in 0.6 is removed, with no compatibility aliases, so
+nothing in the package emits a `DeprecationWarning` any more. Each had a
+replacement in 0.6; see the
 [Python migration guide](https://docs.fatoority.com/guides/migrate-0.7/python/).
 
 - Module names: `Signer`, `CsidCompliance`, `CsidProduction`,
@@ -194,18 +166,66 @@ any more. Each had a replacement in 0.6; see the
   `request_compliance_csid` and `request_production_csid`), and the
   `clearance_status=bool` keyword of `report_simplified_invoice` and
   `clear_standard_invoice` (`clearance=ClearanceMode...` is now required).
-C# (`Fatoority` NuGet package): every `[Obsolete]` member is removed; see the
-[C# migration guide](https://docs.fatoority.com/guides/migrate-0.7/csharp/).
 
-- `New` on `Address`, `AllowanceCharge`, `Config`, `CsrProperties`,
-  `InvoiceBuilder`, `InvoiceLineItem`, `LineItemBuilder`,
-  `OriginalInvoiceRef`, `PaymentMeans`, `TaxExemption` and `VatBreakdown`
-  (use `Create`).
-- `Adjustment.WithSuppliedAmount` (use `SuppliedAmount`), the
-  `Adjustment.Percent` property (use `Percentage`), and `WithoutVatRate()` on
-  `AllowanceCharge` and `VatBreakdown` (use `OmitVatRate()`).
-Kotlin/Java (`com.fatoority:fatoority`, `fatoority-android`): every
-`@Deprecated` member of the `com.fatoora` facade is removed; see the
+### JavaScript / TypeScript (`fatoority` on npm)
+
+#### Changed (breaking)
+
+- `ZatcaClient.reportSimplifiedInvoice` and `ZatcaClient.clearStandardInvoice`
+  require a `ClearanceMode` for the `Clearance-Status` header, like every other
+  binding. Booleans, the variant names `'Enabled'`/`'Disabled'` and an omitted
+  argument (which defaulted to `false` for reporting and `true` for clearance)
+  reject with a `TypeError`. The parameter is renamed `clearanceStatus` ->
+  `clearanceMode`, matching the `fatoority/raw` `prepare*` methods, and the
+  `ClearanceModeInput` type is removed.
+- `Bytes.asSlice()`, which returned a copied `number[]`, is replaced by
+  `Bytes.toUint8Array()`, which returns a new `Uint8Array`, in the package root
+  and `fatoority/raw`. Byte parameters (`SigningKey.fromDer`, `Csr.fromDer`,
+  `InvoiceSigner.fromDer`, prepared requests' `decode`) are typed
+  `Uint8Array | readonly number[]` instead of `Array<number>`, so a
+  `Uint8Array` or Node.js `Buffer` passes without conversion.
+- Error renames: `ErrorCode` → `ErrorKind` (string values matching
+  `error.kind`), `errorClassForCode` → `FatooraError.fromCode`, and
+  `TransportError` is removed: fetch, cancellation and body-read failures throw
+  `NetworkError` with the host error in `cause` and `details` in the library
+  schema (`network`, or `api_response_read` with `http_status` in place of
+  `httpStatus`).
+
+#### Removed
+
+Every name marked `@deprecated` in 0.6 is removed from the package root and
+`fatoority/raw`; see the
+[JavaScript migration guide](https://docs.fatoority.com/guides/migrate-0.7/javascript/).
+
+- `new_` on every class with a Rust `new` constructor (use `create`).
+- `Adjustment.percentage(base, percent)`, `adjustment.withSuppliedAmount`,
+  `adjustment.percent()` and `withoutVatRate()` on `AllowanceCharge` and
+  `VatBreakdown` (use `Adjustment.percentOf`, `suppliedAmount`, the
+  `percentage` property and `omitVatRate()`).
+
+### Kotlin / Java (`com.fatoora`)
+
+#### Changed (breaking)
+
+- `ZatcaClient.withTimeout(config, timeout)` takes a `java.time.Duration`, plus
+  a Kotlin-only `kotlin.time.Duration` overload
+  (`ZatcaClient.withTimeout(config, 30.seconds)`), instead of a `Long`
+  millisecond count. The millisecond overload is removed. As in Python, the
+  timeout is rounded up to whole milliseconds; zero, negative and
+  over-4294967.295-second timeouts throw `IllegalArgumentException` before
+  reaching the native library.
+- Raw Kotlin: `ValidationResponse.clearedInvoiceXml()` and
+  `SignedInvoice.zatcaKeySignature()` in `com.fatoora.raw` return a plain
+  string and fail when the value is absent; check the new
+  `clearedInvoiceXmlPresent()` and `zatcaKeySignaturePresent()` first. The
+  `com.fatoora` facade still returns one nullable string.
+- Error renames: `BindingException` → `FatooraException`, which gains a public
+  `fromCode` factory.
+
+#### Removed
+
+Every `@Deprecated` member of the `com.fatoora` facade is removed (both
+`com.fatoority:fatoority` and `fatoority-android`); see the
 [Kotlin/Java migration guide](https://docs.fatoority.com/guides/migrate-0.7/kotlin/).
 
 - Getter functions superseded by properties, such as `address.city()` and
@@ -222,15 +242,69 @@ Kotlin/Java (`com.fatoority:fatoority`, `fatoority-android`): every
   `clearStandardInvoiceAsync` (pass a `ClearanceMode`).
 - The `com.fatoora.Text` class, which only the removed getter functions
   returned (optional text properties are `String?`).
-JavaScript/TypeScript (`fatoority` on npm): every name marked `@deprecated`
-in 0.6 is removed from the package root and `fatoority/raw`; see the
-[JavaScript migration guide](https://docs.fatoority.com/guides/migrate-0.7/javascript/).
 
-- `new_` on every class with a Rust `new` constructor (use `create`).
-- `Adjustment.percentage(base, percent)`, `adjustment.withSuppliedAmount`,
-  `adjustment.percent()` and `withoutVatRate()` on `AllowanceCharge` and
-  `VatBreakdown` (use `Adjustment.percentOf`, `suppliedAmount`, the
-  `percentage` property and `omitVatRate()`).
+### .NET (`Fatoority` NuGet package)
+
+#### Changed (breaking)
+
+- `ZatcaClient.WithTimeout(config, timeout)` takes a `TimeSpan` instead of a
+  `uint`. The millisecond overload is removed. As in Python, the timeout is
+  rounded up to whole milliseconds; zero, negative and over-4294967.295-second
+  timeouts throw `ArgumentOutOfRangeException` before reaching the native
+  library.
+- `Bytes.AsSlice()`, which returned a disposable `DiplomatBorrowedSpan<byte>`
+  view, is replaced by `Bytes.ToArray()`, which returns a new `byte[]` that
+  stays valid after its owner is disposed. No `Fatoora.Diplomat` byte-view type
+  is public any more.
+- Error renames: `FfiException` → `FatooraException`, `FfiErrorKind` →
+  `ErrorKind`, `FfiException.Create` → `FatooraException.FromCode`; subclass
+  constructors drop the redundant `code` argument, and the old message-only
+  `FatooraException` constructors are removed.
+
+#### Removed
+
+Every `[Obsolete]` member is removed; see the
+[C# migration guide](https://docs.fatoority.com/guides/migrate-0.7/csharp/).
+
+- `New` on `Address`, `AllowanceCharge`, `Config`, `CsrProperties`,
+  `InvoiceBuilder`, `InvoiceLineItem`, `LineItemBuilder`,
+  `OriginalInvoiceRef`, `PaymentMeans`, `TaxExemption` and `VatBreakdown`
+  (use `Create`).
+- `Adjustment.WithSuppliedAmount` (use `SuppliedAmount`), the
+  `Adjustment.Percent` property (use `Percentage`), and `WithoutVatRate()` on
+  `AllowanceCharge` and `VatBreakdown` (use `OmitVatRate()`).
+
+### C and C++
+
+#### Changed (breaking)
+
+- C++: `ValidationResponse::cleared_invoice_xml` and
+  `SignedInvoice::zatca_key_signature` return a plain string and fail when the
+  value is absent; check the new `cleared_invoice_xml_present()` and
+  `zatca_key_signature_present()` first. Every other optional C++ string is a
+  `std::optional<std::string>`, and the C facade still returns one nullable
+  string.
+
+### CI and internal
+
+- Bindings are generated with Diplomat 0.17.0 (`diplomat` 0.17.0,
+  `diplomat-runtime` 0.16.1). The C# generator moves to current upstream
+  Diplomat plus the opt-in `diplomat_str_as_string` option; the Kotlin generator
+  moves to the `v0.17.0` tag.
+- The C# and Kotlin generators support optional string returns (a
+  `DiplomatWrite` method returning `Option<()>`); the Kotlin patch frees the
+  write buffer when the result is absent. The C facade rejects any string
+  output containing NUL.
+- Every FFI string return writes into a `DiplomatWrite`; the `Text` opaque
+  and its special cases in the C, C#, Kotlin, JavaScript and Python facades are
+  removed. A fallible optional string is an `x_present`/`x` pair that the
+  generators merge into one nullable string (see
+  `docs/development/diplomat.md`).
+- Lockfile security updates: `bytes` 1.12 and `rand` 0.9.5 in every Cargo
+  lockfile, `rustls` 0.23.46 and `rustls-webpki` 0.103.17 in the fuzz and
+  xsd-compat lockfiles, and Pygments 2.21.0 and pytest 9.2.0 in the Python dev
+  lock. The stale, unused `fatoora-core/Cargo.lock` is removed.
+- CI retries the Android instrumentation tests once on a fresh emulator.
 
 ## [0.6.0] - 2026-11-18
 
