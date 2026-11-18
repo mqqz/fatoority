@@ -38,7 +38,7 @@ public:
 
   inline diplomat::result<fatoora::Environment, std::unique_ptr<fatoora::BindingError>> env() const;
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> request_id() const;
+  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> request_id() const;
 
   inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> binary_security_token() const;
   template<typename W>

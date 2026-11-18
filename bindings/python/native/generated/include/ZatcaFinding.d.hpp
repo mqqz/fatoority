@@ -38,7 +38,7 @@ public:
   /**
    * Rule assertion that produced the finding, for business-rule findings.
    */
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> assertion_site() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> assertion_site() const;
 
   inline _native::ValidationLayer layer() const;
 
@@ -66,7 +66,7 @@ public:
   /**
    * The field path or XPath, or null for other location kinds.
    */
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> location_path() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> location_path() const;
 
   /**
    * One-based XML line, or null when the location is not XML coordinates.

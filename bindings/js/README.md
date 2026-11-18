@@ -1,6 +1,6 @@
 # Fatoority JavaScript / TypeScript
 
-ES modules backed by Diplomat 0.16.1 and WebAssembly. Supports Node 22+ and modern browsers with WebAssembly, Web Crypto, FinalizationRegistry and top-level await.
+ES modules backed by Diplomat 0.17.0 and WebAssembly. Supports Node 22+ and modern browsers with WebAssembly, Web Crypto, FinalizationRegistry and top-level await.
 
 Install from npm:
 
@@ -12,7 +12,7 @@ To build from source, run from the repository root:
 
 ```sh
 rustup target add wasm32-unknown-unknown
-cargo install diplomat-tool --version 0.16.1 --locked
+cargo install diplomat-tool --version 0.17.0 --locked
 npm ci --prefix bindings/js
 python3 scripts/generate_bindings.py
 python3 scripts/build_js.py

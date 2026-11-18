@@ -40,11 +40,11 @@ public:
 
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> ensure_accepted() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> cleared_invoice_xml() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> cleared_invoice_xml() const;
 
   inline _native::diplomat::result<std::unique_ptr<_native::ValidationResults>, std::unique_ptr<_native::BindingError>> validation_results() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> cleared_invoice_base64() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> cleared_invoice_base64() const;
 
   /**
    * The parsed `reportingStatus`, or null when the response has none.
@@ -54,7 +54,7 @@ public:
   /**
    * The `reportingStatus` exactly as ZATCA sent it, or null when absent.
    */
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> reporting_status_raw() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> reporting_status_raw() const;
 
   /**
    * The parsed `clearanceStatus`, or null when the response has none.
@@ -64,11 +64,11 @@ public:
   /**
    * The `clearanceStatus` exactly as ZATCA sent it, or null when absent.
    */
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> clearance_status_raw() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> clearance_status_raw() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> qr_seller_status() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> qr_seller_status() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> qr_buyer_status() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> qr_buyer_status() const;
 
     inline const _native::capi::ValidationResponse* AsFFI() const;
     inline _native::capi::ValidationResponse* AsFFI();

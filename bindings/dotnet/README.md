@@ -40,11 +40,10 @@ Native errors throw one `FfiException` subclass per error code
 `Code`, `Kind`, and `DetailsJson`; exceptions hold no native resources.
 Releasing native memory does not guarantee erasure of secrets or managed copies.
 
-`Bytes.AsSlice()` returns a disposable borrowed view. Call `Clone()` to obtain an
-independent `byte[]`, or `WithSpan()` for a scoped read. Active reads retain the
-native buffer even if its owner is disposed concurrently. Later reads fail once
-the source is disposed. Disposing a view while a read is active throws
-`InvalidOperationException`; retry after the read completes.
+`Bytes.AsSlice()` returns a disposable `RustVec` holding a native copy of the
+bytes, so it stays valid after its owner is disposed. Call `Clone()` to obtain an
+independent `byte[]`, or `WithSpan()` for a scoped read. Disposing a view while a
+read is active throws `InvalidOperationException`; retry after the read completes.
 
 ```csharp
 using var bytes = restored.ToDer();
@@ -88,10 +87,10 @@ packages inherit the build host's libc requirements.
 ## Regenerate
 
 The generator uses `mqqz/diplomat` commit
-`8f2d28f1b39653320db1446ebd8fd264cc8a166d`. This revision provides strict UTF-16
-encoding, synchronized borrowed-span access, and native handle retention during
-borrowed reads. It permits scoped read-only spans from disposable sources while
-preserving the other borrowing restrictions.
+`7255ca482b247ed635f6ded2e02fa3dfc4b930a2`: upstream Diplomat after 0.17.0 plus
+the opt-in `dotnet.diplomat_str_as_string` configuration (upstream PR #1294), which
+maps `&DiplomatStr` parameters to `string`. `generate_dotnet.py` keeps string
+inputs on a strict UTF-8 encoder, so unpaired surrogates throw.
 
 ```sh
 python3 scripts/install_dotnet_generator.py
@@ -114,7 +113,7 @@ results into `string?`, maps every decimal the Rust FFI parses or returns to
 `src/`; it contains no per-type wrappers.
 
 The .NET contracts cover encoding, optional strings, structured errors, disposal,
-concurrent borrowed reads, keys, invoice signing, hashes against frozen SDK
+binary copies, keys, invoice signing, hashes against frozen SDK
 fixtures, prepared requests, response decoding, and owned snapshots. These tests
 run locally without contacting ZATCA.
 

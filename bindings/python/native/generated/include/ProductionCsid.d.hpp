@@ -36,7 +36,7 @@ public:
 
   inline _native::diplomat::result<_native::Environment, std::unique_ptr<_native::BindingError>> env() const;
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> request_id() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> request_id() const;
 
   inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> binary_security_token() const;
   template<typename W>

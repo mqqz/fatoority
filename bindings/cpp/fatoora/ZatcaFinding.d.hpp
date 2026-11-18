@@ -40,7 +40,7 @@ public:
   /**
    * Rule assertion that produced the finding, for business-rule findings.
    */
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> assertion_site() const;
+  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> assertion_site() const;
 
   inline fatoora::ValidationLayer layer() const;
 
@@ -68,7 +68,7 @@ public:
   /**
    * The field path or XPath, or null for other location kinds.
    */
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> location_path() const;
+  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> location_path() const;
 
   /**
    * One-based XML line, or null when the location is not XML coordinates.

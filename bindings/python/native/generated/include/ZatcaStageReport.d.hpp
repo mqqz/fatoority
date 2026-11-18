@@ -45,7 +45,7 @@ public:
   /**
    * Pinned rule source, for the CEN and KSA business-rule stages.
    */
-  inline _native::diplomat::result<std::unique_ptr<_native::ZatcaRuleSource>, std::unique_ptr<_native::BindingError>> provenance() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::ZatcaRuleSource>>, std::unique_ptr<_native::BindingError>> provenance() const;
 
   inline size_t evaluated_assertions_len() const;
 

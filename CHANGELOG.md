@@ -7,6 +7,17 @@
 - Python: drop support for Python 3.9, which reached end of life in October
   2025. The package now requires Python 3.10 or newer and no longer ships
   `cp39` wheels.
+- C#: `Bytes.AsSlice()` returns a `RustVec` holding a native copy of the bytes
+  instead of a `DiplomatBorrowedSpan<byte>` view, so it stays valid after its
+  owner is disposed. `Clone()`, `WithSpan()`, `Length` and `using` work as
+  before.
+
+### Internal
+
+- Bindings are generated with Diplomat 0.17.0 (`diplomat` 0.17.0,
+  `diplomat-runtime` 0.16.1). The C# generator moves to current upstream
+  Diplomat plus the opt-in `diplomat_str_as_string` option; the Kotlin generator
+  moves to the `v0.17.0` tag.
 
 ### Removed
 

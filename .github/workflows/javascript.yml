@@ -110,7 +110,7 @@ jobs:
           targets: wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2
       - run: npm ci --prefix bindings/js
-      - run: cargo install diplomat-tool --version 0.16.1 --locked
+      - run: cargo install diplomat-tool --version 0.17.0 --locked
       - uses: actions/cache@v4
         id: diplomat-fork
         with:

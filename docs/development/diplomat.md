@@ -23,7 +23,7 @@ Generated files are checked in. Edit the bridge or generator, then regenerate; d
 Install the pinned generators once:
 
 ```sh
-cargo install diplomat-tool --version 0.16.1 --locked
+cargo install diplomat-tool --version 0.17.0 --locked
 python3 scripts/install_dotnet_generator.py
 python3 scripts/install_kotlin_generator.py
 ```

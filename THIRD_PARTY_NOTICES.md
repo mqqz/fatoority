@@ -220,7 +220,7 @@ archives.
 
 ## Diplomat runtime and generated bindings
 
-Diplomat macro/tool 0.16.1 and runtime 0.16.0: https://github.com/rust-diplomat/diplomat.
+Diplomat macro/tool 0.17.0 and runtime 0.16.1: https://github.com/rust-diplomat/diplomat.
 The generated C/C++ runtime headers and Rust runtime retain these MIT terms.
 
 MIT License

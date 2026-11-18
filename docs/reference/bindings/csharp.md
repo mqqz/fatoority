@@ -91,7 +91,7 @@ raises `InvalidInputException`. Build and signing failures can also consume
 state. Returned invoice data, totals, addresses, and response children are owned
 snapshots and remain usable after their parents are disposed.
 
-For binary output, dispose both the owner and its borrowed view:
+For binary output, dispose both the owner and the copy returned by `AsSlice()`:
 
 ```csharp
 using Fatoora;
@@ -102,9 +102,9 @@ using var view = bytes.AsSlice();
 byte[] der = view.Clone(); // Independent managed copy.
 ```
 
-`WithSpan()` provides a scoped, read-only view without copying. An active read
-retains native memory through concurrent source disposal. Later reads fail after
-the source is disposed. Disposing the view while a read is active throws
+`AsSlice()` copies the bytes into a native `RustVec` that stays valid after
+`bytes` is disposed. `WithSpan()` reads it in place without another copy.
+Disposing the view while a read is active throws
 `InvalidOperationException`; retry once the read has finished. Conflicting calls
 that require mutable access also throw `InvalidOperationException`.
 

@@ -29,7 +29,7 @@ namespace _native {
 class InvoiceNote {
 public:
 
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> language_id() const;
+  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> language_id() const;
 
   inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> language() const;
   template<typename W>

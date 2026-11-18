@@ -6,7 +6,6 @@
 #include <nanobind/stl/string_view.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/optional.h>
-#include <nanobind/stl/function.h>
 #include <nanobind/stl/vector.h>
 #include <nanobind/stl/bind_vector.h>
 #include <nanobind/stl/tuple.h>
@@ -14,6 +13,7 @@
 #include <nanobind/ndarray.h>
 #include <../src/nb_internals.h>  // Required for shimming
 #include "diplomat_runtime.hpp"
+#include "diplomat_ffi_errors.hpp"
 
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -34,6 +34,14 @@ namespace nanobind::detail
 
         bool from_python(handle src, uint8_t, cleanup_list *) noexcept
         {
+            // None maps to the default-initialized char '\0', mirroring C struct
+            // zero-initialization, instead of leaving a dangling Python error.
+            if (src.is_none())
+            {
+                value = U'\0';
+                size = 1;
+                return true;
+            }
             value = PyUnicode_ReadChar(src.ptr(), 0);
             if (!value)
             {
@@ -71,7 +79,9 @@ namespace nanobind::detail
         template <typename T_>
         NB_INLINE bool can_cast() const noexcept
         {
-            return (value && size == 1);
+            // size == 1 means exactly one code point was read (incl. '\0' from None);
+            // the read-failure sentinel leaves size == 0, so it is rejected here.
+            return (size == 1);
         }
 
         explicit operator char32_t()
@@ -176,6 +186,8 @@ namespace nanobind::detail
                 is_ok = true;
                 if constexpr(std::is_reference_v<T>) {
                     ok_val = std::optional(std::reference_wrapper(caster.operator cast_t<T>()));
+                } else if constexpr(std::is_same_v<T, std::monostate>) {
+                    ok_val = std::optional(std::monostate());
                 } else {
                     ok_val = std::optional(caster.operator cast_t<T>());
                 }
@@ -187,6 +199,8 @@ namespace nanobind::detail
                     is_ok = false;
                     if constexpr(std::is_reference_v<E>) {
                         err_val = std::optional(std::reference_wrapper(err_caster.operator cast_t<E>()));
+                    } else if constexpr(std::is_same_v<E, std::monostate>) {
+                        err_val = std::optional(std::monostate());
                     } else {
                         err_val = std::optional(err_caster.operator cast_t<E>());
                     }
@@ -308,6 +322,66 @@ namespace nanobind::detail
 
         static handle from_cpp(_native::diplomat::string_view_for_slice value, rv_policy, cleanup_list *) noexcept {
             return PyUnicode_FromStringAndSize(value.data(), value.size());
+        }
+    };
+
+    // Callbacks all take the form of std::function<result<T, E>(Args...)>:
+    template<typename T, typename E, typename... Args>
+    struct type_caster<std::function<_native::diplomat::result<T, E>(Args...)>> {
+        static constexpr auto Name = const_name("collections.abc.Callable[[") +
+        concat(make_caster<Args>::Name...)
+        + const_name("], ") + make_caster<_native::diplomat::result<T, E>>::Name + const_name("]");
+
+        using Value = std::function<_native::diplomat::result<T, E>(Args...)>;
+        Value value;
+
+        struct method_owner {
+            object inner;
+
+            _native::diplomat::result<T, E> operator()(Args... args) {
+                // Acquire the GIL:
+                gil_scoped_acquire acq;
+                handle out;
+                // nb::handle will `throw` if it encounters an issue:
+                try {
+                    // nb::handle automatically converts args for us:
+                    out = inner(args...);
+                } catch (...) {
+                    PyErr_Clear();
+                    // Diplomat Nanobind makes the assumption that we always are returning a result:
+                    return _native::diplomat::Err(_native::get_ffi_error<E>::get());
+                }
+                make_caster<_native::diplomat::result<T, E>> caster;
+                if (caster.from_python(out, 0, nullptr)) {
+                    if (caster.ok_val.has_value()) {
+                        return _native::diplomat::Ok<T>(std::move(caster.ok_val.value()));
+                    } else if (caster.err_val.has_value()) {
+                        return _native::diplomat::Err<E>(std::move(caster.err_val.value()));
+                    } else {
+                        return _native::diplomat::Err<E>(std::move(_native::get_ffi_error<E>::get()));
+                    }
+                } else {
+                    return _native::diplomat::Err<E>(std::move(_native::get_ffi_error<E>::get()));
+                }
+            }
+        };
+        
+        template <typename T_>
+        using Cast = Value;
+        operator Value() { return value; }
+
+        bool from_python(handle src, uint8_t, cleanup_list*) {
+            if (src.is_none()) {
+                return false;
+            }
+
+            if (!PyCallable_Check(src.ptr())) {
+                return false;
+            }
+            value = method_owner {
+                object(src, borrow_t())
+            };
+            return true;
         }
     };
 }

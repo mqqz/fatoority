@@ -31,7 +31,7 @@ namespace fatoora {
 class InvoiceNote {
 public:
 
-  inline diplomat::result<std::unique_ptr<fatoora::Text>, std::unique_ptr<fatoora::BindingError>> language_id() const;
+  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> language_id() const;
 
   inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> language() const;
   template<typename W>
