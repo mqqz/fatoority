@@ -77,6 +77,9 @@ pub enum ZatcaError {
     /// environment mismatch or a missing compliance request ID.
     #[error("Client state error: {0}")]
     ClientState(String),
+    /// A request timeout passed to [`ZatcaClient::with_timeout`] was zero.
+    #[error("Invalid timeout: request timeout must be greater than zero")]
+    InvalidTimeout,
 }
 
 impl ZatcaError {
@@ -108,6 +111,7 @@ impl ZatcaError {
             Self::ServerError(_) => crate::ErrorKind::Api,
             Self::Http(_) => crate::ErrorKind::Network,
             Self::ClientState(_) => crate::ErrorKind::Internal,
+            Self::InvalidTimeout => crate::ErrorKind::InvalidInput,
         }
     }
 }
@@ -545,7 +549,9 @@ impl ZatcaClient {
     /// and ignored.
     ///
     /// # Errors
-    /// Returns [`ZatcaError::ClientState`] if `timeout` is zero, and
+    /// Returns [`ZatcaError::InvalidTimeout`]
+    /// ([`ErrorKind::InvalidInput`](crate::ErrorKind::InvalidInput)) if
+    /// `timeout` is zero, and
     /// [`ZatcaError::Http`] if the HTTP client cannot be built.
     ///
     /// # Examples
@@ -560,9 +566,7 @@ impl ZatcaClient {
     /// ```
     pub fn with_timeout(config: Config, timeout: std::time::Duration) -> Result<Self, ZatcaError> {
         if timeout.is_zero() {
-            return Err(ZatcaError::ClientState(
-                "Request timeout must be greater than zero".into(),
-            ));
+            return Err(ZatcaError::InvalidTimeout);
         }
         Self::build(config, Some(timeout))
     }
@@ -1478,7 +1482,9 @@ mod tests {
     fn with_timeout_rejects_zero() {
         let err =
             ZatcaClient::with_timeout(Config::default(), std::time::Duration::ZERO).unwrap_err();
-        assert!(matches!(err, ZatcaError::ClientState(_)), "{err:?}");
+        assert!(matches!(err, ZatcaError::InvalidTimeout), "{err:?}");
+        assert_eq!(err.kind(), crate::ErrorKind::InvalidInput);
+        assert!(err.to_string().contains("greater than zero"), "{err}");
         assert!(
             ZatcaClient::with_timeout(Config::default(), std::time::Duration::from_secs(5)).is_ok()
         );

@@ -253,6 +253,16 @@ def test_client_timeout_rejects_invalid_values(timeout, error):
         ZatcaClient(Config(Environment.NON_PRODUCTION), timeout=timeout)
 
 
+def test_native_zero_timeout_is_invalid_input():
+    # The facade rejects zero first; the native constructor classifies it the same way.
+    from fatoora import api, _native
+    from fatoora.errors import InvalidInputError
+
+    with pytest.raises(InvalidInputError, match="timeout must be greater than zero") as caught:
+        api._call(_native.ZatcaClient.with_timeout, Config(Environment.NON_PRODUCTION), 0)
+    assert caught.value.details["type"] == "invalid_timeout"
+
+
 def test_client_timeout_is_keyword_only():
     with pytest.raises(TypeError):
         ZatcaClient(Config(Environment.NON_PRODUCTION), 30)

@@ -42,6 +42,21 @@
   Python, the timeout is rounded up to whole milliseconds; zero, negative and
   over-4294967.295-second timeouts throw `IllegalArgumentException` (Kotlin/Java)
   or `ArgumentOutOfRangeException` (C#) before reaching the native library.
+- Rust (`fatoora-core`): `ZatcaClient::with_timeout` with a zero timeout
+  returns the new `ZatcaError::InvalidTimeout` (`ErrorKind::InvalidInput`,
+  details type `invalid_timeout`) instead of `ZatcaError::ClientState`
+  (`ErrorKind::Internal`). The FFI constructor reports it with the
+  invalid-input code, so Kotlin/Java and C# throw `InvalidInputException` and C
+  returns `FATOORA_INVALID_INPUT`. Python still raises `ValueError` before
+  calling native code.
+- JavaScript: `ZatcaClient.reportSimplifiedInvoice` and
+  `ZatcaClient.clearStandardInvoice` require a `ClearanceMode` for the
+  `Clearance-Status` header, like every other binding. Booleans, the variant
+  names `'Enabled'`/`'Disabled'` and an omitted argument (which defaulted to
+  `false` for reporting and `true` for clearance) reject with a `TypeError`.
+  The parameter is renamed `clearanceStatus` -> `clearanceMode`, matching the
+  `fatoority/raw` `prepare*` methods, and the `ClearanceModeInput` type is
+  removed.
 
 ### Internal
 

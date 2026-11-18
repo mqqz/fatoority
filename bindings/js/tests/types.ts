@@ -16,8 +16,13 @@ const prepared = RawClient.create(rawConfig).prepareRequestProductionCsid(creden
 const sent: Promise<ProductionCsid> = sendPrepared(prepared);
 declare const invoice: SignedInvoice, production: ProductionCsid;
 const reported: Promise<ValidationResponse> = client.reportSimplifiedInvoice(invoice, production, ClearanceMode.Disabled);
-const cleared: Promise<ValidationResponse> = client.clearStandardInvoice(invoice, production, true);
-const named: Promise<ValidationResponse> = client.clearStandardInvoice(invoice, production, 'Enabled');
+const cleared: Promise<ValidationResponse> = client.clearStandardInvoice(invoice, production, ClearanceMode.Enabled);
+// @ts-expect-error the Clearance-Status header takes a ClearanceMode, not a boolean
+client.clearStandardInvoice(invoice, production, true);
+// @ts-expect-error nor the variant name
+client.clearStandardInvoice(invoice, production, 'Enabled');
+// @ts-expect-error nor may it be omitted
+client.reportSimplifiedInvoice(invoice, production);
 
 const builder: InvoiceBuilder = InvoiceBuilder.create(InvoiceTypeKind.Tax, InvoiceSubType.Simplified, null, null, null, null);
 builder.addPaymentMeans(PaymentMeans.create('10', null));
@@ -75,5 +80,5 @@ const xml: string = invoice.xml;
 const counter: bigint = invoice.data().invoiceCounter;
 const url: string = prepared.url;
 
-void [response, sent, reported, cleared, named, line, legacy, valid, bogus, severity, environment, ErrorClass,
+void [response, sent, reported, cleared, line, legacy, valid, bogus, severity, environment, ErrorClass,
   percentage, amount, city, district, environmentProperty, status, statusText, httpStatus, results, xml, counter, url];

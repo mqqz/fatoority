@@ -3,8 +3,8 @@ import { randomUUID } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 import {
-  Address, Config, Environment, FatooraError, InvoiceBuilder, InvoiceSigner, InvoiceSubType,
-  InvoiceTypeKind, PaymentMeans, ProductionCsid, VatCategory, Xml, ZatcaClient,
+  Address, ClearanceMode, Config, Environment, FatooraError, InvoiceBuilder, InvoiceSigner,
+  InvoiceSubType, InvoiceTypeKind, PaymentMeans, ProductionCsid, VatCategory, Xml, ZatcaClient,
   type ValidationResponse, type ValidationMessage, type ZatcaValidationReport,
 } from 'fatoority';
 
@@ -110,7 +110,7 @@ export async function run(inputPath: string, submit: boolean, transport?: typeof
     saveJson(`${output}/state.json`, state);
     const client = new ZatcaClient(Config.create(ENVIRONMENT), transport ? { fetch: transport } : {});
     const credentials = ProductionCsid.create(ENVIRONMENT, null, token, secret);
-    const response = await client.reportSimplifiedInvoice(signed, credentials, false, 'en');
+    const response = await client.reportSimplifiedInvoice(signed, credentials, ClearanceMode.Disabled, 'en');
     handleResponse(response, output);
     state.stage = 'accepted';
   } catch (error) {

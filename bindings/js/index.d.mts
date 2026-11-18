@@ -121,8 +121,6 @@ export declare class Xml {
 
 export interface RequestOptions { signal?: AbortSignal; }
 export interface TransportOptions extends RequestOptions { fetch?: typeof fetch; }
-/** The Clearance-Status request header: a boolean, a `ClearanceMode` or its value name. */
-export type ClearanceModeInput = boolean | ClearanceMode | ClearanceModeValue;
 export function sendPrepared(request: InvoiceRequest, options?: TransportOptions): Promise<ValidationResponse>;
 export function sendPrepared(request: ComplianceRequest, options?: TransportOptions): Promise<ComplianceCsid>;
 export function sendPrepared(request: ProductionRequest, options?: TransportOptions): Promise<ProductionCsid>;
@@ -132,6 +130,6 @@ export class ZatcaClient {
   requestProductionCsid(credentials: ComplianceCsid, options?: RequestOptions): Promise<ProductionCsid>;
   renewCsid(credentials: ProductionCsid, csr: Csr, otp: string, acceptLanguage?: string | null, options?: RequestOptions): Promise<ProductionCsid>;
   checkInvoiceCompliance(invoice: SignedInvoice, credentials: ComplianceCsid, options?: RequestOptions): Promise<ValidationResponse>;
-  reportSimplifiedInvoice(invoice: SignedInvoice, credentials: ProductionCsid, clearanceStatus?: ClearanceModeInput, acceptLanguage?: string | null, options?: RequestOptions): Promise<ValidationResponse>;
-  clearStandardInvoice(invoice: SignedInvoice, credentials: ProductionCsid, clearanceStatus?: ClearanceModeInput, acceptLanguage?: string | null, options?: RequestOptions): Promise<ValidationResponse>;
+  reportSimplifiedInvoice(invoice: SignedInvoice, credentials: ProductionCsid, clearanceMode: ClearanceMode, acceptLanguage?: string | null, options?: RequestOptions): Promise<ValidationResponse>;
+  clearStandardInvoice(invoice: SignedInvoice, credentials: ProductionCsid, clearanceMode: ClearanceMode, acceptLanguage?: string | null, options?: RequestOptions): Promise<ValidationResponse>;
 }

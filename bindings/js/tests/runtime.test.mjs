@@ -77,7 +77,7 @@ test('prepared request retains context after invoice consumption and WASM memory
 test('fetch sees Rust headers and body; concurrent requests decode independently', async () => {
   const pending = [];
   const client = new sdk.ZatcaClient(config, { fetch: (url, init) => new Promise(resolve => pending.push({url, init, resolve})) });
-  const a = client.reportSimplifiedInvoice(invoice(), pcsid(), false, 'ar');
+  const a = client.reportSimplifiedInvoice(invoice(), pcsid(), sdk.ClearanceMode.Disabled, 'ar');
   const b = client.requestProductionCsid(ccsid());
   assert.equal(pending.length, 2);
   const headers = new Headers(pending[0].init.headers);
@@ -108,14 +108,14 @@ test('all credential operations, including renewal 428, share Rust decoding', as
 test('HTTP failures decode in Rust; network, body-read and cancellation failures stay transport errors', async () => {
   for (const status of [400, 401, 409, 500]) {
     const client = new sdk.ZatcaClient(config, { fetch: async () => json(validationBody, status) });
-    await assert.rejects(client.reportSimplifiedInvoice(invoice(), pcsid()), (e) => {
+    await assert.rejects(client.reportSimplifiedInvoice(invoice(), pcsid(), sdk.ClearanceMode.Disabled), (e) => {
       assert.ok(e instanceof sdk.FatooraError);
       assert.equal(e.details.http_status, status);
       assert.equal(JSON.parse(e.cause.detailsJson()).http_status, status); return true;
     });
   }
   const malformed = new sdk.ZatcaClient(config, { fetch: async () => new Response('bad') });
-  await assert.rejects(malformed.reportSimplifiedInvoice(invoice(), pcsid()), code(3));
+  await assert.rejects(malformed.reportSimplifiedInvoice(invoice(), pcsid(), sdk.ClearanceMode.Disabled), code(3));
   const broken = new sdk.ZatcaClient(config, { fetch: async () => ({ status: 200, arrayBuffer: async () => { throw new Error('read'); } }) });
   await assert.rejects(broken.requestProductionCsid(ccsid()), e => e instanceof sdk.TransportError && e instanceof sdk.NetworkError && e.code === 7 && e.httpStatus === 200);
   const abort = new AbortController(); abort.abort();
@@ -181,11 +181,14 @@ test('clearance and compliance use their own acceptance fields', async () => {
     ? json({validationResults: {status: 'PASS'}, clearanceStatus: 'CLEARED', reportingStatus: 'NOT_REPORTED'})
     : json({validationResults: {status: 'WARNING'}, reportingStatus: 'NOT_REPORTED'})});
   const standard = sdk.SignedInvoice.fromXml(loadFixture('sdk-parity/cases/standard-invoice/sdk-signed.xml'));
-  assert.equal((await client.clearStandardInvoice(standard, pcsid())).outcome.value, 'Accepted');
+  assert.equal((await client.clearStandardInvoice(standard, pcsid(), sdk.ClearanceMode.Enabled)).outcome.value, 'Accepted');
   assert.equal((await client.checkInvoiceCompliance(invoice(), ccsid())).outcome.value, 'Accepted');
-  await assert.rejects(client.clearStandardInvoice(invoice(), pcsid()));
+  await assert.rejects(client.clearStandardInvoice(invoice(), pcsid(), sdk.ClearanceMode.Enabled), code(9));
   assert.equal((await client.clearStandardInvoice(standard, pcsid(), sdk.ClearanceMode.Enabled)).clearanceStatus, sdk.ClearanceStatus.Cleared);
-  await assert.rejects(client.clearStandardInvoice(standard, pcsid(), 1), TypeError);
+  for (const mode of [true, false, 'Enabled', 'Disabled', 1, undefined]) {
+    await assert.rejects(client.clearStandardInvoice(standard, pcsid(), mode), TypeError);
+    await assert.rejects(client.reportSimplifiedInvoice(invoice(), pcsid(), mode), TypeError);
+  }
 });
 
 test('compressed schemas preserve valid Arabic input and reject schema-invalid XML', () => {
