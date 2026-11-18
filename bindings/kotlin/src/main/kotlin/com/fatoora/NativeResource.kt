@@ -88,7 +88,12 @@ internal fun <T> unwrap(result: Result<T>): T = result.getOrElse { error ->
 }
 
 /** Copies an owned optional-text result and frees it immediately. */
-internal fun readText(raw: com.fatoora.raw.Text): String = Text(raw).use { it.value }
+internal fun readText(raw: com.fatoora.raw.Text): String {
+    check(raw.owned && raw.selfEdges.isEmpty()) { "Text result must be an independent owned handle" }
+    raw.owned = false
+    try { return unwrap(raw.value()) }
+    finally { com.fatoora.raw.Text.lib.fatoora_Text_destroy(raw.handle) }
+}
 
 // Decimals cross the native boundary as plain decimal text. Both directions are exact:
 // BigDecimal keeps every digit and the scale, and toPlainString never uses an exponent.

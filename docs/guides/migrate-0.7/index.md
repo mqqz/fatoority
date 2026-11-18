@@ -18,6 +18,7 @@ upgrade to 0.7. Each warning names its replacement.
 | Rust | `fatoora-core = "0.7.0"` | [Rust](rust.md) |
 | Python | `pip install "fatoority==0.7.0"` | [Python](python.md) |
 | C# / .NET | `Fatoority` 0.7.0 | [C#/.NET](csharp.md) |
+| Kotlin / Java | `com.fatoority:fatoority:0.7.0` | [Kotlin / Java](kotlin.md) |
 
 If you are still on 0.5, follow
 [Migrate from 0.5 to 0.6](../migrate-0.6/index.md) first, using the 0.6

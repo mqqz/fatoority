@@ -38,14 +38,4 @@ class FinalizedInvoice internal constructor(internal val raw: com.fatoora.raw.Fi
     fun totals(): InvoiceTotals = nativeCall(listOfNotNull(this)) {
         InvoiceTotals(unwrap(raw.totals()))
     }
-
-    @Deprecated("Use the hash property.", ReplaceWith("hash"))
-    fun hash(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.hash())
-    }
-
-    @Deprecated("Use the xml property.", ReplaceWith("xml"))
-    fun xml(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.xml())
-    }
 }

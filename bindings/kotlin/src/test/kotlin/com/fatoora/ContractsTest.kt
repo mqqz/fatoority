@@ -85,21 +85,6 @@ class ContractsTest {
         assertFailsWith<InvalidInputException> { Adjustment.amount(BigDecimal("1E+40")) }
     }
 
-    @Suppress("DEPRECATION")
-    @Test fun deprecatedAccessorsStillWork() {
-        Address.create("SA", "Riyadh", "Street", "1234", "12345", district = "Olaya").use { a ->
-            assertEquals("Riyadh", a.city())
-            a.district()!!.use { assertEquals("Olaya", it.value()) }
-        }
-        Adjustment.amount("12.50").use { assertEquals("12.5", it.value()) }
-        Adjustment.percentage(BigDecimal("200"), BigDecimal("10")).use { a ->
-            assertEquals(0, BigDecimal("10").compareTo(a.percent))
-            a.percent()!!.use { assertEquals("10", it.value()) }
-            a.withSuppliedAmount(BigDecimal("20")).use { assertEquals(0, BigDecimal("20").compareTo(it.value)) }
-        }
-        assertEquals(InvoiceFlag.Export.bit, InvoiceFlag.Export.bit())
-    }
-
     @Test fun errorCodesMapToExceptionSubclasses() {
         val expected = mapOf(
             1 to InvalidInputException::class, 2 to ValidationException::class, 3 to ParseException::class,

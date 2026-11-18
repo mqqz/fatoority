@@ -107,6 +107,24 @@ C# (`Fatoority` NuGet package): every `[Obsolete]` member is removed; see the
 - `Adjustment.WithSuppliedAmount` (use `SuppliedAmount`), the
   `Adjustment.Percent` property (use `Percentage`), and `WithoutVatRate()` on
   `AllowanceCharge` and `VatBreakdown` (use `OmitVatRate()`).
+Kotlin/Java (`com.fatoority:fatoority`, `fatoority-android`): every
+`@Deprecated` member of the `com.fatoora` facade is removed; see the
+[Kotlin/Java migration guide](https://docs.fatoority.com/guides/migrate-0.7/kotlin/).
+
+- Getter functions superseded by properties, such as `address.city()` and
+  `totals.payableAmount()` (read `address.city` in Kotlin or
+  `address.getCity()` in Java). Optional text is a `String?` property instead
+  of a closeable `Text`, and amounts are `BigDecimal` instead of `String`.
+- `String` overloads of every amount, quantity and rate parameter (pass
+  `java.math.BigDecimal`).
+- Renamed aliases: `Adjustment.percentage(base, percent)` (use `percentOf`),
+  `withSuppliedAmount` (use `suppliedAmount`), the `percent` property (use
+  `percentage`), and `AllowanceCharge`/`VatBreakdown.withoutVatRate` (use
+  `omitVatRate`).
+- The `Boolean` overloads of `reportSimplifiedInvoiceAsync` and
+  `clearStandardInvoiceAsync` (pass a `ClearanceMode`).
+- The `com.fatoora.Text` class, which only the removed getter functions
+  returned (optional text properties are `String?`).
 
 ## [0.6.0] - 2026-11-18
 

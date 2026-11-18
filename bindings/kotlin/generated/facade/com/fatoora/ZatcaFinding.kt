@@ -78,49 +78,4 @@ class ZatcaFinding internal constructor(internal val raw: com.fatoora.raw.ZatcaF
         get() = nativeCall(listOfNotNull(this)) {
             raw.locationColumn()?.let { value -> value.toLong() }
         }
-
-    @Deprecated("Use the assertionSite property.", ReplaceWith("assertionSite"))
-    fun assertionSite(): String? = nativeCall(listOfNotNull(this)) {
-        raw.assertionSite()
-    }
-
-    @Deprecated("Use the layer property.", ReplaceWith("layer"))
-    fun layer(): ValidationLayer = nativeCall(listOfNotNull(this)) {
-        ValidationLayer.valueOf(raw.layer().name)
-    }
-
-    @Deprecated("Use the code property.", ReplaceWith("code"))
-    fun code(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.code())
-    }
-
-    @Deprecated("Use the severity property.", ReplaceWith("severity"))
-    fun severity(): Severity = nativeCall(listOfNotNull(this)) {
-        Severity.valueOf(raw.severity().name)
-    }
-
-    @Deprecated("Use the message property.", ReplaceWith("message"))
-    fun message(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.message())
-    }
-
-    @Deprecated("Use the locationKind property.", ReplaceWith("locationKind"))
-    fun locationKind(): ValidationLocationKind? = nativeCall(listOfNotNull(this)) {
-        raw.locationKind()?.let { ValidationLocationKind.valueOf(it.name) }
-    }
-
-    @Deprecated("Use the locationPath property.", ReplaceWith("locationPath"))
-    fun locationPath(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.locationPath())?.let(::Text)
-    }
-
-    @Deprecated("Use the locationLine property.", ReplaceWith("locationLine"))
-    fun locationLine(): Long? = nativeCall(listOfNotNull(this)) {
-        raw.locationLine()?.let { value -> value.toLong() }
-    }
-
-    @Deprecated("Use the locationColumn property.", ReplaceWith("locationColumn"))
-    fun locationColumn(): Long? = nativeCall(listOfNotNull(this)) {
-        raw.locationColumn()?.let { value -> value.toLong() }
-    }
 }

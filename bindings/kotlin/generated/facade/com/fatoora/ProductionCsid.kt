@@ -35,24 +35,4 @@ class ProductionCsid internal constructor(internal val raw: com.fatoora.raw.Prod
         get() = nativeCall(listOfNotNull(this)) {
             unwrap(raw.secret())
         }
-
-    @Deprecated("Use the env property.", ReplaceWith("env"))
-    fun env(): Environment = nativeCall(listOfNotNull(this)) {
-        Environment.valueOf(unwrap(raw.env()).name)
-    }
-
-    @Deprecated("Use the requestId property.", ReplaceWith("requestId"))
-    fun requestId(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.requestId())?.let(::Text)
-    }
-
-    @Deprecated("Use the binarySecurityToken property.", ReplaceWith("binarySecurityToken"))
-    fun binarySecurityToken(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.binarySecurityToken())
-    }
-
-    @Deprecated("Use the secret property.", ReplaceWith("secret"))
-    fun secret(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.secret())
-    }
 }

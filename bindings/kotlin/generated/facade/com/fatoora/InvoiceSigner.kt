@@ -30,11 +30,6 @@ class InvoiceSigner internal constructor(internal val raw: com.fatoora.raw.Invoi
         Bytes(unwrap(raw.certificateDer()))
     }
 
-    @Deprecated("Use the certificatePem property.", ReplaceWith("certificatePem"))
-    fun certificatePem(): String = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.certificatePem())
-    }
-
     fun sign(invoice: FinalizedInvoice): SignedInvoice = nativeCall(listOfNotNull(this, invoice)) {
         SignedInvoice(unwrap(raw.sign(invoice.raw)))
     }

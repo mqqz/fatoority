@@ -119,9 +119,9 @@ run concurrently. Consumed builders/invoices remain closeable but reject further
 use with a native error. Automatic cleanup is nondeterministic; explicitly close owners. Freeing native
 memory does not guarantee secret erasure.
 
-Import public classes from `com.fatoora`. The 0.5 getter functions (such as
-`address.city()`), `String` amount overloads and `Boolean` coroutine overloads
-remain as `@Deprecated` members with `ReplaceWith` hints until 0.7.
+Import public classes from `com.fatoora`. 0.7 removed the getter functions,
+`String` amount overloads, renamed aliases and `Boolean` coroutine overloads
+deprecated in 0.6; see the [0.7 migration guide](../../guides/migrate-0.7/kotlin.md).
 
 ## Amounts
 
