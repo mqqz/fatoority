@@ -19,12 +19,12 @@ class OriginalInvoiceRef internal constructor(internal val raw: com.fatoora.raw.
 
     val issueTime: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.issueTime())?.let(::readText)
+            raw.issueTime()
         }
 
     val documentTypeCode: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.documentTypeCode())?.let(::readText)
+            raw.documentTypeCode()
         }
 
     val id: String
@@ -34,11 +34,11 @@ class OriginalInvoiceRef internal constructor(internal val raw: com.fatoora.raw.
 
     val uuid: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.uuid())?.let(::readText)
+            raw.uuid()
         }
 
     val issueDate: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.issueDate())?.let(::readText)
+            raw.issueDate()
         }
 }

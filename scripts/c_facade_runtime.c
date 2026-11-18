@@ -96,17 +96,6 @@ static FatooraStatus fatoora_private_finish(DiplomatWrite *write, char **out,
     *out = write->buf;
     return FATOORA_OK;
 }
-static FatooraStatus fatoora_private_text(Text *text, char **out, FatooraError **error) {
-    if (!text) return FATOORA_OK;
-    DiplomatWrite write = fatoora_private_writer();
-    fatoora_Text_value_result result = fatoora_Text_value(text, &write);
-    fatoora_Text_destroy(text);
-    if (!result.is_ok) {
-        free(write.buf);
-        return fatoora_private_error(result.err, error);
-    }
-    return fatoora_private_finish(&write, out, error);
-}
 static DiplomatStringView fatoora_private_string(const char *value) {
     DiplomatStringView view = {value, strlen(value)};
     return view;

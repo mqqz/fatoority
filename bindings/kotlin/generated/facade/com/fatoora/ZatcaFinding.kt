@@ -60,7 +60,7 @@ class ZatcaFinding internal constructor(internal val raw: com.fatoora.raw.ZatcaF
      */
     val locationPath: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.locationPath())?.let(::readText)
+            raw.locationPath()
         }
 
     /**

@@ -11,7 +11,7 @@ internal interface ZatcaStageReportLib: Library {
     fun fatoora_ZatcaStageReport_status(handle: Pointer): Int
     fun fatoora_ZatcaStageReport_provenance(handle: Pointer): ResultPointerPointer
     fun fatoora_ZatcaStageReport_evaluated_assertions_len(handle: Pointer): FFISizet
-    fun fatoora_ZatcaStageReport_evaluated_assertion(handle: Pointer, index: FFISizet): ResultPointerPointer
+    fun fatoora_ZatcaStageReport_evaluated_assertion(handle: Pointer, index: FFISizet, write: Pointer): ResultUnitPointer
     fun fatoora_ZatcaStageReport_findings_len(handle: Pointer): FFISizet
     fun fatoora_ZatcaStageReport_finding(handle: Pointer, index: FFISizet): ResultPointerPointer
 }
@@ -89,16 +89,16 @@ class ZatcaStageReport internal constructor (
     /**
      * Assertion site at `index` whose selected contexts were all evaluated.
      */
-    fun evaluatedAssertion(index: ULong): Result<Text> {
-
-        val returnVal = lib.fatoora_ZatcaStageReport_evaluated_assertion(handle, FFISizet(index));
+    fun evaluatedAssertion(index: ULong): Result<String> {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_ZatcaStageReport_evaluated_assertion(handle, FFISizet(index), write);
         val nativeOkVal = returnVal.getNativeOk();
         if (nativeOkVal != null) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
+
+            val returnString = DW.writeToString(write)
+            return returnString.ok()
         } else {
+            DW.lib.diplomat_buffer_write_destroy(write)
             val selfEdges: List<Any> = listOf()
             val handle = returnVal.getNativeErr()!!
             val returnOpaque = BindingError(handle, selfEdges, true)

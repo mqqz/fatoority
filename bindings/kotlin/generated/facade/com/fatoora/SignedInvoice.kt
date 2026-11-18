@@ -76,9 +76,12 @@ class SignedInvoice internal constructor(internal val raw: com.fatoora.raw.Signe
             unwrap(raw.signingTime())
         }
 
+    /**
+     * Base64 signature value of the signing certificate, or null when absent.
+     */
     val zatcaKeySignature: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.zatcaKeySignature())?.let(::readText)
+            if (unwrap(raw.zatcaKeySignaturePresent())) unwrap(raw.zatcaKeySignature()) else null
         }
 
     fun data(): InvoiceData = nativeCall(listOfNotNull(this)) {

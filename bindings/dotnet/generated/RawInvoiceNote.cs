@@ -10,7 +10,7 @@ internal partial struct InvoiceNote
 {
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceNote_language_id", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError LanguageId(InvoiceNote* handle);
+    internal static unsafe extern DiplomatOptionVoid LanguageId(InvoiceNote* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceNote_language", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError Language(InvoiceNote* handle, DiplomatWrite* writeable);

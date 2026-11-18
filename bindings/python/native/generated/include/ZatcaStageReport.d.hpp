@@ -13,8 +13,6 @@
 namespace _native {
 namespace capi { struct BindingError; }
 class BindingError;
-namespace capi { struct Text; }
-class Text;
 namespace capi { struct ZatcaFinding; }
 class ZatcaFinding;
 namespace capi { struct ZatcaRuleSource; }
@@ -52,7 +50,9 @@ public:
   /**
    * Assertion site at `index` whose selected contexts were all evaluated.
    */
-  inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> evaluated_assertion(size_t index) const;
+  inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> evaluated_assertion(size_t index) const;
+  template<typename W>
+  inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> evaluated_assertion_write(size_t index, W& writeable_output) const;
 
   inline size_t findings_len() const;
 

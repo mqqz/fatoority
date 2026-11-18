@@ -7,10 +7,13 @@ implement ``IDisposable`` and track borrow lifetimes, so instead of wrapping
 them a second time this script rewrites the generated wrappers in place:
 
 * value getters (zero-argument instance methods returning a string, number,
-  bool, enum or optional ``Text``) become read-only properties;
+  bool or enum, optional or not) become read-only properties;
   methods returning native-owned ``IDisposable`` snapshots stay methods so
   ownership (``using``) remains explicit, as do ``To*``/``Into*`` conversions;
-* optional ``Text`` results are copied into ``string`` and released at once;
+* a fallible string getter ``X`` with an ``XPresent`` sibling (the FFI's
+  ``x_present``/``x`` pair, see docs/development/diplomat.md) becomes one
+  ``string?`` property that is null when ``XPresent`` is false; ``XPresent``
+  is private;
 * every decimal the Rust FFI parses (``decimal(param, ...)``) or returns
   (a ``fatoora_core`` getter typed ``Decimal``) is ``decimal`` in C#,
   converted with the invariant culture (never through ``double``);
@@ -109,7 +112,7 @@ def decimal_members():
         if found:
             inputs[key] = {camel(p) for p in found}
         signature = body.split("{", 1)[0]
-        if "&self" in signature and re.search(r"(DiplomatWrite|Option<Box<Text>>)", signature):
+        if "&self" in signature and "DiplomatWrite" in signature:
             called = set(re.findall(r"\.(\w+)\(\)", body))
             if called & core_getters:
                 outputs.add(key)
@@ -125,6 +128,10 @@ def transform_class(name, text, inputs, outputs, enums):
     result = []
     index = 0
     seen = set()
+    methods = {m["name"]: m["ret"] for m in map(SIGNATURE.match, lines) if m and not m["params"]}
+    # `x_present`/`x` pairs: a fallible optional string the FFI cannot return as Option.
+    optional_pairs = {m for m, ret in methods.items() if ret == "string" and methods.get(m + "Present") == "bool"}
+    hidden = {m + "Present" for m in optional_pairs}
     while index < len(lines):
         line = lines[index]
         match = SIGNATURE.match(line)
@@ -150,32 +157,26 @@ def transform_class(name, text, inputs, outputs, enums):
             if not any(f"FatooraDecimal.Format({param})" in b for b in body):
                 raise SystemExit(f"{name}.{method}: unexpected conversion of {param}")
 
-        # Text results become strings; decimal results become decimals.
+        # Decimal results become decimals.
         is_decimal = key in outputs
-        if is_decimal and ret not in {"string", "Text", "Text?"}:
+        if is_decimal and ret not in {"string", "string?"}:
             raise SystemExit(f"{name}.{method}: decimal result has unexpected type {ret}")
-        if ret in {"Text", "Text?"}:
-            helper = ("TakeDecimal" if is_decimal else "Take") + ("" if ret == "Text" else "Optional")
-            ret = ("decimal" if is_decimal else "string") + ("?" if ret == "Text?" else "")
-            body = [re.sub(r"return (.*new )Text\((.*)\);$",
-                           rf"return global::Fatoora.Text.{helper}(\1global::Fatoora.Text(\2));", b)
-                    for b in body]
-            text_doc = ["/// <returns>", "/// A <c>Text</c> allocated on Rust side.", "/// </returns>"]
-            if [r.strip() for r in result[-3:]] == text_doc:
-                del result[-3:]
-        elif is_decimal:
-            ret = "decimal"
+        if is_decimal:
+            ret = ret.replace("string", "decimal")
             body = [b.replace("return writeable.ToUnicode();",
                               "return FatooraDecimal.Parse(writeable.ToUnicode());") for b in body]
-        if match["ret"] != ret and not any("FatooraDecimal.Parse(" in b or ".Text.Take" in b for b in body):
-            raise SystemExit(f"{name}.{method}: unexpected result conversion")
-        if is_decimal and not any("FatooraDecimal.Parse(" in b or ".TakeDecimal" in b for b in body):
-            raise SystemExit(f"{name}.{method}: unexpected decimal result conversion")
+            if not any("FatooraDecimal.Parse(" in b for b in body):
+                raise SystemExit(f"{name}.{method}: unexpected decimal result conversion")
+        if method in optional_pairs:
+            ret += "?"
+            body = [f"        if (!{method}Present)", "        {", "            return null;", "        }"] + body
 
         exposed = "Create" if match["static"] and method == "New" else method
         visibility = "public"
         if key in PRIVATE_METHODS:
             exposed, visibility = PRIVATE_METHODS[key], "private"
+        if method in hidden:
+            visibility = "private"
         base = ret.rstrip("?")
         is_property = (not match["static"] and not params and ret != "void"
                        and not any(method.startswith(p) and method[len(p):][:1].isupper()
@@ -184,7 +185,7 @@ def transform_class(name, text, inputs, outputs, enums):
         if is_property:
             if method == name:
                 raise SystemExit(f"{name}.{method}: property would share its class name")
-            result.append(f"    public {ret} {exposed}")
+            result.append(f"    {visibility} {ret} {exposed}")
             result.append("    {")
             result.append("        get")
             result.append("        {")

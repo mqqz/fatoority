@@ -263,7 +263,7 @@ fn rejected_setters_leave_previous_values_and_totals_intact() {
     );
     assert_eq!(written(|out| ok(data.currency(out))), "SAR");
     assert_eq!(
-        written(|out| ok(ok(data.allowance_reason()).unwrap().value(out))),
+        optional_written(|out| data.allowance_reason(out)).unwrap(),
         "Discount"
     );
     let note = ok(data.note()).unwrap();
@@ -323,16 +323,13 @@ fn buyer_optional_fields_and_owned_snapshots_preserve_absent_vs_empty() {
             assert_eq!(written(|out| ok(vat_id.value(out))), "399999999900003");
         }
         assert_eq!(written(|out| ok(id.value(out))), "buyer-id");
-        assert!(ok(id.scheme()).is_none());
+        assert!(optional_written(|out| id.scheme(out)).is_none());
         assert_eq!(
-            written(|out| ok(ok(address.additional_street()).unwrap().value(out))),
+            optional_written(|out| address.additional_street(out)).unwrap(),
             ""
         );
-        assert!(ok(address.additional_number()).is_none());
-        assert_eq!(
-            written(|out| ok(ok(address.district()).unwrap().value(out))),
-            "حي"
-        );
+        assert!(optional_written(|out| address.additional_number(out)).is_none());
+        assert_eq!(optional_written(|out| address.district(out)).unwrap(), "حي");
     }
 }
 
@@ -375,7 +372,7 @@ fn vat_category_mapping_preserves_zero_tax_categories() {
         assert!(ok(data.buyer()).is_none());
         assert!(ok(data.note()).is_none());
         assert!(ok(data.original_invoice_ref()).is_none());
-        assert!(ok(data.original_invoice_reason()).is_none());
+        assert!(optional_written(|out| data.original_invoice_reason(out)).is_none());
     }
 }
 
@@ -397,18 +394,18 @@ fn credit_and_debit_notes_keep_original_reference_after_parent_drop() {
             assert_eq!(data.invoice_type_kind(), kind);
             assert_eq!(data.invoice_sub_type(), InvoiceSubType::Simplified);
             let reference = ok(data.original_invoice_ref()).unwrap();
-            let reason = ok(data.original_invoice_reason()).unwrap();
+            let reason = optional_written(|out| data.original_invoice_reason(out)).unwrap();
             drop(invoice);
             drop(data);
             assert_eq!(written(|out| ok(reference.id(out))), "INV-0");
-            assert_eq!(written(|out| ok(reason.value(out))), "تصحيح");
-            let uuid = ok(reference.uuid());
-            let date = ok(reference.issue_date());
+            assert_eq!(reason, "تصحيح");
+            let uuid = optional_written(|out| reference.uuid(out));
+            let date = optional_written(|out| reference.issue_date(out));
             assert_eq!(uuid.is_some(), optional);
             assert_eq!(date.is_some(), optional);
             if optional {
-                assert_eq!(written(|out| ok(uuid.unwrap().value(out))), "old-uuid");
-                assert_eq!(written(|out| ok(date.unwrap().value(out))), "2023-11-13");
+                assert_eq!(uuid.unwrap(), "old-uuid");
+                assert_eq!(date.unwrap(), "2023-11-13");
             }
         }
     }
@@ -471,12 +468,6 @@ fn prepayment_handoff_preserves_transaction_identity_and_amounts() {
         assert_eq!(written(|out| ok(address.postal_code(out))), "12222");
         assert_eq!(written(|out| ok(address.country_code(out))), "SAU");
     }
-}
-
-fn optional_string(
-    value: Result<Option<Box<fatoora_ffi::common::ffi::Text>>, Box<BindingError>>,
-) -> Option<String> {
-    ok(value).map(|text| written(|out| ok(text.value(out))))
 }
 
 #[test]
@@ -543,24 +534,27 @@ fn roundtrip_metadata_crosses_binding_boundary_and_snapshots_own_their_data() {
         b, invoice, parsed, item, reference, subtotal, adjustment, exemption,
     ));
     assert_eq!(
-        optional_string(data.payment_instruction()).as_deref(),
+        optional_written(|out| data.payment_instruction(out)).as_deref(),
         Some("Transfer & receipt")
     );
     assert_eq!(
-        optional_string(data.actual_delivery_date()).as_deref(),
+        optional_written(|out| data.actual_delivery_date(out)).as_deref(),
         Some("2024-01-01")
     );
     assert_eq!(
-        optional_string(data.latest_delivery_date()).as_deref(),
+        optional_written(|out| data.latest_delivery_date(out)).as_deref(),
         Some("2024-01-02")
     );
-    assert_eq!(optional_string(data.tax_currency()).as_deref(), Some("SAR"));
     assert_eq!(
-        optional_string(data.tax_currency_amount()).as_deref(),
+        optional_written(|out| data.tax_currency(out)).as_deref(),
+        Some("SAR")
+    );
+    assert_eq!(
+        optional_written(|out| data.tax_currency_amount(out)).as_deref(),
         Some("0")
     );
     assert_eq!(
-        optional_string(ok(data.note()).unwrap().language_id()).as_deref(),
+        optional_written(|out| ok(data.note()).unwrap().language_id(out)).as_deref(),
         Some("ar")
     );
     assert_eq!(written(|out| ok(totals.prepaid_amount(out))), "10");
@@ -578,15 +572,18 @@ fn roundtrip_metadata_crosses_binding_boundary_and_snapshots_own_their_data() {
     assert_eq!(written(|out| ok(adjustment.amount(out))), "5");
     assert_eq!(written(|out| ok(adjustment.rate(out))), "0");
     assert_eq!(
-        optional_string(adjustment.reason()).as_deref(),
+        optional_written(|out| adjustment.reason(out)).as_deref(),
         Some("Discount & rebate")
     );
     assert_eq!(
-        optional_string(adjustment.reason_code()).as_deref(),
+        optional_written(|out| adjustment.reason_code(out)).as_deref(),
         Some("95")
     );
     let line = ok(data.line_item(0));
-    assert_eq!(optional_string(line.id()).as_deref(), Some("line-export"));
+    assert_eq!(
+        optional_written(|out| line.id(out)).as_deref(),
+        Some("line-export")
+    );
     assert_eq!(line.document_references_len(), 1);
     assert_eq!(line.tax_subtotals_len(), 1);
     assert!(line.document_reference(1).is_err());
@@ -594,19 +591,19 @@ fn roundtrip_metadata_crosses_binding_boundary_and_snapshots_own_their_data() {
     let reference = ok(line.document_reference(0));
     assert_eq!(written(|out| ok(reference.id(out))), "PRE-1");
     assert_eq!(
-        optional_string(reference.uuid()).as_deref(),
+        optional_written(|out| reference.uuid(out)).as_deref(),
         Some("original-uuid")
     );
     assert_eq!(
-        optional_string(reference.issue_date()).as_deref(),
+        optional_written(|out| reference.issue_date(out)).as_deref(),
         Some("2023-12-01")
     );
     assert_eq!(
-        optional_string(reference.issue_time()).as_deref(),
+        optional_written(|out| reference.issue_time(out)).as_deref(),
         Some("10:20:30")
     );
     assert_eq!(
-        optional_string(reference.document_type_code()).as_deref(),
+        optional_written(|out| reference.document_type_code(out)).as_deref(),
         Some("388")
     );
     assert_eq!(totals.vat_breakdown_len(), 1);
@@ -625,11 +622,11 @@ fn roundtrip_metadata_crosses_binding_boundary_and_snapshots_own_their_data() {
         ok(subtotal.exemption()),
     ] {
         assert_eq!(
-            optional_string(exemption.reason_code()).as_deref(),
+            optional_written(|out| exemption.reason_code(out)).as_deref(),
             Some("VATEX-SA-32")
         );
         assert_eq!(
-            optional_string(exemption.reason()).as_deref(),
+            optional_written(|out| exemption.reason(out)).as_deref(),
             Some("تصدير & exempt")
         );
     }
@@ -641,11 +638,14 @@ fn optional_metadata_and_invalid_inputs_are_distinct_in_bindings() {
         AllowanceCharge, InvoiceLineItem, OriginalInvoiceRef, TaxExemption, VatBreakdown,
     };
     let empty = ok(TaxExemption::new(None, None));
-    assert_eq!(optional_string(empty.reason()), None);
-    assert_eq!(optional_string(empty.reason_code()), None);
+    assert_eq!(optional_written(|out| empty.reason(out)), None);
+    assert_eq!(optional_written(|out| empty.reason_code(out)), None);
     let reference = ok(OriginalInvoiceRef::new(b"PRE", None, None, None, None));
-    assert_eq!(optional_string(reference.issue_time()), None);
-    assert_eq!(optional_string(reference.document_type_code()), None);
+    assert_eq!(optional_written(|out| reference.issue_time(out)), None);
+    assert_eq!(
+        optional_written(|out| reference.document_type_code(out)),
+        None
+    );
     assert!(OriginalInvoiceRef::new(b"PRE", None, Some(b"invalid"), None, None).is_err());
     assert!(OriginalInvoiceRef::new(b"PRE", None, None, Some(b"25:00:00"), None).is_err());
     assert!(TaxExemption::new(Some(&[0xff]), None).is_err());
@@ -674,7 +674,7 @@ fn optional_metadata_and_invalid_inputs_are_distinct_in_bindings() {
         VatCategory::Standard,
     ));
     let item = ok(item.with_metadata(None, &empty));
-    assert_eq!(optional_string(item.id()), None);
+    assert_eq!(optional_written(|out| item.id(out)), None);
     let mut b = builder();
     ok(b.set_delivery(None, None));
     assert!(b.set_delivery(Some(b"2024-02-30"), None).is_err());
@@ -687,12 +687,15 @@ fn optional_metadata_and_invalid_inputs_are_distinct_in_bindings() {
     ok(b.add_item(&item));
     let invoice = ok(b.build());
     let data = ok(invoice.data());
-    assert_eq!(optional_string(data.actual_delivery_date()), None);
-    assert_eq!(optional_string(data.latest_delivery_date()), None);
-    assert_eq!(optional_string(data.payment_instruction()), None);
-    assert_eq!(optional_string(data.tax_currency()).as_deref(), Some("SAR"));
+    assert_eq!(optional_written(|out| data.actual_delivery_date(out)), None);
+    assert_eq!(optional_written(|out| data.latest_delivery_date(out)), None);
+    assert_eq!(optional_written(|out| data.payment_instruction(out)), None);
     assert_eq!(
-        optional_string(data.tax_currency_amount()).as_deref(),
+        optional_written(|out| data.tax_currency(out)).as_deref(),
+        Some("SAR")
+    );
+    assert_eq!(
+        optional_written(|out| data.tax_currency_amount(out)).as_deref(),
         Some("0.15")
     );
     assert!(b.add_item(&item).is_err());
@@ -702,7 +705,7 @@ fn optional_metadata_and_invalid_inputs_are_distinct_in_bindings() {
     );
     let parsed = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
     assert_eq!(
-        optional_string(ok(ok(parsed.data()).note()).unwrap().language_id()),
+        optional_written(|out| ok(ok(parsed.data()).note()).unwrap().language_id(out)),
         None
     );
 }
@@ -785,7 +788,7 @@ fn line_reference_ids_and_times_are_validated_through_bindings() {
             None,
         ));
         assert_eq!(
-            optional_string(reference.issue_time()).as_deref(),
+            optional_written(|out| reference.issue_time(out)).as_deref(),
             Some("10:20:30")
         );
         let line = ok(InvoiceLineItem::new(
@@ -816,7 +819,7 @@ fn line_reference_ids_and_times_are_validated_through_bindings() {
             let reference = ok(ok(ok(restored.data()).line_item(0)).document_reference(0));
             assert_eq!(written(|out| ok(reference.id(out))), "PRE-1");
             assert_eq!(
-                optional_string(reference.issue_time()).as_deref(),
+                optional_written(|out| reference.issue_time(out)).as_deref(),
                 Some("10:20:30")
             );
         }
@@ -895,14 +898,14 @@ fn full_billing_references_and_language_less_notes_are_constructible() {
             drop(parsed);
             drop(data);
             assert_eq!(
-                optional_string(restored.issue_time()).as_deref(),
+                optional_written(|out| restored.issue_time(out)).as_deref(),
                 Some("10:20:30")
             );
             assert_eq!(
-                optional_string(restored.document_type_code()).as_deref(),
+                optional_written(|out| restored.document_type_code(out)).as_deref(),
                 Some("388")
             );
-            assert_eq!(optional_string(note.language_id()), None);
+            assert_eq!(optional_written(|out| note.language_id(out)), None);
             assert_eq!(written(|out| ok(note.text(out))), "ملاحظة &");
         }
         let mut b = configured(ok(InvoiceBuilder::new_with_reference(
@@ -915,7 +918,7 @@ fn full_billing_references_and_language_less_notes_are_constructible() {
         ok(b.set_payment_instruction(b"different"));
         let invoice = ok(b.build());
         assert_eq!(
-            optional_string(ok(invoice.data()).payment_instruction()).as_deref(),
+            optional_written(|out| ok(invoice.data()).payment_instruction(out)).as_deref(),
             Some("different")
         );
     }
@@ -941,7 +944,7 @@ fn referenced_notes_accept_payment_means_without_legacy_code_setter() {
         let data = ok(restored.data());
         assert_eq!(data.payment_means_len(), 1);
         assert_eq!(
-            optional_string(data.payment_instruction()).as_deref(),
+            optional_written(|out| data.payment_instruction(out)).as_deref(),
             Some("correction reason")
         );
         assert!(xml.contains("transfer"));
@@ -995,17 +998,20 @@ fn repeated_adjustment_counts_preserve_owned_metadata_and_totals() {
         assert_eq!(adjustment.tax_category_count(), 3);
         assert_eq!(adjustment.kind(), kind);
         assert_eq!(
-            optional_string(adjustment.reason()).as_deref(),
+            optional_written(|out| adjustment.reason(out)).as_deref(),
             Some("رسوم &")
         );
         assert_eq!(
-            optional_string(adjustment.reason_code()).as_deref(),
+            optional_written(|out| adjustment.reason_code(out)).as_deref(),
             Some("95")
         );
         let tax = ok(adjustment.exemption());
-        assert_eq!(optional_string(tax.reason()).as_deref(), Some("إعفاء &"));
         assert_eq!(
-            optional_string(tax.reason_code()).as_deref(),
+            optional_written(|out| tax.reason(out)).as_deref(),
+            Some("إعفاء &")
+        );
+        assert_eq!(
+            optional_written(|out| tax.reason_code(out)).as_deref(),
             Some("VATEX-SA-29")
         );
         assert_eq!(
@@ -1037,15 +1043,15 @@ fn imported_notes_do_not_invent_payment_instructions() {
         let xml = source.replace("<cbc:InstructionNote>reason</cbc:InstructionNote>", "");
         assert_ne!(xml, source);
         let imported = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
-        assert!(ok(ok(imported.data()).payment_instruction()).is_none());
+        assert!(optional_written(|out| ok(imported.data()).payment_instruction(out)).is_none());
         assert_eq!(
-            optional_string(ok(imported.data()).original_invoice_reason()).as_deref(),
+            optional_written(|out| ok(imported.data()).original_invoice_reason(out)).as_deref(),
             None
         );
         let regenerated = written(|out| ok(imported.xml(out)));
         assert!(!regenerated.contains("InstructionNote"));
         let second = ok(FinalizedInvoice::from_xml(regenerated.as_bytes()));
-        assert!(ok(ok(second.data()).payment_instruction()).is_none());
+        assert!(optional_written(|out| ok(second.data()).payment_instruction(out)).is_none());
         assert_eq!(written(|out| ok(second.xml(out))), regenerated);
     }
 }
@@ -1060,8 +1066,8 @@ fn optional_builder_fields_survive_binding_snapshots_and_xml() {
     assert!(rebate.with_reason(Some(&[0xff]), None).is_err());
     assert!(rebate.with_reason(None, Some(&[0xff])).is_err());
     let unchanged = ok(rebate.with_reason(None, None));
-    assert!(ok(unchanged.reason()).is_none());
-    assert!(ok(unchanged.reason_code()).is_none());
+    assert!(optional_written(|out| unchanged.reason(out)).is_none());
+    assert!(optional_written(|out| unchanged.reason_code(out)).is_none());
     let rebate = ok(rebate.supplied_amount(b"25"));
     let rebate = ok(rebate.with_reason(Some(b"rebate"), Some(b"95")));
     let freight = ok(Adjustment::amount(b"5"));
@@ -1142,10 +1148,13 @@ fn optional_builder_fields_survive_binding_snapshots_and_xml() {
     assert_eq!(written(|out| ok(data.issue_date(out))), "2024-01-01");
     assert_eq!(written(|out| ok(data.issue_time(out))), "12:30:00Z");
     assert_eq!(
-        optional_string(data.purchase_order_id()).as_deref(),
+        optional_written(|out| data.purchase_order_id(out)).as_deref(),
         Some("PO")
     );
-    assert_eq!(optional_string(data.contract_id()).as_deref(), Some("CON"));
+    assert_eq!(
+        optional_written(|out| data.contract_id(out)).as_deref(),
+        Some("CON")
+    );
     assert_eq!(data.billing_references_len(), 1);
     assert_eq!(
         written(|out| ok(ok(data.billing_reference(0)).id(out))),
@@ -1168,40 +1177,42 @@ fn optional_builder_fields_survive_binding_snapshots_and_xml() {
     let payment = ok(data.payment_means(1));
     assert_eq!(written(|out| ok(payment.code(out))), "30");
     assert_eq!(
-        optional_string(payment.instruction_note()).as_deref(),
+        optional_written(|out| payment.instruction_note(out)).as_deref(),
         Some("first")
     );
     assert_eq!(payment.instruction_notes_len(), 2);
     assert_eq!(
-        written(|out| ok(ok(payment.instruction_note_at(1)).value(out))),
+        written(|out| ok(payment.instruction_note_at(1, out))),
         "second"
     );
-    assert!(payment.instruction_note_at(2).is_err());
+    let mut missing = Ok(());
+    written(|out| missing = payment.instruction_note_at(2, out));
+    assert!(missing.is_err());
     assert!(data.payment_means(2).is_err());
     assert!(payment.has_account());
     assert_eq!(
-        optional_string(payment.account_identifier()).as_deref(),
+        optional_written(|out| payment.account_identifier(out)).as_deref(),
         Some("bank")
     );
     assert_eq!(
-        optional_string(payment.payment_terms()).as_deref(),
+        optional_written(|out| payment.payment_terms(out)).as_deref(),
         Some("net 30")
     );
     let item = ok(data.line_item(0));
     assert_eq!(
-        optional_string(item.item_gross_price()).as_deref(),
+        optional_written(|out| item.item_gross_price(out)).as_deref(),
         Some("120")
     );
     assert_eq!(
-        optional_string(item.item_price_discount()).as_deref(),
+        optional_written(|out| item.item_price_discount(out)).as_deref(),
         Some("20")
     );
     assert_eq!(
-        optional_string(item.item_price_base_quantity()).as_deref(),
+        optional_written(|out| item.item_price_base_quantity(out)).as_deref(),
         Some("12")
     );
     assert_eq!(
-        optional_string(item.item_price_base_quantity_unit_code()).as_deref(),
+        optional_written(|out| item.item_price_base_quantity_unit_code(out)).as_deref(),
         Some("PCE")
     );
     for (identifier, expected) in [
@@ -1221,13 +1232,31 @@ fn optional_builder_fields_survive_binding_snapshots_and_xml() {
     assert!(item.adjustment(2).is_err());
     let a = ok(item.adjustment(0));
     assert_eq!(written(|out| ok(a.value(out))), "25");
-    assert_eq!(optional_string(a.base_amount()).as_deref(), Some("250"));
-    assert_eq!(optional_string(a.percentage()).as_deref(), Some("10"));
-    assert_eq!(optional_string(a.reason()).as_deref(), Some("rebate"));
-    assert_eq!(optional_string(a.reason_code()).as_deref(), Some("95"));
+    assert_eq!(
+        optional_written(|out| a.base_amount(out)).as_deref(),
+        Some("250")
+    );
+    assert_eq!(
+        optional_written(|out| a.percentage(out)).as_deref(),
+        Some("10")
+    );
+    assert_eq!(
+        optional_written(|out| a.reason(out)).as_deref(),
+        Some("rebate")
+    );
+    assert_eq!(
+        optional_written(|out| a.reason_code(out)).as_deref(),
+        Some("95")
+    );
     let a = ok(data.adjustment(0));
-    assert_eq!(optional_string(a.base_amount()).as_deref(), Some("230"));
-    assert_eq!(optional_string(a.percentage()).as_deref(), Some("10"));
+    assert_eq!(
+        optional_written(|out| a.base_amount(out)).as_deref(),
+        Some("230")
+    );
+    assert_eq!(
+        optional_written(|out| a.percentage(out)).as_deref(),
+        Some("10")
+    );
     assert!(a.has_vat_rate());
     assert!(a.omit_vat_rate().is_err());
     let copy = ok(a.with_tax_category_count(3));
@@ -1273,9 +1302,9 @@ fn optional_adjustments_and_party_metadata_preserve_absence() {
     ok(b.add_line_item(b"item", b"1", b"PCE", b"100", b"0", VatCategory::OutOfScope));
     let bare = ok(PaymentMeans::new(b"30", None));
     assert!(!bare.has_account());
-    assert!(optional_string(bare.instruction_note()).is_none());
-    assert!(optional_string(bare.account_identifier()).is_none());
-    assert!(optional_string(bare.payment_terms()).is_none());
+    assert!(optional_written(|out| bare.instruction_note(out)).is_none());
+    assert!(optional_written(|out| bare.account_identifier(out)).is_none());
+    assert!(optional_written(|out| bare.payment_terms(out)).is_none());
     ok(b.add_payment_means(&bare));
     let xml = written(|out| ok(ok(b.build()).xml(out)));
     let parsed = ok(FinalizedInvoice::from_xml(xml.as_bytes()));
@@ -1285,7 +1314,7 @@ fn optional_adjustments_and_party_metadata_preserve_absence() {
     assert!(!restored.has_vat_rate());
     assert_eq!(restored.tax_category_count(), 2);
     assert_eq!(
-        optional_string(restored.base_amount()).as_deref(),
+        optional_written(|out| restored.base_amount(out)).as_deref(),
         Some("100")
     );
     let address = ok(ok(data.seller()).address()).unwrap();
@@ -1294,10 +1323,10 @@ fn optional_adjustments_and_party_metadata_preserve_absence() {
         Some("Riyadh Province")
     );
     let flat = ok(Adjustment::amount(b"1"));
-    assert!(optional_string(flat.base_amount()).is_none());
-    assert!(optional_string(flat.percentage()).is_none());
-    assert!(optional_string(flat.reason()).is_none());
-    assert!(optional_string(flat.reason_code()).is_none());
+    assert!(optional_written(|out| flat.base_amount(out)).is_none());
+    assert!(optional_written(|out| flat.percentage(out)).is_none());
+    assert!(optional_written(|out| flat.reason(out)).is_none());
+    assert!(optional_written(|out| flat.reason_code(out)).is_none());
     assert!(Adjustment::amount(b"NaN").is_err());
     let mut missing = LineItemBuilder::new();
     assert!(missing.build().is_err());

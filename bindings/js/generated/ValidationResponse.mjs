@@ -3,7 +3,6 @@ import { BindingError } from "./BindingError.mjs"
 import { ClearanceStatus } from "./ClearanceStatus.mjs"
 import { InvoiceOutcome } from "./InvoiceOutcome.mjs"
 import { ReportingStatus } from "./ReportingStatus.mjs"
-import { Text } from "./Text.mjs"
 import { ValidationResults } from "./ValidationResults.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
@@ -92,23 +91,46 @@ export class ValidationResponse {
         }
     }
 
+    /**
+     * Whether the response carries a cleared invoice.
+     */
+    clearedInvoiceXmlPresent() {
+
+        const result = wasm.fatoora_ValidationResponse_cleared_invoice_xml_present(this.ffiValue);
+
+        try {
+            return result;
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+        }
+    }
+
+    /**
+     * The decoded cleared invoice, or null when the response has none.
+     * Fails when the content is not base64-encoded UTF-8 text without NUL.
+     */
     clearedInvoiceXml() {
         const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
 
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
-        const result = wasm.fatoora_ValidationResponse_cleared_invoice_xml(diplomatReceive.buffer, this.ffiValue);
+
+        const result = wasm.fatoora_ValidationResponse_cleared_invoice_xml(diplomatReceive.buffer, this.ffiValue, write.buffer);
 
         try {
             if (!diplomatReceive.resultFlag) {
                 const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
                 throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
             }
-            return diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer) === 0 ? null : new Text(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+            return write.readString8();
         }
 
         finally {
             diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
             diplomatReceive.free();
+            write.free();
         }
     }
 
@@ -133,22 +155,18 @@ export class ValidationResponse {
     }
 
     clearedInvoiceBase64() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
 
-        const result = wasm.fatoora_ValidationResponse_cleared_invoice_base64(diplomatReceive.buffer, this.ffiValue);
+        const result = wasm.fatoora_ValidationResponse_cleared_invoice_base64(this.ffiValue, write.buffer);
 
         try {
-            if (!diplomatReceive.resultFlag) {
-                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
-            }
-            return diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer) === 0 ? null : new Text(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+            return result === 0 ? null : write.readString8();
         }
 
         finally {
             diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
-            diplomatReceive.free();
+            write.free();
         }
     }
 
@@ -178,22 +196,18 @@ export class ValidationResponse {
      * The `reportingStatus` exactly as ZATCA sent it, or null when absent.
      */
     reportingStatusRaw() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
 
-        const result = wasm.fatoora_ValidationResponse_reporting_status_raw(diplomatReceive.buffer, this.ffiValue);
+        const result = wasm.fatoora_ValidationResponse_reporting_status_raw(this.ffiValue, write.buffer);
 
         try {
-            if (!diplomatReceive.resultFlag) {
-                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
-            }
-            return diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer) === 0 ? null : new Text(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+            return result === 0 ? null : write.readString8();
         }
 
         finally {
             diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
-            diplomatReceive.free();
+            write.free();
         }
     }
 
@@ -223,62 +237,50 @@ export class ValidationResponse {
      * The `clearanceStatus` exactly as ZATCA sent it, or null when absent.
      */
     clearanceStatusRaw() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
 
-        const result = wasm.fatoora_ValidationResponse_clearance_status_raw(diplomatReceive.buffer, this.ffiValue);
+        const result = wasm.fatoora_ValidationResponse_clearance_status_raw(this.ffiValue, write.buffer);
 
         try {
-            if (!diplomatReceive.resultFlag) {
-                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
-            }
-            return diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer) === 0 ? null : new Text(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+            return result === 0 ? null : write.readString8();
         }
 
         finally {
             diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
-            diplomatReceive.free();
+            write.free();
         }
     }
 
     qrSellerStatus() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
 
-        const result = wasm.fatoora_ValidationResponse_qr_seller_status(diplomatReceive.buffer, this.ffiValue);
+        const result = wasm.fatoora_ValidationResponse_qr_seller_status(this.ffiValue, write.buffer);
 
         try {
-            if (!diplomatReceive.resultFlag) {
-                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
-            }
-            return diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer) === 0 ? null : new Text(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+            return result === 0 ? null : write.readString8();
         }
 
         finally {
             diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
-            diplomatReceive.free();
+            write.free();
         }
     }
 
     qrBuyerStatus() {
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
 
-        const result = wasm.fatoora_ValidationResponse_qr_buyer_status(diplomatReceive.buffer, this.ffiValue);
+        const result = wasm.fatoora_ValidationResponse_qr_buyer_status(this.ffiValue, write.buffer);
 
         try {
-            if (!diplomatReceive.resultFlag) {
-                const cause = new BindingError(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
-                throw new globalThis.Error('BindingError: ' + cause.toString(), { cause });
-            }
-            return diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer) === 0 ? null : new Text(diplomatRuntime.internalConstructor, diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
+            return result === 0 ? null : write.readString8();
         }
 
         finally {
             diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
-            diplomatReceive.free();
+            write.free();
         }
     }
 

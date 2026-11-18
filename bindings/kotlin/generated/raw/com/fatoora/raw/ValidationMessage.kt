@@ -8,12 +8,12 @@ import com.sun.jna.Structure
 internal interface ValidationMessageLib: Library {
     fun fatoora_ValidationMessage_destroy(handle: Pointer)
     fun fatoora_ValidationMessage_message_type(handle: Pointer): OptionInt
-    fun fatoora_ValidationMessage_message_type_raw(handle: Pointer): ResultPointerPointer
-    fun fatoora_ValidationMessage_code(handle: Pointer): ResultPointerPointer
-    fun fatoora_ValidationMessage_category(handle: Pointer): ResultPointerPointer
-    fun fatoora_ValidationMessage_message(handle: Pointer): ResultPointerPointer
+    fun fatoora_ValidationMessage_message_type_raw(handle: Pointer, write: Pointer): OptionUnit
+    fun fatoora_ValidationMessage_code(handle: Pointer, write: Pointer): OptionUnit
+    fun fatoora_ValidationMessage_category(handle: Pointer, write: Pointer): OptionUnit
+    fun fatoora_ValidationMessage_message(handle: Pointer, write: Pointer): OptionUnit
     fun fatoora_ValidationMessage_status(handle: Pointer): OptionInt
-    fun fatoora_ValidationMessage_status_raw(handle: Pointer): ResultPointerPointer
+    fun fatoora_ValidationMessage_status_raw(handle: Pointer, write: Pointer): OptionUnit
 }
 
 class ValidationMessage internal constructor (
@@ -60,72 +60,60 @@ class ValidationMessage internal constructor (
     /**
      * The message `type` exactly as ZATCA sent it, or null when absent.
      */
-    fun messageTypeRaw(): Result<Text?> {
+    fun messageTypeRaw(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_ValidationMessage_message_type_raw(handle, write);
 
-        val returnVal = lib.fatoora_ValidationMessage_message_type_raw(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
-    fun code(): Result<Text?> {
+    fun code(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_ValidationMessage_code(handle, write);
 
-        val returnVal = lib.fatoora_ValidationMessage_code(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
-    fun category(): Result<Text?> {
+    fun category(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_ValidationMessage_category(handle, write);
 
-        val returnVal = lib.fatoora_ValidationMessage_category(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
-    fun message(): Result<Text?> {
+    fun message(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_ValidationMessage_message(handle, write);
 
-        val returnVal = lib.fatoora_ValidationMessage_message(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
     /**
@@ -142,21 +130,18 @@ class ValidationMessage internal constructor (
     /**
      * The message `status` exactly as ZATCA sent it, or null when absent.
      */
-    fun statusRaw(): Result<Text?> {
+    fun statusRaw(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_ValidationMessage_status_raw(handle, write);
 
-        val returnVal = lib.fatoora_ValidationMessage_status_raw(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
 }

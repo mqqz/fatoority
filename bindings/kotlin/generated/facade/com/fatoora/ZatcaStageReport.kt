@@ -44,7 +44,7 @@ class ZatcaStageReport internal constructor(internal val raw: com.fatoora.raw.Za
      * Assertion site at `index` whose selected contexts were all evaluated.
      */
     fun evaluatedAssertion(index: java.math.BigInteger): String = nativeCall(listOfNotNull(this)) {
-        readText(unwrap(raw.evaluatedAssertion(checkedCounter(index))))
+        unwrap(raw.evaluatedAssertion(checkedCounter(index)))
     }
 
     fun finding(index: java.math.BigInteger): ZatcaFinding = nativeCall(listOfNotNull(this)) {

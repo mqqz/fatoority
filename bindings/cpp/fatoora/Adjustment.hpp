@@ -13,7 +13,6 @@
 #include <cstdlib>
 #include "../diplomat_runtime.hpp"
 #include "BindingError.hpp"
-#include "Text.hpp"
 
 
 namespace fatoora {
@@ -35,17 +34,17 @@ namespace capi {
     typedef struct fatoora_Adjustment_value_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Adjustment_value_result;
     fatoora_Adjustment_value_result fatoora_Adjustment_value(const fatoora::capi::Adjustment* self, diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_Adjustment_base_amount_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Adjustment_base_amount_result;
-    fatoora_Adjustment_base_amount_result fatoora_Adjustment_base_amount(const fatoora::capi::Adjustment* self);
+    typedef struct fatoora_Adjustment_base_amount_result { bool is_ok;} fatoora_Adjustment_base_amount_result;
+    fatoora_Adjustment_base_amount_result fatoora_Adjustment_base_amount(const fatoora::capi::Adjustment* self, diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_Adjustment_percentage_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Adjustment_percentage_result;
-    fatoora_Adjustment_percentage_result fatoora_Adjustment_percentage(const fatoora::capi::Adjustment* self);
+    typedef struct fatoora_Adjustment_percentage_result { bool is_ok;} fatoora_Adjustment_percentage_result;
+    fatoora_Adjustment_percentage_result fatoora_Adjustment_percentage(const fatoora::capi::Adjustment* self, diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_Adjustment_reason_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Adjustment_reason_result;
-    fatoora_Adjustment_reason_result fatoora_Adjustment_reason(const fatoora::capi::Adjustment* self);
+    typedef struct fatoora_Adjustment_reason_result { bool is_ok;} fatoora_Adjustment_reason_result;
+    fatoora_Adjustment_reason_result fatoora_Adjustment_reason(const fatoora::capi::Adjustment* self, diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_Adjustment_reason_code_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_Adjustment_reason_code_result;
-    fatoora_Adjustment_reason_code_result fatoora_Adjustment_reason_code(const fatoora::capi::Adjustment* self);
+    typedef struct fatoora_Adjustment_reason_code_result { bool is_ok;} fatoora_Adjustment_reason_code_result;
+    fatoora_Adjustment_reason_code_result fatoora_Adjustment_reason_code(const fatoora::capi::Adjustment* self, diplomat::capi::DiplomatWrite* write);
 
     void fatoora_Adjustment_destroy(Adjustment* self);
 
@@ -92,24 +91,64 @@ inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> 
     return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> fatoora::Adjustment::base_amount() const {
-    auto result = fatoora::capi::fatoora_Adjustment_base_amount(this->AsFFI());
-    return result.is_ok ? diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::Adjustment::base_amount() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_Adjustment_base_amount(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::Adjustment::base_amount_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_Adjustment_base_amount(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> fatoora::Adjustment::percentage() const {
-    auto result = fatoora::capi::fatoora_Adjustment_percentage(this->AsFFI());
-    return result.is_ok ? diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::Adjustment::percentage() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_Adjustment_percentage(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::Adjustment::percentage_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_Adjustment_percentage(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> fatoora::Adjustment::reason() const {
-    auto result = fatoora::capi::fatoora_Adjustment_reason(this->AsFFI());
-    return result.is_ok ? diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::Adjustment::reason() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_Adjustment_reason(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::Adjustment::reason_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_Adjustment_reason(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> fatoora::Adjustment::reason_code() const {
-    auto result = fatoora::capi::fatoora_Adjustment_reason_code(this->AsFFI());
-    return result.is_ok ? diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::Adjustment::reason_code() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_Adjustment_reason_code(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::Adjustment::reason_code_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_Adjustment_reason_code(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline const fatoora::capi::Adjustment* fatoora::Adjustment::AsFFI() const {

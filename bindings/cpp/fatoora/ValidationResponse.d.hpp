@@ -14,8 +14,6 @@
 namespace fatoora {
 namespace capi { struct BindingError; }
 class BindingError;
-namespace capi { struct Text; }
-class Text;
 namespace capi { struct ValidationResults; }
 class ValidationResults;
 class ClearanceStatus;
@@ -42,11 +40,24 @@ public:
 
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> ensure_accepted() const;
 
-  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> cleared_invoice_xml() const;
+  /**
+   * Whether the response carries a cleared invoice.
+   */
+  inline bool cleared_invoice_xml_present() const;
+
+  /**
+   * The decoded cleared invoice, or null when the response has none.
+   * Fails when the content is not base64-encoded UTF-8 text without NUL.
+   */
+  inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> cleared_invoice_xml() const;
+  template<typename W>
+  inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> cleared_invoice_xml_write(W& writeable_output) const;
 
   inline diplomat::result<std::unique_ptr<fatoora::ValidationResults>, std::unique_ptr<fatoora::BindingError>> validation_results() const;
 
-  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> cleared_invoice_base64() const;
+  inline std::optional<std::string> cleared_invoice_base64() const;
+  template<typename W>
+  inline std::optional<std::monostate> cleared_invoice_base64_write(W& writeable_output) const;
 
   /**
    * The parsed `reportingStatus`, or null when the response has none.
@@ -56,7 +67,9 @@ public:
   /**
    * The `reportingStatus` exactly as ZATCA sent it, or null when absent.
    */
-  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> reporting_status_raw() const;
+  inline std::optional<std::string> reporting_status_raw() const;
+  template<typename W>
+  inline std::optional<std::monostate> reporting_status_raw_write(W& writeable_output) const;
 
   /**
    * The parsed `clearanceStatus`, or null when the response has none.
@@ -66,11 +79,17 @@ public:
   /**
    * The `clearanceStatus` exactly as ZATCA sent it, or null when absent.
    */
-  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> clearance_status_raw() const;
+  inline std::optional<std::string> clearance_status_raw() const;
+  template<typename W>
+  inline std::optional<std::monostate> clearance_status_raw_write(W& writeable_output) const;
 
-  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> qr_seller_status() const;
+  inline std::optional<std::string> qr_seller_status() const;
+  template<typename W>
+  inline std::optional<std::monostate> qr_seller_status_write(W& writeable_output) const;
 
-  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> qr_buyer_status() const;
+  inline std::optional<std::string> qr_buyer_status() const;
+  template<typename W>
+  inline std::optional<std::monostate> qr_buyer_status_write(W& writeable_output) const;
 
     inline const fatoora::capi::ValidationResponse* AsFFI() const;
     inline fatoora::capi::ValidationResponse* AsFFI();

@@ -14,8 +14,6 @@
 namespace fatoora {
 namespace capi { struct BindingError; }
 class BindingError;
-namespace capi { struct Text; }
-class Text;
 class Severity;
 class ValidationLayer;
 class ValidationLocationKind;
@@ -70,7 +68,9 @@ public:
   /**
    * The field path or XPath, or null for other location kinds.
    */
-  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> location_path() const;
+  inline std::optional<std::string> location_path() const;
+  template<typename W>
+  inline std::optional<std::monostate> location_path_write(W& writeable_output) const;
 
   /**
    * One-based XML line, or null when the location is not XML coordinates.

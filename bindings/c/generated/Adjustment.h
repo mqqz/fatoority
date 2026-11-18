@@ -8,7 +8,6 @@
 #include "diplomat_runtime.h"
 
 #include "BindingError.d.h"
-#include "Text.d.h"
 
 #include "Adjustment.d.h"
 
@@ -32,17 +31,17 @@ fatoora_Adjustment_with_reason_result fatoora_Adjustment_with_reason(const Adjus
 typedef struct fatoora_Adjustment_value_result {union { BindingError* err;}; bool is_ok;} fatoora_Adjustment_value_result;
 fatoora_Adjustment_value_result fatoora_Adjustment_value(const Adjustment* self, DiplomatWrite* write);
 
-typedef struct fatoora_Adjustment_base_amount_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_Adjustment_base_amount_result;
-fatoora_Adjustment_base_amount_result fatoora_Adjustment_base_amount(const Adjustment* self);
+typedef struct fatoora_Adjustment_base_amount_result { bool is_ok;} fatoora_Adjustment_base_amount_result;
+fatoora_Adjustment_base_amount_result fatoora_Adjustment_base_amount(const Adjustment* self, DiplomatWrite* write);
 
-typedef struct fatoora_Adjustment_percentage_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_Adjustment_percentage_result;
-fatoora_Adjustment_percentage_result fatoora_Adjustment_percentage(const Adjustment* self);
+typedef struct fatoora_Adjustment_percentage_result { bool is_ok;} fatoora_Adjustment_percentage_result;
+fatoora_Adjustment_percentage_result fatoora_Adjustment_percentage(const Adjustment* self, DiplomatWrite* write);
 
-typedef struct fatoora_Adjustment_reason_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_Adjustment_reason_result;
-fatoora_Adjustment_reason_result fatoora_Adjustment_reason(const Adjustment* self);
+typedef struct fatoora_Adjustment_reason_result { bool is_ok;} fatoora_Adjustment_reason_result;
+fatoora_Adjustment_reason_result fatoora_Adjustment_reason(const Adjustment* self, DiplomatWrite* write);
 
-typedef struct fatoora_Adjustment_reason_code_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_Adjustment_reason_code_result;
-fatoora_Adjustment_reason_code_result fatoora_Adjustment_reason_code(const Adjustment* self);
+typedef struct fatoora_Adjustment_reason_code_result { bool is_ok;} fatoora_Adjustment_reason_code_result;
+fatoora_Adjustment_reason_code_result fatoora_Adjustment_reason_code(const Adjustment* self, DiplomatWrite* write);
 
 void fatoora_Adjustment_destroy(Adjustment* self);
 

@@ -559,7 +559,7 @@ public partial class SignedInvoice: IDisposable
     }
 
     /// <exception cref="FatooraException"></exception>
-    public string? ZatcaKeySignature
+    private bool ZatcaKeySignaturePresent
     {
         get
         {
@@ -569,12 +569,50 @@ public partial class SignedInvoice: IDisposable
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                    var result = Raw.SignedInvoice.ZatcaKeySignature(selfLease!.Ptr);
+                    var result = Raw.SignedInvoice.ZatcaKeySignaturePresent(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
                         throw FatooraException.FromNative(new BindingError(result.Err));
                     }
-                    return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
+                    return result.Ok;
+                }
+                finally
+                {
+                    selfLease?.Release();
+                }
+            }
+        }
+    }
+
+    /// <exception cref="FatooraException"></exception>
+    public string? ZatcaKeySignature
+    {
+        get
+        {
+            if (!ZatcaKeySignaturePresent)
+            {
+                return null;
+            }
+            unsafe
+            {
+                BorrowLease<Raw.SignedInvoice>? selfLease = null;
+                try
+                {
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    DiplomatWrite writeable = new DiplomatWrite();
+                    try
+                    {
+                        var result = Raw.SignedInvoice.ZatcaKeySignature(selfLease!.Ptr, &writeable);
+                        if (!result.IsOk)
+                        {
+                            throw FatooraException.FromNative(new BindingError(result.Err));
+                        }
+                        return writeable.ToUnicode();
+                    }
+                    finally
+                    {
+                        writeable.Dispose();
+                    }
                 }
                 finally
                 {

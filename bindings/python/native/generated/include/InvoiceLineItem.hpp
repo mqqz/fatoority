@@ -17,7 +17,6 @@
 #include "OriginalInvoiceRef.hpp"
 #include "OtherId.hpp"
 #include "TaxExemption.hpp"
-#include "Text.hpp"
 #include "VatBreakdown.hpp"
 #include "VatCategory.hpp"
 #include "diplomat_runtime.hpp"
@@ -27,17 +26,17 @@ namespace _native {
 namespace capi {
     extern "C" {
 
-    typedef struct fatoora_InvoiceLineItem_item_gross_price_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_item_gross_price_result;
-    fatoora_InvoiceLineItem_item_gross_price_result fatoora_InvoiceLineItem_item_gross_price(const _native::capi::InvoiceLineItem* self);
+    typedef struct fatoora_InvoiceLineItem_item_gross_price_result { bool is_ok;} fatoora_InvoiceLineItem_item_gross_price_result;
+    fatoora_InvoiceLineItem_item_gross_price_result fatoora_InvoiceLineItem_item_gross_price(const _native::capi::InvoiceLineItem* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_InvoiceLineItem_item_price_discount_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_item_price_discount_result;
-    fatoora_InvoiceLineItem_item_price_discount_result fatoora_InvoiceLineItem_item_price_discount(const _native::capi::InvoiceLineItem* self);
+    typedef struct fatoora_InvoiceLineItem_item_price_discount_result { bool is_ok;} fatoora_InvoiceLineItem_item_price_discount_result;
+    fatoora_InvoiceLineItem_item_price_discount_result fatoora_InvoiceLineItem_item_price_discount(const _native::capi::InvoiceLineItem* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_InvoiceLineItem_item_price_base_quantity_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_item_price_base_quantity_result;
-    fatoora_InvoiceLineItem_item_price_base_quantity_result fatoora_InvoiceLineItem_item_price_base_quantity(const _native::capi::InvoiceLineItem* self);
+    typedef struct fatoora_InvoiceLineItem_item_price_base_quantity_result { bool is_ok;} fatoora_InvoiceLineItem_item_price_base_quantity_result;
+    fatoora_InvoiceLineItem_item_price_base_quantity_result fatoora_InvoiceLineItem_item_price_base_quantity(const _native::capi::InvoiceLineItem* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_InvoiceLineItem_item_price_base_quantity_unit_code_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_item_price_base_quantity_unit_code_result;
-    fatoora_InvoiceLineItem_item_price_base_quantity_unit_code_result fatoora_InvoiceLineItem_item_price_base_quantity_unit_code(const _native::capi::InvoiceLineItem* self);
+    typedef struct fatoora_InvoiceLineItem_item_price_base_quantity_unit_code_result { bool is_ok;} fatoora_InvoiceLineItem_item_price_base_quantity_unit_code_result;
+    fatoora_InvoiceLineItem_item_price_base_quantity_unit_code_result fatoora_InvoiceLineItem_item_price_base_quantity_unit_code(const _native::capi::InvoiceLineItem* self, _native::diplomat::capi::DiplomatWrite* write);
 
     size_t fatoora_InvoiceLineItem_adjustments_len(const _native::capi::InvoiceLineItem* self);
 
@@ -78,8 +77,8 @@ namespace capi {
     typedef struct fatoora_InvoiceLineItem_with_metadata_result {union {_native::capi::InvoiceLineItem* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_with_metadata_result;
     fatoora_InvoiceLineItem_with_metadata_result fatoora_InvoiceLineItem_with_metadata(const _native::capi::InvoiceLineItem* self, _native::diplomat::capi::OptionStringView id, const _native::capi::TaxExemption* exemption);
 
-    typedef struct fatoora_InvoiceLineItem_id_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_id_result;
-    fatoora_InvoiceLineItem_id_result fatoora_InvoiceLineItem_id(const _native::capi::InvoiceLineItem* self);
+    typedef struct fatoora_InvoiceLineItem_id_result { bool is_ok;} fatoora_InvoiceLineItem_id_result;
+    fatoora_InvoiceLineItem_id_result fatoora_InvoiceLineItem_id(const _native::capi::InvoiceLineItem* self, _native::diplomat::capi::DiplomatWrite* write);
 
     typedef struct fatoora_InvoiceLineItem_exemption_result {union {_native::capi::TaxExemption* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceLineItem_exemption_result;
     fatoora_InvoiceLineItem_exemption_result fatoora_InvoiceLineItem_exemption(const _native::capi::InvoiceLineItem* self);
@@ -119,24 +118,64 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> _native::InvoiceLineItem::item_gross_price() const {
-    auto result = _native::capi::fatoora_InvoiceLineItem_item_gross_price(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::InvoiceLineItem::item_gross_price() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_InvoiceLineItem_item_gross_price(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::InvoiceLineItem::item_gross_price_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_InvoiceLineItem_item_gross_price(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> _native::InvoiceLineItem::item_price_discount() const {
-    auto result = _native::capi::fatoora_InvoiceLineItem_item_price_discount(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::InvoiceLineItem::item_price_discount() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_InvoiceLineItem_item_price_discount(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::InvoiceLineItem::item_price_discount_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_InvoiceLineItem_item_price_discount(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> _native::InvoiceLineItem::item_price_base_quantity() const {
-    auto result = _native::capi::fatoora_InvoiceLineItem_item_price_base_quantity(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::InvoiceLineItem::item_price_base_quantity() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_InvoiceLineItem_item_price_base_quantity(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::InvoiceLineItem::item_price_base_quantity_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_InvoiceLineItem_item_price_base_quantity(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> _native::InvoiceLineItem::item_price_base_quantity_unit_code() const {
-    auto result = _native::capi::fatoora_InvoiceLineItem_item_price_base_quantity_unit_code(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::InvoiceLineItem::item_price_base_quantity_unit_code() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_InvoiceLineItem_item_price_base_quantity_unit_code(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::InvoiceLineItem::item_price_base_quantity_unit_code_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_InvoiceLineItem_item_price_base_quantity_unit_code(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline size_t _native::InvoiceLineItem::adjustments_len() const {
@@ -222,9 +261,19 @@ inline _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std:
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::InvoiceLineItem>>(std::unique_ptr<_native::InvoiceLineItem>(_native::InvoiceLineItem::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::InvoiceLineItem>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> _native::InvoiceLineItem::id() const {
-    auto result = _native::capi::fatoora_InvoiceLineItem_id(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::InvoiceLineItem::id() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_InvoiceLineItem_id(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::InvoiceLineItem::id_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_InvoiceLineItem_id(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline _native::diplomat::result<std::unique_ptr<_native::TaxExemption>, std::unique_ptr<_native::BindingError>> _native::InvoiceLineItem::exemption() const {

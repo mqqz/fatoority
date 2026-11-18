@@ -12,7 +12,7 @@ class InvoiceNote internal constructor(internal val raw: com.fatoora.raw.Invoice
 
     val languageId: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.languageId())?.let(::readText)
+            raw.languageId()
         }
 
     val language: String

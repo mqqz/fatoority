@@ -14,8 +14,6 @@
 namespace fatoora {
 namespace capi { struct BindingError; }
 class BindingError;
-namespace capi { struct Text; }
-class Text;
 namespace capi { struct ValidationMessage; }
 class ValidationMessage;
 class ValidationStatus;
@@ -42,7 +40,9 @@ public:
   /**
    * The overall status exactly as ZATCA sent it, or null when absent.
    */
-  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> status_raw() const;
+  inline std::optional<std::string> status_raw() const;
+  template<typename W>
+  inline std::optional<std::monostate> status_raw_write(W& writeable_output) const;
 
   inline size_t info_len() const;
 

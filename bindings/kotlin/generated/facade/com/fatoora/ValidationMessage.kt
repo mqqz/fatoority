@@ -23,22 +23,22 @@ class ValidationMessage internal constructor(internal val raw: com.fatoora.raw.V
      */
     val messageTypeRaw: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.messageTypeRaw())?.let(::readText)
+            raw.messageTypeRaw()
         }
 
     val code: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.code())?.let(::readText)
+            raw.code()
         }
 
     val category: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.category())?.let(::readText)
+            raw.category()
         }
 
     val message: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.message())?.let(::readText)
+            raw.message()
         }
 
     /**
@@ -54,6 +54,6 @@ class ValidationMessage internal constructor(internal val raw: com.fatoora.raw.V
      */
     val statusRaw: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.statusRaw())?.let(::readText)
+            raw.statusRaw()
         }
 }

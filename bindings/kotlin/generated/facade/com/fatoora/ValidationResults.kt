@@ -23,7 +23,7 @@ class ValidationResults internal constructor(internal val raw: com.fatoora.raw.V
      */
     val statusRaw: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.statusRaw())?.let(::readText)
+            raw.statusRaw()
         }
 
     val infoLen: java.math.BigInteger

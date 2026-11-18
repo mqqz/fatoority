@@ -9,7 +9,7 @@ use fatoora_ffi::{
 };
 use httpmock::{Method::POST, MockServer};
 use serde_json::json;
-use support::written;
+use support::{optional_written, written};
 
 const SIMPLE: &[u8] =
     include_bytes!("../../fatoora-core/tests/fixtures/invoices/sample-simplified-invoice.xml");
@@ -164,7 +164,7 @@ fn exercise_client() {
                 let warning = ok(results.warning_message(0));
                 drop(results);
                 assert_eq!(
-                    written(|out| ok(ok(warning.message()).unwrap().value(out))),
+                    optional_written(|out| warning.message(out)).unwrap(),
                     "retained"
                 );
             }

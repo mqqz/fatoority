@@ -16,7 +16,7 @@ internal partial struct ProductionCsid
     internal static unsafe extern DiplomatResultZatcaEnvironmentBindingError Env(ProductionCsid* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ProductionCsid_request_id", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError RequestId(ProductionCsid* handle);
+    internal static unsafe extern DiplomatOptionVoid RequestId(ProductionCsid* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ProductionCsid_binary_security_token", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError BinarySecurityToken(ProductionCsid* handle, DiplomatWrite* writeable);

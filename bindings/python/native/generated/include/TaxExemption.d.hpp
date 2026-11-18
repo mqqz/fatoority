@@ -15,8 +15,6 @@ namespace capi { struct BindingError; }
 class BindingError;
 namespace capi { struct TaxExemption; }
 class TaxExemption;
-namespace capi { struct Text; }
-class Text;
 } // namespace _native
 
 
@@ -33,9 +31,13 @@ public:
 
   inline static _native::diplomat::result<std::unique_ptr<_native::TaxExemption>, std::unique_ptr<_native::BindingError>> new_(std::optional<std::string_view> code, std::optional<std::string_view> reason);
 
-  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> reason_code() const;
+  inline std::optional<std::string> reason_code() const;
+  template<typename W>
+  inline std::optional<std::monostate> reason_code_write(W& writeable_output) const;
 
-  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> reason() const;
+  inline std::optional<std::string> reason() const;
+  template<typename W>
+  inline std::optional<std::monostate> reason_write(W& writeable_output) const;
 
     inline const _native::capi::TaxExemption* AsFFI() const;
     inline _native::capi::TaxExemption* AsFFI();

@@ -17,6 +17,6 @@ class OtherId internal constructor(internal val raw: com.fatoora.raw.OtherId) : 
 
     val scheme: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.scheme())?.let(::readText)
+            raw.scheme()
         }
 }

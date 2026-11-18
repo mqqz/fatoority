@@ -42,6 +42,9 @@ fn signing_consumes_finalized_and_preserves_signed_xml_exactly() {
     assert!(signed.data().is_err());
     written(|out| assert!(signed.xml(out).is_err()));
     written(|out| assert!(signed.into_xml(out).is_err()));
+    // The nullable-string pair reports consumption instead of absence.
+    assert!(signed.zatca_key_signature_present().is_err());
+    written(|out| assert!(signed.zatca_key_signature(out).is_err()));
 }
 
 #[test]
@@ -219,9 +222,9 @@ fn pem_signing_and_exports_preserve_certificate_key_and_signature() {
         written(|out| ok(signed.signing_time(out))),
         "2025-07-22T15:51:28"
     );
-    let cert_signature = ok(signed.zatca_key_signature()).unwrap();
+    assert!(ok(signed.zatca_key_signature_present()));
     assert_eq!(
-        Base64::decode_vec(&written(|out| ok(cert_signature.value(out)))).unwrap(),
+        Base64::decode_vec(&written(|out| ok(signed.zatca_key_signature(out)))).unwrap(),
         certificate.signature().as_bytes().unwrap()
     );
 }

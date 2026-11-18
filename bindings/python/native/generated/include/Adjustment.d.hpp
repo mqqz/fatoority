@@ -15,8 +15,6 @@ namespace capi { struct Adjustment; }
 class Adjustment;
 namespace capi { struct BindingError; }
 class BindingError;
-namespace capi { struct Text; }
-class Text;
 } // namespace _native
 
 
@@ -49,13 +47,21 @@ public:
   template<typename W>
   inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> value_write(W& writeable_output) const;
 
-  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> base_amount() const;
+  inline std::optional<std::string> base_amount() const;
+  template<typename W>
+  inline std::optional<std::monostate> base_amount_write(W& writeable_output) const;
 
-  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> percentage() const;
+  inline std::optional<std::string> percentage() const;
+  template<typename W>
+  inline std::optional<std::monostate> percentage_write(W& writeable_output) const;
 
-  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> reason() const;
+  inline std::optional<std::string> reason() const;
+  template<typename W>
+  inline std::optional<std::monostate> reason_write(W& writeable_output) const;
 
-  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> reason_code() const;
+  inline std::optional<std::string> reason_code() const;
+  template<typename W>
+  inline std::optional<std::monostate> reason_code_write(W& writeable_output) const;
 
     inline const _native::capi::Adjustment* AsFFI() const;
     inline _native::capi::Adjustment* AsFFI();

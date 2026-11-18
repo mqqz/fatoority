@@ -12,7 +12,7 @@ use httpmock::{
     MockServer,
 };
 use serde_json::json;
-use support::written;
+use support::{optional_written, written};
 
 const KEY: &[u8] =
     include_bytes!("../../fatoora-core/tests/fixtures/sdk-parity/credentials/private-key.der");
@@ -109,7 +109,7 @@ fn exercise_client() {
     let compliance = ok(client.request_compliance_csid(&csr, b"123456"));
     assert_eq!(compliance.env().ok(), Some(Environment::Simulation));
     assert_eq!(
-        written(|out| ok(ok(compliance.request_id()).unwrap().value(out))),
+        optional_written(|out| compliance.request_id(out)).unwrap(),
         "42"
     );
     assert_eq!(
@@ -121,7 +121,7 @@ fn exercise_client() {
     drop(compliance);
     assert_eq!(production.env().ok(), Some(Environment::Simulation));
     assert_eq!(
-        written(|out| ok(ok(production.request_id()).unwrap().value(out))),
+        optional_written(|out| production.request_id(out)).unwrap(),
         "0077"
     );
     for (otp, expected_type) in [
@@ -157,7 +157,7 @@ fn exercise_client() {
         let renewed = ok(client.renew_csid(&production, &csr, otp, Some(b"ar")));
         assert_eq!(renewed.env().ok(), Some(Environment::Simulation));
         assert_eq!(
-            written(|out| ok(ok(renewed.request_id()).unwrap().value(out))),
+            optional_written(|out| renewed.request_id(out)).unwrap(),
             "88"
         );
         assert_eq!(

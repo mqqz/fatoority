@@ -74,6 +74,12 @@ for no client-side timeout.
 | 0.6 | 0.7 |
 | --- | --- |
 | `ZatcaClient.WithTimeout(config, 30_000)` | `ZatcaClient.WithTimeout(config, TimeSpan.FromSeconds(30))` |
+
+### `Text` class
+
+The `Fatoora.Text` class is removed. No public member returned it in 0.6:
+optional text was already `string?`.
+
 ## Error classes
 
 0.7 gives every language the same error hierarchy: a base `FatooraException`, one

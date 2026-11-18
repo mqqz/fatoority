@@ -12,12 +12,12 @@ void add_Address_binding(nb::module_ mod) {
     
     nb::class_<_native::Address> opaque(mod, "Address", nb::type_slots(_native_Address_slots));
     opaque
-        .def("additional_number", std::move(maybe_op_unwrap(&_native::Address::additional_number)))
-        .def("additional_street", std::move(maybe_op_unwrap(&_native::Address::additional_street)))
+        .def("additional_number", &_native::Address::additional_number)
+        .def("additional_street", &_native::Address::additional_street)
         .def("building_number", std::move(maybe_op_unwrap(&_native::Address::building_number)))
         .def("city", std::move(maybe_op_unwrap(&_native::Address::city)))
         .def("country_code", std::move(maybe_op_unwrap(&_native::Address::country_code)))
-        .def("district", std::move(maybe_op_unwrap(&_native::Address::district)))
+        .def("district", &_native::Address::district)
         .def_static("new", std::move(maybe_op_unwrap(&_native::Address::new_)), "country_code"_a, "city"_a, "street"_a, "building_number"_a, "postal_code"_a, "additional_street"_a= nb::none(), "additional_number"_a= nb::none(), "district"_a= nb::none())
         .def("postal_code", std::move(maybe_op_unwrap(&_native::Address::postal_code)))
         .def("province", &_native::Address::province)

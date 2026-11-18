@@ -16,7 +16,7 @@ internal partial struct ComplianceCsid
     internal static unsafe extern DiplomatResultZatcaEnvironmentBindingError Env(ComplianceCsid* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ComplianceCsid_request_id", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError RequestId(ComplianceCsid* handle);
+    internal static unsafe extern DiplomatOptionVoid RequestId(ComplianceCsid* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_ComplianceCsid_binary_security_token", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidBindingError BinarySecurityToken(ComplianceCsid* handle, DiplomatWrite* writeable);

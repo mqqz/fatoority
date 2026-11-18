@@ -16,8 +16,6 @@ namespace capi { struct BindingError; }
 class BindingError;
 namespace capi { struct OriginalInvoiceRef; }
 class OriginalInvoiceRef;
-namespace capi { struct Text; }
-class Text;
 } // namespace fatoora
 
 
@@ -35,17 +33,25 @@ public:
 
   inline static diplomat::result<std::unique_ptr<fatoora::OriginalInvoiceRef>, std::unique_ptr<fatoora::BindingError>> new_(std::string_view id, std::optional<std::string_view> uuid, std::optional<std::string_view> date, std::optional<std::string_view> time, std::optional<std::string_view> type_code);
 
-  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> issue_time() const;
+  inline std::optional<std::string> issue_time() const;
+  template<typename W>
+  inline std::optional<std::monostate> issue_time_write(W& writeable_output) const;
 
-  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> document_type_code() const;
+  inline std::optional<std::string> document_type_code() const;
+  template<typename W>
+  inline std::optional<std::monostate> document_type_code_write(W& writeable_output) const;
 
   inline diplomat::result<std::string, std::unique_ptr<fatoora::BindingError>> id() const;
   template<typename W>
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> id_write(W& writeable_output) const;
 
-  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> uuid() const;
+  inline std::optional<std::string> uuid() const;
+  template<typename W>
+  inline std::optional<std::monostate> uuid_write(W& writeable_output) const;
 
-  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> issue_date() const;
+  inline std::optional<std::string> issue_date() const;
+  template<typename W>
+  inline std::optional<std::monostate> issue_date_write(W& writeable_output) const;
 
     inline const fatoora::capi::OriginalInvoiceRef* AsFFI() const;
     inline fatoora::capi::OriginalInvoiceRef* AsFFI();

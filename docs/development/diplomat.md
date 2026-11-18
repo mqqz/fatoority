@@ -14,9 +14,26 @@ Use this page when changing the shared bridge or a language package. Installatio
 3. Regenerate the bindings. Update a handwritten facade when it needs language-specific conversion or resource handling.
 4. Test the affected language and its installed package. Update public examples and reference documentation.
 
-Return an optional string as `fn name(&self, out: &mut DiplomatWrite) -> Option<()>`, implemented with `common::write_optional`. Every binding surfaces it as a nullable string (`str | None`, `string | null`, `String?`, `string?`, `std::optional<std::string>`, or a `NULL` C string), and the generated code frees the write buffer on both paths. The shape has no error channel, so use it only for values that cannot fail; keep `Result<(), Box<BindingError>>` for required strings.
-
 Preserve exact decimals, absent versus empty values, structured errors and ownership on failure. Test consumed objects, returned children after parent disposal, and concurrent close where relevant. Test HTTP behavior against a local server.
+
+### Return strings
+
+Strings leave the bridge through a `&mut DiplomatWrite` argument; no binding sees a string handle.
+
+| Value | FFI shape | Bindings |
+| --- | --- | --- |
+| Required | `fn x(&self, out: &mut DiplomatWrite) -> Result<(), Box<BindingError>>`, written with `common::write` | A plain string; errors throw |
+| Optional, cannot fail | `fn x(&self, out: &mut DiplomatWrite) -> Option<()>`, written with `common::write_optional` | A nullable string |
+| Optional, can fail | `fn x_present(&self) -> bool` (or `Result<bool, Box<BindingError>>`) plus a required-string `x` that fails when the value is absent | One nullable string `x`; errors throw |
+
+A nullable string is `str | None`, `string | null`, `String?`, `string?`, `std::optional<std::string>`, or a `NULL` C string. The generated code frees the write buffer on both paths.
+
+`Option<()>` has no error channel, and Diplomat cannot express `Result<Option<()>, E>`. Before reaching for a pair, argue the error away:
+
+- Write NUL as-is. `write_optional` never fails; the C facade rejects a string containing NUL itself, and the other languages return it unchanged.
+- Index into a list with a `_len` getter plus an index method returning a required string, as `PaymentMeans::instruction_note_at` and `ZatcaStageReport::evaluated_assertion` do. An out-of-range index is an error, not an absent value.
+
+Use an `x_present`/`x` pair only when computing the value can fail, as decoding `ValidationResponse::cleared_invoice_xml` can, or when the object can be consumed, as `SignedInvoice::zatca_key_signature` can. The C, C#, Kotlin and JavaScript generators recognize the pair by name: they call `x_present` first, return null when it is false, and hide `x_present`. The Python facade does the same with `_invoke_optional`. Raw `x` fails when the value is absent, so callers of the raw C++ and Kotlin (`com.fatoora.raw`) classes check `x_present` first.
 
 ## Generate and verify
 
@@ -87,7 +104,7 @@ The combined check covers all generators, including C# and Kotlin. It requires a
 
     Use the build script so optimization and artifact-size checks run consistently. The checks cover declarations, runtime behavior, browser loading and an installed npm package.
 
-    `scripts/generate_bindings.py` also runs `scripts/generate_js_facade.py`, which derives `bindings/js/members.mjs` (the property and text tables `patch.mjs` applies) and `bindings/js/raw.d.mts` (the adapted declarations) from the generated JavaScript. Change that script, not its output, to adjust which getters are properties.
+    `scripts/generate_bindings.py` also runs `scripts/generate_js_facade.py`, which derives `bindings/js/members.mjs` (the property and optional-string tables `patch.mjs` applies) and `bindings/js/raw.d.mts` (the adapted declarations) from the generated JavaScript. Change that script, not its output, to adjust which getters are properties.
 
 === "C#"
 

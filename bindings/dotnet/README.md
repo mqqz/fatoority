@@ -107,8 +107,8 @@ Edit generator inputs or the fork, then regenerate; do not edit generated C#.
 
 `generate_dotnet.py` post-processes the fork's output into the public API rather
 than wrapping it, so each class keeps the generated handle, disposal and lifetime
-code. The pass turns scalar getters into properties, copies optional `Text`
-results into `string?`, maps every decimal the Rust FFI parses or returns to
+code. The pass turns scalar getters into properties, merges each
+`x_present`/`x` pair into one `string?` property, maps every decimal the Rust FFI parses or returns to
 `decimal` (derived from `fatoora-ffi` and `fatoora-core` sources), and throws
 `FatooraException` subclasses from `src/Errors.cs`. Hand-written support code lives in
 `src/`; it contains no per-type wrappers.

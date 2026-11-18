@@ -147,8 +147,10 @@ foreach (var kind in new[] { "simplified", "standard" })
     using var body = JsonDocument.Parse(Copy(request.Body()));
     Check(body.RootElement.GetProperty("invoiceHash").GetString() == signed.Hash, "Prepared hash");
     Check(Encoding.UTF8.GetString(Convert.FromBase64String(body.RootElement.GetProperty("invoice").GetString()!)) == signed.Xml, "Prepared invoice");
+    Check(!string.IsNullOrEmpty(signed.ZatcaKeySignature), "ZATCA key signature");
     var signedXml = signed.IntoXml();
     NativeError(() => _ = signed.Xml, 1, "consumed");
+    NativeError(() => _ = signed.ZatcaKeySignature, 1, "consumed");
     signed.Dispose();
     Check(data.Id.Length != 0 && totals.PayableAmount > 0, "Owned snapshots survive source");
     var responseBody = kind == "simplified"
@@ -161,10 +163,12 @@ foreach (var kind in new[] { "simplified", "standard" })
     {
         Check(response.ReportingStatus == ReportingStatus.Reported && response.ClearanceStatus == null, "Reporting status enum");
         Check(response.ReportingStatusRaw == "REPORTED", "Reporting status wire value");
+        Check(response.ClearedInvoiceXml is null, "Absent cleared invoice");
     }
     else
     {
         Check(response.ClearanceStatus == ClearanceStatus.Cleared, "Clearance status enum");
+        Check(response.ClearedInvoiceXml == signedXml, "Cleared invoice XML");
     }
     using var results = response.ValidationResults();
     Check(results.Status == ValidationStatus.Pass, "Validation status enum");
@@ -174,6 +178,8 @@ foreach (var kind in new[] { "simplified", "standard" })
     Check(warning.Code == "WARN", "Response snapshots survive disposal");
     NativeError(() => request.Decode(401, Encoding.UTF8.GetBytes("{}")), 8);
     NativeError(() => request.Decode(200, Encoding.UTF8.GetBytes("invalid json")), 3);
+    using var invalid = request.Decode(200, Encoding.UTF8.GetBytes("{\"validationResults\":{},\"clearedInvoice\":\"!!!\"}"));
+    NativeError(() => _ = invalid.ClearedInvoiceXml, 3);
 }
 using var compliance = ComplianceCsid.Create(ZatcaEnvironment.NonProduction, "request-id", "token", "secret");
 using var productionRequest = client.PrepareRequestProductionCsid(compliance);

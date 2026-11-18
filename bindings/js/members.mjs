@@ -37,24 +37,11 @@ export const properties = {
   ZatcaValidationReport: ['schemaVersion', 'profile', 'evaluatedAt', 'isComplete', 'hasErrors', 'isValid', 'stagesLen'],
 };
 
-/** Members whose generated `Text` result is returned as a string. */
-export const textResults = {
-  Address: ['additionalStreet', 'additionalNumber', 'district'],
-  Adjustment: ['baseAmount', 'percentage', 'reason', 'reasonCode'],
-  AllowanceCharge: ['baseAmount', 'percentage', 'reason', 'reasonCode'],
-  ComplianceCsid: ['requestId'],
-  InvoiceData: ['purchaseOrderId', 'contractId', 'paymentInstruction', 'actualDeliveryDate', 'latestDeliveryDate', 'taxCurrency', 'taxCurrencyAmount', 'allowanceReason', 'originalInvoiceReason'],
-  InvoiceLineItem: ['itemGrossPrice', 'itemPriceDiscount', 'itemPriceBaseQuantity', 'itemPriceBaseQuantityUnitCode', 'id'],
-  InvoiceNote: ['languageId'],
-  OriginalInvoiceRef: ['issueTime', 'documentTypeCode', 'uuid', 'issueDate'],
-  OtherId: ['scheme'],
-  PaymentMeans: ['instructionNoteAt', 'instructionNote', 'accountIdentifier', 'paymentTerms'],
-  ProductionCsid: ['requestId'],
-  SignedInvoice: ['zatcaKeySignature'],
-  TaxExemption: ['reasonCode', 'reason'],
-  ValidationMessage: ['messageTypeRaw', 'code', 'category', 'message', 'statusRaw'],
-  ValidationResponse: ['clearedInvoiceXml', 'clearedInvoiceBase64', 'reportingStatusRaw', 'clearanceStatusRaw', 'qrSellerStatus', 'qrBuyerStatus'],
-  ValidationResults: ['statusRaw'],
-  ZatcaFinding: ['locationPath'],
-  ZatcaStageReport: ['evaluatedAssertion'],
+/**
+ * Fallible string getters that are null when their `*Present` sibling is false.
+ * patch.mjs merges each pair into one member and removes the `*Present` method.
+ */
+export const optionalResults = {
+  SignedInvoice: { zatcaKeySignature: 'zatcaKeySignaturePresent' },
+  ValidationResponse: { clearedInvoiceXml: 'clearedInvoiceXmlPresent' },
 };

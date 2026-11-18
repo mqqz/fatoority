@@ -11,10 +11,6 @@
 #include <cstdlib>
 #include "diplomat_runtime.hpp"
 namespace _native {
-namespace capi { struct BindingError; }
-class BindingError;
-namespace capi { struct Text; }
-class Text;
 class MessageType;
 class ValidationStatus;
 } // namespace _native
@@ -39,13 +35,21 @@ public:
   /**
    * The message `type` exactly as ZATCA sent it, or null when absent.
    */
-  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> message_type_raw() const;
+  inline std::optional<std::string> message_type_raw() const;
+  template<typename W>
+  inline std::optional<std::monostate> message_type_raw_write(W& writeable_output) const;
 
-  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> code() const;
+  inline std::optional<std::string> code() const;
+  template<typename W>
+  inline std::optional<std::monostate> code_write(W& writeable_output) const;
 
-  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> category() const;
+  inline std::optional<std::string> category() const;
+  template<typename W>
+  inline std::optional<std::monostate> category_write(W& writeable_output) const;
 
-  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> message() const;
+  inline std::optional<std::string> message() const;
+  template<typename W>
+  inline std::optional<std::monostate> message_write(W& writeable_output) const;
 
   /**
    * The parsed message `status`, or null when the message has none.
@@ -55,7 +59,9 @@ public:
   /**
    * The message `status` exactly as ZATCA sent it, or null when absent.
    */
-  inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> status_raw() const;
+  inline std::optional<std::string> status_raw() const;
+  template<typename W>
+  inline std::optional<std::monostate> status_raw_write(W& writeable_output) const;
 
     inline const _native::capi::ValidationMessage* AsFFI() const;
     inline _native::capi::ValidationMessage* AsFFI();

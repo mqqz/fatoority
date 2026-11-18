@@ -9,14 +9,14 @@ internal interface PaymentMeansLib: Library {
     fun fatoora_PaymentMeans_destroy(handle: Pointer)
     fun fatoora_PaymentMeans_with_instruction_note(handle: Pointer, value: Slice): ResultPointerPointer
     fun fatoora_PaymentMeans_instruction_notes_len(handle: Pointer): FFISizet
-    fun fatoora_PaymentMeans_instruction_note_at(handle: Pointer, index: FFISizet): ResultPointerPointer
+    fun fatoora_PaymentMeans_instruction_note_at(handle: Pointer, index: FFISizet, write: Pointer): ResultUnitPointer
     fun fatoora_PaymentMeans_new(code: Slice, instruction: OptionSlice): ResultPointerPointer
     fun fatoora_PaymentMeans_with_account(handle: Pointer, id: OptionSlice, terms: OptionSlice): ResultPointerPointer
     fun fatoora_PaymentMeans_code(handle: Pointer, write: Pointer): ResultUnitPointer
-    fun fatoora_PaymentMeans_instruction_note(handle: Pointer): ResultPointerPointer
+    fun fatoora_PaymentMeans_instruction_note(handle: Pointer, write: Pointer): OptionUnit
     fun fatoora_PaymentMeans_has_account(handle: Pointer): Byte
-    fun fatoora_PaymentMeans_account_identifier(handle: Pointer): ResultPointerPointer
-    fun fatoora_PaymentMeans_payment_terms(handle: Pointer): ResultPointerPointer
+    fun fatoora_PaymentMeans_account_identifier(handle: Pointer, write: Pointer): OptionUnit
+    fun fatoora_PaymentMeans_payment_terms(handle: Pointer, write: Pointer): OptionUnit
 }
 
 class PaymentMeans internal constructor (
@@ -102,16 +102,16 @@ class PaymentMeans internal constructor (
         return (returnVal.toULong())
     }
 
-    fun instructionNoteAt(index: ULong): Result<Text> {
-
-        val returnVal = lib.fatoora_PaymentMeans_instruction_note_at(handle, FFISizet(index));
+    fun instructionNoteAt(index: ULong): Result<String> {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_PaymentMeans_instruction_note_at(handle, FFISizet(index), write);
         val nativeOkVal = returnVal.getNativeOk();
         if (nativeOkVal != null) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
+
+            val returnString = DW.writeToString(write)
+            return returnString.ok()
         } else {
+            DW.lib.diplomat_buffer_write_destroy(write)
             val selfEdges: List<Any> = listOf()
             val handle = returnVal.getNativeErr()!!
             val returnOpaque = BindingError(handle, selfEdges, true)
@@ -160,21 +160,18 @@ class PaymentMeans internal constructor (
         }
     }
 
-    fun instructionNote(): Result<Text?> {
+    fun instructionNote(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_PaymentMeans_instruction_note(handle, write);
 
-        val returnVal = lib.fatoora_PaymentMeans_instruction_note(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
     fun hasAccount(): Boolean {
@@ -183,38 +180,32 @@ class PaymentMeans internal constructor (
         return (returnVal > 0)
     }
 
-    fun accountIdentifier(): Result<Text?> {
+    fun accountIdentifier(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_PaymentMeans_account_identifier(handle, write);
 
-        val returnVal = lib.fatoora_PaymentMeans_account_identifier(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
-    fun paymentTerms(): Result<Text?> {
+    fun paymentTerms(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_PaymentMeans_payment_terms(handle, write);
 
-        val returnVal = lib.fatoora_PaymentMeans_payment_terms(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
 }

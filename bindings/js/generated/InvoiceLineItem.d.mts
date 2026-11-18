@@ -5,7 +5,6 @@ import type { BindingError } from "./BindingError.mjs"
 import type { OriginalInvoiceRef } from "./OriginalInvoiceRef.mjs"
 import type { OtherId } from "./OtherId.mjs"
 import type { TaxExemption } from "./TaxExemption.mjs"
-import type { Text } from "./Text.mjs"
 import type { VatBreakdown } from "./VatBreakdown.mjs"
 import type { VatCategory } from "./VatCategory.mjs"
 import type { pointer, codepoint } from "./diplomat-runtime.mjs";
@@ -19,13 +18,13 @@ export class InvoiceLineItem {
     constructor();
 
 
-    itemGrossPrice(): Text | null;
+    itemGrossPrice(): string | null;
 
-    itemPriceDiscount(): Text | null;
+    itemPriceDiscount(): string | null;
 
-    itemPriceBaseQuantity(): Text | null;
+    itemPriceBaseQuantity(): string | null;
 
-    itemPriceBaseQuantityUnitCode(): Text | null;
+    itemPriceBaseQuantityUnitCode(): string | null;
 
     adjustmentsLen(): number;
 
@@ -55,7 +54,7 @@ export class InvoiceLineItem {
 
     withMetadata(id: string | null, exemption: TaxExemption): InvoiceLineItem;
 
-    id(): Text | null;
+    id(): string | null;
 
     exemption(): TaxExemption;
 

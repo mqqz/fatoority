@@ -12,7 +12,6 @@
 #include <optional>
 #include <cstdlib>
 #include "BindingError.hpp"
-#include "Text.hpp"
 #include "diplomat_runtime.hpp"
 
 
@@ -23,11 +22,11 @@ namespace capi {
     typedef struct fatoora_TaxExemption_new_result {union {_native::capi::TaxExemption* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_TaxExemption_new_result;
     fatoora_TaxExemption_new_result fatoora_TaxExemption_new(_native::diplomat::capi::OptionStringView code, _native::diplomat::capi::OptionStringView reason);
 
-    typedef struct fatoora_TaxExemption_reason_code_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_TaxExemption_reason_code_result;
-    fatoora_TaxExemption_reason_code_result fatoora_TaxExemption_reason_code(const _native::capi::TaxExemption* self);
+    typedef struct fatoora_TaxExemption_reason_code_result { bool is_ok;} fatoora_TaxExemption_reason_code_result;
+    fatoora_TaxExemption_reason_code_result fatoora_TaxExemption_reason_code(const _native::capi::TaxExemption* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_TaxExemption_reason_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_TaxExemption_reason_result;
-    fatoora_TaxExemption_reason_result fatoora_TaxExemption_reason(const _native::capi::TaxExemption* self);
+    typedef struct fatoora_TaxExemption_reason_result { bool is_ok;} fatoora_TaxExemption_reason_result;
+    fatoora_TaxExemption_reason_result fatoora_TaxExemption_reason(const _native::capi::TaxExemption* self, _native::diplomat::capi::DiplomatWrite* write);
 
     void fatoora_TaxExemption_destroy(TaxExemption* self);
 
@@ -41,14 +40,34 @@ inline _native::diplomat::result<std::unique_ptr<_native::TaxExemption>, std::un
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::TaxExemption>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::TaxExemption>>(std::unique_ptr<_native::TaxExemption>(_native::TaxExemption::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::TaxExemption>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> _native::TaxExemption::reason_code() const {
-    auto result = _native::capi::fatoora_TaxExemption_reason_code(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::TaxExemption::reason_code() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_TaxExemption_reason_code(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::TaxExemption::reason_code_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_TaxExemption_reason_code(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> _native::TaxExemption::reason() const {
-    auto result = _native::capi::fatoora_TaxExemption_reason(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::TaxExemption::reason() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_TaxExemption_reason(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::TaxExemption::reason_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_TaxExemption_reason(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline const _native::capi::TaxExemption* _native::TaxExemption::AsFFI() const {

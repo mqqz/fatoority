@@ -22,25 +22,25 @@ internal partial struct InvoiceData
     internal static unsafe extern DiplomatResultPaymentMeansBindingError PaymentMeans(InvoiceData* handle, nuint index);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_purchase_order_id", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError PurchaseOrderId(InvoiceData* handle);
+    internal static unsafe extern DiplomatOptionVoid PurchaseOrderId(InvoiceData* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_contract_id", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError ContractId(InvoiceData* handle);
+    internal static unsafe extern DiplomatOptionVoid ContractId(InvoiceData* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_payment_instruction", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError PaymentInstruction(InvoiceData* handle);
+    internal static unsafe extern DiplomatOptionVoid PaymentInstruction(InvoiceData* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_actual_delivery_date", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError ActualDeliveryDate(InvoiceData* handle);
+    internal static unsafe extern DiplomatOptionVoid ActualDeliveryDate(InvoiceData* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_latest_delivery_date", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError LatestDeliveryDate(InvoiceData* handle);
+    internal static unsafe extern DiplomatOptionVoid LatestDeliveryDate(InvoiceData* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_tax_currency", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError TaxCurrency(InvoiceData* handle);
+    internal static unsafe extern DiplomatOptionVoid TaxCurrency(InvoiceData* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_tax_currency_amount", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError TaxCurrencyAmount(InvoiceData* handle);
+    internal static unsafe extern DiplomatOptionVoid TaxCurrencyAmount(InvoiceData* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_adjustments_len", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern nuint AdjustmentsLen(InvoiceData* handle);
@@ -73,7 +73,7 @@ internal partial struct InvoiceData
     internal static unsafe extern DiplomatResultVoidBindingError InvoiceLevelDiscount(InvoiceData* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_allowance_reason", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError AllowanceReason(InvoiceData* handle);
+    internal static unsafe extern DiplomatOptionVoid AllowanceReason(InvoiceData* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_invoice_counter", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern ulong InvoiceCounter(InvoiceData* handle);
@@ -109,7 +109,7 @@ internal partial struct InvoiceData
     internal static unsafe extern DiplomatResultOriginalInvoiceRefBindingError OriginalInvoiceRef(InvoiceData* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_original_invoice_reason", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError OriginalInvoiceReason(InvoiceData* handle);
+    internal static unsafe extern DiplomatOptionVoid OriginalInvoiceReason(InvoiceData* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_InvoiceData_notes_len", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern nuint NotesLen(InvoiceData* handle);

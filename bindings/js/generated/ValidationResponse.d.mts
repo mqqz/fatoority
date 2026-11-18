@@ -3,7 +3,6 @@ import type { BindingError } from "./BindingError.mjs"
 import type { ClearanceStatus } from "./ClearanceStatus.mjs"
 import type { InvoiceOutcome } from "./InvoiceOutcome.mjs"
 import type { ReportingStatus } from "./ReportingStatus.mjs"
-import type { Text } from "./Text.mjs"
 import type { ValidationResults } from "./ValidationResults.mjs"
 import type { pointer, codepoint } from "./diplomat-runtime.mjs";
 
@@ -22,11 +21,20 @@ export class ValidationResponse {
 
     ensureAccepted(): void;
 
-    clearedInvoiceXml(): Text | null;
+    /**
+     * Whether the response carries a cleared invoice.
+     */
+    clearedInvoiceXmlPresent(): boolean;
+
+    /**
+     * The decoded cleared invoice, or null when the response has none.
+     * Fails when the content is not base64-encoded UTF-8 text without NUL.
+     */
+    clearedInvoiceXml(): string;
 
     validationResults(): ValidationResults;
 
-    clearedInvoiceBase64(): Text | null;
+    clearedInvoiceBase64(): string | null;
 
     /**
      * The parsed `reportingStatus`, or null when the response has none.
@@ -36,7 +44,7 @@ export class ValidationResponse {
     /**
      * The `reportingStatus` exactly as ZATCA sent it, or null when absent.
      */
-    reportingStatusRaw(): Text | null;
+    reportingStatusRaw(): string | null;
 
     /**
      * The parsed `clearanceStatus`, or null when the response has none.
@@ -46,9 +54,9 @@ export class ValidationResponse {
     /**
      * The `clearanceStatus` exactly as ZATCA sent it, or null when absent.
      */
-    clearanceStatusRaw(): Text | null;
+    clearanceStatusRaw(): string | null;
 
-    qrSellerStatus(): Text | null;
+    qrSellerStatus(): string | null;
 
-    qrBuyerStatus(): Text | null;
+    qrBuyerStatus(): string | null;
 }

@@ -12,7 +12,6 @@
 #include <optional>
 #include <cstdlib>
 #include "BindingError.hpp"
-#include "Text.hpp"
 #include "diplomat_runtime.hpp"
 
 
@@ -25,8 +24,8 @@ namespace capi {
 
     size_t fatoora_PaymentMeans_instruction_notes_len(const _native::capi::PaymentMeans* self);
 
-    typedef struct fatoora_PaymentMeans_instruction_note_at_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_PaymentMeans_instruction_note_at_result;
-    fatoora_PaymentMeans_instruction_note_at_result fatoora_PaymentMeans_instruction_note_at(const _native::capi::PaymentMeans* self, size_t index);
+    typedef struct fatoora_PaymentMeans_instruction_note_at_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_PaymentMeans_instruction_note_at_result;
+    fatoora_PaymentMeans_instruction_note_at_result fatoora_PaymentMeans_instruction_note_at(const _native::capi::PaymentMeans* self, size_t index, _native::diplomat::capi::DiplomatWrite* write);
 
     typedef struct fatoora_PaymentMeans_new_result {union {_native::capi::PaymentMeans* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_PaymentMeans_new_result;
     fatoora_PaymentMeans_new_result fatoora_PaymentMeans_new(_native::diplomat::capi::DiplomatStringView code, _native::diplomat::capi::OptionStringView instruction);
@@ -37,16 +36,16 @@ namespace capi {
     typedef struct fatoora_PaymentMeans_code_result {union { _native::capi::BindingError* err;}; bool is_ok;} fatoora_PaymentMeans_code_result;
     fatoora_PaymentMeans_code_result fatoora_PaymentMeans_code(const _native::capi::PaymentMeans* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_PaymentMeans_instruction_note_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_PaymentMeans_instruction_note_result;
-    fatoora_PaymentMeans_instruction_note_result fatoora_PaymentMeans_instruction_note(const _native::capi::PaymentMeans* self);
+    typedef struct fatoora_PaymentMeans_instruction_note_result { bool is_ok;} fatoora_PaymentMeans_instruction_note_result;
+    fatoora_PaymentMeans_instruction_note_result fatoora_PaymentMeans_instruction_note(const _native::capi::PaymentMeans* self, _native::diplomat::capi::DiplomatWrite* write);
 
     bool fatoora_PaymentMeans_has_account(const _native::capi::PaymentMeans* self);
 
-    typedef struct fatoora_PaymentMeans_account_identifier_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_PaymentMeans_account_identifier_result;
-    fatoora_PaymentMeans_account_identifier_result fatoora_PaymentMeans_account_identifier(const _native::capi::PaymentMeans* self);
+    typedef struct fatoora_PaymentMeans_account_identifier_result { bool is_ok;} fatoora_PaymentMeans_account_identifier_result;
+    fatoora_PaymentMeans_account_identifier_result fatoora_PaymentMeans_account_identifier(const _native::capi::PaymentMeans* self, _native::diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_PaymentMeans_payment_terms_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_PaymentMeans_payment_terms_result;
-    fatoora_PaymentMeans_payment_terms_result fatoora_PaymentMeans_payment_terms(const _native::capi::PaymentMeans* self);
+    typedef struct fatoora_PaymentMeans_payment_terms_result { bool is_ok;} fatoora_PaymentMeans_payment_terms_result;
+    fatoora_PaymentMeans_payment_terms_result fatoora_PaymentMeans_payment_terms(const _native::capi::PaymentMeans* self, _native::diplomat::capi::DiplomatWrite* write);
 
     void fatoora_PaymentMeans_destroy(PaymentMeans* self);
 
@@ -65,10 +64,21 @@ inline size_t _native::PaymentMeans::instruction_notes_len() const {
     return result;
 }
 
-inline _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>> _native::PaymentMeans::instruction_note_at(size_t index) const {
+inline _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>> _native::PaymentMeans::instruction_note_at(size_t index) const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
     auto result = _native::capi::fatoora_PaymentMeans_instruction_note_at(this->AsFFI(),
-        index);
-    return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Text>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Text>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+        index,
+        &write);
+    return result.is_ok ? _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::string>(std::move(output))) : _native::diplomat::result<std::string, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+}
+template<typename W>
+inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>> _native::PaymentMeans::instruction_note_at_write(size_t index, W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_PaymentMeans_instruction_note_at(this->AsFFI(),
+        index,
+        &write);
+    return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
 inline _native::diplomat::result<std::unique_ptr<_native::PaymentMeans>, std::unique_ptr<_native::BindingError>> _native::PaymentMeans::new_(std::string_view code, std::optional<std::string_view> instruction) {
@@ -99,9 +109,19 @@ inline _native::diplomat::result<std::monostate, std::unique_ptr<_native::Bindin
     return result.is_ok ? _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::monostate>()) : _native::diplomat::result<std::monostate, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> _native::PaymentMeans::instruction_note() const {
-    auto result = _native::capi::fatoora_PaymentMeans_instruction_note(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::PaymentMeans::instruction_note() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_PaymentMeans_instruction_note(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::PaymentMeans::instruction_note_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_PaymentMeans_instruction_note(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline bool _native::PaymentMeans::has_account() const {
@@ -109,14 +129,34 @@ inline bool _native::PaymentMeans::has_account() const {
     return result;
 }
 
-inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> _native::PaymentMeans::account_identifier() const {
-    auto result = _native::capi::fatoora_PaymentMeans_account_identifier(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::PaymentMeans::account_identifier() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_PaymentMeans_account_identifier(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::PaymentMeans::account_identifier_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_PaymentMeans_account_identifier(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> _native::PaymentMeans::payment_terms() const {
-    auto result = _native::capi::fatoora_PaymentMeans_payment_terms(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::PaymentMeans::payment_terms() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_PaymentMeans_payment_terms(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::PaymentMeans::payment_terms_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_PaymentMeans_payment_terms(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline const _native::capi::PaymentMeans* _native::PaymentMeans::AsFFI() const {

@@ -215,6 +215,13 @@ class _Owned:
     def _invoke(self, name, *args):
         return _call(lambda owner, *values: getattr(owner, name)(*values), self, *args)
 
+    def _invoke_optional(self, name):
+        # A fallible optional string crosses the FFI as an `x_present`/`x` pair.
+        def read(owner):
+            return getattr(owner, name)() if getattr(owner, f"{name}_present")() else None
+
+        return _call(read, self)
+
     def __repr__(self) -> str:
         name = type(self).__name__
         try:
@@ -268,8 +275,6 @@ def _convert(value):
     public = _NATIVE_ENUMS.get(type(value))
     if public is not None:
         return public(_native_enum_value(value))
-    if isinstance(value, _native.Text):
-        return _call(value.value)
     if isinstance(value, _native.Bytes):
         return value._copy()
     if isinstance(value, _native.BytesList):
@@ -599,7 +604,7 @@ class ValidationResponse(_Owned):
 
     @property
     def cleared_invoice_xml(self) -> Optional[str]:
-        return self._invoke("cleared_invoice_xml")
+        return self._invoke_optional("cleared_invoice_xml")
 
     @property
     def reporting_status(self) -> Optional[ReportingStatus]:
@@ -1422,7 +1427,7 @@ class SignedInvoice(_Invoice):
 
     @property
     def zatca_key_signature(self) -> Optional[str]:
-        return self._invoke("zatca_key_signature")
+        return self._invoke_optional("zatca_key_signature")
 
     @property
     def cert_hash(self) -> str:

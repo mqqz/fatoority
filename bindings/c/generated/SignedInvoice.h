@@ -10,7 +10,6 @@
 #include "BindingError.d.h"
 #include "InvoiceData.d.h"
 #include "InvoiceTotals.d.h"
-#include "Text.d.h"
 
 #include "SignedInvoice.d.h"
 
@@ -67,8 +66,11 @@ fatoora_SignedInvoice_signed_props_hash_result fatoora_SignedInvoice_signed_prop
 typedef struct fatoora_SignedInvoice_signing_time_result {union { BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_signing_time_result;
 fatoora_SignedInvoice_signing_time_result fatoora_SignedInvoice_signing_time(const SignedInvoice* self, DiplomatWrite* write);
 
-typedef struct fatoora_SignedInvoice_zatca_key_signature_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_zatca_key_signature_result;
-fatoora_SignedInvoice_zatca_key_signature_result fatoora_SignedInvoice_zatca_key_signature(const SignedInvoice* self);
+typedef struct fatoora_SignedInvoice_zatca_key_signature_present_result {union {bool ok; BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_zatca_key_signature_present_result;
+fatoora_SignedInvoice_zatca_key_signature_present_result fatoora_SignedInvoice_zatca_key_signature_present(const SignedInvoice* self);
+
+typedef struct fatoora_SignedInvoice_zatca_key_signature_result {union { BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_zatca_key_signature_result;
+fatoora_SignedInvoice_zatca_key_signature_result fatoora_SignedInvoice_zatca_key_signature(const SignedInvoice* self, DiplomatWrite* write);
 
 typedef struct fatoora_SignedInvoice_into_xml_result {union { BindingError* err;}; bool is_ok;} fatoora_SignedInvoice_into_xml_result;
 fatoora_SignedInvoice_into_xml_result fatoora_SignedInvoice_into_xml(SignedInvoice* self, DiplomatWrite* write);

@@ -203,6 +203,7 @@ class ContractsTest {
                 val credentials = ProductionCsid.create(Environment.NonProduction, null, "token", "secret")
                 val invoice = SignedInvoice.fromXml(signed)
                 assertEquals(Xml.hash(signed), invoice.hash)
+                assertTrue(invoice.zatcaKeySignature!!.isNotEmpty())
                 val request = client.prepareReportSimplifiedInvoice(invoice, credentials, ClearanceMode.Disabled)
                 credentials.close(); invoice.close()
                 request.use {
@@ -213,10 +214,18 @@ class ContractsTest {
                         assertEquals(ReportingStatus.Reported, response.reportingStatus)
                         assertEquals("REPORTED", response.reportingStatusRaw)
                         assertNull(response.clearanceStatus)
+                        assertNull(response.clearedInvoiceXml)
                         response.validationResults().use { results -> assertEquals(ValidationStatus.Pass, results.status) }
                         response.ensureAccepted()
                     }
                     assertFailsWith<FatooraException> { it.decode(400, "bad response".toByteArray()) }
+                    val cleared = { encoded: String ->
+                        it.decode(200, """{"validationResults":{},"clearedInvoice":"$encoded"}""".toByteArray())
+                    }
+                    cleared("PEludm9pY2UvPg==").use { response -> assertEquals("<Invoice/>", response.clearedInvoiceXml) }
+                    cleared("!!!").use { response ->
+                        assertEquals(3, assertFailsWith<FatooraException> { response.clearedInvoiceXml }.code)
+                    }
                 }
             } }
         }

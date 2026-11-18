@@ -12,6 +12,7 @@ def test_signed_xml_copy_survives_close():
     signed = SignedInvoice.from_xml(xml)
     copied = signed.xml
     assert copied == xml
+    assert isinstance(signed.zatca_key_signature, str) and signed.zatca_key_signature
     signed.close()
     assert copied == xml
     with pytest.raises(FatooraError):
@@ -30,7 +31,9 @@ def test_generated_signed_invoice_consumption_keeps_copy_and_owned_data():
     assert signed.into_xml() == xml
     assert copied == xml
     assert data.id() == invoice_id
-    for method in (signed.xml, signed.into_xml, signed.data):
+    # The optional-string pair fails once consumed instead of reporting absence.
+    for method in (signed.xml, signed.into_xml, signed.data,
+                   signed.zatca_key_signature_present, signed.zatca_key_signature):
         with pytest.raises(Exception) as caught:
             method()
         error = caught.value.args[0]

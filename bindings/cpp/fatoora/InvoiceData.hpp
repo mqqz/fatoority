@@ -21,7 +21,6 @@
 #include "OriginalInvoiceRef.hpp"
 #include "Party.hpp"
 #include "PaymentMeans.hpp"
-#include "Text.hpp"
 #include "VatCategory.hpp"
 
 
@@ -40,26 +39,26 @@ namespace capi {
     typedef struct fatoora_InvoiceData_payment_means_result {union {fatoora::capi::PaymentMeans* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_payment_means_result;
     fatoora_InvoiceData_payment_means_result fatoora_InvoiceData_payment_means(const fatoora::capi::InvoiceData* self, size_t index);
 
-    typedef struct fatoora_InvoiceData_purchase_order_id_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_purchase_order_id_result;
-    fatoora_InvoiceData_purchase_order_id_result fatoora_InvoiceData_purchase_order_id(const fatoora::capi::InvoiceData* self);
+    typedef struct fatoora_InvoiceData_purchase_order_id_result { bool is_ok;} fatoora_InvoiceData_purchase_order_id_result;
+    fatoora_InvoiceData_purchase_order_id_result fatoora_InvoiceData_purchase_order_id(const fatoora::capi::InvoiceData* self, diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_InvoiceData_contract_id_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_contract_id_result;
-    fatoora_InvoiceData_contract_id_result fatoora_InvoiceData_contract_id(const fatoora::capi::InvoiceData* self);
+    typedef struct fatoora_InvoiceData_contract_id_result { bool is_ok;} fatoora_InvoiceData_contract_id_result;
+    fatoora_InvoiceData_contract_id_result fatoora_InvoiceData_contract_id(const fatoora::capi::InvoiceData* self, diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_InvoiceData_payment_instruction_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_payment_instruction_result;
-    fatoora_InvoiceData_payment_instruction_result fatoora_InvoiceData_payment_instruction(const fatoora::capi::InvoiceData* self);
+    typedef struct fatoora_InvoiceData_payment_instruction_result { bool is_ok;} fatoora_InvoiceData_payment_instruction_result;
+    fatoora_InvoiceData_payment_instruction_result fatoora_InvoiceData_payment_instruction(const fatoora::capi::InvoiceData* self, diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_InvoiceData_actual_delivery_date_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_actual_delivery_date_result;
-    fatoora_InvoiceData_actual_delivery_date_result fatoora_InvoiceData_actual_delivery_date(const fatoora::capi::InvoiceData* self);
+    typedef struct fatoora_InvoiceData_actual_delivery_date_result { bool is_ok;} fatoora_InvoiceData_actual_delivery_date_result;
+    fatoora_InvoiceData_actual_delivery_date_result fatoora_InvoiceData_actual_delivery_date(const fatoora::capi::InvoiceData* self, diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_InvoiceData_latest_delivery_date_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_latest_delivery_date_result;
-    fatoora_InvoiceData_latest_delivery_date_result fatoora_InvoiceData_latest_delivery_date(const fatoora::capi::InvoiceData* self);
+    typedef struct fatoora_InvoiceData_latest_delivery_date_result { bool is_ok;} fatoora_InvoiceData_latest_delivery_date_result;
+    fatoora_InvoiceData_latest_delivery_date_result fatoora_InvoiceData_latest_delivery_date(const fatoora::capi::InvoiceData* self, diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_InvoiceData_tax_currency_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_tax_currency_result;
-    fatoora_InvoiceData_tax_currency_result fatoora_InvoiceData_tax_currency(const fatoora::capi::InvoiceData* self);
+    typedef struct fatoora_InvoiceData_tax_currency_result { bool is_ok;} fatoora_InvoiceData_tax_currency_result;
+    fatoora_InvoiceData_tax_currency_result fatoora_InvoiceData_tax_currency(const fatoora::capi::InvoiceData* self, diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_InvoiceData_tax_currency_amount_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_tax_currency_amount_result;
-    fatoora_InvoiceData_tax_currency_amount_result fatoora_InvoiceData_tax_currency_amount(const fatoora::capi::InvoiceData* self);
+    typedef struct fatoora_InvoiceData_tax_currency_amount_result { bool is_ok;} fatoora_InvoiceData_tax_currency_amount_result;
+    fatoora_InvoiceData_tax_currency_amount_result fatoora_InvoiceData_tax_currency_amount(const fatoora::capi::InvoiceData* self, diplomat::capi::DiplomatWrite* write);
 
     size_t fatoora_InvoiceData_adjustments_len(const fatoora::capi::InvoiceData* self);
 
@@ -90,8 +89,8 @@ namespace capi {
     typedef struct fatoora_InvoiceData_invoice_level_discount_result {union { fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_invoice_level_discount_result;
     fatoora_InvoiceData_invoice_level_discount_result fatoora_InvoiceData_invoice_level_discount(const fatoora::capi::InvoiceData* self, diplomat::capi::DiplomatWrite* write);
 
-    typedef struct fatoora_InvoiceData_allowance_reason_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_allowance_reason_result;
-    fatoora_InvoiceData_allowance_reason_result fatoora_InvoiceData_allowance_reason(const fatoora::capi::InvoiceData* self);
+    typedef struct fatoora_InvoiceData_allowance_reason_result { bool is_ok;} fatoora_InvoiceData_allowance_reason_result;
+    fatoora_InvoiceData_allowance_reason_result fatoora_InvoiceData_allowance_reason(const fatoora::capi::InvoiceData* self, diplomat::capi::DiplomatWrite* write);
 
     uint64_t fatoora_InvoiceData_invoice_counter(const fatoora::capi::InvoiceData* self);
 
@@ -120,8 +119,8 @@ namespace capi {
     typedef struct fatoora_InvoiceData_original_invoice_ref_result {union {fatoora::capi::OriginalInvoiceRef* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_original_invoice_ref_result;
     fatoora_InvoiceData_original_invoice_ref_result fatoora_InvoiceData_original_invoice_ref(const fatoora::capi::InvoiceData* self);
 
-    typedef struct fatoora_InvoiceData_original_invoice_reason_result {union {fatoora::capi::Text* ok; fatoora::capi::BindingError* err;}; bool is_ok;} fatoora_InvoiceData_original_invoice_reason_result;
-    fatoora_InvoiceData_original_invoice_reason_result fatoora_InvoiceData_original_invoice_reason(const fatoora::capi::InvoiceData* self);
+    typedef struct fatoora_InvoiceData_original_invoice_reason_result { bool is_ok;} fatoora_InvoiceData_original_invoice_reason_result;
+    fatoora_InvoiceData_original_invoice_reason_result fatoora_InvoiceData_original_invoice_reason(const fatoora::capi::InvoiceData* self, diplomat::capi::DiplomatWrite* write);
 
     size_t fatoora_InvoiceData_notes_len(const fatoora::capi::InvoiceData* self);
 
@@ -180,39 +179,109 @@ inline diplomat::result<std::unique_ptr<fatoora::PaymentMeans>, std::unique_ptr<
     return result.is_ok ? diplomat::result<std::unique_ptr<fatoora::PaymentMeans>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::unique_ptr<fatoora::PaymentMeans>>(std::unique_ptr<fatoora::PaymentMeans>(fatoora::PaymentMeans::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<fatoora::PaymentMeans>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceData::purchase_order_id() const {
-    auto result = fatoora::capi::fatoora_InvoiceData_purchase_order_id(this->AsFFI());
-    return result.is_ok ? diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::InvoiceData::purchase_order_id() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_InvoiceData_purchase_order_id(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::InvoiceData::purchase_order_id_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_InvoiceData_purchase_order_id(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceData::contract_id() const {
-    auto result = fatoora::capi::fatoora_InvoiceData_contract_id(this->AsFFI());
-    return result.is_ok ? diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::InvoiceData::contract_id() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_InvoiceData_contract_id(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::InvoiceData::contract_id_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_InvoiceData_contract_id(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceData::payment_instruction() const {
-    auto result = fatoora::capi::fatoora_InvoiceData_payment_instruction(this->AsFFI());
-    return result.is_ok ? diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::InvoiceData::payment_instruction() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_InvoiceData_payment_instruction(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::InvoiceData::payment_instruction_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_InvoiceData_payment_instruction(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceData::actual_delivery_date() const {
-    auto result = fatoora::capi::fatoora_InvoiceData_actual_delivery_date(this->AsFFI());
-    return result.is_ok ? diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::InvoiceData::actual_delivery_date() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_InvoiceData_actual_delivery_date(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::InvoiceData::actual_delivery_date_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_InvoiceData_actual_delivery_date(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceData::latest_delivery_date() const {
-    auto result = fatoora::capi::fatoora_InvoiceData_latest_delivery_date(this->AsFFI());
-    return result.is_ok ? diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::InvoiceData::latest_delivery_date() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_InvoiceData_latest_delivery_date(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::InvoiceData::latest_delivery_date_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_InvoiceData_latest_delivery_date(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceData::tax_currency() const {
-    auto result = fatoora::capi::fatoora_InvoiceData_tax_currency(this->AsFFI());
-    return result.is_ok ? diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::InvoiceData::tax_currency() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_InvoiceData_tax_currency(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::InvoiceData::tax_currency_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_InvoiceData_tax_currency(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
-inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceData::tax_currency_amount() const {
-    auto result = fatoora::capi::fatoora_InvoiceData_tax_currency_amount(this->AsFFI());
-    return result.is_ok ? diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::InvoiceData::tax_currency_amount() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_InvoiceData_tax_currency_amount(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::InvoiceData::tax_currency_amount_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_InvoiceData_tax_currency_amount(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline size_t fatoora::InvoiceData::adjustments_len() const {
@@ -346,9 +415,19 @@ inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> 
     return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceData::allowance_reason() const {
-    auto result = fatoora::capi::fatoora_InvoiceData_allowance_reason(this->AsFFI());
-    return result.is_ok ? diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::InvoiceData::allowance_reason() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_InvoiceData_allowance_reason(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::InvoiceData::allowance_reason_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_InvoiceData_allowance_reason(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline uint64_t fatoora::InvoiceData::invoice_counter() const {
@@ -407,9 +486,19 @@ inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::OriginalIn
     return result.is_ok ? diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::OriginalInvoiceRef>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<diplomat::maybe_null<std::unique_ptr<fatoora::OriginalInvoiceRef>>>(std::unique_ptr<fatoora::OriginalInvoiceRef>(fatoora::OriginalInvoiceRef::FromFFI(result.ok)))) : diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::OriginalInvoiceRef>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
 }
 
-inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> fatoora::InvoiceData::original_invoice_reason() const {
-    auto result = fatoora::capi::fatoora_InvoiceData_original_invoice_reason(this->AsFFI());
-    return result.is_ok ? diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Ok<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>>(std::unique_ptr<fatoora::Text>(fatoora::Text::FromFFI(result.ok)))) : diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>>(diplomat::Err<std::unique_ptr<fatoora::BindingError>>(std::unique_ptr<fatoora::BindingError>(fatoora::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> fatoora::InvoiceData::original_invoice_reason() const {
+    std::string output;
+    diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+    auto result = fatoora::capi::fatoora_InvoiceData_original_invoice_reason(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> fatoora::InvoiceData::original_invoice_reason_write(W& writeable) const {
+    diplomat::capi::DiplomatWrite write = diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = fatoora::capi::fatoora_InvoiceData_original_invoice_reason(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline size_t fatoora::InvoiceData::notes_len() const {

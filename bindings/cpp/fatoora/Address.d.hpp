@@ -16,8 +16,6 @@ namespace capi { struct Address; }
 class Address;
 namespace capi { struct BindingError; }
 class BindingError;
-namespace capi { struct Text; }
-class Text;
 } // namespace fatoora
 
 
@@ -61,11 +59,17 @@ public:
   template<typename W>
   inline diplomat::result<std::monostate, std::unique_ptr<fatoora::BindingError>> country_code_write(W& writeable_output) const;
 
-  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> additional_street() const;
+  inline std::optional<std::string> additional_street() const;
+  template<typename W>
+  inline std::optional<std::monostate> additional_street_write(W& writeable_output) const;
 
-  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> additional_number() const;
+  inline std::optional<std::string> additional_number() const;
+  template<typename W>
+  inline std::optional<std::monostate> additional_number_write(W& writeable_output) const;
 
-  inline diplomat::result<diplomat::maybe_null<std::unique_ptr<fatoora::Text>>, std::unique_ptr<fatoora::BindingError>> district() const;
+  inline std::optional<std::string> district() const;
+  template<typename W>
+  inline std::optional<std::monostate> district_write(W& writeable_output) const;
 
     inline const fatoora::capi::Address* AsFFI() const;
     inline fatoora::capi::Address* AsFFI();
