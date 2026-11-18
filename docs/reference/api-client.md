@@ -345,8 +345,10 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
 === "C#"
     Use the `Fatoora` namespace. `ZatcaClient.Create(config: Config)` returns a client;
-    `ZatcaClient.WithTimeout(config, timeoutMs: uint)` adds a per-request timeout
-    in milliseconds that raises `NetworkException` when exceeded.
+    `ZatcaClient.WithTimeout(config, timeout: TimeSpan)` adds a per-request timeout,
+    rounded up to whole milliseconds, that raises `NetworkException` when exceeded;
+    a zero, negative, or over-`uint.MaxValue`-millisecond timeout throws
+    `ArgumentOutOfRangeException`.
     HTTP methods block; errors throw `FfiException` subclasses such as
     `NetworkException` or `UnauthorizedException`. Use `using` for owned objects,
     including child responses. Scalar getters are read-only properties.
@@ -418,8 +420,11 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
 === "Kotlin"
     Import types from `com.fatoora`. `ZatcaClient.create(config)` takes `Config` and
-    returns a client; `ZatcaClient.withTimeout(config, timeoutMs: Long)` adds a
-    per-request timeout in milliseconds that raises `NetworkException` when exceeded.
+    returns a client; `ZatcaClient.withTimeout(config, timeout)` takes a
+    `kotlin.time.Duration` (such as `30.seconds`) or `java.time.Duration` and adds a
+    per-request timeout, rounded up to whole milliseconds, that raises
+    `NetworkException` when exceeded; a zero, negative, or too-long timeout throws
+    `IllegalArgumentException`.
     HTTP methods block and errors raise exceptions. Use `.use { ... }` or `close()` for owned objects,
     including child responses.
 
@@ -490,8 +495,10 @@ context needed for acceptance checks. Keep redirects disabled in custom transpor
 
 === "Java"
     Import types from `com.fatoora`. `ZatcaClient.create(config)` takes `Config` and
-    returns a client; `ZatcaClient.withTimeout(config, timeoutMs)` adds a
-    per-request timeout in milliseconds that raises `NetworkException` when exceeded.
+    returns a client; `ZatcaClient.withTimeout(config, Duration.ofSeconds(30))` takes a
+    `java.time.Duration` and adds a per-request timeout, rounded up to whole
+    milliseconds, that raises `NetworkException` when exceeded; a zero, negative, or
+    too-long timeout throws `IllegalArgumentException`.
     HTTP methods block and errors raise exceptions. Use try-with-resources or `close()` for owned objects,
     including child responses.
 

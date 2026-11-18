@@ -141,6 +141,25 @@ every optional text property is already a `String?` in 0.6, so replace
 `text.value` or `text.value()` with the string itself and drop the
 `use { }` block.
 
+## Changed signatures
+
+These changes have no 0.6 equivalent to migrate to first; update the call when
+you upgrade.
+
+### Client timeout
+
+`ZatcaClient.withTimeout` takes a duration instead of a `Long` millisecond
+count: a `java.time.Duration` from Java or Kotlin, or a `kotlin.time.Duration`
+from Kotlin. The timeout is rounded up to whole milliseconds; zero, negative,
+infinite and longer-than-4294967.295-second values throw
+`IllegalArgumentException`. Use `ZatcaClient.create(config)` for no client-side
+timeout.
+
+| 0.6 | 0.7 |
+| --- | --- |
+| `ZatcaClient.withTimeout(config, 30_000)` | Kotlin: `ZatcaClient.withTimeout(config, 30.seconds)` (`import kotlin.time.Duration.Companion.seconds`) |
+| `ZatcaClient.withTimeout(config, 30000L)` (Java) | `ZatcaClient.withTimeout(config, Duration.ofSeconds(30))` (`import java.time.Duration`) |
+
 ## Example
 
 ```kotlin

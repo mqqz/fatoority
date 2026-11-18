@@ -104,6 +104,18 @@ Check(Copy(signer.CertificateDer()).SequenceEqual(File.ReadAllBytes(Path.Combine
 using var config = Config.Create(ZatcaEnvironment.NonProduction);
 Check(config.Env == ZatcaEnvironment.NonProduction, "Environment round trip");
 using var client = ZatcaClient.Create(config);
+ZatcaClient.WithTimeout(config, TimeSpan.FromSeconds(30)).Dispose();
+ZatcaClient.WithTimeout(config, TimeSpan.FromTicks(1)).Dispose(); // Rounds up to 1 ms.
+ZatcaClient.WithTimeout(config, TimeSpan.FromMilliseconds(uint.MaxValue)).Dispose();
+foreach (var bad in new[] { TimeSpan.Zero, TimeSpan.FromTicks(-1), Timeout.InfiniteTimeSpan,
+                            TimeSpan.FromMilliseconds(uint.MaxValue) + TimeSpan.FromTicks(1), TimeSpan.MaxValue })
+{
+    Throws<ArgumentOutOfRangeException>(() => ZatcaClient.WithTimeout(config, bad));
+}
+Throws<ArgumentNullException>(() => ZatcaClient.WithTimeout(null!, TimeSpan.FromSeconds(1)));
+Check(typeof(ZatcaClient).GetMethods().Where(m => m.Name == "WithTimeout")
+        .Select(m => m.GetParameters()[1].ParameterType).SequenceEqual(new[] { typeof(TimeSpan) }),
+      "TimeSpan is the only public timeout overload");
 using var credentials = ProductionCsid.Create(ZatcaEnvironment.NonProduction, null, "token", "secret");
 foreach (var kind in new[] { "simplified", "standard" })
 {

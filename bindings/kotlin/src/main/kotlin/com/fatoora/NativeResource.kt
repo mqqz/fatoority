@@ -114,3 +114,19 @@ internal fun checkedCounter(value: BigInteger): ULong {
     require(value.signum() >= 0 && value.bitLength() <= 64) { "Unsigned 64-bit value out of range" }
     return value.toString().toULong()
 }
+
+private const val MAX_TIMEOUT_MILLIS = 4294967295L
+
+/** A positive timeout in whole milliseconds, rounded up, that fits the native u32. */
+internal fun timeoutMillis(timeout: java.time.Duration): UInt {
+    require(!timeout.isNegative && !timeout.isZero) { "timeout must be positive: $timeout" }
+    val tooLong = "timeout must be at most 4294967.295 seconds: $timeout"
+    require(timeout.seconds <= MAX_TIMEOUT_MILLIS / 1000) { tooLong }
+    val millis = timeout.seconds * 1000 + (timeout.nano + 999_999) / 1_000_000
+    require(millis <= MAX_TIMEOUT_MILLIS) { tooLong }
+    return millis.toUInt()
+}
+
+/** The exact java.time form; infinite durations saturate and are rejected as too long. */
+internal fun javaDuration(timeout: kotlin.time.Duration): java.time.Duration =
+    timeout.toComponents { seconds, nanoseconds -> java.time.Duration.ofSeconds(seconds, nanoseconds.toLong()) }

@@ -41,6 +41,15 @@ public class JavaContractsTest {
         }
     }
 
+    @Test public void clientTimeoutIsAJavaDuration() {
+        try (Config config = Config.create(Environment.NonProduction);
+             ZatcaClient client = ZatcaClient.withTimeout(config, java.time.Duration.ofSeconds(30))) {
+            assertNotNull(client);
+            try { ZatcaClient.withTimeout(config, java.time.Duration.ZERO); fail("Expected IllegalArgumentException"); }
+            catch (IllegalArgumentException e) { assertTrue(e.getMessage().contains("timeout")); }
+        }
+    }
+
     @Test public void javaUsesFactoriesOverloadsAndExceptions() {
         try (SigningKey key = SigningKey.generate();
              SigningKey restored = SigningKey.fromPem(key.toPem());

@@ -88,7 +88,7 @@ public partial class ZatcaClient: IDisposable
     /// <returns>
     /// A <c>ZatcaClient</c> allocated on Rust side.
     /// </returns>
-    public static ZatcaClient WithTimeout(Config config, uint timeoutMs)
+    private static ZatcaClient WithTimeoutMilliseconds(Config config, uint timeoutMs)
     {
         unsafe
         {
