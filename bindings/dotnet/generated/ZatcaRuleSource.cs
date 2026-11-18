@@ -57,7 +57,7 @@ public partial class ZatcaRuleSource: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Stylesheet
     {
         get
@@ -74,7 +74,7 @@ public partial class ZatcaRuleSource: IDisposable
                         var result = Raw.ZatcaRuleSource.Stylesheet(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -91,7 +91,7 @@ public partial class ZatcaRuleSource: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Sha256
     {
         get
@@ -108,7 +108,7 @@ public partial class ZatcaRuleSource: IDisposable
                         var result = Raw.ZatcaRuleSource.Sha256(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }

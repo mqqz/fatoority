@@ -78,7 +78,7 @@ public partial class ValidationMessage: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? MessageTypeRaw
     {
         get
@@ -92,7 +92,7 @@ public partial class ValidationMessage: IDisposable
                     var result = Raw.ValidationMessage.MessageTypeRaw(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
@@ -104,7 +104,7 @@ public partial class ValidationMessage: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? Code
     {
         get
@@ -118,7 +118,7 @@ public partial class ValidationMessage: IDisposable
                     var result = Raw.ValidationMessage.Code(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
@@ -130,7 +130,7 @@ public partial class ValidationMessage: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? Category
     {
         get
@@ -144,7 +144,7 @@ public partial class ValidationMessage: IDisposable
                     var result = Raw.ValidationMessage.Category(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
@@ -156,7 +156,7 @@ public partial class ValidationMessage: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? Message
     {
         get
@@ -170,7 +170,7 @@ public partial class ValidationMessage: IDisposable
                     var result = Raw.ValidationMessage.Message(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
@@ -203,7 +203,7 @@ public partial class ValidationMessage: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? StatusRaw
     {
         get
@@ -217,7 +217,7 @@ public partial class ValidationMessage: IDisposable
                     var result = Raw.ValidationMessage.StatusRaw(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }

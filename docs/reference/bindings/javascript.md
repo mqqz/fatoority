@@ -91,11 +91,13 @@ A library failure throws one `FatooraError` subclass per error code:
 | 9 | `InternalError` | Internal invariant or consumed-state error |
 | 10 | `ApiError` | ZATCA returned an error or non-accepted response |
 
-Each error has `code`, `kind` (the name column without `Error`, or `null` for a
+Each error has `code`, `kind` (an `ErrorKind` value such as
+`ErrorKind.InvalidInput`, which is the string `'InvalidInput'`, or `null` for a
 code this version does not know), `message`, and `details`, the parsed JSON
 object with structured information such as validation findings or an HTTP
-response body. `cause` is the underlying `BindingError`. `ErrorCode` maps kinds
-to codes and `errorClassForCode(code)` returns the class. Typed errors apply to
+response body. `cause` is the underlying `BindingError`.
+`FatooraError.fromCode(code, message, { details })` creates the class for a
+code. Typed errors apply to
 `fatoority/raw` too, because it shares the generated classes.
 See [error codes and details](../errors.md).
 
@@ -111,10 +113,11 @@ try {
 }
 ```
 
-Network, cancellation, and response-body read failures throw `TransportError`,
-a `NetworkError` subclass. It preserves the original host error in `cause`;
-`httpStatus` is present when a response was received but its body could not be
-read. HTTP rejection decoded by the library uses the class for its code instead,
+Network, cancellation, and response-body read failures throw `NetworkError`
+with the original host error in `cause`. Its `details` follow the library
+schema: `{ type: 'network', diagnostics }` when `fetch` fails, or
+`{ type: 'api_response_read', http_status, message }` when a response arrived
+but its body could not be read. HTTP rejection decoded by the library uses the class for its code instead,
 such as `UnauthorizedError` or `ApiError`.
 
 ## Local validation

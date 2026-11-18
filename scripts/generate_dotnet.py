@@ -16,7 +16,7 @@ them a second time this script rewrites the generated wrappers in place:
   converted with the invariant culture (never through ``double``);
 * string inputs are encoded with a strict UTF-8 encoder, so unpaired
   surrogates throw ``EncoderFallbackException`` instead of becoming U+FFFD;
-* native errors are thrown as ``FfiException`` subclasses (see
+* native errors are thrown as ``FatooraException`` subclasses (see
   ``bindings/dotnet/src/Errors.cs``) and ``BindingError`` becomes internal;
 * the Rust ``new`` constructors become ``Create`` factory methods, matching
   the Kotlin and JavaScript packages;
@@ -198,9 +198,9 @@ def transform_class(name, text, inputs, outputs, enums):
             result.append("    }")
         index = end + 1
     text = "\n".join(result)
-    text = text.replace(THROW, "throw FfiException.FromNative(new BindingError(result.Err));")
+    text = text.replace(THROW, "throw FatooraException.FromNative(new BindingError(result.Err));")
     text = text.replace('/// <exception cref="BindingErrorException"></exception>',
-                        '/// <exception cref="FfiException"></exception>')
+                        '/// <exception cref="FatooraException"></exception>')
     return text, seen
 
 

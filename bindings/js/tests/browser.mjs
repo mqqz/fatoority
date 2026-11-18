@@ -35,13 +35,13 @@ try {
     }});
     const client = new sdk.ZatcaClient(config, {fetch: (_url, init) => fetch('/redirect', init)});
     let redirectBlocked = false;
-    try { await client.requestProductionCsid(credentials); } catch (e) { redirectBlocked = e instanceof sdk.TransportError; }
+    try { await client.requestProductionCsid(credentials); } catch (e) { redirectBlocked = e instanceof sdk.NetworkError && e.details.type === 'network'; }
     const controller = new AbortController();
     const slow = new sdk.ZatcaClient(config, {fetch: (_url, init) => fetch('/slow', init)});
     const pending = slow.requestProductionCsid(credentials, {signal: controller.signal});
     controller.abort();
     let aborted = false;
-    try { await pending; } catch (e) { aborted = e instanceof sdk.TransportError && e.cause.name === 'AbortError'; }
+    try { await pending; } catch (e) { aborted = e instanceof sdk.NetworkError && e.cause.name === 'AbortError'; }
     let typedError = false;
     try { sdk.Address.create('SAU', '\0', '', '', '', null, null, null); } catch (e) { typedError = e instanceof sdk.InvalidInputError && e.code === 1; }
     return {pem: key.toPem(), token: response.binarySecurityToken, redirectBlocked, aborted, typedError};

@@ -71,7 +71,7 @@ public static class SdkExamples
         }
         catch (InvalidInputException error)
         {
-            // Every native error derives from FfiException; Kind names its category.
+            // Every library error derives from FatooraException; Kind names its category.
             Console.WriteLine($"{error.Kind} ({error.Code}): {error.Message}");
             Console.WriteLine(error.DetailsJson);
         }

@@ -26,7 +26,7 @@ class ContractsTest {
         assertTrue(error.message.contains("Invalid country"))
         assertTrue(error.detailsJson.startsWith("{"))
         assertFailsWith<CharacterCodingException> { Address.create("SA", "\uD800", "b", "1", "1") }
-        assertFailsWith<BindingException> { Address.create("SA", "bad\u0000city", "b", "1", "1") }
+        assertFailsWith<FatooraException> { Address.create("SA", "bad\u0000city", "b", "1", "1") }
     }
 
     @Test fun unsignedBoundariesRemainJavaCallable() {
@@ -93,13 +93,15 @@ class ContractsTest {
             10 to ApiException::class,
         )
         for ((code, type) in expected) {
-            val error = bindingException(code, "message", "{}")
+            val error = FatooraException.fromCode(code, "message", "{}")
             assertEquals(type, error::class)
             assertEquals(code, error.code)
             assertEquals(code, error.kind!!.code)
+            assertEquals("${error.kind}Exception", error::class.simpleName)
         }
-        val unknown = bindingException(99, "message", "{}")
-        assertEquals(BindingException::class, unknown::class)
+        assertEquals(ErrorKind.entries.map { it.code }, expected.keys.toList())
+        val unknown = FatooraException.fromCode(99, "message", "{}")
+        assertEquals(FatooraException::class, unknown::class)
         assertNull(unknown.kind)
         assertFailsWith<XmlException> { SignedInvoice.fromXml("<not-closed") }
     }
@@ -119,8 +121,8 @@ class ContractsTest {
 
     @Test fun consumptionDoesNotBecomeUseAfterFree() {
         InvoiceBuilder.create(InvoiceTypeKind.Tax, InvoiceSubType.Standard).use { b ->
-            assertFailsWith<BindingException> { b.build() }
-            assertFailsWith<BindingException> { b.setId("again") }
+            assertFailsWith<FatooraException> { b.build() }
+            assertFailsWith<FatooraException> { b.setId("again") }
         }
     }
 
@@ -214,7 +216,7 @@ class ContractsTest {
                         response.validationResults().use { results -> assertEquals(ValidationStatus.Pass, results.status) }
                         response.ensureAccepted()
                     }
-                    assertFailsWith<BindingException> { it.decode(400, "bad response".toByteArray()) }
+                    assertFailsWith<FatooraException> { it.decode(400, "bad response".toByteArray()) }
                 }
             } }
         }

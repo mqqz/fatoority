@@ -57,7 +57,7 @@ public partial class ComplianceRequest: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Method
     {
         get
@@ -74,7 +74,7 @@ public partial class ComplianceRequest: IDisposable
                         var result = Raw.ComplianceRequest.Method(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -91,7 +91,7 @@ public partial class ComplianceRequest: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Url
     {
         get
@@ -108,7 +108,7 @@ public partial class ComplianceRequest: IDisposable
                         var result = Raw.ComplianceRequest.Url(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -125,7 +125,7 @@ public partial class ComplianceRequest: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string HeadersJson
     {
         get
@@ -142,7 +142,7 @@ public partial class ComplianceRequest: IDisposable
                         var result = Raw.ComplianceRequest.HeadersJson(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -159,7 +159,7 @@ public partial class ComplianceRequest: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>Bytes</c> allocated on Rust side.
     /// </returns>
@@ -174,7 +174,7 @@ public partial class ComplianceRequest: IDisposable
                 var result = Raw.ComplianceRequest.Body(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new Bytes(result.Ok);
             }
@@ -185,7 +185,7 @@ public partial class ComplianceRequest: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>ComplianceCsid</c> allocated on Rust side.
     /// </returns>
@@ -203,7 +203,7 @@ public partial class ComplianceRequest: IDisposable
                     var result = Raw.ComplianceRequest.Decode(selfLease!.Ptr, status, new DiplomatSliceU8 { Ptr = bodyPtr, Len = (nuint)body.Length });
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return new ComplianceCsid(result.Ok);
                 }

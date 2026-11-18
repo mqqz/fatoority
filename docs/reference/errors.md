@@ -9,18 +9,36 @@ Use error codes and structured fields to decide how to recover. Messages are int
 
 ## Shared classification
 
-| Code | Category | Meaning |
-| --- | --- | --- |
-| 1 | InvalidInput | An argument, key, certificate, option or context is invalid |
-| 2 | Validation | A model validation failure or interrupted rule evaluation |
-| 3 | Parse | Structured data, a successful API response, or returned cleared XML could not be decoded |
-| 4 | Xml | An XML operation failed |
-| 5 | Crypto | A cryptographic operation failed |
-| 6 | Io | A file or other I/O operation failed |
-| 7 | Network | A network operation failed |
-| 8 | Unauthorized | The service rejected authorization |
-| 9 | Internal | An internal operation failed |
-| 10 | Api | A non-authorization API response or acceptance check failed |
+Every failure has one `ErrorKind` with a stable numeric code. Each binding
+throws one class per kind under a common base, with the same names in every
+language:
+
+| Code | `ErrorKind` | Python | JavaScript | C# | Kotlin / Java | C status | Meaning |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| | *(base)* | `FatooraError` | `FatooraError` | `FatooraException` | `FatooraException` | | Every library failure; also thrown alone for an unknown code |
+| 1 | `InvalidInput` | `InvalidInputError` | `InvalidInputError` | `InvalidInputException` | `InvalidInputException` | `FATOORA_INVALID_INPUT` | An argument, key, certificate, option or context is invalid |
+| 2 | `Validation` | `ValidationError` | `ValidationError` | `ValidationException` | `ValidationException` | `FATOORA_VALIDATION` | A model validation failure or interrupted rule evaluation |
+| 3 | `Parse` | `ParseError` | `ParseError` | `ParseException` | `ParseException` | `FATOORA_PARSE` | Structured data, a successful API response, or returned cleared XML could not be decoded |
+| 4 | `Xml` | `XmlError` | `XmlError` | `XmlException` | `XmlException` | `FATOORA_XML` | An XML operation failed |
+| 5 | `Crypto` | `CryptoError` | `CryptoError` | `CryptoException` | `CryptoException` | `FATOORA_CRYPTO` | A cryptographic operation failed |
+| 6 | `Io` | `IoError` | `IoError` | `IoException` | `IoException` | `FATOORA_IO` | A file or other I/O operation failed |
+| 7 | `Network` | `NetworkError` | `NetworkError` | `NetworkException` | `NetworkException` | `FATOORA_NETWORK` | A network operation failed |
+| 8 | `Unauthorized` | `UnauthorizedError` | `UnauthorizedError` | `UnauthorizedException` | `UnauthorizedException` | `FATOORA_UNAUTHORIZED` | The service rejected authorization |
+| 9 | `Internal` | `InternalError` | `InternalError` | `InternalException` | `InternalException` | `FATOORA_INTERNAL` | An internal operation failed |
+| 10 | `Api` | `ApiError` | `ApiError` | `ApiException` | `ApiException` | `FATOORA_API` | A non-authorization API response or acceptance check failed |
+
+Every error object carries the same data, spelled in each language's style:
+
+| Data | Rust | Python | JavaScript | C# | Kotlin (Java) | C |
+| --- | --- | --- | --- | --- | --- | --- |
+| Kind | `kind()` → `ErrorKind` | `.kind` → `ErrorKind` (`IntEnum`, `INVALID_INPUT`) | `.kind` → `ErrorKind` string (`'InvalidInput'`) | `Kind` → `ErrorKind?` | `kind` (`getKind()`) → `ErrorKind?` | — |
+| Code | `kind() as i32` | `.code` | `.code` | `Code` | `code` (`getCode()`) | `fatoora_error_code()` |
+| Message | `Display` | `.message`, `str(error)` | `.message` | `Message` | `message` (`getMessage()`) | `fatoora_error_message()` |
+| Details | `details_json()` | `.details` (`dict`) | `.details` (object) | `DetailsJson` (string) | `detailsJson` (`getDetailsJson()`) | `fatoora_error_details_json()` |
+| Create by code | — | `FatooraError.from_code(code, message, details)` | `FatooraError.fromCode(code, message, { details })` | `FatooraException.FromCode(code, message, detailsJson)` | `FatooraException.fromCode(code, message, detailsJson)` | — |
+
+Kind is null (`None`) only for a code this version does not recognize; the
+error is then the base class and keeps its code and details.
 
 Classification follows the cause: an XML failure during signing is `Xml`, while a file-read failure is `Io`. Preserve unknown numeric codes and provide a generic fallback. An `Internal` failure may leave an operation consumed; discard affected operation handles.
 
@@ -76,13 +94,14 @@ Classification follows the cause: an XML failure during signing is `Xml`, while 
 
 === "Python"
 
-    Native-operation exceptions inherit from `FfiError` and `FatooraError`. These exceptions
-    carry `.code`, `.kind`, and `.details`. Unknown codes produce `FfiError`, with
-    `.kind` set to `None`; the original code and details remain available.
+    Library failures raise a `FatooraError` subclass chosen by `ErrorKind`. Each
+    carries `.code`, `.kind`, `.message` and `.details`. Unknown codes raise plain
+    `FatooraError` with `.kind` set to `None`; the original code and details
+    remain available.
 
     ```python
     from fatoora import InvoiceBuilder, InvoiceSubType, InvoiceTypeKind
-    from fatoora.errors import ValidationError
+    from fatoora import ValidationError
 
     builder = InvoiceBuilder(InvoiceTypeKind.TAX, InvoiceSubType.SIMPLIFIED)
     try:
@@ -95,22 +114,25 @@ Classification follows the cause: an XML failure during signing is `Xml`, while 
 
     Argument conversion and application code can also raise ordinary Python exceptions, such as `TypeError` or `ValueError`.
 
-    Mapped exception classes are `InvalidInputError`, `ValidationError`, `ParseError`, `XmlError`, `CryptoError`, `IoError`, `NetworkError`, `UnauthorizedError`, `InternalError` and `ApiError`, in numeric code order. Local execution failures may expose a partial validation report at `error.details["report"]`.
+    `InvalidInputError` is also a `ValueError` and `IoError` an `OSError`. Local execution failures may expose a partial validation report at `error.details["report"]`.
 
 === "JavaScript"
 
-    Library failures throw a `FatooraError` subclass chosen by code. The error
-    exposes `code` (number), `kind` (such as `"InvalidInput"`), `message` and
-    `details` (parsed JSON object); `cause` is the underlying `BindingError`.
-    Fetch, cancellation and response-body read failures throw `TransportError`,
-    a `NetworkError` subclass with the host error in `cause` and an optional `httpStatus`.
+    Library failures throw a `FatooraError` subclass chosen by `ErrorKind`. The
+    error exposes `code` (number), `kind` (an `ErrorKind` value such as
+    `"InvalidInput"`), `message` and `details` (parsed JSON object); `cause` is
+    the underlying `BindingError`. Fetch, cancellation and response-body read
+    failures throw `NetworkError` with the host error in `cause` and `details`
+    of type `network`, or `api_response_read` with `http_status`.
 
     ```javascript
-    import { FatooraError, ValidationError } from "fatoority";
+    import { ErrorKind, FatooraError, ValidationError } from "fatoority";
 
     function inspectError(error) {
       if (error instanceof ValidationError) {
         console.error("Rejected:", error.details);
+      } else if (error instanceof FatooraError && error.kind === ErrorKind.Unauthorized) {
+        console.error("Credentials rejected:", error.message);
       } else if (error instanceof FatooraError) {
         console.error(error.code, error.kind, error.message, error.details);
       } else {
@@ -119,18 +141,18 @@ Classification follows the cause: an XML failure during signing is `Xml`, while 
     }
     ```
 
-    Mapped error classes are `InvalidInputError`, `ValidationError`, `ParseError`, `XmlError`, `CryptoError`, `IoError`, `NetworkError`, `UnauthorizedError`, `InternalError` and `ApiError`, in numeric code order; `ErrorCode` maps names to codes. An unrecognized code throws the base `FatooraError` with `kind` set to `null`. Argument conversion can also throw `TypeError`. A local validation call returning JSON means a report was produced; inspect `is_valid` to decide whether the invoice passed.
+    An unrecognized code throws the base `FatooraError` with `kind` set to `null`. Argument conversion can also throw `TypeError`. A local validation call returning JSON means a report was produced; inspect `is_valid` to decide whether the invoice passed.
 
 === "C#"
 
-    Native operations throw a subclass of `FfiException` (base `FatooraException`), one per code: `InvalidInputException`, `ValidationException`, `ParseException`, `XmlException`, `CryptoException`, `IoException`, `NetworkException`, `UnauthorizedException`, `InternalException` and `ApiException`. `Code`, `Kind` (`FfiErrorKind`), `Message` and `DetailsJson` are copied values; nothing needs disposal.
+    Library failures throw a `FatooraException` subclass chosen by `ErrorKind`. `Code`, `Kind`, `Message` and `DetailsJson` are copied values; nothing needs disposal. An unknown code throws plain `FatooraException` with a `null` `Kind`.
 
     ```csharp
     catch (UnauthorizedException error)
     {
         Console.Error.WriteLine("Credentials rejected: " + error.Message);
     }
-    catch (FfiException error)
+    catch (FatooraException error)
     {
         Console.Error.WriteLine($"{error.Kind} ({error.Code}): {error.Message}");
         Console.Error.WriteLine(error.DetailsJson);
@@ -141,7 +163,7 @@ Classification follows the cause: an XML failure during signing is `Xml`, while 
 
 === "Kotlin"
 
-    Native operations throw a `BindingException` subclass for each code: `InvalidInputException` (1), `ValidationException` (2), `ParseException` (3), `XmlException` (4), `CryptoException` (5), `IoException` (6), `NetworkException` (7), `UnauthorizedException` (8), `InternalException` (9) and `ApiException` (10). An unknown code throws plain `BindingException`. Each carries `code`, `kind` (a nullable `ErrorKind`), `message` and `detailsJson`. These are copied managed values; the exception needs no cleanup. Parse `detailsJson` with your application's JSON library. Calls on a closed owner throw `IllegalStateException`.
+    Library failures throw a `FatooraException` subclass chosen by `ErrorKind`. An unknown code throws plain `FatooraException`. Each carries `code`, `kind` (a nullable `ErrorKind`), `message` and `detailsJson`. These are copied managed values; the exception needs no cleanup. Parse `detailsJson` with your application's JSON library. Calls on a closed owner throw `IllegalStateException`.
 
     ```kotlin
     --8<-- "bindings/kotlin/examples/SdkExamples.kt:errors"
@@ -151,7 +173,7 @@ Classification follows the cause: an XML failure during signing is `Xml`, while 
 
 === "Java"
 
-    Native operations throw a `BindingException` subclass for each code, such as `InvalidInputException`, `XmlException` or `NetworkException`; catch `BindingException` last for the rest. Read `getCode()`, `getKind()`, `getMessage()` and `getDetailsJson()`. These are copied managed values; the exception needs no cleanup. Calls on a closed owner throw `IllegalStateException`.
+    Library failures throw a `FatooraException` subclass for each `ErrorKind`, such as `InvalidInputException`, `XmlException` or `NetworkException`; catch `FatooraException` last for the rest. Read `getCode()`, `getKind()`, `getMessage()` and `getDetailsJson()`. These are copied managed values; the exception needs no cleanup. Calls on a closed owner throw `IllegalStateException`.
 
     ```java
     --8<-- "bindings/kotlin/examples/JavaExamples.java:errors"
@@ -161,7 +183,8 @@ Classification follows the cause: an XML failure during signing is `Xml`, while 
 
 === "C"
 
-    The C API uses opaque `FatooraError` owners and a shared `FatooraStatus`:
+    The C API has no exception classes: it uses opaque `FatooraError` owners and a
+    shared `FatooraStatus` whose values are the codes in the table above:
 
     ```c
     #include "fatoora.h"

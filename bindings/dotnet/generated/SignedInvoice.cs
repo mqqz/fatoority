@@ -57,7 +57,7 @@ public partial class SignedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>SignedInvoice</c> allocated on Rust side.
     /// </returns>
@@ -72,14 +72,14 @@ public partial class SignedInvoice: IDisposable
                 var result = Raw.SignedInvoice.FromXml(new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new SignedInvoice(result.Ok);
             }
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>SignedInvoice</c> allocated on Rust side.
     /// </returns>
@@ -94,14 +94,14 @@ public partial class SignedInvoice: IDisposable
                 var result = Raw.SignedInvoice.FromFile(new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new SignedInvoice(result.Ok);
             }
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>InvoiceData</c> allocated on Rust side.
     /// </returns>
@@ -116,7 +116,7 @@ public partial class SignedInvoice: IDisposable
                 var result = Raw.SignedInvoice.Data(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new InvoiceData(result.Ok);
             }
@@ -127,7 +127,7 @@ public partial class SignedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>InvoiceTotals</c> allocated on Rust side.
     /// </returns>
@@ -142,7 +142,7 @@ public partial class SignedInvoice: IDisposable
                 var result = Raw.SignedInvoice.Totals(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new InvoiceTotals(result.Ok);
             }
@@ -153,7 +153,7 @@ public partial class SignedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Hash
     {
         get
@@ -170,7 +170,7 @@ public partial class SignedInvoice: IDisposable
                         var result = Raw.SignedInvoice.Hash(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -187,7 +187,7 @@ public partial class SignedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Xml
     {
         get
@@ -204,7 +204,7 @@ public partial class SignedInvoice: IDisposable
                         var result = Raw.SignedInvoice.Xml(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -221,7 +221,7 @@ public partial class SignedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string QrCode
     {
         get
@@ -238,7 +238,7 @@ public partial class SignedInvoice: IDisposable
                         var result = Raw.SignedInvoice.QrCode(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -255,7 +255,7 @@ public partial class SignedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Signature
     {
         get
@@ -272,7 +272,7 @@ public partial class SignedInvoice: IDisposable
                         var result = Raw.SignedInvoice.Signature(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -289,7 +289,7 @@ public partial class SignedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string PublicKey
     {
         get
@@ -306,7 +306,7 @@ public partial class SignedInvoice: IDisposable
                         var result = Raw.SignedInvoice.PublicKey(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -323,7 +323,7 @@ public partial class SignedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string InvoiceHash
     {
         get
@@ -340,7 +340,7 @@ public partial class SignedInvoice: IDisposable
                         var result = Raw.SignedInvoice.InvoiceHash(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -357,7 +357,7 @@ public partial class SignedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string ToXmlBase64()
     {
         unsafe
@@ -372,7 +372,7 @@ public partial class SignedInvoice: IDisposable
                     var result = Raw.SignedInvoice.ToXmlBase64(selfLease!.Ptr, &writeable);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return writeable.ToUnicode();
                 }
@@ -388,7 +388,7 @@ public partial class SignedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Issuer
     {
         get
@@ -405,7 +405,7 @@ public partial class SignedInvoice: IDisposable
                         var result = Raw.SignedInvoice.Issuer(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -422,7 +422,7 @@ public partial class SignedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Serial
     {
         get
@@ -439,7 +439,7 @@ public partial class SignedInvoice: IDisposable
                         var result = Raw.SignedInvoice.Serial(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -456,7 +456,7 @@ public partial class SignedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string CertHash
     {
         get
@@ -473,7 +473,7 @@ public partial class SignedInvoice: IDisposable
                         var result = Raw.SignedInvoice.CertHash(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -490,7 +490,7 @@ public partial class SignedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string SignedPropsHash
     {
         get
@@ -507,7 +507,7 @@ public partial class SignedInvoice: IDisposable
                         var result = Raw.SignedInvoice.SignedPropsHash(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -524,7 +524,7 @@ public partial class SignedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string SigningTime
     {
         get
@@ -541,7 +541,7 @@ public partial class SignedInvoice: IDisposable
                         var result = Raw.SignedInvoice.SigningTime(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -558,7 +558,7 @@ public partial class SignedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? ZatcaKeySignature
     {
         get
@@ -572,7 +572,7 @@ public partial class SignedInvoice: IDisposable
                     var result = Raw.SignedInvoice.ZatcaKeySignature(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
@@ -584,7 +584,7 @@ public partial class SignedInvoice: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string IntoXml()
     {
         unsafe
@@ -599,7 +599,7 @@ public partial class SignedInvoice: IDisposable
                     var result = Raw.SignedInvoice.IntoXml(selfLease!.Ptr, &writeable);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return writeable.ToUnicode();
                 }

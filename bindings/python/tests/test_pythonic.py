@@ -13,7 +13,7 @@ from fatoora import (Address, Adjustment, ComplianceCsid, Config, CsrProperties,
                      InvoiceTypeKind, LineItemBuilder, OriginalInvoiceRef, PaymentMeans,
                      ProductionCsid, SignedInvoice, SigningKey, TaxExemption, VatCategory,
                      ZatcaClient, hash_xml)
-from fatoora.errors import FfiError
+from fatoora.errors import FatooraError
 
 FIXTURES = Path(__file__).resolve().parents[3] / "fatoora-core/tests/fixtures"
 SIGNED_XML = FIXTURES / "invoices/sample-simplified-invoice.xml"
@@ -178,7 +178,7 @@ def test_parsing_classmethods_and_hashes():
     invoice = complete(header()).build()
     parsed = FinalizedInvoice.from_xml(invoice.xml)
     assert isinstance(parsed, FinalizedInvoice) and parsed.hash() == invoice.hash()
-    with pytest.raises(FfiError):
+    with pytest.raises(FatooraError):
         SignedInvoice.from_xml(invoice.xml)
 
 
@@ -189,7 +189,7 @@ def test_invoice_signer_signs_finalized_invoices():
     invoice = complete(header()).build()
     invoice_id = invoice.id  # caches the invoice data
     signed = invoice.sign(signer)
-    with pytest.raises(FfiError, match="consumed"):
+    with pytest.raises(FatooraError, match="consumed"):
         invoice.id  # signing consumed the finalized invoice, cached data included
     assert signed.id == invoice_id
     assert isinstance(signed, SignedInvoice)

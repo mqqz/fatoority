@@ -1,7 +1,7 @@
 import pytest
 
 from fatoora import InvoiceBuilder, InvoiceSubType, InvoiceTypeKind
-from fatoora.errors import FfiError, FfiErrorKind, ValidationError, error_class_for_code
+from fatoora.errors import ErrorKind, FatooraError, ValidationError
 
 
 def test_validation_issues_cross_the_ffi_boundary():
@@ -10,7 +10,7 @@ def test_validation_issues_cross_the_ffi_boundary():
         builder.build()
     error = caught.value
     assert error.code == 2
-    assert error.kind == FfiErrorKind.VALIDATION
+    assert error.kind == ErrorKind.VALIDATION
     assert error.details["type"] == "invoice_validation"
     assert any(issue["field"] == "seller" for issue in error.details["issues"])
     assert all("kind" in issue for issue in error.details["issues"])
@@ -18,12 +18,26 @@ def test_validation_issues_cross_the_ffi_boundary():
 
 def test_unknown_codes_and_details_remain_available():
     details = {"type": "future_error", "new_field": ["some value"]}
-    error = error_class_for_code(999)("future message", 999, details)
-    assert type(error) is FfiError
+    error = FatooraError.from_code(999, "future message", details)
+    assert type(error) is FatooraError
     assert error.code == 999
     assert error.kind is None
     assert error.details == details
     assert str(error) == "future message"
+    assert error.message == "future message"
+
+
+@pytest.mark.parametrize("kind", list(ErrorKind))
+def test_every_kind_has_its_own_subclass(kind):
+    from fatoora import errors
+
+    name = "".join(part.capitalize() for part in kind.name.split("_")) + "Error"
+    error_type = getattr(errors, name)
+    error = FatooraError.from_code(int(kind), "message")
+    assert type(error) is error_type
+    assert (error.code, error.kind, error.details) == (int(kind), kind, {})
+    direct = error_type("message")
+    assert (direct.code, direct.kind) == (int(kind), kind)
 
 
 
@@ -86,22 +100,21 @@ def test_error_classes_also_subclass_builtin_exceptions(cls, builtin):
 
     error_type = getattr(errors, cls)
     assert issubclass(error_type, builtin)
-    assert issubclass(error_type, FfiError)
+    assert issubclass(error_type, FatooraError)
     details = {"type": "io", "path": "/tmp/x"}
     code = 6 if cls == "IoError" else 1
-    error = error_type("file not found", code, details)
+    error = error_type("file not found", details=details)
     assert str(error) == "file not found"
     assert error.args == ("file not found",)
     assert error.code == code
-    assert error.kind == FfiErrorKind(code)
+    assert error.kind == ErrorKind(code)
     assert error.details == details
-    assert error_class_for_code(code) is error_type
-    # The three-argument constructor must not be reinterpreted as errno/strerror/filename.
+    assert type(FatooraError.from_code(code, "m")) is error_type
+    # The keyword constructor must not be reinterpreted as errno/strerror/filename.
     if builtin is OSError:
         assert error.errno is None and error.strerror is None and error.filename is None
-    for args in [("only message",), ("message", code)]:
-        e = error_type(*args)
-        assert str(e) == args[0] and e.args == (args[0],)
+    e = error_type("only message")
+    assert str(e) == "only message" and e.args == ("only message",)
     restored = pickle.loads(pickle.dumps(error))
     assert type(restored) is error_type
     assert (str(restored), restored.args, restored.code, restored.details) == (
@@ -113,4 +126,4 @@ def test_missing_invoice_file_is_catchable_as_oserror():
 
     with pytest.raises(OSError) as caught:
         FinalizedInvoice.from_file("/nonexistent/fatoora/invoice.xml")
-    assert isinstance(caught.value, FfiError)
+    assert isinstance(caught.value, FatooraError)

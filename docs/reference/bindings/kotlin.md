@@ -8,7 +8,7 @@ description: Install fatoority from Maven Central for Kotlin, Java, or Android. 
 Use `com.fatoora` classes to build, sign, and validate invoices and send ZATCA API
 requests on the JVM or Android. Value getters are Kotlin properties (Java
 `getX()`), amounts are exact `BigDecimal` values, and failures throw a
-`BindingException` subclass for each error kind.
+`FatooraException` subclass for each error kind.
 
 ## Install from Maven Central
 
@@ -105,7 +105,7 @@ environment. Factory names use `create`, such as
 | Invoice flags | `Int` bitmask taken by `InvoiceBuilder.setFlags` and held by `InvoiceData.flags`; combine `InvoiceFlag` bits from its `bit` property (`ThirdParty`, `Nominal`, `Export`, `Summary`, `SelfBilled`) |
 | Unsigned 64-bit counter | `BigInteger`, range 0 through 2^64−1 |
 | Binary input / copied output | JVM byte array; copies survive closing their owner |
-| Native failure | `BindingException` subclass with `code`, `kind`, `message`, `detailsJson` |
+| Native failure | `FatooraException` subclass with `code`, `kind`, `message`, `detailsJson` |
 
 Close objects returned by methods as well as those you construct. Native errors
 are copied to managed data and freed immediately; exceptions need no cleanup.
@@ -144,7 +144,7 @@ normalized, so `10.50` reads back as `10.5`; compare with `compareTo`.
 
 ## Errors
 
-Native failures throw a subclass of `BindingException` chosen by error code:
+Native failures throw a subclass of `FatooraException` chosen by error code:
 
 | Code | `ErrorKind` | Exception |
 | --- | --- | --- |
@@ -159,7 +159,7 @@ Native failures throw a subclass of `BindingException` chosen by error code:
 | 9 | `Internal` | `InternalException` |
 | 10 | `Api` | `ApiException` |
 
-A code this version does not know throws plain `BindingException` with a `null`
+A code this version does not know throws plain `FatooraException` with a `null`
 `kind`. The code, kind, message, and JSON details are managed values; exceptions
 need no cleanup. Invalid UTF-16 and embedded NUL are rejected. Use
 [structured error details](../errors.md) to distinguish validation, input,
@@ -172,7 +172,7 @@ cryptography, and gateway failures.
         Address.create("XX", "Riyadh", "King Fahd Road", "1234", "12345").use { }
     } catch (error: InvalidInputException) {
         println("Rejected input: ${error.message}")
-    } catch (error: BindingException) {
+    } catch (error: FatooraException) {
         println("${error.kind} (${error.code}): ${error.message}")
         println(error.detailsJson)
     }
@@ -185,7 +185,7 @@ cryptography, and gateway failures.
         // An unrecognized country code throws before this block.
     } catch (InvalidInputException error) {
         System.err.println("Rejected input: " + error.getMessage());
-    } catch (BindingException error) {
+    } catch (FatooraException error) {
         System.err.println(error.getKind() + " (" + error.getCode() + "): " + error.getMessage());
         System.err.println(error.getDetailsJson());
     }

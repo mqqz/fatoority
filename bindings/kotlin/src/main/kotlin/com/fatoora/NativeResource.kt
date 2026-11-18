@@ -83,7 +83,7 @@ internal fun <T> nativeCall(owners: List<NativeResource>, action: () -> T): T {
 internal fun <T> unwrap(result: Result<T>): T = result.getOrElse { error ->
     if (error !is com.fatoora.raw.BindingError) throw error
     error.owned = false
-    try { throw bindingException(error.code(), error.message(), error.detailsJson()) }
+    try { throw FatooraException.fromCode(error.code(), error.message(), error.detailsJson()) }
     finally { com.fatoora.raw.BindingError.lib.fatoora_BindingError_destroy(error.handle) }
 }
 

@@ -114,10 +114,11 @@ that require mutable access also throw `InvalidOperationException`.
 --8<-- "bindings/dotnet/examples/SdkExamples.cs:errors"
 ```
 
-Native failures throw a subclass of `FfiException`, which derives from
-`FatooraException`. Each [error code](../errors.md) has its own class:
+Library failures throw a subclass of `FatooraException`. Each
+[error kind](../errors.md) has its own class; a code this version does not know
+throws plain `FatooraException` with a `null` `Kind`:
 
-| Code | `FfiErrorKind` | Exception |
+| Code | `ErrorKind` | Exception |
 | --- | --- | --- |
 | 1 | `InvalidInput` | `InvalidInputException` |
 | 2 | `Validation` | `ValidationException` |

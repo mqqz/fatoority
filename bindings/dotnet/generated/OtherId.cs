@@ -57,7 +57,7 @@ public partial class OtherId: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Value
     {
         get
@@ -74,7 +74,7 @@ public partial class OtherId: IDisposable
                         var result = Raw.OtherId.Value(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -91,7 +91,7 @@ public partial class OtherId: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? Scheme
     {
         get
@@ -105,7 +105,7 @@ public partial class OtherId: IDisposable
                     var result = Raw.OtherId.Scheme(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }

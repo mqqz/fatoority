@@ -35,9 +35,9 @@ it does not clash with `System.Environment`), `VatCategory.Standard` and
 `ClearanceMode.Disabled`. Response statuses return a nullable enum (`Unknown` for
 unrecognized values), and `*Raw` properties return the exact text. Build the
 invoice flag mask by casting, such as `(byte)InvoiceFlag.Export`.
-Native errors throw one `FfiException` subclass per error code
-(`InvalidInputException`, `NetworkException`, ...; base `FatooraException`) with
-`Code`, `Kind`, and `DetailsJson`; exceptions hold no native resources.
+Library errors throw one `FatooraException` subclass per `ErrorKind`
+(`InvalidInputException`, `NetworkException`, ...) with `Code`, `Kind`, and
+`DetailsJson`; exceptions hold no native resources.
 Releasing native memory does not guarantee erasure of secrets or managed copies.
 
 `Bytes.AsSlice()` returns a disposable `RustVec` holding a native copy of the
@@ -110,7 +110,7 @@ than wrapping it, so each class keeps the generated handle, disposal and lifetim
 code. The pass turns scalar getters into properties, copies optional `Text`
 results into `string?`, maps every decimal the Rust FFI parses or returns to
 `decimal` (derived from `fatoora-ffi` and `fatoora-core` sources), and throws
-`FfiException` subclasses from `src/Errors.cs`. Hand-written support code lives in
+`FatooraException` subclasses from `src/Errors.cs`. Hand-written support code lives in
 `src/`; it contains no per-type wrappers.
 
 The .NET contracts cover encoding, optional strings, structured errors, disposal,

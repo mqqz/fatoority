@@ -77,7 +77,7 @@ public partial class VatBreakdown: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>VatBreakdown</c> allocated on Rust side.
     /// </returns>
@@ -92,7 +92,7 @@ public partial class VatBreakdown: IDisposable
                 var result = Raw.VatBreakdown.OmitVatRate(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new VatBreakdown(result.Ok);
             }
@@ -103,7 +103,7 @@ public partial class VatBreakdown: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>VatBreakdown</c> allocated on Rust side.
     /// </returns>
@@ -126,7 +126,7 @@ public partial class VatBreakdown: IDisposable
                     var result = Raw.VatBreakdown.New(category, new DiplomatSliceU8 { Ptr = ratePtr, Len = (nuint)rateBytes.Length }, new DiplomatSliceU8 { Ptr = taxableAmountPtr, Len = (nuint)taxableAmountBytes.Length }, new DiplomatSliceU8 { Ptr = taxAmountPtr, Len = (nuint)taxAmountBytes.Length }, exemptionLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return new VatBreakdown(result.Ok);
                 }
@@ -158,7 +158,7 @@ public partial class VatBreakdown: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public decimal Rate
     {
         get
@@ -175,7 +175,7 @@ public partial class VatBreakdown: IDisposable
                         var result = Raw.VatBreakdown.Rate(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
@@ -192,7 +192,7 @@ public partial class VatBreakdown: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public decimal TaxableAmount
     {
         get
@@ -209,7 +209,7 @@ public partial class VatBreakdown: IDisposable
                         var result = Raw.VatBreakdown.TaxableAmount(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
@@ -226,7 +226,7 @@ public partial class VatBreakdown: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public decimal TaxAmount
     {
         get
@@ -243,7 +243,7 @@ public partial class VatBreakdown: IDisposable
                         var result = Raw.VatBreakdown.TaxAmount(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
@@ -260,7 +260,7 @@ public partial class VatBreakdown: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>TaxExemption</c> allocated on Rust side.
     /// </returns>
@@ -275,7 +275,7 @@ public partial class VatBreakdown: IDisposable
                 var result = Raw.VatBreakdown.Exemption(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new TaxExemption(result.Ok);
             }

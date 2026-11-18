@@ -97,7 +97,7 @@ public partial class BytesList: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>Bytes</c> allocated on Rust side.
     /// </returns>
@@ -112,7 +112,7 @@ public partial class BytesList: IDisposable
                 var result = Raw.BytesList.Get(selfLease!.Ptr, index);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new Bytes(result.Ok);
             }

@@ -57,6 +57,29 @@
   The parameter is renamed `clearanceStatus` -> `clearanceMode`, matching the
   `fatoority/raw` `prepare*` methods, and the `ClearanceModeInput` type is
   removed.
+- Bindings: errors form one hierarchy with the same names in every language:
+  a base `FatooraError` (Python, JavaScript) or `FatooraException` (C#,
+  Kotlin/Java), an `ErrorKind` enum mirroring `fatoora_core::ErrorKind`, and
+  one subclass per kind (`InvalidInputError`/`InvalidInputException`, ...,
+  `ApiError`/`ApiException`). Every error carries its code, kind, message and
+  details, and `FatooraError.from_code` / `fromCode` / `FromCode` creates the
+  subclass for a code. Renamed with no aliases:
+  - Python: `FfiError` → `FatooraError`, `FfiErrorKind` → `ErrorKind`,
+    `fatoora.errors.error_class_for_code` → `FatooraError.from_code`; error
+    constructors take `code` and `details` as keyword-only arguments and a
+    subclass supplies its own code.
+  - C#: `FfiException` → `FatooraException`, `FfiErrorKind` → `ErrorKind`,
+    `FfiException.Create` → `FatooraException.FromCode`; subclass constructors
+    drop the redundant `code` argument, and the old message-only
+    `FatooraException` constructors are removed.
+  - Kotlin/Java: `BindingException` → `FatooraException`, which gains a public
+    `fromCode` factory.
+  - JavaScript: `ErrorCode` → `ErrorKind` (string values matching
+    `error.kind`), `errorClassForCode` → `FatooraError.fromCode`, and
+    `TransportError` is removed: fetch, cancellation and body-read failures
+    throw `NetworkError` with the host error in `cause` and `details` in the
+    library schema (`network`, or `api_response_read` with `http_status`
+    in place of `httpStatus`).
 
 ### Internal
 

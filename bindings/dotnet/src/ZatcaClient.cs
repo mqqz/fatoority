@@ -19,7 +19,7 @@ public partial class ZatcaClient
     /// <see cref="System.Threading.Timeout.InfiniteTimeSpan"/>), or longer than
     /// 4294967.295 seconds (<see cref="uint.MaxValue"/> milliseconds).
     /// </exception>
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public static ZatcaClient WithTimeout(Config config, TimeSpan timeout)
     {
         ArgumentNullException.ThrowIfNull(config);

@@ -57,7 +57,7 @@ public partial class TaxExemption: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>TaxExemption</c> allocated on Rust side.
     /// </returns>
@@ -73,14 +73,14 @@ public partial class TaxExemption: IDisposable
                 var result = Raw.TaxExemption.New(code == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = codePtr, Len = (nuint)codeBytes!.Length }), reason == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = reasonPtr, Len = (nuint)reasonBytes!.Length }));
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new TaxExemption(result.Ok);
             }
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? ReasonCode
     {
         get
@@ -94,7 +94,7 @@ public partial class TaxExemption: IDisposable
                     var result = Raw.TaxExemption.ReasonCode(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
@@ -106,7 +106,7 @@ public partial class TaxExemption: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? Reason
     {
         get
@@ -120,7 +120,7 @@ public partial class TaxExemption: IDisposable
                     var result = Raw.TaxExemption.Reason(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }

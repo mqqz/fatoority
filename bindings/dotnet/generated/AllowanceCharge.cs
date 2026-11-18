@@ -77,7 +77,7 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>AllowanceCharge</c> allocated on Rust side.
     /// </returns>
@@ -92,7 +92,7 @@ public partial class AllowanceCharge: IDisposable
                 var result = Raw.AllowanceCharge.OmitVatRate(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new AllowanceCharge(result.Ok);
             }
@@ -103,7 +103,7 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>AllowanceCharge</c> allocated on Rust side.
     /// </returns>
@@ -123,7 +123,7 @@ public partial class AllowanceCharge: IDisposable
                     var result = Raw.AllowanceCharge.WithPercentage(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = basePtr, Len = (nuint)baseBytes.Length }, new DiplomatSliceU8 { Ptr = percentPtr, Len = (nuint)percentBytes.Length });
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return new AllowanceCharge(result.Ok);
                 }
@@ -135,7 +135,7 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public decimal? BaseAmount
     {
         get
@@ -149,7 +149,7 @@ public partial class AllowanceCharge: IDisposable
                     var result = Raw.AllowanceCharge.BaseAmount(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeDecimalOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
@@ -161,7 +161,7 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public decimal? Percentage
     {
         get
@@ -175,7 +175,7 @@ public partial class AllowanceCharge: IDisposable
                     var result = Raw.AllowanceCharge.Percentage(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeDecimalOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
@@ -187,7 +187,7 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>AllowanceCharge</c> allocated on Rust side.
     /// </returns>
@@ -212,7 +212,7 @@ public partial class AllowanceCharge: IDisposable
                     var result = Raw.AllowanceCharge.New(kind, new DiplomatSliceU8 { Ptr = amountPtr, Len = (nuint)amountBytes.Length }, reason == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = reasonPtr, Len = (nuint)reasonBytes!.Length }), reasonCode == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = reasonCodePtr, Len = (nuint)reasonCodeBytes!.Length }), category, new DiplomatSliceU8 { Ptr = ratePtr, Len = (nuint)rateBytes.Length }, exemptionLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return new AllowanceCharge(result.Ok);
                 }
@@ -244,7 +244,7 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public decimal Amount
     {
         get
@@ -261,7 +261,7 @@ public partial class AllowanceCharge: IDisposable
                         var result = Raw.AllowanceCharge.Amount(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
@@ -278,7 +278,7 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public decimal Rate
     {
         get
@@ -295,7 +295,7 @@ public partial class AllowanceCharge: IDisposable
                         var result = Raw.AllowanceCharge.Rate(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return FatooraDecimal.Parse(writeable.ToUnicode());
                     }
@@ -332,7 +332,7 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>AllowanceCharge</c> allocated on Rust side.
     /// </returns>
@@ -347,7 +347,7 @@ public partial class AllowanceCharge: IDisposable
                 var result = Raw.AllowanceCharge.WithTaxCategoryCount(selfLease!.Ptr, count);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new AllowanceCharge(result.Ok);
             }
@@ -378,7 +378,7 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? Reason
     {
         get
@@ -392,7 +392,7 @@ public partial class AllowanceCharge: IDisposable
                     var result = Raw.AllowanceCharge.Reason(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
@@ -404,7 +404,7 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? ReasonCode
     {
         get
@@ -418,7 +418,7 @@ public partial class AllowanceCharge: IDisposable
                     var result = Raw.AllowanceCharge.ReasonCode(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }
@@ -430,7 +430,7 @@ public partial class AllowanceCharge: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     /// <returns>
     /// A <c>TaxExemption</c> allocated on Rust side.
     /// </returns>
@@ -445,7 +445,7 @@ public partial class AllowanceCharge: IDisposable
                 var result = Raw.AllowanceCharge.Exemption(selfLease!.Ptr);
                 if (!result.IsOk)
                 {
-                    throw FfiException.FromNative(new BindingError(result.Err));
+                    throw FatooraException.FromNative(new BindingError(result.Err));
                 }
                 return new TaxExemption(result.Ok);
             }

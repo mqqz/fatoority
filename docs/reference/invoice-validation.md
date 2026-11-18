@@ -198,7 +198,7 @@ Child objects are independent snapshots and outlive the report.
 
     `Validate` returns `true` on schema success and throws on violations or execution failures. `ValidateZatca` returns an owned report even for a rejected or incomplete invoice; dispose it with `using`. Pass `null` for default options or a JSON object string with the keys documented above (maximum 4096 UTF-8 bytes). Inspect `report.IsValid`; `report.ToJson()` returns the JSON report.
 
-    On `FfiException` (or a subclass such as `ValidationException`), `error.DetailsJson` returns structured JSON; a failure after validation starts includes `report`. Earlier input rejection may omit the report.
+    On `FatooraException` (or a subclass such as `ValidationException`), `error.DetailsJson` returns structured JSON; a failure after validation starts includes `report`. Earlier input rejection may omit the report.
 
 === "Kotlin"
 
@@ -209,9 +209,9 @@ Child objects are independent snapshots and outlive the report.
     Xml.validateZatca(xml: String, optionsJson: String? = null): ZatcaValidationReport
     ```
 
-    `validate` returns `true` on schema success; violations and execution failures throw `BindingException`. `validateZatca` returns an owned report for completed calls, including rejected or incomplete invoices. Close it with `use` and inspect `isValid`; `toJson()` returns the JSON report.
+    `validate` returns `true` on schema success; violations and execution failures throw `FatooraException`. `validateZatca` returns an owned report for completed calls, including rejected or incomplete invoices. Close it with `use` and inspect `isValid`; `toJson()` returns the JSON report.
 
-    Omit `optionsJson` or pass null for defaults; otherwise provide a JSON object string containing the documented context keys, limited to 4096 UTF-8 bytes. `BindingException.detailsJson` contains structured failure details and an optional partial `report`. Invalid options can fail before that report exists.
+    Omit `optionsJson` or pass null for defaults; otherwise provide a JSON object string containing the documented context keys, limited to 4096 UTF-8 bytes. `FatooraException.detailsJson` contains structured failure details and an optional partial `report`. Invalid options can fail before that report exists.
 
 === "Java"
 
@@ -223,7 +223,7 @@ Child objects are independent snapshots and outlive the report.
     ZatcaValidationReport Xml.validateZatca(String xml, String optionsJson)
     ```
 
-    `validate` returns `true` on schema success and throws `BindingException` on violations or execution failures. `validateZatca` returns an owned report even if validation rejects the invoice or coverage is incomplete. Close it with try-with-resources and inspect `isValid()`; `toJson()` returns the JSON report.
+    `validate` returns `true` on schema success and throws `FatooraException` on violations or execution failures. `validateZatca` returns an owned report even if validation rejects the invoice or coverage is incomplete. Close it with try-with-resources and inspect `isValid()`; `toJson()` returns the JSON report.
 
     The one-argument overload uses default options. The second argument accepts null or a JSON object string with the documented context keys, limited to 4096 UTF-8 bytes. On failure, `error.getDetailsJson()` returns structured details with an optional partial `report`; earlier input rejection may omit it.
 

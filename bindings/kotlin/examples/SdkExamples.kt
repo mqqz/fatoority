@@ -44,7 +44,7 @@ object SdkExamples {
         SignedInvoice.fromXml(xml).use { "signed by ${it.issuer}" }
     } catch (error: InvalidInputException) {
         "bad input: ${error.message}"
-    } catch (error: BindingException) {
+    } catch (error: FatooraException) {
         "${error.kind}: ${error.message} ${error.detailsJson}"
     }
     // --8<-- [end:errors]

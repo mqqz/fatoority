@@ -110,7 +110,7 @@ public partial class ZatcaFinding: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Code
     {
         get
@@ -127,7 +127,7 @@ public partial class ZatcaFinding: IDisposable
                         var result = Raw.ZatcaFinding.Code(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -164,7 +164,7 @@ public partial class ZatcaFinding: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string Message
     {
         get
@@ -181,7 +181,7 @@ public partial class ZatcaFinding: IDisposable
                         var result = Raw.ZatcaFinding.Message(selfLease!.Ptr, &writeable);
                         if (!result.IsOk)
                         {
-                            throw FfiException.FromNative(new BindingError(result.Err));
+                            throw FatooraException.FromNative(new BindingError(result.Err));
                         }
                         return writeable.ToUnicode();
                     }
@@ -219,7 +219,7 @@ public partial class ZatcaFinding: IDisposable
         }
     }
 
-    /// <exception cref="FfiException"></exception>
+    /// <exception cref="FatooraException"></exception>
     public string? LocationPath
     {
         get
@@ -233,7 +233,7 @@ public partial class ZatcaFinding: IDisposable
                     var result = Raw.ZatcaFinding.LocationPath(selfLease!.Ptr);
                     if (!result.IsOk)
                     {
-                        throw FfiException.FromNative(new BindingError(result.Err));
+                        throw FatooraException.FromNative(new BindingError(result.Err));
                     }
                     return global::Fatoora.Text.TakeOptional(result.Ok == null ? null : new global::Fatoora.Text(result.Ok));
                 }

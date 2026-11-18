@@ -159,6 +159,22 @@ timeout.
 | --- | --- |
 | `ZatcaClient.withTimeout(config, 30_000)` | Kotlin: `ZatcaClient.withTimeout(config, 30.seconds)` (`import kotlin.time.Duration.Companion.seconds`) |
 | `ZatcaClient.withTimeout(config, 30000L)` (Java) | `ZatcaClient.withTimeout(config, Duration.ofSeconds(30))` (`import java.time.Duration`) |
+## Error classes
+
+0.7 gives every language the same error hierarchy: a base `FatooraException`, one
+`ErrorKind` enum, and one subclass per kind named `<Kind>Exception`. See
+[errors and diagnostics](../../reference/errors.md). These names change in 0.7
+with no deprecated alias in 0.6, so update them while upgrading.
+
+| 0.6 | 0.7 |
+| --- | --- |
+| `BindingException` | `FatooraException` (same `code`, `kind`, `message` and `detailsJson`) |
+| `ErrorKind`, `ErrorKind.fromCode(code)` | Unchanged |
+| No public factory | `FatooraException.fromCode(code, message, detailsJson)` |
+
+The subclasses (`InvalidInputException`, ..., `ApiException`) keep their names
+and constructors. A `catch (error: BindingException)` (Java
+`catch (BindingException error)`) becomes `catch (error: FatooraException)`.
 
 ## Example
 
