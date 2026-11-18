@@ -60,7 +60,7 @@ fn json_error(error: serde_json::Error) -> Box<crate::common::ffi::BindingError>
 pub mod ffi {
     use super::{index_error, json_error, zv};
     use crate::common::ffi::{BindingError, Text};
-    use crate::common::{boundary, write};
+    use crate::common::{boundary, write, write_optional};
     use diplomat_runtime::DiplomatWrite;
 
     /// A stage of the local ZATCA validation profile.
@@ -276,8 +276,8 @@ pub mod ffi {
 
     impl ZatcaFinding {
         /// Rule assertion that produced the finding, for business-rule findings.
-        pub fn assertion_site(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok(self.0.assertion_site.clone().map(|v| Box::new(Text(v)))))
+        pub fn assertion_site(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.assertion_site.as_deref(), out)
         }
         pub fn layer(&self) -> ValidationLayer {
             self.0.finding.layer.into()
@@ -443,7 +443,9 @@ mod tests {
         assert_eq!(cen.findings_len(), 1);
         assert!(cen.finding(1).is_err());
         let finding = cen.finding(0).ok().unwrap();
-        assert_eq!(finding.assertion_site().ok().unwrap().unwrap().0, "BR-01#0");
+        let mut present = None;
+        let site = written(|o| present = finding.assertion_site(o));
+        assert_eq!((present, site.as_str()), (Some(()), "BR-01#0"));
         assert_eq!(finding.layer(), ValidationLayer::BusinessRules);
         assert_eq!(finding.severity(), Severity::Error);
         assert_eq!(written(|o| finding.code(o).ok().unwrap()), "BR-01");
@@ -486,7 +488,9 @@ mod tests {
         warning.finding.severity = zv::Severity::Warning;
         let warning = ZatcaFinding(warning);
         assert_eq!(warning.severity(), Severity::Warning);
-        assert!(warning.assertion_site().ok().unwrap().is_none());
+        let mut present = Some(());
+        let site = written(|o| present = warning.assertion_site(o));
+        assert_eq!((present, site.as_str()), (None, ""));
     }
 
     #[test]

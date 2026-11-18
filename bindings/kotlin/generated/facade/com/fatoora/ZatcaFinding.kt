@@ -18,7 +18,7 @@ class ZatcaFinding internal constructor(internal val raw: com.fatoora.raw.ZatcaF
      */
     val assertionSite: String?
         get() = nativeCall(listOfNotNull(this)) {
-            unwrap(raw.assertionSite())?.let(::readText)
+            raw.assertionSite()
         }
 
     val layer: ValidationLayer
@@ -80,8 +80,8 @@ class ZatcaFinding internal constructor(internal val raw: com.fatoora.raw.ZatcaF
         }
 
     @Deprecated("Use the assertionSite property.", ReplaceWith("assertionSite"))
-    fun assertionSite(): Text? = nativeCall(listOfNotNull(this)) {
-        unwrap(raw.assertionSite())?.let(::Text)
+    fun assertionSite(): String? = nativeCall(listOfNotNull(this)) {
+        raw.assertionSite()
     }
 
     @Deprecated("Use the layer property.", ReplaceWith("layer"))

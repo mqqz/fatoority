@@ -172,6 +172,13 @@ def test_python_party_setters_expose_province():
     assert restored.buyer.address.province == "Makkah Province"
 
 
+def test_native_optional_string_is_str_or_none():
+    from fatoora import _native
+    address = _native.Address.new("SA", "Riyadh", "Street", "1234", "12222", None, None, None)
+    assert address.province() is None
+    assert address.with_province("Riyadh Province").province() == "Riyadh Province"
+
+
 def test_out_of_scope_adjustment_without_rate_survives_rebuild():
     adjustment = Adjustment(10, charge=True, category=VatCategory.OUT_OF_SCOPE, rate=0, omitted_rate=True)
     b = builder()

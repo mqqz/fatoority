@@ -20,8 +20,8 @@
 
 
 
-typedef struct fatoora_ZatcaFinding_assertion_site_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_ZatcaFinding_assertion_site_result;
-fatoora_ZatcaFinding_assertion_site_result fatoora_ZatcaFinding_assertion_site(const ZatcaFinding* self);
+typedef struct fatoora_ZatcaFinding_assertion_site_result { bool is_ok;} fatoora_ZatcaFinding_assertion_site_result;
+fatoora_ZatcaFinding_assertion_site_result fatoora_ZatcaFinding_assertion_site(const ZatcaFinding* self, DiplomatWrite* write);
 
 ValidationLayer fatoora_ZatcaFinding_layer(const ZatcaFinding* self);
 

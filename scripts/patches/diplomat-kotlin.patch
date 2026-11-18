@@ -1,8 +1,8 @@
 diff --git a/tool/src/kotlin/mod.rs b/tool/src/kotlin/mod.rs
-index e536d5e..5be5de8 100644
+index 784168f5..00c4444b 100644
 --- a/tool/src/kotlin/mod.rs
 +++ b/tool/src/kotlin/mod.rs
-@@ -73,7 +73,9 @@ impl KotlinConfig {
+@@ -74,7 +74,9 @@ impl KotlinConfig {
                  self.domain = value.as_str().map(|s| s.to_string());
              }
              "use_finalizers_not_cleaners" => {
@@ -13,7 +13,7 @@ index e536d5e..5be5de8 100644
              }
              "scaffold" => {
                  self.scaffold = value.as_str().map(|val| val == "true");
-@@ -496,7 +498,11 @@ impl<'cx> ItemGenContext<'_, 'cx> {
+@@ -497,7 +499,11 @@ impl<'cx> ItemGenContext<'_, 'cx> {
          match *out {
              ReturnType::Infallible(ref s) => self.gen_infallible_return_type_ffi(s),
              ReturnType::Fallible(ref ok, ref err) => {
@@ -26,7 +26,7 @@ index e536d5e..5be5de8 100644
                  let err_type = err
                      .as_ref()
                      .map(|err| self.gen_type_name_ffi(err, None))
-@@ -514,7 +520,13 @@ impl<'cx> ItemGenContext<'_, 'cx> {
+@@ -515,7 +521,13 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                                  _ => unreachable!("unknown AST/HIR variant"),
                              }
                          })
@@ -41,7 +41,7 @@ index e536d5e..5be5de8 100644
                      _ => None,
                  };
                  let err_default = err
-@@ -956,10 +968,14 @@ val intermediateOption = {val_name}.option() ?: return null
+@@ -962,10 +974,14 @@ val intermediateOption = {val_name}.option() ?: return null
                  #[derive(Template)]
                  #[template(path = "kotlin/ResultReturn.kt.jinja", escape = "none")]
                  struct ResultReturn<'d> {
@@ -56,10 +56,72 @@ index e536d5e..5be5de8 100644
                      ok_path: ok_path.as_str(),
                      err_path: err_path.as_str(),
                  }
-@@ -2285,6 +2301,52 @@ mod test {
+@@ -976,9 +992,13 @@ val intermediateOption = {val_name}.option() ?: return null
+                 self.gen_nullable_return_conversion(method, method_lifetimes_map, "returnVal", res)
+             }
+ 
++            // On None the writer is still ours to free: Rust left it empty.
+             ReturnType::Nullable(SuccessType::Write(ref w)) => format!(
+                 r#"
+-returnVal.option() ?: return null
++if (returnVal.option() == null) {{
++    DW.lib.diplomat_buffer_write_destroy(write)
++    return null
++}}
+ {}
+                         "#,
+                 Self::write_return(w, "")
+@@ -2291,6 +2311,99 @@ mod test {
      use super::formatter::test::new_tcx;
      use super::{formatter::KotlinFormatter, ItemGenContext};
  
++    #[test]
++    fn test_optional_string_frees_writer() {
++        let tcx = new_tcx(quote! {
++            #[diplomat::bridge]
++            mod ffi {
++                #[diplomat::opaque]
++                pub struct Value;
++                impl Value {
++                    pub fn text(&self, write: &mut DiplomatWrite) -> Option<()> { todo!() }
++                }
++            }
++        });
++        let mut config = crate::Config::default();
++        config.set("lib_name", "test".into());
++        config.set("kotlin.domain", "dev.test".into());
++        let docs = diplomat_core::hir::DocsUrlGenerator::with_base_urls(None, HashMap::new());
++        let (files, errors) = super::run(&tcx, config, &docs);
++        assert!(errors.take_all().is_empty());
++        let files = files.take_files();
++        let value = files
++            .iter()
++            .find(|(name, _)| name.ends_with("/Value.kt"))
++            .unwrap()
++            .1;
++        assert!(value.contains("fun text(): String? {"));
++        // None frees the writer before returning; Some frees it in writeToString.
++        assert!(value.contains(
++            "if (returnVal.option() == null) {\n            DW.lib.diplomat_buffer_write_destroy(write)\n            return null\n        }"
++        ));
++        assert!(value.contains("DW.writeToString(write)"));
++        let lib = files
++            .iter()
++            .find(|(name, _)| name.ends_with("/Lib.kt"))
++            .unwrap()
++            .1;
++        // JNA rejects a field order naming a field the struct lacks.
++        let option_unit = lib
++            .split("internal class OptionUnit")
++            .nth(1)
++            .unwrap()
++            .split("internal class")
++            .next()
++            .unwrap();
++        assert!(option_unit.contains("return listOf(\"isOk\")"));
++        assert!(!option_unit.contains("\"value\""));
++    }
++
 +    #[test]
 +    fn test_optional_result_and_failed_write() {
 +        let tcx = new_tcx(quote! {
@@ -110,7 +172,7 @@ index e536d5e..5be5de8 100644
      fn test_enum() {
          let tk_stream = quote! {
 diff --git a/tool/src/kotlin/snapshots/diplomat_tool__kotlin__test__opaque_gen_with_finalizers.snap b/tool/src/kotlin/snapshots/diplomat_tool__kotlin__test__opaque_gen_with_finalizers.snap
-index 8d2eff4..2acb4a3 100644
+index 8d2eff47..2acb4a3c 100644
 --- a/tool/src/kotlin/snapshots/diplomat_tool__kotlin__test__opaque_gen_with_finalizers.snap
 +++ b/tool/src/kotlin/snapshots/diplomat_tool__kotlin__test__opaque_gen_with_finalizers.snap
 @@ -21,6 +21,7 @@ class MyOpaqueStruct internal constructor (
@@ -122,7 +184,7 @@ index 8d2eff4..2acb4a3 100644
  )  {
  
 diff --git a/tool/src/kotlin/snapshots/diplomat_tool__kotlin__test__opaque_gen_with_mocking_interface.snap b/tool/src/kotlin/snapshots/diplomat_tool__kotlin__test__opaque_gen_with_mocking_interface.snap
-index 8d2eff4..2acb4a3 100644
+index 8d2eff47..2acb4a3c 100644
 --- a/tool/src/kotlin/snapshots/diplomat_tool__kotlin__test__opaque_gen_with_mocking_interface.snap
 +++ b/tool/src/kotlin/snapshots/diplomat_tool__kotlin__test__opaque_gen_with_mocking_interface.snap
 @@ -21,6 +21,7 @@ class MyOpaqueStruct internal constructor (
@@ -134,7 +196,7 @@ index 8d2eff4..2acb4a3 100644
  )  {
  
 diff --git a/tool/templates/kotlin/Opaque.kt.jinja b/tool/templates/kotlin/Opaque.kt.jinja
-index 69cf702..583ebfc 100644
+index 69cf7025..583ebfc2 100644
 --- a/tool/templates/kotlin/Opaque.kt.jinja
 +++ b/tool/templates/kotlin/Opaque.kt.jinja
 @@ -47,6 +47,9 @@ class {{type_name}} internal constructor (
@@ -148,7 +210,7 @@ index 69cf702..583ebfc 100644
  {%- if generate_mocking_interface %}
  ): {{type_name}}Interface {%- if is_custom_error %}: Exception("Rust error result for {{type_name}}") {%- endif %}
 diff --git a/tool/templates/kotlin/OpaqueReturn.kt.jinja b/tool/templates/kotlin/OpaqueReturn.kt.jinja
-index e9418e2..151df19 100644
+index e9418e29..151df197 100644
 --- a/tool/templates/kotlin/OpaqueReturn.kt.jinja
 +++ b/tool/templates/kotlin/OpaqueReturn.kt.jinja
 @@ -3,6 +3,6 @@ listOf()
@@ -159,8 +221,24 @@ index e9418e2..151df19 100644
 +val handle = {{val_name}} {% if optional %}?: return {% if return_type_modifier == ".ok()" %}Result.success(null){% else %}null{% endif %}{% endif %}
  val returnOpaque = {{return_type_name}}(handle, selfEdges{%- if !named_lifetimes.is_empty() %}{%- for lt in named_lifetimes %}, {{lt}}Edges{%- endfor %}{% endif -%}, {{is_owned}})
  return returnOpaque{{return_type_modifier}}
+diff --git a/tool/templates/kotlin/Option.kt.jinja b/tool/templates/kotlin/Option.kt.jinja
+index 25283f3c..bc82b5a4 100644
+--- a/tool/templates/kotlin/Option.kt.jinja
++++ b/tool/templates/kotlin/Option.kt.jinja
+@@ -11,7 +11,11 @@ internal class Option{{ffi_type_name}} constructor(): Structure(), Structure.ByV
+ 
+     // Define the fields of the struct
+     override fun getFieldOrder(): List<String> {
++        {%- if ffi_default.is_some() %}
+         return listOf("value", "isOk")
++        {%- else %}
++        return listOf("isOk")
++        {%- endif %}
+     }
+ 
+     internal fun option(): {{ffi_type_name}}? {
 diff --git a/tool/templates/kotlin/Result.kt.jinja b/tool/templates/kotlin/Result.kt.jinja
-index bd3d380..9fe2e5d 100644
+index bd3d380c..9fe2e5d3 100644
 --- a/tool/templates/kotlin/Result.kt.jinja
 +++ b/tool/templates/kotlin/Result.kt.jinja
 @@ -29,7 +29,7 @@ class Result{{ok.type_name}}{{err.type_name}}: Structure(), Structure.ByValue  {
@@ -173,7 +251,7 @@ index bd3d380..9fe2e5d 100644
          return null
      }
 diff --git a/tool/templates/kotlin/ResultReturn.kt.jinja b/tool/templates/kotlin/ResultReturn.kt.jinja
-index 7ebf927..bb1934f 100644
+index 7ebf9275..bb1934ff 100644
 --- a/tool/templates/kotlin/ResultReturn.kt.jinja
 +++ b/tool/templates/kotlin/ResultReturn.kt.jinja
 @@ -1,6 +1,9 @@

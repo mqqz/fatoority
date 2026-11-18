@@ -124,6 +124,8 @@ const char *fatoora_error_details_json(const FatooraError *error);
     count = 0
     for path, text in texts.items():
         results = dict(re.findall(r"typedef struct (fatoora_\w+_result) \{union \{(.*?)\}; bool is_ok;\} \1;", text))
+        # Tag-only results: a writer method returning Option<()> (optional string).
+        results.update((name, "") for name in re.findall(r"typedef struct (fatoora_\w+_result) \{ bool is_ok;\} \1;", text))
         declarations = re.findall(r"^.*\bfatoora_\w+\(.*\);$", text, re.M)
         for declaration_text in declarations:
             match = re.fullmatch(r"(\w+\*?) (fatoora_(\w+?)_(\w+))\((.*?)\);", declaration_text)
@@ -217,7 +219,9 @@ const char *fatoora_error_details_json(const FatooraError *error);
                     checks.append("!out")
                     zero = "(FatooraBytesView){0}" if out_type == "FatooraBytesView" else "0"
                     init.append(f"    if (out) *out = {zero};")
-                optional_scalar = fields is not None and not fallible
+                # An optional string leaves *out NULL for None, like a NULL Text*.
+                optional_string = writer and fields == ""
+                optional_scalar = fields is not None and not fallible and not optional_string
                 if optional_scalar:
                     args.append("bool *has_value")
                     checks.append("!has_value")
@@ -237,6 +241,10 @@ const char *fatoora_error_details_json(const FatooraError *error);
                         body.append("        free(write.buf);")
                     body.extend(["        return fatoora_private_error(result.err, error);", "    }"])
                     value = "result.ok" if value_type else None
+                elif optional_string:
+                    body.extend([f"    {ret} result = {expression};", "    if (!result.is_ok) {",
+                                 "        free(write.buf);", "        return FATOORA_OK;", "    }"])
+                    value = None
                 elif optional_scalar:
                     cast = f"({public_type(value_type)})" if value_type in enums else ""
                     body.extend([f"    {ret} result = {expression};", "    *has_value = result.is_ok;", f"    if (result.is_ok) *out = {cast}result.ok;"])

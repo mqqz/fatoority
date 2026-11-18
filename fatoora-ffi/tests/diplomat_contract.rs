@@ -5,7 +5,7 @@ use fatoora_ffi::invoice::ffi::InvoiceSubType;
 use fatoora_ffi::invoice::ffi::InvoiceTypeKind;
 use fatoora_ffi::invoice::ffi::VatCategory;
 use fatoora_ffi::invoice::ffi::{Address, FinalizedInvoice, InvoiceBuilder};
-use support::written;
+use support::{optional_written, written};
 
 fn ok<T>(result: Result<T, Box<BindingError>>) -> T {
     result.unwrap_or_else(|e| {
@@ -1260,7 +1260,7 @@ fn optional_adjustments_and_party_metadata_preserve_absence() {
     let address = ok(Address::new(
         b"SA", b"Riyadh", b"Street", b"1234", b"12222", None, None, None,
     ));
-    assert!(optional_string(address.province()).is_none());
+    assert!(optional_written(|out| address.province(out)).is_none());
     let address = ok(address.with_province(b"Riyadh Province"));
     ok(b.set_seller(b"Seller", &address, b"399999999900003", None, None));
     ok(b.set_buyer_without_address(
@@ -1290,7 +1290,7 @@ fn optional_adjustments_and_party_metadata_preserve_absence() {
     );
     let address = ok(ok(data.seller()).address()).unwrap();
     assert_eq!(
-        optional_string(address.province()).as_deref(),
+        optional_written(|out| address.province(out)).as_deref(),
         Some("Riyadh Province")
     );
     let flat = ok(Adjustment::amount(b"1"));

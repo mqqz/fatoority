@@ -37,6 +37,13 @@ static auto builder() {
     assert(b->set_vat_category(fatoora::VatCategory::Standard).is_ok());
     auto address = fatoora::Address::new_("SA", "Riyadh", "King Fahd", "1234", "12222",
         std::nullopt, std::nullopt, "Olaya").ok().value();
+    assert(!address->province().has_value());
+    std::string unwritten;
+    assert(!address->province_write(unwritten).has_value());
+    auto with_province = address->with_province("Riyadh").ok().value();
+    assert(with_province->province().value() == "Riyadh");
+    std::string written;
+    assert(with_province->province_write(written).has_value() && written == "Riyadh");
     assert(b->set_seller("Seller", *address, "399999999900003", "7003339333", "CRN").is_ok());
     return b;
 }

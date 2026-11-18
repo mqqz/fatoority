@@ -148,7 +148,9 @@ python3 scripts/generate_kotlin.py --check
 ```
 
 The installer pins upstream Diplomat including #1295 and applies the tracked
-Kotlin patch, running backend tests first. `DIPLOMAT_TOOL_KOTLIN` overrides its
+Kotlin patch, running backend tests first. The patch fixes optional results and
+frees the native write buffer on every path, including optional string
+(`String?`) returns. `DIPLOMAT_TOOL_KOTLIN` overrides its
 isolated tool path. Both raw bindings and the Java-friendly facade are generated;
 do not edit `generated/` by hand.
 

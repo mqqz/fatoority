@@ -211,6 +211,11 @@ static FatooraStatus fatoora_private_finish(DiplomatWrite *write, char **out,
         free(write->buf);
         return fatoora_private_fail(FATOORA_INTERNAL, "output allocation failed", error);
     }
+    /* C strings end at the first NUL, so a value containing one cannot be returned. */
+    if (memchr(write->buf, '\0', write->len)) {
+        free(write->buf);
+        return fatoora_private_fail(FATOORA_INVALID_INPUT, "text must not contain NUL", error);
+    }
     fatoora_private_flush(write);
     *out = write->buf;
     return FATOORA_OK;
@@ -256,11 +261,15 @@ FatooraStatus fatoora_address_province(const FatooraAddress *self, char **out, F
     if (out) *out = 0;
     if (!self || !out)
         return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
-    fatoora_Address_province_result result = fatoora_Address_province(self);
+    DiplomatWrite write = fatoora_private_writer();
+    if (write.grow_failed)
+        return fatoora_private_fail(FATOORA_INTERNAL, "output allocation failed", error);
+    fatoora_Address_province_result result = fatoora_Address_province(self, &write);
     if (!result.is_ok) {
-        return fatoora_private_error(result.err, error);
+        free(write.buf);
+        return FATOORA_OK;
     }
-    return fatoora_private_text(result.ok, out, error);
+    return fatoora_private_finish(&write, out, error);
 }
 
 FatooraStatus fatoora_address_new(const FatooraAddressOptions *options, FatooraAddress **out, FatooraError **error) {
@@ -4739,11 +4748,15 @@ FatooraStatus fatoora_zatca_finding_assertion_site(const FatooraZatcaFinding *se
     if (out) *out = 0;
     if (!self || !out)
         return fatoora_private_fail(FATOORA_INVALID_INPUT, "required argument is NULL or integer is out of range", error);
-    fatoora_ZatcaFinding_assertion_site_result result = fatoora_ZatcaFinding_assertion_site(self);
+    DiplomatWrite write = fatoora_private_writer();
+    if (write.grow_failed)
+        return fatoora_private_fail(FATOORA_INTERNAL, "output allocation failed", error);
+    fatoora_ZatcaFinding_assertion_site_result result = fatoora_ZatcaFinding_assertion_site(self, &write);
     if (!result.is_ok) {
-        return fatoora_private_error(result.err, error);
+        free(write.buf);
+        return FATOORA_OK;
     }
-    return fatoora_private_text(result.ok, out, error);
+    return fatoora_private_finish(&write, out, error);
 }
 
 FatooraStatus fatoora_zatca_finding_layer(const FatooraZatcaFinding *self, FatooraValidationLayer *out, FatooraError **error) {

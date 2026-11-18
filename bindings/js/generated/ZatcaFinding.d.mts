@@ -21,7 +21,7 @@ export class ZatcaFinding {
     /**
      * Rule assertion that produced the finding, for business-rule findings.
      */
-    assertionSite(): Text | null;
+    assertionSite(): string | null;
 
     layer(): ValidationLayer;
 

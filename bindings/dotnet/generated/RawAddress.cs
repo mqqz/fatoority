@@ -13,7 +13,7 @@ internal partial struct Address
     internal static unsafe extern DiplomatResultAddressBindingError WithProvince(Address* handle, DiplomatSliceU8 value);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Address_province", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultTextBindingError Province(Address* handle);
+    internal static unsafe extern DiplomatOptionVoid Province(Address* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "fatoora_Address_new", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultAddressBindingError New(DiplomatSliceU8 countryCode, DiplomatSliceU8 city, DiplomatSliceU8 street, DiplomatSliceU8 buildingNumber, DiplomatSliceU8 postalCode, DiplomatOptionSliceU8 additionalStreet, DiplomatOptionSliceU8 additionalNumber, DiplomatOptionSliceU8 district);

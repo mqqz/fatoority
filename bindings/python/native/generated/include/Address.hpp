@@ -23,8 +23,8 @@ namespace capi {
     typedef struct fatoora_Address_with_province_result {union {_native::capi::Address* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_Address_with_province_result;
     fatoora_Address_with_province_result fatoora_Address_with_province(const _native::capi::Address* self, _native::diplomat::capi::DiplomatStringView value);
 
-    typedef struct fatoora_Address_province_result {union {_native::capi::Text* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_Address_province_result;
-    fatoora_Address_province_result fatoora_Address_province(const _native::capi::Address* self);
+    typedef struct fatoora_Address_province_result { bool is_ok;} fatoora_Address_province_result;
+    fatoora_Address_province_result fatoora_Address_province(const _native::capi::Address* self, _native::diplomat::capi::DiplomatWrite* write);
 
     typedef struct fatoora_Address_new_result {union {_native::capi::Address* ok; _native::capi::BindingError* err;}; bool is_ok;} fatoora_Address_new_result;
     fatoora_Address_new_result fatoora_Address_new(_native::diplomat::capi::DiplomatStringView country_code, _native::diplomat::capi::DiplomatStringView city, _native::diplomat::capi::DiplomatStringView street, _native::diplomat::capi::DiplomatStringView building_number, _native::diplomat::capi::DiplomatStringView postal_code, _native::diplomat::capi::OptionStringView additional_street, _native::diplomat::capi::OptionStringView additional_number, _native::diplomat::capi::OptionStringView district);
@@ -65,9 +65,19 @@ inline _native::diplomat::result<std::unique_ptr<_native::Address>, std::unique_
     return result.is_ok ? _native::diplomat::result<std::unique_ptr<_native::Address>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<std::unique_ptr<_native::Address>>(std::unique_ptr<_native::Address>(_native::Address::FromFFI(result.ok)))) : _native::diplomat::result<std::unique_ptr<_native::Address>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
 }
 
-inline _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>> _native::Address::province() const {
-    auto result = _native::capi::fatoora_Address_province(this->AsFFI());
-    return result.is_ok ? _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Ok<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>>(std::unique_ptr<_native::Text>(_native::Text::FromFFI(result.ok)))) : _native::diplomat::result<_native::diplomat::maybe_null<std::unique_ptr<_native::Text>>, std::unique_ptr<_native::BindingError>>(_native::diplomat::Err<std::unique_ptr<_native::BindingError>>(std::unique_ptr<_native::BindingError>(_native::BindingError::FromFFI(result.err))));
+inline std::optional<std::string> _native::Address::province() const {
+    std::string output;
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteFromString(output);
+    auto result = _native::capi::fatoora_Address_province(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::string>(std::move(output)) : std::nullopt;
+}
+template<typename W>
+inline std::optional<std::monostate> _native::Address::province_write(W& writeable) const {
+    _native::diplomat::capi::DiplomatWrite write = _native::diplomat::WriteTrait<W>::Construct(writeable);
+    auto result = _native::capi::fatoora_Address_province(this->AsFFI(),
+        &write);
+    return result.is_ok ? std::optional<std::monostate>(std::monostate()) : std::nullopt;
 }
 
 inline _native::diplomat::result<std::unique_ptr<_native::Address>, std::unique_ptr<_native::BindingError>> _native::Address::new_(std::string_view country_code, std::string_view city, std::string_view street, std::string_view building_number, std::string_view postal_code, std::optional<std::string_view> additional_street, std::optional<std::string_view> additional_number, std::optional<std::string_view> district) {

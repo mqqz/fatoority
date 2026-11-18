@@ -11,6 +11,10 @@
   instead of a `DiplomatBorrowedSpan<byte>` view, so it stays valid after its
   owner is disposed. `Clone()`, `WithSpan()`, `Length` and `using` work as
   before.
+- Bindings: `Address.province` and `ZatcaFinding.assertion_site` return a
+  plain nullable string in every language instead of a `Text` handle. This
+  changes the raw JavaScript methods and the deprecated Kotlin
+  `province()`/`assertionSite()` methods, which returned `Text?`.
 
 ### Internal
 
@@ -18,6 +22,10 @@
   `diplomat-runtime` 0.16.1). The C# generator moves to current upstream
   Diplomat plus the opt-in `diplomat_str_as_string` option; the Kotlin generator
   moves to the `v0.17.0` tag.
+- The C# and Kotlin generators support optional string returns (a
+  `DiplomatWrite` method returning `Option<()>`); the Kotlin patch frees the
+  write buffer when the result is absent. The C facade rejects any string
+  output containing NUL.
 
 ### Removed
 

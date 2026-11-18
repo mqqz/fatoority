@@ -20,8 +20,8 @@
 typedef struct fatoora_Address_with_province_result {union {Address* ok; BindingError* err;}; bool is_ok;} fatoora_Address_with_province_result;
 fatoora_Address_with_province_result fatoora_Address_with_province(const Address* self, DiplomatStringView value);
 
-typedef struct fatoora_Address_province_result {union {Text* ok; BindingError* err;}; bool is_ok;} fatoora_Address_province_result;
-fatoora_Address_province_result fatoora_Address_province(const Address* self);
+typedef struct fatoora_Address_province_result { bool is_ok;} fatoora_Address_province_result;
+fatoora_Address_province_result fatoora_Address_province(const Address* self, DiplomatWrite* write);
 
 typedef struct fatoora_Address_new_result {union {Address* ok; BindingError* err;}; bool is_ok;} fatoora_Address_new_result;
 fatoora_Address_new_result fatoora_Address_new(DiplomatStringView country_code, DiplomatStringView city, DiplomatStringView street, DiplomatStringView building_number, DiplomatStringView postal_code, OptionStringView additional_street, OptionStringView additional_number, OptionStringView district);

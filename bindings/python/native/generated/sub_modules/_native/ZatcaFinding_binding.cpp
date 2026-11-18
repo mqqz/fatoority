@@ -12,7 +12,7 @@ void add_ZatcaFinding_binding(nb::module_ mod) {
     
     nb::class_<_native::ZatcaFinding> opaque(mod, "ZatcaFinding", nb::type_slots(_native_ZatcaFinding_slots), "One validation finding with its source assertion, when applicable.");
     opaque
-        .def("assertion_site", std::move(maybe_op_unwrap(&_native::ZatcaFinding::assertion_site)), "Rule assertion that produced the finding, for business-rule findings.")
+        .def("assertion_site", &_native::ZatcaFinding::assertion_site, "Rule assertion that produced the finding, for business-rule findings.")
         .def("code", std::move(maybe_op_unwrap(&_native::ZatcaFinding::code)), "Library-owned rule identifier, independent of message wording.")
         .def("layer", &_native::ZatcaFinding::layer)
         .def("location_column", &_native::ZatcaFinding::location_column, "One-based XML column, or null when unknown.")

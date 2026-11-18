@@ -8,7 +8,7 @@ import com.sun.jna.Structure
 internal interface AddressLib: Library {
     fun fatoora_Address_destroy(handle: Pointer)
     fun fatoora_Address_with_province(handle: Pointer, value: Slice): ResultPointerPointer
-    fun fatoora_Address_province(handle: Pointer): ResultPointerPointer
+    fun fatoora_Address_province(handle: Pointer, write: Pointer): OptionUnit
     fun fatoora_Address_new(countryCode: Slice, city: Slice, street: Slice, buildingNumber: Slice, postalCode: Slice, additionalStreet: OptionSlice, additionalNumber: OptionSlice, district: OptionSlice): ResultPointerPointer
     fun fatoora_Address_city(handle: Pointer, write: Pointer): ResultUnitPointer
     fun fatoora_Address_street(handle: Pointer, write: Pointer): ResultUnitPointer
@@ -109,21 +109,18 @@ class Address internal constructor (
         }
     }
 
-    fun province(): Result<Text?> {
+    fun province(): String? {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.fatoora_Address_province(handle, write);
 
-        val returnVal = lib.fatoora_Address_province(handle);
-        val nativeOkVal = returnVal.getNativeOk();
-        if (returnVal.isOk == 1.toByte()) {
-            val selfEdges: List<Any> = listOf()
-            val handle = nativeOkVal ?: return Result.success(null)
-            val returnOpaque = Text(handle, selfEdges, true)
-            return returnOpaque.ok()
-        } else {
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.getNativeErr()!!
-            val returnOpaque = BindingError(handle, selfEdges, true)
-            return returnOpaque.err()
+        if (returnVal.option() == null) {
+            DW.lib.diplomat_buffer_write_destroy(write)
+            return null
         }
+
+        val returnString = DW.writeToString(write)
+        return returnString
+
     }
 
     fun city(): Result<String> {

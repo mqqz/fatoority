@@ -27,7 +27,9 @@ fn party<R: inv_core::PartyRole>(p: &inv_core::Party<R>) -> ffi::Party {
 pub mod ffi {
     use super::{PartyData, decimal, inv_core, party};
     use crate::common::ffi::{BindingError, Text};
-    use crate::common::{boundary, core_error, local_error, optional_text, text, write};
+    use crate::common::{
+        boundary, core_error, local_error, optional_text, text, write, write_optional,
+    };
     use crate::validation::ffi::ZatcaValidationReport;
     use diplomat_runtime::{DiplomatStr, DiplomatWrite};
 
@@ -115,8 +117,8 @@ pub mod ffi {
                 )))
             })
         }
-        pub fn province(&self) -> Result<Option<Box<Text>>, Box<BindingError>> {
-            boundary(|| Ok(self.0.province().map(|v| Box::new(Text(v.into())))))
+        pub fn province(&self, out: &mut DiplomatWrite) -> Option<()> {
+            write_optional(self.0.province(), out)
         }
 
         #[allow(clippy::too_many_arguments)]

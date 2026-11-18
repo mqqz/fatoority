@@ -40,6 +40,16 @@ def main():
                     content = content.replace("'./diplomat-runtime'", "'./diplomat-runtime.mjs'")
                     declaration.with_suffix('.mts').write_text(content)
                     declaration.unlink()
+            if backend in ("cpp", "nanobind"):
+                # diplomat-tool 0.17.0 returns an empty optional from the `_write`
+                # overload of an optional string; fixed in mqqz/diplomat@7161fed2.
+                for header in Path(generated).rglob("*.hpp"):
+                    content = header.read_text()
+                    fixed = content.replace(
+                        "? std::optional<std::monostate>() :",
+                        "? std::optional<std::monostate>(std::monostate()) :")
+                    if fixed != content:
+                        header.write_text(fixed)
             if backend == "nanobind":
                 # diplomat-tool 0.17.0 hard-codes the feature-test `somelib` namespace in
                 # the callback caster; fixed upstream by rust-diplomat/diplomat#1308.
